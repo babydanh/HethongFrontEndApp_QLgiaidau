@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -243,6 +244,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     return DateFormat('dd/MM').format(dt);
   }
 
+  /// The other person in a one-to-one room. Club / group / support rooms
+  /// return null: their tile avatar is a room logo, not a user's face.
+  ChatParticipant? _directPeer(ChatRoomModel room, String? currentUserId) {
+    if (room.type != 'DIRECT' || room.participants.isEmpty) return null;
+    final peers = room.participants
+        .where((p) => p.id.trim().isNotEmpty && p.id != currentUserId)
+        .toList();
+    return peers.isEmpty ? null : peers.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -408,6 +419,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                             final title = room.displayTitle(currentUserId);
                             final avatar = room.displayAvatar(currentUserId);
                             final hasUnread = room.unreadCount > 0;
+                            final peer = _directPeer(room, currentUserId);
 
                             return ListTile(
                               tileColor: colors.bgCard,
@@ -432,25 +444,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               leading: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: AppTheme.primaryLight,
-                                    backgroundImage:
-                                        avatar != null && avatar.isNotEmpty
-                                        ? NetworkImage(avatar)
-                                        : null,
-                                    child: avatar == null || avatar.isEmpty
-                                        ? Text(
-                                            title.characters.first
-                                                .toUpperCase(),
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: AppTheme.primaryDark,
-                                              fontSize: 16,
-                                            ),
-                                          )
-                                        : null,
-                                  ),
+                                  peer != null
+                                      ? UserAvatarTap(
+                                          userId: peer.id,
+                                          name: peer.fullName,
+                                          communityId: room.communityId,
+                                          imageUrl: peer.avatarUrl,
+                                          size: 48,
+                                        )
+                                      : CircleAvatar(
+                                          radius: 24,
+                                          backgroundColor:
+                                              AppTheme.primaryLight,
+                                          backgroundImage:
+                                              avatar != null &&
+                                                  avatar.isNotEmpty
+                                              ? NetworkImage(avatar)
+                                              : null,
+                                          child:
+                                              avatar == null || avatar.isEmpty
+                                              ? Text(
+                                                  title.characters.first
+                                                      .toUpperCase(),
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppTheme.primaryDark,
+                                                    fontSize: 16,
+                                                  ),
+                                                )
+                                              : null,
+                                        ),
                                   Positioned(
                                     bottom: 0,
                                     right: 0,

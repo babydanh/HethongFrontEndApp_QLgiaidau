@@ -22,6 +22,8 @@ Tournament _tournament({
   String status = 'REGISTRATION_OPEN',
   String visibility = 'PUBLIC',
   bool registrationLocked = false,
+  bool registrationExpired = false,
+  bool registrationNotStarted = false,
   String creatorId = 'owner-1',
 }) {
   final now = DateTime.now();
@@ -40,8 +42,12 @@ Tournament _tournament({
     maxTeams: 8,
     createdAt: now,
     updatedAt: now,
-    registrationStartDate: now.subtract(const Duration(days: 1)),
-    registrationEndDate: now.add(const Duration(days: 1)),
+    registrationStartDate: registrationNotStarted
+        ? now.add(const Duration(days: 1))
+        : now.subtract(const Duration(days: 1)),
+    registrationEndDate: registrationExpired
+        ? now.subtract(const Duration(days: 1))
+        : now.add(const Duration(days: 1)),
     isRegistrationLocked: registrationLocked,
     divisions: const [
       TournamentDivision(
@@ -63,7 +69,7 @@ void _setPhoneViewport(WidgetTester tester) {
 
 void main() {
   testWidgets(
-    'open registration replaces bottom nav and preserves route context',
+    'open registration shows floating CTA and preserves route context',
     (tester) async {
       _setPhoneViewport(tester);
       final router = _createRouter(invite: _invite);
@@ -76,9 +82,16 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       final context = tester.element(find.byType(TournamentIntroScreen));
-      final registerLabel = AppLocalizations.of(context)!.registerNow;
+      final registerLabel = AppLocalizations.of(context)!.register;
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.byType(TextButton), findsOneWidget);
       expect(find.text(registerLabel), findsOneWidget);
-      expect(find.byType(FloatingBottomNav), findsNothing);
+      final registerButton = tester.widget<TextButton>(find.byType(TextButton));
+      expect(
+        registerButton.style?.backgroundColor?.resolve(<WidgetState>{}),
+        Colors.transparent,
+      );
+      expect(find.byType(FloatingBottomNav), findsOneWidget);
 
       await tester.tap(find.text(registerLabel));
       await tester.pump();
@@ -109,12 +122,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     final context = tester.element(find.byType(TournamentIntroScreen));
-    final registerLabel = AppLocalizations.of(context)!.registerNow;
+    final registerLabel = AppLocalizations.of(context)!.register;
+    expect(find.byType(TextButton), findsNothing);
     expect(find.text(registerLabel), findsNothing);
     expect(find.byType(FloatingBottomNav), findsOneWidget);
   });
 
-  testWidgets('locked registration shows a disabled CTA without bottom nav', (
+  testWidgets('locked registration hides CTA instead of disabling it', (
     tester,
   ) async {
     _setPhoneViewport(tester);
@@ -132,16 +146,68 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     final context = tester.element(find.byType(TournamentIntroScreen));
-    final closedLabel = AppLocalizations.of(context)!.registerRegClosed;
-    expect(find.text(closedLabel), findsOneWidget);
-    expect(find.byType(FloatingBottomNav), findsNothing);
-    final button = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, closedLabel),
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.text(AppLocalizations.of(context)!.register), findsNothing);
+    expect(
+      find.text(AppLocalizations.of(context)!.registerRegClosed),
+      findsNothing,
     );
-    expect(button.onPressed, isNull);
+    expect(find.byType(FloatingBottomNav), findsOneWidget);
   });
 
-  testWidgets('private access denial keeps bottom nav and hides CTA', (
+  testWidgets('expired registration hides CTA entirely', (tester) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(registrationExpired: true),
+        invite: null,
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.text(AppLocalizations.of(context)!.register), findsNothing);
+    expect(
+      find.text(AppLocalizations.of(context)!.registerRegClosed),
+      findsNothing,
+    );
+    expect(find.byType(FloatingBottomNav), findsOneWidget);
+  });
+
+  testWidgets('future registration hides CTA instead of disabling it', (
+    tester,
+  ) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(registrationNotStarted: true),
+        invite: null,
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.text(AppLocalizations.of(context)!.register), findsNothing);
+    expect(
+      find.text(AppLocalizations.of(context)!.lite_registrationNotOpen),
+      findsNothing,
+    );
+    expect(find.byType(FloatingBottomNav), findsOneWidget);
+  });
+
+  testWidgets('private access denial still exposes actionable CTA', (
     tester,
   ) async {
     _setPhoneViewport(tester);
@@ -159,8 +225,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     final context = tester.element(find.byType(TournamentIntroScreen));
-    final registerLabel = AppLocalizations.of(context)!.registerNow;
-    expect(find.text(registerLabel), findsNothing);
+    final registerLabel = AppLocalizations.of(context)!.register;
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byType(TextButton), findsOneWidget);
+    expect(find.text(registerLabel), findsOneWidget);
     expect(find.byType(FloatingBottomNav), findsOneWidget);
   });
 }

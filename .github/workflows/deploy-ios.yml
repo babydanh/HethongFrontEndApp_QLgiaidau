@@ -108,7 +108,12 @@ jobs:
 
       # 4. Build iOS Runner (không codesign trên máy chủ builder)
       - name: Build iOS release
-        run: flutter build ios --release --no-codesign
+        run: |
+          BUILD_ARGS=""
+          if [ -n "${{ github.event.inputs.build_number }}" ]; then
+            BUILD_ARGS="--build-number=${{ github.event.inputs.build_number }}"
+          fi
+          flutter build ios --release --no-codesign $BUILD_ARGS
 
       # 5. Cài CocoaPods
       - name: Install CocoaPods
@@ -163,7 +168,11 @@ jobs:
           KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${API_KEY_ID}.p8"
 
           # Thử build IPA trực tiếp bằng Flutter với ExportOptions
-          if flutter build ipa --release --export-options-plist=ios/ExportOptions.plist; then
+          BUILD_ARGS=""
+          if [ -n "${{ github.event.inputs.build_number }}" ]; then
+            BUILD_ARGS="--build-number=${{ github.event.inputs.build_number }}"
+          fi
+          if flutter build ipa --release --export-options-plist=ios/ExportOptions.plist $BUILD_ARGS; then
             echo "✓ Flutter build ipa succeeded!"
             mkdir -p ios/build/ipa
             cp build/ios/ipa/*.ipa ios/build/ipa/ || true

@@ -11,6 +11,7 @@ class TournamentDivisionOption {
     this.maxParticipants,
     this.bracketType,
     this.registrationEndDate,
+    this.effectiveRegistrationEndDate,
     this.participantCount,
   });
 
@@ -25,6 +26,10 @@ class TournamentDivisionOption {
   final int? maxParticipants;
   final String? bracketType;
   final DateTime? registrationEndDate;
+  /// Hạn chót hiệu lực do backend tính sẵn: min(hạn nội dung, hạn giải).
+  /// null nghĩa là không đặt hạn — server cũng không chặn theo ngày trong
+  /// trường hợp đó, nên client không được tự coi là đã hết hạn.
+  final DateTime? effectiveRegistrationEndDate;
   final int? participantCount;
 
   factory TournamentDivisionOption.fromJson(Map<String, dynamic> json) {
@@ -34,6 +39,9 @@ class TournamentDivisionOption {
     final maxParticipants = json['maxParticipants'] ?? json['max_participants'];
     final rawEndDate =
         json['registrationEndDate'] ?? json['registration_end_date'];
+    final rawEffectiveEnd =
+        json['effectiveRegistrationEndDate'] ??
+        json['effective_registration_end_date'];
     final rawCount = json['_count'] is Map
         ? (json['_count'] as Map)['participants']
         : (json['participantCount'] ?? json['participant_count']);
@@ -51,6 +59,9 @@ class TournamentDivisionOption {
       bracketType: (json['bracketType'] ?? json['bracket_type'])?.toString(),
       registrationEndDate: rawEndDate is String
           ? DateTime.tryParse(rawEndDate)
+          : null,
+      effectiveRegistrationEndDate: rawEffectiveEnd is String
+          ? DateTime.tryParse(rawEffectiveEnd)
           : null,
       participantCount: _parseInt(rawCount),
     );

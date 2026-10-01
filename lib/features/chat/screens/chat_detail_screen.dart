@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_image_viewer.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -1879,6 +1880,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     );
   }
 
+  String? _senderAvatarUrl(ChatMessageModel msg) {
+    final url = msg.senderAvatarUrl;
+    if (url == null || url.isEmpty) return null;
+    return _resolveMediaUrl(url);
+  }
+
   Widget _buildMessageBubble(
     ChatMessageModel msg,
     AppColorsExtension colors,
@@ -1937,29 +1944,15 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           // Other's Avatar (only on last message of group)
           if (!isMine) ...[
             if (isLastInGroup)
-              GestureDetector(
-                onTap: () => _openMemberProfile(msg.senderId),
-                child: CircleAvatar(
-                  radius: 14,
-                  backgroundColor: AppTheme.primaryLight,
-                  backgroundImage:
-                      msg.senderAvatarUrl != null &&
-                          msg.senderAvatarUrl!.isNotEmpty
-                      ? NetworkImage(_resolveMediaUrl(msg.senderAvatarUrl!))
-                      : null,
-                  child:
-                      msg.senderAvatarUrl == null ||
-                          msg.senderAvatarUrl!.isEmpty
-                      ? Text(
-                          msg.senderName.characters.first.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryDark,
-                          ),
-                        )
-                      : null,
-                ),
+              UserAvatarTap(
+                userId: msg.senderId,
+                name: msg.senderName,
+                communityId: widget.communityId,
+                imageUrl: _senderAvatarUrl(msg),
+                size: 28,
+                // The gutter reserved for this avatar is 28px; a 44px target
+                // would overlap the bubble, so the box matches the artwork.
+                minTouchTarget: 28,
               )
             else
               const SizedBox(width: 28),
@@ -1987,8 +1980,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         runSpacing: 3,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          GestureDetector(
-                            onTap: () => _openMemberProfile(msg.senderId),
+                          UserProfileTapTarget(
+                            userId: msg.senderId,
+                            name: msg.senderName,
+                            communityId: widget.communityId,
+                            imageUrl: _senderAvatarUrl(msg),
                             child: Text(
                               msg.senderName,
                               style: TextStyle(

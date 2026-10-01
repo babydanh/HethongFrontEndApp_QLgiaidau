@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/utils/tennis_game_point_display.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 
 /// Sport-tech match card — dùng cho cả 3 trạng thái: live / scheduled / completed
 class LiveMatchCardV2 extends StatefulWidget {
@@ -582,7 +583,9 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                       : FontWeight.w600,
                   color: isWinner
                       ? colors.success
-                      : (isLeading ? const Color(0xFFDC2626) : colors.textPrimary),
+                      : (isLeading
+                            ? const Color(0xFFDC2626)
+                            : colors.textPrimary),
                   height: 1.25,
                 ),
                 textAlign: alignment == CrossAxisAlignment.start
@@ -686,6 +689,32 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       );
     }
 
+    /// The card itself opens the match, so the member avatar is the profile
+    /// entry point here. It keeps the card's own artwork — winner ring, shadow,
+    /// initials fallback — and only borrows the shared hover-preview /
+    /// quick-sheet behaviour.
+    Widget memberAvatar(MatchMemberInfo member, {String? fallbackUrl}) {
+      final url = (member.avatarUrl?.isNotEmpty ?? false)
+          ? member.avatarUrl
+          : fallbackUrl;
+      final artwork = avatar(
+        url: url,
+        initial: member.fullName.isNotEmpty
+            ? member.fullName[0].toUpperCase()
+            : fallbackInitial,
+      );
+      final userId = member.userId?.trim() ?? '';
+      if (userId.isEmpty || member.isMock) return artwork;
+      return UserProfileTapTarget(
+        userId: userId,
+        name: member.fullName,
+        imageUrl: member.avatarUrl,
+        elo: member.eloPoints ?? 0,
+        tierName: member.tierName,
+        child: artwork,
+      );
+    }
+
     if (displayMembers.length == 2) {
       final m1 = displayMembers[0];
       final m2 = displayMembers[1];
@@ -700,38 +729,22 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             Positioned(
               left: alignment == CrossAxisAlignment.start ? 0 : null,
               right: alignment == CrossAxisAlignment.end ? 0 : null,
-              child: avatar(
-                url: m1.avatarUrl,
-                initial: m1.fullName.isNotEmpty
-                    ? m1.fullName[0].toUpperCase()
-                    : '?',
-              ),
+              child: memberAvatar(m1),
             ),
             Positioned(
               left: alignment == CrossAxisAlignment.start ? 20 : null,
               right: alignment == CrossAxisAlignment.end ? 20 : null,
-              child: avatar(
-                url: m2.avatarUrl,
-                initial: m2.fullName.isNotEmpty
-                    ? m2.fullName[0].toUpperCase()
-                    : '?',
-              ),
+              child: memberAvatar(m2),
             ),
           ],
         ),
       );
     }
 
-    final singleMemberAvatar = displayMembers.length == 1
-        ? displayMembers.first.avatarUrl
-        : null;
-    return avatar(
-      url: singleMemberAvatar ?? teamLogoUrl,
-      initial:
-          displayMembers.length == 1 && displayMembers.first.fullName.isNotEmpty
-          ? displayMembers.first.fullName[0].toUpperCase()
-          : fallbackInitial,
-    );
+    if (displayMembers.length == 1) {
+      return memberAvatar(displayMembers.first, fallbackUrl: teamLogoUrl);
+    }
+    return avatar(url: teamLogoUrl, initial: fallbackInitial);
   }
 
   Widget _buildSetScores(BuildContext context) {

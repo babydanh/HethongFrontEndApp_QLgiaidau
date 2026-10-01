@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
@@ -275,7 +276,10 @@ class _SeriesDetailContentState extends ConsumerState<_SeriesDetailContent>
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
         SliverAppBar(
           backgroundColor: colors.bgDark,
-          expandedHeight: 200,
+          expandedHeight: AppResponsive.bannerHeight(
+            MediaQuery.sizeOf(context).height,
+            viewportWidth: MediaQuery.sizeOf(context).width,
+          ),
           floating: false,
           pinned: true,
           leading: IconButton(

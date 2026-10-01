@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 
 class IntroTab extends StatelessWidget {
   final Tournament tournament;
   final String Function(String? url)? resolveImageUrl;
 
-  const IntroTab({
-    super.key,
-    required this.tournament,
-    this.resolveImageUrl,
-  });
+  const IntroTab({super.key, required this.tournament, this.resolveImageUrl});
 
   String _resolve(String? url) {
     if (url == null || url.isEmpty) return '';
@@ -25,7 +22,8 @@ class IntroTab extends StatelessWidget {
     final colors = context.colors;
     final t = tournament;
     final desc = t.description.trim();
-    final hasPrize = !t.isClubLite &&
+    final hasPrize =
+        !t.isClubLite &&
         t.prizeDescription != null &&
         t.prizeDescription!.trim().isNotEmpty;
 
@@ -51,10 +49,7 @@ class IntroTab extends StatelessWidget {
           if (hasPrize) ...[
             if (desc.isNotEmpty) ...[
               const SizedBox(height: 20),
-              Divider(
-                color: colors.border.withValues(alpha: 0.6),
-                height: 1,
-              ),
+              Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
               const SizedBox(height: 16),
             ],
             _buildSectionHeader(context, 'CƠ CẤU GIẢI THƯỞNG'),
@@ -96,10 +91,7 @@ class IntroTab extends StatelessWidget {
           // ─── THÔNG TIN BAN TỔ CHỨC / NGƯỜI SÁNG LẬP ───
           if (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Divider(
-              color: colors.border.withValues(alpha: 0.6),
-              height: 1,
-            ),
+            Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
             const SizedBox(height: 16),
             _buildSectionHeader(context, 'BAN TỔ CHỨC GIẢI ĐẤU'),
             const SizedBox(height: 10),
@@ -108,30 +100,15 @@ class IntroTab extends StatelessWidget {
               decoration: BoxDecoration(
                 color: colors.bgSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colors.border.withValues(alpha: 0.7),
-                ),
+                border: Border.all(color: colors.border.withValues(alpha: 0.7)),
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                    backgroundImage: resolvedAvatar.isNotEmpty
-                        ? NetworkImage(resolvedAvatar)
-                        : null,
-                    child: resolvedAvatar.isEmpty
-                        ? Text(
-                            creatorName.isNotEmpty
-                                ? creatorName[0].toUpperCase()
-                                : 'B',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primary,
-                            ),
-                          )
-                        : null,
+                  UserAvatarTap(
+                    userId: t.creatorId,
+                    name: creatorName,
+                    imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,
+                    size: 40,
                   ),
                   const SizedBox(width: 12),
                   Expanded(

@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AboutTab extends StatefulWidget {
@@ -175,8 +177,8 @@ class _AboutTabState extends State<AboutTab> {
     final dateRangeStr = (t.startDate != null && t.endDate != null)
         ? '${_formatDate(t.startDate)} - ${_formatDate(t.endDate)}'
         : (t.startDate != null
-            ? _formatDate(t.startDate)
-            : 'Chưa cập nhật thời gian');
+              ? _formatDate(t.startDate)
+              : 'Chưa cập nhật thời gian');
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final divisionCount = t.divisions.isNotEmpty ? t.divisions.length : 1;
 
@@ -201,7 +203,10 @@ class _AboutTabState extends State<AboutTab> {
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
             child: SizedBox(
-              height: 175,
+              height: AppResponsive.bannerHeight(
+                MediaQuery.sizeOf(context).height,
+                viewportWidth: MediaQuery.sizeOf(context).width,
+              ),
               width: double.infinity,
               child: _buildBannerView(t),
             ),
@@ -215,24 +220,11 @@ class _AboutTabState extends State<AboutTab> {
                 // Organizer row
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 17,
-                      backgroundColor: colors.bgSurface,
-                      backgroundImage: resolvedAvatar.isNotEmpty
-                          ? NetworkImage(resolvedAvatar)
-                          : null,
-                      child: resolvedAvatar.isEmpty
-                          ? Text(
-                              creatorName.isNotEmpty
-                                  ? creatorName[0].toUpperCase()
-                                  : 'B',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primary,
-                              ),
-                            )
-                          : null,
+                    UserAvatarTap(
+                      userId: t.creatorId,
+                      name: creatorName,
+                      imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,
+                      size: 34,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -572,24 +564,11 @@ class _AboutTabState extends State<AboutTab> {
           // Creator details
           Row(
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: colors.bgSurface,
-                backgroundImage: resolvedAvatar.isNotEmpty
-                    ? NetworkImage(resolvedAvatar)
-                    : null,
-                child: resolvedAvatar.isEmpty
-                    ? Text(
-                        creatorName.isNotEmpty
-                            ? creatorName[0].toUpperCase()
-                            : 'B',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primary,
-                        ),
-                      )
-                    : null,
+              UserAvatarTap(
+                userId: t.creatorId,
+                name: creatorName,
+                imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,
+                size: 40,
               ),
               const SizedBox(width: 12),
               Expanded(

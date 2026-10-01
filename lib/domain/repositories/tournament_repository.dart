@@ -15,7 +15,7 @@ abstract class ITournamentRepository {
   Future<List<OrganizerOpsParticipant>> getPublicParticipants(
     String tournamentId,
   );
-  Future<TournamentWorkspace> getMyWorkspace();
+  Future<TournamentWorkspace> getMyWorkspace({String? cursor, int limit = 20});
   Future<void> respondToRefereeInvite({
     required String tournamentId,
     required String refereeId,

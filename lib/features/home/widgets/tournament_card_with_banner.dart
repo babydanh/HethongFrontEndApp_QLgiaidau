@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
@@ -264,10 +265,13 @@ class _TournamentCardWithBannerState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Banner Header (tăng height ráo & cao ráo lên 185px)
+                  // Banner Header — bám % chiều cao viewport theo hướng màn
+                  // hình (dọc 30%, ngang 20%), không phải pixel cứng.
                   SizedBox(
-                    height: 185,
-                    width: double.infinity,
+                    height: AppResponsive.bannerHeight(
+                      MediaQuery.sizeOf(context).height,
+                      viewportWidth: MediaQuery.sizeOf(context).width,
+                    ),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [

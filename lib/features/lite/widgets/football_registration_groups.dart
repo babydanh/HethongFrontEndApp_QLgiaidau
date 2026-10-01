@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 
 /// Compact team-first registration view for football Lite management.
 /// The organizer opens one team card to inspect its roster instead of seeing
@@ -11,7 +12,7 @@ class FootballRegistrationGroups extends StatefulWidget {
   final AppColorsExtension colors;
   final bool rosterConfirmed;
   final Future<void> Function(LiteParticipant participant, String reason)?
-      onKickParticipant;
+  onKickParticipant;
 
   const FootballRegistrationGroups({
     super.key,
@@ -132,32 +133,30 @@ class _FootballRegistrationGroupsState
                           color: widget.colors.success,
                         ),
                       const SizedBox(height: 8),
-                      ...members.values.map(
-                        (member) => Padding(
+                      ...members.values.map((member) {
+                        final memberName = member.fullName.isEmpty
+                            ? l10n.lite_memberUnnamed
+                            : member.fullName;
+                        return Padding(
                           padding: const EdgeInsets.only(bottom: 7),
                           child: Row(
                             children: [
-                              CircleAvatar(
-                                radius: 15,
-                                backgroundColor: AppTheme.primary
-                                    .withValues(alpha: 0.1),
-                                backgroundImage: member.avatarUrl.isNotEmpty
-                                    ? NetworkImage(member.avatarUrl)
-                                    : null,
-                                child: member.avatarUrl.isEmpty
-                                    ? Icon(
-                                        Icons.person_outline,
-                                        size: 17,
-                                        color: AppTheme.primary,
-                                      )
-                                    : null,
+                              UserAvatarTap(
+                                userId: member.id,
+                                name: memberName,
+                                imageUrl: member.avatarUrl.isEmpty
+                                    ? null
+                                    : member.avatarUrl,
+                                size: 30,
+                                // Pinned to the artwork: the roster row is
+                                // dense, and a larger hit box would grow
+                                // every member row.
+                                minTouchTarget: 30,
                               ),
                               const SizedBox(width: 9),
                               Expanded(
                                 child: Text(
-                                  member.fullName.isEmpty
-                                      ? l10n.lite_memberUnnamed
-                                      : member.fullName,
+                                  memberName,
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -173,20 +172,25 @@ class _FootballRegistrationGroupsState
                               ),
                             ],
                           ),
-                        ),
-                      ),
+                        );
+                      }),
                       if (widget.onKickParticipant != null) ...[
                         const SizedBox(height: 6),
                         Align(
                           alignment: Alignment.centerRight,
                           child: OutlinedButton.icon(
                             onPressed: () => _confirmKick(context, team),
-                            icon: const Icon(Icons.person_remove_outlined, size: 16),
+                            icon: const Icon(
+                              Icons.person_remove_outlined,
+                              size: 16,
+                            ),
                             label: Text(l10n.lite_removeTeamFromTournament),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: widget.colors.error,
                               side: BorderSide(
-                                color: widget.colors.error.withValues(alpha: 0.35),
+                                color: widget.colors.error.withValues(
+                                  alpha: 0.35,
+                                ),
                               ),
                               visualDensity: VisualDensity.compact,
                             ),
@@ -203,7 +207,10 @@ class _FootballRegistrationGroupsState
     );
   }
 
-  String _statusLabel(List<LiteParticipant> participants, AppLocalizations l10n) {
+  String _statusLabel(
+    List<LiteParticipant> participants,
+    AppLocalizations l10n,
+  ) {
     final statuses = participants.map((item) => item.status).toSet();
     if (statuses.contains('KICKED')) return l10n.lite_statusKicked;
     // Lite is direct participation. Legacy approval statuses are displayed as
@@ -252,13 +259,9 @@ class _FootballRegistrationGroupsState
             child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(
-              dialogContext,
-              reasonController.text.trim(),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: widget.colors.error,
-            ),
+            onPressed: () =>
+                Navigator.pop(dialogContext, reasonController.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: widget.colors.error),
             child: Text(l10n.lite_kickTeamAction),
           ),
         ],
@@ -270,7 +273,6 @@ class _FootballRegistrationGroupsState
     }
     await widget.onKickParticipant!(participant, reason);
   }
-
 }
 
 class _TeamLogo extends StatelessWidget {
@@ -303,7 +305,6 @@ class _TeamLogo extends StatelessWidget {
           : null,
     );
   }
-
 }
 
 class _StatusChip extends StatelessWidget {
@@ -330,5 +331,4 @@ class _StatusChip extends StatelessWidget {
       ),
     );
   }
-
 }

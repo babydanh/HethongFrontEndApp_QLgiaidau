@@ -12,7 +12,6 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
     final l10n = AppLocalizations.of(context)!;
     final isOwner = m.role == 'OWNER';
     final isCurrentOwner = _myMembership?.role == 'OWNER';
-    final canViewProfile = m.userId.isNotEmpty;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -44,34 +43,26 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
             ),
             const SizedBox(width: 4),
           ],
-          GestureDetector(
-            onTap: canViewProfile
-                ? () => _showMemberProfile(
-                    m.userId,
-                    m.userFullName,
-                    m.userAvatarUrl,
-                  )
-                : null,
-            child: _buildUserAvatar(
-              name: m.userFullName,
-              avatarUrl: m.userAvatarUrl,
-              radius: 20,
-              fallbackColor: AppTheme.primary,
-              elo: memberElo,
-              matchesPlayed: memberElo != null ? 1 : 0,
-            ),
+          // The avatar and the name are two separate controls, never nested:
+          // both lead to the same profile through the shared tap target.
+          _buildUserAvatar(
+            userId: m.userId,
+            name: m.userFullName,
+            avatarUrl: m.userAvatarUrl,
+            radius: 20,
+            elo: memberElo,
+            matchesPlayed: memberElo != null ? 1 : 0,
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: GestureDetector(
-              onTap: canViewProfile
-                  ? () => _showMemberProfile(
-                      m.userId,
-                      m.userFullName,
-                      m.userAvatarUrl,
-                    )
-                  : null,
-              behavior: HitTestBehavior.opaque,
+            child: UserProfileTapTarget(
+              userId: m.userId,
+              communityId: widget.clubId,
+              name: m.userFullName ?? l10n.club_membersLabel,
+              imageUrl: m.userAvatarUrl,
+              elo: memberElo ?? 0,
+              matchesPlayed: memberElo != null ? 1 : 0,
+              onFilterMatches: _filterClubMatches,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -184,7 +175,8 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: stat != null &&
+                    color:
+                        stat != null &&
                             stat.totalMatches > 0 &&
                             stat.winRate >= 50
                         ? const Color(0xFF16A34A)
@@ -193,9 +185,7 @@ extension _ClubDetailMemberItem on _ClubDetailScreenState {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  stat != null
-                      ? '${stat.wins}W - ${stat.losses}L'
-                      : '0W - 0L',
+                  stat != null ? '${stat.wins}W - ${stat.losses}L' : '0W - 0L',
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,

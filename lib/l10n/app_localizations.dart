@@ -1814,6 +1814,12 @@ abstract class AppLocalizations {
   /// **'Xem hồ sơ'**
   String get userProfileViewProfile;
 
+  /// No description provided for @userProfileViewProfileOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem hồ sơ {name}'**
+  String userProfileViewProfileOf(Object name);
+
   /// No description provided for @userProfileLoading.
   ///
   /// In vi, this message translates to:
@@ -5977,6 +5983,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bạn chưa tạo hoặc tham gia giải đấu nào'**
   String get dashboard_noTournaments;
+
+  /// No description provided for @dashboard_noMoreTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xem hết giải đấu'**
+  String get dashboard_noMoreTournaments;
 
   /// No description provided for @dashboard_collapse.
   ///

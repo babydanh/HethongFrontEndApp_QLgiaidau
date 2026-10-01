@@ -33,14 +33,18 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_social_screen.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_activity_tab.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
-import 'package:app_quanly_giaidau/providers/club_member_stats_provider.dart';
+// `club_detail_tournament_overview.dart` va
+// `club_detail_tournament_session_card.dart` la `part` cua file nay nen khong
+// tu import duoc; hai man nay dinh nghia
+// ClubMatchSessionsScreen + ClubMatchSessionDetailPage.
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
+import 'package:app_quanly_giaidau/providers/club_member_stats_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 
 part '../widgets/club_detail_tab_delegate.dart';
 part '../widgets/club_detail_lazy_tab.dart';
@@ -101,7 +105,15 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   Future<CommunitySocialSettings>? _socialSettingsFuture;
   late final ScrollController _scrollController;
   bool _isCollapsed = false;
-  final double _bannerHeight = 100.0;
+  /// Chiều cao ảnh bìa CLB bám theo chiều cao viewport (dọc 30%, ngang 20%),
+  /// không phải pixel cứng.
+  double get _bannerHeight {
+    final size = MediaQuery.sizeOf(context);
+    return AppResponsive.bannerHeight(
+      size.height,
+      viewportWidth: size.width,
+    );
+  }
   final double _avatarOverlap = 8.0;
 
   void _updateClubState(VoidCallback update) {

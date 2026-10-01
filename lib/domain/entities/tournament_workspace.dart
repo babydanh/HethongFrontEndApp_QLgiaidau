@@ -117,6 +117,24 @@ class TournamentAssignedMatch {
   }
 }
 
+/// Một giải trong workspace kèm vai trò của người dùng.
+///
+/// Backend gộp 3 nhóm (chủ / đồng chủ / tham gia) thành MỘT danh sách để
+/// dedupe đúng một lần rồi mới cắt trang — nếu phân trang từng nhóm riêng thì
+/// giải trùng vai trò có thể lọt lại ở trang sau.
+class WorkspaceTournamentItem {
+  final Tournament tournament;
+  final String role;
+
+  const WorkspaceTournamentItem({required this.tournament, required this.role});
+
+  factory WorkspaceTournamentItem.fromJson(Map<String, dynamic> json) =>
+      WorkspaceTournamentItem(
+        tournament: Tournament.fromJson(json, json['id']?.toString() ?? ''),
+        role: (json['workspaceRole'] ?? 'PARTICIPANT').toString(),
+      );
+}
+
 class TournamentWorkspace {
   final List<Tournament> organizedTournaments;
   final List<Tournament> participatingTournaments;
@@ -125,6 +143,11 @@ class TournamentWorkspace {
   final List<TournamentRefereeInvite> refereeTournaments;
   final List<TournamentAssignedMatch> refereeMatches;
 
+  /// Luồng hợp nhất đã dedupe + cắt trang. Rỗng khi backend cũ chưa trả.
+  final List<WorkspaceTournamentItem> items;
+  final String? nextCursor;
+  final bool hasMore;
+
   const TournamentWorkspace({
     this.organizedTournaments = const [],
     this.participatingTournaments = const [],
@@ -132,6 +155,9 @@ class TournamentWorkspace {
     this.refereeInvites = const [],
     this.refereeTournaments = const [],
     this.refereeMatches = const [],
+    this.items = const [],
+    this.nextCursor,
+    this.hasMore = false,
   });
 
   factory TournamentWorkspace.fromJson(Map<String, dynamic> json) {
@@ -162,6 +188,8 @@ class TournamentWorkspace {
           .toList();
     }
 
+    final meta = json['meta'] as Map<String, dynamic>? ?? const {};
+
     return TournamentWorkspace(
       organizedTournaments: parseTournaments('organizedTournaments'),
       participatingTournaments: parseTournaments('participatingTournaments'),
@@ -169,6 +197,13 @@ class TournamentWorkspace {
       refereeInvites: parseInvites('refereeInvites'),
       refereeTournaments: parseInvites('refereeTournaments'),
       refereeMatches: parseMatches(),
+      items: (json['items'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(WorkspaceTournamentItem.fromJson)
+          .where((item) => item.tournament.id.isNotEmpty)
+          .toList(),
+      nextCursor: meta['nextCursor']?.toString(),
+      hasMore: meta['hasMore'] == true,
     );
   }
 
@@ -184,6 +219,48 @@ class TournamentWorkspace {
       map.putIfAbsent(tournament.id, () => tournament);
     }
     return map.values.toList();
+  }
+
+  /// Nối trang mới vào trang cũ cho cuộn tự tải. Giữ `nextCursor`/`hasMore`
+  /// của trang mới vì đó là mốc tiếp theo.
+  ///
+  /// Dedup theo id phòng khi backend trả trùng ở ranh giới trang — keyset
+  /// pagination vẫn có thể lặp nếu dữ liệu vừa được sửa giữa chừng.
+  TournamentWorkspace mergePage(TournamentWorkspace next) {
+    final seen = <String>{for (final item in items) item.tournament.id};
+    final mergedItems = <WorkspaceTournamentItem>[
+      ...items,
+      ...next.items.where((item) => seen.add(item.tournament.id)),
+    ];
+    return TournamentWorkspace(
+      items: mergedItems,
+      nextCursor: next.nextCursor,
+      hasMore: next.hasMore,
+      organizedTournaments: [
+        ...organizedTournaments,
+        ...next.organizedTournaments.where((t) => !seen.contains(t.id)),
+      ],
+      coOrganizerTournaments: [
+        ...coOrganizerTournaments,
+        ...next.coOrganizerTournaments.where((t) => !seen.contains(t.id)),
+      ],
+      participatingTournaments: [
+        ...participatingTournaments,
+        ...next.participatingTournaments.where((t) => !seen.contains(t.id)),
+      ],
+      refereeInvites: [
+        ...refereeInvites,
+        ...next.refereeInvites.where((i) => !refereeInvites.contains(i)),
+      ],
+      refereeTournaments: [
+        ...refereeTournaments,
+        ...next.refereeTournaments.where((i) => !refereeTournaments.contains(i)),
+      ],
+      refereeMatches: [
+        ...refereeMatches,
+        ...next.refereeMatches.where((m) => !refereeMatches.contains(m)),
+      ],
+    );
   }
 
   int get pendingInviteCount =>

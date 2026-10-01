@@ -330,6 +330,7 @@
   "userProfileOpeningChat": "Opening...",
   "userProfileMessage": "Message",
   "userProfileViewProfile": "View profile",
+  "userProfileViewProfileOf": "View {name}'s profile",
   "userProfileLoading": "Loading profile...",
   "userProfileLoadError": "Unable to load user profile",
   "userProfileNoTop100": "You are not ranked in the Top 100 yet. Join a tournament to get ranked!",
@@ -349,6 +350,11 @@
   "@userProfileOpenTagError": {
     "placeholders": {
       "error": {}
+    }
+  },
+  "@userProfileViewProfileOf": {
+    "placeholders": {
+      "name": {}
     }
   },
   "vietnam": "Vietnam",
@@ -1219,6 +1225,7 @@
   "dashboard_searchHint": "Search tournaments...",
   "dashboard_noSearchResults": "No tournaments found",
   "dashboard_noTournaments": "You haven't created or joined any tournaments yet.",
+  "dashboard_noMoreTournaments": "You've seen all tournaments",
   "dashboard_collapse": "Collapse",
   "dashboard_showMore": "Show more ({count} more tournaments)",
   "dashboard_quickActions": "Quick Actions",

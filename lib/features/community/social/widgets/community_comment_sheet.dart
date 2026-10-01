@@ -2,7 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -218,23 +218,15 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                 return ListTile(
                                   dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  leading: CircleAvatar(
-                                    radius: 15,
-                                    backgroundColor: AppTheme.primaryLight,
-                                    backgroundImage: avatarUrl.isEmpty
+                                  leading: UserAvatarTap(
+                                    userId: user.id,
+                                    communityId: widget.communityId,
+                                    name: displayName,
+                                    imageUrl: avatarUrl.isEmpty
                                         ? null
-                                        : NetworkImage(avatarUrl),
-                                    child: avatarUrl.isEmpty
-                                        ? Text(
-                                            displayName.characters.first
-                                                .toUpperCase(),
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppTheme.primaryDark,
-                                            ),
-                                          )
-                                        : null,
+                                        : avatarUrl,
+                                    size: 30,
+                                    ringWidth: 1.5,
                                   ),
                                   title: Text(
                                     displayName,
@@ -850,33 +842,15 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Author Avatar ──
-          GestureDetector(
-            onTap: comment.authorId.isEmpty
-                ? null
-                : () => UserProfileBottomSheet.show(
-                    context,
-                    userId: comment.authorId,
-                    communityId: widget.communityId,
-                    initialFullName: comment.authorName,
-                    initialAvatarUrl: comment.authorAvatarUrl,
-                  ),
-            child: CircleAvatar(
-              radius: isReply ? 14 : 18,
-              backgroundColor: AppTheme.primaryLight,
-              backgroundImage: comment.authorAvatarUrl == null
-                  ? null
-                  : NetworkImage(comment.authorAvatarUrl!),
-              child: comment.authorAvatarUrl == null
-                  ? Text(
-                      comment.authorName.characters.first.toUpperCase(),
-                      style: TextStyle(
-                        color: AppTheme.primaryDark,
-                        fontWeight: FontWeight.bold,
-                        fontSize: isReply ? 10.5 : 13,
-                      ),
-                    )
-                  : null,
-            ),
+          UserAvatarTap(
+            userId: comment.authorId,
+            communityId: widget.communityId,
+            name: comment.authorName,
+            imageUrl: comment.authorAvatarUrl,
+            size: isReply ? 28 : 36,
+            // Replies sit in a dense thread, so the hit box matches the
+            // artwork instead of growing the row to 44px.
+            minTouchTarget: isReply ? 28 : 36,
           ),
           const SizedBox(width: 8),
 
@@ -904,16 +878,11 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                         runSpacing: 2,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          GestureDetector(
-                            onTap: comment.authorId.isEmpty
-                                ? null
-                                : () => UserProfileBottomSheet.show(
-                                    context,
-                                    userId: comment.authorId,
-                                    communityId: widget.communityId,
-                                    initialFullName: comment.authorName,
-                                    initialAvatarUrl: comment.authorAvatarUrl,
-                                  ),
+                          UserProfileTapTarget(
+                            userId: comment.authorId,
+                            communityId: widget.communityId,
+                            name: comment.authorName,
+                            imageUrl: comment.authorAvatarUrl,
                             child: Text(
                               comment.authorName,
                               style: TextStyle(

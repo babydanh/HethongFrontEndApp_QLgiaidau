@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
@@ -1301,15 +1302,16 @@ class _ManageTournamentsSectionState
     return map.values.toList();
   }
 
-  /// Giải đã kết thúc bị đẩy xuống cuối, dùng đúng helper của app.
+  /// Ưu tiên: giải CHƯA kết thúc trước; trong mỗi nhóm, giải tạo MỚI nhất
+  /// lên đầu. Trước đây xếp theo `startDate` tăng dần nên giải khai báo sau
+  /// (ngày thi đấu xa hơn) bị đẩy xuống dù vừa tạo.
   void _sort(List<_ManagedTournament> items) {
     items.sort((a, b) {
       final aDone = StatusHelper.isTournamentCompleted(a.tournament.status);
       final bDone = StatusHelper.isTournamentCompleted(b.tournament.status);
       if (aDone != bDone) return aDone ? 1 : -1;
-      final aDate = a.tournament.startDate ?? a.tournament.createdAt;
-      final bDate = b.tournament.startDate ?? b.tournament.createdAt;
-      return aDate.compareTo(bDate);
+      // compareTo trả âm khi a sớm hơn b; đảo dấu để ngày MỚI lên trước.
+      return b.tournament.createdAt.compareTo(a.tournament.createdAt);
     });
   }
 
@@ -1325,6 +1327,7 @@ class _ManageTournamentsSectionState
             ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
       ),
       data: (workspace) {
+        final notifier = ref.read(myTournamentWorkspaceProvider.notifier);
         final all = _collect(workspace);
         _sort(all);
 
@@ -1362,96 +1365,81 @@ class _ManageTournamentsSectionState
           );
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _searchController,
-              onChanged: (value) => setState(() => _query = value),
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                isDense: true,
-                hintText: l10n.dashboard_searchHint,
-                hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  size: 18,
-                  color: colors.textMuted,
-                ),
-                prefixIconConstraints: const BoxConstraints(
-                  minWidth: 36,
-                  minHeight: 36,
-                ),
-                suffixIcon: _query.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: Icon(
-                          Icons.close_rounded,
-                          size: 16,
-                          color: colors.textMuted,
-                        ),
-                        tooltip: MaterialLocalizations.of(context)
-                            .deleteButtonTooltip,
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _query = '');
-                        },
+        // Bắt cuộn tới gần đáy thì tải trang kế tiếp. Ngưỡng 400px để không phải
+        // chờ tới tận cùng — người dùng thấy nút "Xem thêm" trước khi chạm đáy.
+        return NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.metrics.extentAfter < 400) {
+              ref.read(myTournamentWorkspaceProvider.notifier).loadMore();
+            }
+            return false;
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _query = value),
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: l10n.dashboard_searchHint,
+                      hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        size: 18,
+                        color: colors.textMuted,
                       ),
-                filled: true,
-                fillColor: colors.bgCard,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: colors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.primary),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _FilterChip(
-                  label: l10n.infoAll,
-                  count: all.length,
-                  selected: _role == _ManageRoleFilter.all,
-                  onTap: () => setState(() => _role = _ManageRoleFilter.all),
-                ),
-                if (roleCounts[_ManageRoleFilter.organizer]! > 0)
-                  _FilterChip(
-                    label: l10n.dashboard_organizer,
-                    count: roleCounts[_ManageRoleFilter.organizer]!,
-                    selected: _role == _ManageRoleFilter.organizer,
-                    onTap: () => setState(
-                      () => _role = _ManageRoleFilter.organizer,
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      suffixIcon: _query.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: Icon(
+                                Icons.close_rounded,
+                                size: 16,
+                                color: colors.textMuted,
+                              ),
+                              tooltip: MaterialLocalizations.of(context)
+                                  .deleteButtonTooltip,
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _query = '');
+                              },
+                            ),
+                      filled: true,
+                      fillColor: colors.bgCard,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppTheme.primary),
+                      ),
                     ),
                   ),
-                if (roleCounts[_ManageRoleFilter.coOrganizer]! > 0)
-                  _FilterChip(
-                    label: l10n.dashboard_coOrganizer,
-                    count: roleCounts[_ManageRoleFilter.coOrganizer]!,
-                    selected: _role == _ManageRoleFilter.coOrganizer,
-                    onTap: () => setState(
-                      () => _role = _ManageRoleFilter.coOrganizer,
-                    ),
-                  ),
-                if (roleCounts[_ManageRoleFilter.participant]! > 0)
-                  _FilterChip(
-                    label: l10n.dashboard_participant,
-                    count: roleCounts[_ManageRoleFilter.participant]!,
-                    selected: _role == _ManageRoleFilter.participant,
-                    onTap: () => setState(
-                      () => _role = _ManageRoleFilter.participant,
-                    ),
-                  ),
+                ),
+                const SizedBox(width: 8),
+                // Lọc theo vai trò: gộp 3 nút to vào MỘT icon cùng hàng tìm kiếm.
+                // Trước đây 3 nút chiếm nguyên một khối cao, đẩy danh sách xuống
+                // dưới màn hình — người dùng phải cuộn mới thấy giải đầu tiên.
+                _RoleFilterIcon(
+                  allCount: all.length,
+                  roleCounts: roleCounts,
+                  selected: _role,
+                  onSelected: (role) => setState(() => _role = role),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -1479,52 +1467,139 @@ class _ManageTournamentsSectionState
                   },
                 ),
               ),
+            // Đang tải trang kế tiếp: spinner nhỏ ở đáy, không chặn thao tác.
+            if (notifier.isLoadingMore)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            // Hết danh sách: dấu hiệu "đã xem hết" thay vì để trống lơ lửng.
+            else if (!workspace.hasMore && visible.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Center(
+                  child: Text(
+                    l10n.dashboard_noMoreTournaments,
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
+                  ),
+                ),
+              ),
           ],
+        ),
         );
       },
     ).animate().fadeIn(delay: 120.ms, duration: 240.ms);
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.count,
+/// Nút lọc theo vai trò — một icon duy nhất, đứng cạnh ô tìm kiếm.
+///
+/// Thay 3 nút to bằng icon + bottom sheet: giải tiết kiệm chiều cao (3 nút cũ
+/// chiếm trọn một khối ~120px, đẩy giải đầu tiên ra ngoài màn hình), nhưng vẫn
+/// hiện được số đếm để người dùng biết có bao nhiêu giải ở mỗi nhóm.
+class _RoleFilterIcon extends StatelessWidget {
+  const _RoleFilterIcon({
+    required this.allCount,
+    required this.roleCounts,
     required this.selected,
-    required this.onTap,
+    required this.onSelected,
   });
 
-  final String label;
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
+  final int allCount;
+  final Map<_ManageRoleFilter, int> roleCounts;
+  final _ManageRoleFilter selected;
+  final ValueChanged<_ManageRoleFilter> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final isAll = selected == _ManageRoleFilter.all;
+    final color = isAll ? colors.textMuted : AppTheme.primary;
+
+    final labels = <_ManageRoleFilter, String>{
+      _ManageRoleFilter.all: l10n.infoAll,
+      _ManageRoleFilter.organizer: l10n.dashboard_organizer,
+      _ManageRoleFilter.coOrganizer: l10n.dashboard_coOrganizer,
+      _ManageRoleFilter.participant: l10n.dashboard_participant,
+    };
+
     return Material(
-      color: selected ? AppTheme.primary : colors.bgCard,
-      borderRadius: BorderRadius.circular(999),
+      color: isAll ? colors.bgCard : AppTheme.primary.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          final picked = await showModalBottomSheet<_ManageRoleFilter>(
+            context: context,
+            showDragHandle: true,
+            builder: (sheetContext) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final role in _ManageRoleFilter.values)
+                    ListTile(
+                      title: Text(labels[role]!),
+                      trailing: Text(
+                        (role == _ManageRoleFilter.all
+                                ? allCount
+                                : roleCounts[role] ?? 0)
+                            .toString(),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      selected: selected == role,
+                      onTap: () => Navigator.of(sheetContext).pop(role),
+                    ),
+                ],
+              ),
+            ),
+          );
+          if (picked != null) onSelected(picked);
+        },
         child: Container(
-          height: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: 44,
+          width: 48,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? AppTheme.primary : colors.border,
+              color: isAll ? colors.border : AppTheme.primary,
             ),
           ),
-          child: Text(
-            '$label · $count',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : colors.textSecondary,
-            ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(Icons.tune_rounded, size: 19, color: color),
+              if (!isAll)
+                Positioned(
+                  right: -6,
+                  top: -5,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      (roleCounts[selected] ?? 0).toString(),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -1542,70 +1617,128 @@ class _ManagedTournamentRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final tournament = entry.tournament;
+    final l10n = AppLocalizations.of(context)!;
     final statusColor = StatusHelper.getTournamentStatusColor(
       tournament.status,
       context,
     );
     final finished = StatusHelper.isTournamentCompleted(tournament.status);
 
+    // Thẻ giải chỉ gồm 3 thứ theo yêu cầu: tên, vai trò, trạng thái. Không
+    // nhồi sân/ngày/số đội — nhìn là rối mà không thêm gì cho người dùng.
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Material(
         color: colors.bgCard,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           onTap: () => context.push('/tournament/${tournament.id}'),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.border),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.border.withValues(alpha: 0.7)),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  _profileSportIconFor(tournament.sport),
-                  size: 18,
-                  color: statusColor,
+                // Không đặt icon môn ở đây: người dùng đã biết giải là môn gì
+                // từ tên, icon chỉ tốn chỗ và tạo nhiễu khi quét danh sách.
+                // Dùng thanh dọc mảnh làm neo thị giác, nhẹ hơn ô icon bo tròn.
+                Container(
+                  width: 3,
+                  height: 40,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // 2 dòng thay vì 1: tên giải Việt Nam rất dài
+                      // ("GIẢI VPSF PICKLEBALL CUP 2026"), cắt 1 dòng mất chữ.
                       Text(
                         tournament.name,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 14.5,
+                          height: 1.3,
                           fontWeight: FontWeight.w700,
                           color: finished
                               ? colors.textSecondary
                               : colors.textPrimary,
                         ),
                       ),
-                      if (roleLabel != null)
-                        Text(
-                          roleLabel!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (roleLabel != null) ...[
+                            // Vai trò: nhỏ, xám — thông tin phụ.
+                            Text(
+                              roleLabel!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: Text(
+                                '·',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                            ),
+                          ],
+                          // Trạng thái: đậm, màu theo trạng thái. Truyền `l10n`
+                          // để nhãn theo ngôn ngữ đang dùng — thiếu nó thì
+                          // helper rơi về mặc định và hiện tiếng Anh.
+                          Flexible(
+                            child: Text(
+                              StatusHelper.getTournamentStatusLabel(
+                                tournament.status,
+                                l10n: l10n,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: statusColor,
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                      // Ngày tạo: giúp phân biệt giải mới với giải cũ khi tên
+                      // gần giống nhau.
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatCreatedAt(
+                          tournament.createdAt,
+                          l10n.localeName,
                         ),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  StatusHelper.getTournamentStatusLabel(tournament.status),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: statusColor,
-                  ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: colors.textMuted,
                 ),
               ],
             ),
@@ -1616,19 +1749,16 @@ class _ManagedTournamentRow extends StatelessWidget {
   }
 }
 
-IconData _profileSportIconFor(String slug) {
-  switch (slug.toLowerCase()) {
-    case 'tennis':
-      return Icons.sports_tennis_rounded;
-    case 'football':
-      return Icons.sports_soccer_rounded;
-    case 'badminton':
-      return Icons.sports_tennis_outlined;
-    case 'table_tennis':
-      return Icons.sports_rounded;
-    default:
-      return Icons.sports_handball_rounded;
-  }
+
+/// Ngày tạo dạng tương đối: "Hôm qua", "3 ngày trước", "2 tháng trước".
+/// Dùng DateFormat của intl theo locale, không tự tính tay tháng/năm.
+String _formatCreatedAt(DateTime createdAt, String localeName) {
+  final diff = DateTime.now().difference(createdAt);
+  if (diff.inDays < 1) return DateFormat.Hm(localeName).format(createdAt);
+  if (diff.inDays < 2) return 'Hôm qua';
+  if (diff.inDays < 30) return '${diff.inDays} ngày trước';
+  if (diff.inDays < 365) return DateFormat.MMMd(localeName).format(createdAt);
+  return DateFormat.yMMMd(localeName).format(createdAt);
 }
 
 

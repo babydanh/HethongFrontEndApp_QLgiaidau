@@ -8,7 +8,8 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -199,10 +200,10 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
     final isCompleted = sessionMatch.status.trim().toUpperCase() == 'COMPLETED';
     final winnerId = isCompleted
         ? (sessionMatch.sideAScore > sessionMatch.sideBScore
-            ? 'SIDE_A'
-            : sessionMatch.sideBScore > sessionMatch.sideAScore
-                ? 'SIDE_B'
-                : '')
+              ? 'SIDE_A'
+              : sessionMatch.sideBScore > sessionMatch.sideAScore
+              ? 'SIDE_B'
+              : '')
         : '';
 
     return MatchModel(
@@ -225,8 +226,8 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
       loserId: winnerId == 'SIDE_A'
           ? 'SIDE_B'
           : winnerId == 'SIDE_B'
-              ? 'SIDE_A'
-              : '',
+          ? 'SIDE_A'
+          : '',
       team1Members: sideAMembers.map((m) => m.fullName).toList(),
       team2Members: sideBMembers.map((m) => m.fullName).toList(),
       team1MemberInfos: sideAMembers,
@@ -271,11 +272,13 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
 
     if (threshold == null) return matches;
 
-    return matches.where((m) {
-      final date = _getMatchDate(m);
-      if (date == null) return true;
-      return date.isAfter(threshold!);
-    }).toList(growable: false);
+    return matches
+        .where((m) {
+          final date = _getMatchDate(m);
+          if (date == null) return true;
+          return date.isAfter(threshold!);
+        })
+        .toList(growable: false);
   }
 
   @override
@@ -314,7 +317,9 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
     }
 
     final filteredMatches = _filterMatchesByPeriod(_allMatches);
-    final completedMatches = filteredMatches.where((m) => m.isCompleted).toList();
+    final completedMatches = filteredMatches
+        .where((m) => m.isCompleted)
+        .toList();
 
     // Tính toán thống kê theo từng thành viên
     final memberStatsMap = <String, _MemberStat>{};
@@ -374,13 +379,21 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
     _MemberStat? topStreak;
     _MemberStat? topWinRate;
 
-    final activeMembers = memberStatsList.where((s) => s.totalMatches > 0).toList();
+    final activeMembers = memberStatsList
+        .where((s) => s.totalMatches > 0)
+        .toList();
     if (activeMembers.isNotEmpty) {
       topWins = activeMembers.reduce((a, b) => b.wins > a.wins ? b : a);
-      topStreak = activeMembers.reduce((a, b) => b.bestWinStreak > a.bestWinStreak ? b : a);
-      final qualifiedForRate = activeMembers.where((s) => s.totalMatches >= 3).toList();
+      topStreak = activeMembers.reduce(
+        (a, b) => b.bestWinStreak > a.bestWinStreak ? b : a,
+      );
+      final qualifiedForRate = activeMembers
+          .where((s) => s.totalMatches >= 3)
+          .toList();
       if (qualifiedForRate.isNotEmpty) {
-        topWinRate = qualifiedForRate.reduce((a, b) => b.winRate > a.winRate ? b : a);
+        topWinRate = qualifiedForRate.reduce(
+          (a, b) => b.winRate > a.winRate ? b : a,
+        );
       }
     }
 
@@ -427,7 +440,8 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
 
           // 4. Bảng thành tích thành viên
           _buildSectionHeader(
-            title: '${l10n.clubStats_memberListTitle} (${memberStatsList.length})',
+            title:
+                '${l10n.clubStats_memberListTitle} (${memberStatsList.length})',
             icon: Icons.leaderboard_rounded,
             colors: colors,
           ),
@@ -496,7 +510,10 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
   }
 
   // ─── Filter Pills ───
-  Widget _buildPeriodFilterRow(AppColorsExtension colors, AppLocalizations l10n) {
+  Widget _buildPeriodFilterRow(
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -549,7 +566,9 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
           color: isSelected ? AppTheme.primary : colors.bgCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppTheme.primary : colors.border.withValues(alpha: 0.7),
+            color: isSelected
+                ? AppTheme.primary
+                : colors.border.withValues(alpha: 0.7),
           ),
           boxShadow: isSelected
               ? [
@@ -704,13 +723,16 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
             child: _buildSpotlightCard(
               title: l10n.clubStats_topWins,
               stat: topWins,
-              detail: '${topWins.wins} ${l10n.clubStats_wins} (${topWins.winRate.round()}%)',
+              detail:
+                  '${topWins.wins} ${l10n.clubStats_wins} (${topWins.winRate.round()}%)',
               icon: Icons.emoji_events_rounded,
               iconColor: const Color(0xFFF59E0B),
               colors: colors,
             ),
           ),
-        if (topWins != null && topStreak != null && topStreak.bestWinStreak >= 2) ...[
+        if (topWins != null &&
+            topStreak != null &&
+            topStreak.bestWinStreak >= 2) ...[
           const SizedBox(width: 10),
           Expanded(
             child: _buildSpotlightCard(
@@ -728,7 +750,8 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
             child: _buildSpotlightCard(
               title: l10n.clubStats_highestWinRate,
               stat: topWinRate,
-              detail: '${topWinRate.winRate.round()}% (${topWinRate.wins}/${topWinRate.losses})',
+              detail:
+                  '${topWinRate.winRate.round()}% (${topWinRate.wins}/${topWinRate.losses})',
               icon: Icons.trending_up_rounded,
               iconColor: const Color(0xFF16A34A),
               colors: colors,
@@ -736,6 +759,18 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
           ),
         ],
       ],
+    );
+  }
+
+  /// A mock row is a synthetic stat, not an account. Blanking the id leaves
+  /// the shared control inert, exactly like the old onTap guard did.
+  String _profileUserId(_MemberStat stat) => stat.isMock ? '' : stat.userId;
+
+  /// The profile's match filter stays scoped to this club.
+  void _filterClubMatches(String query) {
+    final clubName = widget.club?.name ?? '';
+    context.push(
+      '/club/${widget.communityId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}&type=MATCHES',
     );
   }
 
@@ -747,25 +782,14 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
     required Color iconColor,
     required AppColorsExtension colors,
   }) {
-    return InkWell(
-      onTap: () {
-        if (stat.userId.isNotEmpty && !stat.isMock) {
-          UserProfileBottomSheet.show(
-            context,
-            userId: stat.userId,
-            communityId: widget.communityId,
-            initialFullName: stat.displayName,
-            initialAvatarUrl: stat.avatarUrl,
-            onFilterMatches: (query) {
-              final clubName = widget.club?.name ?? '';
-              context.push(
-                '/club/${widget.communityId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}&type=MATCHES',
-              );
-            },
-          );
-        }
-      },
-      borderRadius: BorderRadius.circular(14),
+    // Avatar, name and the spotlight number all belong to the same member, so
+    // the card is one control instead of an InkWell wrapping a second one.
+    return UserProfileTapTarget(
+      userId: _profileUserId(stat),
+      name: stat.displayName,
+      communityId: widget.communityId,
+      imageUrl: stat.avatarUrl,
+      onFilterMatches: _filterClubMatches,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -797,22 +821,11 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
             const SizedBox(height: 8),
             Row(
               children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: iconColor.withValues(alpha: 0.12),
-                  backgroundImage: stat.avatarUrl != null && stat.avatarUrl!.isNotEmpty
-                      ? NetworkImage(stat.avatarUrl!)
-                      : null,
-                  child: stat.avatarUrl == null || stat.avatarUrl!.isEmpty
-                      ? Text(
-                          stat.displayName.isNotEmpty ? stat.displayName[0].toUpperCase() : '?',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: iconColor,
-                          ),
-                        )
-                      : null,
+                RankAvatar(
+                  imageUrl: stat.avatarUrl,
+                  name: stat.displayName,
+                  size: 28,
+                  ringWidth: 2,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -860,28 +873,18 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
 
     final streakBadge = stat.currentStreak >= 2
         ? stat.isCurrentStreakWin
-            ? '🔥 ${stat.currentStreak}'
-            : '↘ ${stat.currentStreak}'
+              ? '🔥 ${stat.currentStreak}'
+              : '↘ ${stat.currentStreak}'
         : null;
 
-    return InkWell(
-      onTap: () {
-        if (stat.userId.isNotEmpty && !stat.isMock) {
-          UserProfileBottomSheet.show(
-            context,
-            userId: stat.userId,
-            communityId: widget.communityId,
-            initialFullName: stat.displayName,
-            initialAvatarUrl: stat.avatarUrl,
-            onFilterMatches: (query) {
-              final clubName = widget.club?.name ?? '';
-              context.push(
-                '/club/${widget.communityId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}&type=MATCHES',
-              );
-            },
-          );
-        }
-      },
+    // One member, one control: rank, avatar, name, streak and win rate all lead
+    // to the same profile, so the row is not an InkWell around a second target.
+    return UserProfileTapTarget(
+      userId: _profileUserId(stat),
+      name: stat.displayName,
+      communityId: widget.communityId,
+      imageUrl: stat.avatarUrl,
+      onFilterMatches: _filterClubMatches,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         child: Row(
@@ -901,22 +904,11 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
             const SizedBox(width: 4),
 
             // Avatar
-            CircleAvatar(
-              radius: 17,
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              backgroundImage: stat.avatarUrl != null && stat.avatarUrl!.isNotEmpty
-                  ? NetworkImage(stat.avatarUrl!)
-                  : null,
-              child: stat.avatarUrl == null || stat.avatarUrl!.isEmpty
-                  ? Text(
-                      stat.displayName.isNotEmpty ? stat.displayName[0].toUpperCase() : '?',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.primary,
-                      ),
-                    )
-                  : null,
+            RankAvatar(
+              imageUrl: stat.avatarUrl,
+              name: stat.displayName,
+              size: 34,
+              ringWidth: 2,
             ),
             const SizedBox(width: 10),
 
@@ -942,10 +934,15 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
                       if (streakBadge != null) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1.5,
+                          ),
                           decoration: BoxDecoration(
                             color: stat.isCurrentStreakWin
-                                ? const Color(0xFFEA580C).withValues(alpha: 0.12)
+                                ? const Color(
+                                    0xFFEA580C,
+                                  ).withValues(alpha: 0.12)
                                 : colors.textMuted.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -986,7 +983,9 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                     fontFeatures: const [FontFeature.tabularFigures()],
-                    color: stat.winRate >= 50 ? const Color(0xFF16A34A) : colors.textMuted,
+                    color: stat.winRate >= 50
+                        ? const Color(0xFF16A34A)
+                        : colors.textMuted,
                   ),
                 ),
                 Text(
@@ -1102,7 +1101,9 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
                 decoration: BoxDecoration(
                   color: colors.bgCard,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colors.border.withValues(alpha: 0.6)),
+                  border: Border.all(
+                    color: colors.border.withValues(alpha: 0.6),
+                  ),
                 ),
               ),
             ),
@@ -1143,7 +1144,10 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
             children: List.generate(
               5,
               (index) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -1278,4 +1282,3 @@ class _MemberStat {
     currentStreak = cur;
   }
 }
-

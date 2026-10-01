@@ -326,6 +326,7 @@
   "userProfileOpeningChat": "Đang mở...",
   "userProfileMessage": "Nhắn tin",
   "userProfileViewProfile": "Xem hồ sơ",
+  "userProfileViewProfileOf": "Xem hồ sơ {name}",
   "userProfileLoading": "Đang tải hồ sơ...",
   "userProfileLoadError": "Không tải được hồ sơ người dùng",
   "userProfileNoTop100": "Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!",
@@ -340,6 +341,11 @@
   "@userProfileOpenChatError": {
     "placeholders": {
       "error": {}
+    }
+  },
+  "@userProfileViewProfileOf": {
+    "placeholders": {
+      "name": {}
     }
   },
   "@userProfileOpenTagError": {
@@ -1219,6 +1225,7 @@
   "dashboard_searchHint": "Tìm kiếm giải đấu...",
   "dashboard_noSearchResults": "Không tìm thấy giải đấu phù hợp",
   "dashboard_noTournaments": "Bạn chưa tạo hoặc tham gia giải đấu nào",
+  "dashboard_noMoreTournaments": "Đã xem hết giải đấu",
   "dashboard_collapse": "Thu gọn",
   "dashboard_showMore": "Xem thêm ({count} giải khác)",
   "dashboard_quickActions": "Tiện ích nhanh",

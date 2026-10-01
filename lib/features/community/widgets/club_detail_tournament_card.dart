@@ -60,7 +60,10 @@ extension _ClubDetailTournamentCard on _ClubDetailScreenState {
           children: [
             // Banner ảnh phía trên card
             SizedBox(
-              height: 130,
+              height: AppResponsive.bannerHeight(
+                MediaQuery.sizeOf(context).height,
+                viewportWidth: MediaQuery.sizeOf(context).width,
+              ),
               width: double.infinity,
               child: Stack(
                 fit: StackFit.expand,

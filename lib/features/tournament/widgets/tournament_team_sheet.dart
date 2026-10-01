@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamSheet extends StatelessWidget {
@@ -115,6 +117,8 @@ class TournamentTeamSheet extends StatelessWidget {
               final index = entry.key;
               final memberName = entry.value;
               final isCaptain = index == 0;
+              final memberInfo = _memberInfoFor(team, memberName, index);
+              final memberUserId = _memberUserId(memberInfo);
 
               return Container(
                 margin: const EdgeInsets.symmetric(vertical: 4),
@@ -128,26 +132,40 @@ class TournamentTeamSheet extends StatelessWidget {
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
-                  onTap: () =>
-                      _showMemberProfile(context, memberName, isCaptain),
+                  onTap: () => _showMemberProfile(
+                    context,
+                    memberName,
+                    isCaptain,
+                    memberInfo: memberInfo,
+                  ),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: AppTheme.primary.withValues(
-                          alpha: 0.1,
-                        ),
-                        child: Text(
-                          memberName.isNotEmpty
-                              ? memberName[0].toUpperCase()
-                              : "?",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primary,
+                      if (memberUserId.isNotEmpty)
+                        UserAvatarTap(
+                          userId: memberUserId,
+                          name: memberName,
+                          imageUrl: memberInfo?.avatarUrl,
+                          elo: memberInfo?.eloPoints ?? 0,
+                          tierName: memberInfo?.tierName,
+                          size: 36,
+                        )
+                      else
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          child: Text(
+                            memberName.isNotEmpty
+                                ? memberName[0].toUpperCase()
+                                : "?",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primary,
+                            ),
                           ),
                         ),
-                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -241,26 +259,52 @@ class TournamentTeamSheet extends StatelessWidget {
     );
   }
 
-  void _showMemberProfile(BuildContext context, String name, bool isCaptain) {
+  void _showMemberProfile(
+    BuildContext context,
+    String name,
+    bool isCaptain, {
+    MatchMemberInfo? memberInfo,
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) =>
-            _MemberProfileScreen(name: name, isCaptain: isCaptain),
+        builder: (context) => _MemberProfileScreen(
+          name: name,
+          isCaptain: isCaptain,
+          memberInfo: memberInfo,
+        ),
       ),
     );
+  }
+
+  /// The roster entry behind a member name, so the row can link to the real
+  /// profile instead of the placeholder athlete sheet.
+  MatchMemberInfo? _memberInfoFor(Team team, String memberName, int index) {
+    for (final info in team.memberInfos) {
+      if (info.fullName.trim().toLowerCase() ==
+          memberName.trim().toLowerCase()) {
+        return info;
+      }
+    }
+    return index < team.memberInfos.length ? team.memberInfos[index] : null;
   }
 }
 
 class _MemberProfileScreen extends StatelessWidget {
   final String name;
   final bool isCaptain;
+  final MatchMemberInfo? memberInfo;
 
-  const _MemberProfileScreen({required this.name, this.isCaptain = false});
+  const _MemberProfileScreen({
+    required this.name,
+    this.isCaptain = false,
+    this.memberInfo,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
+    final memberUserId = _memberUserId(memberInfo);
     return Scaffold(
       backgroundColor: colors.bgDark,
       appBar: AppBar(
@@ -283,18 +327,28 @@ class _MemberProfileScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 48,
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : "?",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primary,
+            if (memberUserId.isNotEmpty)
+              UserAvatarTap(
+                userId: memberUserId,
+                name: name,
+                imageUrl: memberInfo?.avatarUrl,
+                elo: memberInfo?.eloPoints ?? 0,
+                tierName: memberInfo?.tierName,
+                size: 96,
+              )
+            else
+              CircleAvatar(
+                radius: 48,
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                child: Text(
+                  name.isNotEmpty ? name[0].toUpperCase() : "?",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                  ),
                 ),
               ),
-            ),
             const SizedBox(height: 16),
             Text(
               name,
@@ -330,4 +384,11 @@ class _MemberProfileScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A mock slot, or a roster entry the API never gave an account for, has no
+/// profile to open — the avatar then stays a plain initials bubble.
+String _memberUserId(MatchMemberInfo? info) {
+  if (info == null || info.isMock) return '';
+  return (info.userId ?? '').trim();
 }

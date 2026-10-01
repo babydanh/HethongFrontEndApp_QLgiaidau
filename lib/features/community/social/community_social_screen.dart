@@ -429,14 +429,14 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                           )
                           .reactToPost(post.id, reaction)
                           .then((ok) {
-                        if (!ok) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content: Text(l10n.communityFeedReactError),
-                            ),
-                          );
-                        }
-                      });
+                            if (!ok) {
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.communityFeedReactError),
+                                ),
+                              );
+                            }
+                          });
                     },
                     currentUserId: currentUserId,
                     canModerateComments: isModerator,
@@ -445,15 +445,6 @@ class _CommunitySocialScreenState extends ConsumerState<CommunitySocialScreen> {
                           communityFeedProvider(widget.communityId).notifier,
                         )
                         .loadInitial(),
-                    onAuthorTap: post.authorId.isEmpty
-                        ? null
-                        : () => UserProfileBottomSheet.show(
-                            context,
-                            userId: post.authorId,
-                            communityId: widget.communityId,
-                            initialFullName: post.authorName,
-                            initialAvatarUrl: post.authorAvatarUrl,
-                          ),
                     onDelete:
                         (currentUserId.isNotEmpty &&
                             (post.authorId == currentUserId || isModerator))

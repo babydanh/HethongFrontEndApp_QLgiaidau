@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/community/social/widgets/community_t
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_club_match_session_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_comment_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
@@ -34,6 +35,7 @@ String _communityReactionEmoji(String reactionType) {
 
 Future<void> _showCommunityReactionDetails(
   BuildContext context,
+  String communityId,
   List<CommunityReactionGroup> groups,
 ) async {
   final l10n = AppLocalizations.of(context)!;
@@ -80,23 +82,13 @@ Future<void> _showCommunityReactionDetails(
                             return ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              leading: CircleAvatar(
-                                radius: 15,
-                                backgroundColor: AppTheme.primaryLight,
-                                backgroundImage: avatarUrl.isEmpty
-                                    ? null
-                                    : NetworkImage(avatarUrl),
-                                child: avatarUrl.isEmpty
-                                    ? Text(
-                                        displayName.characters.first
-                                            .toUpperCase(),
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.primaryDark,
-                                        ),
-                                      )
-                                    : null,
+                              leading: UserAvatarTap(
+                                userId: user.id,
+                                communityId: communityId,
+                                name: displayName,
+                                imageUrl: avatarUrl.isEmpty ? null : avatarUrl,
+                                size: 30,
+                                ringWidth: 1.5,
                               ),
                               title: Text(
                                 displayName,
@@ -127,7 +119,6 @@ class CommunityPostCard extends ConsumerWidget {
   final String currentUserId;
   final bool canModerateComments;
   final VoidCallback? onCommentUpdated;
-  final VoidCallback? onAuthorTap;
 
   const CommunityPostCard({
     super.key,
@@ -139,7 +130,6 @@ class CommunityPostCard extends ConsumerWidget {
     this.currentUserId = '',
     this.canModerateComments = false,
     this.onCommentUpdated,
-    this.onAuthorTap,
   });
 
   @override
@@ -158,25 +148,12 @@ class CommunityPostCard extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: onAuthorTap,
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppTheme.primaryLight,
-                    backgroundImage: post.authorAvatarUrl == null
-                        ? null
-                        : NetworkImage(post.authorAvatarUrl!),
-                    child: post.authorAvatarUrl == null
-                        ? Text(
-                            post.authorName.characters.first.toUpperCase(),
-                            style: const TextStyle(
-                              color: AppTheme.primaryDark,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          )
-                        : null,
-                  ),
+                UserAvatarTap(
+                  userId: post.authorId,
+                  communityId: communityId,
+                  name: post.authorName,
+                  imageUrl: post.authorAvatarUrl,
+                  size: 40,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -206,8 +183,11 @@ class CommunityPostCard extends ConsumerWidget {
                             runSpacing: 3,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              GestureDetector(
-                                onTap: onAuthorTap,
+                              UserProfileTapTarget(
+                                userId: post.authorId,
+                                communityId: communityId,
+                                name: post.authorName,
+                                imageUrl: post.authorAvatarUrl,
                                 child: Text(
                                   post.authorName,
                                   style: Theme.of(context).textTheme.titleSmall
@@ -552,6 +532,7 @@ class CommunityPostCard extends ConsumerWidget {
                               if (context.mounted) {
                                 await _showCommunityReactionDetails(
                                   context,
+                                  communityId,
                                   groups,
                                 );
                               }

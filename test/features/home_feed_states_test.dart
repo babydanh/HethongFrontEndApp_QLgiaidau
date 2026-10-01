@@ -28,7 +28,6 @@ void main() {
     await tester.pumpWidget(_homeApp((ref, tournamentId) => matches.stream));
     await tester.pump();
 
-    expect(find.text('Live Matches'), findsOneWidget);
     expect(find.text('Loading match data...'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -53,7 +52,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Upcoming Matches'), findsOneWidget);
     expect(
       find.text('Unable to load match data. Please try again.'),
       findsOneWidget,
@@ -86,7 +84,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Upcoming Matches'), findsOneWidget);
     expect(find.text('No upcoming matches'), findsOneWidget);
     expect(find.text('Try again'), findsNothing);
     expect(tester.takeException(), isNull);
@@ -122,7 +119,33 @@ void main() {
 
     expect(find.text('Team Alpha'), findsOneWidget);
     expect(find.text('Team Beta'), findsOneWidget);
-    expect(find.text('Upcoming Matches'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
+  testWidgets('home bỏ tiêu đề section và link "Xem tất cả", nội dung còn nguyên', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+
+    await tester.pumpWidget(
+      _homeApp((ref, tournamentId) => Stream.value(const <MatchModel>[])),
+    );
+    await tester.pumpAndSettle();
+
+    // Người dùng yêu cầu bỏ cho gọn: "Giải đấu nổi bật" + "Xem tất cả" của nó,
+    // và tiêu đề lịch thi đấu sắp diễn ra + "Xem tất cả" của nó.
+    expect(find.text('Featured Tournaments'), findsNothing);
+    expect(find.text('Upcoming Matches'), findsNothing);
+    expect(find.text('View All'), findsNothing);
+
+    // Bỏ tiêu đề không được nuốt mất nội dung của section.
+    expect(find.text('Synthetic tournament'), findsWidgets);
+    expect(find.text('No upcoming matches'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class EloHistoryScreen extends ConsumerStatefulWidget {
@@ -125,9 +126,6 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
 
   Widget _buildHeader() {
     final l10n = AppLocalizations.of(context)!;
-    final initial = widget.userName.isNotEmpty
-        ? widget.userName[0].toUpperCase()
-        : '?';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -138,22 +136,14 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
-            backgroundImage: widget.avatarUrl?.isNotEmpty == true
-                ? NetworkImage(widget.avatarUrl!)
-                : null,
-            child: widget.avatarUrl?.isNotEmpty == true
-                ? null
-                : Text(
-                    initial,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+          UserAvatarTap(
+            userId: widget.userId,
+            name: widget.userName,
+            communityId: widget.communityId,
+            imageUrl: widget.avatarUrl,
+            elo: widget.currentElo,
+            tierName: widget.tierName,
+            size: 48,
           ),
           const SizedBox(width: 14),
           Expanded(

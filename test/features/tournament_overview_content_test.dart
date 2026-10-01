@@ -39,6 +39,35 @@ Tournament _multiDivisionTournament() => Tournament.fromJson({
   ],
 }, 'tournament-1');
 
+Tournament _organizerTournament() => Tournament.fromJson({
+  'name': 'Organizer placement regression',
+  'sport': 'pickleball',
+  'category': {'name': 'Pickleball', 'slug': 'pickleball'},
+  'format': 'SINGLES',
+  'bracketType': 'single_elimination',
+  'status': 'in_progress',
+  'creator': {'id': 'creator-1', 'fullName': 'Organizer Name'},
+  'maxTeams': 16,
+  'venue': {
+    'name': 'Central Pickleball Hall',
+    'locationAddress': 'District 1, Ho Chi Minh City',
+  },
+  'city': 'Ho Chi Minh City',
+  'createdAt': '2026-01-01T00:00:00.000Z',
+  'updatedAt': '2026-01-01T00:00:00.000Z',
+  'registrationStartDate': '2026-09-01T00:00:00.000Z',
+  'registrationEndDate': '2026-09-29T00:00:00.000Z',
+  'startDate': '2026-10-01T00:00:00.000Z',
+  'divisions': [
+    {
+      'id': 'division-men',
+      'name': 'Regression Men Division',
+      'matchType': 'SINGLES',
+      'maxParticipants': 16,
+    },
+  ],
+}, 'tournament-2');
+
 void main() {
   testWidgets(
     'overview omits division cards while keeping schedule and fee details',
@@ -56,7 +85,6 @@ void main() {
                 tournament: _multiDivisionTournament(),
                 teamCount: 0,
                 resolveImageUrl: (_) => '',
-                onNavigateToMatches: () {},
               ),
             ),
           ),
@@ -69,8 +97,126 @@ void main() {
       expect(find.text('Regression Women Division'), findsNothing);
       expect(find.text('Lịch thi đấu'), findsOneWidget);
       expect(find.text('THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'), findsOneWidget);
+      expect(find.text('Xem lịch thi đấu chi tiết'), findsNothing);
       expect(find.text('Lệ phí tham gia:'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('overview omits detailed schedule shortcut', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authProvider.overrideWith(_UnauthenticatedNotifier.new)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: OverviewTab(
+              tournament: _multiDivisionTournament(),
+              teamCount: 0,
+              resolveImageUrl: (_) => '',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Xem lịch thi đấu chi tiết'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'organizer appears last without a custom logo and top pickleball badge is absent',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [authProvider.overrideWith(_UnauthenticatedNotifier.new)],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('vi'),
+            home: Scaffold(
+              body: OverviewTab(
+                tournament: _organizerTournament(),
+                teamCount: 0,
+                resolveImageUrl: (_) => '',
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Organizer Name'), findsOneWidget);
+      expect(find.text('BAN TỔ CHỨC GIẢI ĐẤU'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Organizer Name')).dy,
+        greaterThan(tester.getTopLeft(find.text('Khai mạc thi đấu')).dy),
+      );
+      expect(
+        find.byWidgetPredicate((widget) {
+          if (widget is! Image ||
+              widget.image is! AssetImage ||
+              widget.width == null) {
+            return false;
+          }
+          final image = widget.image as AssetImage;
+          return image.assetName == 'assets/icons/pickleball.png' &&
+              widget.width! < 18;
+        }),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets('sport card is centered and location appears below', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authProvider.overrideWith(_UnauthenticatedNotifier.new)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: OverviewTab(
+              tournament: _organizerTournament(),
+              teamCount: 0,
+              resolveImageUrl: (_) => '',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final sportCard = find.byKey(
+      const ValueKey('tournament-overview-sport-card'),
+    );
+    final locationCard = find.byKey(
+      const ValueKey('tournament-overview-location-card'),
+    );
+    expect(sportCard, findsOneWidget);
+    expect(locationCard, findsOneWidget);
+
+    final overviewRect = tester.getRect(find.byType(OverviewTab));
+    final sportRect = tester.getRect(sportCard);
+    final locationRect = tester.getRect(locationCard);
+    expect(sportRect.center.dx, closeTo(overviewRect.center.dx, 1));
+    expect(locationRect.width, closeTo(overviewRect.width - 32, 1));
+    expect(locationRect.top, greaterThan(sportRect.bottom));
+    expect(find.text('Pickleball'), findsOneWidget);
+    expect(find.text('Central Pickleball Hall'), findsOneWidget);
+    expect(find.text('Ho Chi Minh City'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

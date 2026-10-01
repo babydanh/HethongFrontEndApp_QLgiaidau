@@ -27,6 +27,35 @@ class MyTournamentWorkspaceNotifier extends AsyncNotifier<TournamentWorkspace> {
     });
   }
 
+  /// Đang tải trang tiếp theo — khoá để không bấm hai lần là gọi trùng.
+  bool _isLoadingMore = false;
+  bool get isLoadingMore => _isLoadingMore;
+
+  /// Lấy trang kế tiếp bằng cursor rồi nối vào dữ liệu hiện có.
+  ///
+  /// Không đụng `state` khi đang tải, đã hết trang, hoặc workspace rỗng — gọi
+  /// lại không gây hại.
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (current == null || !current.hasMore || current.nextCursor == null) {
+      return;
+    }
+    if (_isLoadingMore) return;
+
+    _isLoadingMore = true;
+    try {
+      final repository = ref.read(tournamentRepositoryProvider);
+      final next = await repository.getMyWorkspace(cursor: current.nextCursor);
+      state = AsyncValue.data(current.mergePage(next));
+    } catch (e, stack) {
+      // Giữ nguyên dữ liệu cũ: cuộn tới đáy thấy lỗi rồi thử lại, không mất
+      // những gì đã tải được.
+      _log.error('Không tải được trang giải tiếp theo', e, stack);
+    } finally {
+      _isLoadingMore = false;
+    }
+  }
+
   Future<void> respondToRefereeInvite({
     required String tournamentId,
     required String refereeId,

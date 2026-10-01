@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -324,6 +325,11 @@ class _TournamentPermissionsState
                             l10n,
                             (member['role'] ?? '').toString(),
                           ),
+                          userId: _personUserId(member, const [
+                            'userId',
+                            'user_id',
+                            'id',
+                          ]),
                           onRemove: _isBusy ? null : () => _removeStaff(member),
                         ),
                     ],
@@ -399,6 +405,10 @@ class _TournamentPermissionsState
                             l10n,
                             (referee['status'] ?? '').toString(),
                           ),
+                          userId: _personUserId(referee, const [
+                            'userId',
+                            'user_id',
+                          ]),
                           onRemove: _isBusy
                               ? null
                               : () => _removeReferee(referee),
@@ -426,6 +436,21 @@ class _TournamentPermissionsState
         ?.toString()
         .trim();
     return name?.isNotEmpty == true ? name! : fallback;
+  }
+
+  /// Reads the first non-empty id among [keys], falling back to a nested `user`
+  /// object. Returns '' when the row is not backed by a real account — a
+  /// referee invite is keyed by its record id, not by a user, so it stays out.
+  String _personUserId(Map<String, dynamic> person, List<String> keys) {
+    for (final key in keys) {
+      final value = person[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    final nestedUser = person['user'];
+    if (nestedUser is Map) {
+      return _personUserId(Map<String, dynamic>.from(nestedUser), keys);
+    }
+    return '';
   }
 
   String _staffRoleLabel(AppLocalizations l10n, String role) =>
@@ -691,10 +716,12 @@ class _PersonRow extends StatelessWidget {
   const _PersonRow({
     required this.name,
     required this.status,
+    required this.userId,
     required this.onRemove,
   });
   final String name;
   final String status;
+  final String userId;
   final VoidCallback? onRemove;
 
   @override
@@ -704,15 +731,18 @@ class _PersonRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 17,
-            backgroundColor: colors.bgElevated,
-            child: Icon(
-              Icons.person_outline_rounded,
-              size: 18,
-              color: colors.textSecondary,
+          if (userId.isNotEmpty)
+            UserAvatarTap(userId: userId, name: name, size: 34)
+          else
+            CircleAvatar(
+              radius: 17,
+              backgroundColor: colors.bgElevated,
+              child: Icon(
+                Icons.person_outline_rounded,
+                size: 18,
+                color: colors.textSecondary,
+              ),
             ),
-          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

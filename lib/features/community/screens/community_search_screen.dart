@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_search_models.dart';
 import 'package:app_quanly_giaidau/features/community/providers/community_search_provider.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,7 +54,8 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
       _controller.text = query;
       setState(() => _activeQuery = query.length >= 2 ? query : '');
     }
-    if (widget.initialType != oldWidget.initialType && widget.initialType != null) {
+    if (widget.initialType != oldWidget.initialType &&
+        widget.initialType != null) {
       setState(() => _type = widget.initialType!);
     }
   }
@@ -366,54 +368,65 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     required Widget leading,
     required String title,
     required String subtitle,
-    required VoidCallback? onTap,
+    VoidCallback? onTap,
     required AppColorsExtension colors,
+    ({String userId, String name, String? imageUrl})? profile,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 7, 12, 7),
-        child: Row(
-          children: [
-            SizedBox(width: 34, height: 34, child: leading),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
+    final tile = Padding(
+      padding: const EdgeInsets.fromLTRB(12, 7, 12, 7),
+      child: Row(
+        children: [
+          SizedBox(width: 34, height: 34, child: leading),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                if (subtitle.trim().isNotEmpty) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    title,
+                    subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
                   ),
-                  if (subtitle.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: colors.textMuted),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-            if (onTap != null)
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: colors.textMuted,
-              ),
-          ],
-        ),
+          ),
+          if (onTap != null || profile != null)
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: colors.textMuted,
+            ),
+        ],
       ),
     );
+    // A profile tile owns the whole row, avatar and name included: the shared
+    // widget already picks between the quick preview and the profile page, so
+    // the tile must not stack an [onTap] of its own on top of it.
+    if (profile != null) {
+      return UserProfileTapTarget(
+        userId: profile.userId,
+        name: profile.name,
+        communityId: widget.communityId,
+        imageUrl: profile.imageUrl,
+        child: tile,
+      );
+    }
+    return InkWell(onTap: onTap, child: tile);
   }
 
   Widget _buildPostSection(
@@ -458,38 +471,23 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     l10n.communitySearchMembers,
     members.length,
     members
-        .map<Widget>(
-          (member) => _resultTile(
-            leading: CircleAvatar(
-              backgroundImage: member.userAvatarUrl?.trim().isNotEmpty == true
-                  ? NetworkImage(member.userAvatarUrl!.trim())
-                  : null,
-              child: member.userAvatarUrl?.trim().isNotEmpty == true
-                  ? null
-                  : Text(
-                      (member.userFullName?.trim().isNotEmpty == true
-                              ? member.userFullName!.trim()[0]
-                              : '?')
-                          .toUpperCase(),
-                    ),
-            ),
-            title: member.userFullName?.trim().isNotEmpty == true
-                ? member.userFullName!.trim()
-                : l10n.communitySearchMembers,
+        .map<Widget>((member) {
+          final fullName = member.userFullName?.trim() ?? '';
+          final title = fullName.isEmpty
+              ? l10n.communitySearchMembers
+              : fullName;
+          final avatarUrl = member.userAvatarUrl?.trim();
+          return _resultTile(
+            leading: RankAvatar(name: fullName, imageUrl: avatarUrl, size: 34),
+            title: title,
             subtitle: member.role,
-            onTap: member.userId.isEmpty
+            profile: member.userId.trim().isEmpty
                 ? null
-                : () => UserProfileBottomSheet.show(
-                    context,
-                    userId: member.userId,
-                    communityId: widget.communityId,
-                    initialFullName: member.userFullName,
-                    initialAvatarUrl: member.userAvatarUrl,
-                  ),
+                : (userId: member.userId, name: title, imageUrl: avatarUrl),
             colors: colors,
-          ),
-        )
-        .toList(),
+          );
+        })
+        .toList(growable: false),
     colors,
   );
 

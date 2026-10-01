@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
-
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 
@@ -51,6 +51,7 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
     final images = _collectImages(widget.tournament);
     final compact = widget.compact;
     final showBannerOverlay = !widget.tournament.hideFeaturedCardText;
+    final viewportSize = MediaQuery.sizeOf(context);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -65,7 +66,12 @@ class _TournamentHeaderViewState extends State<TournamentHeaderView> {
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
               child: SizedBox(
-                height: compact ? 0 : 185,
+                height: compact
+                    ? 0
+                    : AppResponsive.bannerHeight(
+                        viewportSize.height,
+                        viewportWidth: viewportSize.width,
+                      ),
                 child: AnimatedOpacity(
                   duration: const Duration(milliseconds: 160),
                   opacity: compact ? 0 : 1,
@@ -264,6 +270,7 @@ class _TournamentManagementBannerState
   Widget build(BuildContext context) {
     final tournament = widget.tournament;
     final colors = widget.colors;
+    final viewportSize = MediaQuery.sizeOf(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -276,9 +283,11 @@ class _TournamentManagementBannerState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            height: 132,
+            height: AppResponsive.bannerHeight(
+              viewportSize.height,
+              viewportWidth: viewportSize.width,
+            ),
             child: Stack(
-              fit: StackFit.expand,
               children: [
                 _BannerCarousel(
                   images: _collectImages(tournament),
@@ -315,7 +324,10 @@ class _TournamentManagementBannerState
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: colors.textPrimary,
-                fontSize: 17,
+                fontSize: AppResponsive.bannerFontSize(
+                  viewportSize.height,
+                  viewportWidth: viewportSize.width,
+                ),
                 fontWeight: FontWeight.w800,
                 height: 1.2,
               ),
@@ -383,11 +395,19 @@ class _HeaderInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final viewportSize = MediaQuery.sizeOf(context);
     return AnimatedDefaultTextStyle(
       duration: const Duration(milliseconds: 140),
       curve: Curves.easeOut,
       style: TextStyle(
-        fontSize: compact ? 15 : 18,
+        // Nhánh compact không có banner (cao = 0) nên giữ literal.
+        fontSize: compact
+            ? 15
+            : AppResponsive.bannerFontSize(
+                viewportSize.height,
+                viewportWidth: viewportSize.width,
+                ratio: AppResponsive.bannerHeadlineRatio,
+              ),
         fontWeight: FontWeight.w900,
         color: colors.textPrimary,
         height: 1.18,
@@ -724,6 +744,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
     if (widget.tournament.galleryImages.isNotEmpty) {
       images.addAll(widget.tournament.galleryImages);
     }
+    // Một nguồn cho cả container (banner phía trên) lẫn chữ tiêu đề phía dưới
+    // — truyền lệch nhau sẽ ra banner cao mà chữ nhỏ, không lỗi biên dịch nào
+    // bắt được.
+    final viewportSize = MediaQuery.sizeOf(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -731,7 +755,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
         Stack(
           children: [
             Container(
-              height: 240,
+              height: AppResponsive.bannerHeight(
+                viewportSize.height,
+                viewportWidth: viewportSize.width,
+              ),
               width: double.infinity,
               color: colors.bgCard,
               child: images.isEmpty
@@ -807,7 +834,11 @@ class _TournamentBannerState extends State<TournamentBanner> {
               Text(
                 widget.tournament.name.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: AppResponsive.bannerFontSize(
+                    viewportSize.height,
+                    viewportWidth: viewportSize.width,
+                    ratio: AppResponsive.bannerHeadlineRatio,
+                  ),
                   fontWeight: FontWeight.w900,
                   color: colors.textPrimary,
                   height: 1.35,

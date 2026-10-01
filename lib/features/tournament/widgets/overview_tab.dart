@@ -11,15 +11,14 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
 class OverviewTab extends StatefulWidget {
   final Tournament tournament;
   final int teamCount;
   final String Function(String? url) resolveImageUrl;
-  final VoidCallback? onNavigateToMatches;
   final VoidCallback? onNavigateToIntro;
   final bool isFollowing;
   final VoidCallback? onToggleFollow;
@@ -31,7 +30,6 @@ class OverviewTab extends StatefulWidget {
     required this.tournament,
     required this.teamCount,
     required this.resolveImageUrl,
-    this.onNavigateToMatches,
     this.onNavigateToIntro,
     this.isFollowing = false,
     this.onToggleFollow,
@@ -170,7 +168,20 @@ class _OverviewTabState extends State<OverviewTab> {
     final creatorName = t.creatorFullName ?? 'Ban tổ chức';
     final isClubLite = t.isClubLite;
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
-    final hasCustomLogo = t.logoUrl != null && t.logoUrl!.trim().isNotEmpty;
+    final sportKey = t.sport.trim().toLowerCase();
+    final categoryName = t.category?.trim();
+    final sportName = categoryName != null && categoryName.isNotEmpty
+        ? categoryName
+        : AppConstants.sportNames[sportKey] ?? t.sport;
+    final venueName = t.venueName?.trim();
+    final locationTitle = venueName != null && venueName.isNotEmpty
+        ? venueName
+        : (locationStr.isNotEmpty
+              ? locationStr.split(',').first.trim()
+              : 'Đang cập nhật');
+    final locationSubtitle = locationStr.isNotEmpty
+        ? locationStr.split(',').last.trim()
+        : 'Việt Nam';
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -197,100 +208,35 @@ class _OverviewTabState extends State<OverviewTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Tag Bar: Badges + Organizer Pill
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
                   crossAxisAlignment: WrapCrossAlignment.center,
-                  alignment: WrapAlignment.spaceBetween,
                   children: [
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _buildSportBadge(t.sport),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3.5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: AppTheme.primary.withValues(alpha: 0.2),
-                              width: 0.8,
-                            ),
-                          ),
-                          child: Text(
-                            _resolveFormatBadge(t),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                        _buildStatusBadge(t.status),
-                        if (t.isRanked) _buildRankingBadge(true),
-                      ],
-                    ),
-                    if (!hasCustomLogo &&
-                        (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty))
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: colors.border.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircleAvatar(
-                              radius: 9,
-                              backgroundColor: AppTheme.primary.withValues(
-                                alpha: 0.1,
-                              ),
-                              backgroundImage: resolvedAvatar.isNotEmpty
-                                  ? NetworkImage(resolvedAvatar)
-                                  : null,
-                              child: resolvedAvatar.isEmpty
-                                  ? Text(
-                                      creatorName.isNotEmpty
-                                          ? creatorName[0].toUpperCase()
-                                          : 'B',
-                                      style: const TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primary,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: 5),
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 120),
-                              child: Text(
-                                creatorName,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3.5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.2),
+                          width: 0.8,
                         ),
                       ),
+                      child: Text(
+                        _resolveFormatBadge(t),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                    _buildStatusBadge(t.status),
+                    if (t.isRanked) _buildRankingBadge(true),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -377,9 +323,10 @@ class _OverviewTabState extends State<OverviewTab> {
                     ),
                     const SizedBox(width: 8),
 
-                    // Card 2: Địa điểm
+                    // Card 2: Môn thể thao (centered)
                     Expanded(
                       child: Container(
+                        key: const ValueKey('tournament-overview-sport-card'),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 12,
@@ -401,38 +348,19 @@ class _OverviewTabState extends State<OverviewTab> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              size: 20,
-                              color: AppTheme.primary,
+                            SportChoiceTile.buildSportIcon(
+                              sportKey,
+                              22,
+                              AppTheme.primary,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              t.venueName != null &&
-                                      t.venueName!.trim().isNotEmpty
-                                  ? t.venueName!
-                                  : (locationStr.isNotEmpty
-                                        ? locationStr.split(',').first.trim()
-                                        : 'Đang cập nhật'),
+                              sportName,
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w900,
                                 color: colors.textPrimary,
                                 letterSpacing: -0.3,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              locationStr.isNotEmpty
-                                  ? locationStr.split(',').last.trim()
-                                  : 'Việt Nam',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: colors.textMuted,
-                                fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -503,6 +431,69 @@ class _OverviewTabState extends State<OverviewTab> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  key: const ValueKey('tournament-overview-location-card'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.bgCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: colors.border.withValues(alpha: 0.65),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_rounded,
+                        size: 20,
+                        color: AppTheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              locationTitle,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w900,
+                                color: colors.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              locationSubtitle,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                color: colors.textMuted,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -785,40 +776,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   },
                 ),
 
-                // Nút Lịch thi đấu (nhanh gọn)
-                if (!isClubLite) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primary,
-                        backgroundColor: colors.bgCard,
-                        side: BorderSide(
-                          color: AppTheme.primary.withValues(alpha: 0.4),
-                          width: 1,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: () {
-                        if (widget.onNavigateToMatches != null) {
-                          widget.onNavigateToMatches!();
-                        }
-                      },
-                      icon: const Icon(Icons.calendar_month_rounded, size: 16),
-                      label: const Text(
-                        'Xem lịch thi đấu chi tiết',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
+                // Trận đấu vẫn hiển thị trong tab Lịch thi đấu.
 
                 // ─── LƯỚI XÁC NHẬN THAM GIA 16/32 SLOT (ĐỒNG BỘ CHUẨN WEB) ───
                 if (isClubLite ||
@@ -895,9 +853,8 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                 ],
 
-                // ─── 4. NGƯỜI SÁNG LẬP GIẢI ĐẤU (ĐẶT Ở CUỐI KHI GIẢI CÓ LOGO) ───
-                if (hasCustomLogo &&
-                    (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty)) ...[
+                // ─── 4. BAN TỔ CHỨC GIẢI ĐẤU (LUÔN Ở CUỐI) ───
+                if (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   _buildSectionHeader('BAN TỔ CHỨC GIẢI ĐẤU'),
                   const SizedBox(height: 8),
@@ -1070,49 +1027,6 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 
-  Widget _buildSportBadge(String sport) {
-    final colors = context.colors;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final name = sport.isNotEmpty
-        ? AppConstants.sportNames[sport.toLowerCase()] ?? sport
-        : 'Thể thao';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.12) : colors.bgCard,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.2)
-              : colors.border.withValues(alpha: 0.8),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SportChoiceTile.buildSportIcon(sport, 14),
-          const SizedBox(width: 5),
-          Text(
-            name,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildRankingBadge(bool isRanked) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -1179,22 +1093,35 @@ class _OverviewTabState extends State<OverviewTab> {
             child: Padding(
               padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: isPassed ? FontWeight.w700 : FontWeight.w600,
-                      color: isPassed ? colors.textPrimary : colors.textMuted,
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: isPassed
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        color: isPassed ? colors.textPrimary : colors.textMuted,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isPassed ? AppTheme.primary : colors.textSecondary,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isPassed
+                            ? AppTheme.primary
+                            : colors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
                     ),
                   ),
                 ],

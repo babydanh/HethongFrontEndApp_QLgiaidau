@@ -10,7 +10,11 @@ import 'package:flutter/material.dart';
 ///    1. Grid → dùng [gridDelegate] (maxCrossAxisExtent)
 ///    2. Layout → dùng [AppResponsiveBuilder] + quyết định sidebar
 ///    3. Width → dùng % (clamp), không pixel cứng
-///    4. Font → Theme.of(context).textTheme
+///    4. Chiều cao banner → [AppResponsive.bannerHeight] (% CHIỀU CAO
+///       viewport, khác nhau dọc/ngang), không pixel cứng; chữ banner →
+///       [AppResponsive.bannerFontSize] để tỉ lệ chữ/banner không đổi giữa
+///       mọi màn hình.
+///    5. Font → Theme.of(context).textTheme
 ///
 ///  🚫 Desktop: app chỉ chạy mobile + tablet.
 ///     Desktop/web đã có frontend-web_qlgiaidau (Next.js) lo.
@@ -121,10 +125,98 @@ class AppResponsive {
       width >= AppBreakpoints.tabletMin ? 0.9 : 0.85;
 
   // ── Banner ──
-  /// Chiều cao banner = 45% chiều rộng, giới hạn 200-340.
-  static double bannerHeight(double width,
-      {double min = 200, double max = 340}) {
-    return (width * 0.45).clamp(min, max);
+  /// Tỉ lệ chiều cao banner / chiều cao viewport khi màn hình DỌC.
+  ///
+  /// Đây là hướng chiếm đa số (điện thoại, iPad cầm tay). Ở dọc, bề ngang mới
+  /// là giới hạn chứ không phải bề dọc: 0.20 rút banner còn ~169px trên iPhone
+  /// 14 (844px cao) — thấp hơn hẳn bản `AspectRatio(16/9)` cũ (~219px), nên
+  /// giải nổi bật bị "bẹp". 0.30 → 253px: cao hơn bản cũ nhưng vẫn chỉ chiếm
+  /// ~1/3 màn hình, phần danh sách bên dưới còn chỗ để thở.
+  static const double bannerPortraitViewportRatio = 0.30;
+
+  /// Tỉ lệ khi màn hình NẰM NGANG (rộng hơn cao) — laptop, tablet ngang.
+  ///
+  /// Ngang thì bề dọc mới là giới hạn. Giữ nguyên 0.20 vì đây chính là tỉ lệ
+  /// đã chặn được `AspectRatio(16/9)`: bản cũ cho ra 750px = 97.7% chiều cao
+  /// viewport ở 1366×768, tức banner gần như chiếm trọn màn hình.
+  static const double bannerLandscapeViewportRatio = 0.20;
+
+  /// Biên dưới: viewport quá thấp (điện thoại nằm ngang 390px cao → 20% là
+  /// 78px) thì banner nhỏ hơn cả ô tiêu đề overlay nằm trên nó.
+  ///
+  /// Biên cũ `min: 200` đã bị bỏ có chủ ý: 768 × 0.20 = 154 < 200 sẽ bị đẩy
+  /// ngược lên 200 = 26% màn hình — tức "huge" trên laptop 14".
+  static const double bannerMinHeight = 140;
+
+  /// Biên trên: CHỈ chặn viewport cao bất thường (>~1067px, ví dụ cửa sổ
+  /// desktop 2160px), nơi 0.30 đã là 648px — nuốt gần hết màn hình.
+  ///
+  /// 320px giữ nguyên tỉ lệ 0.30 cho mọi thiết bị thật (iPhone SE → iPad Pro
+  /// 12.9"), nên "banner chiếm cùng một tỉ lệ màn hình" vẫn đúng.
+  static const double bannerMaxHeight = 320;
+
+  /// Tỉ lệ cỡ chữ tiêu đề overlay / chiều cao banner
+  /// (17px trên banner 185px cũ).
+  static const double bannerTitleRatio = 0.092;
+
+  /// Tỉ lệ cỡ chữ tiêu đề trong khối header / chiều cao banner
+  /// (18px trên banner 185px, 24px trên cover 240px).
+  static const double bannerHeadlineRatio = 0.10;
+
+  /// Tỉ lệ cỡ chữ phụ trên banner / chiều cao banner
+  /// (10px trên banner 185px cũ).
+  static const double bannerCaptionRatio = 0.054;
+
+  /// Chiều cao banner = tỉ lệ theo hướng màn hình × chiều cao viewport,
+  /// giới hạn [bannerMinHeight]–[bannerMaxHeight].
+  ///
+  /// - [viewportWidth] — quyết định nhánh dọc/ngang. Bỏ trống thì coi như DỌC
+  ///   vì đó là hướng phổ biến của app; call site quên truyền chỉ lệch ở
+  ///   chế độ ngang, không vỡ layout.
+  ///
+  /// ⚠️ Mọi thứ bám theo chiều cao này, kể cả chữ: [bannerFontSize] nhân
+  /// thẳng [bannerHeight] với [bannerTitleRatio]/[bannerHeadlineRatio]/
+  /// [bannerCaptionRatio]. TUYỆT ĐỐI không lấy chiều cao banner từ nguồn khác
+  /// (một nhánh riêng theo hướng chẳng hạn) — banner sẽ cao lên trong khi
+  /// chữ giữ nguyên cỡ cũ, và không có dòng cảnh báo nào báo lỗi.
+  ///
+  /// ```dart
+  /// final size = MediaQuery.sizeOf(context);
+  /// SizedBox(
+  ///   height: AppResponsive.bannerHeight(size.height, viewportWidth: size.width),
+  ///   width: double.infinity,
+  ///   child: Image.network(url, fit: BoxFit.cover),
+  /// )
+  /// ```
+  static double bannerHeight(
+    double viewportHeight, {
+    double? viewportWidth,
+    double min = bannerMinHeight,
+    double max = bannerMaxHeight,
+  }) {
+    final isLandscape = viewportWidth != null && viewportWidth > viewportHeight;
+    final ratio =
+        isLandscape ? bannerLandscapeViewportRatio : bannerPortraitViewportRatio;
+    return (viewportHeight * ratio).clamp(min, max);
+  }
+
+  /// Cỡ chữ trong banner — scale TUYẾN TÍNH theo [bannerHeight].
+  ///
+  /// Vì [bannerHeight] đã clamp trước, quan hệ
+  /// `bannerFontSize(vh) / bannerHeight(vh) == ratio` đúng tuyệt đối ở
+  /// MỌI kích thước viewport: banner cao gấp đôi thì chữ to gấp đôi. Đây là
+  /// điều kiện để tỉ lệ chữ/banner không đổi giữa 14" và 16", và cả giữa
+  /// chế độ dọc với chế độ ngang. Vì vậy [viewportWidth] phải truyền giống
+  /// hệt giá trị mà call site dùng cho [bannerHeight].
+  ///
+  /// - [bannerTitleRatio] — tiêu đề overlay nằm TRÊN ảnh banner.
+  /// - [bannerHeadlineRatio] — tiêu đề trong khối header cạnh/dưới banner.
+  static double bannerFontSize(
+    double viewportHeight, {
+    double? viewportWidth,
+    double ratio = bannerTitleRatio,
+  }) {
+    return bannerHeight(viewportHeight, viewportWidth: viewportWidth) * ratio;
   }
 
   // ── Spacing ──

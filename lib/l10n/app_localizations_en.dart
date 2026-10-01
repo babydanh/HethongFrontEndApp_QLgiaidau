@@ -920,6 +920,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userProfileViewProfile => 'View profile';
 
   @override
+  String userProfileViewProfileOf(Object name) {
+    return 'View $name\'s profile';
+  }
+
+  @override
   String get userProfileLoading => 'Loading profile...';
 
   @override
@@ -3160,6 +3165,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboard_noTournaments =>
       'You haven\'t created or joined any tournaments yet.';
+
+  @override
+  String get dashboard_noMoreTournaments => 'You\'ve seen all tournaments';
 
   @override
   String get dashboard_collapse => 'Collapse';

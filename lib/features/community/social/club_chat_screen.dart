@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1037,7 +1038,18 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                 : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (!isMine) _SenderAvatar(message: message),
+              if (!isMine)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6, bottom: 8),
+                  child: UserAvatarTap(
+                    userId: message.senderId,
+                    communityId: widget.communityId,
+                    name: message.senderName,
+                    imageUrl: message.senderAvatarUrl,
+                    size: 30,
+                    ringWidth: 1.5,
+                  ),
+                ),
               Flexible(
                 child: Column(
                   crossAxisAlignment: isMine
@@ -1499,34 +1511,6 @@ List<String> _flattenReactionDetails(
         .toList(growable: false);
   }
   return const [];
-}
-
-class _SenderAvatar extends StatelessWidget {
-  const _SenderAvatar({required this.message});
-  final _ClubChatMessage message;
-  @override
-  Widget build(BuildContext context) {
-    final url = message.senderAvatarUrl;
-    return Padding(
-      padding: const EdgeInsets.only(right: 6, bottom: 8),
-      child: CircleAvatar(
-        radius: 15,
-        backgroundColor: AppTheme.primary,
-        backgroundImage: url == null || url.isEmpty ? null : NetworkImage(url),
-        child: url == null || url.isEmpty
-            ? Text(
-                message.senderName.trim().isEmpty
-                    ? '?'
-                    : message.senderName.trim()[0].toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              )
-            : null,
-      ),
-    );
-  }
 }
 
 Map<String, dynamic> _asMap(Object? value) {

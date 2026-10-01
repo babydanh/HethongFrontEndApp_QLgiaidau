@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/liquid_glass_surface.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -921,13 +922,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         child: _buildGuestLoginNoticeBanner(l10n),
                       ),
                     if (featuredTournaments.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          title: l10n.featuredTournaments,
-                          actionLabel: l10n.viewAll,
-                          onAction: () => _switchTab(1),
-                        ),
-                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
                       SliverToBoxAdapter(
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
@@ -948,16 +943,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     _TournamentSectionList(
                       tournaments: allTournaments,
-                      sectionHeader: _buildSectionTitle(
-                        title: _exploreStatus == 'live'
-                            ? l10n.liveMatches
-                            : _exploreStatus == 'scheduled'
-                            ? l10n.upcomingMatches
-                            : l10n.completedMatchesLabel,
-                        isLive: _exploreStatus == 'live',
-                        actionLabel: l10n.viewAll,
-                        onAction: () => _switchTab(1),
-                      ),
                       filterStatus: _exploreStatus,
                       searchQuery: _searchQueries[0] ?? '',
                       contentFilter: _exploreContent,
@@ -1239,98 +1224,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildSectionTitle({
-    required String title,
-
-    bool isLive = false,
-    String? badge,
-    String? actionLabel,
-    VoidCallback? onAction,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
-                color: context.colors.textPrimary,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ),
-          if (isLive) ...[
-            const SizedBox(width: 6),
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEF4444),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-          if (badge != null) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEF4444),
-                borderRadius: BorderRadius.circular(6.0),
-              ),
-              child: Text(
-                badge,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9.0,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            _PulsingDot(),
-          ],
-          if (actionLabel != null && onAction != null)
-            TextButton(
-              onPressed: onAction,
-              style: TextButton.styleFrom(
-                minimumSize: const Size(48, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    actionLabel,
-                    style: const TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 12,
-                    color: AppTheme.primary,
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildExploreSegmentTabBar(AppLocalizations l10n) {
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1453,34 +1346,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final cardWidth = constraints.maxWidth - 32.0; // padding 16 hai bên
-            final cardHeight = cardWidth / (16 / 9);
-            return SizedBox(
-              height: cardHeight,
-              child: PageView.builder(
-                controller: _carouselController,
-                physics: const BouncingScrollPhysics(),
-                itemCount: items.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _carouselCurrentPage = index;
-                  });
-                },
-                itemBuilder: (context, i) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: FeaturedTournamentBannerCard(
-                      tournament: items[i],
-                      onTap: () => context.push("/intro/${items[i].id}"),
-                    ),
-                  ),
+        // Chiều cao dựa trên CHIỀU CAO viewport, không phải chiều rộng:
+        // cardWidth/(16/9) ở 1366×768 cho ra 750px = 97.7% màn hình.
+        SizedBox(
+          height: AppResponsive.bannerHeight(
+            MediaQuery.sizeOf(context).height,
+            viewportWidth: MediaQuery.sizeOf(context).width,
+          ),
+          child: PageView.builder(
+            controller: _carouselController,
+            physics: const BouncingScrollPhysics(),
+            itemCount: items.length,
+            onPageChanged: (index) {
+              setState(() {
+                _carouselCurrentPage = index;
+              });
+            },
+            itemBuilder: (context, i) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: FeaturedTournamentBannerCard(
+                  tournament: items[i],
+                  onTap: () => context.push("/intro/${items[i].id}"),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ],
     );
@@ -2027,51 +1919,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 }
 
-// ═══════════════════════════════════════════════════════
-//  TOURNAMENT CARD — Horizontal scroll (Gradient)
-// ═══════════════════════════════════════════════════════
-class _PulsingDot extends StatefulWidget {
-  @override
-  State<_PulsingDot> createState() => _PulsingDotState();
-}
-
-class _PulsingDotState extends State<_PulsingDot>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.3, end: 1.0).animate(_ctrl);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _anim,
-      child: Container(
-        width: 7,
-        height: 7,
-        decoration: const BoxDecoration(
-          color: Color(0xFFEF4444),
-          shape: BoxShape.circle,
-        ),
-      ),
-    );
-  }
-}
-
 class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   _StatusFilterDelegate({required this.child});
@@ -2106,7 +1953,6 @@ class _TournamentSectionList extends ConsumerWidget {
   final String rankedFilter;
   final bool enabled;
   final String emptyMessage;
-  final Widget? sectionHeader;
   final VoidCallback? onNoLiveMatches;
 
   const _TournamentSectionList({
@@ -2118,7 +1964,6 @@ class _TournamentSectionList extends ConsumerWidget {
     this.rankedFilter = 'all',
     this.enabled = true,
     required this.emptyMessage,
-    this.sectionHeader,
     this.onNoLiveMatches,
   });
 
@@ -2259,7 +2104,6 @@ class _TournamentSectionList extends ConsumerWidget {
 
     return SliverMainAxisGroup(
       slivers: [
-        if (sectionHeader != null) SliverToBoxAdapter(child: sectionHeader!),
         if (activeTournaments.isEmpty)
           SliverToBoxAdapter(child: statusFeedback)
         else

@@ -1,20 +1,15 @@
 part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailMemberProfile on _ClubDetailScreenState {
-  void _showMemberProfile(String userId, String? fullName, String? avatarUrl) {
-    UserProfileBottomSheet.show(
-      context,
-      userId: userId,
-      communityId: widget.clubId,
-      initialFullName: fullName,
-      initialAvatarUrl: avatarUrl,
-      onFilterMatches: (query) {
-        final clubName =
-            ref.read(communityDetailProvider(widget.clubId)).value?.name ?? '';
-        context.push(
-          '/club/${widget.clubId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}&type=MATCHES',
-        );
-      },
+  /// "Trận đấu" filter inside the profile preview keeps its club context: it
+  /// searches this club's matches instead of dropping the member onto a
+  /// generic search. Shared by every profile entry point on the club screen
+  /// so the shared widget owns the preview and we only own the destination.
+  void _filterClubMatches(String query) {
+    final clubName =
+        ref.read(communityDetailProvider(widget.clubId)).value?.name ?? '';
+    context.push(
+      '/club/${widget.clubId}/search?name=${Uri.encodeComponent(clubName)}&q=${Uri.encodeComponent(query)}&type=MATCHES',
     );
   }
 }

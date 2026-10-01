@@ -178,10 +178,23 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
-  Future<TournamentWorkspace> getMyWorkspace() async {
-    _log.debug('Fetching tournament workspace for current user');
+  Future<TournamentWorkspace> getMyWorkspace({
+    String? cursor,
+    int limit = 20,
+  }) async {
+    _log.debug(
+      'Fetching tournament workspace for current user (cursor: ${cursor ?? 'none'})',
+    );
     try {
-      final response = await _dioClient.dio.get('/tournaments/workspace/me');
+      final response = await _dioClient.dio.get(
+        '/tournaments/workspace/me',
+        queryParameters: {
+          'limit': limit,
+          // Không gửi cursor rỗng: backend decode '' sẽ trả null, nhưng gửi
+          // tham số rỗng vẫn làm URL xấu và dễ sót trong log.
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        },
+      );
       final raw = response.data;
       final data = raw is Map<String, dynamic>
           ? (raw['data'] as Map<String, dynamic>? ?? raw)

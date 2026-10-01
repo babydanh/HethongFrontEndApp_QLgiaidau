@@ -20,6 +20,8 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
@@ -3507,60 +3509,72 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     );
   }
 
-  Widget _buildUserAvatar(
-    AppColorsExtension colors, {
-    required String? avatarUrl,
+  /// Lite avatar URLs can be relative, and the network widgets do not resolve
+  /// them on their own.
+  String? _resolvedAvatarUrl(String? avatarUrl) {
+    final trimmed = avatarUrl?.trim() ?? '';
+    return trimmed.isEmpty
+        ? null
+        : LiteTournamentCreateResult.resolveUrl(trimmed);
+  }
+
+  /// Avatar for one slot in a pairing / pending list.
+  ///
+  /// A slot backed by a real account ([userId]) routes through
+  /// [UserAvatarTap] so tapping it reaches that profile. A slot that is only
+  /// a label — an unclaimed team, a partner who has not joined yet — keeps the
+  /// accent badge and stays inert, because there is nobody to link to.
+  ///
+  /// The tap box is pinned to [size]: every call site is a dense row where a
+  /// larger hit area would push the name and the trailing chip sideways.
+  Widget _buildUserAvatar({
+    String? userId,
+    String? avatarUrl,
     required String displayName,
     required Color accentColor,
-    VoidCallback? onTap,
     double size = 38,
   }) {
+    final id = userId?.trim() ?? '';
+    final resolvedUrl = _resolvedAvatarUrl(avatarUrl);
+    if (id.isNotEmpty) {
+      return UserAvatarTap(
+        userId: id,
+        name: displayName,
+        imageUrl: resolvedUrl,
+        size: size,
+        minTouchTarget: size,
+      );
+    }
+
     final initial = displayName.trim().isNotEmpty
         ? displayName.trim()[0].toUpperCase()
         : '?';
-    final resolvedUrl = avatarUrl != null && avatarUrl.trim().isNotEmpty
-        ? LiteTournamentCreateResult.resolveUrl(avatarUrl.trim())
-        : null;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [accentColor.withValues(alpha: 0.85), accentColor],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.25),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [accentColor.withValues(alpha: 0.85), accentColor],
         ),
-        child: ClipOval(
-          child: resolvedUrl != null && resolvedUrl.isNotEmpty
-              ? Image.network(
-                  resolvedUrl,
-                  fit: BoxFit.cover,
-                  width: size,
-                  height: size,
-                  errorBuilder: (context, error, stackTrace) => Center(
-                    child: Text(
-                      initial,
-                      style: TextStyle(
-                        fontSize: size * 0.38,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                )
-              : Center(
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withValues(alpha: 0.25),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: resolvedUrl != null && resolvedUrl.isNotEmpty
+            ? Image.network(
+                resolvedUrl,
+                fit: BoxFit.cover,
+                width: size,
+                height: size,
+                errorBuilder: (context, error, stackTrace) => Center(
                   child: Text(
                     initial,
                     style: TextStyle(
@@ -3570,7 +3584,17 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     ),
                   ),
                 ),
-        ),
+              )
+            : Center(
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontSize: size * 0.38,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -3587,6 +3611,29 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ? participant.members.first
         : null;
     final subtitle = participant.members.map((m) => m.fullName).join(', ');
+    final memberId = firstMember?.id.trim() ?? '';
+    // The whole row toggles the pairing selection, so the account link lives
+    // in its own control over the name — exactly the shape it had before.
+    final nameColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          participant.displayName,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: colors.textPrimary,
+          ),
+        ),
+        if (subtitle.isNotEmpty && subtitle != participant.displayName)
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 11, color: colors.textMuted),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+      ],
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -3614,45 +3661,21 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
               ),
               const SizedBox(width: 10),
               _buildUserAvatar(
-                colors,
+                userId: memberId,
                 avatarUrl: firstMember?.avatarUrl,
                 displayName: participant.displayName,
                 accentColor: colors.warning,
-                onTap: firstMember != null && firstMember.id.isNotEmpty
-                    ? () => context.push('/user/${firstMember.id}')
-                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: GestureDetector(
-                  onTap: firstMember != null && firstMember.id.isNotEmpty
-                      ? () => context.push('/user/${firstMember.id}')
-                      : null,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        participant.displayName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colors.textPrimary,
-                        ),
+                child: memberId.isEmpty
+                    ? nameColumn
+                    : UserProfileTapTarget(
+                        userId: memberId,
+                        name: participant.displayName,
+                        imageUrl: _resolvedAvatarUrl(firstMember?.avatarUrl),
+                        child: nameColumn,
                       ),
-                      if (subtitle.isNotEmpty &&
-                          subtitle != participant.displayName)
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -3682,6 +3705,27 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ? participant.members.first
         : null;
     final subtitle = participant.members.map((m) => m.fullName).join(', ');
+    final memberId = firstMember?.id.trim() ?? '';
+    final nameColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          participant.displayName,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: colors.textPrimary,
+          ),
+        ),
+        if (subtitle.isNotEmpty && subtitle != participant.displayName)
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 11, color: colors.textMuted),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+      ],
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -3694,42 +3738,21 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
       child: Row(
         children: [
           _buildUserAvatar(
-            colors,
+            userId: memberId,
             avatarUrl: firstMember?.avatarUrl,
             displayName: participant.displayName,
             accentColor: colors.info,
-            onTap: firstMember != null && firstMember.id.isNotEmpty
-                ? () => context.push('/user/${firstMember.id}')
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: GestureDetector(
-              onTap: firstMember != null && firstMember.id.isNotEmpty
-                  ? () => context.push('/user/${firstMember.id}')
-                  : null,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    participant.displayName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colors.textPrimary,
-                    ),
+            child: memberId.isEmpty
+                ? nameColumn
+                : UserProfileTapTarget(
+                    userId: memberId,
+                    name: participant.displayName,
+                    imageUrl: _resolvedAvatarUrl(firstMember?.avatarUrl),
+                    child: nameColumn,
                   ),
-                  if (subtitle.isNotEmpty &&
-                      subtitle != participant.displayName)
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 11, color: colors.textMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -3760,6 +3783,39 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final members = participant.members;
     final hasTwoMembers = members.length >= 2;
 
+    String memberLabel(LiteMember member) =>
+        member.fullName.isNotEmpty ? member.fullName : l10n.infoPlayer;
+
+    // Avatar and name are a single control on this tile, so the tap target
+    // owns the whole row and only the avatar artwork goes inside it.
+    Widget memberRow(LiteMember member) {
+      final name = memberLabel(member);
+      final avatarUrl = _resolvedAvatarUrl(member.avatarUrl);
+      return UserProfileTapTarget(
+        userId: member.id,
+        name: name,
+        imageUrl: avatarUrl,
+        child: Row(
+          children: [
+            RankAvatar(imageUrl: avatarUrl, name: name, size: 32),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -3777,76 +3833,16 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Member 1
-                      InkWell(
-                        onTap: members[0].id.isNotEmpty
-                            ? () => context.push('/user/${members[0].id}')
-                            : null,
-                        child: Row(
-                          children: [
-                            _buildUserAvatar(
-                              colors,
-                              avatarUrl: members[0].avatarUrl,
-                              displayName: members[0].fullName,
-                              accentColor: colors.success,
-                              size: 32,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                members[0].fullName.isNotEmpty
-                                    ? members[0].fullName
-                                    : l10n.infoPlayer,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: colors.textPrimary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      memberRow(members[0]),
                       const SizedBox(height: 6),
                       // Member 2
-                      InkWell(
-                        onTap: members[1].id.isNotEmpty
-                            ? () => context.push('/user/${members[1].id}')
-                            : null,
-                        child: Row(
-                          children: [
-                            _buildUserAvatar(
-                              colors,
-                              avatarUrl: members[1].avatarUrl,
-                              displayName: members[1].fullName,
-                              accentColor: AppTheme.primary,
-                              size: 32,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                members[1].fullName.isNotEmpty
-                                    ? members[1].fullName
-                                    : l10n.infoPlayer,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: colors.textPrimary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      memberRow(members[1]),
                     ],
                   )
                 : Row(
                     children: [
                       _buildUserAvatar(
-                        colors,
+                        userId: members.isNotEmpty ? members.first.id : null,
                         avatarUrl: members.isNotEmpty
                             ? members.first.avatarUrl
                             : null,
@@ -4185,23 +4181,18 @@ class _LiteClubMemberPickerSheetState
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: widget.colors.info
-                                      .withValues(alpha: 0.12),
-                                  backgroundImage:
-                                      avatar == null || avatar.isEmpty
+                                UserAvatarTap(
+                                  userId: userId,
+                                  communityId: widget.communityId,
+                                  name: name,
+                                  imageUrl: avatar == null || avatar.isEmpty
                                       ? null
-                                      : NetworkImage(avatar),
-                                  child: avatar == null || avatar.isEmpty
-                                      ? Text(
-                                          name.characters.first.toUpperCase(),
-                                          style: TextStyle(
-                                            color: widget.colors.info,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        )
-                                      : null,
+                                      : avatar,
+                                  size: 40,
+                                  // Pinned to the artwork: the row also holds
+                                  // the "add" button, so a larger hit box
+                                  // would push the name and button sideways.
+                                  minTouchTarget: 40,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(

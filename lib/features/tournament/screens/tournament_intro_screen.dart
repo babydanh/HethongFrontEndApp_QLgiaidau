@@ -248,54 +248,25 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
       ),
       extendBody: true,
-      bottomNavigationBar: _buildBottomBar(
+      floatingActionButton: _buildRegistrationAction(
         context,
         tournamentAsync.asData?.value,
         activeInvite,
-        currentUserId,
-        isAdmin,
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: _buildBottomBar(context),
     );
   }
 
-  Widget _buildBottomBar(
+  Widget _buildBottomBar(BuildContext context) =>
+      _buildFloatingBottomNav(context);
+
+  Widget? _buildRegistrationAction(
     BuildContext context,
     Tournament? tournament,
     String? activeInvite,
-    String? currentUserId,
-    bool isAdmin,
   ) {
-    if (tournament == null) {
-      return _buildFloatingBottomNav(context);
-    }
-
-    final isCreator = tournament.creatorId == currentUserId;
-    final hasInvite = activeInvite?.trim().isNotEmpty == true;
-    final isClubRestricted =
-        tournament.isClubTournament ||
-        tournament.isClubLite ||
-        (tournament.communityId?.isNotEmpty ?? false) ||
-        tournament.visibility == 'PRIVATE';
-
-    var hasTournamentAccess =
-        !isClubRestricted || isCreator || isAdmin || hasInvite;
-    if (!hasTournamentAccess &&
-        tournament.communityId != null &&
-        tournament.communityId!.isNotEmpty) {
-      final membership = ref
-          .watch(myCommunityMembershipProvider(tournament.communityId!))
-          .value;
-      final membershipStatus = membership?.status.toUpperCase();
-      hasTournamentAccess =
-          membershipStatus == 'JOINED' ||
-          membershipStatus == 'ADMIN' ||
-          membershipStatus == 'OWNER' ||
-          membershipStatus == 'APPROVED';
-    }
-
-    if (!hasTournamentAccess || isCreator) {
-      return _buildFloatingBottomNav(context);
-    }
+    if (tournament == null) return null;
 
     final now = DateTime.now();
     final isRegistrationNotStarted =
@@ -304,19 +275,17 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final isRegistrationExpired =
         tournament.registrationEndDate != null &&
         now.isAfter(tournament.registrationEndDate!);
-    final isRegOpen = StatusHelper.isTournamentRegistration(tournament.status);
-    if (!isRegOpen) return _buildFloatingBottomNav(context);
-    final canRegister =
-        isRegOpen &&
-        !tournament.isRegistrationLocked &&
-        !isRegistrationNotStarted &&
-        !isRegistrationExpired;
-    final l10n = AppLocalizations.of(context)!;
-    final registerLabel = isRegistrationNotStarted
-        ? l10n.lite_registrationNotOpen
-        : canRegister
-        ? l10n.registerNow
-        : l10n.registerRegClosed;
+    final isRegistrationOpen = StatusHelper.isTournamentRegistration(
+      tournament.status,
+    );
+    if (!isRegistrationOpen ||
+        tournament.isRegistrationLocked ||
+        isRegistrationNotStarted ||
+        isRegistrationExpired) {
+      return null;
+    }
+
+    final hasInvite = activeInvite?.trim().isNotEmpty == true;
     final queryParameters = <String, String>{
       if (hasInvite) 'invite': activeInvite!.trim(),
       if (_selectedDivisionId?.isNotEmpty == true)
@@ -327,48 +296,20 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       queryParameters: queryParameters.isEmpty ? null : queryParameters,
     ).toString();
 
-    return SafeArea(
-      top: false,
-      child: Container(
-        color: Colors.transparent,
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-        child: SizedBox(
-          height: 48,
-          child: FilledButton(
-            onPressed: canRegister ? () => context.push(registrationUri) : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: context.colors.bgSurface,
-              disabledForegroundColor: context.colors.textMuted,
-              elevation: canRegister ? 2 : 0,
-              shadowColor: AppTheme.primary.withValues(alpha: 0.35),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.how_to_reg_rounded, size: 20),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    registerLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 15,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+    return TextButton(
+      onPressed: () => context.push(registrationUri),
+      style: TextButton.styleFrom(
+        foregroundColor: AppTheme.primary,
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        minimumSize: const Size(48, 48),
+        tapTargetSize: MaterialTapTargetSize.padded,
+      ),
+      child: Text(
+        AppLocalizations.of(context)!.register,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -776,7 +717,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     tabHeaders.add(Tab(height: 28, text: l10n.tabTeams));
 
     // 6. Lịch thi đấu
-    final int scheduleIndex = tabHeaders.length;
     tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
 
     // 7. Tab [Bảng đấu]
@@ -796,9 +736,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament: tournament,
         teamCount: teamsAsync.value?.length ?? 0,
         resolveImageUrl: _resolveImageUrl,
-        onNavigateToMatches: () {
-          controller.animateTo(scheduleIndex);
-        },
         onNavigateToIntro: _introTabIndex >= 0
             ? () => controller.animateTo(_introTabIndex)
             : null,
@@ -1156,8 +1093,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             ),
           ];
 
-    final Color currentIconColor =
-        (_isCollapsed || isClubLite) ? colors.textPrimary : Colors.white;
+    final Color currentIconColor = (_isCollapsed || isClubLite)
+        ? colors.textPrimary
+        : Colors.white;
 
     return SliverAppBar(
       pinned: true,
@@ -1167,11 +1105,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      backgroundColor: (_isCollapsed || isClubLite) ? colors.bgDark : Colors.transparent,
-      iconTheme: IconThemeData(
-        color: currentIconColor,
-        opacity: 1.0,
-      ),
+      backgroundColor: (_isCollapsed || isClubLite)
+          ? colors.bgDark
+          : Colors.transparent,
+      iconTheme: IconThemeData(color: currentIconColor, opacity: 1.0),
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back_ios_rounded,
@@ -1190,9 +1127,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             isFollowing
                 ? Icons.bookmark_rounded
                 : Icons.bookmark_border_rounded,
-            color: isFollowing
-                ? AppTheme.primary
-                : currentIconColor,
+            color: isFollowing ? AppTheme.primary : currentIconColor,
             size: 22,
             shadows: isFollowing ? null : iconShadows,
           ),

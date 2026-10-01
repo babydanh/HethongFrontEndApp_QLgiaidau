@@ -19,6 +19,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/register/doubles_registration_member.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -1092,19 +1093,14 @@ class _DoublesRegistrationFlowState
                   final sel = _selectedPartner?.id == u.id;
                   return ListTile(
                     dense: true,
-                    leading: CircleAvatar(
-                      radius: 16,
-                      backgroundImage: u.avatarUrl != null
-                          ? NetworkImage(u.avatarUrl!)
-                          : null,
-                      child: u.avatarUrl == null
-                          ? Text(
-                              u.fullName.isNotEmpty
-                                  ? u.fullName[0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(fontSize: 12),
-                            )
-                          : null,
+                    leading: UserAvatarTap(
+                      userId: u.id,
+                      name: u.fullName,
+                      imageUrl: u.avatarUrl,
+                      size: 32,
+                      // Pinned to the artwork: the tile is dense and its
+                      // title/subtitle must not shift right.
+                      minTouchTarget: 32,
                     ),
                     title: Text(
                       u.fullName,

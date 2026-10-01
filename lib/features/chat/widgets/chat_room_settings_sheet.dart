@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 enum ChatNotificationMode { all, mentionsOnly, muted }
@@ -251,9 +252,9 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.chatRoomUploadAvatarError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.chatRoomUploadAvatarError)));
       }
     } finally {
       if (mounted) setState(() => _isUpdatingAdminSettings = false);
@@ -348,14 +349,15 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: CircleAvatar(
-                radius: 18,
-                backgroundImage: participant.avatarUrl != null
-                    ? NetworkImage(participant.avatarUrl!)
-                    : null,
-                child: participant.avatarUrl == null
-                    ? Text(participant.fullName.characters.first)
-                    : null,
+              leading: UserAvatarTap(
+                userId: participant.id,
+                name: participant.fullName,
+                communityId: widget.communityId,
+                imageUrl: participant.avatarUrl,
+                size: 36,
+                // ListTile leadings sit in a fixed 40px slot; keeping the box
+                // at the artwork size avoids shifting the title column.
+                minTouchTarget: 36,
               ),
               title: Text(
                 participant.fullName,

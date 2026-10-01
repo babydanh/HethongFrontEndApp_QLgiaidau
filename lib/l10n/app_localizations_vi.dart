@@ -915,6 +915,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get userProfileViewProfile => 'Xem hồ sơ';
 
   @override
+  String userProfileViewProfileOf(Object name) {
+    return 'Xem hồ sơ $name';
+  }
+
+  @override
   String get userProfileLoading => 'Đang tải hồ sơ...';
 
   @override
@@ -3149,6 +3154,9 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get dashboard_noTournaments =>
       'Bạn chưa tạo hoặc tham gia giải đấu nào';
+
+  @override
+  String get dashboard_noMoreTournaments => 'Đã xem hết giải đấu';
 
   @override
   String get dashboard_collapse => 'Thu gọn';

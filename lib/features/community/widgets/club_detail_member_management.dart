@@ -88,20 +88,16 @@ extension _ClubDetailMemberManagement on _ClubDetailScreenState {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-            child: Text(
-              (req.userFullName?.isNotEmpty == true
-                      ? req.userFullName![0]
-                      : '?')
-                  .toUpperCase(),
-              style: const TextStyle(
-                color: Color(0xFFF59E0B),
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
+          // The row itself is an admin action (approve / reject), so only the
+          // avatar becomes the profile entry point — never the whole card.
+          UserAvatarTap(
+            userId: req.userId,
+            communityId: widget.clubId,
+            name: req.userFullName ?? l10n.dashboard_user,
+            imageUrl: req.userAvatarUrl,
+            size: 44,
+            ringWidth: 2.5,
+            onFilterMatches: _filterClubMatches,
           ),
           const SizedBox(width: 12),
           Expanded(

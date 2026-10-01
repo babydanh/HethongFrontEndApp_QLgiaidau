@@ -32,7 +32,10 @@ class _ClubSessionAthleticBanner extends StatelessWidget {
     return
     // ─── Athletic Sport Banner Cover ───
     SizedBox(
-      height: 140,
+      height: AppResponsive.bannerHeight(
+        MediaQuery.sizeOf(context).height,
+        viewportWidth: MediaQuery.sizeOf(context).width,
+      ),
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,

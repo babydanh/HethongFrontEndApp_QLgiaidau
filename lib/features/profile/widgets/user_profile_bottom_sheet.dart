@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/community/providers/user_club_rank_p
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 
 /// Bottom sheet xem nhanh hồ sơ người dùng & thành viên CLB (tương đương UserProfilePopover trên Web).
 /// Cho phép xem nhanh thông tin, ELO, Danh hiệu CLB, gán tag (nếu là BQT) và nút nhắn tin / xem hồ sơ chi tiết.
@@ -22,6 +23,23 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
   final String? initialFullName;
   final String? initialAvatarUrl;
   final void Function(String query)? onFilterMatches;
+  /// Replaces the default "close then push the profile page" behaviour.
+  ///
+  /// Set when the sheet is embedded somewhere without a modal route to pop —
+  /// e.g. the desktop hover preview owned by `UserAvatarTap` — so the action
+  /// button never pops a route it does not own.
+  final VoidCallback? onViewProfile;
+
+  /// Pins the action row to the bottom edge instead of leaving it as the last
+  /// item of the scrolling body.
+  ///
+  /// Off by default, which is right for the modal sheet: it is tall and the
+  /// user scrolls to the bottom. A host that caps the height — the desktop
+  /// hover preview owned by `UserAvatarTap`, which fits in
+  /// `min(height * 0.62, 520)` logical pixels — would otherwise bury the only
+  /// path to the profile page below the fold. The host must bound the height:
+  /// the body is a flex child, so an unbounded parent cannot shrink it.
+  final bool pinActions;
 
   const UserProfileBottomSheet({
     super.key,
@@ -30,6 +48,8 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
     this.initialFullName,
     this.initialAvatarUrl,
     this.onFilterMatches,
+    this.onViewProfile,
+    this.pinActions = false,
   });
 
   /// Hiển thị UserProfileBottomSheet dạng Modal BottomSheet.
@@ -40,6 +60,7 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
     String? initialFullName,
     String? initialAvatarUrl,
     void Function(String query)? onFilterMatches,
+    VoidCallback? onViewProfile,
   }) {
     return showModalBottomSheet<void>(
       context: context,
@@ -51,6 +72,7 @@ class UserProfileBottomSheet extends ConsumerStatefulWidget {
         initialFullName: initialFullName,
         initialAvatarUrl: initialAvatarUrl,
         onFilterMatches: onFilterMatches,
+        onViewProfile: onViewProfile,
       ),
     );
   }
@@ -142,9 +164,13 @@ class _UserProfileBottomSheetState
       if (roomData == null || roomData['id'] == null || !context.mounted) {
         return;
       }
-      Navigator.pop(context); // Close bottom sheet
+      // Resolve the router while the sheet is still mounted, then pop and
+      // push. Touching `context` after `Navigator.pop` walks a route element
+      // that is already on its way out.
+      final router = GoRouter.of(context);
       final name = Uri.encodeComponent(fullName);
-      context.push('/chat/${roomData['id']}?name=$name');
+      Navigator.of(context).pop();
+      router.push('/chat/${roomData['id']}?name=$name');
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -223,6 +249,96 @@ class _UserProfileBottomSheetState
         myMembership != null &&
         (myMembership.role == 'OWNER' || myMembership.role == 'MODERATOR');
 
+    final profile = profileAsync.asData?.value;
+    // A host that caps the height pins the actions to its bottom edge. The
+    // modal sheet does not: there the user simply scrolls to the end.
+    final pinActions = widget.pinActions && profile != null;
+
+    final Widget scrollBody = SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ─── 1. COVER PHOTO & HEADER BAR ──────────────────────
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Cover Image / Gradient
+              _buildCover(profile?.coverUrl, colors),
+
+              // Drag indicator
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Close button
+              Positioned(
+                top: 12,
+                right: 12,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // ─── 2. AVATAR & BASIC DETAILS ────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: profileAsync.when(
+              loading: () => _buildLoadingContent(colors, l10n),
+              error: (err, _) =>
+                  _buildErrorContent(colors, err.toString(), l10n),
+              data: (data) {
+                final clubRankInfo = communityId != null
+                    ? ref.watch(userClubRankProvider((userId: widget.userId, communityId: communityId))).asData?.value
+                    : null;
+                return _buildProfileContent(
+                  context,
+                  data,
+                  memberTags,
+                  tagPresets,
+                  clubRole,
+                  isViewerAdmin,
+                  clubRankInfo,
+                  colors,
+                  l10n,
+                  showActions: !pinActions,
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.88,
@@ -240,89 +356,19 @@ class _UserProfileBottomSheetState
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ─── 1. COVER PHOTO & HEADER BAR ──────────────────────
-              Stack(
-                clipBehavior: Clip.none,
+        // `loose` keeps a short profile from stretching the popup out to the
+        // host's cap; the action bar is a sibling of the scroll view, so it
+        // cannot scroll out of reach.
+        child: pinActions
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Cover Image / Gradient
-                  _buildCover(profileAsync.asData?.value.coverUrl, colors),
-
-                  // Drag indicator
-                  Positioned(
-                    top: 8,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Close button
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ),
+                  Flexible(fit: FlexFit.loose, child: scrollBody),
+                  _buildPinnedActions(context, profile, colors, l10n),
                 ],
-              ),
-
-              // ─── 2. AVATAR & BASIC DETAILS ────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: profileAsync.when(
-                  loading: () => _buildLoadingContent(colors, l10n),
-                  error: (err, _) =>
-                      _buildErrorContent(colors, err.toString(), l10n),
-                  data: (profile) {
-                    final clubRankInfo = communityId != null
-                        ? ref.watch(userClubRankProvider((userId: widget.userId, communityId: communityId))).asData?.value
-                        : null;
-                    return _buildProfileContent(
-                      context,
-                      profile,
-                      memberTags,
-                      tagPresets,
-                      clubRole,
-                      isViewerAdmin,
-                      clubRankInfo,
-                      colors,
-                      l10n,
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
+              )
+            : scrollBody,
       ),
     );
   }
@@ -376,8 +422,11 @@ class _UserProfileBottomSheetState
     bool isViewerAdmin,
     UserClubRankInfo? clubRankInfo,
     AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) {
+    AppLocalizations l10n, {
+    // `false` when the host pins its own action bar, so the pair is never
+    // rendered twice.
+    required bool showActions,
+  }) {
     final featuredRank = profile.ranks
         .where((r) => r.matchesPlayed > 0)
         .fold<UserPublicRank?>(
@@ -1057,81 +1106,153 @@ class _UserProfileBottomSheetState
         ],
 
         // ─── 5. ACTION BUTTONS ────────────────────────────────────
-        Row(
-          children: [
-            // Direct Message Button
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _isOpeningChat
-                    ? null
-                    : () => _handleDirectChat(context, profile.fullName),
-                icon: _isOpeningChat
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.chat_bubble_rounded, size: 16),
-                label: Text(
-                  _isOpeningChat
-                      ? l10n.userProfileOpeningChat
-                      : l10n.userProfileMessage,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
+        if (showActions) _buildActionRow(context, profile, colors, l10n),
+      ],
+    );
+  }
+
+  /// Footer for a host that caps the sheet's height.
+  ///
+  /// The preview it serves is anchored to a row on a live page, so its lower
+  /// edge is the only place the actions can live and still be one click away
+  /// — the body scrolls, this does not. Both actions come from
+  /// [_buildActionRow] so a pinned bar is never lopsided: no "message" without
+  /// "view profile", or the reverse.
+  Widget _buildPinnedActions(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: colors.borderLight)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          // A pinned row needs a bounded cross axis to stretch into, and 44 is
+          // the smallest pointer target worth shipping. `stretch` then hands
+          // the whole height to the buttons, so all of it is tappable rather
+          // than just the label.
+          child: SizedBox(
+            height: _actionTargetHeight,
+            child: _buildActionRow(
+              context,
+              profile,
+              colors,
+              l10n,
+              stretchTargets: true,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Smallest pointer target the pinned bar ships. 44 logical pixels is the
+  /// accessibility floor, and it is a named constant rather than a literal
+  /// because the test asserts against the same number.
+  static const double _actionTargetHeight = 44;
+
+  /// The "message" / "view profile" pair, shared by the scrolling body and the
+  /// pinned footer so both hosts offer the same two actions with the same
+  /// weight, wording and route.
+  ///
+  /// [stretchTargets] fills the row's cross axis into the buttons, for the
+  /// host that wraps this in a minimum-height box. It is off in the modal
+  /// sheet, where the buttons keep their natural height.
+  Widget _buildActionRow(
+    BuildContext context,
+    UserPublicProfile profile,
+    AppColorsExtension colors,
+    AppLocalizations l10n, {
+    bool stretchTargets = false,
+  }) {
+    return Row(
+      crossAxisAlignment: stretchTargets
+          ? CrossAxisAlignment.stretch
+          : CrossAxisAlignment.center,
+      children: [
+        // Direct Message Button
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: _isOpeningChat
+                ? null
+                : () => _handleDirectChat(context, profile.fullName),
+            icon: _isOpeningChat
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.chat_bubble_rounded, size: 16),
+            label: Text(
+              _isOpeningChat
+                  ? l10n.userProfileOpeningChat
+                  : l10n.userProfileMessage,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(width: 10),
-            // View Full Profile Button
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  // Capture the router before dismissing the modal. Using the
-                  // sheet context to push immediately after Navigator.pop can
-                  // reuse a disposed route element on the next profile open.
-                  final router = GoRouter.of(context);
-                  final uri = widget.communityId != null
-                      ? '/users/${widget.userId}?communityId=${widget.communityId}'
-                      : '/users/${widget.userId}';
-                  Navigator.pop(context);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    router.push(uri);
-                  });
-                },
-                icon: const Icon(Icons.person_rounded, size: 16),
-                label: Text(
-                  l10n.userProfileViewProfile,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colors.textPrimary,
-                  side: BorderSide(color: colors.border),
-                  backgroundColor: colors.bgSurface,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        // View Full Profile Button
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              // Resolve the router while the sheet is still mounted and
+              // never touch `context` after popping it: the sheet is
+              // unmounted from that point on, so a deferred push would
+              // land on a defunct element. Pushing synchronously on the
+              // captured router keeps the two imperative operations
+              // ordered, which is what a post-frame callback got wrong.
+              final router = GoRouter.of(context);
+              final uri = NavigationHelper.getUserProfileRoute(
+                widget.userId,
+                communityId: widget.communityId,
+              );
+              final onViewProfile = widget.onViewProfile;
+              if (onViewProfile != null) {
+                onViewProfile();
+                return;
+              }
+              Navigator.of(context).pop();
+              router.push(uri);
+            },
+            icon: const Icon(Icons.person_rounded, size: 16),
+            label: Text(
+              l10n.userProfileViewProfile,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
-          ],
+            style: OutlinedButton.styleFrom(
+              foregroundColor: colors.textPrimary,
+              side: BorderSide(color: colors.border),
+              backgroundColor: colors.bgSurface,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ),
       ],
     );

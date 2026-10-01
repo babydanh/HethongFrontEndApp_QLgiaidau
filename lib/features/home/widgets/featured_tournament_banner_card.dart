@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 
 class FeaturedTournamentBannerCard extends StatelessWidget {
   final Tournament tournament;
@@ -64,14 +65,26 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    // Một nguồn duy nhất cho CẢ container lẫn chữ: bannerFontSize nhân thẳng
+    // bannerHeight, nên truyền lệch chiều rộng ở đây sẽ sinh ra banner cao mà
+    // chữ nhỏ — không có cảnh báo biên dịch nào bắt được.
+    final viewportSize = MediaQuery.sizeOf(context);
     final bannerUrl = _resolveImageUrl(tournament.bannerUrl);
     final hasBanner = bannerUrl.isNotEmpty;
     final hideText = tournament.hideFeaturedCardText;
 
     return GestureDetector(
       onTap: onTap,
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
+      child: SizedBox(
+        // Cao hơn trước: bản cũ chặn cứng ở 20% chiều cao viewport, trên iPhone
+        // dọc 844px chỉ còn 169px — thấp hơn hẳn AspectRatio(16/9) cũ (~219px)
+        // nên giải nổi bật bị bẹp. Nay dọc lấy 30% (253px). Ở chế độ ngang vẫn
+        // giữ 20%, vì AspectRatio(16/9) ở 1366×768 cho ra 750px = 97.7% màn
+        // hình. Ảnh vẫn BoxFit.cover nên chỉ crop ở giữa chứ không méo.
+        height: AppResponsive.bannerHeight(
+          viewportSize.height,
+          viewportWidth: viewportSize.width,
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
@@ -149,10 +162,12 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                         tournament.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 17,
-                          height: 1.2,
+                          fontSize: AppResponsive.bannerFontSize(
+                            viewportSize.height,
+                            viewportWidth: viewportSize.width,
+                          ),
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,
                           shadows: [
@@ -314,7 +329,11 @@ class _MetaChip extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.92),
-                fontSize: 10,
+                fontSize: AppResponsive.bannerFontSize(
+                  MediaQuery.sizeOf(context).height,
+                  viewportWidth: MediaQuery.sizeOf(context).width,
+                  ratio: AppResponsive.bannerCaptionRatio,
+                ),
                 fontWeight: FontWeight.w700,
               ),
             ),

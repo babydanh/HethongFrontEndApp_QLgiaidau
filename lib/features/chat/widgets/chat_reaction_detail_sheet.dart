@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:flutter/material.dart';
 
 class ChatReactionDetailSheet extends StatelessWidget {
@@ -146,29 +147,13 @@ class ChatReactionDetailSheet extends StatelessWidget {
                         ListTile(
                           dense: true,
                           contentPadding: EdgeInsets.zero,
-                          leading: CircleAvatar(
-                            radius: 18,
-                            backgroundColor: AppTheme.primary.withValues(
-                              alpha: 0.12,
-                            ),
-                            backgroundImage:
-                                user.avatarUrl != null &&
-                                    user.avatarUrl!.isNotEmpty
-                                ? NetworkImage(user.avatarUrl!)
-                                : null,
-                            child:
-                                user.avatarUrl == null ||
-                                    user.avatarUrl!.isEmpty
-                                ? Text(
-                                    user.fullName.trim().isEmpty
-                                        ? '?'
-                                        : user.fullName.trim()[0].toUpperCase(),
-                                    style: const TextStyle(
-                                      color: AppTheme.primary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  )
-                                : null,
+                          leading: UserAvatarTap(
+                            userId: user.id,
+                            name: user.fullName,
+                            imageUrl: user.avatarUrl,
+                            size: 36,
+                            // Dense tile: a 44px box would grow the row.
+                            minTouchTarget: 36,
                           ),
                           title: Text(
                             user.fullName,

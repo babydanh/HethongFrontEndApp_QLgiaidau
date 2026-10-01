@@ -22,6 +22,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -55,8 +56,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     _tabController.dispose();
     super.dispose();
   }
-
-
 
   // ─── IMAGE PICKER ────────────────────────────────────────────────────
   Future<void> _pickImage(bool isCover) async {
@@ -291,10 +290,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ? rankings.map((r) => r.eloPoints).reduce((a, b) => a > b ? a : b)
         : (profile.eloPoints ?? 0);
 
-    final eligibleRankings = rankings
-        .where((r) => r.isLeaderboardEligible && r.eloPoints > 0)
-        .toList()
-      ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+    final eligibleRankings =
+        rankings
+            .where((r) => r.isLeaderboardEligible && r.eloPoints > 0)
+            .toList()
+          ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
 
     final bestRanking = eligibleRankings.isNotEmpty
         ? eligibleRankings.first
@@ -428,7 +428,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             background: Stack(
               fit: StackFit.expand,
               children: [
-                if (profile.coverUrl != null && profile.coverUrl!.trim().isNotEmpty)
+                if (profile.coverUrl != null &&
+                    profile.coverUrl!.trim().isNotEmpty)
                   Image.network(
                     profile.coverUrl!.trim(),
                     fit: BoxFit.cover,
@@ -492,7 +493,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           ),
                           child: RankAvatar(
                             imageUrl: profile.avatarUrl,
-                            name: (profile.fullName != null && profile.fullName!.isNotEmpty)
+                            name:
+                                (profile.fullName != null &&
+                                    profile.fullName!.isNotEmpty)
                                 ? profile.fullName!
                                 : 'SportO',
                             elo: bestRanking?.eloPoints ?? 0,
@@ -620,12 +623,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         children: [
                           Builder(
                             builder: (context) {
-                              final roleUpper = (profile.role ?? '').toUpperCase();
+                              final roleUpper = (profile.role ?? '')
+                                  .toUpperCase();
                               final isAdmin = roleUpper == 'ADMIN';
                               final isOrganizer = roleUpper == 'ORGANIZER';
                               final roleTitle = isAdmin
                                   ? 'Quản trị viên'
-                                  : (isOrganizer ? 'Ban tổ chức' : 'Vận động viên');
+                                  : (isOrganizer
+                                        ? 'Ban tổ chức'
+                                        : 'Vận động viên');
 
                               if (isAdmin) {
                                 return Container(
@@ -642,7 +648,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFFD97706).withValues(alpha: 0.35),
+                                        color: const Color(
+                                          0xFFD97706,
+                                        ).withValues(alpha: 0.35),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -666,10 +674,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withValues(alpha: 0.1),
+                                  color: AppTheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: AppTheme.primary.withValues(alpha: 0.3),
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                     width: 1.2,
                                   ),
                                 ),
@@ -685,7 +697,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                             },
                           ),
 
-                          if (profile.gender != null && profile.gender!.isNotEmpty) ...[
+                          if (profile.gender != null &&
+                              profile.gender!.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -704,7 +717,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    _formatGender(context, profile.gender) == (AppLocalizations.of(context)?.genderFemale ?? 'Nữ')
+                                    _formatGender(context, profile.gender) ==
+                                            (AppLocalizations.of(
+                                                  context,
+                                                )?.genderFemale ??
+                                                'Nữ')
                                         ? Icons.female_rounded
                                         : Icons.male_rounded,
                                     size: 14,
@@ -724,7 +741,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                             ),
                           ],
 
-                          if (profile.address != null && profile.address!.isNotEmpty) ...[
+                          if (profile.address != null &&
+                              profile.address!.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -765,7 +783,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ),
 
                       // Bio text if available
-                      if (profile.bio != null && profile.bio!.trim().isNotEmpty) ...[
+                      if (profile.bio != null &&
+                          profile.bio!.trim().isNotEmpty) ...[
                         const SizedBox(height: 10),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1049,7 +1068,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           );
         }
         return Column(
-          children: active.map((t) => _buildHistoryCard(t, colors, context)).toList(),
+          children: active
+              .map((t) => _buildHistoryCard(t, colors, context))
+              .toList(),
         );
       },
     );
@@ -1064,15 +1085,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final followedAsync = ref.watch(followedTournamentsProvider);
     final followed = followedAsync.asData?.value ?? [];
 
-    final activeTournaments = followed
-        .where((t) => !StatusHelper.isTournamentCompleted(t.status))
-        .toList()
-      ..sort((a, b) => (b.startDate ?? b.createdAt).compareTo(a.startDate ?? a.createdAt));
+    final activeTournaments =
+        followed
+            .where((t) => !StatusHelper.isTournamentCompleted(t.status))
+            .toList()
+          ..sort(
+            (a, b) => (b.startDate ?? b.createdAt).compareTo(
+              a.startDate ?? a.createdAt,
+            ),
+          );
 
-    final completedTournaments = followed
-        .where((t) => StatusHelper.isTournamentCompleted(t.status))
-        .toList()
-      ..sort((a, b) => (b.endDate ?? b.updatedAt).compareTo(a.endDate ?? a.updatedAt));
+    final completedTournaments =
+        followed
+            .where((t) => StatusHelper.isTournamentCompleted(t.status))
+            .toList()
+          ..sort(
+            (a, b) =>
+                (b.endDate ?? b.updatedAt).compareTo(a.endDate ?? a.updatedAt),
+          );
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -1109,7 +1139,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               : Column(
                   children: completedTournaments
                       .take(15)
-                      .map((t) => _buildCompletedTournamentCard(t, colors, context))
+                      .map(
+                        (t) =>
+                            _buildCompletedTournamentCard(t, colors, context),
+                      )
                       .toList(),
                 ),
         ],
@@ -1117,16 +1150,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-
   Widget _buildArtisticCover(AppColorsExtension colors) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF0F172A),
-            Color(0xFF1E3A8A),
-            Color(0xFF1D4ED8),
-          ],
+          colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF1D4ED8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -1185,7 +1213,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-    // ─── USER INFO HEADER (CENTERED AS SHOWN IN DESIGN MOCKUP) ─────────
+  // ─── USER INFO HEADER (CENTERED AS SHOWN IN DESIGN MOCKUP) ─────────
   Widget _buildStatsRow(
     BuildContext context,
     AppColorsExtension colors,
@@ -1330,11 +1358,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-  Widget _statDivider(AppColorsExtension colors) => Container(
-    width: 1,
-    height: 34,
-    color: colors.borderLight,
-  );
+  Widget _statDivider(AppColorsExtension colors) =>
+      Container(width: 1, height: 34, color: colors.borderLight);
 
   Widget _buildRankCard(PlayerRanking rank, AppColorsExtension colors) {
     final winRate = rank.matchesPlayed > 0
@@ -1350,7 +1375,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.sports_tennis_rounded, size: 22, color: AppTheme.primary),
+          const Icon(
+            Icons.sports_tennis_rounded,
+            size: 22,
+            color: AppTheme.primary,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1476,7 +1505,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
-
   Widget _buildMatchHistoryCard(
     MatchModel match,
     AppColorsExtension colors,
@@ -1518,7 +1546,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  match.tournamentName ?? (isCompleted ? 'Trận đấu hoàn thành' : 'Sắp diễn ra'),
+                  match.tournamentName ??
+                      (isCompleted ? 'Trận đấu hoàn thành' : 'Sắp diễn ra'),
                   style: TextStyle(fontSize: 11, color: colors.textMuted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1619,10 +1648,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   // ─── TAB 3: BẠN BÈ (ALIGNED WITH WEB ProfileFriendsTab) ─────────────
-  Widget _buildFriendsTab(
-    BuildContext context,
-    AppColorsExtension colors,
-  ) {
+  Widget _buildFriendsTab(BuildContext context, AppColorsExtension colors) {
     final friendsAsync = ref.watch(userFriendsProvider);
 
     return SingleChildScrollView(
@@ -1636,12 +1662,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             loading: () => const SizedBox.shrink(),
             error: (e, s) => const SizedBox.shrink(),
             data: (items) {
-              final accepted = items.where((i) => i.status == 'ACCEPTED').length;
+              final accepted = items
+                  .where((i) => i.status == 'ACCEPTED')
+                  .length;
               final incoming = items
-                  .where((i) => i.status == 'PENDING' && i.direction == 'INCOMING')
+                  .where(
+                    (i) => i.status == 'PENDING' && i.direction == 'INCOMING',
+                  )
                   .length;
               final outgoing = items
-                  .where((i) => i.status == 'PENDING' && i.direction == 'OUTGOING')
+                  .where(
+                    (i) => i.status == 'PENDING' && i.direction == 'OUTGOING',
+                  )
                   .length;
 
               return Container(
@@ -1685,15 +1717,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               actionLabel: 'Thử lại',
             ),
             data: (items) {
-              final acceptedFriends =
-                  items.where((item) => item.status == 'ACCEPTED').toList();
+              final acceptedFriends = items
+                  .where((item) => item.status == 'ACCEPTED')
+                  .toList();
               final incomingRequests = items
-                  .where((item) =>
-                      item.status == 'PENDING' && item.direction == 'INCOMING')
+                  .where(
+                    (item) =>
+                        item.status == 'PENDING' &&
+                        item.direction == 'INCOMING',
+                  )
                   .toList();
               final outgoingRequests = items
-                  .where((item) =>
-                      item.status == 'PENDING' && item.direction == 'OUTGOING')
+                  .where(
+                    (item) =>
+                        item.status == 'PENDING' &&
+                        item.direction == 'OUTGOING',
+                  )
                   .toList();
 
               if (_friendsSubTabIndex == 0) {
@@ -1709,7 +1748,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 }
                 return Column(
                   children: acceptedFriends
-                      .map((friend) => _buildFriendCard(friend, colors, context))
+                      .map(
+                        (friend) => _buildFriendCard(friend, colors, context),
+                      )
                       .toList(),
                 );
               } else if (_friendsSubTabIndex == 1) {
@@ -1795,22 +1836,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-            backgroundImage: (item.friendAvatar != null && item.friendAvatar!.isNotEmpty)
-                ? NetworkImage(item.friendAvatar!)
-                : null,
-            child: (item.friendAvatar == null || item.friendAvatar!.isEmpty)
-                ? Text(
-                    (item.friendName ?? 'B')[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primary,
-                      fontSize: 16,
-                    ),
-                  )
-                : null,
+          UserAvatarTap(
+            userId: item.friendId,
+            name: item.friendName ?? 'Vận động viên',
+            imageUrl: item.friendAvatar,
+            size: 44,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1830,10 +1860,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 const SizedBox(height: 2),
                 Text(
                   'Bạn bè SportO',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: colors.textMuted,
-                  ),
+                  style: TextStyle(fontSize: 11, color: colors.textMuted),
                 ),
               ],
             ),
@@ -1865,22 +1892,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-            backgroundImage: (item.friendAvatar != null && item.friendAvatar!.isNotEmpty)
-                ? NetworkImage(item.friendAvatar!)
-                : null,
-            child: (item.friendAvatar == null || item.friendAvatar!.isEmpty)
-                ? Text(
-                    (item.friendName ?? 'B')[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primary,
-                      fontSize: 15,
-                    ),
-                  )
-                : null,
+          UserAvatarTap(
+            userId: item.friendId,
+            name: item.friendName ?? 'Người dùng',
+            imageUrl: item.friendAvatar,
+            size: 40,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1921,7 +1937,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   } catch (_) {}
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary,
                     borderRadius: BorderRadius.circular(8),
@@ -1947,7 +1966,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   } catch (_) {}
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.bgSurface,
                     borderRadius: BorderRadius.circular(8),
@@ -1984,22 +2006,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: colors.border,
-            backgroundImage: (item.friendAvatar != null && item.friendAvatar!.isNotEmpty)
-                ? NetworkImage(item.friendAvatar!)
-                : null,
-            child: (item.friendAvatar == null || item.friendAvatar!.isEmpty)
-                ? Text(
-                    (item.friendName ?? 'B')[0].toUpperCase(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: colors.textSecondary,
-                      fontSize: 15,
-                    ),
-                  )
-                : null,
+          UserAvatarTap(
+            userId: item.friendId,
+            name: item.friendName ?? 'Người dùng',
+            imageUrl: item.friendAvatar,
+            size: 40,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2231,10 +2242,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               const SizedBox(height: 10),
               Text(
                 l10n.profileLoginDescription,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 14, color: colors.textSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 28),
@@ -2405,10 +2413,7 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
-      color: backgroundColor,
-      child: tabBar,
-    );
+    return Container(color: backgroundColor, child: tabBar);
   }
 
   @override

@@ -374,6 +374,28 @@ class _TournamentRegisterScreenState
     }
   }
 
+  /// Hạn chót hiệu lực của nội dung đang chọn.
+  ///
+  /// Backend chặn theo mốc sớm nhất trong hạn của nội dung và hạn của giải
+  /// (tournament-registration.repository.ts:705-719), còn màn này trước đây chỉ
+  /// xét hạn cấp giải. Chọn nội dung đã đóng hạn thì form vẫn nhận và nút vẫn
+  /// bấm được, chỉ tới lúc gửi mới nhận lỗi.
+  ///
+  /// `effectiveRegistrationEndDate` là mốc backend đã tính sẵn; null nghĩa là
+  /// không đặt hạn và server cũng không chặn theo ngày, nên không được coi null
+  /// là đã hết hạn. Chưa chọn nội dung thì server tự chọn, client chỉ xét được
+  /// mức cấp giải.
+  DateTime? get _effectiveRegistrationDeadline {
+    final tournament = ref.read(tournamentProvider(widget.tournamentId)).value;
+    return _selectedDivision?.effectiveRegistrationEndDate ??
+        tournament?.registrationEndDate;
+  }
+
+  bool get _isDivisionRegistrationExpired {
+    final deadline = _effectiveRegistrationDeadline;
+    return deadline != null && DateTime.now().isAfter(deadline);
+  }
+
   void _onDivisionSelected(
     String id,
     List<TournamentDivisionOption> divisions,
@@ -2080,11 +2102,54 @@ class _TournamentRegisterScreenState
                   const SizedBox(height: 12),
                 ],
                 const SizedBox(height: 24),
+                // Cảnh báo tĩnh trước khi bấm: trước đây người dùng phải điền
+                // hết form rồi mới biết hạn đã kết thúc, vì lỗi chỉ hiện sau
+                // khi server từ chối.
+                if (_isDivisionRegistrationExpired) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.colors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: context.colors.warning.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.timer_off_rounded,
+                          size: 20,
+                          color: context.colors.warning,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            AppLocalizations.of(context)!
+                                .registerDeadlineExpired,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: context.colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: FilledButton(
-                    onPressed: (isRegistrationClosed || _submitting)
+                    // Hạn cấp nội dung cũng chặn: trước đây chỉ xét hạn cấp
+                    // giải nên chọn nội dung đã đóng vẫn bấm được rồi mới nhận
+                    // lỗi từ server.
+                    onPressed:
+                        (isRegistrationClosed ||
+                            _isDivisionRegistrationExpired ||
+                            _submitting)
                         ? null
                         : _register,
                     style: FilledButton.styleFrom(
@@ -2107,7 +2172,8 @@ class _TournamentRegisterScreenState
                             ),
                           )
                         : Text(
-                            isRegistrationClosed
+                            (isRegistrationClosed ||
+                                    _isDivisionRegistrationExpired)
                                 ? l10n.registerRegClosed
                                 : (_selectedDivision?.entryFee != null &&
                                       _selectedDivision!.entryFee! > 0)
