@@ -124,6 +124,20 @@ void main() {
     expect(results.single.name, 'Phường Bình Trưng');
   });
 
+  test(
+    'search reports provider failure when regions return no venue matches',
+    () async {
+      final photon = _FakePhoton()
+        ..onSearch = (_) async => throw const LocationNetworkFailure();
+      final regions = _FakeRegions()..onSearch = (_, _) async => const [];
+
+      await expectLater(
+        _repo(photon: photon, regions: regions).search('MK building'),
+        throwsA(isA<LocationNetworkFailure>()),
+      );
+    },
+  );
+
   test('search throws network failure only when both sources fail', () async {
     final photon = _FakePhoton()
       ..onSearch = (_) async => throw const LocationNetworkFailure();
