@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 class DioClient {
-  final AppLogger _log;
+  static const _log = AppLogger('DioClient');
   static const _retryCountKey = '__transient_retry_count';
   static const _authRetryKey = '__auth_retry';
   static const _rateLimitRetryKey = '__rate_limit_retry_count';
@@ -23,16 +23,9 @@ class DioClient {
   Future<_TokenPair?>? _refreshInFlight;
   late final Future<String> _clientId = _loadClientId();
 
-  DioClient({required TokenManager tokenManager, Dio? dio, AppLogger? logger})
-    : _tokenManager = tokenManager,
-      _log = logger ?? const AppLogger('DioClient') {
-    const envApiBaseUrl = String.fromEnvironment('API_BASE_URL');
-    var baseUrl = envApiBaseUrl.isNotEmpty
-        ? envApiBaseUrl
-        : (dotenv.env['API_BASE_URL'] ??
-              (kIsWeb
-                  ? 'https://sporto.asia/api/v1'
-                  : 'http://localhost:3000/api/v1'));
+  DioClient({required TokenManager tokenManager, Dio? dio})
+      : _tokenManager = tokenManager {
+    var baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
     if (!kIsWeb && Platform.isAndroid) {
       if (baseUrl.contains('localhost')) {
         baseUrl = baseUrl.replaceAll('localhost', '10.0.2.2');
@@ -42,157 +35,69 @@ class DioClient {
     }
     _log.info('Initializing Dio with Base URL: $baseUrl');
 
-    _dio =
-        dio ??
-        Dio(
-          BaseOptions(
-            baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
-            sendTimeout: const Duration(seconds: 10),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              if (dotenv.env['APP_API_KEY'] != null &&
-                  dotenv.env['APP_API_KEY']!.isNotEmpty)
-                'x-app-key': dotenv.env['APP_API_KEY']!,
-            },
-          ),
-        );
+    _dio = dio ?? Dio(BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 10),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (dotenv.env['APP_API_KEY'] != null && dotenv.env['APP_API_KEY']!.isNotEmpty)
+          'x-app-key': dotenv.env['APP_API_KEY']!,
+      },
+    ));
 
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final clientId = await _clientId;
-          options.headers['x-client-id'] = clientId;
-          final token = await _tokenManager.getAccessToken();
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final clientId = await _clientId;
+        options.headers['x-client-id'] = clientId;
+        final token = await _tokenManager.getAccessToken();
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        if (kDebugMode) _logRequest(options);
+        handler.next(options);
+      },
+      onResponse: (response, handler) {
+        if (kDebugMode) _logResponse(response);
+        // Dữ liệu realtime (thông báo...) không nên bị cache — luôn lấy mới.
+        final noCache = response.requestOptions.extra['noCache'] == true;
+        if (!noCache &&
+            response.requestOptions.method.toUpperCase() == 'GET' &&
+            response.statusCode != null &&
+            response.statusCode! >= 200 &&
+            response.statusCode! < 300) {
+          _getCache[_cacheKey(response.requestOptions)] = _CachedGetResponse(
+            data: response.data,
+            statusCode: response.statusCode!,
+            statusMessage: response.statusMessage,
+            headers: response.headers,
+            savedAt: DateTime.now(),
+          );
+          if (_getCache.length > 120) {
+            final oldest = _getCache.entries.reduce(
+                  (a, b) => a.value.savedAt.isBefore(b.value.savedAt) ? a : b,
+            ).key;
+            _getCache.remove(oldest);
           }
-          if (kDebugMode) _logRequest(options);
-          handler.next(options);
-        },
-        onResponse: (response, handler) {
-          if (kDebugMode) _logResponse(response);
-          // Dữ liệu realtime (thông báo...) không nên bị cache — luôn lấy mới.
-          final noCache = response.requestOptions.extra['noCache'] == true;
-          if (!noCache &&
-              response.requestOptions.method.toUpperCase() == 'GET' &&
-              response.statusCode != null &&
-              response.statusCode! >= 200 &&
-              response.statusCode! < 300) {
-            _getCache[_cacheKey(response.requestOptions)] = _CachedGetResponse(
-              data: response.data,
-              statusCode: response.statusCode!,
-              statusMessage: response.statusMessage,
-              headers: response.headers,
-              savedAt: DateTime.now(),
-            );
-            if (_getCache.length > 120) {
-              final oldest = _getCache.entries
-                  .reduce(
-                    (a, b) => a.value.savedAt.isBefore(b.value.savedAt) ? a : b,
-                  )
-                  .key;
-              _getCache.remove(oldest);
-            }
-          }
-          handler.next(response);
-        },
-        onError: (DioException error, handler) async {
-          if (kDebugMode) _logError(error);
-          final statusCode = error.response?.statusCode;
-          if (statusCode == 401 &&
-              error.requestOptions.extra[_authRetryKey] != true &&
-              !error.requestOptions.path.contains('/auth/mobile/login') &&
-              !error.requestOptions.path.contains('/auth/mobile/refresh')) {
-            final refreshed = await _refreshAccessToken(baseUrl);
-            if (refreshed != null) {
-              final options = error.requestOptions.copyWith(
-                extra: {...error.requestOptions.extra, _authRetryKey: true},
-                headers: {
-                  ...error.requestOptions.headers,
-                  'Authorization': 'Bearer ${refreshed.accessToken}',
-                },
-              );
-              try {
-                return handler.resolve(await _dio.fetch<dynamic>(options));
-              } on DioException catch (retryError) {
-                error = retryError;
-              }
-            }
-          }
-
-          final transient =
-              error.type == DioExceptionType.connectionTimeout ||
-              error.type == DioExceptionType.sendTimeout ||
-              error.type == DioExceptionType.receiveTimeout ||
-              error.type == DioExceptionType.connectionError ||
-              (statusCode != null && statusCode >= 500);
-          final method = error.requestOptions.method.toUpperCase();
-          final noCache = error.requestOptions.extra['noCache'] == true;
-          final cached = noCache
-              ? null
-              : _getCache[_cacheKey(error.requestOptions)];
-
-          // A stale-but-valid public snapshot is more useful than waiting for a
-          // rate-limit window. Only retry a GET without cache, once, and honor
-          // the server's Retry-After with a small jitter to avoid synchronized
-          // clients waking up together.
-          if (method == 'GET' && statusCode == 429) {
-            if (cached != null &&
-                DateTime.now().difference(cached.savedAt) <
-                    const Duration(minutes: 10)) {
-              return handler.resolve(
-                Response(
-                  requestOptions: error.requestOptions,
-                  data: cached.data,
-                  statusCode: cached.statusCode,
-                  statusMessage: cached.statusMessage,
-                  headers: cached.headers,
-                ),
-              );
-            }
-            final rateLimitRetryCount =
-                (error.requestOptions.extra[_rateLimitRetryKey] as int?) ?? 0;
-            if (rateLimitRetryCount < _maxRateLimitRetries) {
-              final retryAfterSeconds =
-                  int.tryParse(
-                    error.response?.headers.value('retry-after') ?? '',
-                  ) ??
-                  1;
-              final jitterMs = math.Random().nextInt(250);
-              final delayMs = math.min(
-                10000,
-                retryAfterSeconds * 1000 + jitterMs,
-              );
-              await Future<void>.delayed(Duration(milliseconds: delayMs));
-              final options = error.requestOptions.copyWith(
-                extra: {
-                  ...error.requestOptions.extra,
-                  _rateLimitRetryKey: rateLimitRetryCount + 1,
-                },
-              );
-              try {
-                return handler.resolve(await _dio.fetch<dynamic>(options));
-              } on DioException catch (retryError) {
-                error = retryError;
-              }
-            }
-          }
-
-          final retryCount =
-              (error.requestOptions.extra[_retryCountKey] as int?) ?? 0;
-          if (method == 'GET' &&
-              transient &&
-              retryCount < _maxTransientRetries) {
-            await Future<void>.delayed(
-              Duration(milliseconds: 350 * (1 << retryCount)),
-            );
+        }
+        handler.next(response);
+      },
+      onError: (DioException error, handler) async {
+        if (kDebugMode) _logError(error);
+        final statusCode = error.response?.statusCode;
+        if (statusCode == 401 &&
+            error.requestOptions.extra[_authRetryKey] != true &&
+            !error.requestOptions.path.contains('/auth/mobile/login') &&
+            !error.requestOptions.path.contains('/auth/mobile/refresh')) {
+          final refreshed = await _refreshAccessToken(baseUrl);
+          if (refreshed != null) {
             final options = error.requestOptions.copyWith(
-              extra: {
-                ...error.requestOptions.extra,
-                _retryCountKey: retryCount + 1,
+              extra: {...error.requestOptions.extra, _authRetryKey: true},
+              headers: {
+                ...error.requestOptions.headers,
+                'Authorization': 'Bearer ${refreshed.accessToken}',
               },
             );
             try {
@@ -201,33 +106,87 @@ class DioClient {
               error = retryError;
             }
           }
+        }
 
-          final canUseCache =
-              error.type == DioExceptionType.connectionTimeout ||
-              error.type == DioExceptionType.sendTimeout ||
-              error.type == DioExceptionType.receiveTimeout ||
-              error.type == DioExceptionType.connectionError ||
-              statusCode == 429 ||
-              (statusCode != null && statusCode >= 500);
-          if (method == 'GET' &&
-              canUseCache &&
-              cached != null &&
-              DateTime.now().difference(cached.savedAt) <
-                  const Duration(minutes: 10)) {
-            return handler.resolve(
-              Response(
-                requestOptions: error.requestOptions,
-                data: cached.data,
-                statusCode: cached.statusCode,
-                statusMessage: cached.statusMessage,
-                headers: cached.headers,
-              ),
-            );
+        final transient = error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.sendTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.connectionError ||
+            (statusCode != null && statusCode >= 500);
+        final method = error.requestOptions.method.toUpperCase();
+        final noCache = error.requestOptions.extra['noCache'] == true;
+        final cached = noCache ? null : _getCache[_cacheKey(error.requestOptions)];
+
+        // A stale-but-valid public snapshot is more useful than waiting for a
+        // rate-limit window. Only retry a GET without cache, once, and honor
+        // the server's Retry-After with a small jitter to avoid synchronized
+        // clients waking up together.
+        if (method == 'GET' && statusCode == 429) {
+          if (cached != null &&
+              DateTime.now().difference(cached.savedAt) < const Duration(minutes: 10)) {
+            return handler.resolve(Response(
+              requestOptions: error.requestOptions,
+              data: cached.data,
+              statusCode: cached.statusCode,
+              statusMessage: cached.statusMessage,
+              headers: cached.headers,
+            ));
           }
-          handler.next(error);
-        },
-      ),
-    );
+          final rateLimitRetryCount =
+              (error.requestOptions.extra[_rateLimitRetryKey] as int?) ?? 0;
+          if (rateLimitRetryCount < _maxRateLimitRetries) {
+            final retryAfterSeconds = int.tryParse(
+              error.response?.headers.value('retry-after') ?? '',
+            ) ??
+                1;
+            final jitterMs = math.Random().nextInt(250);
+            final delayMs = math.min(10000, retryAfterSeconds * 1000 + jitterMs);
+            await Future<void>.delayed(Duration(milliseconds: delayMs));
+            final options = error.requestOptions.copyWith(extra: {
+              ...error.requestOptions.extra,
+              _rateLimitRetryKey: rateLimitRetryCount + 1,
+            });
+            try {
+              return handler.resolve(await _dio.fetch<dynamic>(options));
+            } on DioException catch (retryError) {
+              error = retryError;
+            }
+          }
+        }
+
+        final retryCount = (error.requestOptions.extra[_retryCountKey] as int?) ?? 0;
+        if (method == 'GET' && transient && retryCount < _maxTransientRetries) {
+          await Future<void>.delayed(Duration(milliseconds: 350 * (1 << retryCount)));
+          final options = error.requestOptions.copyWith(extra: {
+            ...error.requestOptions.extra,
+            _retryCountKey: retryCount + 1,
+          });
+          try {
+            return handler.resolve(await _dio.fetch<dynamic>(options));
+          } on DioException catch (retryError) {
+            error = retryError;
+          }
+        }
+
+        final canUseCache = error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.sendTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.connectionError ||
+            statusCode == 429 ||
+            (statusCode != null && statusCode >= 500);
+        if (method == 'GET' && canUseCache && cached != null &&
+            DateTime.now().difference(cached.savedAt) < const Duration(minutes: 10)) {
+          return handler.resolve(Response(
+            requestOptions: error.requestOptions,
+            data: cached.data,
+            statusCode: cached.statusCode,
+            statusMessage: cached.statusMessage,
+            headers: cached.headers,
+          ));
+        }
+        handler.next(error);
+      },
+    ));
   }
 
   Future<String> _loadClientId() async {
@@ -260,20 +219,18 @@ class DioClient {
       return null;
     }
     try {
-      final response = await Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 8),
-          receiveTimeout: const Duration(seconds: 8),
-          sendTimeout: const Duration(seconds: 8),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            if (dotenv.env['APP_API_KEY']?.isNotEmpty == true)
-              'x-app-key': dotenv.env['APP_API_KEY']!,
-          },
-        ),
-      ).post('/auth/mobile/refresh', data: {'refreshToken': refreshToken});
+      final response = await Dio(BaseOptions(
+        baseUrl: baseUrl,
+        connectTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 8),
+        sendTimeout: const Duration(seconds: 8),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          if (dotenv.env['APP_API_KEY']?.isNotEmpty == true)
+            'x-app-key': dotenv.env['APP_API_KEY']!,
+        },
+      )).post('/auth/mobile/refresh', data: {'refreshToken': refreshToken});
       final rawData = response.data;
       final data = rawData is Map && rawData['data'] is Map
           ? rawData['data'] as Map
@@ -283,10 +240,7 @@ class DioClient {
       final access = data['accessToken']?.toString();
       final nextRefresh = data['refreshToken']?.toString();
       if (access == null || nextRefresh == null) return null;
-      await _tokenManager.saveTokens(
-        accessToken: access,
-        refreshToken: nextRefresh,
-      );
+      await _tokenManager.saveTokens(accessToken: access, refreshToken: nextRefresh);
       return _TokenPair(access, nextRefresh);
     } on DioException catch (error, stack) {
       _log.error('Failed to refresh token', error, stack);
@@ -310,20 +264,52 @@ class DioClient {
   // Dùng AppLogger (dart:developer log) để lọc theo tag DioClient trong DevTools.
 
   void _logRequest(RequestOptions options) {
-    _log.debug('[REQUEST] ${options.method} ${options.uri.path}');
+    _log.debug('');
+    _log.debug('============= REQUEST =============');
+    _log.debug('${options.method} ${options.uri}');
+
+    if (options.queryParameters.isNotEmpty) {
+      _log.debug('Query Params:');
+      _log.debug(options.queryParameters.toString());
+    }
+
+    if (options.data != null) {
+      if (options.data is FormData) {
+        final formData = options.data as FormData;
+        _log.debug('FormData Fields:');
+        for (final field in formData.fields) {
+          _log.debug('${field.key}: ${field.value}');
+        }
+        if (formData.files.isNotEmpty) {
+          _log.debug('FormData Files:');
+          for (final file in formData.files) {
+            _log.debug('${file.key}: ${file.value.filename}');
+          }
+        }
+      } else {
+        _log.debug('Body:');
+        _log.debug(options.data.toString());
+      }
+    }
+
+    _log.debug('===================================');
   }
 
   void _logResponse(Response response) {
     _log.debug(
-      '[RESPONSE] ${response.statusCode} ${response.requestOptions.uri.path}',
+      '[RESPONSE] ${response.statusCode} ${response.requestOptions.uri}',
     );
+    _log.debug(response.data.toString());
   }
 
   void _logError(DioException err) {
     _log.debug(
-      '[ERROR] ${err.response?.statusCode ?? 'network'} '
-      '${err.requestOptions.uri.path} (${err.type.name})',
+      '[ERROR] ${err.response?.statusCode} ${err.requestOptions.uri}',
     );
+    _log.debug(err.message ?? 'Unknown error');
+    if (err.response?.data != null) {
+      _log.debug(err.response!.data.toString());
+    }
   }
 }
 
@@ -370,7 +356,7 @@ String friendlyDioErrorMessage(DioException e) {
       return 'Yêu cầu đã bị hủy.';
     case DioExceptionType.unknown:
       return _mapUnknownError(e);
-    // ignore: unreachable_switch_default
+  // ignore: unreachable_switch_default
     default:
       return e.message ?? 'Lỗi kết nối không xác định. Vui lòng thử lại.';
   }
