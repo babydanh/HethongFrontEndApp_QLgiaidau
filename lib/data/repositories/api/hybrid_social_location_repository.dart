@@ -72,7 +72,7 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
       if (seen.add(key)) merged.add(place);
     }
 
-    if (merged.isEmpty && photonError != null && regionError != null) {
+    if (merged.isEmpty && (photonError != null || regionError != null)) {
       throw const LocationNetworkFailure();
     }
     return merged.take(_maxResults).toList(growable: false);
