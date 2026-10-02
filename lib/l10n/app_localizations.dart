@@ -26068,6 +26068,108 @@ abstract class AppLocalizations {
   /// **'Chưa tìm thấy địa chỉ cho vị trí đã ghim.'**
   String get socialLocationNoAddressFound;
 
+  /// No description provided for @socialLocationApproximateReference.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vị trí đã chọn'**
+  String get socialLocationApproximateReference;
+
+  /// No description provided for @socialLocationChangeReference.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi vị trí tìm kiếm'**
+  String get socialLocationChangeReference;
+
+  /// No description provided for @socialLocationCenterMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tâm ước lượng cho khu vực này.'**
+  String get socialLocationCenterMissing;
+
+  /// No description provided for @socialLocationCenterLookupError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải tâm khu vực. Vui lòng chọn lại để thử lại.'**
+  String get socialLocationCenterLookupError;
+
+  /// No description provided for @socialNearbyNoResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có buổi Social nào gần vị trí đã chọn'**
+  String get socialNearbyNoResults;
+
+  /// No description provided for @socialNearbyExpandRadius.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử mở rộng bán kính hoặc chọn vị trí khác'**
+  String get socialNearbyExpandRadius;
+
+  /// No description provided for @socialNearbyLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm'**
+  String get socialNearbyLoadMore;
+
+  /// No description provided for @socialNearbyRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử tải lại'**
+  String get socialNearbyRetry;
+
+  /// No description provided for @socialDistanceMeters.
+  ///
+  /// In vi, this message translates to:
+  /// **'cách ~{distance} m'**
+  String socialDistanceMeters(String distance);
+
+  /// No description provided for @socialDistanceKilometers.
+  ///
+  /// In vi, this message translates to:
+  /// **'cách ~{distance} km'**
+  String socialDistanceKilometers(String distance);
+
+  /// No description provided for @socialPlaceVenueName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân'**
+  String get socialPlaceVenueName;
+
+  /// No description provided for @socialPlaceVenueAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ sân'**
+  String get socialPlaceVenueAddress;
+
+  /// No description provided for @socialPlaceDuplicateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có sân gần giống trong danh bạ'**
+  String get socialPlaceDuplicateTitle;
+
+  /// No description provided for @socialPlaceDuplicateUse.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng sân này'**
+  String get socialPlaceDuplicateUse;
+
+  /// No description provided for @socialPlaceDuplicateEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa tên hoặc ghim'**
+  String get socialPlaceDuplicateEdit;
+
+  /// No description provided for @socialPlaceDuplicateEditHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy sửa tên, địa chỉ hoặc ghim trên biểu mẫu rồi gửi lại.'**
+  String get socialPlaceDuplicateEditHint;
+
+  /// No description provided for @socialPlaceCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get socialPlaceCancel;
+
   /// No description provided for @socialPlaceSelect.
   ///
   /// In vi, this message translates to:
@@ -26125,7 +26227,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialPlaceInputHint.
   ///
   /// In vi, this message translates to:
-  /// **'Địa chỉ đầy đủ hoặc Google Maps link'**
+  /// **'Tên sân hoặc địa chỉ đầy đủ'**
   String get socialPlaceInputHint;
 
   /// No description provided for @socialPlaceMap.
@@ -26161,25 +26263,25 @@ abstract class AppLocalizations {
   /// No description provided for @socialPlaceUnsupportedLink.
   ///
   /// In vi, this message translates to:
-  /// **'Google Maps link này không được hỗ trợ.'**
+  /// **'Không hỗ trợ liên kết địa điểm. Hãy nhập tên hoặc địa chỉ sân rồi ghim vị trí.'**
   String get socialPlaceUnsupportedLink;
 
   /// No description provided for @socialPlaceNotFound.
   ///
   /// In vi, this message translates to:
-  /// **'Không tìm thấy địa điểm cho địa chỉ hoặc link này.'**
+  /// **'Không tìm thấy sân trong danh bạ.'**
   String get socialPlaceNotFound;
 
   /// No description provided for @socialPlaceUnresolvable.
   ///
   /// In vi, this message translates to:
-  /// **'Không tìm được địa chỉ đường đầy đủ và ghim bản đồ. Hãy thử đầu vào khác.'**
+  /// **'Hãy kiểm tra tên, địa chỉ và ghim vị trí sân.'**
   String get socialPlaceUnresolvable;
 
   /// No description provided for @socialPlaceNetworkError.
   ///
   /// In vi, this message translates to:
-  /// **'Dịch vụ địa điểm không khả dụng. Vui lòng thử lại.'**
+  /// **'Không thể tìm sân trong danh bạ. Vui lòng thử lại.'**
   String get socialPlaceNetworkError;
 
   /// No description provided for @socialPlaceResolving.
@@ -26203,7 +26305,7 @@ abstract class AppLocalizations {
   /// No description provided for @socialPlaceReverseError.
   ///
   /// In vi, this message translates to:
-  /// **'Không tìm được địa chỉ đầy đủ cho ghim này. Hãy chọn ghim khác hoặc nhập địa chỉ.'**
+  /// **'Hãy chọn ghim khác hoặc nhập địa chỉ sân.'**
   String get socialPlaceReverseError;
 
   /// No description provided for @socialPlaceSuggestedSection.

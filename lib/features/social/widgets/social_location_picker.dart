@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/services/social_map_tile_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Màn ghim vị trí sân trên bản đồ (OpenStreetMap — không cần API key).
 /// Trả về [LatLng] đã chọn qua Navigator.pop, null khi hủy.
-class SocialLocationPicker extends StatefulWidget {
+class SocialLocationPicker extends ConsumerStatefulWidget {
   /// Tâm bản đồ ban đầu (vị trí user / tọa độ cũ / fallback TP.HCM).
   final LatLng initialCenter;
 
@@ -35,11 +40,26 @@ class SocialLocationPicker extends StatefulWidget {
     );
   }
 
+  static Future<LatLng?> showSheet(
+    BuildContext context, {
+    required LatLng initialCenter,
+  }) => showModalBottomSheet<LatLng>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: false,
+    builder: (_) => FractionallySizedBox(
+      heightFactor: 0.92,
+      child: SocialLocationPicker(initialCenter: initialCenter),
+    ),
+  );
+
   @override
-  State<SocialLocationPicker> createState() => _SocialLocationPickerState();
+  ConsumerState<SocialLocationPicker> createState() =>
+      _SocialLocationPickerState();
 }
 
-class _SocialLocationPickerState extends State<SocialLocationPicker> {
+class _SocialLocationPickerState extends ConsumerState<SocialLocationPicker> {
   final MapController _mapController = MapController();
   late LatLng _picked;
 
@@ -62,9 +82,9 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
         ),
         actions: [
           IconButton(
-            tooltip: l10n.socialLocationCenterOnPin,
+            tooltip: 'Dùng vị trí hiện tại',
             icon: const Icon(Icons.my_location_rounded),
-            onPressed: () => _mapController.move(_picked, 16),
+            onPressed: _useCurrentLocation,
           ),
         ],
       ),
@@ -77,27 +97,29 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
               initialZoom: 15,
               minZoom: 5,
               maxZoom: 19,
-              onTap: (_, latLng) => setState(() => _picked = latLng),
+              onPositionChanged: (position, hasGesture) {
+                if (hasGesture) {
+                  _picked = position.center;
+                }
+              },
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'asia.sporto.app',
+                urlTemplate: AppConstants.osmTileUrl,
+                userAgentPackageName: AppConstants.osmUserAgentPackageName,
+                tileProvider: SocialMapTileProvider(),
               ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: _picked,
-                    width: 48,
-                    height: 48,
-                    alignment: Alignment.topCenter,
-                    child: const Icon(
+              IgnorePointer(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 36),
+                    child: Icon(
                       Icons.location_pin,
                       size: 44,
                       color: Colors.redAccent,
                     ),
                   ),
-                ],
+                ),
               ),
             ],
           ),
@@ -129,10 +151,18 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
                       ),
                     ),
                   ),
-                  const Text(
-                    '© OpenStreetMap contributors',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11),
+                  GestureDetector(
+                    onTap: () => launchUrl(
+                      Uri.parse('https://www.openstreetmap.org/copyright'),
+                    ),
+                    child: const Text(
+                      '© OpenStreetMap contributors',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
@@ -162,5 +192,26 @@ class _SocialLocationPickerState extends State<SocialLocationPicker> {
         ],
       ),
     );
+  }
+
+  Future<void> _useCurrentLocation() async {
+    final notifier = ref.read(userLocationProvider.notifier);
+    await notifier.useCurrentPosition();
+    final location = ref.read(userLocationProvider);
+    if (!location.hasPosition ||
+        location.latitude == null ||
+        location.longitude == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(location.message ?? 'Không thể lấy vị trí hiện tại.'),
+          ),
+        );
+      }
+      return;
+    }
+    final point = LatLng(location.latitude!, location.longitude!);
+    setState(() => _picked = point);
+    _mapController.move(point, 16);
   }
 }

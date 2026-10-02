@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/services/social_map_tile_provider.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
@@ -10,24 +12,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum _LocationStep { search, input, preview }
 
 class SocialLocationFlow extends ConsumerStatefulWidget {
-  const SocialLocationFlow({super.key, this.initialPlace});
+  const SocialLocationFlow({super.key, this.initialPlace, this.initialCenter});
 
   final SocialPlace? initialPlace;
+  final LatLng? initialCenter;
 
   static Future<SocialPlace?> show(
     BuildContext context, {
     SocialPlace? initialPlace,
+    LatLng? initialCenter,
   }) {
     return showModalBottomSheet<SocialPlace>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
-      builder: (_) => SocialLocationFlow(initialPlace: initialPlace),
+      builder: (_) => SocialLocationFlow(
+        initialPlace: initialPlace,
+        initialCenter: initialCenter,
+      ),
     );
   }
 
@@ -97,9 +105,6 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   }
 
   String _errorMessage(Object error, AppLocalizations l10n) {
-    if (error is UnsupportedLocationLink) {
-      return l10n.socialPlaceUnsupportedLink;
-    }
     if (error is LocationNotFound) return l10n.socialPlaceNotFound;
     if (error is UnresolvableLocation) return l10n.socialPlaceUnresolvable;
     return l10n.socialPlaceNetworkError;
@@ -109,65 +114,40 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
     final input = _inputController.text.trim();
     if (input.isEmpty || _resolving) return;
     setState(() {
-      _resolving = true;
-      _inputError = null;
+      _candidate = SocialPlace(name: input, formattedAddress: input);
+      _inputError =
+          'Đã nhập nhãn sân. Hãy ghim và xác nhận vị trí trên bản đồ.';
     });
-    try {
-      final place = await ref
-          .read(socialLocationRepositoryProvider)
-          .resolveInput(input);
-      if (!mounted) return;
-      if (!place.canPreview) throw const UnresolvableLocation();
-      setState(() {
-        _candidate = place;
-        _step = _LocationStep.preview;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(
-        () => _inputError = _errorMessage(error, AppLocalizations.of(context)!),
-      );
-    } finally {
-      if (mounted) setState(() => _resolving = false);
-    }
+    await _pickOnMap();
   }
 
   Future<void> _pickOnMap() async {
     final previous = widget.initialPlace;
     final center = previous?.hasPin == true
         ? LatLng(previous!.latitude!, previous.longitude!)
-        : const LatLng(10.7769, 106.7009);
+        : widget.initialCenter ?? const LatLng(10.7769, 106.7009);
     final pin = await SocialLocationPicker.show(
       context,
       initialCenter: center,
       initialPin: previous?.hasPin == true ? center : null,
     );
     if (!mounted || pin == null) return;
-    setState(() {
-      _resolving = true;
-      _inputError = null;
-    });
-    try {
-      final place = await ref
-          .read(socialLocationRepositoryProvider)
-          .reverseLookup(pin);
-      if (!mounted) return;
-      if (!place.canPreview) throw const UnresolvableLocation();
-      Navigator.of(context).pop(place);
-    } catch (_) {
-      if (!mounted) return;
-      final entered = _inputController.text.trim();
-      Navigator.of(context).pop(SocialPlace(
-        name: entered.isEmpty ? 'Vị trí đã chọn' : entered,
-        formattedAddress: entered.isEmpty
-            ? '${pin.latitude.toStringAsFixed(6)}, ${pin.longitude.toStringAsFixed(6)}'
-            : entered,
+    final entered = _inputController.text.trim();
+    if (entered.isEmpty) {
+      setState(
+        () =>
+            _inputError = 'Nhập tên hoặc địa chỉ sân trước khi xác nhận ghim.',
+      );
+      return;
+    }
+    Navigator.of(context).pop(
+      SocialPlace(
+        name: entered,
+        formattedAddress: entered,
         latitude: pin.latitude,
         longitude: pin.longitude,
-      ));
-    } finally {
-      if (mounted) setState(() => _resolving = false);
-    }
+      ),
+    );
   }
 
   void _goBack() {
@@ -349,26 +329,12 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
         overflow: TextOverflow.ellipsis,
       ),
       onTap: () async {
-        if (!place.hasPin) {
+        if (!place.hasPin && place.venueId == null) {
           _inputController.text = place.formattedAddress;
           setState(() => _step = _LocationStep.input);
           return;
         }
-        if (place.placeId == null) {
-          Navigator.of(context).pop(place);
-          return;
-        }
-        try {
-          final detail = await ref.read(socialLocationRepositoryProvider)
-              .getPlaceDetail(place.placeId!);
-          if (mounted) Navigator.of(context).pop(detail);
-        } catch (_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.socialPlaceNotFound)),
-            );
-          }
-        }
+        Navigator.of(context).pop(place);
       },
     );
   }
@@ -427,8 +393,9 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
               options: MapOptions(initialCenter: pin, initialZoom: 16),
               children: [
                 TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'asia.sporto.app',
+                  urlTemplate: AppConstants.osmTileUrl,
+                  userAgentPackageName: AppConstants.osmUserAgentPackageName,
+                  tileProvider: SocialMapTileProvider(),
                 ),
                 MarkerLayer(
                   markers: [
@@ -448,9 +415,16 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
             ),
           ),
         ),
-        const Text(
-          '© OpenStreetMap contributors',
-          style: TextStyle(fontSize: 11),
+        InkWell(
+          onTap: () =>
+              launchUrl(Uri.parse('https://www.openstreetmap.org/copyright')),
+          child: const Text(
+            '© OpenStreetMap contributors',
+            style: TextStyle(
+              fontSize: 11,
+              decoration: TextDecoration.underline,
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         Text(place.name, style: Theme.of(context).textTheme.titleMedium),

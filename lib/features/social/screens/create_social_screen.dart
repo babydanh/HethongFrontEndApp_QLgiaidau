@@ -4,19 +4,25 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_flow.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_setting_tile.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participant_counter.dart';
+import 'package:latlong2/latlong.dart';
 
 class CreateSocialScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -57,6 +63,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   double _durationHours = 1.0;
 
   SocialPlace? _selectedPlace;
+  String? _chosenProvinceCode;
+  String? _chosenWardCode;
+  SocialRegionSelection? _chosenRegion;
   final _venueNameController = TextEditingController();
   final _venueAddressController = TextEditingController();
 
@@ -73,6 +82,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   // Buổi mới chỉ gắn CLB khi route có clubId; buổi đang sửa dùng CLB hiện tại.
   late bool _isClubAttached;
   bool _isSubmitting = false;
+  bool _locationChanged = false;
 
   @override
   void initState() {
@@ -484,29 +494,56 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   }
 
   Future<void> _chooseLocation() async {
+    final location = ref.read(userLocationProvider);
+    final selectedWard = _chosenRegion?.ward;
+    final initialCenter = location.hasPosition
+        ? LatLng(location.latitude!, location.longitude!)
+        : selectedWard?.latitude != null && selectedWard?.longitude != null
+        ? LatLng(selectedWard!.latitude!, selectedWard.longitude!)
+        : const LatLng(10.7769, 106.7009);
     final selected = await SocialLocationFlow.show(
       context,
       initialPlace: _selectedPlace,
+      initialCenter: initialCenter,
     );
     if (selected != null && mounted) {
       _venueNameController.text = selected.name;
       _venueAddressController.text = selected.formattedAddress;
-      setState(() => _selectedPlace = selected);
+      setState(() {
+        _selectedPlace = selected;
+        _locationChanged = true;
+      });
     }
   }
 
   void _editVenueText() {
     final place = _selectedPlace;
     if (place == null) return;
-    setState(() => _selectedPlace = SocialPlace(
-      name: _venueNameController.text,
-      formattedAddress: _venueAddressController.text,
-      latitude: place.latitude,
-      longitude: place.longitude,
-      placeId: place.placeId,
-      provinceCode: place.provinceCode,
-      wardCode: place.wardCode,
-    ));
+    setState(() {
+      _locationChanged = true;
+      _selectedPlace = SocialPlace(
+        name: _venueNameController.text,
+        formattedAddress: _venueAddressController.text,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        venueId: place.venueId,
+        provinceCode: place.provinceCode,
+        wardCode: place.wardCode,
+      );
+    });
+  }
+
+  Future<SocialRegionCatalogue?> _loadRegionCatalogue({
+    bool refresh = false,
+    String? provinceCode,
+  }) async {
+    final repository = ref.read(regionRepositoryProvider);
+    final provinces = await repository.getProvinces();
+    if (provinces.isEmpty) return null;
+    final wards = provinceCode == null
+        ? <Region>[]
+        : await repository.getWardsByProvince(provinceCode);
+    return (provinces: provinces, wards: wards);
   }
 
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
@@ -538,7 +575,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     if (sport.slug.isEmpty) return;
     final l10n = AppLocalizations.of(context)!;
     final place = _selectedPlace;
-    if (place == null || !place.canApply ||
+    if (place == null ||
+        !place.canApply ||
         (widget.initialSession == null && !place.hasPin)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -575,14 +613,18 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           'playFormat': _selectedFormat,
           'startAt': _selectedDateTime.toIso8601String(),
           'durationMinutes': (_durationHours * 60).round(),
-          'venueName': place.name.trim(),
-          'venueAddress': place.formattedAddress.trim(),
-          if (place.provinceCode != null) 'provinceCode': place.provinceCode,
-          if (place.wardCode != null) 'wardCode': place.wardCode,
-          if (place.hasPin) ...{
-            'latitude': place.latitude,
-            'longitude': place.longitude,
+          if (_locationChanged && place.venueId != null) ...{
+            'venueId': place.venueId,
+            'venueName': _venueNameController.text.trim(),
+            'venueAddress': _venueAddressController.text.trim(),
           },
+          if (_locationChanged && place.venueId == null)
+            'newVenue': {
+              'name': _venueNameController.text.trim(),
+              'locationAddress': _venueAddressController.text.trim(),
+              'latitude': place.latitude,
+              'longitude': place.longitude,
+            },
           'maxSlots': _maxParticipants,
           'feePerSlot': _price,
           'levelRequirement': 'ALL',
@@ -623,8 +665,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           venueAddress: place.formattedAddress.trim(),
           latitude: place.latitude!,
           longitude: place.longitude!,
-          provinceCode: place.provinceCode,
-          wardCode: place.wardCode,
+          venueId: place.venueId,
           maxSlots: _maxParticipants,
           feePerSlot: _price,
           levelRequirement: 'ALL',
@@ -635,7 +676,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
               : null,
         );
 
-        final createdSession = await repo.create(request);
+        final createdSession = await _createWithDuplicateChoice(repo, request);
+        if (createdSession == null) return;
 
         ref.read(socialSessionsProvider.notifier).refresh();
         ref
@@ -670,6 +712,99 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       if (mounted) {
         setState(() => _isSubmitting = false);
       }
+    }
+  }
+
+  Future<SocialSessionModel?> _createWithDuplicateChoice(
+    dynamic repository,
+    CreateSocialSessionRequest request,
+  ) async {
+    try {
+      return await repository.create(request) as SocialSessionModel;
+    } on SocialApiException catch (error) {
+      if (error.code != 'VENUE_DUPLICATE_CANDIDATES' || !mounted) rethrow;
+      final details = error.details;
+      final raw = details is Map ? details['candidates'] : null;
+      final candidates = raw is List ? raw.whereType<Map>().toList() : <Map>[];
+      if (candidates.isEmpty) rethrow;
+      final selected = await showDialog<Map>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(AppLocalizations.of(context)!.socialPlaceDuplicateTitle),
+          content: SizedBox(
+            width: 440,
+            child: ListView(
+              shrinkWrap: true,
+              children: candidates.take(10).map((candidate) {
+                final distance = (candidate['distanceMeters'] as num?)
+                    ?.toDouble();
+                return ListTile(
+                  title: Text(candidate['name']?.toString() ?? 'Sân đã lưu'),
+                  subtitle: Text(
+                    [
+                      candidate['locationAddress']?.toString() ??
+                          candidate['formattedAddress']?.toString() ??
+                          '',
+                      if (distance != null) '${distance.round()} m',
+                    ].where((value) => value.isNotEmpty).join(' • '),
+                  ),
+                  trailing: Text(
+                    AppLocalizations.of(context)!.socialPlaceDuplicateUse,
+                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                  ),
+                  onTap: () => Navigator.of(dialogContext).pop(candidate),
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(AppLocalizations.of(context)!.socialPlaceCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop({'edit': true}),
+              child: Text(AppLocalizations.of(context)!.socialPlaceDuplicateEdit),
+            ),
+          ],
+        ),
+      );
+      if (selected == null) rethrow;
+      if (selected['edit'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.socialPlaceDuplicateEditHint,
+              ),
+            ),
+          );
+        }
+        return null;
+      }
+      final venueId = selected['id']?.toString();
+      if (venueId == null || venueId.isEmpty) rethrow;
+      final retry = CreateSocialSessionRequest(
+        sport: request.sport,
+        title: request.title,
+        description: request.description,
+        playFormat: request.playFormat,
+        startAt: request.startAt,
+        durationMinutes: request.durationMinutes,
+        venueName: request.venueName,
+        venueAddress: request.venueAddress,
+        latitude: request.latitude,
+        longitude: request.longitude,
+        venueId: venueId,
+        maxSlots: request.maxSlots,
+        feePerSlot: request.feePerSlot,
+        levelRequirement: request.levelRequirement,
+        visibility: request.visibility,
+        contactPhone: request.contactPhone,
+        zaloGroupUrl: request.zaloGroupUrl,
+        communityId: request.communityId,
+      );
+      return await repository.create(retry) as SocialSessionModel;
     }
   }
 
@@ -959,23 +1094,41 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         place: _selectedPlace,
                         onTap: _chooseLocation,
                       ),
+                      const SizedBox(height: 8),
+                      SocialRegionInlineFields(
+                        applied: _chosenRegion,
+                        loadCatalogue: _loadRegionCatalogue,
+                        onSelect: (selection) => setState(() {
+                          _chosenRegion = selection;
+                          _chosenProvinceCode = selection.province?.code;
+                          _chosenWardCode = selection.ward?.code;
+                        }),
+                      ),
                       if (_selectedPlace != null) ...[
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: _venueNameController,
                           maxLength: 255,
-                          decoration: const InputDecoration(labelText: 'Tên sân'),
+                          decoration: InputDecoration(
+                            labelText: l10n.socialPlaceVenueName,
+                          ),
                           onChanged: (_) => _editVenueText(),
-                          validator: (value) => value == null || value.trim().isEmpty
-                              ? 'Nhập tên sân' : null,
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
+                              ? 'Nhập tên sân'
+                              : null,
                         ),
                         TextFormField(
                           controller: _venueAddressController,
                           maxLength: 500,
-                          decoration: const InputDecoration(labelText: 'Địa chỉ sân'),
+                          decoration: InputDecoration(
+                            labelText: l10n.socialPlaceVenueAddress,
+                          ),
                           onChanged: (_) => _editVenueText(),
-                          validator: (value) => value == null || value.trim().isEmpty
-                              ? 'Nhập địa chỉ sân' : null,
+                          validator: (value) =>
+                              value == null || value.trim().isEmpty
+                              ? 'Nhập địa chỉ sân'
+                              : null,
                         ),
                       ],
                       const SizedBox(height: 16),

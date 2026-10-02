@@ -11,7 +11,16 @@ abstract class IRegionRepository {
   Future<List<Region>> searchRegions(String query, {int limit = 10});
 }
 
+abstract class IRegionCentroidRepository {
+  /// Returns null when a region exists without a center; throws on lookup failure.
+  Future<Region?> getWardCentroid(String provinceCode, String wardCode);
+}
+
 /// Lỗi tìm kiếm khu vực hành chính (mạng/server), khác với "không có kết quả".
 class RegionSearchFailure implements Exception {
   const RegionSearchFailure();
+}
+
+class RegionLookupFailure implements Exception {
+  const RegionLookupFailure();
 }

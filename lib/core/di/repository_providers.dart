@@ -24,9 +24,7 @@ import 'package:app_quanly_giaidau/domain/repositories/session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/token_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/api/api_social_location_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/api/hybrid_social_location_repository.dart';
-import 'package:app_quanly_giaidau/data/repositories/api/nominatim_reverse_datasource.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/backend_social_location_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
@@ -106,9 +104,5 @@ final socialSessionRepositoryProvider = Provider<ISocialSessionRepository>((
 final socialLocationRepositoryProvider = Provider<ISocialLocationRepository>((
   ref,
 ) {
-  return HybridSocialLocationRepository(
-    photon: ApiSocialLocationRepository(),
-    regions: ref.watch(regionRepositoryProvider),
-    nominatim: NominatimReverseDataSource(),
-  );
+  return BackendSocialLocationRepository(dio: ref.watch(dioClientProvider).dio);
 });

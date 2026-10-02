@@ -14340,6 +14340,66 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa tìm thấy địa chỉ cho vị trí đã ghim.';
 
   @override
+  String get socialLocationApproximateReference => 'Vị trí đã chọn';
+
+  @override
+  String get socialLocationChangeReference => 'Đổi vị trí tìm kiếm';
+
+  @override
+  String get socialLocationCenterMissing =>
+      'Chưa có tâm ước lượng cho khu vực này.';
+
+  @override
+  String get socialLocationCenterLookupError =>
+      'Không thể tải tâm khu vực. Vui lòng chọn lại để thử lại.';
+
+  @override
+  String get socialNearbyNoResults =>
+      'Không có buổi Social nào gần vị trí đã chọn';
+
+  @override
+  String get socialNearbyExpandRadius =>
+      'Thử mở rộng bán kính hoặc chọn vị trí khác';
+
+  @override
+  String get socialNearbyLoadMore => 'Xem thêm';
+
+  @override
+  String get socialNearbyRetry => 'Thử tải lại';
+
+  @override
+  String socialDistanceMeters(String distance) {
+    return 'cách ~$distance m';
+  }
+
+  @override
+  String socialDistanceKilometers(String distance) {
+    return 'cách ~$distance km';
+  }
+
+  @override
+  String get socialPlaceVenueName => 'Tên sân';
+
+  @override
+  String get socialPlaceVenueAddress => 'Địa chỉ sân';
+
+  @override
+  String get socialPlaceDuplicateTitle => 'Có sân gần giống trong danh bạ';
+
+  @override
+  String get socialPlaceDuplicateUse => 'Dùng sân này';
+
+  @override
+  String get socialPlaceDuplicateEdit => 'Sửa tên hoặc ghim';
+
+  @override
+  String get socialPlaceDuplicateEditHint =>
+      'Hãy sửa tên, địa chỉ hoặc ghim trên biểu mẫu rồi gửi lại.';
+
+  @override
+  String get socialPlaceCancel => 'Hủy';
+
+  @override
   String get socialPlaceSelect => 'Chọn địa điểm';
 
   @override
@@ -14367,7 +14427,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialPlaceInputTitle => 'Thêm địa điểm';
 
   @override
-  String get socialPlaceInputHint => 'Địa chỉ đầy đủ hoặc Google Maps link';
+  String get socialPlaceInputHint => 'Tên sân hoặc địa chỉ đầy đủ';
 
   @override
   String get socialPlaceMap => 'Chọn từ bản đồ';
@@ -14386,19 +14446,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialPlaceUnsupportedLink =>
-      'Google Maps link này không được hỗ trợ.';
+      'Không hỗ trợ liên kết địa điểm. Hãy nhập tên hoặc địa chỉ sân rồi ghim vị trí.';
 
   @override
-  String get socialPlaceNotFound =>
-      'Không tìm thấy địa điểm cho địa chỉ hoặc link này.';
+  String get socialPlaceNotFound => 'Không tìm thấy sân trong danh bạ.';
 
   @override
   String get socialPlaceUnresolvable =>
-      'Không tìm được địa chỉ đường đầy đủ và ghim bản đồ. Hãy thử đầu vào khác.';
+      'Hãy kiểm tra tên, địa chỉ và ghim vị trí sân.';
 
   @override
   String get socialPlaceNetworkError =>
-      'Dịch vụ địa điểm không khả dụng. Vui lòng thử lại.';
+      'Không thể tìm sân trong danh bạ. Vui lòng thử lại.';
 
   @override
   String get socialPlaceResolving => 'Đang tìm địa điểm...';
@@ -14411,7 +14470,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialPlaceReverseError =>
-      'Không tìm được địa chỉ đầy đủ cho ghim này. Hãy chọn ghim khác hoặc nhập địa chỉ.';
+      'Hãy chọn ghim khác hoặc nhập địa chỉ sân.';
 
   @override
   String get socialPlaceSuggestedSection => 'Gợi ý';

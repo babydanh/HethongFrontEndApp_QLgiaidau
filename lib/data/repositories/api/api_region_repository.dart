@@ -3,7 +3,8 @@ import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
 
-class ApiRegionRepository implements IRegionRepository {
+class ApiRegionRepository
+    implements IRegionRepository, IRegionCentroidRepository {
   static const _log = AppLogger('ApiRegionRepository');
   final DioClient _dioClient;
 
@@ -24,6 +25,25 @@ class ApiRegionRepository implements IRegionRepository {
         ? null
         : {'provinceCode': provinceCode.trim()};
     return _fetch('/regions/wards', query: query);
+  }
+
+  @override
+  Future<Region?> getWardCentroid(String provinceCode, String wardCode) async {
+    try {
+      final response = await _dioClient.dio.get(
+        '/regions/wards/centroid',
+        queryParameters: {'provinceCode': provinceCode, 'wardCode': wardCode},
+      );
+      final raw = response.data is Map ? response.data['data'] : response.data;
+      if (raw is! Map) return null;
+      final region = Region.fromJson(Map<String, dynamic>.from(raw));
+      return region.latitude != null && region.longitude != null
+          ? region
+          : null;
+    } catch (error, stack) {
+      _log.error('Lỗi tải tâm phường', error, stack);
+      throw const RegionLookupFailure();
+    }
   }
 
   @override

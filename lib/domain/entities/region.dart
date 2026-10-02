@@ -52,7 +52,9 @@ class Region {
     type: json['type']?.toString(),
     provinceName:
         (json['provinceName'] ?? json['province_name'])?.toString(),
-    latitude: (json['latitude'] as num?)?.toDouble(),
-    longitude: (json['longitude'] as num?)?.toDouble(),
+    latitude: (json['latitude'] as num?)?.toDouble() ??
+        (json['centerLat'] as num?)?.toDouble(),
+    longitude: (json['longitude'] as num?)?.toDouble() ??
+        (json['centerLng'] as num?)?.toDouble(),
   );
 }

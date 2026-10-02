@@ -45,6 +45,9 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
     return resolveInput(placeId);
   }
 
+  @override
+  Future<SocialPlace> getVenueDetail(String venueId) => getPlaceDetail(venueId);
+
   Future<List<SocialPlace>> _searchFeatures(
     String query, {
     bool requireStreet = false,

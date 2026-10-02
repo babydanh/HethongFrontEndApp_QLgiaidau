@@ -7,6 +7,7 @@ class SocialPlace {
     this.latitude,
     this.longitude,
     this.placeId,
+    this.venueId,
     this.sourceProvince,
     this.sourceWard,
     this.provinceCode,
@@ -19,6 +20,7 @@ class SocialPlace {
   final double? latitude;
   final double? longitude;
   final String? placeId;
+  final String? venueId;
   final String? sourceProvince;
   final String? sourceWard;
   final String? provinceCode;
@@ -37,6 +39,7 @@ class SocialPlace {
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       placeId: json['placeId']?.toString(),
+      venueId: (json['venueId'] ?? json['id'])?.toString(),
       sourceProvince: json['sourceProvince']?.toString(),
       sourceWard: json['sourceWard']?.toString(),
       provinceCode: json['provinceCode']?.toString(),
@@ -50,11 +53,6 @@ class SocialPlace {
     'formattedAddress': formattedAddress,
     if (latitude != null) 'latitude': latitude,
     if (longitude != null) 'longitude': longitude,
-    if (placeId != null) 'placeId': placeId,
-    if (sourceProvince != null) 'sourceProvince': sourceProvince,
-    if (sourceWard != null) 'sourceWard': sourceWard,
-    if (provinceCode != null) 'provinceCode': provinceCode,
-    if (wardCode != null) 'wardCode': wardCode,
-    if (regionEstimated) 'regionEstimated': regionEstimated,
+    if (venueId != null) 'venueId': venueId,
   };
 }

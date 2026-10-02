@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:dio/dio.dart';
+import 'package:uuid/uuid.dart';
 
 class SocialApiException implements Exception {
   final int? statusCode;
@@ -80,6 +83,23 @@ class SocialApiException implements Exception {
         case 'LOCATION_PAIR_REQUIRED':
           message = 'Tọa độ phải gồm cả vĩ độ và kinh độ';
           break;
+        case 'INVALID_COORDINATES':
+          message = 'Tọa độ sân không hợp lệ. Hãy ghim lại vị trí.';
+          break;
+        case 'LOCATION_REQUIRED':
+        case 'SELECT_EXACTLY_ONE_VENUE_SOURCE':
+          message = 'Hãy chọn một sân đã lưu hoặc xác nhận ghim sân mới.';
+          break;
+        case 'CREATE_IDEMPOTENCY_KEY_REUSED':
+          message = 'Nội dung tạo kèo đã thay đổi. Hãy gửi lại yêu cầu.';
+          break;
+        case 'VENUE_NOT_FOUND':
+        case 'VENUE_LOCATION_REQUIRED':
+          message = 'Sân đã chọn không còn ghim vị trí. Hãy chọn sân khác hoặc ghim lại.';
+          break;
+        case 'VENUE_DUPLICATE_CANDIDATES':
+          message = 'Có sân gần giống trong danh bạ. Hãy chọn sân để dùng lại hoặc sửa ghim.';
+          break;
         default:
           if (statusCode == 401) {
             message = 'Phiên đăng nhập đã hết hạn, vui lòng thử lại';
@@ -120,6 +140,7 @@ class SocialApiException implements Exception {
 class ApiSocialSessionRepository implements ISocialSessionRepository {
   static const _log = AppLogger('ApiSocialSessionRepository');
   final DioClient _dioClient;
+  final Map<String, String> _createKeysByIntent = {};
 
   ApiSocialSessionRepository(this._dioClient);
 
@@ -164,8 +185,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           'sport': sport,
         if (communityId != null && communityId.isNotEmpty)
           'communityId': communityId,
-        if (search != null && search.trim().isNotEmpty)
-          'search': search.trim(),
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         // Vị trí user chỉ dùng để lọc/sắp xếp — không lưu server.
         ...?_geoQueryParams(
           lat: lat,
@@ -192,10 +212,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           combined['meta'] = rawMeta;
         }
       } else if (rawData is List) {
-        combined = {
-          'items': rawData,
-          if (rawMeta is Map) 'meta': rawMeta,
-        };
+        combined = {'items': rawData, if (rawMeta is Map) 'meta': rawMeta};
       } else {
         combined = body;
       }
@@ -214,21 +231,21 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   Future<NearbySocialSessionsResponse> listNearby({
     required double lat,
     required double lng,
-    int? radius,
+    double radiusKm = 10,
+    int page = 1,
     int limit = 20,
-    String? cursor,
   }) async {
     try {
       final queryParams = <String, dynamic>{
         'lat': lat,
         'lng': lng,
-        'limit': limit,
+        'limit': limit.clamp(1, 50),
+        'page': page,
+        'radiusKm': radiusKm.clamp(0.5, 50),
       };
-      if (radius != null) queryParams['radius'] = radius;
-      if (cursor != null && cursor.isNotEmpty) queryParams['cursor'] = cursor;
 
       final response = await _dioClient.dio.get(
-        '/socials/nearby',
+        '/social-sessions/nearby',
         queryParameters: queryParams,
         options: Options(extra: {'noCache': true}),
       );
@@ -236,10 +253,14 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       final body = _asMap(response.data);
       return NearbySocialSessionsResponse.fromJson(body);
     } on DioException catch (error, stack) {
-      _log.error('listNearby error for lat: $lat, lng: $lng', error, stack);
+      _log.error(
+        'listNearby failed status=${error.response?.statusCode}',
+        null,
+        stack,
+      );
       throw SocialApiException.fromDioException(error);
     } catch (error, stack) {
-      _log.error('listNearby unexpected error', error, stack);
+      _log.error('listNearby failed', null, stack);
       rethrow;
     }
   }
@@ -267,16 +288,26 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   @override
   Future<SocialSessionModel> create(CreateSocialSessionRequest request) async {
     try {
+      final payload = request.toJson();
+      final intent = jsonEncode(payload);
+      final key = _createKeysByIntent.putIfAbsent(intent, const Uuid().v4);
       final response = await _dioClient.dio.post(
         '/social-sessions',
-        data: request.toJson(),
+        data: payload,
+        options: Options(headers: {'Idempotency-Key': key}),
       );
       final body = _asMap(response.data);
       final rawData = body['data'];
       final dataMap = rawData is Map ? _asMap(rawData) : body;
-      return SocialSessionModel.fromJson(dataMap);
+      final created = SocialSessionModel.fromJson(dataMap);
+      _createKeysByIntent.remove(intent);
+      return created;
     } on DioException catch (error, stack) {
-      _log.error('create session error', error, stack);
+      _log.error(
+        'create session failed status=${error.response?.statusCode}',
+        null,
+        stack,
+      );
       throw SocialApiException.fromDioException(error);
     } catch (error, stack) {
       _log.error('create session unexpected error', error, stack);
@@ -326,12 +357,10 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       final queryParams = <String, dynamic>{
         'page': page,
         'limit': limit,
-        if (status != null && status.trim().isNotEmpty)
-          'status': status.trim(),
+        if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
         if (sport != null && sport.isNotEmpty && sport.toLowerCase() != 'all')
           'sport': sport,
-        if (search != null && search.trim().isNotEmpty)
-          'search': search.trim(),
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (from != null && from.isNotEmpty) 'from': from,
         if (to != null && to.isNotEmpty) 'to': to,
         ...?_geoQueryParams(
@@ -359,10 +388,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
           combined['meta'] = rawMeta;
         }
       } else if (rawData is List) {
-        combined = {
-          'items': rawData,
-          if (rawMeta is Map) 'meta': rawMeta,
-        };
+        combined = {'items': rawData, if (rawMeta is Map) 'meta': rawMeta};
       } else {
         combined = body;
       }
@@ -416,10 +442,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       final response = await _dioClient.dio.get(
         '/social-sessions/$sessionId/messages',
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-        },
+        queryParameters: {'page': page, 'limit': limit},
         options: Options(extra: {'noCache': true}),
       );
 
@@ -428,9 +451,11 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       if (rawData is List) {
         return rawData
             .whereType<Map>()
-            .map((m) => SocialChatMessageModel.fromJson(
-                  m.map((k, v) => MapEntry(k.toString(), v)),
-                ))
+            .map(
+              (m) => SocialChatMessageModel.fromJson(
+                m.map((k, v) => MapEntry(k.toString(), v)),
+              ),
+            )
             .toList();
       }
       return const [];
@@ -475,10 +500,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       await _dioClient.dio.post(
         '/social-sessions/$sessionId/participants',
-        data: {
-          'userId': userId,
-          'ticketCount': ticketCount,
-        },
+        data: {'userId': userId, 'ticketCount': ticketCount},
       );
     } on DioException catch (error, stack) {
       _log.error('addParticipant error for: $sessionId', error, stack);
@@ -498,10 +520,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       await _dioClient.dio.post(
         '/social-sessions/$sessionId/participants',
-        data: {
-          'guestName': guestName.trim(),
-          'ticketCount': ticketCount,
-        },
+        data: {'guestName': guestName.trim(), 'ticketCount': ticketCount},
       );
     } on DioException catch (error, stack) {
       _log.error('addGuestParticipant error for: $sessionId', error, stack);
@@ -521,10 +540,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     try {
       final response = await _dioClient.dio.post(
         '/social-sessions/$sessionId/participants/batch',
-        data: {
-          'userIds': userIds,
-          'ticketCount': ticketCount,
-        },
+        data: {'userIds': userIds, 'ticketCount': ticketCount},
       );
       final body = _asMap(response.data);
       final rawData = body['data'];

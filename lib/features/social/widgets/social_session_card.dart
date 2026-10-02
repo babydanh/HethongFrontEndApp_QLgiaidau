@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class SocialSessionCard extends StatelessWidget {
   final SocialSessionModel session;
@@ -15,6 +16,16 @@ class SocialSessionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final distanceMeters = session.distanceM ??
+        (session.distanceKm > 0 ? session.distanceKm * 1000 : null);
+    final distanceLabel = distanceMeters == null
+        ? ''
+        : distanceMeters < 1000
+            ? l10n.socialDistanceMeters(distanceMeters.round().toString())
+            : l10n.socialDistanceKilometers(
+                (distanceMeters / 1000).toStringAsFixed(1),
+              );
 
     return InkWell(
       onTap: onTap,
@@ -164,10 +175,10 @@ class SocialSessionCard extends StatelessWidget {
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
                   ),
                 ),
-                if (session.distanceDisplay.isNotEmpty) ...[
+                if (distanceLabel.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
-                    session.distanceDisplay,
+                    distanceLabel,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,

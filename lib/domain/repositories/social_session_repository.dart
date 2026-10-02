@@ -20,17 +20,13 @@ abstract class ISocialSessionRepository {
     String? sortBy,
   });
 
-  /// Danh sách kèo gần bạn (GET /socials/nearby?lat=...&lng=...&radius=...&limit=...&cursor=...)
-  /// [lat]/[lng]: tọa độ user (bắt buộc).
-  /// [radius]: bán kính lọc bằng mét (100–50000, mặc định 10000).
-  /// [limit]: số lượng mỗi trang (1–50, mặc định 20).
-  /// [cursor]: chuỗi con trỏ trang kế tiếp từ nextCursor (bỏ trống trang đầu).
+  /// Nearby search uses page/limit and kilometre radius. Coordinates are request-only.
   Future<NearbySocialSessionsResponse> listNearby({
     required double lat,
     required double lng,
-    int? radius,
+    double radiusKm = 10,
+    int page = 1,
     int limit = 20,
-    String? cursor,
   });
 
   /// 4.3 - Chi tiết (GET /social-sessions/:id)
@@ -57,7 +53,10 @@ abstract class ISocialSessionRepository {
   });
 
   /// 4.6 - Sửa kèo (PATCH /social-sessions/:id)
-  Future<SocialSessionModel> update(String sessionId, Map<String, dynamic> fields);
+  Future<SocialSessionModel> update(
+    String sessionId,
+    Map<String, dynamic> fields,
+  );
 
   /// 4.8 - Hủy kèo (PATCH /social-sessions/:id/cancel)
   Future<void> cancel(String sessionId);

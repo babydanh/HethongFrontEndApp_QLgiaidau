@@ -14388,6 +14388,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLocationNoAddressFound => 'No address found for this pin.';
 
   @override
+  String get socialLocationApproximateReference => 'Selected location';
+
+  @override
+  String get socialLocationChangeReference => 'Change search location';
+
+  @override
+  String get socialLocationCenterMissing =>
+      'No approximate center is available for this area.';
+
+  @override
+  String get socialLocationCenterLookupError =>
+      'Could not load the area center. Select the area again to retry.';
+
+  @override
+  String get socialNearbyNoResults =>
+      'No Social sessions near the selected location';
+
+  @override
+  String get socialNearbyExpandRadius =>
+      'Try expanding the radius or choosing another location';
+
+  @override
+  String get socialNearbyLoadMore => 'Load more';
+
+  @override
+  String get socialNearbyRetry => 'Retry loading';
+
+  @override
+  String socialDistanceMeters(String distance) {
+    return 'about $distance m away';
+  }
+
+  @override
+  String socialDistanceKilometers(String distance) {
+    return 'about $distance km away';
+  }
+
+  @override
+  String get socialPlaceVenueName => 'Venue name';
+
+  @override
+  String get socialPlaceVenueAddress => 'Venue address';
+
+  @override
+  String get socialPlaceDuplicateTitle => 'A similar venue is already listed';
+
+  @override
+  String get socialPlaceDuplicateUse => 'Use this venue';
+
+  @override
+  String get socialPlaceDuplicateEdit => 'Edit name or pin';
+
+  @override
+  String get socialPlaceDuplicateEditHint =>
+      'Edit the name, address, or pin in the form, then submit again.';
+
+  @override
+  String get socialPlaceCancel => 'Cancel';
+
+  @override
   String get socialPlaceSelect => 'Select location';
 
   @override
@@ -14415,7 +14475,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialPlaceInputTitle => 'Add a location';
 
   @override
-  String get socialPlaceInputHint => 'Full address or Google Maps link';
+  String get socialPlaceInputHint => 'Venue name or full address';
 
   @override
   String get socialPlaceMap => 'Choose from map';
@@ -14434,19 +14494,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialPlaceUnsupportedLink =>
-      'This Google Maps link is not supported.';
+      'Location links are not supported. Enter a venue name or address and pin it on the map.';
 
   @override
-  String get socialPlaceNotFound =>
-      'No location was found for that address or link.';
+  String get socialPlaceNotFound => 'No venue was found in the directory.';
 
   @override
   String get socialPlaceUnresolvable =>
-      'A full street address and map pin could not be found. Try another input.';
+      'Check the venue name, address, and map pin.';
 
   @override
   String get socialPlaceNetworkError =>
-      'The location service is unavailable. Please retry.';
+      'Could not search the venue directory. Please retry.';
 
   @override
   String get socialPlaceResolving => 'Looking up location...';
@@ -14459,7 +14518,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialPlaceReverseError =>
-      'Could not find a full address for that pin. Choose another pin or enter an address.';
+      'Choose another pin or enter a venue address.';
 
   @override
   String get socialPlaceSuggestedSection => 'Suggestions';

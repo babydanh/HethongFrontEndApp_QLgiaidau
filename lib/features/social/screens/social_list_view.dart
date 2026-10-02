@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.
 import 'package:app_quanly_giaidau/features/social/widgets/social_nearby_filter.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.dart';
 import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class SocialListView extends ConsumerStatefulWidget {
   final double topPadding;
@@ -37,8 +38,10 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final filterState = ref.watch(socialFilterProvider);
+    final locationState = ref.watch(userLocationProvider);
     final sessionsAsync = ref.watch(filteredSocialSessionsProvider);
 
     return RefreshIndicator(
@@ -53,8 +56,9 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
           // Offset for top header
           SliverToBoxAdapter(child: SizedBox(height: widget.topPadding)),
 
-          // Horizontal Date Selector
-          const SliverToBoxAdapter(child: SocialDateSelector()),
+          // Nearby is future-based and is not constrained by the date picker.
+          if (!filterState.nearbyOnly)
+            const SliverToBoxAdapter(child: SocialDateSelector()),
 
           // Toggle "Gần bạn" + chips bán kính + banner quyền vị trí
           const SliverToBoxAdapter(child: SocialNearbyFilter()),
@@ -115,77 +119,109 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
             ],
             data: (sessions) {
               if (sessions.isEmpty) {
+                final nearbyNotifier = ref.read(
+                  socialSessionsProvider.notifier,
+                );
+                if (filterState.nearbyOnly && nearbyNotifier.hasMoreNearby) {
+                  return [
+                    const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Text('Chưa có kết quả trong trang này.'),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: _buildNearbyPagination(nearbyNotifier),
+                    ),
+                  ];
+                }
                 return [
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 64,
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white10
-                                  : Colors.black.withValues(alpha: 0.04),
-                              shape: BoxShape.circle,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? Colors.white10
+                                    : Colors.black.withValues(alpha: 0.04),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.sports_tennis_rounded,
+                                size: 32,
+                                color: isDark ? Colors.white38 : Colors.black38,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.sports_tennis_rounded,
-                              size: 32,
-                              color: isDark ? Colors.white38 : Colors.black38,
+                            const SizedBox(height: 12),
+                            Text(
+                              filterState.nearbyOnly &&
+                                      locationState.hasPosition
+                                  ? l10n.socialNearbyNoResults
+                                  : 'Không có buổi Social nào trong ngày ${filterState.selectedDate.day}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF64748B),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Không có buổi Social nào trong ngày ${filterState.selectedDate.day}',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? Colors.white70
-                                  : const Color(0xFF64748B),
+                            const SizedBox(height: 6),
+                            Text(
+                              filterState.nearbyOnly &&
+                                      locationState.hasPosition
+                                  ? l10n.socialNearbyExpandRadius
+                                  : 'Thử chọn ngày khác hoặc tìm kiếm môn thể thao khác',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: isDark
+                                    ? Colors.white38
+                                    : const Color(0xFF94A3B8),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Thử chọn ngày khác hoặc tìm kiếm môn thể thao khác',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark
-                                  ? Colors.white38
-                                  : const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ];
               }
 
-              // Group filtered sessions by timeSlot
+              if (filterState.nearbyOnly) {
+                return [
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => SocialSessionCard(
+                        session: sessions[index],
+                        onTap: () =>
+                            _openSessionDetail(context, sessions[index].id),
+                      ),
+                      childCount: sessions.length,
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _buildNearbyPagination(
+                      ref.read(socialSessionsProvider.notifier),
+                    ),
+                  ),
+                ];
+              }
+
+              // Regular list mode keeps the existing time-slot grouping.
               final Map<String, List<SocialSessionModel>> groupedSessions = {};
               for (final session in sessions) {
                 groupedSessions
                     .putIfAbsent(session.timeSlot, () => [])
                     .add(session);
-              }
-              // Chế độ "Gần bạn": xếp gần lên trước TRONG từng khung giờ
-              // (giữ grouping theo giờ như đã chốt). Venue chưa ghim (<=0) xếp cuối.
-              if (filterState.nearbyOnly) {
-                for (final entry in groupedSessions.entries) {
-                  entry.value.sort((a, b) {
-                    final da = (a.distanceM != null && a.distanceM! > 0)
-                        ? a.distanceM!
-                        : (a.distanceKm > 0 ? a.distanceKm * 1000 : double.infinity);
-                    final db = (b.distanceM != null && b.distanceM! > 0)
-                        ? b.distanceM!
-                        : (b.distanceKm > 0 ? b.distanceKm * 1000 : double.infinity);
-                    return da.compareTo(db);
-                  });
-                }
               }
               final sortedTimeSlots = groupedSessions.keys.toList()..sort();
 
@@ -234,6 +270,34 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
           // Bottom spacing for bottom nav
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNearbyPagination(SocialSessionsNotifier notifier) {
+    if (!notifier.hasMoreNearby && notifier.loadMoreError == null) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+      child: Center(
+        child: notifier.isLoadingMore
+            ? const CircularProgressIndicator()
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (notifier.loadMoreError != null)
+                    Text(notifier.loadMoreError!, textAlign: TextAlign.center),
+                  TextButton(
+                    onPressed: notifier.loadMoreNearby,
+                    child: Text(
+                      notifier.loadMoreError == null
+                          ? AppLocalizations.of(context)!.socialNearbyLoadMore
+                          : AppLocalizations.of(context)!.socialNearbyRetry,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }

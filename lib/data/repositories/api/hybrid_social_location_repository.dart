@@ -84,6 +84,10 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
   }
 
   @override
+  Future<SocialPlace> getVenueDetail(String venueId) =>
+      _photon.getVenueDetail(venueId);
+
+  @override
   Future<SocialPlace> resolveInput(String addressOrMapsUrl) async {
     final value = addressOrMapsUrl.trim();
     if (value.isEmpty) throw const LocationNotFound();

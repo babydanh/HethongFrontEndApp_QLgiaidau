@@ -108,11 +108,42 @@ class SocialFilterNotifier extends Notifier<SocialFilterState> {
 
 final socialFilterProvider =
     NotifierProvider<SocialFilterNotifier, SocialFilterState>(
-  SocialFilterNotifier.new,
-);
+      SocialFilterNotifier.new,
+    );
 
-class SocialSessionsNotifier
-    extends AsyncNotifier<List<SocialSessionModel>> {
+class SocialSessionsNotifier extends AsyncNotifier<List<SocialSessionModel>> {
+  int _nearbyPage = 1;
+  bool _nearbyHasMore = false;
+  bool _loadingMore = false;
+  int _nearbyGeneration = 0;
+  String? _loadMoreError;
+
+  bool get hasMoreNearby => _nearbyHasMore;
+  bool get isLoadingMore => _loadingMore;
+  String? get loadMoreError => _loadMoreError;
+
+  List<SocialSessionModel> _applyNearbyFilters(
+    List<SocialSessionModel> items,
+    SocialFilterState filter,
+  ) {
+    var visible = items;
+    if (filter.selectedSport != 'all') {
+      visible = visible.where((s) => s.sport == filter.selectedSport).toList();
+    }
+    final query = filter.searchQuery.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      visible = visible
+          .where(
+            (s) =>
+                s.title.toLowerCase().contains(query) ||
+                s.venueName.toLowerCase().contains(query) ||
+                s.venueAddress.toLowerCase().contains(query),
+          )
+          .toList();
+    }
+    return visible;
+  }
+
   /// Tọa độ gửi kèm query — chỉ khi user bật "Gần bạn" VÀ đã có vị trí.
   /// Thiếu vị trí (từ chối quyền/tắt GPS) thì fallback danh sách theo giờ.
   ({double? lat, double? lng, String? sortBy}) _geoParams(
@@ -120,7 +151,11 @@ class SocialSessionsNotifier
     UserLocationState location,
   ) {
     if (filter.nearbyOnly && location.hasPosition) {
-      return (lat: location.latitude, lng: location.longitude, sortBy: 'DISTANCE');
+      return (
+        lat: location.latitude,
+        lng: location.longitude,
+        sortBy: 'DISTANCE',
+      );
     }
     return (lat: null, lng: null, sortBy: null);
   }
@@ -130,27 +165,23 @@ class SocialSessionsNotifier
     final filter = ref.watch(socialFilterProvider);
     final location = ref.watch(userLocationProvider);
     final repo = ref.watch(socialSessionRepositoryProvider);
+    final generation = ++_nearbyGeneration;
+    _nearbyPage = 1;
+    _nearbyHasMore = false;
+    _loadMoreError = null;
 
     if (filter.nearbyOnly && location.hasPosition) {
-      final radiusM = (filter.radiusKm * 1000).round().clamp(100, 50000);
       final nearby = await repo.listNearby(
         lat: location.latitude!,
         lng: location.longitude!,
-        radius: radiusM,
+        radiusKm: filter.radiusKm,
+        page: 1,
+        limit: 20,
       );
-      var items = nearby.items;
-      if (filter.selectedSport != 'all') {
-        items = items.where((s) => s.sport == filter.selectedSport).toList();
-      }
-      if (filter.searchQuery.trim().isNotEmpty) {
-        final query = filter.searchQuery.trim().toLowerCase();
-        items = items.where((s) =>
-          s.title.toLowerCase().contains(query) ||
-          s.venueName.toLowerCase().contains(query) ||
-          s.venueAddress.toLowerCase().contains(query)
-        ).toList();
-      }
-      return items;
+      if (generation != _nearbyGeneration) return const [];
+      _nearbyPage = nearby.page;
+      _nearbyHasMore = nearby.hasMore;
+      return _applyNearbyFilters(nearby.items, filter);
     }
 
     final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
@@ -169,33 +200,67 @@ class SocialSessionsNotifier
     return response.items;
   }
 
+  Future<void> loadMoreNearby() async {
+    if (_loadingMore || !_nearbyHasMore) return;
+    final filter = ref.read(socialFilterProvider);
+    final location = ref.read(userLocationProvider);
+    if (!filter.nearbyOnly || !location.hasPosition) return;
+    final generation = _nearbyGeneration;
+    _loadingMore = true;
+    _loadMoreError = null;
+    state = AsyncData(state.asData?.value ?? const <SocialSessionModel>[]);
+    try {
+      final response = await ref
+          .read(socialSessionRepositoryProvider)
+          .listNearby(
+            lat: location.latitude!,
+            lng: location.longitude!,
+            radiusKm: filter.radiusKm,
+            page: _nearbyPage + 1,
+            limit: 20,
+          );
+      if (generation != _nearbyGeneration) return;
+      final existing = state.asData?.value ?? const <SocialSessionModel>[];
+      final ids = existing.map((item) => item.id).toSet();
+      final next = _applyNearbyFilters(
+        response.items,
+        filter,
+      ).where((item) => ids.add(item.id));
+      _nearbyPage = response.page;
+      _nearbyHasMore = response.hasMore;
+      state = AsyncData([...existing, ...next]);
+    } catch (_) {
+      if (generation == _nearbyGeneration)
+        _loadMoreError = 'Không thể tải thêm. Hãy thử lại.';
+    } finally {
+      _loadingMore = false;
+      if (generation == _nearbyGeneration) {
+        state = AsyncData(state.asData?.value ?? const <SocialSessionModel>[]);
+      }
+    }
+  }
+
   Future<void> refresh() async {
     final filter = ref.read(socialFilterProvider);
     final location = ref.read(userLocationProvider);
     final repo = ref.read(socialSessionRepositoryProvider);
 
+    _nearbyGeneration++;
+    _nearbyPage = 1;
+    _nearbyHasMore = false;
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       if (filter.nearbyOnly && location.hasPosition) {
-        final radiusM = (filter.radiusKm * 1000).round().clamp(100, 50000);
         final nearby = await repo.listNearby(
           lat: location.latitude!,
           lng: location.longitude!,
-          radius: radiusM,
+          radiusKm: filter.radiusKm,
+          page: 1,
+          limit: 20,
         );
-        var items = nearby.items;
-        if (filter.selectedSport != 'all') {
-          items = items.where((s) => s.sport == filter.selectedSport).toList();
-        }
-        if (filter.searchQuery.trim().isNotEmpty) {
-          final query = filter.searchQuery.trim().toLowerCase();
-          items = items.where((s) =>
-            s.title.toLowerCase().contains(query) ||
-            s.venueName.toLowerCase().contains(query) ||
-            s.venueAddress.toLowerCase().contains(query)
-          ).toList();
-        }
-        return items;
+        _nearbyPage = nearby.page;
+        _nearbyHasMore = nearby.hasMore;
+        return _applyNearbyFilters(nearby.items, filter);
       }
 
       final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
@@ -260,11 +325,7 @@ class SocialSessionsNotifier
     String newStatus,
   ) async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.updatePaymentStatus(
-      sessionId,
-      userId,
-      paymentStatus: newStatus,
-    );
+    await repo.updatePaymentStatus(sessionId, userId, paymentStatus: newStatus);
     await refresh();
   }
 
@@ -344,11 +405,10 @@ class SocialSessionsNotifier
 
 final socialSessionsProvider =
     AsyncNotifierProvider<SocialSessionsNotifier, List<SocialSessionModel>>(
-  SocialSessionsNotifier.new,
-);
+      SocialSessionsNotifier.new,
+    );
 
-class SocialSessionDetailNotifier
-    extends AsyncNotifier<SocialSessionModel> {
+class SocialSessionDetailNotifier extends AsyncNotifier<SocialSessionModel> {
   final String sessionId;
   SocialSessionDetailNotifier(this.sessionId);
 
@@ -361,7 +421,9 @@ class SocialSessionDetailNotifier
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      return await ref.read(socialSessionRepositoryProvider).getDetail(sessionId);
+      return await ref
+          .read(socialSessionRepositoryProvider)
+          .getDetail(sessionId);
     });
   }
 
@@ -375,7 +437,11 @@ class SocialSessionDetailNotifier
 
   Future<void> updatePaymentStatus(String userId, String paymentStatus) async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.updatePaymentStatus(sessionId, userId, paymentStatus: paymentStatus);
+    await repo.updatePaymentStatus(
+      sessionId,
+      userId,
+      paymentStatus: paymentStatus,
+    );
     await refresh();
     ref.read(socialSessionsProvider.notifier).refresh();
   }
@@ -392,7 +458,11 @@ class SocialSessionDetailNotifier
     int ticketCount = 1,
   }) async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.addParticipant(sessionId, userId: userId, ticketCount: ticketCount);
+    await repo.addParticipant(
+      sessionId,
+      userId: userId,
+      ticketCount: ticketCount,
+    );
     await refresh();
     ref.read(socialSessionsProvider.notifier).refresh();
   }
@@ -447,9 +517,7 @@ class SocialSessionDetailNotifier
       isMe: true,
     );
     state = AsyncData(
-      current.copyWith(
-        chatMessages: [...current.chatMessages, newMessage],
-      ),
+      current.copyWith(chatMessages: [...current.chatMessages, newMessage]),
     );
   }
 }
@@ -549,9 +617,7 @@ class ClubSocialSessionsNotifier
     } catch (error) {
       // Silent refresh lỗi: giữ data cũ, chỉ warn log.
       // Cron server sẽ dọn lại, lần refresh tiếp sẽ đúng.
-      _socialClubLog.warning(
-        'Silent refresh failed for $communityId: $error',
-      );
+      _socialClubLog.warning('Silent refresh failed for $communityId: $error');
     }
   }
 
@@ -571,18 +637,19 @@ class ClubSocialSessionsNotifier
   }
 }
 
-final clubSocialSessionsProvider = AsyncNotifierProvider.family<
-    ClubSocialSessionsNotifier,
-    List<SocialSessionModel>,
-    String>(ClubSocialSessionsNotifier.new);
+final clubSocialSessionsProvider =
+    AsyncNotifierProvider.family<
+      ClubSocialSessionsNotifier,
+      List<SocialSessionModel>,
+      String
+    >(ClubSocialSessionsNotifier.new);
 
 /// Aliases tương thích ngược: cùng trỏ tới [clubSocialSessionsProvider]
 /// để dùng chung cơ chế auto-close, auto-refresh 5 phút và TTL 60s.
 final clubSocialSessionsQueryProvider = clubSocialSessionsProvider;
 final communitySocialSessionsQueryProvider = clubSocialSessionsProvider;
 
-
 final filteredSocialSessionsProvider =
     Provider<AsyncValue<List<SocialSessionModel>>>((ref) {
-  return ref.watch(socialSessionsProvider);
-});
+      return ref.watch(socialSessionsProvider);
+    });
