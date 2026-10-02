@@ -7,9 +7,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The match card typography was enlarged to match the reference product, so
-/// the labels it prints (round name, court, team names) have to keep shrinking
-/// inside the row instead of overflowing the phone width. A two-digit round and
-/// a long round/court name are the exact inputs that broke it.
+/// every label it prints has to keep shrinking inside its row instead of
+/// overflowing the phone width, and the trailing court label has to stay
+/// pinned to the right edge of the bar.
+///
+/// These are the exact inputs that broke it: a long round name (which the bar
+/// renders verbatim) and a two-digit round badge. The court label is passed
+/// pre-shortened because `TournamentLocationFormatter.matchShortCourt` is what
+/// the card actually renders, and the finder has to see that exact string.
+const longRound = 'GIẢI PICKLEBALL TẬP CHỊ TRÊM VIỆT NAM LẦN 1 - 2026';
+const courtLabel = 'Sân TDTT Q1';
+
 Widget _harness(Widget child) {
   return MaterialApp(
     theme: AppTheme.darkTheme,
@@ -22,9 +30,8 @@ Widget _harness(Widget child) {
 }
 
 MatchModel _match({
-  required String round,
-  required String courtName,
-  String status = 'COMPLETED',
+  required String status,
+  String round = '16',
   String team1 = 'Nguyễn Minh Danh',
   String team2 = 'Trần Quốc Bảo Khánh',
 }) {
@@ -37,16 +44,26 @@ MatchModel _match({
     team2Id: 'team-2',
     team1Name: team1,
     team2Name: team2,
+    courtName: courtLabel,
+    court: courtLabel,
     status: status,
+    // `formatRound` returns a group name verbatim, which is how the bar ends
+    // up holding a name long enough to overflow.
     stageName: 'GROUP_STAGE',
-    groupName: longLabel,
-    courtName: courtName,
-    court: courtName,
+    groupName: longRound,
     updatedAt: DateTime(2026, 1, 1),
   );
 }
 
-const longLabel = 'GIẢI PICKLEBALL TẬP CHỊ TRÊM VIỆT NAM LẦN 1 - 2026';
+/// The court label is the trailing element of every bar: it has to stay pinned
+/// to the right edge. Giving both the round name and the court name a Flex and
+/// leaving a Spacer between them still fits the row, but leaves the court
+/// label floating mid-bar — a defect no overflow assertion can see.
+void _expectCourtPinnedRight(WidgetTester tester, {double tolerance = 24}) {
+  final court = tester.getRect(find.text(courtLabel).last);
+  final card = tester.getRect(find.byType(LiveMatchCardV2));
+  expect(card.right - court.right, lessThan(tolerance));
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,8 +75,7 @@ void main() {
       _harness(
         MatchCardCompact(
           match: _match(
-            round: '16',
-            courtName: '',
+            status: 'COMPLETED',
             team1: 'Nguyễn Minh Danh và đồng đội rất dài',
           ),
           isCompleted: true,
@@ -72,78 +88,44 @@ void main() {
     expect(find.textContaining('16'), findsWidgets);
   });
 
-  testWidgets('completed bar ellipsizes a long round and court name', (
+  testWidgets('completed bar fits a long round name and pins court right', (
     tester,
   ) async {
     await tester.pumpWidget(
       _harness(
-        LiveMatchCardV2(
-          match: _match(
-            round: '16',
-            courtName: 'Sân trung tâm TDTT Quận 1',
-            team1: longLabel,
-            team2: longLabel,
-          ),
-          isCompleted: true,
-        ),
+        LiveMatchCardV2(match: _match(status: 'COMPLETED'), isCompleted: true),
       ),
     );
     await tester.pump();
 
     expect(tester.takeException(), isNull);
-    expect(
-      tester
-          .widgetList<Text>(find.byType(Text))
-          .any((text) => text.overflow == TextOverflow.ellipsis),
-      isTrue,
-    );
+    _expectCourtPinnedRight(tester);
   });
 
-  testWidgets('scheduled bar ellipsizes a long round and court name', (
+  testWidgets('scheduled bar fits a long round name and pins court right', (
     tester,
   ) async {
     await tester.pumpWidget(
-      _harness(
-        LiveMatchCardV2(
-          match: _match(
-            round: '16',
-            courtName: 'Sân trung tâm TDTT Quận 1',
-            team1: longLabel,
-            team2: longLabel,
-            status: 'scheduled',
-          ),
-        ),
-      ),
+      _harness(LiveMatchCardV2(match: _match(status: 'scheduled'))),
     );
     await tester.pump();
 
     expect(tester.takeException(), isNull);
-    expect(
-      tester
-          .widgetList<Text>(find.byType(Text))
-          .any((text) => text.overflow == TextOverflow.ellipsis),
-      isTrue,
-    );
+    _expectCourtPinnedRight(tester);
   });
 
-  testWidgets('live bar ellipsizes a long round name', (tester) async {
+  testWidgets('live bar fits a long round name and pins court right', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _harness(
-        LiveMatchCardV2(
-          match: _match(
-            round: '16',
-            courtName: 'Sân trung tâm TDTT Quận 1',
-            team1: longLabel,
-            team2: longLabel,
-            status: 'IN_PROGRESS',
-          ),
-          isLive: true,
-        ),
-      ),
+      _harness(LiveMatchCardV2(match: _match(status: 'IN_PROGRESS'), isLive: true)),
     );
     await tester.pump();
 
     expect(tester.takeException(), isNull);
+    // The live bar wraps the court label in a bordered chip, so allow for that
+    // chip's own padding on top of the card padding.
+    _expectCourtPinnedRight(tester, tolerance: 32);
 
     // The live badge pulses forever; tear the card down so the test does not
     // end with a pending animation timer.
