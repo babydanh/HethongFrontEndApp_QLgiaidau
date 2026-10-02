@@ -250,7 +250,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: context.colors.textSecondary,
                 ),
@@ -259,34 +259,40 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
           ],
           const Spacer(),
           if (courtName.isNotEmpty) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: context.colors.bgSurface,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: context.colors.border.withValues(alpha: 0.5),
-                  width: 0.8,
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: context.colors.bgSurface,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: context.colors.border.withValues(alpha: 0.5),
+                    width: 0.8,
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: 11,
-                    color: context.colors.textMuted,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    courtName,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textSecondary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 11,
+                      color: context.colors.textMuted,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 3),
+                    Flexible(
+                      child: Text(
+                        courtName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: context.colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(width: 6),
@@ -360,23 +366,31 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
           ),
           if (roundName.isNotEmpty) ...[
             const SizedBox(width: 8),
-            Text(
-              roundName,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: colors.textSecondary,
+            Flexible(
+              child: Text(
+                roundName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textSecondary,
+                ),
               ),
             ),
           ],
           const Spacer(),
           if (courtName.isNotEmpty)
-            Text(
-              courtName,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: colors.textMuted,
+            Flexible(
+              child: Text(
+                courtName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: colors.textMuted,
+                ),
               ),
             ),
         ],
@@ -423,20 +437,28 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
           ),
           if (roundName.isNotEmpty) ...[
             const SizedBox(width: 8),
-            Text(
-              '•  $roundName',
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: colors.textMuted,
+            Flexible(
+              child: Text(
+                '•  $roundName',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textMuted,
+                ),
               ),
             ),
           ],
           const Spacer(),
           if (courtName.isNotEmpty)
-            Text(
-              courtName,
-              style: TextStyle(fontSize: 10, color: colors.textMuted),
+            Flexible(
+              child: Text(
+                courtName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+              ),
             ),
         ],
       ),
@@ -464,8 +486,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             child: Text(
               l10n.matchVsLabel,
               style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
+                fontSize: 11.5,
                 color: colors.textMuted,
                 letterSpacing: 0.5,
               ),
@@ -542,7 +563,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             child: Text(
               eloDelta,
               style: TextStyle(
-                fontSize: 8.5,
+                fontSize: 10,
                 fontWeight: FontWeight.w800,
                 fontFeatures: const [FontFeature.tabularFigures()],
                 color: eloIsNegative
@@ -577,7 +598,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
               child: Text(
                 displayLabel,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: isWinner || isLeading
                       ? FontWeight.w800
                       : FontWeight.w600,

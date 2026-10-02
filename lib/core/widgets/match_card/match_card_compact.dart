@@ -28,17 +28,21 @@ class MatchCardCompact extends StatelessWidget {
         children: [
           // Round badge
           Container(
-            width: 32,
-            height: 24,
+            constraints: const BoxConstraints(minWidth: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
               color: context.colors.bgSurface,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Center(
-              child: Text(l10n.matchRound(match.round),
-                  style: TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.w700,
-                      color: context.colors.textMuted)),
+              child: Text(
+                l10n.matchRound(match.round),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 11.5, fontWeight: FontWeight.w700,
+                    color: context.colors.textMuted),
+              ),
             ),
           ),
           const SizedBox(width: 10),
@@ -46,7 +50,7 @@ class MatchCardCompact extends StatelessWidget {
             child: Text(
               match.team1Name,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: isCompleted && match.winnerId == match.team1Id
                     ? FontWeight.w700
                     : FontWeight.w400,
@@ -61,7 +65,7 @@ class MatchCardCompact extends StatelessWidget {
           Text(
             '${match.score1} - ${match.score2}',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: context.colors.textPrimary,
             ),
@@ -71,7 +75,7 @@ class MatchCardCompact extends StatelessWidget {
               match.team2Name,
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: isCompleted && match.winnerId == match.team2Id
                     ? FontWeight.w700
                     : FontWeight.w400,

@@ -40,7 +40,7 @@ extension _ClubDetailHeaderInfo on _ClubDetailScreenState {
                               child: Text(
                                 club.name,
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.w800,
                                   color: colors.textPrimary,
                                   height: 1.1,
