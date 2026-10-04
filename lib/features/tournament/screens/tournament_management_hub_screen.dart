@@ -2,14 +2,15 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_action_button.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
@@ -39,10 +40,11 @@ class TournamentManagementHubScreen extends ConsumerStatefulWidget {
 
 class _TournamentManagementHubScreenState
     extends ConsumerState<TournamentManagementHubScreen> {
-  // Khởi tạo `.general` vì tab Tổng quan đã bị bỏ; nếu để `.overview` thì cột
-  // chi tiết trên tablet mở lên sẽ hiện nội dung không còn nằm trong nav.
   TournamentManagementSection _selectedSection =
       TournamentManagementSection.general;
+  TournamentManagementSection? _overviewSection;
+  TournamentManagementSection? _inlineSection;
+  bool _showSettings = false;
   bool _isFinalizing = false;
   bool _isExporting = false;
   bool _isDeleting = false;
@@ -67,6 +69,14 @@ class _TournamentManagementHubScreenState
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: l10n.tournamentManagementBack,
           onPressed: () {
+            if (_showSettings) {
+              setState(() => _showSettings = false);
+              return;
+            }
+            if (_overviewSection != null) {
+              setState(() => _overviewSection = null);
+              return;
+            }
             if (context.canPop()) {
               context.pop();
             } else {
@@ -74,8 +84,27 @@ class _TournamentManagementHubScreenState
             }
           },
         ),
-        title: Text(l10n.managementTitle),
+        title: Text(
+          _showSettings
+              ? l10n.tournamentManagementSettingsTooltip
+              : _overviewSection == null
+              ? l10n.managementTitle
+              : _sectionDetails(l10n, _overviewSection!).title,
+        ),
         actions: [
+          if (!_showSettings)
+            IconButton(
+              tooltip: l10n.tournamentManagementSettingsTooltip,
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () {
+                setState(() {
+                  _showSettings = true;
+                  _overviewSection = null;
+                  _inlineSection = null;
+                  _selectedSection = TournamentManagementSection.general;
+                });
+              },
+            ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             tooltip: l10n.tournamentManagementSystemGroup,
@@ -187,32 +216,51 @@ class _TournamentManagementHubScreenState
         ],
       ),
       body: ResponsiveLayout(
-        mobile: _buildManagementNavigation(
-          context,
-          tournament,
-          isTablet: false,
-        ),
-        tablet: Row(
-          children: [
-            SizedBox(
-              width: 360,
-              child: _buildManagementNavigation(
-                context,
-                tournament,
-                isTablet: true,
-              ),
-            ),
-            VerticalDivider(width: 1, color: context.colors.border),
-            Expanded(child: _buildDetailView(context)),
-          ],
-        ),
+        mobile: _showSettings
+            ? _buildSettingsNavigation(context, isTablet: false)
+            : _buildPrimaryNavigation(context, tournament),
+        tablet: _showSettings
+            ? Row(
+                children: [
+                  SizedBox(
+                    width: 360,
+                    child: _buildSettingsNavigation(context, isTablet: true),
+                  ),
+                  VerticalDivider(width: 1, color: context.colors.border),
+                  Expanded(child: _buildDetailView(context)),
+                ],
+              )
+            : _buildPrimaryNavigation(context, tournament),
       ),
     );
   }
 
-  Widget _buildManagementNavigation(
-    BuildContext context,
-    Tournament tournament, {
+  Widget _buildPrimaryNavigation(BuildContext context, Tournament tournament) {
+    if (_overviewSection != null) return _buildDetailView(context);
+    return _TournamentManagementOverview(
+      tournament: tournament,
+      onEditSection: (section) {
+        setState(() {
+          _selectedSection = section;
+          _overviewSection = section;
+        });
+      },
+    );
+  }
+
+
+  Widget _buildManagementSection(
+    Tournament tournament,
+    TournamentManagementSection section,
+  ) => TournamentManagementSectionScreen(
+    tournament: tournament,
+    section: section,
+    opsWorkspaceRoute: widget.opsWorkspaceRoute,
+    actionRouteBase: widget.actionRouteBase,
+  );
+
+  Widget _buildSettingsNavigation(
+    BuildContext context, {
     required bool isTablet,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -256,7 +304,24 @@ class _TournamentManagementHubScreenState
                     TournamentManagementSection.divisions,
                   ],
                 ),
-                _buildOperationsGroupPage(context, isTablet: isTablet),
+                // Settings preserves every management destination not represented by an overview edit target.
+                _buildSectionGroupPage(
+                  context,
+                  isTablet: isTablet,
+                  title: l10n.tournamentManagementOperationsGroup,
+                  icon: Icons.sports_score_rounded,
+                  sections: const [
+                    // Court schedule remains available in the Operations settings group.
+                    TournamentManagementSection.schedule,
+                    TournamentManagementSection.liveOperations,
+                    TournamentManagementSection.teams,
+                    TournamentManagementSection.draw,
+                    TournamentManagementSection.bracket,
+                    TournamentManagementSection.sponsors,
+                    TournamentManagementSection.finance,
+                    TournamentManagementSection.livestream,
+                  ],
+                ),
                 _buildSectionGroupPage(
                   context,
                   isTablet: isTablet,
@@ -282,6 +347,33 @@ class _TournamentManagementHubScreenState
     required IconData icon,
     required List<TournamentManagementSection> sections,
   }) {
+    if (!isTablet &&
+        _inlineSection != null &&
+        sections.contains(_inlineSection)) {
+      final l10n = AppLocalizations.of(context)!;
+      final section = _inlineSection!;
+      final details = _sectionDetails(l10n, section);
+      return Column(
+        children: [
+          Material(
+            color: context.colors.bgDark,
+            child: ListTile(
+              leading: IconButton(
+                tooltip: l10n.tournamentManagementBack,
+                icon: const Icon(Icons.arrow_back_rounded),
+                onPressed: () => setState(() => _inlineSection = null),
+              ),
+              title: Text(
+                details.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          Expanded(child: _buildDetailView(context)),
+        ],
+      );
+    }
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -291,41 +383,6 @@ class _TournamentManagementHubScreenState
           title: title,
           icon: icon,
           sections: sections,
-          showHeader: false,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOperationsGroupPage(
-    BuildContext context, {
-    required bool isTablet,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Trước đây có thêm một `AppActionButton` độc lập mở
-        // `opsWorkspaceRoute`, nhưng dòng `schedule` bên dưới cũng mở đúng
-        // workspace đó (`_buildSectionAction` map schedule -> opsWorkspaceRoute).
-        // Hai lối vào một chỗ, lại lệch hình dạng với các dòng còn lại. Đã bỏ
-        // nút riêng, giữ lại dòng `schedule` để mọi dòng cùng một kiểu.
-        _buildSectionGroup(
-          context,
-          isTablet: isTablet,
-          title: l10n.tournamentManagementOperationsGroup,
-          icon: Icons.sports_score_rounded,
-          sections: const [
-            // `schedule` trước đây có trong enum nhưng không nằm ở tab nào
-            // nên không mục nào mở được. Đưa vào đây để tới được.
-            TournamentManagementSection.schedule,
-            TournamentManagementSection.teams,
-            TournamentManagementSection.draw,
-            TournamentManagementSection.bracket,
-            TournamentManagementSection.sponsors,
-            TournamentManagementSection.finance,
-            TournamentManagementSection.livestream,
-          ],
           showHeader: false,
         ),
       ],
@@ -420,46 +477,29 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection section,
   ) {
     final details = _sectionDetails(l10n, section);
-    final route = switch (section) {
-      TournamentManagementSection.tokens => '${widget.actionRouteBase}/tokens',
-      TournamentManagementSection.teams => '${widget.actionRouteBase}/teams',
-      TournamentManagementSection.draw => '${widget.actionRouteBase}/draw',
-      TournamentManagementSection.bracket =>
-        '${widget.actionRouteBase}/bracket',
-      TournamentManagementSection.schedule ||
-      TournamentManagementSection.liveOperations => widget.opsWorkspaceRoute,
-      _ => null,
-    };
-    return AppActionButton(
-      icon: details.icon,
-      label: details.title,
-      subtitle: details.subtitle,
-      color: details.color,
-      isSelected: isTablet && _selectedSection == section,
-      onTap: () {
-        if (isTablet) {
-          setState(() => _selectedSection = section);
-        } else if (route != null) {
-          context.push(route);
-        } else {
-          Navigator.of(context).push<void>(
-            MaterialPageRoute(
-              builder: (context) => Scaffold(
-                backgroundColor: context.colors.bgDark,
-                appBar: AppBar(title: Text(details.title)),
-                body: SafeArea(
-                  child: TournamentManagementSectionScreen(
-                    tournament: widget.tournament,
-                    section: section,
-                    opsWorkspaceRoute: widget.opsWorkspaceRoute,
-                    actionRouteBase: widget.actionRouteBase,
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-      },
+    return Tooltip(
+      message: details.subtitle,
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          dense: true,
+          selected: isTablet && _selectedSection == section,
+          selectedTileColor: context.colors.bgSurface,
+          leading: Icon(details.icon, color: details.color),
+          title: Text(
+            details.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+          onTap: () {
+            setState(() {
+              _selectedSection = section;
+              if (!isTablet) _inlineSection = section;
+            });
+          },
+        ),
+      ),
     );
   }
 
@@ -657,6 +697,37 @@ class _TournamentManagementHubScreenState
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.deleteError)));
     }
+  }
+}
+
+class _TournamentManagementOverview extends ConsumerWidget {
+  const _TournamentManagementOverview({
+    required this.tournament,
+    required this.onEditSection,
+  });
+
+  final Tournament tournament;
+  final ValueChanged<TournamentManagementSection> onEditSection;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamsAsync = ref.watch(introTeamsProvider(tournament.id));
+    return OverviewTab(
+      tournament: tournament,
+      teamCount: teamsAsync.value?.length ?? 0,
+      resolveImageUrl: (url) {
+        if (url == null || url.isEmpty) return '';
+        if (url.startsWith('http')) return url;
+        return '${AppConstants.appDomain}$url';
+      },
+      onEditGeneral: () => onEditSection(TournamentManagementSection.general),
+      onEditBranding: () =>
+          onEditSection(TournamentManagementSection.branding),
+      onEditVenues: () => onEditSection(TournamentManagementSection.venues),
+      onEditRegistration: () =>
+          onEditSection(TournamentManagementSection.registration),
+      onEditFinance: () => onEditSection(TournamentManagementSection.finance),
+    );
   }
 }
 

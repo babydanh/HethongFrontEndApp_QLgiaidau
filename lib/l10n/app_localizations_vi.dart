@@ -1536,6 +1536,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchesCourtNameUnavailable => 'Tên sân chưa được cung cấp';
 
   @override
+  String matchesUnplacedSection(int count) {
+    return 'Trận chưa xếp đủ sân/giờ ($count)';
+  }
+
+  @override
   String tournamentScheduleHours(String start, String end) {
     return 'Giờ hoạt động: $start–$end';
   }
@@ -14349,4 +14354,7 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get socialLocationNoAddressFound =>
       'Chưa tìm thấy địa chỉ cho vị trí đã ghim.';
+
+  @override
+  String get tournamentManagementSettingsTooltip => 'Cài đặt giải đấu';
 }

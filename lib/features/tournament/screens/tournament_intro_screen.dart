@@ -45,7 +45,7 @@ class TournamentIntroScreen extends ConsumerStatefulWidget {
 class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
-  int _currentTabCount = 0;
+  List<String> _tabIds = const [];
   int _introTabIndex = 0;
   String _selectedDivision = "";
   String? _selectedDivisionId;
@@ -68,21 +68,35 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     }
   }
 
-  void _updateTabController(int count, {int? defaultIndex}) {
-    if (_tabController != null && _currentTabCount == count) return;
+  void _updateTabController(List<String> tabIds, {int? defaultIndex}) {
     final prev = _tabController;
-    final prevIndex = prev?.index;
-    _currentTabCount = count;
+    var hasSameTabs = prev != null && _tabIds.length == tabIds.length;
+    for (var index = 0; hasSameTabs && index < tabIds.length; index++) {
+      hasSameTabs = _tabIds[index] == tabIds[index];
+    }
+    if (hasSameTabs) return;
 
-    // If the user hasn't actively switched tabs yet, always default to defaultIndex (overview tab)
+    final prevIndex = prev?.index;
+    final previousTabId = prevIndex != null && prevIndex < _tabIds.length
+        ? _tabIds[prevIndex]
+        : null;
+    final identityIndex = previousTabId == null
+        ? -1
+        : tabIds.indexOf(previousTabId);
+    final count = tabIds.length;
+    _tabIds = tabIds;
+
+    // Keep a user-selected page by identity when optional tabs change position.
     final targetIndex =
         (!_hasUserSwitchedTab && defaultIndex != null && defaultIndex < count)
         ? defaultIndex
-        : (prevIndex != null && prevIndex < count
-              ? prevIndex
-              : (defaultIndex != null && defaultIndex < count
-                    ? defaultIndex
-                    : 0));
+        : (identityIndex >= 0
+              ? identityIndex
+              : (prevIndex != null && prevIndex < count
+                    ? prevIndex
+                    : (defaultIndex != null && defaultIndex < count
+                          ? defaultIndex
+                          : 0)));
 
     final newController = TabController(
       length: count,
@@ -471,6 +485,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final currentUserId = userProfile?.id;
     final isCreator = tournament.creatorId == currentUserId;
     final isAdmin = authState.isAdmin;
+    final canManage =
+        isAdmin ||
+        authState.isOrganizer ||
+        (userProfile != null &&
+            userProfile.id.isNotEmpty &&
+            userProfile.id == tournament.creatorId);
     final activeInvite = _customInviteCode ?? widget.inviteCode;
     final hasInvite = activeInvite != null && activeInvite.trim().isNotEmpty;
 
@@ -600,6 +620,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     // Build Dynamic Tabs List & Pages List strictly according to Web Layout (Hình 2)
     final List<Widget> tabHeaders = [];
     final List<Widget> tabViews = [];
+    final List<String> tabIds = [];
 
     // 1. Tab [🔴 Đang diễn ra (N)] nếu có trận Live
     if (hasLive) {
@@ -648,6 +669,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ),
         ),
       );
+      tabIds.add('live');
       tabViews.add(
         LiveTab(
           key: ValueKey('live-$_selectedDivisionId'),
@@ -680,6 +702,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ),
         ),
       );
+      tabIds.add('results');
       tabViews.add(
         tournament.divisions.length > 1
             ? Column(
@@ -707,26 +730,33 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     // 3. Tab [Tổng quan] (Mặc định khi vào màn hình)
     final int overviewIndex = tabHeaders.length;
     tabHeaders.add(const Tab(height: 28, text: 'Tổng quan'));
+    tabIds.add('overview');
 
     // 4. Tab [Giới thiệu]
     final int introIndex = tabHeaders.length;
     _introTabIndex = introIndex;
     tabHeaders.add(const Tab(height: 28, text: 'Giới thiệu'));
+    tabIds.add('intro');
 
     // 5. Tab [Đội tham gia]
     tabHeaders.add(Tab(height: 28, text: l10n.tabTeams));
+    tabIds.add('teams');
 
-    // 6. Lịch thi đấu
-    tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
-
-    // 7. Tab [Bảng đấu]
+    // 6. Tab [Bảng đấu]
     tabHeaders.add(const Tab(height: 28, text: 'Bảng đấu'));
-    // 8. Tab [Tài trợ] (nếu có)
+    tabIds.add('bracket');
+
+    // 7. Tab [Tài trợ] (nếu có)
     if (hasSponsors) {
       tabHeaders.add(Tab(height: 28, text: l10n.tabSponsors));
+      tabIds.add('sponsors');
     }
 
-    _updateTabController(tabHeaders.length, defaultIndex: overviewIndex);
+    // 8. Lịch thi đấu luôn là tab cuối.
+    tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
+    tabIds.add('schedule');
+
+    _updateTabController(tabIds, defaultIndex: overviewIndex);
     final controller = _tabController!;
 
     // Add Views for remaining tabs:
@@ -786,38 +816,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                   )),
     );
 
-    // Lịch thi đấu (reuse the existing matches source, filters and match cards)
-    tabViews.add(
-      tournament.divisions.length > 1
-          ? Column(
-              children: [
-                _buildDivisionsSelectorList(tournament, colors),
-                Expanded(
-                  child: MatchesTab(
-                    key: ValueKey('matches-$_selectedDivisionId'),
-                    tournamentId: widget.tournamentId,
-                    selectedDivisionId: _selectedDivisionId,
-                    selectedDivision: _selectedDivision,
-                    isLite: tournament.isLite,
-                    scheduleSettings: tournament.scheduleSettings,
-                    tournamentVenueName: tournament.venueName,
-                    tournamentLocationAddress: tournament.locationAddress,
-                  ),
-                ),
-              ],
-            )
-          : MatchesTab(
-              key: ValueKey('matches-$_selectedDivisionId'),
-              tournamentId: widget.tournamentId,
-              selectedDivisionId: _selectedDivisionId,
-              selectedDivision: _selectedDivision,
-              isLite: tournament.isLite,
-              scheduleSettings: tournament.scheduleSettings,
-              tournamentVenueName: tournament.venueName,
-              tournamentLocationAddress: tournament.locationAddress,
-            ),
-    );
-
     // Bảng đấu (BracketTab with divisions selector)
     tabViews.add(
       SingleChildScrollView(
@@ -860,6 +858,37 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
       );
     }
+    // Lịch thi đấu (reuse the existing matches source, filters and match cards)
+    tabViews.add(
+      tournament.divisions.length > 1
+          ? Column(
+              children: [
+                _buildDivisionsSelectorList(tournament, colors),
+                Expanded(
+                  child: MatchesTab(
+                    key: ValueKey('matches-$_selectedDivisionId'),
+                    tournamentId: widget.tournamentId,
+                    selectedDivisionId: _selectedDivisionId,
+                    selectedDivision: _selectedDivision,
+                    isLite: tournament.isLite,
+                    scheduleSettings: tournament.scheduleSettings,
+                    tournamentVenueName: tournament.venueName,
+                    tournamentLocationAddress: tournament.locationAddress,
+                  ),
+                ),
+              ],
+            )
+          : MatchesTab(
+              key: ValueKey('matches-$_selectedDivisionId'),
+              tournamentId: widget.tournamentId,
+              selectedDivisionId: _selectedDivisionId,
+              selectedDivision: _selectedDivision,
+              isLite: tournament.isLite,
+              scheduleSettings: tournament.scheduleSettings,
+              tournamentVenueName: tournament.venueName,
+              tournamentLocationAddress: tournament.locationAddress,
+            ),
+    );
 
     final isClubLite = tournament.isClubLite;
     final topPadding = MediaQuery.of(context).padding.top;
@@ -890,6 +919,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             isFollowing,
             topPadding,
             isClubLite: isClubLite,
+            canManage: canManage,
           ),
           SliverPersistentHeader(
             pinned: true,
@@ -1055,6 +1085,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     bool isFollowing,
     double topPadding, {
     required bool isClubLite,
+    required bool canManage,
   }) {
     final images = <String>[];
     if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty) {
@@ -1144,6 +1175,24 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           splashRadius: 20,
           onPressed: () => _shareTournament(tournament),
         ),
+        if (canManage)
+          IconButton(
+            tooltip: AppLocalizations.of(context)!.managementTitle,
+            icon: Icon(
+              Icons.settings_suggest_rounded,
+              color: currentIconColor,
+              size: 20,
+              shadows: iconShadows,
+            ),
+            splashRadius: 20,
+            onPressed: () {
+              if (tournament.isSuperLite) {
+                context.push('/lite-manage/${tournament.id}');
+              } else {
+                context.push('/organizer/tournaments/${tournament.id}/manage');
+              }
+            },
+          ),
         const SizedBox(width: 4),
       ],
       flexibleSpace: isClubLite

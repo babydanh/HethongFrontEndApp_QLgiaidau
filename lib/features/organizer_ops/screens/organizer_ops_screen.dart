@@ -20,11 +20,13 @@ class OrganizerOpsScreen extends ConsumerStatefulWidget {
     required this.tournamentId,
     this.initialDivisionId,
     this.initialFocusMatchId,
+    this.isEmbedded = false,
   });
 
   final String tournamentId;
   final String? initialDivisionId;
   final String? initialFocusMatchId;
+  final bool isEmbedded;
 
   @override
   ConsumerState<OrganizerOpsScreen> createState() => _OrganizerOpsScreenState();
@@ -54,11 +56,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     return tournamentAsync.when(
       loading: () => _OpsScaffold(
         title: l10n.opsTitle,
+        isEmbedded: widget.isEmbedded,
         onBack: () => _goBack(context),
         body: const _OpsLoadingBody(),
       ),
       error: (error, _) => _OpsScaffold(
         title: l10n.opsTitle,
+        isEmbedded: widget.isEmbedded,
         onBack: () => _goBack(context),
         body: _OpsErrorBody(
           message:
@@ -71,6 +75,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         if (tournament == null) {
           return _OpsScaffold(
             title: l10n.opsTitle,
+            isEmbedded: widget.isEmbedded,
             onBack: () => _goBack(context),
             body: _OpsErrorBody(
               message: l10n.tournamentNotFound,
@@ -98,6 +103,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
 
     return _OpsScaffold(
       title: tournament.name,
+      isEmbedded: widget.isEmbedded,
       subtitle: l10n.opsOrganizerOnly,
       onBack: () => _goBack(context),
       actions: [
@@ -1312,6 +1318,7 @@ class _OpsScaffold extends StatelessWidget {
     required this.body,
     this.subtitle,
     this.actions,
+    this.isEmbedded = false,
   });
 
   final String title;
@@ -1319,39 +1326,62 @@ class _OpsScaffold extends StatelessWidget {
   final VoidCallback onBack;
   final Widget body;
   final List<Widget>? actions;
+  final bool isEmbedded;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final actions = this.actions;
     return Scaffold(
       backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: colors.bgDark,
-        leading: IconButton(
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: onBack,
-          icon: const Icon(Icons.arrow_back_ios_rounded),
-        ),
-        titleSpacing: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-            ),
-            if (subtitle != null)
-              Text(
-                subtitle!,
-                style: TextStyle(fontSize: 10, color: colors.textMuted),
+      appBar: isEmbedded
+          ? null
+          : AppBar(
+              backgroundColor: colors.bgDark,
+              leading: IconButton(
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: onBack,
+                icon: const Icon(Icons.arrow_back_ios_rounded),
               ),
-          ],
-        ),
-        actions: actions,
-      ),
-      body: body,
+              titleSpacing: 0,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle!,
+                      style: TextStyle(fontSize: 10, color: colors.textMuted),
+                    ),
+                ],
+              ),
+              actions: actions,
+            ),
+      body: isEmbedded && actions != null && actions.isNotEmpty
+          ? Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: actions,
+                    ),
+                  ),
+                ),
+                Expanded(child: body),
+              ],
+            )
+          : body,
     );
   }
 }
@@ -1806,11 +1836,11 @@ class _OpsMatchCard extends StatelessWidget {
     final isRoundRobin = isGroupStageMatch(match);
     final contextLabel = isRoundRobin
         ? groupName?.isNotEmpty == true
-            ? l10n.crossTableLegTitle(
-                MatchRoundLabel.formatStageOrGroupName(groupName, l10n: l10n),
-                match.leg ?? 1,
-              )
-            : '#${match.matchNumber}'
+              ? l10n.crossTableLegTitle(
+                  MatchRoundLabel.formatStageOrGroupName(groupName, l10n: l10n),
+                  match.leg ?? 1,
+                )
+              : '#${match.matchNumber}'
         : l10n.organizer_matchTitle(match.round, match.matchNumber);
     final scheduledLabel = match.scheduledTime == null
         ? l10n.opsUnscheduled
@@ -1893,10 +1923,7 @@ class _OpsMatchCard extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 6,
                 children: [
-                  _OpsMeta(
-                    icon: Icons.schedule_rounded,
-                    text: scheduledLabel,
-                  ),
+                  _OpsMeta(icon: Icons.schedule_rounded, text: scheduledLabel),
                   if (match.court.isNotEmpty)
                     _OpsMeta(icon: Icons.place_outlined, text: match.court),
                   if (match.refereeName != null &&

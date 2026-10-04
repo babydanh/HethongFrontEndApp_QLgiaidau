@@ -1,19 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class OverviewTab extends StatefulWidget {
   final Tournament tournament;
@@ -24,6 +19,11 @@ class OverviewTab extends StatefulWidget {
   final VoidCallback? onToggleFollow;
   final String? inviteCode;
   final bool hasSliverBanner;
+  final VoidCallback? onEditGeneral;
+  final VoidCallback? onEditBranding;
+  final VoidCallback? onEditVenues;
+  final VoidCallback? onEditRegistration;
+  final VoidCallback? onEditFinance;
 
   const OverviewTab({
     super.key,
@@ -35,6 +35,11 @@ class OverviewTab extends StatefulWidget {
     this.onToggleFollow,
     this.inviteCode,
     this.hasSliverBanner = false,
+    this.onEditGeneral,
+    this.onEditBranding,
+    this.onEditVenues,
+    this.onEditRegistration,
+    this.onEditFinance,
   });
 
   @override
@@ -143,29 +148,48 @@ class _OverviewTabState extends State<OverviewTab> {
     return '${fmt.format(amount)} đ';
   }
 
-  String _resolveFormatBadge(Tournament t) {
-    final l10n = AppLocalizations.of(context)!;
-    final formatStr = (t.format).toLowerCase();
-    final sportStr = (t.sport).toLowerCase();
-    final isFootball =
-        sportStr.contains('bóng đá') || sportStr.contains('football');
-
-    if (isFootball) {
-      return l10n.tournamentCategoryFootballMen;
-    }
-    final isDoubles =
-        formatStr.contains('doubles') || formatStr.contains('đôi');
-    return isDoubles
-        ? l10n.createClubTournament_formatDoubles
-        : l10n.createClubTournament_formatSingles;
+  Widget _editableItem({
+    required Key key,
+    required VoidCallback? onTap,
+    required String sectionLabel,
+    required Widget child,
+  }) {
+    if (onTap == null) return child;
+    final editLabel =
+        '${AppLocalizations.of(context)!.infoEdit} $sectionLabel';
+    return Semantics(
+      button: true,
+      label: editLabel,
+      child: Tooltip(
+        message: editLabel,
+        child: InkWell(
+          key: key,
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: child,
+        ),
+      ),
+    );
   }
+
+  Widget _editIndicator(VoidCallback? onTap) => onTap == null
+      ? const SizedBox.shrink()
+      : const Padding(
+          padding: EdgeInsets.only(left: 6),
+          child: Icon(
+            Icons.edit_outlined,
+            size: 14,
+            color: AppTheme.primary,
+          ),
+        );
 
   @override
   Widget build(BuildContext context) {
     final t = widget.tournament;
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final resolvedAvatar = widget.resolveImageUrl(t.creatorAvatarUrl);
-    final creatorName = t.creatorFullName ?? 'Ban tổ chức';
+    final creatorName = (t.creatorFullName ?? '').trim();
     final isClubLite = t.isClubLite;
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final sportKey = t.sport.trim().toLowerCase();
@@ -194,7 +218,35 @@ class _OverviewTabState extends State<OverviewTab> {
             SizedBox(
               height: 195,
               width: double.infinity,
-              child: _buildBannerView(t),
+              child: _editableItem(
+                key: const ValueKey('tournament-overview-banner-edit'),
+                onTap: widget.onEditBranding,
+                sectionLabel: l10n.tournamentManagementBranding,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _buildBannerView(t),
+                    if (widget.onEditBranding != null)
+                      Positioned(
+                        right: 12,
+                        bottom: 12,
+                        child: IgnorePointer(
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colors.bgCard.withValues(alpha: 0.92),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.edit_outlined,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
 
           // ─── 2. NỘI DUNG TỔNG QUAN ───
@@ -208,142 +260,109 @@ class _OverviewTabState extends State<OverviewTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.2),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: Text(
-                        _resolveFormatBadge(t),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                    _buildStatusBadge(t.status),
-                    if (t.isRanked) _buildRankingBadge(true),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                if (t.isRanked) ...[
+                  _buildRankingBadge(true),
+                  const SizedBox(height: 12),
+                ],
 
                 // Tên giải đấu lớn & nổi bật (ở ngoài card, tạo visual hierarchy mạnh mẽ)
-                Text(
-                  t.name,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: colors.textPrimary,
-                    letterSpacing: -0.3,
-                    height: 1.25,
+                _editableItem(
+                  key: const ValueKey('tournament-overview-name-edit'),
+                  onTap: widget.onEditGeneral,
+                  sectionLabel: l10n.tournamentManagementGeneral,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          t.name,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: colors.textPrimary,
+                            letterSpacing: -0.3,
+                            height: 1.25,
+                          ),
+                        ),
+                      ),
+                      _editIndicator(widget.onEditGeneral),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 14),
 
-                // ─── 3 STATS CARDS ROW (Matching Mockup Hình 2) ───
+                // ─── SUMMARY METRICS ROW (Flat columns with dividers) ───
                 Row(
                   children: [
-                    // Card 1: Thời gian
+                    // Metric 1: Thời gian
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: colors.border.withValues(alpha: 0.65),
+                      child: _editableItem(
+                        key: const ValueKey('tournament-overview-dates-edit'),
+                        onTap: widget.onEditGeneral,
+                        sectionLabel: l10n.tournamentManagementGeneral,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 12,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.calendar_today_rounded,
-                              size: 18,
-                              color: AppTheme.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              (t.startDate != null && t.endDate != null)
-                                  ? '${t.startDate!.day} - ${t.endDate!.day}'
-                                  : (t.startDate != null
-                                        ? '${t.startDate!.day}'
-                                        : '--'),
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w900,
-                                color: colors.textPrimary,
-                                letterSpacing: -0.3,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.calendar_today_rounded,
+                                    size: 18,
+                                    color: AppTheme.primary,
+                                  ),
+                                  _editIndicator(widget.onEditGeneral),
+                                ],
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              t.startDate != null
-                                  ? 'Tháng ${t.startDate!.month}, ${t.startDate!.year}'
-                                  : 'Dự kiến',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: colors.textMuted,
-                                fontWeight: FontWeight.w600,
+                              const SizedBox(height: 8),
+                              Text(
+                                (t.startDate != null && t.endDate != null)
+                                    ? '${t.startDate!.day} - ${t.endDate!.day}'
+                                    : (t.startDate != null
+                                          ? '${t.startDate!.day}'
+                                          : '--'),
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: colors.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                              const SizedBox(height: 2),
+                              Text(
+                                t.startDate != null
+                                    ? 'Tháng ${t.startDate!.month}, ${t.startDate!.year}'
+                                    : 'Dự kiến',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: colors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    Container(width: 1, height: 82, color: colors.border),
 
-                    // Card 2: Môn thể thao (centered)
+                    // Metric 2: Môn thể thao (centered)
                     Expanded(
                       child: Container(
                         key: const ValueKey('tournament-overview-sport-card'),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
                           vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: colors.border.withValues(alpha: 0.65),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -370,267 +389,275 @@ class _OverviewTabState extends State<OverviewTab> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    Container(width: 1, height: 82, color: colors.border),
 
-                    // Card 3: Vận động viên
+                    // Metric 3: Vận động viên
                     Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 12,
+                      child: _editableItem(
+                        key: const ValueKey(
+                          'tournament-overview-athletes-edit',
                         ),
-                        decoration: BoxDecoration(
-                          color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: colors.border.withValues(alpha: 0.65),
+                        onTap: widget.onEditRegistration,
+                        sectionLabel: l10n.tournamentManagementRegistration,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 12,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.groups_rounded,
-                              size: 20,
-                              color: AppTheme.primary,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${widget.teamCount > 0 ? widget.teamCount : (t.maxTeams > 0 ? t.maxTeams : 0)}',
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w900,
-                                color: colors.textPrimary,
-                                letterSpacing: -0.3,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Vận động viên',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: colors.textMuted,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  key: const ValueKey('tournament-overview-location-card'),
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.bgCard,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: colors.border.withValues(alpha: 0.65),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_rounded,
-                        size: 20,
-                        color: AppTheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              locationTitle,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w900,
-                                color: colors.textPrimary,
-                                letterSpacing: -0.3,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              locationSubtitle,
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: colors.textMuted,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // ─── CARD LỆ PHÍ THAM GIA (Entry Fee Card) ───
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 11,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.bgCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colors.border.withValues(alpha: 0.65),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.payments_outlined,
-                                size: 16,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    'Lệ phí giải',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: colors.textPrimary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  const Icon(
+                                    Icons.groups_rounded,
+                                    size: 20,
+                                    color: AppTheme.primary,
                                   ),
-                                  Text(
-                                    t.entryFee != null && t.entryFee! > 0
-                                        ? 'Thanh toán trực tiếp / QR'
-                                        : 'Miễn phí tham dự',
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      color: colors.textMuted,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  _editIndicator(widget.onEditRegistration),
                                 ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                '${widget.teamCount > 0 ? widget.teamCount : (t.maxTeams > 0 ? t.maxTeams : 0)}',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: colors.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Vận động viên',
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: colors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatCurrency(t.entryFee),
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: (t.entryFee != null && t.entryFee! > 0)
-                              ? const Color(0xFFE11D48)
-                              : const Color(0xFF10B981),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                    ),
                     ],
+                ),
+                const SizedBox(height: 8),
+                Divider(height: 1, color: colors.border),
+                _editableItem(
+                  key: const ValueKey('tournament-overview-location-edit'),
+                  onTap: widget.onEditVenues,
+                  sectionLabel: l10n.tournamentManagementVenues,
+                  child: Container(
+                    key: const ValueKey('tournament-overview-location-card'),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 20,
+                          color: AppTheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                locationTitle,
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: colors.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                locationSubtitle,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  color: colors.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        _editIndicator(widget.onEditVenues),
+                      ],
+                    ),
                   ),
                 ),
+                Divider(height: 1, color: colors.border),
+
+                // ─── ENTRY FEE ROW ───
+                _editableItem(
+                  key: const ValueKey('tournament-overview-entry-fee-edit'),
+                  onTap: widget.onEditFinance,
+                  sectionLabel: l10n.tournamentManagementFinance,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 11,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.payments_outlined,
+                                  size: 16,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Lệ phí giải',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.textPrimary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if ((t.entryFee ?? 0) > 0)
+                                      Text(
+                                        'Thanh toán trực tiếp / QR',
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          color: colors.textMuted,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatCurrency(t.entryFee),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                            color: (t.entryFee != null && t.entryFee! > 0)
+                                ? const Color(0xFFE11D48)
+                                : const Color(0xFF10B981),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        _editIndicator(widget.onEditFinance),
+                      ],
+                    ),
+                  ),
+                ),
+                Divider(height: 1, color: colors.border),
                 const SizedBox(height: 14),
 
-                // ─── GIỚI THIỆU SECTION (Matching Mockup Hình 2) ───
                 if (t.description.trim().isNotEmpty) ...[
-                  Text(
-                    'Giới thiệu',
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w900,
-                      color: colors.textPrimary,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    t.description
-                        .replaceAll(RegExp(r'<[^>]*>'), ' ')
-                        .replaceAll(RegExp(r'\s+'), ' ')
-                        .trim(),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.45,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                  if (widget.onNavigateToIntro != null) ...[
-                    const SizedBox(height: 4),
-                    GestureDetector(
-                      onTap: widget.onNavigateToIntro,
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Xem thêm',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.primary,
+                  _editableItem(
+                    key: const ValueKey('tournament-overview-description-edit'),
+                    onTap: widget.onEditGeneral,
+                    sectionLabel: l10n.tournamentManagementGeneral,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Giới thiệu',
+                                style: TextStyle(
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: colors.textPrimary,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                            ),
+                            _editIndicator(widget.onEditGeneral),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          t.description
+                              .replaceAll(RegExp(r'<[^>]*>'), ' ')
+                              .replaceAll(RegExp(r'\s+'), ' ')
+                              .trim(),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.45,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                        if (widget.onNavigateToIntro != null) ...[
+                          const SizedBox(height: 4),
+                          GestureDetector(
+                            onTap: widget.onNavigateToIntro,
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Xem thêm',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppTheme.primary,
+                                  ),
+                                ),
+                                SizedBox(width: 2),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 16,
+                                  color: AppTheme.primary,
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(width: 2),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 16,
-                            color: AppTheme.primary,
-                          ),
                         ],
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                   const SizedBox(height: 14),
                 ],
-
                 // Đếm ngược (nếu có - tinh tế, tinh gọn)
                 if (_countdownLabel.isNotEmpty &&
                     _remainingTime > Duration.zero) ...[
@@ -674,107 +701,7 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 12),
                 ],
 
-                // ─── BANNER QUẢN LÝ CHO BAN TỔ CHỨC ───
-                Consumer(
-                  builder: (context, ref, _) {
-                    final authState = ref.watch(authProvider);
-                    final userProfile = ref.watch(userProfileProvider).value;
-                    final isCreator =
-                        userProfile != null &&
-                        userProfile.id.isNotEmpty &&
-                        userProfile.id == t.creatorId;
-                    final canManage =
-                        authState.isAdmin || authState.isOrganizer || isCreator;
-
-                    if (!canManage) return const SizedBox.shrink();
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.admin_panel_settings_rounded,
-                              color: AppTheme.primary,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Bạn là Ban tổ chức',
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                Text(
-                                  t.isSuperLite
-                                      ? 'Quản lý danh sách VĐV, tạo nhánh đấu'
-                                      : 'Bốc thăm, điều hành trận & cập nhật tỉ số',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: colors.textMuted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          FilledButton.icon(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () {
-                              if (t.isSuperLite) {
-                                context.push('/lite-manage/${t.id}');
-                              } else {
-                                context.push(
-                                  '/organizer/tournaments/${t.id}/manage',
-                                );
-                              }
-                            },
-                            icon: const Icon(
-                              Icons.settings_suggest_rounded,
-                              size: 16,
-                            ),
-                            label: const Text(
-                              'Quản lý',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                // Organizer management is available from the header when permitted.
 
                 // Trận đấu vẫn hiển thị trong tab Lịch thi đấu.
 
@@ -798,74 +725,85 @@ class _OverviewTabState extends State<OverviewTab> {
                   const SizedBox(height: 14),
                 ],
 
-                // ─── 3. LỘ TRÌNH ĐĂNG KÝ & THỜI GIAN BIỂU (Timeline Roadmap Card) ───
+                // ─── 3. LỘ TRÌNH GIẢI ĐẤU ───
                 if (!isClubLite &&
                     (t.registrationStartDate != null ||
                         t.registrationEndDate != null ||
                         t.startDate != null)) ...[
-                  _buildSectionHeader('LỘ TRÌNH GIẢI ĐẤU'),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.bgCard,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: colors.border.withValues(alpha: 0.65),
-                      ),
-                    ),
+                  _editableItem(
+                    key: const ValueKey('tournament-overview-timeline-edit'),
+                    onTap: widget.onEditGeneral,
+                    sectionLabel: l10n.tournamentManagementGeneral,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTimelineItem(
-                          title: 'Mở đăng ký',
-                          subtitle: _formatDate(t.registrationStartDate),
-                          isFirst: true,
-                          isLast: false,
-                          isPassed:
-                              t.registrationStartDate != null &&
-                              DateTime.now().isAfter(t.registrationStartDate!),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildSectionHeader(
+                                'LỘ TRÌNH GIẢI ĐẤU',
+                              ),
+                            ),
+                            _editIndicator(widget.onEditGeneral),
+                          ],
                         ),
-                        _buildTimelineItem(
-                          title: 'Hạn chót đăng ký',
-                          subtitle: _formatDate(t.registrationEndDate),
-                          isFirst: false,
-                          isLast: false,
-                          isPassed:
-                              t.registrationEndDate != null &&
-                              DateTime.now().isAfter(t.registrationEndDate!),
-                        ),
-                        _buildTimelineItem(
-                          title: 'Khai mạc thi đấu',
-                          subtitle: _formatDate(t.startDate),
-                          isFirst: false,
-                          isLast: true,
-                          isPassed:
-                              t.startDate != null &&
-                              DateTime.now().isAfter(t.startDate!),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTimelineItem(
+                                title: 'Mở đăng ký',
+                                subtitle: _formatDate(t.registrationStartDate),
+                                isFirst: true,
+                                isLast: false,
+                                isPassed:
+                                    t.registrationStartDate != null &&
+                                    DateTime.now().isAfter(
+                                      t.registrationStartDate!,
+                                    ),
+                              ),
+                              _buildTimelineItem(
+                                title: 'Hạn chót đăng ký',
+                                subtitle: _formatDate(t.registrationEndDate),
+                                isFirst: false,
+                                isLast: false,
+                                isPassed:
+                                    t.registrationEndDate != null &&
+                                    DateTime.now().isAfter(
+                                      t.registrationEndDate!,
+                                    ),
+                              ),
+                              _buildTimelineItem(
+                                title: 'Khai mạc thi đấu',
+                                subtitle: _formatDate(t.startDate),
+                                isFirst: false,
+                                isLast: true,
+                                isPassed:
+                                    t.startDate != null &&
+                                    DateTime.now().isAfter(t.startDate!),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ],
-
-                // ─── 4. BAN TỔ CHỨC GIẢI ĐẤU (LUÔN Ở CUỐI) ───
+                // Keep organizer identity separate from the removed management notice.
                 if (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   _buildSectionHeader('BAN TỔ CHỨC GIẢI ĐẤU'),
                   const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colors.bgCard,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: colors.border.withValues(alpha: 0.65),
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
                     ),
                     child: Row(
                       children: [
@@ -993,36 +931,6 @@ class _OverviewTabState extends State<OverviewTab> {
         fontWeight: FontWeight.w800,
         color: context.colors.textMuted,
         letterSpacing: 0.6,
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    final l10n = AppLocalizations.of(context)!;
-    final label = StatusHelper.getTournamentStatusLabel(status, l10n: l10n);
-    final bg = StatusHelper.getTournamentStatusColor(status, context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-      decoration: BoxDecoration(
-        color: bg.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: bg.withValues(alpha: 0.35),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          letterSpacing: 0.2,
-        ),
       ),
     );
   }

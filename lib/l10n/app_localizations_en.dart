@@ -1541,6 +1541,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchesCourtNameUnavailable => 'Court name unavailable';
 
   @override
+  String matchesUnplacedSection(int count) {
+    return 'Matches missing court/time ($count)';
+  }
+
+  @override
   String tournamentScheduleHours(String start, String end) {
     return 'Court hours: $start–$end';
   }
@@ -14397,4 +14402,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialLocationNoAddressFound => 'No address found for this pin.';
+
+  @override
+  String get tournamentManagementSettingsTooltip => 'Tournament settings';
 }

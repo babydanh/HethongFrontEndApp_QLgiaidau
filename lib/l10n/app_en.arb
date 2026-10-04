@@ -547,6 +547,15 @@
   "matchesStatusWalkover": "Walkover",
   "matchesCourtNotAssigned": "Court not assigned",
   "matchesCourtNameUnavailable": "Court name unavailable",
+  "matchesUnplacedSection": "Matches missing court/time ({count})",
+  "@matchesUnplacedSection": {
+    "description": "Collapsed schedule section for matches missing a court or scheduled time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tournamentScheduleHours": "Court hours: {start}–{end}",
   "@tournamentScheduleHours": {
     "placeholders": {
@@ -5782,5 +5791,6 @@
   "socialRegionAlphabetHint": "Filter options by initial letter",
   "socialRegionCloseAction": "Close",
   "socialLocationReverseFailed": "Couldn't look up the area for this pin.",
-  "socialLocationNoAddressFound": "No address found for this pin."
+  "socialLocationNoAddressFound": "No address found for this pin.",
+  "tournamentManagementSettingsTooltip": "Tournament settings"
 }

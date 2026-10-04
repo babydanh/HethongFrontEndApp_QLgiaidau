@@ -77,6 +77,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             TournamentManagementSectionCard(
               title: l10n.tournamentManagementRegistration,
               subtitle: l10n.tournamentManagementRegistrationDescription,
+              showHeader: false,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

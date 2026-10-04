@@ -12,32 +12,36 @@ class _UnauthenticatedNotifier extends AuthNotifier {
   AuthState build() => const AuthState();
 }
 
-Tournament _multiDivisionTournament() => Tournament.fromJson({
-  'name': 'Overview content regression',
-  'sport': 'badminton',
-  'format': 'SINGLES',
-  'bracketType': 'single_elimination',
-  'status': 'in_progress',
-  'creatorId': 'creator-1',
-  'maxTeams': 16,
-  'createdAt': '2026-01-01T00:00:00.000Z',
-  'updatedAt': '2026-01-01T00:00:00.000Z',
-  'entryFee': 200001,
-  'divisions': [
-    {
-      'id': 'division-men',
-      'name': 'Regression Men Division',
-      'matchType': 'SINGLES',
-      'maxParticipants': 16,
-    },
-    {
-      'id': 'division-women',
-      'name': 'Regression Women Division',
-      'matchType': 'SINGLES',
-      'maxParticipants': 16,
-    },
-  ],
-}, 'tournament-1');
+Tournament _multiDivisionTournament({num entryFee = 200001}) =>
+    Tournament.fromJson({
+      'name': 'Overview content regression',
+      'sport': 'badminton',
+      'format': 'SINGLES',
+      'bracketType': 'single_elimination',
+      'status': 'in_progress',
+      'creatorId': 'creator-1',
+      'maxTeams': 16,
+      'createdAt': '2026-01-01T00:00:00.000Z',
+      'updatedAt': '2026-01-01T00:00:00.000Z',
+      'registrationStartDate': '2099-01-01T00:00:00.000Z',
+      'registrationEndDate': '2099-01-15T00:00:00.000Z',
+      'startDate': '2099-02-01T00:00:00.000Z',
+      'entryFee': entryFee,
+      'divisions': [
+        {
+          'id': 'division-men',
+          'name': 'Regression Men Division',
+          'matchType': 'SINGLES',
+          'maxParticipants': 16,
+        },
+        {
+          'id': 'division-women',
+          'name': 'Regression Women Division',
+          'matchType': 'SINGLES',
+          'maxParticipants': 16,
+        },
+      ],
+    }, 'tournament-1');
 
 Tournament _organizerTournament() => Tournament.fromJson({
   'name': 'Organizer placement regression',
@@ -70,7 +74,7 @@ Tournament _organizerTournament() => Tournament.fromJson({
 
 void main() {
   testWidgets(
-    'overview omits division cards while keeping schedule and fee details',
+    'overview omits division cards while keeping roadmap and fee details',
     (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -95,14 +99,16 @@ void main() {
       expect(find.textContaining('NỘI DUNG THI ĐẤU'), findsNothing);
       expect(find.text('Regression Men Division'), findsNothing);
       expect(find.text('Regression Women Division'), findsNothing);
-      expect(find.text('Lịch thi đấu'), findsOneWidget);
-      expect(find.text('THỜI GIAN ĐĂNG KÝ & LỆ PHÍ'), findsOneWidget);
-      expect(find.text('Xem lịch thi đấu chi tiết'), findsNothing);
-      expect(find.text('Lệ phí tham gia:'), findsOneWidget);
+      expect(find.text('Mở đăng ký'), findsOneWidget);
+      expect(find.text('Khai mạc thi đấu'), findsOneWidget);
+      expect(find.text('Lệ phí giải'), findsOneWidget);
+      expect(find.text('200.001 đ'), findsOneWidget);
+      expect(find.text('Thanh toán trực tiếp / QR'), findsOneWidget);
+      expect(find.text('BAN TỔ CHỨC GIẢI ĐẤU'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
-  testWidgets('overview omits detailed schedule shortcut', (tester) async {
+  testWidgets('free entry fee is labeled once in the overview', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [authProvider.overrideWith(_UnauthenticatedNotifier.new)],
@@ -113,7 +119,7 @@ void main() {
           locale: const Locale('vi'),
           home: Scaffold(
             body: OverviewTab(
-              tournament: _multiDivisionTournament(),
+              tournament: _multiDivisionTournament(entryFee: 0),
               teamCount: 0,
               resolveImageUrl: (_) => '',
             ),
@@ -123,12 +129,12 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Xem lịch thi đấu chi tiết'), findsNothing);
+    expect(find.textContaining('Miễn phí'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
-    'organizer appears last without a custom logo and top pickleball badge is absent',
+    'organizer details remain without the management banner or top pickleball badge',
     (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -152,10 +158,8 @@ void main() {
 
       expect(find.text('Organizer Name'), findsOneWidget);
       expect(find.text('BAN TỔ CHỨC GIẢI ĐẤU'), findsOneWidget);
-      expect(
-        tester.getTopLeft(find.text('Organizer Name')).dy,
-        greaterThan(tester.getTopLeft(find.text('Khai mạc thi đấu')).dy),
-      );
+      expect(find.text('Ban tổ chức giải đấu'), findsOneWidget);
+      expect(find.text('Bạn là Ban tổ chức'), findsNothing);
       expect(
         find.byWidgetPredicate((widget) {
           if (widget is! Image ||

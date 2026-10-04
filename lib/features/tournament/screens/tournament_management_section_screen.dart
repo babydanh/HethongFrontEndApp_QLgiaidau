@@ -6,6 +6,8 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_finance_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_venues_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
@@ -15,7 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 
 enum TournamentManagementSection {
   general,
@@ -50,92 +51,7 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   final String actionRouteBase;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _sectionTitle(l10n),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _sectionDescription(l10n),
-                style: TextStyle(color: colors.textSecondary),
-              ),
-            ],
-          ),
-        ),
-        Divider(height: 1, color: colors.border),
-        Expanded(child: _content(context, ref)),
-      ],
-    );
-  }
-
-  String _sectionTitle(AppLocalizations l10n) => switch (section) {
-    TournamentManagementSection.general => l10n.tournamentManagementGeneral,
-    TournamentManagementSection.branding => l10n.tournamentManagementBranding,
-    TournamentManagementSection.venues => l10n.tournamentManagementVenues,
-    TournamentManagementSection.registration =>
-      l10n.tournamentManagementRegistration,
-    TournamentManagementSection.divisions => l10n.tournamentManagementDivisions,
-    TournamentManagementSection.schedule => l10n.tournamentManagementSchedule,
-    TournamentManagementSection.teams => l10n.manageTeams,
-    TournamentManagementSection.draw => l10n.manageDraw,
-    TournamentManagementSection.bracket => l10n.viewBracket,
-    TournamentManagementSection.liveOperations =>
-      l10n.tournamentManagementLiveOperations,
-    TournamentManagementSection.sponsors => l10n.tournamentManagementSponsors,
-    TournamentManagementSection.finance => l10n.tournamentManagementFinance,
-    TournamentManagementSection.livestream =>
-      l10n.tournamentManagementLivestream,
-    TournamentManagementSection.permissions =>
-      l10n.tournamentManagementPermissions,
-    TournamentManagementSection.tokens => l10n.manageTokens,
-  };
-
-  String _sectionDescription(AppLocalizations l10n) => switch (section) {
-    TournamentManagementSection.general =>
-      l10n.tournamentManagementGeneralDescription,
-    TournamentManagementSection.branding =>
-      l10n.tournamentManagementBrandingDescription,
-    TournamentManagementSection.venues =>
-      l10n.tournamentManagementVenuesDescription,
-    TournamentManagementSection.registration =>
-      l10n.tournamentManagementRegistrationDescription,
-    TournamentManagementSection.divisions =>
-      l10n.tournamentManagementDivisionsDescription,
-    TournamentManagementSection.schedule =>
-      l10n.tournamentManagementScheduleDescription,
-    TournamentManagementSection.teams =>
-      l10n.tournamentManagementTeamsDescription,
-    TournamentManagementSection.draw =>
-      l10n.tournamentManagementDrawDescription,
-    TournamentManagementSection.bracket =>
-      l10n.tournamentManagementBracketDescription,
-    TournamentManagementSection.liveOperations =>
-      l10n.tournamentManagementLiveOperationsDescription,
-    TournamentManagementSection.sponsors =>
-      l10n.tournamentManagementSponsorsDescription,
-    TournamentManagementSection.finance =>
-      l10n.tournamentManagementFinanceDescription,
-    TournamentManagementSection.livestream =>
-      l10n.tournamentManagementLivestreamDescription,
-    TournamentManagementSection.permissions =>
-      l10n.tournamentManagementPermissionsDescription,
-    TournamentManagementSection.tokens =>
-      l10n.tournamentManagementTokensDescription,
-  };
+  Widget build(BuildContext context, WidgetRef ref) => _content(context, ref);
 
   Widget _content(BuildContext context, WidgetRef ref) => switch (section) {
     TournamentManagementSection.general => _TournamentGeneralSettings(
@@ -165,15 +81,11 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     TournamentManagementSection.finance => TournamentManagementFinanceSection(
       tournament: tournament,
     ),
-    TournamentManagementSection.schedule => _ExistingOperationsDestination(
-      route: opsWorkspaceRoute,
-      icon: Icons.calendar_month_rounded,
+    TournamentManagementSection.schedule ||
+    TournamentManagementSection.liveOperations => OrganizerOpsScreen(
+      tournamentId: tournament.id,
+      isEmbedded: true,
     ),
-    TournamentManagementSection.liveOperations =>
-      _ExistingOperationsDestination(
-        route: opsWorkspaceRoute,
-        icon: Icons.sports_score_rounded,
-      ),
     TournamentManagementSection.livestream =>
       TournamentManagementLivestreamSection(
         tournamentId: tournament.id,
@@ -187,9 +99,9 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
       route: '$actionRouteBase/draw',
       icon: Icons.casino_rounded,
     ),
-    TournamentManagementSection.bracket => _ExistingOperationsDestination(
-      route: '$actionRouteBase/bracket',
-      icon: Icons.account_tree_rounded,
+    TournamentManagementSection.bracket => BracketViewScreen(
+      tournamentId: tournament.id,
+      isEmbedded: true,
     ),
     TournamentManagementSection.tokens => _ExistingOperationsDestination(
       route: '$actionRouteBase/tokens',
@@ -197,7 +109,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     ),
   };
 }
-
 
 class _TournamentGeneralSettings extends ConsumerStatefulWidget {
   const _TournamentGeneralSettings({required this.tournament});
@@ -247,6 +158,7 @@ class _TournamentGeneralSettingsState
         TournamentManagementSectionCard(
           title: l10n.tournamentManagementGeneral,
           subtitle: l10n.tournamentManagementGeneralDescription,
+          showHeader: false,
           child: Column(
             children: [
               TextField(

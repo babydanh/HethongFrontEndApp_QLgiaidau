@@ -3026,6 +3026,12 @@ abstract class AppLocalizations {
   /// **'Tên sân chưa được cung cấp'**
   String get matchesCourtNameUnavailable;
 
+  /// Tiêu đề mục thu gọn cho các trận chưa có đủ sân hoặc giờ thi đấu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận chưa xếp đủ sân/giờ ({count})'**
+  String matchesUnplacedSection(int count);
+
   /// No description provided for @tournamentScheduleHours.
   ///
   /// In vi, this message translates to:
@@ -26085,6 +26091,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa tìm thấy địa chỉ cho vị trí đã ghim.'**
   String get socialLocationNoAddressFound;
+
+  /// No description provided for @tournamentManagementSettingsTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt giải đấu'**
+  String get tournamentManagementSettingsTooltip;
 }
 
 class _AppLocalizationsDelegate

@@ -1,5 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -18,6 +20,20 @@ class _GuestAuthNotifier extends AuthNotifier {
   AuthState build() => const AuthState();
 }
 
+class _OrganizerAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const AuthState(
+    status: AuthStatus.authenticated,
+    role: UserRole.organizer,
+  );
+}
+
+class _AdminAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() =>
+      const AuthState(status: AuthStatus.authenticated, role: UserRole.admin);
+}
+
 Tournament _tournament({
   String status = 'REGISTRATION_OPEN',
   String visibility = 'PUBLIC',
@@ -25,13 +41,16 @@ Tournament _tournament({
   bool registrationExpired = false,
   bool registrationNotStarted = false,
   String creatorId = 'owner-1',
+  String creatorFullName = 'Tournament owner',
+  String format = 'SINGLES',
+  bool isSuperLite = false,
 }) {
   final now = DateTime.now();
   return Tournament(
     id: _tournamentId,
     name: 'CTA tournament',
     sport: 'badminton',
-    format: 'SINGLES',
+    format: format,
     bracketType: 'single_elimination',
     status: status,
     visibility: visibility,
@@ -39,6 +58,8 @@ Tournament _tournament({
     refereeToken: '',
     viewerToken: '',
     creatorId: creatorId,
+    creatorFullName: creatorFullName,
+    isSuperLite: isSuperLite,
     maxTeams: 8,
     createdAt: now,
     updatedAt: now,
@@ -231,6 +252,158 @@ void main() {
     expect(find.text(registerLabel), findsOneWidget);
     expect(find.byType(FloatingBottomNav), findsOneWidget);
   });
+  testWidgets('viewer does not see a management action in the header', (
+    tester,
+  ) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(tournament: _tournament(), invite: null, child: _app(router)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(
+      find.byTooltip(AppLocalizations.of(context)!.managementTitle),
+      findsNothing,
+    );
+  });
+
+  testWidgets('authorized organizer opens the Lite management route', (
+    tester,
+  ) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(isSuperLite: true),
+        invite: null,
+        authNotifier: _OrganizerAuthNotifier.new,
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    final manageAction = find.byTooltip(
+      AppLocalizations.of(context)!.managementTitle,
+    );
+    expect(manageAction, findsOneWidget);
+
+    await tester.tap(manageAction);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('lite-manage:$_tournamentId'), findsOneWidget);
+  });
+
+  testWidgets('authorized organizer opens the standard management route', (
+    tester,
+  ) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(),
+        invite: null,
+        authNotifier: _OrganizerAuthNotifier.new,
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    await tester.tap(
+      find.byTooltip(AppLocalizations.of(context)!.managementTitle),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('organizer-manage:$_tournamentId'), findsOneWidget);
+  });
+
+  testWidgets('overview omits requested chips and organizer banner', (
+    tester,
+  ) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(
+          format: 'DOUBLES',
+          status: 'REGISTRATION_CLOSED',
+        ),
+        invite: null,
+        authNotifier: _OrganizerAuthNotifier.new,
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    final l10n = AppLocalizations.of(context)!;
+    expect(find.text(l10n.lite_doubles), findsNothing);
+    expect(find.text(l10n.statusLabelRegistrationClosed), findsNothing);
+    expect(find.text('Bạn là Ban tổ chức'), findsNothing);
+    expect(find.text('CTA tournament'), findsOneWidget);
+  });
+  testWidgets('tournament creator sees the management action', (tester) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(),
+        invite: null,
+        profileId: 'owner-1',
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(
+      find.byTooltip(AppLocalizations.of(context)!.managementTitle),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('admin sees the management action', (tester) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(),
+        invite: null,
+        authNotifier: _AdminAuthNotifier.new,
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(
+      find.byTooltip(AppLocalizations.of(context)!.managementTitle),
+      findsOneWidget,
+    );
+  });
 }
 
 GoRouter _createRouter({String? invite}) => GoRouter(
@@ -255,6 +428,17 @@ GoRouter _createRouter({String? invite}) => GoRouter(
         ),
       ),
     ),
+    GoRoute(
+      path: '/lite-manage/:id',
+      builder: (context, state) =>
+          Scaffold(body: Text('lite-manage:${state.pathParameters['id']}')),
+    ),
+    GoRoute(
+      path: '/organizer/tournaments/:id/manage',
+      builder: (context, state) => Scaffold(
+        body: Text('organizer-manage:${state.pathParameters['id']}'),
+      ),
+    ),
     GoRoute(path: '/home', builder: (context, state) => const SizedBox()),
   ],
 );
@@ -271,9 +455,18 @@ ProviderScope _scope({
   required Tournament tournament,
   required String? invite,
   required Widget child,
+  AuthNotifier Function()? authNotifier,
+  String profileId = 'viewer-1',
 }) => ProviderScope(
   overrides: [
-    authProvider.overrideWith(_GuestAuthNotifier.new),
+    authProvider.overrideWith(authNotifier ?? _GuestAuthNotifier.new),
+    userProfileProvider.overrideWith(
+      (ref) async => UserProfile(
+        id: profileId,
+        fullName: 'Viewer',
+        email: 'viewer@example.test',
+      ),
+    ),
     tournamentIntroWithInviteProvider((
       id: _tournamentId,
       invite: invite,
@@ -281,6 +474,7 @@ ProviderScope _scope({
     tournamentDivisionsProvider(
       _tournamentId,
     ).overrideWith((ref) async => const <Map<String, dynamic>>[]),
+    introTeamsProvider(_tournamentId).overrideWith((ref) async => const []),
     teamsProvider(_tournamentId).overrideWith((ref) => Stream.value(const [])),
     matchesProvider(
       _tournamentId,

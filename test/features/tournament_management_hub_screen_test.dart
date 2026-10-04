@@ -4,11 +4,17 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
+import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -30,6 +36,8 @@ Tournament _tournament(
   String? communityId,
   String? bannerUrl,
   String? logoUrl,
+  String description = '',
+  DateTime? startDate,
 }) => Tournament.fromJson({
   'name': name,
   'sport': 'pickleball',
@@ -38,12 +46,14 @@ Tournament _tournament(
   'status': status,
   'maxTeams': 8,
   'maxPlayersPerTeam': 2,
+  'description': description,
   if (quick) 'isLite': true,
   'communityId': communityId,
   'bannerUrl': bannerUrl,
   'logoUrl': logoUrl,
   if (superLite)
     'tournamentConfig': {'mode': 'LITE', 'hideAdvancedSettings': true},
+  if (startDate != null) 'startDate': startDate.toIso8601String(),
   'createdAt': '2026-01-01T00:00:00Z',
   'updatedAt': '2026-01-01T00:00:00Z',
 }, 'tournament-1');
@@ -52,6 +62,8 @@ Widget _app(
   Tournament tournament, {
   Locale locale = const Locale('vi'),
   UserProfile? profile,
+  TournamentManagementRepository? managementRepository,
+  ITournamentRepository? tournamentRepository,
 }) => ProviderScope(
   overrides: [
     userProfileProvider.overrideWith(
@@ -63,6 +75,12 @@ Widget _app(
             roles: ['ORGANIZER', 'ADMIN'],
           ),
     ),
+    if (managementRepository != null)
+      tournamentManagementRepositoryProvider.overrideWithValue(
+        managementRepository,
+      ),
+    if (tournamentRepository != null)
+      tournamentRepositoryProvider.overrideWithValue(tournamentRepository),
   ],
   child: MaterialApp(
     theme: AppTheme.lightTheme,
@@ -104,13 +122,194 @@ class _EmptyRegionRepository implements IRegionRepository {
   Future<List<Region>> getWardsByProvince(String provinceCode) async => [];
 }
 
+class _EmptyTournamentRepository implements ITournamentRepository {
+  @override
+  Future<List<OrganizerOpsParticipant>> getOrganizerParticipants(
+    String tournamentId, {
+    String? divisionId,
+  }) async => const [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+class _EmptyTournamentManagementRepository
+    implements TournamentManagementRepository {
+  @override
+  Future<List<Map<String, dynamic>>> getVenues(String id) async => const [];
+
+  @override
+  Future<Map<String, dynamic>> getFeesConfig() async => const {};
+
+  @override
+  Future<List<Map<String, dynamic>>> getMyPayouts() async => const [];
+
+  @override
+  Future<List<String>> getGallery(String id) async => const [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+
 class _IdleLiteManagementNotifier extends LiteManagementNotifier {
   @override
   Future<void> init(String tournamentId) async {}
 }
 
+Future<void> _openSettings(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.settings_outlined));
+  await tester.pumpAndSettle();
+}
+
 
 void main() {
+  testWidgets('overview tournament title opens its general editor', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 1200);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(_app(_tournament('in_progress')));
+    await tester.pumpAndSettle();
+
+    final hub = find.byType(TournamentManagementHubScreen);
+    final l10n = AppLocalizations.of(tester.element(hub))!;
+    await tester.tap(find.text('City Pickleball Cup'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.tournamentManagementName), findsOneWidget);
+  });
+  testWidgets('overview edit targets open their matching management sections', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 1200);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      _app(
+        _tournament(
+          'in_progress',
+          description: 'Cup overview description',
+          startDate: DateTime(2030, 1, 1),
+        ),
+        managementRepository: _EmptyTournamentManagementRepository(),
+        tournamentRepository: _EmptyTournamentRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final hub = find.byType(TournamentManagementHubScreen);
+    final l10n = AppLocalizations.of(tester.element(hub))!;
+    final targets = [
+      ('tournament-overview-dates-edit', l10n.tournamentManagementGeneral),
+      (
+        'tournament-overview-description-edit',
+        l10n.tournamentManagementGeneral,
+      ),
+      (
+        'tournament-overview-timeline-edit',
+        l10n.tournamentManagementGeneral,
+      ),
+      (
+        'tournament-overview-banner-edit',
+        l10n.tournamentManagementBranding,
+      ),
+      (
+        'tournament-overview-athletes-edit',
+        l10n.tournamentManagementRegistration,
+      ),
+      (
+        'tournament-overview-location-edit',
+        l10n.tournamentManagementVenues,
+      ),
+      ('tournament-overview-entry-fee-edit', l10n.tournamentManagementFinance),
+    ];
+
+    for (final (key, sectionTitle) in targets) {
+      final target = find.byKey(ValueKey(key));
+      await tester.ensureVisible(target);
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+      expect(find.text(sectionTitle), findsWidgets);
+      await tester.tap(find.byTooltip(l10n.tournamentManagementBack));
+      await tester.pumpAndSettle();
+    }
+  });
+
+  testWidgets('hub shows only overview and opens accessible settings', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 1200);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      _app(_tournament('in_progress'), locale: const Locale('en')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TabBar), findsNothing);
+    expect(find.text('City Pickleball Cup'), findsOneWidget);
+
+    final settings = find.byTooltip('Tournament settings');
+    expect(settings, findsOneWidget);
+    expect(
+      find.descendant(
+        of: settings,
+        matching: find.byIcon(Icons.settings_outlined),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(settings);
+    await tester.pumpAndSettle();
+    expect(find.text('SETUP'), findsOneWidget);
+    expect(find.text('OPERATIONS'), findsOneWidget);
+    expect(find.text('SYSTEM'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('bracket and schedule stay available in operations settings', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 1200);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tournamentProvider(
+            'tournament-1',
+          ).overrideWith((ref) => Stream.value(_tournament('in_progress'))),
+          bracketMatchesWithDivisionProvider((
+            tournamentId: 'tournament-1',
+            divisionId: null,
+          )).overrideWith((ref) => Stream.value(const <MatchModel>[])),
+          tournamentDivisionsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => <Map<String, dynamic>>[]),
+        ],
+        child: _app(_tournament('in_progress'), locale: const Locale('en')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(TournamentManagementHubScreen)),
+    )!;
+    await tester.tap(find.byTooltip(l10n.tournamentManagementSettingsTooltip));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.tournamentManagementOperationsGroup));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.viewBracket).first);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.bracketView_noMatches), findsOneWidget);
+    expect(find.text(l10n.bracketView_drawHint), findsOneWidget);
+    expect(find.byType(TournamentManagementHubScreen), findsOneWidget);
+
+    await tester.tap(find.text(l10n.tournamentManagementSchedule).first);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip(l10n.opsRefresh), findsOneWidget);
+    expect(find.byType(TournamentManagementHubScreen), findsOneWidget);
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('admin, organizer, and Lite entry routes share one hub', (
     tester,
   ) async {
@@ -167,7 +366,6 @@ void main() {
       expect(find.byType(TournamentManagementHubScreen), findsOneWidget);
     }
   });
-
 
   testWidgets('club Super Lite keeps the existing Lite management screen', (
     tester,
@@ -333,7 +531,7 @@ void main() {
     expect(find.text(l10n.endTournament), findsNothing);
   });
 
-  testWidgets('opens the existing action workspaces from the shared hub', (
+  testWidgets('keeps lite management accessible from overflow actions', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 1500);
@@ -353,19 +551,6 @@ void main() {
               liteWorkspaceRoute: '/lite-manage/$id?workspace=1',
             );
           },
-          routes: [
-            for (final action in ['tokens', 'teams', 'draw', 'bracket'])
-              GoRoute(
-                path: action,
-                builder: (context, state) =>
-                    Scaffold(body: Text('Destination: $action')),
-              ),
-          ],
-        ),
-        GoRoute(
-          path: '/organizer/tournaments/:id/ops',
-          builder: (context, state) =>
-              const Scaffold(body: Text('Destination: workspace')),
         ),
         GoRoute(
           path: '/lite-manage/:id',
@@ -390,36 +575,18 @@ void main() {
 
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
-    final groups = <String, Map<String, String>>{
-      l10n.tournamentManagementSystemGroup: {l10n.manageTokens: 'tokens'},
-      l10n.tournamentManagementOperationsGroup: {
-        l10n.manageTeams: 'teams',
-        l10n.manageDraw: 'draw',
-        l10n.viewBracket: 'bracket',
-        l10n.opsTitle: 'workspace',
-      },
-    };
-    for (final group in groups.entries) {
-      await tester.tap(find.text(group.key).first);
-      await tester.pumpAndSettle();
-      for (final action in group.value.entries) {
-        await tester.tap(find.text(action.key));
-        await tester.pumpAndSettle();
-        expect(find.text('Destination: ${action.value}'), findsOneWidget);
-        router.pop();
-        await tester.pumpAndSettle();
-      }
-    }
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.lite_managementTitle));
     await tester.pumpAndSettle();
+
     expect(find.text('Destination: lite'), findsOneWidget);
     router.pop();
     await tester.pumpAndSettle();
+    expect(find.byType(TournamentManagementHubScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('renders overview, grouped navigation, and overflow actions', (
+  testWidgets('settings retain every management section and action', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 1500);
@@ -429,24 +596,28 @@ void main() {
 
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
-    expect(find.text('City Pickleball Cup'), findsNWidgets(2));
-    expect(find.text(l10n.notUpdated), findsNothing);
-    expect(find.text(l10n.locationNotUpdated), findsNothing);
-    expect(find.text(l10n.tournamentManagementOverview), findsWidgets);
-    expect(find.text(l10n.tournamentManagementSetupGroup), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementOperationsGroup), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
-    expect(find.byType(SportoBrandFallback), findsOneWidget);
+    await _openSettings(tester);
 
-    await tester.tap(find.text(l10n.tournamentManagementSetupGroup).first);
-    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementSetupGroup), findsOneWidget);
     expect(find.text(l10n.tournamentManagementGeneral), findsOneWidget);
-    await tester.tap(find.text(l10n.tournamentManagementOperationsGroup).first);
+    expect(find.text(l10n.tournamentManagementBranding), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementVenues), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementRegistration), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementDivisions), findsOneWidget);
+
+    await tester.tap(find.text(l10n.tournamentManagementOperationsGroup));
     await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementSchedule), findsOneWidget);
     expect(find.text(l10n.manageTeams), findsOneWidget);
-    expect(find.text(l10n.opsTitle), findsOneWidget);
-    await tester.tap(find.text(l10n.tournamentManagementSystemGroup).first);
+    expect(find.text(l10n.manageDraw), findsOneWidget);
+    expect(find.text(l10n.viewBracket), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementSponsors), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementFinance), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementLivestream), findsOneWidget);
+
+    await tester.tap(find.text(l10n.tournamentManagementSystemGroup));
     await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementPermissions), findsOneWidget);
     expect(find.text(l10n.manageTokens), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -457,20 +628,18 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('management header displays its supplied tournament artwork', (
+  testWidgets('management overview shows one title and the provided banner', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 1200);
     tester.view.devicePixelRatio = 1;
     const bannerUrl = 'https://images.example/tournament-banner.jpg';
-    const logoUrl = 'https://images.example/tournament-logo.jpg';
 
     await tester.pumpWidget(
-      _app(_tournament('in_progress', bannerUrl: bannerUrl, logoUrl: logoUrl)),
+      _app(_tournament('in_progress', bannerUrl: bannerUrl)),
     );
-    await tester.pumpAndSettle();
 
-    expect(find.text('City Pickleball Cup'), findsNWidgets(2));
+    expect(find.text('City Pickleball Cup'), findsOneWidget);
     expect(
       find.byWidgetPredicate(
         (widget) =>
@@ -480,17 +649,6 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(
-      find.byWidgetPredicate(
-        (widget) =>
-            widget is Image &&
-            widget.image is NetworkImage &&
-            (widget.image as NetworkImage).url == logoUrl,
-      ),
-      findsOneWidget,
-    );
-    expect(find.byType(SportoBrandFallback), findsNWidgets(2));
-    expect(tester.takeException(), isNull);
   });
 
   testWidgets('hides finalization action for a completed tournament', (
@@ -511,9 +669,10 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.tapAt(const Offset(20, 20));
     await tester.pumpAndSettle();
+    await _openSettings(tester);
     await tester.tap(find.text(l10n.tournamentManagementOperationsGroup).first);
     await tester.pumpAndSettle();
-    expect(find.text(l10n.opsTitle), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementSchedule), findsOneWidget);
   });
   testWidgets('supports long English tournament names on phone width', (
     tester,
@@ -531,7 +690,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.drag(find.byType(ListView).first, const Offset(0, -900));
+    await tester.drag(
+      find.byType(SingleChildScrollView).first,
+      const Offset(0, -900),
+    );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
@@ -545,6 +707,7 @@ void main() {
 
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
+    await _openSettings(tester);
     await tester.tap(find.text(l10n.tournamentManagementSetupGroup).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.tournamentManagementGeneral).first);
@@ -552,8 +715,14 @@ void main() {
 
     expect(find.text(l10n.tournamentManagementName), findsOneWidget);
     expect(find.text(l10n.tournamentManagementLifecycle), findsOneWidget);
-    expect(find.byType(TextField), findsNWidgets(2));
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementDescription), findsOneWidget);
     expect(find.text(l10n.tournamentManagementChooseDate), findsNWidgets(4));
+    expect(find.text(l10n.tournamentManagementGeneral), findsOneWidget);
+    expect(
+      find.text(l10n.tournamentManagementGeneralDescription),
+      findsNothing,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -590,6 +759,7 @@ void main() {
 
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
+    await _openSettings(tester);
     await tester.tap(find.text(l10n.tournamentManagementSetupGroup).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.tournamentManagementGeneral).first);
@@ -608,18 +778,53 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('operations list scrolls to its final existing section', (
+  testWidgets('operations retains live operations and the final section', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 800);
     tester.view.devicePixelRatio = 1;
-    await tester.pumpWidget(_app(_tournament('in_progress')));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          introTeamsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => const []),
+          tournamentRepositoryProvider.overrideWithValue(
+            _EmptyTournamentRepository(),
+          ),
+          tournamentProvider(
+            'tournament-1',
+          ).overrideWith((ref) => Stream.value(_tournament('in_progress'))),
+          tournamentDivisionsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => <Map<String, dynamic>>[]),
+        ],
+        child: _app(_tournament('in_progress')),
+      ),
+    );
     await tester.pumpAndSettle();
-
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
+    await _openSettings(tester);
     await tester.tap(find.text(l10n.tournamentManagementOperationsGroup).first);
     await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementLiveOperations), findsOneWidget);
+    await tester.tap(find.text(l10n.tournamentManagementSchedule).first);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip(l10n.opsRefresh), findsOneWidget);
+    expect(find.byTooltip(l10n.tournamentManagementBack), findsNWidgets(2));
+    final detailBack = find.descendant(
+      of: find
+          .ancestor(
+            of: find.byTooltip(l10n.tournamentManagementBack),
+            matching: find.byType(ListTile),
+          )
+          .first,
+      matching: find.byTooltip(l10n.tournamentManagementBack),
+    );
+    await tester.tap(detailBack);
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementLiveOperations), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text(l10n.tournamentManagementLivestream),
       160,
@@ -639,6 +844,7 @@ void main() {
 
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
+    await _openSettings(tester);
     await tester.tap(find.text(l10n.tournamentManagementSetupGroup).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.tournamentManagementGeneral).first);

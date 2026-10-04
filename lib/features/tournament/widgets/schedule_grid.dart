@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
-/// Lịch thi đấu dạng lưới: cột giờ khoá sát trái, mỗi sân một cột.
+typedef _ScheduledMatchLane = ({MatchModel match, int lane});
+
+/// Lịch thi đấu dạng lưới: cột giờ khoá sát trái, mỗi nhóm sân có thể có nhiều lane.
 ///
 /// Bố cục đáp ứng ba yêu cầu đặt ra:
 ///  * Cột giờ nằm ngoài `SingleChildScrollView` ngang nên luôn dính trái.
-///  * Tên sân và các cột sân cuộn ngang với nhau: thân giữ cử chỉ cuộn, header
+///  * Tên sân và các lane cuộn ngang với nhau: thân giữ cử chỉ cuộn, header
 ///    nghe thân rồi `jumpTo` theo (một chiều, không phản hồi vòng).
-///  * Chỉ cuộn dọc áp lên thân, cột giờ chạy dọc cùng nội dung.
+///  * Thân cuộn dọc; các trận có thời lượng giao nhau được đặt vào lane riêng
+///    để card không che card khác và nhãn giờ gốc vẫn giữ nguyên.
 class ScheduleGrid extends StatefulWidget {
   /// Các sân theo đúng thứ tự cột.
   ///
@@ -39,7 +42,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   /// Chiều cao ô 30 phút — gọn để điện thoại thấy được nhiều giờ.
   static const double _slotHeight = 44;
   static const double _timeColumnWidth = 56;
-  static const double _courtColumnWidth = 132;
+  static const double _courtLaneWidth = 168;
+  static const double _minimumCardHeight = 56;
+  static const int _minimumCardDurationMinutes = 40;
 
   // Header và thân dùng hai controller riêng: một ScrollController chỉ gắn
   // được một ScrollPosition, dùng chung sẽ assert ngay lần swipe ngang đầu.
@@ -93,6 +98,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     if (widget.courts.isEmpty) return const SizedBox.shrink();
+    final courtLayouts = [
+      for (final court in widget.courts) _buildCourtLayout(court),
+    ];
 
     return Column(
       children: [
@@ -123,10 +131,11 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                   physics: const NeverScrollableScrollPhysics(),
                   child: Row(
                     children: [
-                      for (final court in widget.courts)
+                      for (var index = 0; index < widget.courts.length; index++)
                         SizedBox(
-                          width: _courtColumnWidth,
-                          child: _courtHeader(court, colors),
+                          width:
+                              courtLayouts[index].laneCount * _courtLaneWidth,
+                          child: _courtHeader(widget.courts[index], colors),
                         ),
                     ],
                   ),
@@ -152,10 +161,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final court in widget.courts)
+                        for (
+                          var index = 0;
+                          index < widget.courts.length;
+                          index++
+                        )
                           SizedBox(
-                            width: _courtColumnWidth,
-                            child: _courtColumn(court, colors),
+                            width:
+                                courtLayouts[index].laneCount * _courtLaneWidth,
+                            child: _courtColumn(courtLayouts[index], colors),
                           ),
                       ],
                     ),
@@ -236,11 +250,52 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  Widget _courtColumn(String court, AppColorsExtension colors) {
-    final courtMatches = widget.matches
-        .where((m) => _courtOf(m) == court)
-        .toList();
+  _CourtLayout _buildCourtLayout(String court) {
+    final matches =
+        widget.matches
+            .where(
+              (match) =>
+                  _courtOf(match) == court && match.scheduledTime != null,
+            )
+            .toList()
+          ..sort((a, b) {
+            final timeOrder = a.scheduledTime!.compareTo(b.scheduledTime!);
+            return timeOrder != 0
+                ? timeOrder
+                : a.matchNumber.compareTo(b.matchNumber);
+          });
+    final laneEnds = <int>[];
+    final placements = <_ScheduledMatchLane>[];
 
+    for (final match in matches) {
+      final start = match.scheduledTime!;
+      final minutesFromOpen =
+          (start.hour - widget.startHour) * 60 + start.minute;
+      final startMinute = minutesFromOpen < 0 ? 0 : minutesFromOpen;
+      final matchDuration = match.timeLimitMinutes ?? 45;
+      final duration = matchDuration < _minimumCardDurationMinutes
+          ? _minimumCardDurationMinutes
+          : matchDuration;
+      var lane = 0;
+      while (lane < laneEnds.length && laneEnds[lane] > startMinute) {
+        lane++;
+      }
+
+      if (lane == laneEnds.length) {
+        laneEnds.add(startMinute + duration);
+      } else {
+        laneEnds[lane] = startMinute + duration;
+      }
+      placements.add((match: match, lane: lane));
+    }
+
+    return _CourtLayout(
+      placements: placements,
+      laneCount: laneEnds.isEmpty ? 1 : laneEnds.length,
+    );
+  }
+
+  Widget _courtColumn(_CourtLayout layout, AppColorsExtension colors) {
     return Container(
       height: _slotHeight * _slotCount,
       decoration: BoxDecoration(
@@ -266,22 +321,27 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                 ),
             ],
           ),
-          // Thẻ trận đặt tuyệt đối theo giờ bắt đầu.
-          for (final match in courtMatches) _matchCard(match, colors),
+          for (final placement in layout.placements)
+            _matchCard(placement.match, placement.lane, colors),
         ],
       ),
     );
   }
 
-  Widget _matchCard(MatchModel match, AppColorsExtension colors) {
+  Widget _matchCard(MatchModel match, int lane, AppColorsExtension colors) {
     final start = match.scheduledTime;
     if (start == null) return const SizedBox.shrink();
 
-    final minutesFromOpen =
-        (start.hour - widget.startHour) * 60 + start.minute;
-    final top = (minutesFromOpen * _pixelsPerMinute).clamp(0.0, double.infinity);
+    final minutesFromOpen = (start.hour - widget.startHour) * 60 + start.minute;
+    final top = (minutesFromOpen * _pixelsPerMinute).clamp(
+      0.0,
+      double.infinity,
+    );
     final duration = match.timeLimitMinutes ?? 45;
-    final height = (duration * _pixelsPerMinute - 3).clamp(34.0, double.infinity);
+    final calculatedHeight = duration * _pixelsPerMinute - 3;
+    final height = calculatedHeight < _minimumCardHeight
+        ? _minimumCardHeight
+        : calculatedHeight;
 
     // Dùng getter của domain model, không so chuỗi thô: backend gửi 'LIVE' /
     // 'COMPLETED' (hoa), so sánh thẳng sẽ tô sai màu và lệch với chip lọc
@@ -297,7 +357,11 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             AppTheme.primary,
           )
         : live
-        ? (const Color(0xFFDCFCE7), const Color(0xFF4ADE80), const Color(0xFF166534))
+        ? (
+            const Color(0xFFDCFCE7),
+            const Color(0xFF4ADE80),
+            const Color(0xFF166534),
+          )
         : done
         ? (colors.bgCard, colors.border, colors.textMuted)
         : (
@@ -307,9 +371,10 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           );
 
     return Positioned(
+      key: ValueKey('schedule-match-${match.id}'),
       top: top + 1.5,
-      left: 3,
-      right: 3,
+      left: lane * _courtLaneWidth + 3,
+      width: _courtLaneWidth - 6,
       height: height,
       child: GestureDetector(
         onTap: () => widget.onTapMatch(match.id),
@@ -372,4 +437,11 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
     );
   }
+}
+
+class _CourtLayout {
+  const _CourtLayout({required this.placements, required this.laneCount});
+
+  final List<_ScheduledMatchLane> placements;
+  final int laneCount;
 }

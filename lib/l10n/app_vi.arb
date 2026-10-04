@@ -543,6 +543,15 @@
   "matchesStatusWalkover": "Bỏ cuộc",
   "matchesCourtNotAssigned": "Chưa được xếp sân",
   "matchesCourtNameUnavailable": "Tên sân chưa được cung cấp",
+  "matchesUnplacedSection": "Trận chưa xếp đủ sân/giờ ({count})",
+  "@matchesUnplacedSection": {
+    "description": "Tiêu đề mục thu gọn cho các trận chưa có đủ sân hoặc giờ thi đấu.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tournamentScheduleHours": "Giờ hoạt động: {start}–{end}",
   "@tournamentScheduleHours": {
     "placeholders": {
@@ -5782,5 +5791,6 @@
   "socialRegionAlphabetHint": "Lọc kết quả theo chữ cái đầu",
   "socialRegionCloseAction": "Đóng",
   "socialLocationReverseFailed": "Không tra được khu vực từ vị trí đã ghim.",
-  "socialLocationNoAddressFound": "Chưa tìm thấy địa chỉ cho vị trí đã ghim."
+  "socialLocationNoAddressFound": "Chưa tìm thấy địa chỉ cho vị trí đã ghim.",
+  "tournamentManagementSettingsTooltip": "Cài đặt giải đấu"
 }

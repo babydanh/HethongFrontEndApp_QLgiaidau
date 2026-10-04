@@ -10,11 +10,13 @@ class TournamentManagementSectionCard extends StatelessWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.showHeader = true,
     required this.child,
   });
 
   final String title;
   final String? subtitle;
+  final bool showHeader;
   final Widget child;
 
   @override
@@ -27,22 +29,24 @@ class TournamentManagementSectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 4),
+            if (showHeader) ...[
               Text(
-                subtitle!,
+                title,
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  subtitle!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+                ),
+              ],
+              const SizedBox(height: 16),
             ],
-            const SizedBox(height: 16),
             child,
           ],
         ),

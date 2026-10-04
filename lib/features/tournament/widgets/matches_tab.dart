@@ -11,6 +11,8 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 
+typedef _UnplacedSection = ({String heading, List<MatchModel> matches});
+
 class MatchesTab extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? selectedDivisionId;
@@ -166,6 +168,24 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           courtLabels[groupKey] = courtName;
           (matchesByCourt[groupKey] ??= <MatchModel>[]).add(match);
         }
+        final unplacedSections = <_UnplacedSection>[
+          if (scheduledWithoutCourt.isNotEmpty)
+            (
+              heading: l10n.matchesCourtNotAssigned,
+              matches: scheduledWithoutCourt,
+            ),
+          if (scheduledWithoutCourtName.isNotEmpty)
+            (
+              heading: l10n.matchesCourtNameUnavailable,
+              matches: scheduledWithoutCourtName,
+            ),
+          if (unscheduledMatches.isNotEmpty)
+            (heading: l10n.matchNotScheduled, matches: unscheduledMatches),
+        ];
+        final unplacedMatchCount = unplacedSections.fold<int>(
+          0,
+          (count, section) => count + section.matches.length,
+        );
 
         final courtGroups = matchesByCourt.entries.toList()
           ..sort(
@@ -175,10 +195,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           );
         final hours = _configuredHours(l10n);
         final hasVisibleMatches =
-            courtGroups.isNotEmpty ||
-            scheduledWithoutCourt.isNotEmpty ||
-            scheduledWithoutCourtName.isNotEmpty ||
-            unscheduledMatches.isNotEmpty;
+            courtGroups.isNotEmpty || unplacedMatchCount > 0;
 
         // ── Dữ liệu cho lưới ──
         // Cột sân gom từ TOÀN BỘ trận của division, KHÔNG lọc theo ngày: nếu lấy
@@ -186,12 +203,8 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
         // cột, và số cột nhảy theo từng ngày. Lọc ngày chỉ quyết định trận nào
         // hiện trong ô, không quyết định có bao nhiêu cột.
         final gridCourts = <String>{
-          for (final match in tournamentMatches)
-            ?_courtDisplayName(match),
-        }.toList()
-          ..sort(
-            (a, b) => a.toLowerCase().compareTo(b.toLowerCase()),
-          );
+          for (final match in tournamentMatches) ?_courtDisplayName(match),
+        }.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         final gridMatches = courtGroups
             .expand((g) => g.value)
             .where((m) => m.scheduledTime != null)
@@ -205,126 +218,95 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           fallback: 22,
         );
 
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Column(
-                children: [
-                  _buildSearchField(colors, l10n),
-                  const SizedBox(height: 10),
-                  _buildStatusFilters(allMatches, l10n),
-                ],
-              ),
-            ),
-            if (scheduleDates.length > 1)
-              _buildDateSelector(scheduleDates, selectedDate, colors),
-            if (selectedDate != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: Text(
-                  DateFormat.yMMMMd(
-                    Localizations.localeOf(context).toString(),
-                  ).format(selectedDate),
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            if (hours != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.schedule_rounded,
-                      size: 16,
-                      color: colors.textMuted,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      hours,
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (!hasVisibleMatches)
-              Expanded(
-                child: _buildEmptyState(
-                  l10n,
-                  colors,
-                  hasSourceMatches: tournamentMatches.isNotEmpty,
-                ),
-              )
-            else ...[
-              // Lưới thay cho danh sách thẻ: cột giờ khoá trái, mỗi sân một cột.
-              // Expanded ở đây BẮT BUỘC — ScheduleGrid dùng Expanded bên trong nên
-              // cần chiều cao hữu hạn; đặt trong SliverToBoxAdapter sẽ crash lúc
-              // render với "incoming height constraints are unbounded".
-              // Cột sân derive từ trận của NGÀY ĐANG CHỌN, nên sân hôm nay không
-              // có trận sẽ không xuất hiện (xem giới hạn trong release note).
-              if (gridCourts.isNotEmpty)
-                // flex: 3 — lưới là nội dung chính. Hai Expanded cùng flex: 1 sẽ
-                // chia đều màn hình, khiến danh sách phụ (chỉ là dự phòng) giành
-                // mất nửa không gian của lưới.
-                Expanded(
-                  flex: 3,
-                  child: ScheduleGrid(
-                    courts: gridCourts,
-                    matches: gridMatches,
-                    startHour: gridStartHour,
-                    endHour: gridEndHour,
-                    onTapMatch: _openMatchById,
-                  ),
-                ),
-              // KHÔNG được điều kiện hoá theo gridCourts: giả định mọi trận chưa
-              // xếp lịch đều kèm sân là sai. Trận không sân/giờ sẽ khiến
-              // gridCourts rỗng, và nếu chặn theo nó thì danh sách phụ — chính là
-              // nơi duy nhất hiển thị các trận đó — sẽ biến mất.
-              if (scheduledWithoutCourt.isNotEmpty ||
-                  scheduledWithoutCourtName.isNotEmpty ||
-                  unscheduledMatches.isNotEmpty)
-                Expanded(
-                  flex: 1,
-                  child: ListView(
-                    padding: const EdgeInsets.only(bottom: 100),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            // Keep the expanded fallback scrollable without crowding the grid.
+            final maxUnplacedListHeight = constraints.maxHeight < 960
+                ? constraints.maxHeight * 0.25
+                : 240.0;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Column(
                     children: [
-                      if (scheduledWithoutCourt.isNotEmpty) ...[
-                        _buildCourtHeading(
-                          l10n.matchesCourtNotAssigned,
-                          scheduledWithoutCourt.length,
-                          colors,
-                        ),
-                        _buildMatchList(scheduledWithoutCourt),
-                      ],
-                      if (scheduledWithoutCourtName.isNotEmpty) ...[
-                        _buildCourtHeading(
-                          l10n.matchesCourtNameUnavailable,
-                          scheduledWithoutCourtName.length,
-                          colors,
-                        ),
-                        _buildMatchList(scheduledWithoutCourtName),
-                      ],
-                      if (unscheduledMatches.isNotEmpty) ...[
-                        _buildCourtHeading(
-                          l10n.matchNotScheduled,
-                          unscheduledMatches.length,
-                          colors,
-                        ),
-                        _buildMatchList(unscheduledMatches),
-                      ],
+                      _buildSearchField(colors, l10n),
+                      const SizedBox(height: 10),
+                      _buildStatusFilters(allMatches, l10n),
                     ],
                   ),
                 ),
-            ],
-          ],
+                if (scheduleDates.length > 1)
+                  _buildDateSelector(scheduleDates, selectedDate, colors),
+                if (selectedDate != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    child: Text(
+                      DateFormat.yMMMMd(
+                        Localizations.localeOf(context).toString(),
+                      ).format(selectedDate),
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                if (hours != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 16,
+                          color: colors.textMuted,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          hours,
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (!hasVisibleMatches)
+                  Expanded(
+                    child: _buildEmptyState(
+                      l10n,
+                      colors,
+                      hasSourceMatches: tournamentMatches.isNotEmpty,
+                    ),
+                  )
+                else ...[
+                  // ScheduleGrid needs bounded height. The unplaced list below
+                  // stays collapsed by default so it does not reserve grid space.
+                  if (gridCourts.isNotEmpty)
+                    Expanded(
+                      child: ScheduleGrid(
+                        courts: gridCourts,
+                        matches: gridMatches,
+                        startHour: gridStartHour,
+                        endHour: gridEndHour,
+                        onTapMatch: _openMatchById,
+                      ),
+                    ),
+                  if (unplacedMatchCount > 0)
+                    _buildUnplacedMatches(
+                      sections: unplacedSections,
+                      matchCount: unplacedMatchCount,
+                      maxListHeight: maxUnplacedListHeight,
+                      l10n: l10n,
+                      colors: colors,
+                    ),
+                ],
+              ],
+            );
+          },
         );
       },
       loading: () => const Center(
@@ -584,14 +566,77 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
     );
   }
 
-  Widget _buildMatchList(List<MatchModel> matches) {
-    // Không còn SliverList: tab đã chuyển từ CustomScrollView sang Column, nên
-    // danh sách phải là widget thường.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
-      child: Column(
+  Widget _buildUnplacedMatches({
+    required List<_UnplacedSection> sections,
+    required int matchCount,
+    required double maxListHeight,
+    required AppLocalizations l10n,
+    required AppColorsExtension colors,
+  }) {
+    final itemCount = sections.fold<int>(
+      0,
+      (count, section) => count + section.matches.length + 1,
+    );
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    );
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: ExpansionTile(
+        key: const ValueKey('schedule-unplaced-matches'),
+        leading: Icon(
+          Icons.sports_tennis_rounded,
+          size: 18,
+          color: colors.textMuted,
+        ),
+        title: Text(
+          l10n.matchesUnplacedSection(matchCount),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+        childrenPadding: EdgeInsets.zero,
+        shape: shape,
+        collapsedShape: shape,
         children: [
-          for (final match in matches) _buildMatchCard(match),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxListHeight),
+            child: ListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.only(bottom: 8),
+              itemCount: itemCount,
+              itemBuilder: (_, index) {
+                for (final section in sections) {
+                  if (index == 0) {
+                    return _buildCourtHeading(
+                      section.heading,
+                      section.matches.length,
+                      colors,
+                    );
+                  }
+                  index--;
+                  if (index < section.matches.length) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
+                      child: _buildMatchCard(section.matches[index]),
+                    );
+                  }
+                  index -= section.matches.length;
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -610,7 +655,9 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
 
   /// Mở màn chi tiết trận từ thẻ trong lưới — dùng chung đường dẫn với thẻ thường.
   void _openMatchById(String matchId) {
-    context.push(NavigationHelper.getLiveMatchRoute(widget.tournamentId, matchId));
+    context.push(
+      NavigationHelper.getLiveMatchRoute(widget.tournamentId, matchId),
+    );
   }
 
   Widget _buildMatchCard(MatchModel match) {
