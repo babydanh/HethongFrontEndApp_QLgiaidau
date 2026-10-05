@@ -61,6 +61,22 @@ void main() {
       expect(tournament.divisions.map((d) => d.name).toList(), ['Nam', 'Nu']);
     });
 
+    test('parses the tournament-level gender restriction', () {
+      final tournament = Tournament.fromJson({
+        'name': 'Tournament gender restriction',
+        'genderRestriction': 'FEMALE',
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      }, 'tournament-gender');
+
+      expect(tournament.genderRestriction, 'FEMALE');
+      expect(
+        tournament.copyWith(genderRestriction: 'MALE').genderRestriction,
+        'MALE',
+      );
+      expect(tournament.toJson()['genderRestriction'], 'FEMALE');
+    });
+
     test('should handle minimal JSON with defaults', () {
       final json = {
         'name': 'Giai Test',

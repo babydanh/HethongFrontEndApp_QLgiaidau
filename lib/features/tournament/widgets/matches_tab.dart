@@ -44,6 +44,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
   String _statusFilter = 'all'; // all, live, scheduled, completed
   String? _selectedScheduleDateKey;
   String _searchQuery = '';
+  bool _unplacedMatchesExpanded = false;
   final TextEditingController _searchCtrl = TextEditingController();
 
   @override
@@ -577,67 +578,101 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
       0,
       (count, section) => count + section.matches.length + 1,
     );
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    );
     return Container(
+      key: const ValueKey('schedule-unplaced-matches'),
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colors.border),
       ),
-      child: ExpansionTile(
-        key: const ValueKey('schedule-unplaced-matches'),
-        leading: Icon(
-          Icons.sports_tennis_rounded,
-          size: 18,
-          color: colors.textMuted,
-        ),
-        title: Text(
-          l10n.matchesUnplacedSection(matchCount),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-        childrenPadding: EdgeInsets.zero,
-        shape: shape,
-        collapsedShape: shape,
-        children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxListHeight),
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: const EdgeInsets.only(bottom: 8),
-              itemCount: itemCount,
-              itemBuilder: (_, index) {
-                for (final section in sections) {
-                  if (index == 0) {
-                    return _buildCourtHeading(
-                      section.heading,
-                      section.matches.length,
-                      colors,
-                    );
-                  }
-                  index--;
-                  if (index < section.matches.length) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
-                      child: _buildMatchCard(section.matches[index]),
-                    );
-                  }
-                  index -= section.matches.length;
-                }
-                return const SizedBox.shrink();
-              },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Semantics(
+              expanded: _unplacedMatchesExpanded,
+              child: Material(
+                color: colors.bgCard,
+                child: ListTile(
+                  key: const ValueKey('schedule-unplaced-header'),
+                  onTap: () {
+                    setState(() {
+                      _unplacedMatchesExpanded = !_unplacedMatchesExpanded;
+                    });
+                  },
+                  leading: Icon(
+                    Icons.sports_tennis_rounded,
+                    size: 18,
+                    color: colors.textMuted,
+                  ),
+                  title: Text(
+                    l10n.matchesUnplacedSection(matchCount),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  trailing: AnimatedRotation(
+                    turns: _unplacedMatchesExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 250),
+                    child: Icon(
+                      Icons.expand_more_rounded,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  minVerticalPadding: 4,
+                ),
+              ),
             ),
-          ),
-        ],
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.fastOutSlowIn,
+              alignment: Alignment.topCenter,
+              child: _unplacedMatchesExpanded
+                  ? SizedBox(
+                      height: maxListHeight,
+                      child: ListView.builder(
+                        key: const ValueKey('schedule-unplaced-list'),
+                        primary: false,
+                        padding: const EdgeInsets.only(bottom: 8),
+                        itemCount: itemCount,
+                        itemBuilder: (_, index) {
+                          for (final section in sections) {
+                            if (index == 0) {
+                              return _buildCourtHeading(
+                                section.heading,
+                                section.matches.length,
+                                colors,
+                              );
+                            }
+                            index--;
+                            if (index < section.matches.length) {
+                              return Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  12,
+                                  2,
+                                  12,
+                                  4,
+                                ),
+                                child: _buildMatchCard(section.matches[index]),
+                              );
+                            }
+                            index -= section.matches.length;
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }

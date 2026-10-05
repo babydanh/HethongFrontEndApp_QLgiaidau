@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 
 const List<Color> _kSlotAvatarColors = [
   Color(0xFF10B981), // Emerald
@@ -177,8 +178,14 @@ class _CommunityTournamentRosterWidgetState
     try {
       final repo = ref.read(tournamentRepositoryProvider);
       final inviteCode = widget.inviteCode;
+      // Widget này không có bộ chọn nội dung: chỉ gửi ID khi giải đúng một
+      // nội dung đang hoạt động, đa nội dung thì để server từ chối rõ ràng
+      // thay vì đoán theo giới tính.
+      final divisionId = soleActiveTournamentDivisionId(
+        _tournament?.divisions ?? const [],
+      );
       if (inviteCode != null && inviteCode.isNotEmpty) {
-        await repo.joinLite(inviteCode);
+        await repo.joinLite(inviteCode, divisionId: divisionId);
       } else {
         final name = userProfile.fullName;
         await repo.registerParticipant(
@@ -186,6 +193,7 @@ class _CommunityTournamentRosterWidgetState
           teamName: (name != null && name.trim().isNotEmpty)
               ? name.trim()
               : 'VĐV',
+          divisionId: divisionId,
         );
       }
       if (mounted) {

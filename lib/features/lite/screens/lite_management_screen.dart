@@ -12,9 +12,11 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
@@ -3103,6 +3105,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         communityId: communityId,
         tournamentId: widget.tournamentId,
         participants: state.participants,
+        divisions: state.tournament?.divisions ?? const [],
         notifier: notifier,
         colors: colors,
       ),
@@ -3940,6 +3943,7 @@ class _LiteClubMemberPickerSheet extends ConsumerStatefulWidget {
   final String communityId;
   final String tournamentId;
   final List<LiteParticipant> participants;
+  final List<TournamentDivision> divisions;
   final LiteManagementNotifier notifier;
   final AppColorsExtension colors;
 
@@ -3947,6 +3951,7 @@ class _LiteClubMemberPickerSheet extends ConsumerStatefulWidget {
     required this.communityId,
     required this.tournamentId,
     required this.participants,
+    required this.divisions,
     required this.notifier,
     required this.colors,
   });
@@ -3963,7 +3968,19 @@ class _LiteClubMemberPickerSheetState
   String _query = '';
   String? _error;
   String? _addingId;
+  String? _divisionId;
   bool _loading = true;
+
+  /// Divisions a club member can actually be registered into: cancelled ones
+  /// are excluded, and synthetic `default_*` ids are dropped because they exist
+  /// only in the UI and are not accepted by the registration endpoints.
+  List<TournamentDivision> get _activeDivisions => widget.divisions
+      .where(
+        (division) =>
+            division.status?.trim().toUpperCase() != 'CANCELLED' &&
+            persistedTournamentDivisionId(division.id) != null,
+      )
+      .toList(growable: false);
 
   @override
   void initState() {
@@ -3973,6 +3990,10 @@ class _LiteClubMemberPickerSheetState
         for (final member in participant.members)
           if (member.id.isNotEmpty) member.id,
     };
+    // Auto-select only when a single active division exists. Several active
+    // divisions must be chosen explicitly by the organizer: taking the first
+    // element would register the member into the wrong category.
+    _divisionId = soleActiveTournamentDivisionId(widget.divisions);
     _loadMembers();
   }
 
@@ -4006,10 +4027,24 @@ class _LiteClubMemberPickerSheetState
     if (userId.isEmpty || _addedIds.contains(userId) || _addingId != null) {
       return;
     }
-    setState(() => _addingId = userId);
     final l10n = AppLocalizations.of(context)!;
+    // Never send an ambiguous registration: without a division the server
+    // would reject a multi-division tournament, and guessing the first one
+    // would file the member under the wrong category.
+    final divisionId = _divisionId;
+    if (divisionId == null || divisionId.isEmpty) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(l10n.registerSelectDivision)),
+      );
+      return;
+    }
+    setState(() => _addingId = userId);
     try {
-      await widget.notifier.addClubMember(widget.tournamentId, userId);
+      await widget.notifier.addClubMember(
+        widget.tournamentId,
+        userId,
+        divisionId: divisionId,
+      );
       if (!mounted) return;
       setState(() {
         _addedIds.add(userId);
@@ -4043,6 +4078,8 @@ class _LiteClubMemberPickerSheetState
         })
         .toList(growable: false);
     final maxHeight = MediaQuery.sizeOf(context).height * 0.82;
+    final activeDivisions = _activeDivisions;
+    final canAdd = _divisionId != null && _divisionId!.isNotEmpty;
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -4124,6 +4161,71 @@ class _LiteClubMemberPickerSheetState
                       ),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  if (activeDivisions.isEmpty)
+                    _DivisionHint(
+                      message: l10n.registerSelectDivision,
+                      colors: widget.colors,
+                    )
+                  else if (activeDivisions.length == 1)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.category_outlined,
+                          size: 16,
+                          color: widget.colors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            activeDivisions.first.name,
+                            style: TextStyle(
+                              color: widget.colors.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    DropdownButtonFormField<String>(
+                      initialValue: canAdd ? _divisionId : null,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: l10n.registerSelectDivision,
+                        isDense: true,
+                        filled: true,
+                        fillColor: widget.colors.bgDark,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: widget.colors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: widget.colors.border),
+                        ),
+                      ),
+                      items: [
+                        for (final division in activeDivisions)
+                          DropdownMenuItem(
+                            value: division.id,
+                            child: Text(
+                              division.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => _divisionId = value),
+                    ),
+                  if (activeDivisions.length > 1 && !canAdd) ...[
+                    const SizedBox(height: 8),
+                    _DivisionHint(
+                      message: l10n.registerSelectDivision,
+                      colors: widget.colors,
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   TextField(
                     onChanged: (value) => setState(() => _query = value),
@@ -4209,7 +4311,8 @@ class _LiteClubMemberPickerSheetState
                                 ),
                                 const SizedBox(width: 8),
                                 OutlinedButton(
-                                  onPressed: isAdded || _addingId != null
+                                  onPressed:
+                                      isAdded || _addingId != null || !canAdd
                                       ? null
                                       : () => _addMember(member),
                                   child: isAdding
@@ -4238,6 +4341,30 @@ class _LiteClubMemberPickerSheetState
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DivisionHint extends StatelessWidget {
+  final String message;
+  final AppColorsExtension colors;
+
+  const _DivisionHint({required this.message, required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.error_outline_rounded, size: 16, color: colors.warning),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            message,
+            style: TextStyle(color: colors.warning, fontSize: 12, height: 1.35),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -59,6 +59,7 @@ UserProfile _profile() => const UserProfile(
 
 /// Projection `capacity` đúng như backend trả về cho nội dung đôi.
 Map<String, dynamic> _doublesDivision({
+  String? status,
   double? occupiedTeamSlots,
   bool? isFull,
   int participantRows = 4,
@@ -68,6 +69,7 @@ Map<String, dynamic> _doublesDivision({
     'name': 'Doubles A',
     'matchType': 'DOUBLES',
     'genderRestriction': 'MIXED',
+    if (status != null) 'status': status,
     'maxParticipants': 4,
     '_count': {'participants': participantRows},
     if (occupiedTeamSlots != null)
@@ -84,10 +86,9 @@ Future<List<String>> _pumpRegisterScreen(
   WidgetTester tester, {
   required Map<String, dynamic> division,
   bool alreadyRegistered = false,
-  /// false = dừng ngay ở frame đầu tiên đã có form, trước khi
-  /// `addPostFrameCallback` tự chọn nội dung chạy. Đó đúng là lúc nút bấm
-  /// được trong khi `_selectedDiv` còn null — trạng thái mà gate sức chứa vẫn
-  /// phải bám theo nhánh "chỉ có một nội dung thì lấy `divisions.first`".
+  /// false = dừng ở frame trước post-frame auto-select.
+  /// Khi `_selectedDiv` còn null, capacity gate phải dùng division hoạt động
+  /// duy nhất, không lấy phần tử đầu danh sách.
   bool settle = true,
 }) async {
   final requests = <String>[];
@@ -166,6 +167,24 @@ void main() {
     dotenv.loadFromString(envString: 'API_BASE_URL=https://api.example.test');
     SharedPreferences.setMockInitialValues({});
   });
+
+  testWidgets(
+    'a cancelled division is not implicitly selected for registration',
+    (tester) async {
+      final requests = await _pumpRegisterScreen(
+        tester,
+        division: _doublesDivision(status: 'CANCELLED'),
+      );
+
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        requests.where((request) => request.startsWith('POST ')),
+        isEmpty,
+      );
+    },
+  );
 
   testWidgets(
     'four unpaired doubles athletes show 2 / 4 team slots and keep the submit enabled',
@@ -249,8 +268,8 @@ void main() {
         settle: false,
       );
 
-      // Frame này `_selectedDiv` còn null (post-frame callback chưa chạy) nhưng
-      // `_register()` sẽ tự gửi vào `divisions.first` → nút phải đã khoá.
+      // Frame này `_selectedDiv` còn null; gate sức chứa vẫn phải nhắm đúng
+      // division hoạt động duy nhất trước khi post-frame callback chạy.
       expect(
         tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
         isNull,

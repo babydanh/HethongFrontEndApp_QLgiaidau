@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_create_entry.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/quick_tournament_format_mapping.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
@@ -417,6 +418,10 @@ class _CreatePublicQuickTournamentScreenState
         return l10n.tournamentCategoryWomenDoubles;
       case 'MIXED_DOUBLES':
         return l10n.tournamentCategoryMixedDoubles;
+      case 'OPEN_SINGLES':
+        return l10n.tournamentCategoryOpenSingles;
+      case 'OPEN_DOUBLES':
+        return l10n.tournamentCategoryOpenDoubles;
       case 'FOOTBALL_MALE':
         return l10n.tournamentCategoryFootballMen;
       case 'FOOTBALL_FEMALE':
@@ -428,21 +433,10 @@ class _CreatePublicQuickTournamentScreenState
     }
   }
 
-  String _divisionMatchType(String key) {
-    if (key.contains('SINGLES')) return 'SINGLES';
-    if (key == 'MIXED_DOUBLES') return 'MIXED_DOUBLES';
-    return 'DOUBLES';
-  }
 
   int _globalMaxParticipants() =>
       int.tryParse(_maxTeamsController.text.trim()) ?? 16;
 
-  String? _divisionGender(String key) {
-    if (key.contains('FEMALE')) return 'FEMALE';
-    if (key.contains('MALE')) return 'MALE';
-    if (key.contains('MIXED')) return 'MIXED';
-    return null;
-  }
 
   Future<void> _detectAddressSuggestion() async {
     final address = _locationAddressController.text.trim();
@@ -554,34 +548,8 @@ class _CreatePublicQuickTournamentScreenState
     setState(() => _isSubmitting = true);
     try {
       final primaryFormat = _contentDrafts.first.formatKey;
-      String apiFormat = 'doubles';
-      String? genderRestriction;
-
-      if (primaryFormat == 'MALE_SINGLES') {
-        apiFormat = 'singles';
-        genderRestriction = 'MALE';
-      } else if (primaryFormat == 'FEMALE_SINGLES') {
-        apiFormat = 'singles';
-        genderRestriction = 'FEMALE';
-      } else if (primaryFormat == 'MALE_DOUBLES') {
-        apiFormat = 'doubles';
-        genderRestriction = 'MALE';
-      } else if (primaryFormat == 'FEMALE_DOUBLES') {
-        apiFormat = 'doubles';
-        genderRestriction = 'FEMALE';
-      } else if (primaryFormat == 'MIXED_DOUBLES') {
-        apiFormat = 'doubles';
-        genderRestriction = 'MIXED';
-      } else if (primaryFormat == 'FOOTBALL_MALE') {
-        apiFormat = 'doubles';
-        genderRestriction = 'MALE';
-      } else if (primaryFormat == 'FOOTBALL_FEMALE') {
-        apiFormat = 'doubles';
-        genderRestriction = 'FEMALE';
-      } else if (primaryFormat == 'FOOTBALL_MIXED') {
-        apiFormat = 'doubles';
-        genderRestriction = 'MIXED';
-      }
+      final primaryFormatFields =
+          quickTournamentApiFormatFields(primaryFormat);
 
       final province = ref
           .read(provincesProvider)
@@ -609,9 +577,7 @@ class _CreatePublicQuickTournamentScreenState
           'name': draft.name.trim().isEmpty
               ? _formatLabel(formatKey)
               : draft.name.trim(),
-          'matchType': _divisionMatchType(formatKey),
-          if (_divisionGender(formatKey) != null)
-            'genderRestriction': _divisionGender(formatKey),
+          ...quickTournamentDivisionFormatFields(formatKey),
           'maxParticipants': draft.maxParticipantsOverride ?? maxTeams,
           'bracketType': (draft.bracketType ?? _bracket).toUpperCase(),
           if (draft.eloEnabled && draft.minElo != null) 'minElo': draft.minElo,
@@ -627,9 +593,7 @@ class _CreatePublicQuickTournamentScreenState
       final payload = <String, dynamic>{
         'name': name,
         'sport': _mapSportSlug(),
-        'format': apiFormat,
-        if (_divisionGender(primaryFormat) != null)
-          'genderRestriction': genderRestriction,
+        ...primaryFormatFields,
         'bracketType': _bracket,
         'maxTeams': maxTeams,
         'divisions': divisions,
@@ -2287,15 +2251,9 @@ class _CreatePublicQuickTournamentScreenState
 
     final l10nNow = l10n;
     final isFootball = _sport == AppConstants.sportFootball;
-    final formatOptions = isFootball
-        ? const <String>['FOOTBALL_MALE', 'FOOTBALL_FEMALE', 'FOOTBALL_MIXED']
-        : const <String>[
-            'MALE_SINGLES',
-            'FEMALE_SINGLES',
-            'MALE_DOUBLES',
-            'FEMALE_DOUBLES',
-            'MIXED_DOUBLES',
-          ];
+    final formatOptions = quickTournamentFormatOptions(
+      isFootball: isFootball,
+    );
 
     var formatKey = existing?.formatKey ?? formatOptions.first;
     if (!formatOptions.contains(formatKey)) formatKey = formatOptions.first;

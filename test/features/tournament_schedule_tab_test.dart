@@ -293,17 +293,25 @@ void main() {
     expect(section, findsOneWidget);
     expect(find.text('Court not assigned'), findsNothing);
 
-    final unplacedTile = find.byKey(
+    final unplacedPanel = find.byKey(
       const ValueKey('schedule-unplaced-matches'),
     );
-    expect(unplacedTile.hitTestable(), findsOneWidget);
-    await tester.tap(unplacedTile);
+    final unplacedHeader = find.byKey(
+      const ValueKey('schedule-unplaced-header'),
+    );
+    expect(unplacedHeader.hitTestable(), findsOneWidget);
+    await tester.tap(unplacedHeader);
+    await tester.pump();
+    final collapsedPanelHeight = tester.getSize(unplacedPanel).height;
+    await tester.pump(const Duration(milliseconds: 125));
+    final transitioningPanelHeight = tester.getSize(unplacedPanel).height;
+    await tester.pump(const Duration(milliseconds: 150));
+    final expandedPanelHeight = tester.getSize(unplacedPanel).height;
+    expect(transitioningPanelHeight, greaterThan(collapsedPanelHeight));
+    expect(expandedPanelHeight, greaterThan(transitioningPanelHeight));
     await tester.pumpAndSettle();
     expect(find.text('Court not assigned'), findsOneWidget);
 
-    final unplacedPanel = find
-        .ancestor(of: section, matching: find.byType(ExpansionTile))
-        .first;
     final unplacedScrollable = find
         .descendant(of: unplacedPanel, matching: find.byType(Scrollable))
         .first;
@@ -373,20 +381,21 @@ void main() {
 
     await _tapStatusFilter(tester, find.text('Scheduled (1)'));
     expect(find.text('Matches missing court/time (1)'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-matches')));
+    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-header')));
     await tester.pumpAndSettle();
     expect(find.text('Player 1'), findsOneWidget);
     expect(find.text('Player 2'), findsNothing);
     expect(find.text('Player 3'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-matches')));
+    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-header')));
     await tester.pumpAndSettle();
 
     await _tapStatusFilter(tester, find.text('All (3)'));
     await tester.enterText(find.byType(TextField).first, 'Player 3');
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('Matches missing court/time (1)'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-matches')));
+    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-header')));
     await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(seconds: 1));
     final unplacedPlayer = find.descendant(
       of: find.byKey(const ValueKey('schedule-unplaced-matches')),
       matching: find.text('Player 3'),

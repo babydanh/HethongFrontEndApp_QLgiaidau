@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -12,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 const _tournamentId = 'tab-density-fixture';
 
@@ -87,6 +89,26 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    final router = GoRouter(
+      initialLocation: '/tournaments/$_tournamentId',
+      routes: [
+        GoRoute(
+          path: '/tournaments/:id',
+          builder: (context, state) =>
+              TournamentIntroScreen(tournamentId: state.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/live/:matchId',
+          builder: (context, state) => Scaffold(
+            body: Text(
+              'Opened match: ${state.pathParameters['matchId']} '
+              'in ${state.uri.queryParameters['tournamentId']}',
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -129,12 +151,12 @@ void main() {
             (ref) async => const UserProfile(id: '', fullName: 'Guest'),
           ),
         ],
-        child: MaterialApp(
+        child: MaterialApp.router(
           theme: AppTheme.lightTheme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('vi'),
-          home: const TournamentIntroScreen(tournamentId: _tournamentId),
+          routerConfig: router,
         ),
       ),
     );
@@ -143,7 +165,19 @@ void main() {
 
     Future<void> openTab(String label) async {
       final tab = find.widgetWithText(Tab, label);
-      await tester.ensureVisible(tab);
+      final tabBar = find.byType(TabBar).first;
+      for (var attempt = 0; attempt < 8; attempt++) {
+        final viewport = tester.getRect(tabBar);
+        final tabRect = tester.getRect(tab);
+        if (tabRect.left >= viewport.left && tabRect.right <= viewport.right) {
+          break;
+        }
+        await tester.drag(
+          tabBar,
+          Offset(tabRect.left < viewport.left ? 300 : -300, 0),
+        );
+        await tester.pumpAndSettle();
+      }
       await tester.tap(tab);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
@@ -162,8 +196,64 @@ void main() {
     expect(find.text('Player Alpha / Player Beta'), findsOneWidget);
 
     await openTab('Lịch thi đấu');
-    expect(find.text('Player Epsilon'), findsOneWidget);
+    final unplacedPanel = find.byKey(
+      const ValueKey('schedule-unplaced-matches'),
+    );
+    final unplacedHeader = find.byKey(
+      const ValueKey('schedule-unplaced-header'),
+    );
+    expect(find.text('Player Epsilon'), findsNothing);
+    expect(find.text('Player Zeta'), findsNothing);
+    expect(unplacedHeader.hitTestable(), findsOneWidget);
+    await tester.tap(unplacedHeader);
+    await tester.pump(const Duration(milliseconds: 300));
+    final unplacedList = find.descendant(
+      of: unplacedPanel,
+      matching: find.byKey(const ValueKey('schedule-unplaced-list')),
+    );
+    expect(unplacedList, findsOneWidget);
+    final headerRect = tester.getRect(unplacedHeader);
+    final listRect = tester.getRect(unplacedList);
+    expect(listRect.top, greaterThanOrEqualTo(headerRect.bottom));
+
+    final unplacedScrollable = find.descendant(
+      of: unplacedList,
+      matching: find.byType(Scrollable),
+    );
+    expect(unplacedScrollable, findsOneWidget);
+    final unplacedPosition = tester
+        .state<ScrollableState>(unplacedScrollable)
+        .position;
+    expect(unplacedPosition.maxScrollExtent, greaterThan(0));
+
+    final epsilon = find.text('Player Epsilon');
+    final epsilonCard = find.widgetWithText(LiveMatchCardV2, 'Player Epsilon');
+    for (
+      var attempt = 0;
+      attempt < 8 && epsilonCard.hitTestable().evaluate().isEmpty;
+      attempt++
+    ) {
+      final currentListRect = tester.getRect(unplacedList);
+      await tester.dragFrom(
+        Offset(currentListRect.center.dx, currentListRect.top + 16),
+        const Offset(0, -80),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+    expect(unplacedPosition.pixels, greaterThan(0));
+    expect(epsilon, findsOneWidget);
     expect(find.text('Player Zeta'), findsOneWidget);
+    final zetaCard = find.widgetWithText(LiveMatchCardV2, 'Player Zeta');
+    expect(epsilonCard, findsOneWidget);
+    expect(epsilonCard.hitTestable(), findsOneWidget);
+    expect(zetaCard.hitTestable(), findsOneWidget);
+    await tester.tap(zetaCard);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Opened match: completed-match in $_tournamentId'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull, reason: 'unplaced matches');
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });

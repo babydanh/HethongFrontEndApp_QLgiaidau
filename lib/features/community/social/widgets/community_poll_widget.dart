@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,21 +67,33 @@ class _CommunityPollWidgetState extends ConsumerState<CommunityPollWidget> {
     final shouldWithdraw = wasPositive && !isPositive;
     if (!shouldJoin && !shouldWithdraw) return;
 
+    final repo = ref.read(tournamentRepositoryProvider);
     try {
       if (shouldJoin) {
         if (inviteCode == null || inviteCode.trim().isEmpty) {
           throw FormatException(l10n.communityPoll_missingInviteCode);
         }
-        await ref.read(tournamentRepositoryProvider).joinLite(inviteCode);
+        // Bình chọn không có bộ chọn nội dung: chỉ gửi ID khi giải đúng một
+        // nội dung đang hoạt động, đa nội dung thì để server từ chối rõ ràng
+        // thay vì đoán nội dung theo giới tính người chơi.
+        String? divisionId;
+        try {
+          final tournament = await repo.getById(tournamentId);
+          divisionId = soleActiveTournamentDivisionId(
+            tournament?.divisions ?? const [],
+          );
+        } catch (_) {
+          // Không tải được giải vẫn tham gia được: server tự lấy nội dung duy
+          // nhất khi và chỉ khi đúng một nội dung đang hoạt động.
+        }
+        await repo.joinLite(inviteCode, divisionId: divisionId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.communityPoll_registrationJoined)),
           );
         }
       } else {
-        await ref
-            .read(tournamentRepositoryProvider)
-            .withdraw(tournamentId: tournamentId);
+        await repo.withdraw(tournamentId: tournamentId);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.communityPoll_registrationWithdrawn)),

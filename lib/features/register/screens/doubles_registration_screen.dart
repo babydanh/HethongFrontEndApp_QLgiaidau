@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.da
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
+import 'package:app_quanly_giaidau/features/register/utils/division_gender_restriction.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
@@ -403,8 +404,10 @@ class _DoublesRegistrationFlowState
     // division lưu 'FEMALE'/'MALE'. So sánh raw (toUpperCase) là 'NỮ' !=
     // 'FEMALE' → báo sai "chỉ dành cho Nữ" kể cả khi đúng giới tính.
     if (user != null) {
-      final userGender = _normalizeGender(user.gender);
-      final divGender = _normalizeGender(div.genderRestriction);
+      final userGender = normalizeDivisionGenderRestriction(user.gender);
+      final divGender = normalizeDivisionGenderRestriction(
+        div.genderRestriction,
+      );
       if (userGender != null &&
           divGender != null &&
           divGender != 'MIXED' &&
@@ -423,21 +426,6 @@ class _DoublesRegistrationFlowState
     }
   }
 
-  /// Chuẩn hoá giá trị giới tính ('Nữ'/'nu'/'FEMALE' → 'FEMALE'; 'Nam'/'nam'/
-  /// 'MALE' → 'MALE'; 'MIXED'/'Nam Nữ' → 'MIXED'; không nhận biết → null).
-  String? _normalizeGender(String? value) {
-    final normalized = value
-        ?.trim()
-        .toUpperCase()
-        .replaceAll('-', '_')
-        .replaceAll(' ', '_');
-    return switch (normalized) {
-      'MALE' || 'MEN' || 'NAM' => 'MALE',
-      'FEMALE' || 'WOMEN' || 'NU' || 'NỮ' => 'FEMALE',
-      'MIXED' || 'MIXED_GENDER' || 'NAM_NU' => 'MIXED',
-      _ => null,
-    };
-  }
 
   Future<void> _checkElo(
     String userId,
@@ -546,6 +534,17 @@ class _DoublesRegistrationFlowState
         )
         .asData
         ?.value;
+    final profileGender = ref
+        .read(userProfileProvider)
+        .asData
+        ?.value
+        ?.gender
+        ?.trim();
+    if (requiresGenderProfileForDivision(widget.division.genderRestriction) &&
+        (profileGender == null || profileGender.isEmpty)) {
+      _showError(l10n.registerMissingGender);
+      return;
+    }
     final pairingMode =
         _pairingMode ??
         (tournament?.doublesPairingMode == 'SELF' ? 'SELF' : 'ORGANIZER');

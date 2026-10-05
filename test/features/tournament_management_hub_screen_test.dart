@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
-import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
@@ -12,9 +11,7 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
-import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
-import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -132,6 +129,7 @@ class _EmptyTournamentRepository implements ITournamentRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
+
 class _EmptyTournamentManagementRepository
     implements TournamentManagementRepository {
   @override
@@ -150,7 +148,6 @@ class _EmptyTournamentManagementRepository
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-
 class _IdleLiteManagementNotifier extends LiteManagementNotifier {
   @override
   Future<void> init(String tournamentId) async {}
@@ -160,7 +157,6 @@ Future<void> _openSettings(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.settings_outlined));
   await tester.pumpAndSettle();
 }
-
 
 void main() {
   testWidgets('overview tournament title opens its general editor', (
@@ -204,22 +200,13 @@ void main() {
         'tournament-overview-description-edit',
         l10n.tournamentManagementGeneral,
       ),
-      (
-        'tournament-overview-timeline-edit',
-        l10n.tournamentManagementGeneral,
-      ),
-      (
-        'tournament-overview-banner-edit',
-        l10n.tournamentManagementBranding,
-      ),
+      ('tournament-overview-timeline-edit', l10n.tournamentManagementGeneral),
+      ('tournament-overview-banner-edit', l10n.tournamentManagementBranding),
       (
         'tournament-overview-athletes-edit',
         l10n.tournamentManagementRegistration,
       ),
-      (
-        'tournament-overview-location-edit',
-        l10n.tournamentManagementVenues,
-      ),
+      ('tournament-overview-location-edit', l10n.tournamentManagementVenues),
       ('tournament-overview-entry-fee-edit', l10n.tournamentManagementFinance),
     ];
 

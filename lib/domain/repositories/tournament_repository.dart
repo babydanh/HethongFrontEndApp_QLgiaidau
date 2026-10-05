@@ -11,7 +11,10 @@ abstract class ITournamentRepository {
   Future<Tournament?> getByInviteCode(String code);
   Future<List<TournamentSponsor>> getPublicSponsors(String tournamentId);
 
-  Future<void> joinLite(String inviteCode);
+  /// Joins a Lite tournament from its invite code. [divisionId] must be sent
+  /// whenever the caller knows which division the player picked; the server
+  /// only falls back to the sole active division when the id is omitted.
+  Future<void> joinLite(String inviteCode, {String? divisionId});
   Future<List<OrganizerOpsParticipant>> getPublicParticipants(
     String tournamentId,
   );

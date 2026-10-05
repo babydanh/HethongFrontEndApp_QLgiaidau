@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
-import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
@@ -247,17 +246,6 @@ class _TournamentManagementHubScreenState
       },
     );
   }
-
-
-  Widget _buildManagementSection(
-    Tournament tournament,
-    TournamentManagementSection section,
-  ) => TournamentManagementSectionScreen(
-    tournament: tournament,
-    section: section,
-    opsWorkspaceRoute: widget.opsWorkspaceRoute,
-    actionRouteBase: widget.actionRouteBase,
-  );
 
   Widget _buildSettingsNavigation(
     BuildContext context, {
@@ -721,8 +709,7 @@ class _TournamentManagementOverview extends ConsumerWidget {
         return '${AppConstants.appDomain}$url';
       },
       onEditGeneral: () => onEditSection(TournamentManagementSection.general),
-      onEditBranding: () =>
-          onEditSection(TournamentManagementSection.branding),
+      onEditBranding: () => onEditSection(TournamentManagementSection.branding),
       onEditVenues: () => onEditSection(TournamentManagementSection.venues),
       onEditRegistration: () =>
           onEditSection(TournamentManagementSection.registration),

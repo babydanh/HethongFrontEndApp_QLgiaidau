@@ -155,8 +155,7 @@ class _OverviewTabState extends State<OverviewTab> {
     required Widget child,
   }) {
     if (onTap == null) return child;
-    final editLabel =
-        '${AppLocalizations.of(context)!.infoEdit} $sectionLabel';
+    final editLabel = '${AppLocalizations.of(context)!.infoEdit} $sectionLabel';
     return Semantics(
       button: true,
       label: editLabel,
@@ -176,11 +175,7 @@ class _OverviewTabState extends State<OverviewTab> {
       ? const SizedBox.shrink()
       : const Padding(
           padding: EdgeInsets.only(left: 6),
-          child: Icon(
-            Icons.edit_outlined,
-            size: 14,
-            color: AppTheme.primary,
-          ),
+          child: Icon(Icons.edit_outlined, size: 14, color: AppTheme.primary),
         );
 
   @override
@@ -448,7 +443,7 @@ class _OverviewTabState extends State<OverviewTab> {
                         ),
                       ),
                     ),
-                    ],
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Divider(height: 1, color: colors.border),
@@ -687,12 +682,17 @@ class _OverviewTabState extends State<OverviewTab> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          '$_countdownLabel: ${_formatDuration(_remainingTime)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: colors.error,
+                        Flexible(
+                          child: Text(
+                            '$_countdownLabel: ${_formatDuration(_remainingTime)}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: colors.error,
+                            ),
                           ),
                         ),
                       ],
@@ -740,9 +740,7 @@ class _OverviewTabState extends State<OverviewTab> {
                         Row(
                           children: [
                             Expanded(
-                              child: _buildSectionHeader(
-                                'LỘ TRÌNH GIẢI ĐẤU',
-                              ),
+                              child: _buildSectionHeader('LỘ TRÌNH GIẢI ĐẤU'),
                             ),
                             _editIndicator(widget.onEditGeneral),
                           ],

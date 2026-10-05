@@ -2131,6 +2131,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerTypeMixedDoubles => 'Mixed Doubles';
 
   @override
+  String get registerTypeOpenSingles => 'Open singles';
+
+  @override
+  String get registerTypeOpenDoubles => 'Open doubles';
+
+  @override
   String get registerTypeDefault => 'Category';
 
   @override
@@ -7974,6 +7980,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCategoryMixedDoubles => 'Mixed doubles';
+
+  @override
+  String get tournamentCategoryOpenSingles => 'Open singles';
+
+  @override
+  String get tournamentCategoryOpenDoubles => 'Open doubles';
 
   @override
   String get tournamentCategoryFootballMen => 'Men\'s Football';

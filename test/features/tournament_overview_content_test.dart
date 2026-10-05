@@ -176,6 +176,36 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('long countdown wraps without overflow on phone width', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authProvider.overrideWith(_UnauthenticatedNotifier.new)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: OverviewTab(
+              tournament: _multiDivisionTournament(),
+              teamCount: 0,
+              resolveImageUrl: (_) => '',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('Hạn đăng ký còn:'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('sport card is centered and location appears below', (
     tester,
   ) async {

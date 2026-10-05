@@ -2124,6 +2124,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get registerTypeMixedDoubles => 'Đôi nam nữ';
 
   @override
+  String get registerTypeOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get registerTypeOpenDoubles => 'Đôi linh hoạt';
+
+  @override
   String get registerTypeDefault => 'Nội dung';
 
   @override
@@ -7956,6 +7962,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCategoryMixedDoubles => 'Đôi nam nữ';
+
+  @override
+  String get tournamentCategoryOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get tournamentCategoryOpenDoubles => 'Đôi linh hoạt';
 
   @override
   String get tournamentCategoryFootballMen => 'Bóng đá Nam';

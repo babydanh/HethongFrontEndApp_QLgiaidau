@@ -72,6 +72,17 @@ void main() {
       expect(division.participantCount, 12);
     });
 
+    test('retains division status from the registration API', () {
+      final division = TournamentDivisionOption.fromJson({
+        'id': 'division-cancelled',
+        'name': 'Cancelled doubles',
+        'matchType': 'DOUBLES',
+        'status': 'CANCELLED',
+      });
+
+      expect(division.status, 'CANCELLED');
+    });
+
     test('trường rỗng/thiếu vẫn parse an toàn', () {
       final division = TournamentDivisionOption.fromJson({
         'id': 'div-2',

@@ -2,6 +2,7 @@ class TournamentDivisionOption {
   const TournamentDivisionOption({
     required this.id,
     required this.name,
+    this.status,
     this.genderRestriction,
     this.matchType,
     this.categoryId,
@@ -18,6 +19,7 @@ class TournamentDivisionOption {
 
   final String id;
   final String name;
+  final String? status;
   final String? genderRestriction; // 'MALE' | 'FEMALE' | 'MIXED'
   final String? matchType; // 'SINGLES' | 'DOUBLES' | 'MIXED_DOUBLES'
   final String? categoryId;
@@ -120,6 +122,7 @@ class TournamentDivisionOption {
     return TournamentDivisionOption(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
+      status: json['status']?.toString(),
       genderRestriction:
           (json['genderRestriction'] ?? json['gender_restriction'])?.toString(),
       matchType: (json['matchType'] ?? json['match_type'])?.toString(),

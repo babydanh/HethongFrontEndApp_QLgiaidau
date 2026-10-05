@@ -4094,6 +4094,18 @@ abstract class AppLocalizations {
   /// **'Đôi nam nữ'**
   String get registerTypeMixedDoubles;
 
+  /// No description provided for @registerTypeOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get registerTypeOpenSingles;
+
+  /// No description provided for @registerTypeOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get registerTypeOpenDoubles;
+
   /// No description provided for @registerTypeDefault.
   ///
   /// In vi, this message translates to:
@@ -14791,6 +14803,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đôi nam nữ'**
   String get tournamentCategoryMixedDoubles;
+
+  /// No description provided for @tournamentCategoryOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get tournamentCategoryOpenSingles;
+
+  /// No description provided for @tournamentCategoryOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get tournamentCategoryOpenDoubles;
 
   /// No description provided for @tournamentCategoryFootballMen.
   ///

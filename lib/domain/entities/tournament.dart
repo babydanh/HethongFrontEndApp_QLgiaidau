@@ -10,6 +10,7 @@ class Tournament {
   final String name;
   final String sport;
   final String format;
+  final String? genderRestriction;
   final String? category;
   final String bracketType;
   final String status;
@@ -88,6 +89,7 @@ class Tournament {
     required this.name,
     required this.sport,
     required this.format,
+    this.genderRestriction,
     this.category,
     required this.bracketType,
     this.status = 'draft',
@@ -356,6 +358,7 @@ class Tournament {
       name: json['name'] ?? '',
       sport: sportVal,
       format: formatVal,
+      genderRestriction: json['genderRestriction']?.toString(),
       category: parsedCategory,
       bracketType: bracketTypeVal,
       status: mappedStatus,
@@ -487,6 +490,7 @@ class Tournament {
       'name': name,
       'sport': sport,
       'format': format,
+      if (genderRestriction != null) 'genderRestriction': genderRestriction,
       if (category != null) 'category': category,
       'bracketType': bracketType,
       'tournamentConfig': {
@@ -565,6 +569,7 @@ class Tournament {
     String? name,
     String? sport,
     String? format,
+    String? genderRestriction,
     String? category,
     String? bracketType,
     String? status,
@@ -621,6 +626,7 @@ class Tournament {
       name: name ?? this.name,
       sport: sport ?? this.sport,
       format: format ?? this.format,
+      genderRestriction: genderRestriction ?? this.genderRestriction,
       category: category ?? this.category,
       bracketType: bracketType ?? this.bracketType,
       status: status ?? this.status,
@@ -686,6 +692,7 @@ class TournamentDivision {
   final String? bracketType;
   final int? roundRobinLegs;
   final String? genderRestriction;
+  final String? status;
   final int? maxParticipants;
   final int participantCount;
 
@@ -696,6 +703,7 @@ class TournamentDivision {
     this.bracketType,
     this.roundRobinLegs,
     this.genderRestriction,
+    this.status,
     this.maxParticipants,
     this.participantCount = 0,
   });
@@ -742,6 +750,7 @@ class TournamentDivision {
       genderRestriction:
           json['genderRestriction']?.toString() ??
           json['gender_restriction']?.toString(),
+      status: json['status']?.toString(),
       maxParticipants: json['maxParticipants'] != null
           ? int.tryParse(json['maxParticipants'].toString())
           : null,
@@ -756,6 +765,7 @@ class TournamentDivision {
     String? bracketType,
     int? roundRobinLegs,
     String? genderRestriction,
+    String? status,
     int? maxParticipants,
     int? participantCount,
   }) {
@@ -766,6 +776,7 @@ class TournamentDivision {
       bracketType: bracketType ?? this.bracketType,
       roundRobinLegs: roundRobinLegs ?? this.roundRobinLegs,
       genderRestriction: genderRestriction ?? this.genderRestriction,
+      status: status ?? this.status,
       maxParticipants: maxParticipants ?? this.maxParticipants,
       participantCount: participantCount ?? this.participantCount,
     );

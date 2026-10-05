@@ -14,6 +14,9 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/features/register/utils/division_gender_restriction.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
+import 'package:app_quanly_giaidau/features/register/utils/division_selection.dart';
 
 final _divisionsProvider =
     FutureProvider.family<List<TournamentDivisionOption>, String>((
@@ -372,11 +375,13 @@ class _TournamentRegisterScreenState
         .asData
         ?.value;
     if (divisions == null || _selectedDiv == null) return null;
-    try {
-      return divisions.firstWhere((d) => d.id == _selectedDiv);
-    } catch (_) {
-      return null;
-    }
+    final division = divisions
+        .where((candidate) => candidate.id == _selectedDiv)
+        .firstOrNull;
+    if (division == null) return null;
+    return _alreadyRegistered || isRegistrationDivisionActive(division)
+        ? division
+        : null;
   }
 
   /// Hạn chót hiệu lực của nội dung đang chọn.
@@ -388,8 +393,8 @@ class _TournamentRegisterScreenState
   ///
   /// `effectiveRegistrationEndDate` là mốc backend đã tính sẵn; null nghĩa là
   /// không đặt hạn và server cũng không chặn theo ngày, nên không được coi null
-  /// là đã hết hạn. Chưa chọn nội dung thì server tự chọn, client chỉ xét được
-  /// mức cấp giải.
+  /// là đã hết hạn. Khi chưa chọn division, chỉ hạn cấp giải được áp dụng; nếu
+  /// các division đã lưu chưa có lựa chọn hợp lệ thì đăng ký sẽ bị chặn.
   DateTime? get _effectiveRegistrationDeadline {
     final tournament = ref.read(tournamentProvider(widget.tournamentId)).value;
     return _selectedDivision?.effectiveRegistrationEndDate ??
@@ -401,28 +406,22 @@ class _TournamentRegisterScreenState
     return deadline != null && DateTime.now().isAfter(deadline);
   }
 
-  /// Nội dung mà lần bấm đăng ký kế tiếp sẽ thực sự gửi lên server.
+  /// Nội dung mà lần đăng ký mới sẽ nhắm tới.
   ///
-  /// `_register()` không bắt buộc chọn nội dung: khi giải chỉ có MỘT nội dung
-  /// thì nó tự lấy `divisions.first`. Gate sức chứa phải bám đúng nhánh này —
-  /// nếu chỉ nhìn `_selectedDivision` thì trước khi `addPostFrameCallback` tự
-  /// chọn chạy, đã có một frame vẽ ra với nút bấm được dù nội dung đã đầy suất.
-  ///
-  /// Trả null khi chưa chọn và có nhiều nội dung: lúc đó server tự chọn, client
-  /// không biết sức chứa nội dung nào nên không chặn.
+  /// Chỉ dùng lựa chọn hiện tại nếu division còn hoạt động; tự chọn chỉ khi có
+  /// đúng một division hoạt động. Nếu có nhiều, caller phải chọn rõ ràng.
   TournamentDivisionOption? get _claimDivision {
     final divisions = ref
         .read(_divisionsProvider(widget.tournamentId))
         .asData
         ?.value;
     if (divisions == null) return null;
-    final id = _selectedDiv ??
-        (divisions.length == 1 ? divisions.first.id : null);
+    final id = resolveRegistrationDivisionId(
+      divisions,
+      preferredDivisionId: _selectedDiv,
+    );
     if (id == null) return null;
-    for (final division in divisions) {
-      if (division.id == id) return division;
-    }
-    return null;
+    return divisions.where((division) => division.id == id).firstOrNull;
   }
 
   /// Nội dung sắp đăng ký đã đầy suất đội.
@@ -557,6 +556,35 @@ class _TournamentRegisterScreenState
     if (!_formKey.currentState!.validate()) return;
     final userAsync = ref.read(userProfileProvider);
     final user = userAsync.asData?.value;
+    final tournament = ref
+        .read(tournamentProvider(widget.tournamentId))
+        .asData
+        ?.value;
+    final divisions = ref.read(_divisionsProvider(widget.tournamentId)).value;
+    final divisionId = divisions == null
+        ? _selectedDiv
+        : resolveRegistrationDivisionId(
+            divisions,
+            preferredDivisionId: _selectedDiv,
+          );
+    final hasPersistedDivisions =
+        divisions?.any(
+          (division) => persistedTournamentDivisionId(division.id) != null,
+        ) ??
+        false;
+    if (divisionId == null && (divisions == null || hasPersistedDivisions)) {
+      setState(() => _divisionError = l10n.registerSelectDivision);
+      return;
+    }
+    final selectedDivision = divisions
+        ?.where((division) => division.id == divisionId)
+        .firstOrNull;
+    // Đã có ID nội dung nhưng danh sách chưa tải xong thì không suy đoán: để
+    // server từ chối nếu nội dung đó giới hạn giới tính, thay vì chặn nhầm
+    // người chơi của nội dung linh hoạt.
+    final genderRestriction = selectedDivision == null
+        ? (divisionId == null ? tournament?.genderRestriction : null)
+        : selectedDivision.genderRestriction;
     final missingFields = <String>[];
     if (user?.fullName == null || user!.fullName!.trim().isEmpty) {
       missingFields.add(l10n.registerMissingFullName);
@@ -564,7 +592,9 @@ class _TournamentRegisterScreenState
     if (user?.phoneNumber == null || user!.phoneNumber!.trim().isEmpty) {
       missingFields.add(l10n.registerMissingPhone);
     }
-    if (user?.gender == null || user!.gender!.trim().isEmpty) {
+    final profileGender = user?.gender?.trim();
+    if (requiresGenderProfileForDivision(genderRestriction) &&
+        (profileGender == null || profileGender.isEmpty)) {
       missingFields.add(l10n.registerMissingGender);
     }
 
@@ -594,6 +624,14 @@ class _TournamentRegisterScreenState
       }
       return;
     }
+    if (tournament?.isRanked == true && !_rankingConsent) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.registerRankingConsentRequired)),
+        );
+      }
+      return;
+    }
     if (_genderError != null) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -610,28 +648,7 @@ class _TournamentRegisterScreenState
       }
       return;
     }
-    final tournament = ref
-        .read(tournamentProvider(widget.tournamentId))
-        .asData
-        ?.value;
-    if (tournament?.isRanked == true && !_rankingConsent) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.registerRankingConsentRequired)),
-        );
-      }
-      return;
-    }
-    final divisions = ref.read(_divisionsProvider(widget.tournamentId)).value;
-    final divisionId =
-        _selectedDiv ??
-        (divisions != null && divisions.length == 1
-            ? divisions.first.id
-            : null);
-    if (divisions != null && divisions.length > 1 && divisionId == null) {
-      setState(() => _divisionError = l10n.registerSelectDivision);
-      return;
-    }
+
     if (tournament != null) {
       final customError = _validateCustomResponses(tournament);
       if (customError != null) {
@@ -776,13 +793,21 @@ class _TournamentRegisterScreenState
   }
 
   String _divisionTypeLabel(TournamentDivisionOption d) {
+    final matchType = _normalizedMatchType(d.matchType);
+    final isOpen = !requiresGenderProfileForDivision(d.genderRestriction);
+    if (isOpen && matchType == 'SINGLES') {
+      return l10n.registerTypeOpenSingles;
+    }
+    if (isOpen && matchType == 'DOUBLES') {
+      return l10n.registerTypeOpenDoubles;
+    }
     final gender = switch (_normalizedGender(d.genderRestriction)) {
       'MALE' => l10n.registerDivMale,
       'FEMALE' => l10n.registerDivFemale,
       'MIXED' => l10n.registerDivMixed,
       _ => '',
     };
-    final type = switch (_normalizedMatchType(d.matchType)) {
+    final type = switch (matchType) {
       'SINGLES' => l10n.registerTypeSingles,
       'DOUBLES' => l10n.registerTypeDoubles,
       'MIXED_DOUBLES' => l10n.registerTypeMixedDoubles,
@@ -792,19 +817,8 @@ class _TournamentRegisterScreenState
     return '$type $gender';
   }
 
-  String? _normalizedGender(String? value) {
-    final normalized = value
-        ?.trim()
-        .toUpperCase()
-        .replaceAll('-', '_')
-        .replaceAll(' ', '_');
-    return switch (normalized) {
-      'MALE' || 'MEN' || 'NAM' => 'MALE',
-      'FEMALE' || 'WOMEN' || 'NU' || 'NỮ' => 'FEMALE',
-      'MIXED' || 'MIXED_GENDER' || 'NAM_NU' => 'MIXED',
-      _ => null,
-    };
-  }
+  String? _normalizedGender(String? value) =>
+      normalizeDivisionGenderRestriction(value);
 
   String? _normalizedMatchType(String? value) {
     final normalized = value
@@ -1826,11 +1840,16 @@ class _TournamentRegisterScreenState
                 const SizedBox(height: 16),
                 divAsync.when(
                   data: (divs) {
-                    if (divs.isEmpty) return const SizedBox.shrink();
-                    if (divs.length == 1 && _selectedDiv == null) {
+                    final activeDivs = activeRegistrationDivisions(divs);
+                    if (activeDivs.isEmpty) return const SizedBox.shrink();
+                    if (!_alreadyRegistered &&
+                        activeDivs.length == 1 &&
+                        activeDivs.first.id != _selectedDiv) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted && _selectedDiv == null) {
-                          _onDivisionSelected(divs.first.id, divs);
+                        if (mounted &&
+                            !_alreadyRegistered &&
+                            _selectedDiv != activeDivs.first.id) {
+                          _onDivisionSelected(activeDivs.first.id, activeDivs);
                         }
                       });
                     }
@@ -1846,7 +1865,7 @@ class _TournamentRegisterScreenState
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...divs.map((d) {
+                        ...activeDivs.map((d) {
                           final id = d.id;
                           final name = d.name;
                           final sel = _selectedDiv == id;
@@ -1859,7 +1878,7 @@ class _TournamentRegisterScreenState
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: GestureDetector(
-                              onTap: () => _onDivisionSelected(id, divs),
+                              onTap: () => _onDivisionSelected(id, activeDivs),
                               child: Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(

@@ -999,11 +999,22 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   /// Adds a real member from the tournament's club roster. The backend owns
   /// membership, capacity, duplicate and lifecycle validation; this method
   /// only refreshes the canonical participant snapshot after success.
-  Future<void> addClubMember(String tournamentId, String userId) async {
+  ///
+  /// [divisionId] must be the division the organizer actually selected. The
+  /// server resolves an omitted division to the only active one and rejects a
+  /// tournament that has several, so an ambiguous value is never guessed here.
+  Future<void> addClubMember(
+    String tournamentId,
+    String userId, {
+    String? divisionId,
+  }) async {
+    final body = <String, dynamic>{'userId': userId};
+    final division = divisionId?.trim();
+    if (division != null && division.isNotEmpty) body['divisionId'] = division;
     try {
       await _dio.post(
         '/tournaments/lite/$tournamentId/club-members',
-        data: {'userId': userId},
+        data: body,
       );
       _log.success('Đã thêm thành viên CLB vào giải: $userId');
       await _fetchParticipants(tournamentId);

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
@@ -420,7 +421,7 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
-  Future<void> joinLite(String inviteCode) async {
+  Future<void> joinLite(String inviteCode, {String? divisionId}) async {
     final code = inviteCode.trim();
     if (code.isEmpty) {
       throw FormatException(
@@ -429,7 +430,13 @@ class ApiTournamentRepository implements ITournamentRepository {
         ).tournamentInviteCodeInvalid,
       );
     }
-    await _dioClient.dio.post('/tournaments/lite/join/$code');
+    final selectedDivisionId = persistedTournamentDivisionId(divisionId);
+    await _dioClient.dio.post(
+      '/tournaments/lite/join/$code',
+      data: selectedDivisionId == null
+          ? null
+          : {'divisionId': selectedDivisionId},
+    );
   }
 
   @override
