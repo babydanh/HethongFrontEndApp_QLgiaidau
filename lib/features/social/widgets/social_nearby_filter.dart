@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/footer_button.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
+import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
@@ -250,28 +251,34 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
     }
     if (!mounted || pin == null) return;
     setState(() => _searching = true);
-    String resolvedAddress;
+    // Không fallback sang chuỗi toạ độ: địa điểm lưu lại và gửi lên phải là
+    // địa chỉ đọc được. Điểm ghim nằm ngoài vùng phường đã nạp polygon thì báo
+    // lỗi để người dùng chọn lại hoặc tìm theo tên.
+    SocialPlace? resolved;
+    String? failure;
     try {
-      final place = await ref
+      resolved = await ref
           .read(socialLocationRepositoryProvider)
           .reverseLookup(pin);
-      resolvedAddress = place.formattedAddress.isNotEmpty
-          ? place.formattedAddress
-          : '${pin.latitude.toStringAsFixed(6)}, ${pin.longitude.toStringAsFixed(6)}';
-    } catch (_) {
-      resolvedAddress =
-          '${pin.latitude.toStringAsFixed(6)}, ${pin.longitude.toStringAsFixed(6)}';
+    } on LocationNetworkFailure {
+      failure = 'Không tải được địa chỉ. Kiểm tra mạng rồi thử lại.';
+    } on SocialLocationFailure {
+      failure =
+          'Chưa xác định được địa chỉ tại điểm này. Hãy chọn vị trí khác.';
     }
     if (!mounted) return;
+    final place = resolved;
+    if (place == null || !place.hasReadableAddress) {
+      setState(() {
+        _searching = false;
+        _error = failure ?? 'Chưa xác định được địa chỉ tại điểm này.';
+      });
+      return;
+    }
     setState(() {
       _searching = false;
-      _candidate = SocialPlace(
-        name: 'Vị trí trên bản đồ',
-        formattedAddress: resolvedAddress,
-        latitude: pin.latitude,
-        longitude: pin.longitude,
-      );
-      _placeSearch.text = _candidate!.formattedAddress;
+      _candidate = place;
+      _placeSearch.text = place.formattedAddress;
       _error = null;
     });
   }
@@ -279,7 +286,14 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
   Future<void> _savePlace() async {
     final label = _label.text.trim();
     final place = _candidate;
-    if (label.isEmpty || place == null || !place.hasPin) return;
+    // Không lưu địa điểm không có địa chỉ đọc được: nó sẽ hiện dòng trống (hoặc
+    // toạ độ) dưới tên ở danh sách và trong form tạo buổi.
+    if (label.isEmpty ||
+        place == null ||
+        !place.hasPin ||
+        !place.hasReadableAddress) {
+      return;
+    }
     setState(() => _saving = true);
     final saved = SocialPlace(
       name: label,
@@ -335,8 +349,7 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
   }
 
   void _confirm() {
-    if (_isCurrentLocation &&
-        ref.read(userLocationProvider).hasPosition) {
+    if (_isCurrentLocation && ref.read(userLocationProvider).hasPosition) {
       _confirmCurrentLocation();
     } else {
       _confirmSavedPlace();
@@ -419,33 +432,37 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
     );
   }
 
-  Widget _heading(String title, VoidCallback onBack, {bool isClose = false}) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-    child: Row(
-      children: [
-        IconButton(
-          onPressed: onBack,
-          icon: Icon(isClose ? Icons.close : Icons.arrow_back),
+  Widget _heading(String title, VoidCallback onBack, {bool isClose = false}) =>
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: onBack,
+              icon: Icon(isClose ? Icons.close : Icons.arrow_back),
+            ),
+            Expanded(
+              child: Text(
+                title,
+                textAlign: isClose ? TextAlign.center : TextAlign.left,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            if (isClose) const SizedBox(width: 48),
+          ],
         ),
-        Expanded(
-          child: Text(
-            title,
-            textAlign: isClose ? TextAlign.center : TextAlign.left,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-          ),
-        ),
-        if (isClose) const SizedBox(width: 48),
-      ],
-    ),
-  );
+      );
 
   Widget _placeTile(SocialPlace place, {bool selectable = false}) => Card(
     margin: const EdgeInsets.only(bottom: 10),
     child: ListTile(
       onTap: () => setState(() {
-      _selected = place;
-      _isCurrentLocation = false;
-    }),
+        _selected = place;
+        _isCurrentLocation = false;
+      }),
       title: Text(
         place.name,
         maxLines: 1,
@@ -522,10 +539,15 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.primary,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusSmall,
+                        ),
                       ),
                       child: Text(
                         '${_radius.round()}km',
@@ -601,12 +623,17 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
                   onTap: _useCurrentLocation,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: _isCurrentLocation
                           ? AppTheme.primary.withValues(alpha: 0.12)
                           : colors.chipBackground,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
                       border: _isCurrentLocation
                           ? Border.all(color: AppTheme.primary, width: 1.5)
                           : null,
@@ -615,7 +642,9 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
                       children: [
                         Icon(
                           Icons.my_location_rounded,
-                          color: _isCurrentLocation ? AppTheme.primary : colors.textSecondary,
+                          color: _isCurrentLocation
+                              ? AppTheme.primary
+                              : colors.textSecondary,
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -623,13 +652,21 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
                           'Vị trí hiện tại',
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight: _isCurrentLocation ? FontWeight.w700 : FontWeight.w600,
-                            color: _isCurrentLocation ? AppTheme.primary : colors.textPrimary,
+                            fontWeight: _isCurrentLocation
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            color: _isCurrentLocation
+                                ? AppTheme.primary
+                                : colors.textPrimary,
                           ),
                         ),
                         if (_isCurrentLocation) ...[
                           const Spacer(),
-                          Icon(Icons.check_circle, color: AppTheme.primary, size: 20),
+                          Icon(
+                            Icons.check_circle,
+                            color: AppTheme.primary,
+                            size: 20,
+                          ),
                         ],
                       ],
                     ),
@@ -658,10 +695,7 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    _error!,
-                    style: TextStyle(color: colors.error),
-                  ),
+                  child: Text(_error!, style: TextStyle(color: colors.error)),
                 ),
             ],
           ),

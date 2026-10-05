@@ -79,9 +79,49 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
     throw const UnresolvableLocation();
   }
 
+  /// Điểm ghim không có geocode provider nào (endpoint `/social-locations/reverse`
+  /// đã bị backend gỡ với 410). Địa chỉ lấy từ `/regions/resolve` — phường bao
+  /// phủ điểm — nên là địa chỉ hành chính, không phải số nhà/số đường.
   @override
   Future<SocialPlace> reverseLookup(LatLng pin) async {
-    throw const UnresolvableLocation();
+    try {
+      final response = await _dio.get<dynamic>(
+        '/regions/resolve',
+        queryParameters: {
+          'lat': pin.latitude.toString(),
+          'lng': pin.longitude.toString(),
+        },
+        options: Options(extra: {'noCache': true}),
+      );
+      final envelope = response.data;
+      final raw = envelope is Map ? envelope['data'] ?? envelope : envelope;
+      if (raw is! Map) throw const UnresolvableLocation();
+      return _region(raw, pin);
+    } on DioException catch (error) {
+      throw _failure(error);
+    }
+  }
+
+  /// `GET /regions/resolve`: `wardName` + `provinceName` là nguồn địa chỉ duy
+  /// nhất cho điểm ghim. `centerLat/centerLng` là tâm phường nên bỏ qua, giữ
+  /// đúng toạ độ người dùng chọn.
+  SocialPlace _region(Map raw, LatLng pin) {
+    final wardName = raw['wardName']?.toString().trim() ?? '';
+    final provinceName = raw['provinceName']?.toString().trim() ?? '';
+    final address = <String>[
+      if (wardName.isNotEmpty) wardName,
+      if (provinceName.isNotEmpty && provinceName != wardName) provinceName,
+    ].join(', ');
+    if (address.isEmpty) throw const UnresolvableLocation();
+    return SocialPlace(
+      name: wardName.isNotEmpty ? wardName : provinceName,
+      formattedAddress: address,
+      latitude: pin.latitude,
+      longitude: pin.longitude,
+      provinceCode: raw['provinceCode']?.toString(),
+      wardCode: raw['wardCode']?.toString(),
+      regionEstimated: raw['isEstimated'] == true,
+    );
   }
 
   SocialPlace _venue(Map raw) {
