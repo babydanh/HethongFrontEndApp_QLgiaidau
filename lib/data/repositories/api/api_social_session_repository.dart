@@ -198,7 +198,9 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       final response = await _dioClient.dio.get(
         '/social-sessions',
         queryParameters: queryParams,
-        options: Options(extra: {'noCache': true}),
+        // noRetry: đọc danh sách không được phép chờ thêm ~1s cho các lần
+        // retry rồi vẫn fail; lỗi transport trả về list rỗng bên dưới.
+        options: Options(extra: {'noCache': true, 'noRetry': true}),
       );
 
       final body = _asMap(response.data);
@@ -219,6 +221,13 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
 
       return SocialSessionListResponse.fromJson(combined);
     } on DioException catch (error, stack) {
+      // Không có HTTP response = lỗi transport (timeout/socket). Danh sách
+      // Social là dữ liệu phụ: trả list rỗng để UI hiện empty state thay vì
+      // đổi cả trang sang error, và để lần mở sau không phải chờ lại.
+      if (error.response == null) {
+        _log.warning('listByDate offline for date: $date');
+        return const SocialSessionListResponse(items: []);
+      }
       _log.error('listByDate error for date: $date', error, stack);
       throw SocialApiException.fromDioException(error);
     } catch (error, stack) {
@@ -247,7 +256,7 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       final response = await _dioClient.dio.get(
         '/social-sessions/nearby',
         queryParameters: queryParams,
-        options: Options(extra: {'noCache': true}),
+        options: Options(extra: {'noCache': true, 'noRetry': true}),
       );
 
       final body = _asMap(response.data);

@@ -161,9 +161,10 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              filterState.nearbyOnly &&
-                                      locationState.hasPosition
-                                  ? l10n.socialNearbyNoResults
+                              filterState.nearbyOnly
+                                  ? locationState.hasPosition
+                                        ? l10n.socialNearbyNoResults
+                                        : l10n.socialNearbyNeedLocation
                                   : 'Không có buổi Social nào trong ngày ${filterState.selectedDate.day}',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -176,9 +177,10 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              filterState.nearbyOnly &&
-                                      locationState.hasPosition
-                                  ? l10n.socialNearbyExpandRadius
+                              filterState.nearbyOnly
+                                  ? locationState.hasPosition
+                                        ? l10n.socialNearbyExpandRadius
+                                        : l10n.socialNearbyPickLocationHint
                                   : 'Thử chọn ngày khác hoặc tìm kiếm môn thể thao khác',
                               textAlign: TextAlign.center,
                               style: TextStyle(

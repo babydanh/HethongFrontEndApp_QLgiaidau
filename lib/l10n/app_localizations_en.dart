@@ -14322,6 +14322,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Inactive sport';
 
   @override
+  String get socialEditSportLocked =>
+      'Sport cannot be changed when editing a session';
+
+  @override
   String get socialRegionProvinceFieldLabel => 'Province / City';
 
   @override
@@ -14408,6 +14412,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get socialNearbyExpandRadius =>
       'Try expanding the radius or choosing another location';
+
+  @override
+  String get socialNearbyNeedLocation =>
+      'No location yet to filter sessions near you';
+
+  @override
+  String get socialNearbyPickLocationHint =>
+      'Tap the \"Near me\" chip to use your current location or pin one on the map';
 
   @override
   String get socialNearbyLoadMore => 'Load more';

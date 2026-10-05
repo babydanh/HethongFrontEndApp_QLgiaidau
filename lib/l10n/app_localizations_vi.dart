@@ -14273,6 +14273,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Môn đã ngừng hoạt động';
 
   @override
+  String get socialEditSportLocked => 'Không đổi môn khi sửa kèo';
+
+  @override
   String get socialRegionProvinceFieldLabel => 'Tỉnh / thành';
 
   @override
@@ -14360,6 +14363,13 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get socialNearbyExpandRadius =>
       'Thử mở rộng bán kính hoặc chọn vị trí khác';
+
+  @override
+  String get socialNearbyNeedLocation => 'Chưa có vị trí để lọc kèo gần bạn';
+
+  @override
+  String get socialNearbyPickLocationHint =>
+      'Chạm vào chip \"Gần bạn\" để chọn vị trí hiện tại hoặc ghim trên bản đồ';
 
   @override
   String get socialNearbyLoadMore => 'Xem thêm';

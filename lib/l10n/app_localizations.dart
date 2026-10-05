@@ -25948,6 +25948,12 @@ abstract class AppLocalizations {
   /// **'Môn đã ngừng hoạt động'**
   String get socialLegacyInactiveSport;
 
+  /// No description provided for @socialEditSportLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đổi môn khi sửa kèo'**
+  String get socialEditSportLocked;
+
   /// No description provided for @socialRegionProvinceFieldLabel.
   ///
   /// In vi, this message translates to:
@@ -26103,6 +26109,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thử mở rộng bán kính hoặc chọn vị trí khác'**
   String get socialNearbyExpandRadius;
+
+  /// No description provided for @socialNearbyNeedLocation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có vị trí để lọc kèo gần bạn'**
+  String get socialNearbyNeedLocation;
+
+  /// No description provided for @socialNearbyPickLocationHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm vào chip \"Gần bạn\" để chọn vị trí hiện tại hoặc ghim trên bản đồ'**
+  String get socialNearbyPickLocationHint;
 
   /// No description provided for @socialNearbyLoadMore.
   ///

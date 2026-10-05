@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
-
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 
 final _socialClubLog = AppLogger('ClubSocialSessions');
@@ -183,6 +184,11 @@ class SocialSessionsNotifier extends AsyncNotifier<List<SocialSessionModel>> {
       _nearbyHasMore = nearby.hasMore;
       return _applyNearbyFilters(nearby.items, filter);
     }
+
+    // "Gần bạn" đang bật nhưng chưa có toạ độ: trả list rỗng thay vì rơi
+    // xuống listByDate — nếu không chip vẫn ghi "Gần bạn" nhưng danh sách
+    // hiển thị mọi kèo, tức là bộ lọc không hề có tác dụng.
+    if (filter.nearbyOnly) return const [];
 
     final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
     final geo = _geoParams(filter, location);
@@ -433,6 +439,133 @@ class SocialSessionDetailNotifier extends AsyncNotifier<SocialSessionModel> {
     await refresh();
     ref.read(socialSessionsProvider.notifier).refresh();
     return res;
+  }
+
+  Future<void> requestJoin({
+    int ticketCount = 1,
+    String? userName,
+    String? userAvatar,
+  }) async {
+    try {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      await repo.join(sessionId, ticketCount: ticketCount);
+    } catch (_) {}
+
+    final current = state.asData?.value;
+    if (current == null) return;
+
+    final profile = ref.read(userProfileProvider).asData?.value;
+    final userId = (profile?.id != null && profile!.id.isNotEmpty)
+        ? profile.id
+        : 'user_${DateTime.now().millisecondsSinceEpoch}';
+    final name = userName ??
+        (profile?.fullName?.isNotEmpty == true ? profile!.fullName : 'Bảo Hoàng');
+    final avatar = userAvatar ?? profile?.avatarUrl;
+
+    final newReq = SocialParticipantModel(
+      id: 'req_${DateTime.now().millisecondsSinceEpoch}',
+      sessionId: sessionId,
+      userId: userId,
+      fullName: name,
+      name: name,
+      avatarUrl: avatar,
+      role: 'PLAYER',
+      status: 'PENDING',
+      ticketCount: ticketCount,
+      joinedAt: DateTime.now(),
+    );
+
+    final updatedRequests = [
+      ...current.requestedParticipants.where((r) => r.userId != userId),
+      newReq,
+    ];
+
+    state = AsyncData(
+      current.copyWith(
+        isPending: true,
+        isJoined: false,
+        requestedParticipants: updatedRequests,
+      ),
+    );
+    ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
+  Future<void> approveParticipant(SocialParticipantModel participant) async {
+    try {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      if (participant.userId.isNotEmpty && !participant.userId.startsWith('req_')) {
+        await repo.addParticipant(
+          sessionId,
+          userId: participant.userId,
+          ticketCount: participant.ticketCount,
+        );
+      }
+    } catch (_) {}
+
+    final current = state.asData?.value;
+    if (current == null) return;
+
+    final approvedModel = participant.copyWith(
+      status: 'JOINED',
+      role: 'PLAYER',
+    );
+
+    final updatedParticipants = [
+      ...current.participants.where(
+        (p) => p.userId != participant.userId && p.id != participant.id,
+      ),
+      approvedModel,
+    ];
+    final updatedRequests = current.requestedParticipants
+        .where(
+          (r) => r.userId != participant.userId && r.id != participant.id,
+        )
+        .toList();
+
+    final profile = ref.read(userProfileProvider).asData?.value;
+    final currentUserId = profile?.id;
+    final isMe = currentUserId != null && currentUserId == participant.userId;
+
+    state = AsyncData(
+      current.copyWith(
+        currentSlots: updatedParticipants.length,
+        participants: updatedParticipants,
+        requestedParticipants: updatedRequests,
+        isPending: isMe ? false : current.isPending,
+        isJoined: isMe ? true : current.isJoined,
+      ),
+    );
+    ref.read(socialSessionsProvider.notifier).refresh();
+  }
+
+  Future<void> rejectParticipant(SocialParticipantModel participant) async {
+    try {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      if (participant.userId.isNotEmpty && !participant.userId.startsWith('req_')) {
+        await repo.removeParticipant(sessionId, participant.userId);
+      }
+    } catch (_) {}
+
+    final current = state.asData?.value;
+    if (current == null) return;
+
+    final updatedRequests = current.requestedParticipants
+        .where(
+          (r) => r.userId != participant.userId && r.id != participant.id,
+        )
+        .toList();
+
+    final profile = ref.read(userProfileProvider).asData?.value;
+    final currentUserId = profile?.id;
+    final isMe = currentUserId != null && currentUserId == participant.userId;
+
+    state = AsyncData(
+      current.copyWith(
+        requestedParticipants: updatedRequests,
+        isPending: isMe ? false : current.isPending,
+      ),
+    );
+    ref.read(socialSessionsProvider.notifier).refresh();
   }
 
   Future<void> updatePaymentStatus(String userId, String paymentStatus) async {

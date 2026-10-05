@@ -391,7 +391,9 @@ class SocialSessionModel {
   final String sport;
   final String sportName;
   final List<SocialParticipantModel> participants;
+  final List<SocialParticipantModel> requestedParticipants;
   final bool isJoined;
+  final bool isPending;
   final bool isHost;
   final String? chatRoomId;
 
@@ -433,7 +435,9 @@ class SocialSessionModel {
     required this.sport,
     required this.sportName,
     this.participants = const [],
+    this.requestedParticipants = const [],
     this.isJoined = false,
+    this.isPending = false,
     this.isHost = false,
     this.chatRoomId,
     this.matches = const [],
@@ -570,6 +574,29 @@ class SocialSessionModel {
               .toList()
         : <SocialParticipantModel>[];
 
+    final rawRequests = json['requests'] ??
+        json['requestedParticipants'] ??
+        json['pendingRequests'] ??
+        json['pending_participants'];
+    final requestedList = (rawRequests is List)
+        ? rawRequests
+              .whereType<Map>()
+              .map(
+                (p) => SocialParticipantModel.fromJson(
+                  p.map((k, v) => MapEntry(k.toString(), v)),
+                ),
+              )
+              .toList()
+        : <SocialParticipantModel>[];
+
+    final combinedRequests = [
+      ...requestedList,
+      ...participantsList.where((p) => p.status.toUpperCase() == 'PENDING'),
+    ];
+    final confirmedParticipants = participantsList
+        .where((p) => p.status.toUpperCase() != 'PENDING')
+        .toList();
+
     final rawCommunity = json['community'];
     final communityObj = (rawCommunity is Map)
         ? SocialCommunitySummary.fromJson(
@@ -644,7 +671,7 @@ class SocialSessionModel {
           ? (json['currentSlots'] as num).toInt()
           : ((json['currentParticipants'] is num)
                 ? (json['currentParticipants'] as num).toInt()
-                : participantsList.length),
+                : confirmedParticipants.length),
       feePerSlot: (json['feePerSlot'] is num)
           ? (json['feePerSlot'] as num).toInt()
           : ((json['pricePerSlot'] is num)
@@ -676,8 +703,10 @@ class SocialSessionModel {
       community: communityObj,
       sport: sportKey,
       sportName: sportName,
-      participants: participantsList,
+      participants: confirmedParticipants,
+      requestedParticipants: combinedRequests,
       isJoined: json['isJoined'] == true,
+      isPending: json['isPending'] == true,
       isHost: json['isHost'] == true,
       chatRoomId: json['chatRoomId']?.toString(),
       chatMessages: (json['chatMessages'] ?? json['messages']) is List
@@ -724,7 +753,9 @@ class SocialSessionModel {
     'sport': sport,
     'sportName': sportName,
     'participants': participants.map((p) => p.toJson()).toList(),
+    'requestedParticipants': requestedParticipants.map((p) => p.toJson()).toList(),
     'isJoined': isJoined,
+    'isPending': isPending,
     'isHost': isHost,
     if (chatRoomId != null) 'chatRoomId': chatRoomId,
     if (chatMessages.isNotEmpty)
@@ -765,7 +796,9 @@ class SocialSessionModel {
     String? sport,
     String? sportName,
     List<SocialParticipantModel>? participants,
+    List<SocialParticipantModel>? requestedParticipants,
     bool? isJoined,
+    bool? isPending,
     bool? isHost,
     String? chatRoomId,
     List<SocialMatchModel>? matches,
@@ -805,7 +838,10 @@ class SocialSessionModel {
       sport: sport ?? this.sport,
       sportName: sportName ?? this.sportName,
       participants: participants ?? this.participants,
+      requestedParticipants:
+          requestedParticipants ?? this.requestedParticipants,
       isJoined: isJoined ?? this.isJoined,
+      isPending: isPending ?? this.isPending,
       isHost: isHost ?? this.isHost,
       chatRoomId: chatRoomId ?? this.chatRoomId,
       matches: matches ?? this.matches,

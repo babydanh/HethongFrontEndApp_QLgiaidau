@@ -134,6 +134,22 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
     if (!silent) {
       state = state.copyWith(status: UserLocationStatus.loading);
     }
+    // `getCurrentPosition` chờ có GPS fix mới (thường 3–6s). Đọc
+    // last-known trước để có toạ độ dùng ngay, rồi bản định chính xác sẽ
+    // ghi đè khi tới — giảm thời gian chờ người dùng thấy vị trí.
+    // Đọc im lặng giữ nguyên hành vi cũ (không nháy loading/loading state).
+    final last = silent ? null : await _readLastKnown();
+    if (last != null && generation == _generation) {
+      if (state.status != UserLocationStatus.selected) {
+        state = UserLocationState(
+          status: UserLocationStatus.granted,
+          latitude: last.latitude,
+          longitude: last.longitude,
+          message: 'Đang lấy vị trí chính xác…',
+          referenceSource: 'gps_last_known',
+        );
+      }
+    }
     try {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -178,7 +194,7 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
         );
         return;
       }
-      final last = await Geolocator.getLastKnownPosition();
+      final last = await _readLastKnown();
       if (generation != _generation) return;
       if (last != null) {
         state = UserLocationState(
@@ -198,6 +214,15 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
       clearPosition: true,
       message: 'Không lấy được vị trí — đang hiện danh sách theo giờ.',
     );
+  }
+
+  /// Vị trí cuối OS nhớ (thường < 100ms). `null` khi thiết bị chưa có fix.
+  Future<Position?> _readLastKnown() async {
+    try {
+      return await Geolocator.getLastKnownPosition();
+    } catch (_) {
+      return null;
+    }
   }
 
   void useSelectedPosition(

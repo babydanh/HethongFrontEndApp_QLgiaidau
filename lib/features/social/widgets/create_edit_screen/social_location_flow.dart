@@ -4,8 +4,8 @@ import 'dart:math' as math;
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/social_map_tile_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/footer_button.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
-import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -102,12 +102,6 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   void _retrySearch() {
     final query = _searchController.text.trim();
     if (query.isNotEmpty) unawaited(_search(query, ++_searchGeneration));
-  }
-
-  String _errorMessage(Object error, AppLocalizations l10n) {
-    if (error is LocationNotFound) return l10n.socialPlaceNotFound;
-    if (error is UnresolvableLocation) return l10n.socialPlaceUnresolvable;
-    return l10n.socialPlaceNetworkError;
   }
 
   Future<void> _resolveInput() async {
@@ -340,40 +334,46 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   }
 
   Widget _buildInput(AppLocalizations l10n) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+    return Column(
       children: [
-        TextField(
-          controller: _inputController,
-          maxLines: 3,
-          minLines: 1,
-          keyboardType: TextInputType.streetAddress,
-          onChanged: (_) => setState(() => _inputError = null),
-          decoration: InputDecoration(
-            labelText: l10n.socialPlaceInputHint,
-            border: const OutlineInputBorder(),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            children: [
+              TextField(
+                controller: _inputController,
+                maxLines: 3,
+                minLines: 1,
+                keyboardType: TextInputType.streetAddress,
+                onChanged: (_) => setState(() => _inputError = null),
+                decoration: InputDecoration(
+                  labelText: l10n.socialPlaceInputHint,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              if (_inputError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _inputError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: _resolving ? null : _pickOnMap,
+                  child: Text(l10n.socialPlaceMap),
+                ),
+              ),
+              if (_resolving) Center(child: Text(l10n.socialPlaceResolving)),
+            ],
           ),
         ),
-        if (_inputError != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            _inputError!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
-          ),
-        ],
-        const SizedBox(height: 12),
-        TextButton.icon(
-          onPressed: _resolving ? null : _pickOnMap,
-          icon: const Icon(Icons.map_outlined),
-          label: Text(l10n.socialPlaceMap),
-        ),
-        const SizedBox(height: 18),
-        if (_resolving) Center(child: Text(l10n.socialPlaceResolving)),
-        TextButton(
+        FooterButton(
+          label: l10n.socialPlaceNext,
           onPressed: _inputController.text.trim().isEmpty || _resolving
               ? null
               : _resolveInput,
-          child: Text(l10n.socialPlaceNext),
         ),
       ],
     );

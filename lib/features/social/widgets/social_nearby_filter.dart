@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/footer_button.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
@@ -13,6 +14,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _savedPlacesKey = 'social_nearby_saved_places_v1';
+
+/// Tâm mặc định khi chưa có bất kỳ vị trí nào (TP.HCM).
+const _defaultMapCenter = LatLng(10.7769, 106.7009);
 
 class SocialNearbyFilter extends ConsumerWidget {
   const SocialNearbyFilter({super.key});
@@ -79,6 +83,7 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
   bool _searchSaved = false;
   bool _saving = false;
   String? _error;
+  bool _isCurrentLocation = false;
   int _generation = 0;
 
   @override
@@ -202,30 +207,37 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
     });
   }
 
+  /// Tâm bản đồ khởi tạo: ưu tiên địa điểm đang chọn, sau đó tới vị trí đã
+  /// biết. Không chặn vào việc chờ GPS vì `_pickOnMap` mở map ngay.
+  LatLng _mapCenterFallback() {
+    final place = _selected?.hasPin == true ? _selected : _candidate;
+    if (place != null && place.hasPin) {
+      return LatLng(place.latitude!, place.longitude!);
+    }
+    final location = ref.read(userLocationProvider);
+    if (location.hasPosition) {
+      return LatLng(location.latitude!, location.longitude!);
+    }
+    return _defaultMapCenter;
+  }
+
   Future<void> _pickOnMap() async {
     final previous = ref.read(userLocationProvider);
-    await ref.read(userLocationProvider.notifier).useCurrentPosition();
-    if (!mounted) return;
-    final current = ref.read(userLocationProvider);
-    if (!current.hasPosition) {
-      if (previous.hasPosition) {
-        ref
-            .read(userLocationProvider.notifier)
-            .useSelectedPosition(
-              previous.latitude!,
-              previous.longitude!,
-              source: previous.referenceSource ?? 'saved',
-            );
-      }
-      setState(
-        () => _error = current.message ?? 'Không lấy được vị trí thiết bị.',
-      );
-      return;
-    }
+    // Mở map ngay với tâm sẵn có, GPS chạy song song thay vì chặn trước:
+    // chờ `getCurrentPosition` xong rồi mới show sheet khiến người dùng đợi
+    // 5–10s mới thấy bản đồ. Vị trí đang chọn được giữ nguyên.
+    final center = _mapCenterFallback();
+    final notifier = ref.read(userLocationProvider.notifier);
+    final gps = switch (previous.status) {
+      UserLocationStatus.selected => Future<void>.value(),
+      UserLocationStatus.granted => notifier.refreshSilently(),
+      _ => notifier.requestWhenInUse(),
+    };
     final pin = await SocialLocationPicker.showSheet(
       context,
-      initialCenter: LatLng(current.latitude!, current.longitude!),
+      initialCenter: center,
     );
+    await gps;
     if (previous.hasPosition &&
         previous.status == UserLocationStatus.selected) {
       ref
@@ -237,11 +249,25 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
           );
     }
     if (!mounted || pin == null) return;
+    setState(() => _searching = true);
+    String resolvedAddress;
+    try {
+      final place = await ref
+          .read(socialLocationRepositoryProvider)
+          .reverseLookup(pin);
+      resolvedAddress = place.formattedAddress.isNotEmpty
+          ? place.formattedAddress
+          : '${pin.latitude.toStringAsFixed(6)}, ${pin.longitude.toStringAsFixed(6)}';
+    } catch (_) {
+      resolvedAddress =
+          '${pin.latitude.toStringAsFixed(6)}, ${pin.longitude.toStringAsFixed(6)}';
+    }
+    if (!mounted) return;
     setState(() {
+      _searching = false;
       _candidate = SocialPlace(
         name: 'Vị trí trên bản đồ',
-        formattedAddress:
-            '${pin.latitude.toStringAsFixed(6)}, ${pin.longitude.toStringAsFixed(6)}',
+        formattedAddress: resolvedAddress,
         latitude: pin.latitude,
         longitude: pin.longitude,
       );
@@ -272,6 +298,9 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
       setState(() {
         _saved = next;
         _selected = saved;
+        // Địa điểm vừa lưu thay cho "vị trí hiện tại": nếu giữ cờ cũ thì
+        // bấm "Xác nhận" sẽ lọc theo tọa độ thiết bị thay vì điểm vừa ghim.
+        _isCurrentLocation = false;
         _saving = false;
         _page = _Page.manage;
         _label.clear();
@@ -288,7 +317,49 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
     }
   }
 
+  Future<void> _useCurrentLocation() async {
+    await ref.read(userLocationProvider.notifier).useCurrentPosition();
+    if (!mounted) return;
+    final location = ref.read(userLocationProvider);
+    if (!location.hasPosition) {
+      setState(
+        () => _error = location.message ?? 'Không lấy được vị trí thiết bị.',
+      );
+      return;
+    }
+    setState(() {
+      _isCurrentLocation = true;
+      _selected = null;
+      _error = null;
+    });
+  }
+
   void _confirm() {
+    if (_isCurrentLocation &&
+        ref.read(userLocationProvider).hasPosition) {
+      _confirmCurrentLocation();
+    } else {
+      _confirmSavedPlace();
+    }
+  }
+
+  void _confirmCurrentLocation() {
+    final location = ref.read(userLocationProvider);
+    if (!location.hasPosition) return;
+    ref
+        .read(userLocationProvider.notifier)
+        .useSelectedPosition(
+          location.latitude!,
+          location.longitude!,
+          source: 'current',
+        );
+    final filter = ref.read(socialFilterProvider.notifier);
+    filter.setRadiusKm(_radius);
+    filter.setNearbyOnly(true);
+    Navigator.of(context).pop();
+  }
+
+  void _confirmSavedPlace() {
     final place = _selected;
     if (place == null || !place.hasPin) return;
     ref
@@ -348,18 +419,22 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
     );
   }
 
-  Widget _heading(String title, VoidCallback onBack) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+  Widget _heading(String title, VoidCallback onBack, {bool isClose = false}) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
     child: Row(
       children: [
-        IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back)),
-        const SizedBox(width: 8),
+        IconButton(
+          onPressed: onBack,
+          icon: Icon(isClose ? Icons.close : Icons.arrow_back),
+        ),
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
+            textAlign: isClose ? TextAlign.center : TextAlign.left,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
         ),
+        if (isClose) const SizedBox(width: 48),
       ],
     ),
   );
@@ -367,7 +442,10 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
   Widget _placeTile(SocialPlace place, {bool selectable = false}) => Card(
     margin: const EdgeInsets.only(bottom: 10),
     child: ListTile(
-      onTap: () => setState(() => _selected = place),
+      onTap: () => setState(() {
+      _selected = place;
+      _isCurrentLocation = false;
+    }),
       title: Text(
         place.name,
         maxLines: 1,
@@ -405,6 +483,7 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
   );
 
   Widget _filterPage() {
+    final colors = context.colors;
     final query = _savedSearch.text.trim().toLowerCase();
     final visible = _saved
         .where(
@@ -413,22 +492,52 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
               .contains(query),
         )
         .toList();
+    final canConfirm = _isCurrentLocation || _selected != null;
     return Column(
       children: [
-        _heading('Vị trí', () => Navigator.of(context).pop()),
+        _heading('Vị trí', () => Navigator.of(context).pop(), isClose: true),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
-              Row(
-                children: [
-                  const Text(
-                    'Tìm kiếm',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                  ),
-                  const Spacer(),
-                  Text('ở trong ${_radius.round()} km'),
-                ],
+              // 'Tìm kiếm' title row without background border
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Row(
+                  children: [
+                    Text(
+                      'Tìm kiếm',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      'ở trong ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                      ),
+                      child: Text(
+                        '${_radius.round()}km',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Slider(
                 min: 1,
@@ -438,17 +547,19 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
                 label: '${_radius.round()} km',
                 onChanged: (value) => setState(() => _radius = value),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
+
+              // Wrap chips: no check icon when selected, grey bg + no border when !selected
               Wrap(
                 spacing: 8,
                 children: [
-                  ChoiceChip(
-                    label: const Text('Đã lưu'),
+                  _filterChip(
+                    label: 'Đã lưu',
                     selected: !_searchSaved,
                     onSelected: (_) => setState(() => _searchSaved = false),
                   ),
-                  ChoiceChip(
-                    label: const Text('Tìm kiếm'),
+                  _filterChip(
+                    label: 'Tìm kiếm',
                     selected: _searchSaved,
                     onSelected: (_) => setState(() => _searchSaved = true),
                   ),
@@ -470,31 +581,88 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 12),
+                if (_saved.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 22),
+                    child: Text('Chưa lưu địa điểm'),
+                  ),
+                if (_saved.isNotEmpty && visible.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Text('Không tìm thấy địa điểm đã lưu'),
+                  ),
+                ...visible.map((place) => _placeTile(place, selectable: true)),
               ],
-              const SizedBox(height: 16),
-              const Text(
-                'Đã lưu',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              if (_saved.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 22),
-                  child: Text('Chưa lưu địa điểm'),
+              if (!_searchSaved) ...[
+                const SizedBox(height: 16),
+                // 'Vị trí hiện tại' option placed in 'Đã lưu' section
+                InkWell(
+                  onTap: _useCurrentLocation,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: _isCurrentLocation
+                          ? AppTheme.primary.withValues(alpha: 0.12)
+                          : colors.chipBackground,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      border: _isCurrentLocation
+                          ? Border.all(color: AppTheme.primary, width: 1.5)
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.my_location_rounded,
+                          color: _isCurrentLocation ? AppTheme.primary : colors.textSecondary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Vị trí hiện tại',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: _isCurrentLocation ? FontWeight.w700 : FontWeight.w600,
+                            color: _isCurrentLocation ? AppTheme.primary : colors.textPrimary,
+                          ),
+                        ),
+                        if (_isCurrentLocation) ...[
+                          const Spacer(),
+                          Icon(Icons.check_circle, color: AppTheme.primary, size: 20),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-              if (_saved.isNotEmpty && visible.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text('Không tìm thấy địa điểm đã lưu'),
+                const SizedBox(height: 12),
+                if (_saved.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 22),
+                    child: Text('Chưa lưu địa điểm'),
+                  ),
+                if (_saved.isNotEmpty && visible.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Text('Không tìm thấy địa điểm đã lưu'),
+                  ),
+                ...visible.map((place) => _placeTile(place, selectable: true)),
+                TextButton(
+                  onPressed: () => setState(() => _page = _Page.manage),
+                  child: const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Quản lý địa điểm'),
+                  ),
                 ),
-              ...visible.map((place) => _placeTile(place, selectable: true)),
-              TextButton(
-                onPressed: () => setState(() => _page = _Page.manage),
-                child: const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('Quản lý địa điểm'),
+              ],
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _error!,
+                    style: TextStyle(color: colors.error),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -506,7 +674,10 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
             },
             child: const Text('Tắt Gần bạn'),
           ),
-        _footer('Xác nhận', _selected == null ? null : _confirm),
+        FooterButton(
+          label: 'Xác nhận',
+          onPressed: canConfirm ? _confirm : null,
+        ),
       ],
     );
   }
@@ -548,7 +719,7 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
               'Nhập tên khu phố hoặc thành phố bạn muốn đến, chúng tôi sẽ hiển thị các hoạt động gần khu vực đó.',
             ),
             const SizedBox(height: 28),
-            const Text('Nhãn'),
+            const Text('Tên địa điểm'),
             const SizedBox(height: 8),
             TextField(
               controller: _label,
@@ -613,24 +784,36 @@ class _NearbySheetState extends ConsumerState<_NearbySheet> {
           ],
         ),
       ),
-      _footer(
-        'Lưu',
-        _saving || _label.text.trim().isEmpty || _candidate == null
+      FooterButton(
+        label: 'Lưu',
+        isLoading: _saving,
+        onPressed: _label.text.trim().isEmpty || _candidate == null
             ? null
             : _savePlace,
       ),
     ],
   );
 
-  Widget _footer(String label, VoidCallback? onPressed) => SafeArea(
-    top: false,
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: FilledButton(onPressed: onPressed, child: Text(label)),
+  Widget _filterChip({
+    required String label,
+    required bool selected,
+    required ValueChanged<bool> onSelected,
+  }) {
+    final colors = context.colors;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      showCheckmark: false,
+      selectedColor: AppTheme.primaryLight,
+      backgroundColor: colors.chipBackground,
+      side: BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      labelStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        color: selected ? Colors.black87 : colors.textPrimary,
       ),
-    ),
-  );
+      onSelected: onSelected,
+    );
+  }
 }

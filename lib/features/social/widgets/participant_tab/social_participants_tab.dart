@@ -9,116 +9,62 @@ class SocialParticipantsTab extends StatelessWidget {
     required this.isHost,
     required this.onAddParticipant,
     required this.onRemoveParticipant,
+    this.onApproveParticipant,
+    this.onRejectParticipant,
     this.removingParticipantId,
   });
+
   final SocialSessionModel session;
   final bool isHost;
   final ValueChanged<int> onAddParticipant;
   final ValueChanged<SocialParticipantModel> onRemoveParticipant;
+  final ValueChanged<SocialParticipantModel>? onApproveParticipant;
+  final ValueChanged<SocialParticipantModel>? onRejectParticipant;
   final String? removingParticipantId;
 
   @override
   Widget build(BuildContext context) {
     final session = this.session;
     final colors = context.colors;
+
     final host =
         session.participants.where((p) => p.isHost).firstOrNull ??
         SocialParticipantModel(
           id: 'host_default',
+          userId: session.hostUserId,
           name: 'Sơn Bảo',
           initials: 'SB',
           skillLevel: session.skillLevel,
           isHost: true,
-          status: 'Người tổ chức',
+          status: 'JOINED',
           joinedAt: DateTime.now(),
         );
 
-    final totalSlots = session.maxParticipants;
-    final confirmedCount = session.participants.length;
+    // List of confirmed participants, ensuring host is included at slot 1
+    List<SocialParticipantModel> confirmedList;
+    if (session.participants.isEmpty) {
+      confirmedList = [host];
+    } else {
+      final list = session.participants
+          .where((p) => p.status.toUpperCase() != 'PENDING')
+          .toList();
+      if (!list.any((p) => p.isHost || p.userId == session.hostUserId)) {
+        confirmedList = [host, ...list];
+      } else {
+        confirmedList = list;
+      }
+    }
+
+    final totalSlots = session.maxSlots;
+    final confirmedCount = confirmedList.length;
     final isCompleted = session.status.toUpperCase() == 'COMPLETED';
+    final pendingRequests = session.requestedParticipants;
 
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       children: [
-        // ─── 1. NGƯỜI TỔ CHỨC ───
-        Text(
-          'NGƯỜI TỔ CHỨC • 1',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: colors.textSecondary,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 62,
-                    height: 62,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: colors.success.withValues(alpha: 0.25),
-                      border: Border.all(
-                        color: colors.success.withValues(alpha: 0.6),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        host.initials,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: -2,
-                    bottom: -2,
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.shield_rounded,
-                        size: 13,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                host.name,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 16),
-        Divider(color: colors.border, height: 1),
-        const SizedBox(height: 14),
-
-        // ─── 2. XÁC NHẬN THAM GIA Header & More icon ───
+        // ─── 1. XÁC NHẬN THAM GIA Header & More icon ───
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -145,28 +91,51 @@ class SocialParticipantsTab extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // Sort dropdown
+        // Sort & Display filter row (Image 2 & 3)
         Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Sắp xếp: Xác nhận gần đây',
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w500,
-                color: colors.textSecondary,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Sắp xếp: Xác nhận gần đây',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down_rounded,
+                  size: 18,
+                  color: colors.textSecondary,
+                ),
+              ],
             ),
-            Icon(
-              Icons.arrow_drop_down_rounded,
-              size: 18,
-              color: colors.textSecondary,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Hiển thị: Thẻ, Sân, Bạn bè,...',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down_rounded,
+                  size: 18,
+                  color: colors.textSecondary,
+                ),
+              ],
             ),
           ],
         ),
         const SizedBox(height: 16),
 
-        // ─── 3. GRID 4 COLUMNS (Ảnh 3 Reclub) ───
+        // ─── 2. GRID 4 COLUMNS (Ảnh 2 & 3) ───
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -178,8 +147,8 @@ class SocialParticipantsTab extends StatelessWidget {
           ),
           itemCount: totalSlots,
           itemBuilder: (context, index) {
-            if (index < session.participants.length) {
-              final p = session.participants[index];
+            if (index < confirmedList.length) {
+              final p = confirmedList[index];
               final canRemove =
                   isHost &&
                   !isCompleted &&
@@ -196,17 +165,13 @@ class SocialParticipantsTab extends StatelessWidget {
                     Stack(
                       children: [
                         Container(
-                          width: 54,
-                          height: 54,
+                          width: 58,
+                          height: 58,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: p.isHost
-                                ? colors.success.withValues(alpha: 0.25)
-                                : AppTheme.primaryLight.withValues(alpha: 0.35),
+                            color: colors.success.withValues(alpha: 0.35),
                             border: Border.all(
-                              color: p.isHost
-                                  ? colors.success.withValues(alpha: 0.6)
-                                  : AppTheme.primary.withValues(alpha: 0.4),
+                              color: colors.success.withValues(alpha: 0.7),
                               width: 1.2,
                             ),
                           ),
@@ -214,8 +179,8 @@ class SocialParticipantsTab extends StatelessWidget {
                             child: Text(
                               p.initials,
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
                                 color: colors.textPrimary,
                               ),
                             ),
@@ -273,22 +238,26 @@ class SocialParticipantsTab extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 54,
-                      height: 54,
+                      width: 58,
+                      height: 58,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: colors.bgSurface,
-                        border: Border.all(color: colors.border, width: 1.5),
+                        color: colors.bgElevated.withValues(alpha: 0.5),
+                        border: Border.all(
+                          color: colors.border,
+                          width: 1.5,
+                          strokeAlign: BorderSide.strokeAlignCenter,
+                        ),
                       ),
                       child: Icon(
                         Icons.add_rounded,
-                        size: 26,
+                        size: 28,
                         color: colors.textMuted,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Slot ${index + 1}',
+                      '',
                       style: TextStyle(fontSize: 11, color: colors.textMuted),
                     ),
                   ],
@@ -297,6 +266,141 @@ class SocialParticipantsTab extends StatelessWidget {
             }
           },
         ),
+
+        // ─── 3. ĐÃ YÊU CẦU (Chỉ hiển thị khi isHost = true và có yêu cầu) ───
+        if (isHost && pendingRequests.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Divider(color: colors.border, height: 1),
+          const SizedBox(height: 16),
+          Text(
+            'ĐÃ YÊU CẦU • ${pendingRequests.length}',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: colors.textSecondary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: pendingRequests.length,
+            separatorBuilder: (_, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final p = pendingRequests[index];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                  border: Border.all(color: colors.borderLight),
+                ),
+                child: Row(
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.success.withValues(alpha: 0.35),
+                        border: Border.all(
+                          color: colors.success.withValues(alpha: 0.7),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          p.initials,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    // Name and Actions
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            p.name,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              // Icons.check button (Duyệt yêu cầu)
+                              OutlinedButton.icon(
+                                onPressed: onApproveParticipant != null
+                                    ? () => onApproveParticipant!(p)
+                                    : null,
+                                icon: const Icon(Icons.check, size: 16),
+                                label: const Text(
+                                  'CHO PHÉP THAM GIA',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.primary,
+                                  side: const BorderSide(
+                                    color: AppTheme.primary,
+                                    width: 1.5,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusSmall,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Icons.close_rounded button (Từ chối yêu cầu)
+                              IconButton.outlined(
+                                tooltip: 'Từ chối yêu cầu',
+                                onPressed: onRejectParticipant != null
+                                    ? () => onRejectParticipant!(p)
+                                    : null,
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  size: 18,
+                                  color: colors.error,
+                                ),
+                                style: IconButton.styleFrom(
+                                  side: BorderSide(color: colors.border),
+                                  padding: const EdgeInsets.all(8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      AppTheme.radiusSmall,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ],
     );
   }

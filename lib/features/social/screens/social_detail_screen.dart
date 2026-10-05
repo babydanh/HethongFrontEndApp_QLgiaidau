@@ -304,6 +304,45 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                           slot,
                         );
                       },
+                      onApproveParticipant: (participant) async {
+                        await ref
+                            .read(
+                              socialSessionDetailProvider(
+                                widget.sessionId,
+                              ).notifier,
+                            )
+                            .approveParticipant(participant);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Đã duyệt yêu cầu của ${participant.name}',
+                              ),
+                              backgroundColor: AppTheme.primary,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      onRejectParticipant: (participant) async {
+                        await ref
+                            .read(
+                              socialSessionDetailProvider(
+                                widget.sessionId,
+                              ).notifier,
+                            )
+                            .rejectParticipant(participant);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Đã từ chối yêu cầu của ${participant.name}',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
                     ),
                     if (showPayment) SocialPaymentTab(session: session),
                     SocialChatTab(session: session),
@@ -438,12 +477,18 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     if (_isHost) {
       return const SizedBox.shrink();
     }
+    final isPending = session.isPending;
+    final isJoined = session.isJoined;
+
     final canJoin =
         session.status == 'OPEN' &&
         session.currentSlots < session.maxSlots &&
-        !session.isJoined;
-    final joinLabel = session.isJoined
+        !isJoined &&
+        !isPending;
+    final joinLabel = isJoined
         ? 'Đã tham gia'
+        : isPending
+        ? 'Chờ duyệt'
         : session.status == 'CANCELLED'
         ? 'Đã hủy'
         : session.status == 'COMPLETED'
@@ -501,7 +546,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             ),
             const SizedBox(width: 12),
 
-            // Right Button: 'Yêu cầu tham gia'
+            // Right Button: 'Yêu cầu tham gia' / 'Chờ duyệt' / 'Đã tham gia'
             Expanded(
               child: SizedBox(
                 height: 48,
@@ -510,8 +555,22 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       ? () => _handleRequestJoin(context, session)
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isPending
+                        ? AppTheme.primaryLight
+                        : isJoined
+                        ? colors.success
+                        : AppTheme.primary,
+                    foregroundColor: isPending ? AppTheme.primaryDark : Colors.white,
+                    disabledBackgroundColor: isPending
+                        ? AppTheme.primaryLight
+                        : isJoined
+                        ? colors.success.withValues(alpha: 0.85)
+                        : null,
+                    disabledForegroundColor: isPending
+                        ? AppTheme.primaryDark
+                        : isJoined
+                        ? Colors.white
+                        : null,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     shape: RoundedRectangleBorder(
@@ -522,12 +581,40 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   ),
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(
-                      joinLabel,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isPending) ...[
+                          const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.primaryDark,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ] else if (isJoined) ...[
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          joinLabel,
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: isPending
+                                ? AppTheme.primaryDark
+                                : isJoined
+                                ? Colors.white
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

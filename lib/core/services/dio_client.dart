@@ -179,8 +179,12 @@ class DioClient {
 
           final retryCount =
               (error.requestOptions.extra[_retryCountKey] as int?) ?? 0;
+          // `noRetry` is opt-in cho các lần đọc mà độ trễ thêm chỉ làm tệ hơn
+          // (danh sách Social): retry lặp lại cùng một lỗi rồi vẫn fail.
+          final noRetry = error.requestOptions.extra['noRetry'] == true;
           if (method == 'GET' &&
               transient &&
+              !noRetry &&
               retryCount < _maxTransientRetries) {
             await Future<void>.delayed(
               Duration(milliseconds: 350 * (1 << retryCount)),

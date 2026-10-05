@@ -26,19 +26,12 @@ class SocialLocationRow extends StatelessWidget {
       label: name.isEmpty ? l10n.socialPlaceSelect : '$name, $address',
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 52),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.border),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              const Icon(Icons.location_on_outlined, color: AppTheme.primary),
-              const SizedBox(width: 12),
+              const Icon(Icons.location_on_outlined, color: AppTheme.primary, size: 22),
+              const SizedBox(width: 14),
               Expanded(
                 child: name.isEmpty
                     ? Text(
@@ -46,6 +39,7 @@ class SocialLocationRow extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
+                          fontSize: 15,
                           color: colors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -59,6 +53,7 @@ class SocialLocationRow extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
+                              fontSize: 14.5,
                               color: colors.textPrimary,
                               fontWeight: FontWeight.w700,
                             ),
@@ -75,8 +70,8 @@ class SocialLocationRow extends StatelessWidget {
                         ],
                       ),
               ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: colors.textSecondary),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right, color: colors.textMuted, size: 20),
             ],
           ),
         ),

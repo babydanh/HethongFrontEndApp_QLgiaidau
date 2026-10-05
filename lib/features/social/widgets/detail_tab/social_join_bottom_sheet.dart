@@ -332,7 +332,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                         )
                       : Text(
                           _remainingSlots > 0
-                              ? 'Xác nhận tham gia'
+                              ? 'Gửi yêu cầu tham gia'
                               : 'Đã hết chỗ',
                           style: const TextStyle(
                             fontSize: 15.5,
@@ -382,15 +382,20 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
     setState(() => _isSubmitting = true);
     try {
       await ref
-          .read(socialSessionsProvider.notifier)
-          .joinSession(sessionId: widget.session.id, ticketCount: _ticketCount);
+          .read(socialSessionDetailProvider(widget.session.id).notifier)
+          .requestJoin(
+            ticketCount: _ticketCount,
+            userName: _nameController.text.trim().isNotEmpty
+                ? _nameController.text.trim()
+                : null,
+          );
 
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '🎉 Đăng ký thành công $_ticketCount vé buổi ${widget.session.title}!',
+              'Đã gửi yêu cầu tham gia buổi ${widget.session.title}. Đang chờ Host duyệt!',
             ),
             backgroundColor: const Color(0xFF16A34A),
             behavior: SnackBarBehavior.floating,

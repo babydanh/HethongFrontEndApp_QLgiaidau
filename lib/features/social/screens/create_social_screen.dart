@@ -4,11 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repository.dart';
-import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
@@ -16,13 +14,58 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_flow.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
-import 'package:app_quanly_giaidau/features/social/widgets/social_region_picker.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_setting_tile.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participant_counter.dart';
 import 'package:latlong2/latlong.dart';
+
+/// Body cho `PATCH /social-sessions/:id`, chỉ gồm field mà
+/// `UpdateSocialSessionDto` chấp nhận.
+///
+/// Cố ý KHÔNG gửi `sport`, `communityId` (DTO không có → ValidationPipe với
+/// `forbidNonWhitelisted` trả 400) và KHÔNG gửi `newVenue` khi sửa: backend
+/// tạo venue mới mỗi lần sửa, tức là 409 `VENUE_DUPLICATE_CANDIDATES` khi
+/// pin trùng sân đã lưu, hoặc nhân bản sân. Đổi toạ độ chỉ cần `latitude` +
+/// `longitude` — `updateSession` tự suy lại `venueGeolocation`.
+Map<String, dynamic> buildSocialSessionUpdatePayload({
+  required String title,
+  required String? description,
+  required String playFormat,
+  required DateTime startAt,
+  required int durationMinutes,
+  required bool locationChanged,
+  required SocialPlace place,
+  required String venueName,
+  required String venueAddress,
+  required int maxSlots,
+  required int feePerSlot,
+  required String visibility,
+}) {
+  return <String, dynamic>{
+    'title': title.length > 100 ? title.substring(0, 100) : title,
+    if (description != null && description.isNotEmpty)
+      'description': description,
+    'playFormat': playFormat,
+    'startAt': startAt.toIso8601String(),
+    'durationMinutes': durationMinutes,
+    if (locationChanged) ...{
+      if (place.venueId != null)
+        'venueId': place.venueId
+      else if (place.hasPin) ...{
+        'latitude': place.latitude,
+        'longitude': place.longitude,
+      },
+      if (venueName.isNotEmpty) 'venueName': venueName,
+      if (venueAddress.isNotEmpty) 'venueAddress': venueAddress,
+    },
+    'maxSlots': maxSlots,
+    'feePerSlot': feePerSlot,
+    'levelRequirement': 'ALL',
+    'visibility': visibility,
+  };
+}
 
 class CreateSocialScreen extends ConsumerStatefulWidget {
   final String clubId;
@@ -63,9 +106,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   double _durationHours = 1.0;
 
   SocialPlace? _selectedPlace;
-  String? _chosenProvinceCode;
-  String? _chosenWardCode;
-  SocialRegionSelection? _chosenRegion;
   final _venueNameController = TextEditingController();
   final _venueAddressController = TextEditingController();
 
@@ -322,12 +362,19 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       sportSlug: category.slug,
                       name: category.name,
                       isSelected: category.slug == sport.slug,
-                      isEnabled: true,
-                      onTap: () => setState(() {
-                        _selectedSportKey = category.slug;
-                        _selectedSportName = category.name;
-                        _userPickedSport = true;
-                      }),
+                      // PATCH /social-sessions không đổi được môn, nên khi
+                      // sửa kèo card môn bị khoá thay vì nhận rồi bỏ qua.
+                      isEnabled: widget.initialSession == null,
+                      note: widget.initialSession == null
+                          ? null
+                          : l10n.socialEditSportLocked,
+                      onTap: widget.initialSession == null
+                          ? () => setState(() {
+                              _selectedSportKey = category.slug;
+                              _selectedSportName = category.name;
+                              _userPickedSport = true;
+                            })
+                          : null,
                     ),
                   ),
               ],
@@ -495,11 +542,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
   Future<void> _chooseLocation() async {
     final location = ref.read(userLocationProvider);
-    final selectedWard = _chosenRegion?.ward;
     final initialCenter = location.hasPosition
         ? LatLng(location.latitude!, location.longitude!)
-        : selectedWard?.latitude != null && selectedWard?.longitude != null
-        ? LatLng(selectedWard!.latitude!, selectedWard.longitude!)
         : const LatLng(10.7769, 106.7009);
     final selected = await SocialLocationFlow.show(
       context,
@@ -533,18 +577,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     });
   }
 
-  Future<SocialRegionCatalogue?> _loadRegionCatalogue({
-    bool refresh = false,
-    String? provinceCode,
-  }) async {
-    final repository = ref.read(regionRepositoryProvider);
-    final provinces = await repository.getProvinces();
-    if (provinces.isEmpty) return null;
-    final wards = provinceCode == null
-        ? <Region>[]
-        : await repository.getWardsByProvince(provinceCode);
-    return (provinces: provinces, wards: wards);
-  }
 
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
   /// [session] là kèo vừa tạo/sửa (lấy communityId thực tế từ server).
@@ -604,34 +636,25 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
       if (widget.initialSession != null) {
         final sessionId = widget.initialSession!.id;
-        final updateFields = <String, dynamic>{
-          'sport': sport.slug,
-          'title': resolvedTitle.length > 100
-              ? resolvedTitle.substring(0, 100)
-              : resolvedTitle,
-          if (notes != null && notes.isNotEmpty) 'description': notes,
-          'playFormat': _selectedFormat,
-          'startAt': _selectedDateTime.toIso8601String(),
-          'durationMinutes': (_durationHours * 60).round(),
-          if (_locationChanged && place.venueId != null) ...{
-            'venueId': place.venueId,
-            'venueName': _venueNameController.text.trim(),
-            'venueAddress': _venueAddressController.text.trim(),
-          },
-          if (_locationChanged && place.venueId == null)
-            'newVenue': {
-              'name': _venueNameController.text.trim(),
-              'locationAddress': _venueAddressController.text.trim(),
-              'latitude': place.latitude,
-              'longitude': place.longitude,
-            },
-          'maxSlots': _maxParticipants,
-          'feePerSlot': _price,
-          'levelRequirement': 'ALL',
-          'visibility': _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
-          if (_isClubAttached && widget.clubId.isNotEmpty)
-            'communityId': widget.clubId,
-        };
+        // UpdateSocialSessionDto chỉ nhận đúng các field dưới đây; gửi
+        // `sport`/`communityId` sẽ bị ValidationPipe chặn (forbidNonWhitelisted).
+        // `newVenue` cũng không dùng khi sửa: backend tạo venue mới mỗi lần
+        // (và trả 409 VENUE_DUPLICATE_CANDIDATES khi pin trùng sân đã có),
+        // nên chỉ gửi lat/lng — repository tự suy lại venueGeolocation.
+        final updateFields = buildSocialSessionUpdatePayload(
+          title: resolvedTitle,
+          description: notes,
+          playFormat: _selectedFormat,
+          startAt: _selectedDateTime,
+          durationMinutes: (_durationHours * 60).round(),
+          locationChanged: _locationChanged,
+          place: place,
+          venueName: _venueNameController.text.trim(),
+          venueAddress: _venueAddressController.text.trim(),
+          maxSlots: _maxParticipants,
+          feePerSlot: _price,
+          visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
+        );
 
         final updatedSession = await repo.update(sessionId, updateFields);
 
@@ -1093,16 +1116,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       SocialLocationRow(
                         place: _selectedPlace,
                         onTap: _chooseLocation,
-                      ),
-                      const SizedBox(height: 8),
-                      SocialRegionInlineFields(
-                        applied: _chosenRegion,
-                        loadCatalogue: _loadRegionCatalogue,
-                        onSelect: (selection) => setState(() {
-                          _chosenRegion = selection;
-                          _chosenProvinceCode = selection.province?.code;
-                          _chosenWardCode = selection.ward?.code;
-                        }),
                       ),
                       if (_selectedPlace != null) ...[
                         const SizedBox(height: 10),
