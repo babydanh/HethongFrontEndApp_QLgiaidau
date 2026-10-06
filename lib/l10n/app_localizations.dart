@@ -98,6 +98,60 @@ abstract class AppLocalizations {
     Locale('vi'),
   ];
 
+  /// No description provided for @socialPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get socialPending;
+
+  /// No description provided for @socialCancelRequestTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy yêu cầu tham gia?'**
+  String get socialCancelRequestTitle;
+
+  /// No description provided for @socialKeepRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vẫn tham gia'**
+  String get socialKeepRequest;
+
+  /// No description provided for @socialConfirmCancelRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get socialConfirmCancelRequest;
+
+  /// No description provided for @socialJoinClubQuestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có muốn tham gia CLB không?'**
+  String get socialJoinClubQuestion;
+
+  /// No description provided for @socialJoinClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia CLB'**
+  String get socialJoinClub;
+
+  /// No description provided for @socialClubMembershipCheckError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể kiểm tra trạng thái thành viên CLB. Thử lại sau.'**
+  String get socialClubMembershipCheckError;
+
+  /// No description provided for @socialSkipClubJoin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để sau'**
+  String get socialSkipClubJoin;
+
+  /// No description provided for @socialRetryMembership.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get socialRetryMembership;
+
   /// No description provided for @club_createMatchStandalone.
   ///
   /// In vi, this message translates to:

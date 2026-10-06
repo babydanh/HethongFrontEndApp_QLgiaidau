@@ -12,12 +12,14 @@ class SocialDetailsTab extends StatelessWidget {
     required this.isHost,
     required this.onContactHost,
     required this.onFindPlayers,
+    this.viewerFooter,
   });
 
   final SocialSessionModel session;
   final bool isHost;
   final VoidCallback onContactHost;
   final VoidCallback onFindPlayers;
+  final Widget? viewerFooter;
 
   @override
   Widget build(BuildContext context) {
@@ -413,6 +415,8 @@ class SocialDetailsTab extends StatelessWidget {
               ),
             ),
           ),
+        if (!isHost && viewerFooter != null)
+          viewerFooter!,
       ],
     );
   }

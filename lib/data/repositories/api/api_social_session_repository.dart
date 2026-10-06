@@ -305,6 +305,15 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   }
 
   @override
+  Future<void> withdrawJoinRequest(String sessionId) async {
+    try {
+      await _dioClient.dio.delete('/social-sessions/$sessionId/requests/self', options: Options(extra: {'noRetry': true}));
+    } on DioException catch (error) {
+      throw SocialApiException.fromDioException(error);
+    }
+  }
+
+  @override
   Future<void> approveJoinRequest(String sessionId, String participantId) =>
       _requestAction(
         '/social-sessions/$sessionId/requests/$participantId/approve',

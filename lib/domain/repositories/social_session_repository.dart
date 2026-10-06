@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 
 abstract class ISocialSessionRepository {
   Future<void> requestJoin(String sessionId, {int ticketCount = 1});
+  Future<void> withdrawJoinRequest(String sessionId);
   Future<List<SocialParticipantModel>> listJoinRequests(String sessionId);
   Future<void> approveJoinRequest(String sessionId, String participantId);
   Future<void> rejectJoinRequest(String sessionId, String participantId);

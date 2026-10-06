@@ -9,6 +9,34 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get socialPending => 'Pending approval';
+
+  @override
+  String get socialCancelRequestTitle => 'Cancel your join request?';
+
+  @override
+  String get socialKeepRequest => 'Keep request';
+
+  @override
+  String get socialConfirmCancelRequest => 'Confirm';
+
+  @override
+  String get socialJoinClubQuestion => 'Would you like to join the club?';
+
+  @override
+  String get socialJoinClub => 'Join club';
+
+  @override
+  String get socialClubMembershipCheckError =>
+      'Could not check club membership. Please try again.';
+
+  @override
+  String get socialSkipClubJoin => 'Maybe later';
+
+  @override
+  String get socialRetryMembership => 'Retry';
+
+  @override
   String get club_createMatchStandalone => 'Create Match';
 
   @override

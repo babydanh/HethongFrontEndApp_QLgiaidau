@@ -74,8 +74,13 @@ part '../widgets/club_detail_settings_delete.dart';
 
 class ClubDetailScreen extends ConsumerStatefulWidget {
   final String clubId;
+  final bool startJoinFlow;
 
-  const ClubDetailScreen({super.key, required this.clubId});
+  const ClubDetailScreen({
+    super.key,
+    required this.clubId,
+    this.startJoinFlow = false,
+  });
 
   @override
   ConsumerState<ClubDetailScreen> createState() => _ClubDetailScreenState();
@@ -87,6 +92,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   late TabController _tabController;
   CommunityMemberModel? _myMembership;
   bool _isJoinLoading = false;
+  bool _didStartRequestedJoinFlow = false;
 
   // Khóa toàn bộ luồng tham gia, kể cả lúc đang mở dialog câu hỏi. Nút có
   // thể nhận 2 lần tap trước khi frame loading đầu tiên được vẽ.
@@ -152,8 +158,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       await _waitForUiFrame();
       if (!mounted) return;
       if (membership == null) {
-        // 404 (chưa phải member) hoặc lỗi → viewer thuần
+        // 404 means the viewer is not a member. Other failures throw above.
         setState(() => _myMembership = null);
+        _startRequestedJoinFlow();
         return;
       }
       final profile = ref.read(userProfileProvider).asData?.value;
@@ -171,6 +178,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
       if (_myMembership?.status == 'JOINED') {
         _loadNotificationPref();
       }
+      _startRequestedJoinFlow();
     } catch (e, stack) {
       _log.error('Failed to fetch membership', e, stack);
       if (mounted) {
@@ -178,6 +186,24 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         ref.invalidate(myCommunityMembershipProvider(widget.clubId));
       }
     }
+  }
+
+  void _startRequestedJoinFlow() {
+    if (!widget.startJoinFlow || _didStartRequestedJoinFlow) return;
+    _didStartRequestedJoinFlow = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted ||
+          _myMembership?.status == 'PENDING' ||
+          _myMembership?.status == 'JOINED') {
+        return;
+      }
+      try {
+        final club = await ref.read(communityDetailProvider(widget.clubId).future);
+        if (mounted) await _handleJoinAction(club);
+      } catch (_) {
+        if (mounted) setState(() => _didStartRequestedJoinFlow = false);
+      }
+    });
   }
 
   bool _isOpeningClubChat = false;

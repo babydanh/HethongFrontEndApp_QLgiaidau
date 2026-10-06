@@ -9,6 +9,34 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get socialPending => 'Chờ duyệt';
+
+  @override
+  String get socialCancelRequestTitle => 'Hủy yêu cầu tham gia?';
+
+  @override
+  String get socialKeepRequest => 'Vẫn tham gia';
+
+  @override
+  String get socialConfirmCancelRequest => 'Xác nhận';
+
+  @override
+  String get socialJoinClubQuestion => 'Bạn có muốn tham gia CLB không?';
+
+  @override
+  String get socialJoinClub => 'Tham gia CLB';
+
+  @override
+  String get socialClubMembershipCheckError =>
+      'Không thể kiểm tra trạng thái thành viên CLB. Thử lại sau.';
+
+  @override
+  String get socialSkipClubJoin => 'Để sau';
+
+  @override
+  String get socialRetryMembership => 'Thử lại';
+
+  @override
   String get club_createMatchStandalone => 'Tạo trận đấu';
 
   @override

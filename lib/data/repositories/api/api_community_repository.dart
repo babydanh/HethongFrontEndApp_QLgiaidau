@@ -819,7 +819,7 @@ class ApiCommunityRepository implements ICommunityRepository {
         };
       }
       _log.warning('getMyMembership status=${response.statusCode}');
-      return null;
+      throw StateError('Unable to read community membership (${response.statusCode})');
     } catch (e, stack) {
       // Quy ước PHASE 5.4: 404 NOT_MEMBER → chưa phải member → viewer thuần.
       final statusCode = e is DioException ? e.response?.statusCode : null;
@@ -828,7 +828,7 @@ class ApiCommunityRepository implements ICommunityRepository {
         return null;
       }
       _log.error('Lỗi lấy membership CLB', e, stack);
-      return null;
+      rethrow;
     }
   }
 

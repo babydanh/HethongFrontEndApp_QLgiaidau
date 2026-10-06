@@ -441,6 +441,18 @@ class SocialSessionDetailNotifier extends AsyncNotifier<SocialSessionModel> {
         .requestJoin(sessionId, ticketCount: ticketCount),
   );
 
+  Future<void> withdrawJoinRequest() {
+    final current = state.asData?.value;
+    if (current == null || current.isHost || !current.isPending) {
+      throw StateError('There is no pending request to withdraw');
+    }
+    return _mutate(
+      () => ref
+          .read(socialSessionRepositoryProvider)
+          .withdrawJoinRequest(sessionId),
+    );
+  }
+
   Future<void> approveParticipant(SocialParticipantModel participant) =>
       _mutate(
         () => ref
