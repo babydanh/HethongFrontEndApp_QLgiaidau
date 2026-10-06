@@ -13,6 +13,7 @@ class SocialPlace {
     this.provinceCode,
     this.wardCode,
     this.regionEstimated = false,
+    this.nameFromRegion = false,
   });
 
   final String name;
@@ -26,6 +27,9 @@ class SocialPlace {
   final String? provinceCode;
   final String? wardCode;
   final bool regionEstimated;
+
+  /// Local editing provenance; server venue names are always treated as explicit.
+  final bool nameFromRegion;
 
   bool get hasReadableAddress => formattedAddress.trim().isNotEmpty;
   bool get hasPin => latitude != null && longitude != null;

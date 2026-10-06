@@ -95,10 +95,12 @@ class SocialApiException implements Exception {
           break;
         case 'VENUE_NOT_FOUND':
         case 'VENUE_LOCATION_REQUIRED':
-          message = 'Sân đã chọn không còn ghim vị trí. Hãy chọn sân khác hoặc ghim lại.';
+          message =
+              'Sân đã chọn không còn ghim vị trí. Hãy chọn sân khác hoặc ghim lại.';
           break;
         case 'VENUE_DUPLICATE_CANDIDATES':
-          message = 'Có sân gần giống trong danh bạ. Hãy chọn sân để dùng lại hoặc sửa ghim.';
+          message =
+              'Có sân gần giống trong danh bạ. Hãy chọn sân để dùng lại hoặc sửa ghim.';
           break;
         default:
           if (statusCode == 401) {
@@ -291,6 +293,87 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
     } catch (error, stack) {
       _log.error('getDetail unexpected error', error, stack);
       rethrow;
+    }
+  }
+
+  @override
+  Future<void> requestJoin(String sessionId, {int ticketCount = 1}) async {
+    await _requestAction(
+      '/social-sessions/$sessionId/requests',
+      data: {'ticketCount': ticketCount},
+    );
+  }
+
+  @override
+  Future<void> approveJoinRequest(String sessionId, String participantId) =>
+      _requestAction(
+        '/social-sessions/$sessionId/requests/$participantId/approve',
+      );
+
+  @override
+  Future<void> rejectJoinRequest(String sessionId, String participantId) =>
+      _requestAction(
+        '/social-sessions/$sessionId/requests/$participantId/reject',
+      );
+
+  Future<void> _requestAction(String path, {Map<String, dynamic>? data}) async {
+    try {
+      await _dioClient.dio.post(
+        path,
+        data: data,
+        options: Options(extra: {'noRetry': true}),
+      );
+    } on DioException catch (error) {
+      throw SocialApiException.fromDioException(error);
+    }
+  }
+
+  @override
+  Future<List<SocialParticipantModel>> listJoinRequests(
+    String sessionId,
+  ) async {
+    final participants = <String, SocialParticipantModel>{};
+    var page = 1;
+    const limit = 50;
+    try {
+      while (true) {
+        final response = await _dioClient.dio.get(
+          '/social-sessions/$sessionId/requests',
+          queryParameters: {'page': page, 'limit': limit},
+          options: Options(extra: {'noCache': true}),
+        );
+        final body = _asMap(response.data);
+        final data = body['data'] is Map ? _asMap(body['data']) : body;
+        final items = data['items'];
+        final meta = data['meta'];
+        if (items is! List || meta is! Map || meta['total'] is! num) {
+          throw const FormatException('Invalid join requests response');
+        }
+        for (final item in items) {
+          final row = _asMap(item);
+          final participant = SocialParticipantModel.fromJson(
+            row['participant'] is Map
+                ? {
+                    ..._asMap(row['participant']),
+                    'fullName': row['fullName'],
+                    'avatarUrl': row['avatarUrl'],
+                  }
+                : row,
+          );
+          if (participant.id.isEmpty) {
+            throw const FormatException('Missing request participant ID');
+          }
+          participants[participant.id] = participant;
+        }
+        if (page * limit >= (meta['total'] as num).toInt()) break;
+        if (items.isEmpty) {
+          throw const FormatException('Incomplete requests page');
+        }
+        page++;
+      }
+      return participants.values.where((p) => p.isRequested).toList();
+    } on DioException catch (error) {
+      throw SocialApiException.fromDioException(error);
     }
   }
 

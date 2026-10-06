@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'social_ticket_slots.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
@@ -27,36 +29,23 @@ class SocialParticipantsTab extends StatelessWidget {
     final session = this.session;
     final colors = context.colors;
 
-    final host =
-        session.participants.where((p) => p.isHost).firstOrNull ??
-        SocialParticipantModel(
-          id: 'host_default',
-          userId: session.hostUserId,
-          name: 'Sơn Bảo',
-          initials: 'SB',
-          skillLevel: session.skillLevel,
-          isHost: true,
-          status: 'JOINED',
-          joinedAt: DateTime.now(),
-        );
-
-    // List of confirmed participants, ensuring host is included at slot 1
-    List<SocialParticipantModel> confirmedList;
-    if (session.participants.isEmpty) {
-      confirmedList = [host];
-    } else {
-      final list = session.participants
-          .where((p) => p.status.toUpperCase() != 'PENDING')
-          .toList();
-      if (!list.any((p) => p.isHost || p.userId == session.hostUserId)) {
-        confirmedList = [host, ...list];
-      } else {
-        confirmedList = list;
-      }
+    final english = Localizations.localeOf(context).languageCode == 'en';
+    late final List<SocialTicketSlot> slots;
+    try {
+      slots = projectSocialTickets(session);
+    } on FormatException {
+      return Center(
+        child: Text(
+          english
+              ? 'Invalid ticket data. Please refresh.'
+              : 'Dữ liệu vé không hợp lệ. Vui lòng tải lại.',
+        ),
+      );
     }
-
     final totalSlots = session.maxSlots;
-    final confirmedCount = confirmedList.length;
+    final confirmedCount = slots.length;
+    final inconsistent =
+        confirmedCount != session.currentSlots || confirmedCount > totalSlots;
     final isCompleted = session.status.toUpperCase() == 'COMPLETED';
     final pendingRequests = session.requestedParticipants;
 
@@ -68,13 +57,15 @@ class SocialParticipantsTab extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'XÁC NHẬN THAM GIA • $confirmedCount/$totalSlots',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: colors.textSecondary,
-                letterSpacing: 0.5,
+            Expanded(
+              child: Text(
+                '${english ? 'CONFIRMED' : 'XÁC NHẬN THAM GIA'} • $confirmedCount/$totalSlots',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textSecondary,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
             IconButton(
@@ -91,140 +82,135 @@ class SocialParticipantsTab extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // Sort & Display filter row (Image 2 & 3)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Sắp xếp: Xác nhận gần đây',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_drop_down_rounded,
-                  size: 18,
-                  color: colors.textSecondary,
-                ),
-              ],
+        if (inconsistent)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              english
+                  ? 'Ticket totals differ from the server. Please refresh.'
+                  : 'Số vé chưa khớp máy chủ. Vui lòng tải lại.',
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Hiển thị: Thẻ, Sân, Bạn bè,...',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_drop_down_rounded,
-                  size: 18,
-                  color: colors.textSecondary,
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // ─── 2. GRID 4 COLUMNS (Ảnh 2 & 3) ───
+          ),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: math.max(
+              1,
+              math.min(
+                4,
+                ((MediaQuery.sizeOf(context).width - 32) /
+                        (80 * MediaQuery.textScalerOf(context).scale(1)))
+                    .floor(),
+              ),
+            ),
             mainAxisSpacing: 16,
             crossAxisSpacing: 12,
-            childAspectRatio: 0.8,
+            mainAxisExtent: 72 + MediaQuery.textScalerOf(context).scale(18),
           ),
-          itemCount: totalSlots,
+          itemCount: math.max(totalSlots, confirmedCount),
           itemBuilder: (context, index) {
-            if (index < confirmedList.length) {
-              final p = confirmedList[index];
+            if (index < slots.length) {
+              final slot = slots[index];
+              final p = slot.participant;
               final canRemove =
                   isHost &&
                   !isCompleted &&
                   !p.isHost &&
+                  p.userId != session.hostUserId &&
                   p.apiIdentifier.isNotEmpty;
-              return InkWell(
-                onTap: canRemove && removingParticipantId == null
-                    ? () => onRemoveParticipant(p)
-                    : null,
-                borderRadius: BorderRadius.circular(12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          width: 58,
-                          height: 58,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colors.success.withValues(alpha: 0.35),
-                            border: Border.all(
-                              color: colors.success.withValues(alpha: 0.7),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              p.initials,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                color: colors.textPrimary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (canRemove)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: colors.bgCard,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: colors.border),
-                              ),
-                              child: removingParticipantId == p.apiIdentifier
-                                  ? const SizedBox(
-                                      width: 17,
-                                      height: 17,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : Icon(
-                                      Icons.close_rounded,
-                                      size: 17,
-                                      color: colors.error,
+              return Semantics(
+                key: ValueKey(slot.key),
+                label:
+                    '${p.name}, ${english ? 'ticket' : 'vé'} ${slot.ticketIndex + 1}/${p.ticketCount}',
+                child: InkWell(
+                  onTap: canRemove && removingParticipantId == null
+                      ? () => onRemoveParticipant(p)
+                      : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        children: [
+                          SizedBox(
+                            width: 58,
+                            height: 58,
+                            child: ClipOval(
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  ColoredBox(
+                                    color: colors.success.withValues(
+                                      alpha: 0.35,
                                     ),
+                                    child: Center(child: Text(p.initials)),
+                                  ),
+                                  if (p.avatarUrl?.trim().isNotEmpty == true)
+                                    Image.network(
+                                      p.avatarUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, error, stack) =>
+                                          Center(child: Text(p.initials)),
+                                    ),
+                                  if (slot.ticketIndex > 0)
+                                    ColoredBox(
+                                      color: Colors.black54,
+                                      child: Center(
+                                        child: Text(
+                                          '+${slot.ticketIndex}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      p.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
+                          if (canRemove)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: colors.bgCard,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: colors.border),
+                                ),
+                                child: removingParticipantId == p.apiIdentifier
+                                    ? const SizedBox(
+                                        width: 17,
+                                        height: 17,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.close_rounded,
+                                        size: 17,
+                                        color: colors.error,
+                                      ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(
+                        p.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             } else {
@@ -273,7 +259,7 @@ class SocialParticipantsTab extends StatelessWidget {
           Divider(color: colors.border, height: 1),
           const SizedBox(height: 16),
           Text(
-            'ĐÃ YÊU CẦU • ${pendingRequests.length}',
+            '${english ? 'REQUESTED' : 'ĐÃ YÊU CẦU'} • ${pendingRequests.length}',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
@@ -290,7 +276,10 @@ class SocialParticipantsTab extends StatelessWidget {
             itemBuilder: (context, index) {
               final p = pendingRequests[index];
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: colors.bgCard,
                   borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -328,7 +317,7 @@ class SocialParticipantsTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            p.name,
+                            '${p.name} • ${p.ticketCount} ${english ? 'tickets' : 'vé'}',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -336,21 +325,16 @@ class SocialParticipantsTab extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
+                          Wrap(
+                            spacing: 8,
                             children: [
                               // Icons.check button (Duyệt yêu cầu)
-                              OutlinedButton.icon(
+                              IconButton.outlined(
                                 onPressed: onApproveParticipant != null
                                     ? () => onApproveParticipant!(p)
                                     : null,
                                 icon: const Icon(Icons.check, size: 16),
-                                label: const Text(
-                                  'CHO PHÉP THAM GIA',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
+                                tooltip: 'Cho phép tham gia',
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppTheme.primary,
                                   side: const BorderSide(

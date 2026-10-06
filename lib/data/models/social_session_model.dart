@@ -78,6 +78,8 @@ class SocialParticipantModel {
   String get apiIdentifier => isGuest ? id : userId;
 
   bool get isHost => role.toUpperCase() == 'HOST';
+  bool get isRequested =>
+      const {'REQUESTED', 'PENDING'}.contains(status.toUpperCase());
 
   String get initials {
     final trimmed = name.trim();
@@ -574,7 +576,8 @@ class SocialSessionModel {
               .toList()
         : <SocialParticipantModel>[];
 
-    final rawRequests = json['requests'] ??
+    final rawRequests =
+        json['requests'] ??
         json['requestedParticipants'] ??
         json['pendingRequests'] ??
         json['pending_participants'];
@@ -589,12 +592,12 @@ class SocialSessionModel {
               .toList()
         : <SocialParticipantModel>[];
 
-    final combinedRequests = [
-      ...requestedList,
-      ...participantsList.where((p) => p.status.toUpperCase() == 'PENDING'),
-    ];
+    final combinedRequests = <String, SocialParticipantModel>{
+      for (final participant in [...requestedList, ...participantsList])
+        if (participant.isRequested) participant.id: participant,
+    }.values.toList();
     final confirmedParticipants = participantsList
-        .where((p) => p.status.toUpperCase() != 'PENDING')
+        .where((p) => p.status.toUpperCase() == 'JOINED')
         .toList();
 
     final rawCommunity = json['community'];
@@ -671,7 +674,10 @@ class SocialSessionModel {
           ? (json['currentSlots'] as num).toInt()
           : ((json['currentParticipants'] is num)
                 ? (json['currentParticipants'] as num).toInt()
-                : confirmedParticipants.length),
+                : confirmedParticipants.fold<int>(
+                    0,
+                    (sum, p) => sum + p.ticketCount,
+                  )),
       feePerSlot: (json['feePerSlot'] is num)
           ? (json['feePerSlot'] as num).toInt()
           : ((json['pricePerSlot'] is num)
@@ -706,7 +712,14 @@ class SocialSessionModel {
       participants: confirmedParticipants,
       requestedParticipants: combinedRequests,
       isJoined: json['isJoined'] == true,
-      isPending: json['isPending'] == true,
+      isPending:
+          json['isJoined'] != true &&
+          (json.containsKey('joinRequestStatus')
+              ? const {
+                  'REQUESTED',
+                  'PENDING',
+                }.contains(json['joinRequestStatus']?.toString().toUpperCase())
+              : json['isPending'] == true),
       isHost: json['isHost'] == true,
       chatRoomId: json['chatRoomId']?.toString(),
       chatMessages: (json['chatMessages'] ?? json['messages']) is List
@@ -753,7 +766,9 @@ class SocialSessionModel {
     'sport': sport,
     'sportName': sportName,
     'participants': participants.map((p) => p.toJson()).toList(),
-    'requestedParticipants': requestedParticipants.map((p) => p.toJson()).toList(),
+    'requestedParticipants': requestedParticipants
+        .map((p) => p.toJson())
+        .toList(),
     'isJoined': isJoined,
     'isPending': isPending,
     'isHost': isHost,

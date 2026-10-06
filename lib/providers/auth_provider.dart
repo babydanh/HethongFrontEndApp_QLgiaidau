@@ -395,6 +395,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Đăng xuất
   Future<void> signOut({String? reason}) async {
+    state = state.copyWith(status: AuthStatus.validating);
     _tokenSubscription?.cancel();
     _tokenSubscription = null;
     await ref.read(clearSessionUseCaseProvider).call();

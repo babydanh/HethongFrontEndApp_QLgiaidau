@@ -24,12 +24,17 @@ class DioClient {
   late final Dio _dio;
   late final Dio _refreshDio;
   final TokenManager _tokenManager;
+  final Object Function()? sessionIdentity;
   final Map<String, _CachedGetResponse> _getCache = {};
   Future<_RefreshResult>? _refreshInFlight;
   late final Future<String> _clientId = _loadClientId();
 
-  DioClient({required TokenManager tokenManager, Dio? dio, Dio? refreshDio})
-    : _tokenManager = tokenManager {
+  DioClient({
+    required TokenManager tokenManager,
+    Dio? dio,
+    Dio? refreshDio,
+    this.sessionIdentity,
+  }) : _tokenManager = tokenManager {
     var baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
     if (!kIsWeb && Platform.isAndroid) {
       if (baseUrl.contains('localhost')) {
@@ -80,9 +85,29 @@ class DioClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          final identity = sessionIdentity?.call();
+          final scoped = options.path.contains('/social-sessions');
+          if (scoped && identity != null) {
+            options.extra.putIfAbsent('socialSessionIdentity', () => identity);
+          }
           final clientId = await _clientId;
           options.headers['x-client-id'] = clientId;
           final token = await _tokenManager.getAccessToken();
+          if (scoped &&
+              sessionIdentity != null &&
+              !identical(
+                options.extra['socialSessionIdentity'],
+                sessionIdentity!(),
+              )) {
+            return handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.cancel,
+                message: 'Session changed',
+              ),
+            );
+          }
+          if (scoped) options.headers.remove('Authorization');
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
@@ -120,6 +145,14 @@ class DioClient {
           handler.next(response);
         },
         onError: (DioException error, handler) async {
+          if (sessionIdentity != null &&
+              error.requestOptions.extra.containsKey('socialSessionIdentity') &&
+              !identical(
+                error.requestOptions.extra['socialSessionIdentity'],
+                sessionIdentity!(),
+              )) {
+            return handler.reject(error);
+          }
           if (kDebugMode) _logError(error);
           final statusCode = error.response?.statusCode;
           if (statusCode == 401 &&
@@ -304,7 +337,11 @@ class DioClient {
   /// báo lỗi mạng chứ không được báo 401, vì 401 giả sẽ khiến UI tưởng phiên
   /// hết hạn và bắt host đăng nhập lại oan.
   Future<_RefreshResult> _performTokenRefresh(String baseUrl) async {
+    final identity = sessionIdentity?.call();
     final refreshToken = await _tokenManager.getRefreshToken();
+    if (sessionIdentity != null && !identical(identity, sessionIdentity!())) {
+      return const (pair: null, transientFailure: null);
+    }
     if (refreshToken == null || refreshToken.isEmpty) {
       await _tokenManager.clearTokens();
       return const (pair: null, transientFailure: null);
@@ -327,6 +364,10 @@ class DioClient {
         if (access == null || nextRefresh == null) {
           return const (pair: null, transientFailure: null);
         }
+        if (sessionIdentity != null &&
+            !identical(identity, sessionIdentity!())) {
+          return const (pair: null, transientFailure: null);
+        }
         await _tokenManager.saveTokens(
           accessToken: access,
           refreshToken: nextRefresh,
@@ -337,6 +378,10 @@ class DioClient {
         final status = error.response?.statusCode;
         // 401/403 là server từ chối token: thử lại cũng vô nghĩa, và token cũ
         // phải bị xoá để auth provider đưa user về màn đăng nhập.
+        if (sessionIdentity != null &&
+            !identical(identity, sessionIdentity!())) {
+          return const (pair: null, transientFailure: null);
+        }
         if (status == 401 || status == 403) {
           await _tokenManager.clearTokens();
           return const (pair: null, transientFailure: null);

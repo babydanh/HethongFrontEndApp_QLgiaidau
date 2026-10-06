@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +29,12 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   bool _isSubmitting = false;
+  late final AuthState _openedSession;
+  @override
+  void initState() {
+    super.initState();
+    _openedSession = ref.read(authProvider);
+  }
 
   int get _remainingSlots =>
       widget.session.maxParticipants - widget.session.currentParticipants;
@@ -41,6 +48,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authProvider, (previous, next) {
+      if (!identical(_openedSession, next)) Navigator.of(context).pop();
+    });
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currencyFormatter = NumberFormat.currency(
       locale: 'vi_VN',
@@ -379,6 +389,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   }
 
   Future<void> _handleConfirmJoin() async {
+    if (_isSubmitting || !identical(_openedSession, ref.read(authProvider))) {
+      return;
+    }
     setState(() => _isSubmitting = true);
     try {
       await ref
@@ -390,7 +403,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                 : null,
           );
 
-      if (mounted) {
+      if (mounted && identical(_openedSession, ref.read(authProvider))) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -403,7 +416,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
         );
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && identical(_openedSession, ref.read(authProvider))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(error.toString()),
@@ -413,7 +426,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && identical(_openedSession, ref.read(authProvider))) {
         setState(() => _isSubmitting = false);
       }
     }

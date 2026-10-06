@@ -582,6 +582,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
         venueId: place.venueId,
         provinceCode: place.provinceCode,
         wardCode: place.wardCode,
+        regionEstimated: place.regionEstimated,
+        sourceProvince: place.sourceProvince,
+        sourceWard: place.sourceWard,
       );
     });
   }

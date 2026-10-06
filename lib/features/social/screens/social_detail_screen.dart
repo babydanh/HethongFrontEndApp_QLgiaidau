@@ -18,7 +18,6 @@ import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_con
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_find_players_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_add_participant_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_more_options_sheet.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
@@ -38,7 +37,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
   String? _removingParticipantId;
 
   Future<void> _removeParticipant(SocialParticipantModel participant) async {
-    if (_removingParticipantId != null || participant.isHost) return;
+    if (_removingParticipantId != null || participant.isHost || !_isHost) {
+      return;
+    }
+    final auth = ref.read(authProvider);
     final currentSession = ref
         .read(socialSessionDetailProvider(widget.sessionId))
         .asData
@@ -61,13 +63,17 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true ||
+        !mounted ||
+        !identical(auth, ref.read(authProvider))) {
+      return;
+    }
     setState(() => _removingParticipantId = participant.apiIdentifier);
     try {
       await ref
           .read(socialSessionDetailProvider(widget.sessionId).notifier)
           .removeParticipant(participant.apiIdentifier);
-      if (mounted) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Đã xóa ${participant.name} khỏi buổi Social.'),
@@ -75,7 +81,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         );
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(error.toString()),
@@ -84,35 +90,48 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         );
       }
     } finally {
-      if (mounted) setState(() => _removingParticipantId = null);
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        setState(() => _removingParticipantId = null);
+      }
     }
   }
 
-  bool get _isHost {
-    if (widget.isHost != null) return widget.isHost!;
-    final session = ref
-        .read(socialSessionDetailProvider(widget.sessionId))
-        .asData
-        ?.value;
-    if (session != null) {
-      if (session.isHost) return true;
-      final currentUser = ref.read(userProfileProvider).asData?.value;
-      if (session.creatorId.isNotEmpty &&
-          currentUser != null &&
-          session.creatorId == currentUser.id) {
-        return true;
+  bool get _isHost =>
+      ref
+          .read(socialSessionDetailProvider(widget.sessionId))
+          .asData
+          ?.value
+          .isHost ==
+      true;
+
+  bool _reviewing = false;
+  Future<void> _reviewRequest(
+    SocialParticipantModel participant,
+    bool approve,
+  ) async {
+    if (_reviewing || !_isHost) return;
+    final auth = ref.read(authProvider);
+    setState(() => _reviewing = true);
+    try {
+      final notifier = ref.read(
+        socialSessionDetailProvider(widget.sessionId).notifier,
+      );
+      if (approve) {
+        await notifier.approveParticipant(participant);
+      } else {
+        await notifier.rejectParticipant(participant);
       }
-      if (session.creatorId == 'me') return true;
-      if (session.participants.any(
-        (p) =>
-            p.isHost &&
-            (p.id == currentUser?.id ||
-                (currentUser != null && p.name == currentUser.fullName)),
-      )) {
-        return true;
+    } catch (error) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        setState(() => _reviewing = false);
       }
     }
-    return false;
   }
 
   @override
@@ -135,7 +154,13 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       socialSessionDetailProvider(widget.sessionId),
     );
 
+    ref.listen(authProvider, (previous, next) {
+      _removingParticipantId = null;
+      _reviewing = false;
+    });
     return sessionAsync.when(
+      skipLoadingOnRefresh: false,
+      skipLoadingOnReload: false,
       loading: () => Scaffold(
         backgroundColor: colors.bgDark,
         appBar: AppBar(
@@ -194,7 +219,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         ),
       ),
       data: (session) {
-        final host = widget.isHost ?? session.isHost;
+        final host = session.isHost;
         final showPayment = host && session.feePerSlot > 0;
         final tabLength = 3 + (showPayment ? 1 : 0);
         if (_tabController.length != tabLength) {
@@ -298,54 +323,20 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       removingParticipantId: _removingParticipantId,
                       onAddParticipant: (slot) {
                         if (session.status.toUpperCase() == 'COMPLETED') return;
-                        SocialAddParticipantSheet.show(
-                          context,
-                          session,
-                          slot,
-                        );
+                        SocialAddParticipantSheet.show(context, session, slot);
                       },
-                      onApproveParticipant: (participant) async {
-                        await ref
-                            .read(
-                              socialSessionDetailProvider(
-                                widget.sessionId,
-                              ).notifier,
-                            )
-                            .approveParticipant(participant);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Đã duyệt yêu cầu của ${participant.name}',
-                              ),
-                              backgroundColor: AppTheme.primary,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
-                      onRejectParticipant: (participant) async {
-                        await ref
-                            .read(
-                              socialSessionDetailProvider(
-                                widget.sessionId,
-                              ).notifier,
-                            )
-                            .rejectParticipant(participant);
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Đã từ chối yêu cầu của ${participant.name}',
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
+                      onApproveParticipant: host && !_reviewing
+                          ? (p) => _reviewRequest(p, true)
+                          : null,
+                      onRejectParticipant: host && !_reviewing
+                          ? (p) => _reviewRequest(p, false)
+                          : null,
                     ),
                     if (showPayment) SocialPaymentTab(session: session),
-                    SocialChatTab(session: session),
+                    SocialChatTab(
+                      key: ObjectKey(ref.watch(authProvider)),
+                      session: session,
+                    ),
                   ],
                 ),
               ),
@@ -427,6 +418,15 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         ),
       ),
       actions: [
+        IconButton(
+          tooltip: MaterialLocalizations.of(
+            context,
+          ).refreshIndicatorSemanticLabel,
+          icon: const Icon(Icons.refresh),
+          onPressed: () => ref
+              .read(socialSessionDetailProvider(widget.sessionId).notifier)
+              .refresh(),
+        ),
         IconButton(
           icon: Icon(
             Icons.ios_share_rounded,
@@ -560,7 +560,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                         : isJoined
                         ? colors.success
                         : AppTheme.primary,
-                    foregroundColor: isPending ? AppTheme.primaryDark : Colors.white,
+                    foregroundColor: isPending
+                        ? AppTheme.primaryDark
+                        : Colors.white,
                     disabledBackgroundColor: isPending
                         ? AppTheme.primaryLight
                         : isJoined

@@ -18,6 +18,33 @@ import 'package:url_launcher/url_launcher.dart';
 
 enum _LocationStep { search, input, preview }
 
+/// Combine user input with a real resolver result without moving the chosen pin.
+SocialPlace socialPlaceFromResolvedPin(
+  String input,
+  LatLng pin,
+  SocialPlace resolved,
+) {
+  final entered = input.trim();
+  final name = entered.isEmpty ? resolved.formattedAddress.trim() : entered;
+  if (name.isEmpty || resolved.formattedAddress.trim().isEmpty) {
+    throw const UnresolvableLocation();
+  }
+  return SocialPlace(
+    name: name,
+    formattedAddress: looksLikeStreetAddress(entered)
+        ? entered
+        : resolved.formattedAddress,
+    latitude: pin.latitude,
+    longitude: pin.longitude,
+    provinceCode: resolved.provinceCode,
+    wardCode: resolved.wardCode,
+    regionEstimated: resolved.regionEstimated,
+    sourceProvince: resolved.sourceProvince,
+    sourceWard: resolved.sourceWard,
+    nameFromRegion: entered.isEmpty,
+  );
+}
+
 class SocialLocationFlow extends ConsumerStatefulWidget {
   const SocialLocationFlow({super.key, this.initialPlace, this.initialCenter});
 
@@ -57,6 +84,15 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   bool _resolving = false;
   String? _inputError;
   SocialPlace? _candidate;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialPlace;
+    _inputController.text = initial?.nameFromRegion == true
+        ? ''
+        : initial?.name ?? '';
+  }
 
   @override
   void dispose() {
@@ -114,7 +150,8 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   }
 
   Future<void> _pickOnMap() async {
-    final previous = widget.initialPlace;
+    if (_resolving) return;
+    final previous = _candidate ?? widget.initialPlace;
     final center = previous?.hasPin == true
         ? LatLng(previous!.latitude!, previous.longitude!)
         : widget.initialCenter ?? const LatLng(10.7769, 106.7009);
@@ -125,13 +162,6 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
     );
     if (!mounted || pin == null) return;
     final entered = _inputController.text.trim();
-    if (entered.isEmpty) {
-      setState(
-        () =>
-            _inputError = 'Nhập tên hoặc địa chỉ sân trước khi xác nhận ghim.',
-      );
-      return;
-    }
     setState(() {
       _resolving = true;
       _inputError = null;
@@ -164,19 +194,10 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   /// chính từ ghim. Trước đây cả `name` và `formattedAddress` đều lấy từ ô
   /// nhập nên form tạo kèo hiện "Địa chỉ sân" trùng "Tên sân".
   void _applyPin(String entered, LatLng pin, SocialPlace resolved) {
-    final address = looksLikeStreetAddress(entered)
-        ? entered
-        : resolved.formattedAddress;
+    final candidate = socialPlaceFromResolvedPin(entered, pin, resolved);
     setState(() {
       _resolving = false;
-      _candidate = SocialPlace(
-        name: entered,
-        formattedAddress: address,
-        latitude: pin.latitude,
-        longitude: pin.longitude,
-        provinceCode: resolved.provinceCode,
-        wardCode: resolved.wardCode,
-      );
+      _candidate = candidate;
       _inputError = null;
       _step = _LocationStep.preview;
     });

@@ -1,6 +1,11 @@
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 
 abstract class ISocialSessionRepository {
+  Future<void> requestJoin(String sessionId, {int ticketCount = 1});
+  Future<List<SocialParticipantModel>> listJoinRequests(String sessionId);
+  Future<void> approveJoinRequest(String sessionId, String participantId);
+  Future<void> rejectJoinRequest(String sessionId, String participantId);
+
   /// 4.2 - Danh sách theo ngày (GET /social-sessions?date=YYYY-MM-DD)
   ///
   /// [date] bỏ trống được **chỉ khi** có [search]: backend nới `date` đúng
