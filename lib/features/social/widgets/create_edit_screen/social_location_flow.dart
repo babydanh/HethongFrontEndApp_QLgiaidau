@@ -6,6 +6,8 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/services/social_map_tile_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/footer_button.dart';
 import 'package:app_quanly_giaidau/data/models/social_place.dart';
+import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_place_input.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_location_picker.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -104,15 +106,11 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
     if (query.isNotEmpty) unawaited(_search(query, ++_searchGeneration));
   }
 
-  Future<void> _resolveInput() async {
-    final input = _inputController.text.trim();
-    if (input.isEmpty || _resolving) return;
-    setState(() {
-      _candidate = SocialPlace(name: input, formattedAddress: input);
-      _inputError =
-          'Đã nhập nhãn sân. Hãy ghim và xác nhận vị trí trên bản đồ.';
-    });
-    await _pickOnMap();
+  /// Bước nhập chỉ chuyển sang ghim, không tự tạo candidate: candidate không có
+  /// tọa độ thì preview vẽ map không được, và `_submit` cũng chặn.
+  void _resolveInput() {
+    if (_inputController.text.trim().isEmpty || _resolving) return;
+    unawaited(_pickOnMap());
   }
 
   Future<void> _pickOnMap() async {
@@ -134,14 +132,54 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
       );
       return;
     }
-    Navigator.of(context).pop(
-      SocialPlace(
+    setState(() {
+      _resolving = true;
+      _inputError = null;
+    });
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final resolved = await ref
+          .read(socialLocationRepositoryProvider)
+          .reverseLookup(pin);
+      if (!mounted) return;
+      _applyPin(entered, pin, resolved);
+    } on LocationNetworkFailure {
+      if (!mounted) return;
+      setState(() {
+        _resolving = false;
+        _inputError = l10n.socialPlaceNetworkError;
+      });
+    } on SocialLocationFailure {
+      if (!mounted) return;
+      setState(() {
+        _resolving = false;
+        _inputError = l10n.socialPlaceReverseError;
+      });
+    }
+  }
+
+  /// Ghim xong thì tọa độ giữ nguyên điểm người dùng chọn (không dùng tâm
+  /// phường của `resolved`), còn địa chỉ thì tuỳ vào ô nhập: host gõ sẵn
+  /// địa chỉ đường phố thì giữ street-level của host, còn lại lấy địa chỉ hành
+  /// chính từ ghim. Trước đây cả `name` và `formattedAddress` đều lấy từ ô
+  /// nhập nên form tạo kèo hiện "Địa chỉ sân" trùng "Tên sân".
+  void _applyPin(String entered, LatLng pin, SocialPlace resolved) {
+    final address = looksLikeStreetAddress(entered)
+        ? entered
+        : resolved.formattedAddress;
+    setState(() {
+      _resolving = false;
+      _candidate = SocialPlace(
         name: entered,
-        formattedAddress: entered,
+        formattedAddress: address,
         latitude: pin.latitude,
         longitude: pin.longitude,
-      ),
-    );
+        provinceCode: resolved.provinceCode,
+        wardCode: resolved.wardCode,
+      );
+      _inputError = null;
+      _step = _LocationStep.preview;
+    });
   }
 
   void _goBack() {

@@ -17,13 +17,18 @@ class DioClient {
   static const _maxTransientRetries = 2;
   static const _maxRateLimitRetries = 1;
 
+  /// Refresh token là nút thắt của MỌI request ghi: không có nó thì 401 không
+  /// retry được. Một lần nghẽn mạng ngắn phải không làm hỏng lần ghi.
+  static const _maxRefreshRetries = 2;
+
   late final Dio _dio;
+  late final Dio _refreshDio;
   final TokenManager _tokenManager;
   final Map<String, _CachedGetResponse> _getCache = {};
-  Future<_TokenPair?>? _refreshInFlight;
+  Future<_RefreshResult>? _refreshInFlight;
   late final Future<String> _clientId = _loadClientId();
 
-  DioClient({required TokenManager tokenManager, Dio? dio})
+  DioClient({required TokenManager tokenManager, Dio? dio, Dio? refreshDio})
     : _tokenManager = tokenManager {
     var baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
     if (!kIsWeb && Platform.isAndroid) {
@@ -40,14 +45,33 @@ class DioClient {
         Dio(
           BaseOptions(
             baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
+            sendTimeout: const Duration(seconds: 30),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              if (dotenv.env['APP_API_KEY'] != null &&
+                  dotenv.env['APP_API_KEY']!.isNotEmpty)
+                'x-app-key': dotenv.env['APP_API_KEY']!,
+            },
+          ),
+        );
+
+    // Cùng timeout với dio chính: refresh mở kết nối mới lúc access token vừa
+    // hết hạn, nên bị timeout sớm hơn chính là nghẽn chết một request ghi.
+    _refreshDio =
+        refreshDio ??
+        Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 10),
             sendTimeout: const Duration(seconds: 10),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              if (dotenv.env['APP_API_KEY'] != null &&
-                  dotenv.env['APP_API_KEY']!.isNotEmpty)
+              if (dotenv.env['APP_API_KEY']?.isNotEmpty == true)
                 'x-app-key': dotenv.env['APP_API_KEY']!,
             },
           ),
@@ -102,7 +126,8 @@ class DioClient {
               error.requestOptions.extra[_authRetryKey] != true &&
               !error.requestOptions.path.contains('/auth/mobile/login') &&
               !error.requestOptions.path.contains('/auth/mobile/refresh')) {
-            final refreshed = await _refreshAccessToken(baseUrl);
+            final outcome = await _refreshAccessToken(baseUrl);
+            final refreshed = outcome.pair;
             if (refreshed != null) {
               final options = error.requestOptions.copyWith(
                 extra: {...error.requestOptions.extra, _authRetryKey: true},
@@ -116,6 +141,18 @@ class DioClient {
               } on DioException catch (retryError) {
                 error = retryError;
               }
+            } else if (outcome.transientFailure case final transient?) {
+              // Refresh chỉ chết vì mạng, token vẫn hợp lệ. Trả lỗi mạng thay
+              // vì 401 để UI không bắt host đăng nhập lại oang oàng.
+              return handler.reject(
+                DioException(
+                  requestOptions: error.requestOptions,
+                  type: transient.type,
+                  error: transient.error,
+                  message: 'Token refresh thất bại do mạng',
+                  stackTrace: transient.stackTrace,
+                ),
+              );
             }
           }
 
@@ -247,56 +284,78 @@ class DioClient {
     }
   }
 
-  Future<_TokenPair?> _refreshAccessToken(String baseUrl) {
+  Future<_RefreshResult> _refreshAccessToken(String baseUrl) {
     return _refreshInFlight ??= _performTokenRefresh(baseUrl).whenComplete(() {
       _refreshInFlight = null;
     });
   }
 
-  Future<_TokenPair?> _performTokenRefresh(String baseUrl) async {
+  static bool _isTransient(DioException error) {
+    return error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.connectionError;
+  }
+
+  /// Gọi `/auth/mobile/refresh`, thử lại khi lỗi mạng tạm thời.
+  ///
+  /// Khi hết số lần thử mà vẫn chỉ là lỗi mạng, trả về [transientFailure] và
+  /// **không** xoá token: token còn hợp lệ, chỉ là mạng chết. Request gốc phải
+  /// báo lỗi mạng chứ không được báo 401, vì 401 giả sẽ khiến UI tưởng phiên
+  /// hết hạn và bắt host đăng nhập lại oan.
+  Future<_RefreshResult> _performTokenRefresh(String baseUrl) async {
     final refreshToken = await _tokenManager.getRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
       await _tokenManager.clearTokens();
-      return null;
+      return const (pair: null, transientFailure: null);
     }
-    try {
-      final response = await Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 8),
-          receiveTimeout: const Duration(seconds: 8),
-          sendTimeout: const Duration(seconds: 8),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            if (dotenv.env['APP_API_KEY']?.isNotEmpty == true)
-              'x-app-key': dotenv.env['APP_API_KEY']!,
-          },
-        ),
-      ).post('/auth/mobile/refresh', data: {'refreshToken': refreshToken});
-      final rawData = response.data;
-      final data = rawData is Map && rawData['data'] is Map
-          ? rawData['data'] as Map
-          : rawData is Map
-          ? rawData
-          : const <String, dynamic>{};
-      final access = data['accessToken']?.toString();
-      final nextRefresh = data['refreshToken']?.toString();
-      if (access == null || nextRefresh == null) return null;
-      await _tokenManager.saveTokens(
-        accessToken: access,
-        refreshToken: nextRefresh,
-      );
-      return _TokenPair(access, nextRefresh);
-    } on DioException catch (error, stack) {
-      _log.error('Failed to refresh token', error, stack);
-      final status = error.response?.statusCode;
-      if (status == 401 || status == 403) await _tokenManager.clearTokens();
-      return null;
-    } catch (error, stack) {
-      _log.error('Unexpected refresh token error', error, stack);
-      return null;
+    DioException? lastTransient;
+    for (var attempt = 0; attempt <= _maxRefreshRetries; attempt++) {
+      try {
+        final response = await _refreshDio.post<dynamic>(
+          '/auth/mobile/refresh',
+          data: {'refreshToken': refreshToken},
+        );
+        final rawData = response.data;
+        final data = rawData is Map && rawData['data'] is Map
+            ? rawData['data'] as Map
+            : rawData is Map
+            ? rawData
+            : const <String, dynamic>{};
+        final access = data['accessToken']?.toString();
+        final nextRefresh = data['refreshToken']?.toString();
+        if (access == null || nextRefresh == null) {
+          return const (pair: null, transientFailure: null);
+        }
+        await _tokenManager.saveTokens(
+          accessToken: access,
+          refreshToken: nextRefresh,
+        );
+        return (pair: _TokenPair(access, nextRefresh), transientFailure: null);
+      } on DioException catch (error, stack) {
+        _log.error('Failed to refresh token', error, stack);
+        final status = error.response?.statusCode;
+        // 401/403 là server từ chối token: thử lại cũng vô nghĩa, và token cũ
+        // phải bị xoá để auth provider đưa user về màn đăng nhập.
+        if (status == 401 || status == 403) {
+          await _tokenManager.clearTokens();
+          return const (pair: null, transientFailure: null);
+        }
+        if (!_isTransient(error)) {
+          return const (pair: null, transientFailure: null);
+        }
+        lastTransient = error;
+        if (attempt < _maxRefreshRetries) {
+          await Future<void>.delayed(
+            Duration(milliseconds: 400 * (1 << attempt)),
+          );
+        }
+      } catch (error, stack) {
+        _log.error('Unexpected refresh token error', error, stack);
+        return const (pair: null, transientFailure: null);
+      }
     }
+    return (pair: null, transientFailure: lastTransient);
   }
 
   String _cacheKey(RequestOptions options) {
@@ -398,6 +457,10 @@ class _TokenPair {
   final String refreshToken;
   const _TokenPair(this.accessToken, this.refreshToken);
 }
+
+/// Kết quả refresh: `pair` khi thành công; `transientFailure` khi hết số lần
+/// thử mà nguyên nhân vẫn là lỗi mạng (token vẫn hợp lệ).
+typedef _RefreshResult = ({_TokenPair? pair, DioException? transientFailure});
 
 class _CachedGetResponse {
   final dynamic data;

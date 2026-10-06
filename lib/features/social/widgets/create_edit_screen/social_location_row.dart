@@ -30,7 +30,11 @@ class SocialLocationRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              const Icon(Icons.location_on_outlined, color: AppTheme.primary, size: 22),
+              const Icon(
+                Icons.location_on_outlined,
+                color: AppTheme.primary,
+                size: 22,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: name.isEmpty

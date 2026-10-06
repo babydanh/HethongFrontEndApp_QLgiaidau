@@ -25,10 +25,12 @@ import 'package:latlong2/latlong.dart';
 /// `UpdateSocialSessionDto` chấp nhận.
 ///
 /// Cố ý KHÔNG gửi `sport`, `communityId` (DTO không có → ValidationPipe với
-/// `forbidNonWhitelisted` trả 400) và KHÔNG gửi `newVenue` khi sửa: backend
-/// tạo venue mới mỗi lần sửa, tức là 409 `VENUE_DUPLICATE_CANDIDATES` khi
-/// pin trùng sân đã lưu, hoặc nhân bản sân. Đổi toạ độ chỉ cần `latitude` +
-/// `longitude` — `updateSession` tự suy lại `venueGeolocation`.
+/// `forbidNonWhitelisted` trả 400). Địa điểm ghim tay thì gửi `newVenue` chứ
+/// không gửi `latitude`/`longitude` trần: đường legacy chỉ cập nhật
+/// `social_sessions`, không tạo dòng trong `tournament_venues`, nên sân host
+/// vừa thêm sẽ không bao giờ xuất hiện trong `/social-locations/search`.
+/// Backend `updateSession` gọi `findOrCreateForSocial` nên ghim lại đúng sân
+/// cũ sẽ tái dùng venue đó thay vì 409 hay nhân bản.
 Map<String, dynamic> buildSocialSessionUpdatePayload({
   required String title,
   required String? description,
@@ -51,14 +53,21 @@ Map<String, dynamic> buildSocialSessionUpdatePayload({
     'startAt': startAt.toIso8601String(),
     'durationMinutes': durationMinutes,
     if (locationChanged) ...{
-      if (place.venueId != null)
-        'venueId': place.venueId
-      else if (place.hasPin) ...{
-        'latitude': place.latitude,
-        'longitude': place.longitude,
-      },
-      if (venueName.isNotEmpty) 'venueName': venueName,
-      if (venueAddress.isNotEmpty) 'venueAddress': venueAddress,
+      if (place.venueId != null) ...{
+        'venueId': place.venueId,
+        if (venueName.isNotEmpty) 'venueName': venueName,
+        if (venueAddress.isNotEmpty) 'venueAddress': venueAddress,
+      } else if (place.hasPin &&
+          venueName.isNotEmpty &&
+          venueAddress.isNotEmpty)
+        // Backend từ chối `venueId` + `newVenue` cùng lúc
+        // (`SELECT_EXACTLY_ONE_VENUE_SOURCE`) nên chỉ gửi một nguồn.
+        'newVenue': {
+          'name': venueName,
+          'locationAddress': venueAddress,
+          'latitude': place.latitude,
+          'longitude': place.longitude,
+        },
     },
     'maxSlots': maxSlots,
     'feePerSlot': feePerSlot,
@@ -577,7 +586,6 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     });
   }
 
-
   /// Invalidate cache Social theo CLB để tab Hoạt động cập nhật ngay.
   /// [session] là kèo vừa tạo/sửa (lấy communityId thực tế từ server).
   void _invalidateClubSocialProviders(
@@ -638,25 +646,48 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
         final sessionId = widget.initialSession!.id;
         // UpdateSocialSessionDto chỉ nhận đúng các field dưới đây; gửi
         // `sport`/`communityId` sẽ bị ValidationPipe chặn (forbidNonWhitelisted).
-        // `newVenue` cũng không dùng khi sửa: backend tạo venue mới mỗi lần
-        // (và trả 409 VENUE_DUPLICATE_CANDIDATES khi pin trùng sân đã có),
-        // nên chỉ gửi lat/lng — repository tự suy lại venueGeolocation.
-        final updateFields = buildSocialSessionUpdatePayload(
-          title: resolvedTitle,
-          description: notes,
-          playFormat: _selectedFormat,
-          startAt: _selectedDateTime,
-          durationMinutes: (_durationHours * 60).round(),
-          locationChanged: _locationChanged,
-          place: place,
-          venueName: _venueNameController.text.trim(),
-          venueAddress: _venueAddressController.text.trim(),
-          maxSlots: _maxParticipants,
-          feePerSlot: _price,
-          visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
-        );
+        // Địa điểm ghim tay đi qua `newVenue` để sân được đưa vào thư viện
+        // `tournament_venues` và sau này tìm lại được bằng search.
+        Map<String, dynamic> fieldsFor(SocialPlace target) =>
+            buildSocialSessionUpdatePayload(
+              title: resolvedTitle,
+              description: notes,
+              playFormat: _selectedFormat,
+              startAt: _selectedDateTime,
+              durationMinutes: (_durationHours * 60).round(),
+              locationChanged: _locationChanged,
+              place: target,
+              venueName: _venueNameController.text.trim(),
+              venueAddress: _venueAddressController.text.trim(),
+              maxSlots: _maxParticipants,
+              feePerSlot: _price,
+              visibility: _privacy == 'Nội bộ CLB' ? 'CLUB_ONLY' : 'PUBLIC',
+            );
 
-        final updatedSession = await repo.update(sessionId, updateFields);
+        SocialSessionModel updatedSession;
+        try {
+          updatedSession = await repo.update(sessionId, fieldsFor(place));
+        } on SocialApiException catch (error) {
+          // Pin trùng bán kính một sân đã lưu nhưng khác tên: cho host chọn
+          // sân có sẵn rồi gửi lại bằng `venueId`.
+          if (error.code != 'VENUE_DUPLICATE_CANDIDATES') rethrow;
+          final candidate = await _promptDuplicateVenue(error);
+          if (candidate == null || !mounted) return;
+          final venueId = candidate['id']?.toString();
+          if (venueId == null || venueId.isEmpty) rethrow;
+          updatedSession = await repo.update(
+            sessionId,
+            fieldsFor(
+              SocialPlace(
+                name: place.name,
+                formattedAddress: place.formattedAddress,
+                latitude: place.latitude,
+                longitude: place.longitude,
+                venueId: venueId,
+              ),
+            ),
+          );
+        }
 
         ref.read(socialSessionsProvider.notifier).refresh();
         ref.read(socialSessionDetailProvider(sessionId).notifier).refresh();
@@ -746,65 +777,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       return await repository.create(request) as SocialSessionModel;
     } on SocialApiException catch (error) {
       if (error.code != 'VENUE_DUPLICATE_CANDIDATES' || !mounted) rethrow;
-      final details = error.details;
-      final raw = details is Map ? details['candidates'] : null;
-      final candidates = raw is List ? raw.whereType<Map>().toList() : <Map>[];
-      if (candidates.isEmpty) rethrow;
-      final selected = await showDialog<Map>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(AppLocalizations.of(context)!.socialPlaceDuplicateTitle),
-          content: SizedBox(
-            width: 440,
-            child: ListView(
-              shrinkWrap: true,
-              children: candidates.take(10).map((candidate) {
-                final distance = (candidate['distanceMeters'] as num?)
-                    ?.toDouble();
-                return ListTile(
-                  title: Text(candidate['name']?.toString() ?? 'Sân đã lưu'),
-                  subtitle: Text(
-                    [
-                      candidate['locationAddress']?.toString() ??
-                          candidate['formattedAddress']?.toString() ??
-                          '',
-                      if (distance != null) '${distance.round()} m',
-                    ].where((value) => value.isNotEmpty).join(' • '),
-                  ),
-                  trailing: Text(
-                    AppLocalizations.of(context)!.socialPlaceDuplicateUse,
-                    style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                  ),
-                  onTap: () => Navigator.of(dialogContext).pop(candidate),
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(AppLocalizations.of(context)!.socialPlaceCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop({'edit': true}),
-              child: Text(AppLocalizations.of(context)!.socialPlaceDuplicateEdit),
-            ),
-          ],
-        ),
-      );
+      final selected = await _promptDuplicateVenue(error);
       if (selected == null) rethrow;
-      if (selected['edit'] == true) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)!.socialPlaceDuplicateEditHint,
-              ),
-            ),
-          );
-        }
-        return null;
-      }
       final venueId = selected['id']?.toString();
       if (venueId == null || venueId.isEmpty) rethrow;
       final retry = CreateSocialSessionRequest(
@@ -829,6 +803,73 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       );
       return await repository.create(retry) as SocialSessionModel;
     }
+  }
+
+  /// Hộp thoại chọn trong số các sân đã lưu ở gần vị trí ghim. Trả về sân host
+  /// chọn, hoặc null khi host bỏ chọn / chọn sửa tên địa điểm cho khác.
+  Future<Map?> _promptDuplicateVenue(SocialApiException error) async {
+    final details = error.details;
+    final raw = details is Map ? details['candidates'] : null;
+    final candidates = raw is List ? raw.whereType<Map>().toList() : <Map>[];
+    if (candidates.isEmpty || !mounted) return null;
+    final selected = await showDialog<Map>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.socialPlaceDuplicateTitle),
+        content: SizedBox(
+          width: 440,
+          child: ListView(
+            shrinkWrap: true,
+            children: candidates.take(10).map((candidate) {
+              final distance = (candidate['distanceMeters'] as num?)
+                  ?.toDouble();
+              return ListTile(
+                title: Text(candidate['name']?.toString() ?? 'Sân đã lưu'),
+                subtitle: Text(
+                  [
+                    candidate['locationAddress']?.toString() ??
+                        candidate['formattedAddress']?.toString() ??
+                        '',
+                    if (distance != null) '${distance.round()} m',
+                  ].where((value) => value.isNotEmpty).join(' • '),
+                ),
+                trailing: Text(
+                  AppLocalizations.of(context)!.socialPlaceDuplicateUse,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                onTap: () => Navigator.of(dialogContext).pop(candidate),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(AppLocalizations.of(context)!.socialPlaceCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop({'edit': true}),
+            child: Text(AppLocalizations.of(context)!.socialPlaceDuplicateEdit),
+          ),
+        ],
+      ),
+    );
+    if (selected == null) return null;
+    if (selected['edit'] == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.socialPlaceDuplicateEditHint,
+            ),
+          ),
+        );
+      }
+      return null;
+    }
+    return selected;
   }
 
   @override
