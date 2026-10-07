@@ -2,10 +2,52 @@ import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final homeProjectionProvider = StreamProvider.autoDispose
+    .family<HomeProjection, ({String sport, String matchStatus})>((ref, query) {
+      final repository = ref.watch(homeProjectionRepositoryProvider);
+      late StreamController<HomeProjection> controller;
+      Timer? refreshTimer;
+      var refreshing = false;
+
+      Future<void> refresh() async {
+        if (refreshing) return;
+        refreshing = true;
+        try {
+          final projection = await repository
+              .fetch(sport: query.sport, matchStatus: query.matchStatus)
+              .timeout(const Duration(seconds: 12));
+          if (!controller.isClosed) controller.add(projection);
+        } catch (error, stack) {
+          if (!controller.isClosed) controller.addError(error, stack);
+        } finally {
+          refreshing = false;
+        }
+      }
+
+      controller = StreamController<HomeProjection>(
+        onListen: () {
+          unawaited(refresh());
+          refreshTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+            unawaited(refresh());
+          });
+        },
+        onCancel: () {
+          refreshTimer?.cancel();
+          refreshTimer = null;
+        },
+      );
+      ref.onDispose(() {
+        refreshTimer?.cancel();
+        unawaited(controller.close());
+      });
+      return controller.stream;
+    });
 
 final tournamentsProvider = StreamProvider.autoDispose<List<Tournament>>((ref) {
   return ref.watch(tournamentRepositoryProvider).watchAll().map((list) {

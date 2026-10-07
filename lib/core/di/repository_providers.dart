@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_home_projection_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_ranking_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
@@ -38,6 +39,10 @@ final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
     ref.watch(matchSocketServiceProvider),
   );
 });
+
+final homeProjectionRepositoryProvider = Provider<ApiHomeProjectionRepository>(
+  (ref) => ApiHomeProjectionRepository(ref.watch(dioClientProvider)),
+);
 
 final tournamentManagementRepositoryProvider =
     Provider<TournamentManagementRepository>((ref) {

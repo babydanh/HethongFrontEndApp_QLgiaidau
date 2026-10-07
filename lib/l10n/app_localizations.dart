@@ -8072,6 +8072,18 @@ abstract class AppLocalizations {
   /// **'Chờ duyệt'**
   String get club_pending;
 
+  /// No description provided for @clubApprovalRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bị từ chối'**
+  String get clubApprovalRejected;
+
+  /// No description provided for @homePendingClubFilterNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một số CLB của bạn không khớp bộ lọc hiện tại.'**
+  String get homePendingClubFilterNotice;
+
   /// No description provided for @club_sectionInfo.
   ///
   /// In vi, this message translates to:

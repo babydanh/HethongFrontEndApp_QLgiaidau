@@ -279,8 +279,6 @@ class ApiMatchRepository implements IMatchRepository {
           unawaited(refresh());
         });
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-          _socketService.connect(null, joinMatch: false);
-          _socketService.joinTournament(tournamentId);
           unawaited(refresh(forceRefresh: false));
         });
       },
@@ -346,8 +344,6 @@ class ApiMatchRepository implements IMatchRepository {
           unawaited(refresh());
         });
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-          _socketService.connect(null, joinMatch: false);
-          _socketService.joinTournament(tournamentId);
           unawaited(refresh(forceRefresh: false));
         });
       },
@@ -1230,6 +1226,7 @@ class ApiMatchRepository implements IMatchRepository {
     String? status,
     DateTime? startDate,
     DateTime? endDate,
+    String? trigger,
   }) async {
     final query = <String, dynamic>{'publicOnly': true, 'limit': limit};
     if (cursor != null && cursor.isNotEmpty) query['cursor'] = cursor;
@@ -1253,6 +1250,9 @@ class ApiMatchRepository implements IMatchRepository {
       final response = await _dioClient.dio.get(
         '/matches',
         queryParameters: query,
+        options: Options(
+          extra: trigger == null ? const {} : {'trigger': trigger},
+        ),
       );
       final payload = response.data;
       final matches = _extractList(payload)
@@ -1330,6 +1330,7 @@ class ApiMatchRepository implements IMatchRepository {
     String? status,
     String? cursor,
     int limit = 4,
+    String? trigger,
   }) async {
     final query = <String, dynamic>{
       'tournamentId': tournamentId,
@@ -1344,6 +1345,9 @@ class ApiMatchRepository implements IMatchRepository {
     final response = await _dioClient.dio.get(
       '/matches',
       queryParameters: query,
+      options: Options(
+        extra: trigger == null ? const {} : {'trigger': trigger},
+      ),
     );
     final payload = response.data;
     final list = _extractList(payload);

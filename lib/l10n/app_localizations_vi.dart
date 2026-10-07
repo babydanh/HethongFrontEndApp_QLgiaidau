@@ -4301,6 +4301,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_pending => 'Chờ duyệt';
 
   @override
+  String get clubApprovalRejected => 'Đã bị từ chối';
+
+  @override
+  String get homePendingClubFilterNotice =>
+      'Một số CLB của bạn không khớp bộ lọc hiện tại.';
+
+  @override
   String get club_sectionInfo => 'Thông tin CLB';
 
   @override

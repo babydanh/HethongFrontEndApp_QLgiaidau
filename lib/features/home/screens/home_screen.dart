@@ -18,20 +18,17 @@ import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
+import 'package:app_quanly_giaidau/data/models/home_projection.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
-import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
-import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
-import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -68,69 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   // ─── Per-tab filter state ───
   String _exploreSport = 'all';
-  // Mặc định mở tab "Sắp diễn ra": phần lớn người dùng vào app để xem giải
-  // sắp diễn ra, còn "Trực tiếp" thường rỗng nên phải bấm mới thấy.
-  String _exploreStatus = 'scheduled';
-  bool _initialLiveProbeCompleted = false;
-  bool _initialLiveProbeStarted = false;
-  bool _hasAutoSwitchedLiveTab = false;
-  bool _userManuallySelectedLiveTab = false;
-
-  /// Resolve the first Explore tab from the public live feed instead of
-  /// waiting for every tournament card to open its own match stream. The
-  /// per-tournament fallback below is still kept for realtime/cache drift.
-  Future<void> _resolveInitialExploreStatus() async {
-    try {
-      final liveMatches = await ref.read(liveMatchesProvider.future);
-      if (!mounted || _initialLiveProbeCompleted) return;
-
-      _initialLiveProbeCompleted = true;
-      if (_userManuallySelectedLiveTab || _exploreStatus != 'live') return;
-
-      final hasLiveMatch = liveMatches.any((match) => match.isLive);
-      if (!hasLiveMatch) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted &&
-              !_userManuallySelectedLiveTab &&
-              _exploreStatus == 'live') {
-            setState(() => _exploreStatus = 'scheduled');
-          }
-        });
-      }
-    } catch (_) {
-      // The existing per-tournament streams remain the source of truth when
-      // the advisory startup probe is unavailable.
-      if (mounted) _initialLiveProbeCompleted = true;
-    }
-  }
-
-  void _startInitialExploreStatusProbe() {
-    if (_initialLiveProbeStarted || _initialLiveProbeCompleted) return;
-    _initialLiveProbeStarted = true;
-    ref.invalidate(liveMatchesProvider);
-    unawaited(_resolveInitialExploreStatus());
-  }
-
-  void _handleNoLiveMatches() {
-    if (!_hasAutoSwitchedLiveTab &&
-        _exploreStatus == 'live' &&
-        !_userManuallySelectedLiveTab) {
-      _hasAutoSwitchedLiveTab = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted &&
-            _exploreStatus == 'live' &&
-            !_userManuallySelectedLiveTab) {
-          setState(() {
-            _exploreStatus = 'scheduled';
-          });
-        }
-      });
-    }
-  }
-
-  final String _exploreContent = 'all';
-  final String _exploreBracket = 'all';
-  final String _exploreRanked = 'all';
+  String _exploreStatus = 'live';
   String _tournamentSport = 'all';
   String _tournamentStatus = 'all';
   String _clubSport = 'all';
@@ -173,9 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   void _setActiveSportFilter(String key) {
     setState(() {
-      _hasAutoSwitchedLiveTab = false;
-      _userManuallySelectedLiveTab = false;
-      _exploreStatus = 'scheduled';
+      _exploreStatus = 'live';
       _exploreSport = key;
       _tournamentSport = key;
       _clubSport = key;
@@ -377,7 +310,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (_currentIndex == 3) _fetchServerClubPage(isLoadMore: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (_currentIndex == 0) _startInitialExploreStatusProbe();
       ref.read(authProvider.notifier).init();
     });
 
@@ -469,7 +401,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
       _currentIndex = index;
     });
-    if (index == 0) _startInitialExploreStatusProbe();
     if (index == 1 && _serverTournamentsList.isEmpty) {
       _fetchServerTournamentPage(isLoadMore: false);
     } else if (index == 3 && _serverClubsList.isEmpty) {
@@ -488,9 +419,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final tournamentsAsync = _currentIndex == 0
-        ? ref.watch(tournamentsProvider)
-        : null;
     final screenSize = MediaQuery.of(context).size;
     final double safeAreaTop = _safeAreaTop;
     final isHomeTab = _currentIndex == 0;
@@ -512,11 +440,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: AnimatedBuilder(
             animation: _collapseProgress,
             builder: (context, child) {
-              final double p = _collapseProgress.value; // 0.0 (full) -> 1.0 (compact)
-              final double currentHeaderHeight =
-                  lerpDouble(_headerHeight, 52.0 + safeAreaTop, p)!;
-              final double currentTopPadding =
-                  lerpDouble(safeAreaTop + 14.0, safeAreaTop + 6.0, p)!;
+              final double p =
+                  _collapseProgress.value; // 0.0 (full) -> 1.0 (compact)
+              final double currentHeaderHeight = lerpDouble(
+                _headerHeight,
+                52.0 + safeAreaTop,
+                p,
+              )!;
+              final double currentTopPadding = lerpDouble(
+                safeAreaTop + 14.0,
+                safeAreaTop + 6.0,
+                p,
+              )!;
 
               return Stack(
                 children: [
@@ -525,10 +460,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 1280),
-                        child: _buildCurrentTabContent(
-                          tournamentsAsync,
-                          activeHeaderHeight,
-                        ),
+                        child: _buildCurrentTabContent(activeHeaderHeight),
                       ),
                     ),
                   ),
@@ -548,7 +480,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               children: [
                                 Positioned.fill(
                                   child: CustomPaint(
-                                    size: Size(screenSize.width, currentHeaderHeight),
+                                    size: Size(
+                                      screenSize.width,
+                                      currentHeaderHeight,
+                                    ),
                                     painter: SportoHeaderPainter(
                                       isLoggedIn: false,
                                       colors: context.colors,
@@ -574,7 +509,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                             onSelected: _setActiveSportFilter,
                                             offset: const Offset(0, 40),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
                                             color: context.colors.bgSurface,
                                             elevation: 8,
@@ -585,24 +521,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                   'all',
                                                 ),
                                               ..._activeSportFilterItems(l10n)
-                                                  .where((item) => item.$1 != 'all')
+                                                  .where(
+                                                    (item) => item.$1 != 'all',
+                                                  )
                                                   .map(
-                                                    (item) => _buildPopupMenuItem(
-                                                      item.$2,
-                                                      item.$1,
-                                                    ),
+                                                    (item) =>
+                                                        _buildPopupMenuItem(
+                                                          item.$2,
+                                                          item.$1,
+                                                        ),
                                                   ),
                                             ],
                                             child: Container(
                                               padding: EdgeInsets.symmetric(
-                                                horizontal: lerpDouble(12.0, 9.0, p)!,
-                                                vertical: lerpDouble(6.0, 4.0, p)!,
+                                                horizontal: lerpDouble(
+                                                  12.0,
+                                                  9.0,
+                                                  p,
+                                                )!,
+                                                vertical: lerpDouble(
+                                                  6.0,
+                                                  4.0,
+                                                  p,
+                                                )!,
                                               ),
                                               decoration: BoxDecoration(
                                                 color: Colors.white.withValues(
                                                   alpha: 0.16,
                                                 ),
-                                                borderRadius: BorderRadius.circular(20),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
                                               ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -615,15 +563,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                               _activeSportFilter,
                                                     style: TextStyle(
                                                       color: Colors.white,
-                                                      fontWeight: FontWeight.w800,
-                                                      fontSize: lerpDouble(14.0, 12.5, p)!,
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                      fontSize: lerpDouble(
+                                                        14.0,
+                                                        12.5,
+                                                        p,
+                                                      )!,
                                                     ),
                                                   ),
                                                   const SizedBox(width: 4),
                                                   Icon(
-                                                    Icons.keyboard_arrow_down_rounded,
+                                                    Icons
+                                                        .keyboard_arrow_down_rounded,
                                                     color: Colors.white,
-                                                    size: lerpDouble(18.0, 15.0, p)!,
+                                                    size: lerpDouble(
+                                                      18.0,
+                                                      15.0,
+                                                      p,
+                                                    )!,
                                                   ),
                                                 ],
                                               ),
@@ -648,7 +606,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.w900,
-                                                fontSize: lerpDouble(18.0, 15.5, p)!,
+                                                fontSize: lerpDouble(
+                                                  18.0,
+                                                  15.5,
+                                                  p,
+                                                )!,
                                                 letterSpacing: 0.5,
                                               ),
                                             ),
@@ -670,22 +632,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                                   child: Material(
                                                     color: Colors.transparent,
                                                     child: IconButton(
-                                                      tooltip: l10n.homeGlobalSearchTitle,
-                                                      onPressed: _showGlobalSearchScreen,
+                                                      tooltip: l10n
+                                                          .homeGlobalSearchTitle,
+                                                      onPressed:
+                                                          _showGlobalSearchScreen,
                                                       style: IconButton.styleFrom(
-                                                        backgroundColor: Colors.white
-                                                            .withValues(alpha: 0.16),
-                                                        foregroundColor: Colors.white,
+                                                        backgroundColor: Colors
+                                                            .white
+                                                            .withValues(
+                                                              alpha: 0.16,
+                                                            ),
+                                                        foregroundColor:
+                                                            Colors.white,
                                                         fixedSize: Size(
-                                                          lerpDouble(40.0, 34.0, p)!,
-                                                          lerpDouble(40.0, 34.0, p)!,
+                                                          lerpDouble(
+                                                            40.0,
+                                                            34.0,
+                                                            p,
+                                                          )!,
+                                                          lerpDouble(
+                                                            40.0,
+                                                            34.0,
+                                                            p,
+                                                          )!,
                                                         ),
-                                                        padding: EdgeInsets.zero,
-                                                        shape: const CircleBorder(),
+                                                        padding:
+                                                            EdgeInsets.zero,
+                                                        shape:
+                                                            const CircleBorder(),
                                                       ),
                                                       icon: Icon(
                                                         Icons.search_rounded,
-                                                        size: lerpDouble(20.0, 17.0, p)!,
+                                                        size: lerpDouble(
+                                                          20.0,
+                                                          17.0,
+                                                          p,
+                                                        )!,
                                                       ),
                                                     ),
                                                   ),
@@ -729,7 +711,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                             _exploreSubTabIndex = 0;
                                           });
                                           if (_serverClubsList.isEmpty) {
-                                            _fetchServerClubPage(isLoadMore: false);
+                                            _fetchServerClubPage(
+                                              isLoadMore: false,
+                                            );
                                           }
                                         }
                                       },
@@ -751,8 +735,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 ],
                               ),
                             ),
-
-
                         ],
                       ),
                     ),
@@ -771,15 +753,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildCurrentTabContent(
-    AsyncValue<List<Tournament>>? tournamentsAsync,
-    double headerHeight,
-  ) {
+  Widget _buildCurrentTabContent(double headerHeight) {
     switch (_currentIndex) {
       case 0:
         return KeyedSubtree(
           key: const ValueKey('explore'),
-          child: _buildExploreTab(tournamentsAsync!),
+          child: _buildExploreTab(),
         );
       case 1:
         return KeyedSubtree(
@@ -853,157 +832,138 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // ═══════════════════════════════════════════════════════
   //  TAB 0: KHÁM PHÁ (Explore)
   // ═══════════════════════════════════════════════════════
-  Widget _buildExploreTab(AsyncValue<List<Tournament>> tournamentsAsync) {
+  Widget _buildExploreTab() {
     final l10n = AppLocalizations.of(context)!;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: RefreshIndicator(
-            onRefresh: () async {
-              _hasAutoSwitchedLiveTab = false;
-              _userManuallySelectedLiveTab = false;
-              return ref.refresh(tournamentsProvider);
-            },
-            color: AppTheme.primary,
-            child: tournamentsAsync.when(
-              data: (tournamentsList) {
-                final allTournaments = tournamentsList.where((t) {
-                  final s = t.status.toUpperCase();
-                  if ([
-                    'DRAFT',
-                    'PENDING_APPROVAL',
-                    'SUSPENDED',
-                    'CANCELLED',
-                    'PENDING_DELETE',
-                  ].contains(s)) {
-                    return false;
-                  }
-                  final tSport = t.sport
-                      .toLowerCase()
-                      .replaceAll('_', '')
-                      .replaceAll(' ', '');
-                  final selSport = _exploreSport
-                      .toLowerCase()
-                      .replaceAll('_', '')
-                      .replaceAll(' ', '');
-                  final sportMatch =
-                      selSport == 'all' ||
-                      tSport == selSport ||
-                      tSport.contains(selSport) ||
-                      selSport.contains(tSport);
-                  // Search on the match rows below, not only on tournament
-                  // names. This lets users find a player/team inside a group.
-                  return sportMatch;
-                }).toList();
+    final query = (
+      sport: _exploreSport,
+      matchStatus: _exploreStatus == 'live' ? 'ONGOING' : 'COMPLETED',
+    );
+    final projectionAsync = ref.watch(homeProjectionProvider(query));
 
-                final now = DateTime.now();
-                final featuredTournaments = allTournaments
-                    .where((t) {
-                      final s = t.status.toLowerCase();
-                      if (s == 'completed' || s == 'finished') {
-                        final endedDate = t.endDate ?? t.updatedAt;
-                        return now.difference(endedDate).inDays <= 14;
-                      }
-                      return true;
-                    })
-                    .take(10)
-                    .toList();
-
-                return CustomScrollView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: _pinnedHeaderHeight),
-                    ),
-                    if (!ref.watch(authProvider).isAuthenticated)
-                      SliverToBoxAdapter(
-                        child: _buildGuestLoginNoticeBanner(l10n),
-                      ),
-                    if (featuredTournaments.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: _buildSectionTitle(
-                          title: l10n.featuredTournaments,
-                          actionLabel: l10n.viewAll,
-                          onAction: () => _switchTab(1),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: KeyedSubtree(
-                            key: ValueKey("featured_$_exploreSport"),
-                            child: _buildTournamentCarousel(
-                              featuredTournaments,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _StatusFilterDelegate(
-                        child: _buildExploreSegmentTabBar(l10n),
-                      ),
-                    ),
-                    _TournamentSectionList(
-                      tournaments: allTournaments,
-                      sectionHeader: _buildSectionTitle(
-                        title: _exploreStatus == 'live'
-                            ? l10n.liveMatches
-                            : _exploreStatus == 'scheduled'
-                            ? l10n.upcomingMatches
-                            : l10n.completedMatchesLabel,
-                        isLive: _exploreStatus == 'live',
-                        actionLabel: l10n.viewAll,
-                        onAction: () => _switchTab(1),
-                      ),
-                      filterStatus: _exploreStatus,
-                      searchQuery: _searchQueries[0] ?? '',
-                      contentFilter: _exploreContent,
-                      bracketFilter: _exploreBracket,
-                      rankedFilter: _exploreRanked,
-                      enabled: true,
-                      emptyMessage: _exploreStatus == 'live'
-                          ? l10n.noLiveMatches
-                          : _exploreStatus == 'scheduled'
-                          ? l10n.noUpcomingMatches
-                          : l10n.homeNoCompletedMatches,
-                      onNoLiveMatches: _handleNoLiveMatches,
-                    ),
-
-                    if (allTournaments.isEmpty)
-                      SliverFillRemaining(child: _buildEmpty()),
-                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                  ],
-                );
-              },
-              loading: () => CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: SizedBox(height: _pinnedHeaderHeight),
-                  ),
-                  const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ],
+    return RefreshIndicator(
+      color: AppTheme.primary,
+      onRefresh: () async => ref.invalidate(homeProjectionProvider(query)),
+      child: projectionAsync.when(
+        data: (projection) => CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
+            if (!ref.watch(authProvider).isAuthenticated)
+              SliverToBoxAdapter(child: _buildGuestLoginNoticeBanner(l10n)),
+            if (projection.featuredTournaments.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: _buildSectionTitle(
+                  title: l10n.featuredTournaments,
+                  actionLabel: l10n.viewAll,
+                  onAction: () => _switchTab(1),
+                ),
               ),
-              error: (e, st) => CustomScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: SizedBox(height: _pinnedHeaderHeight),
-                  ),
-                  SliverFillRemaining(child: _buildErrorState(e)),
-                ],
+              SliverToBoxAdapter(
+                child: _buildTournamentCarousel(projection.featuredTournaments),
+              ),
+            ],
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StatusFilterDelegate(
+                child: _buildExploreSegmentTabBar(l10n),
               ),
             ),
-          ),
+            SliverToBoxAdapter(
+              child: _buildSectionTitle(
+                title: _exploreStatus == 'live'
+                    ? l10n.liveMatches
+                    : l10n.completedMatchesLabel,
+                isLive: _exploreStatus == 'live',
+                actionLabel: l10n.viewAll,
+                onAction: () => _switchTab(1),
+              ),
+            ),
+            if (projection.tournaments.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      _exploreStatus == 'live'
+                          ? l10n.noLiveMatches
+                          : l10n.homeNoCompletedMatches,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: context.colors.textSecondary,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                sliver: SliverList.separated(
+                  itemCount: projection.tournaments.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) => _HomeTournamentFinalsCard(
+                    tournament: projection.tournaments[index],
+                  ),
+                ),
+              ),
+            if (projectionAsync.hasError)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(child: Text(l10n.homeMatchesLoadError)),
+                      TextButton(
+                        onPressed: () =>
+                            ref.invalidate(homeProjectionProvider(query)),
+                        child: Text(l10n.homeGlobalSearchRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
         ),
-      ],
+        loading: () => CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ],
+        ),
+        error: (error, _) => CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.homeMatchesLoadError),
+                    TextButton(
+                      onPressed: () =>
+                          ref.invalidate(homeProjectionProvider(query)),
+                      child: Text(l10n.homeGlobalSearchRetry),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1185,60 +1145,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Future<void> _showCreateSocialSession() async {
-    if (!ref.read(authProvider).isAuthenticated) {
-      await context.push('/login');
-      return;
-    }
-
-    final createdSession = await showModalBottomSheet<SocialSessionModel>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CreateSocialScreen(clubId: '', clubName: ''),
-    );
-
-    if (createdSession == null || !mounted) return;
-    await context.push('/social/${createdSession.id}?isHost=true');
-  }
-
-  Widget _buildCreateClubButton() {
-    return GestureDetector(
-      onTap: () {
-        final auth = ref.read(authProvider);
-        if (!auth.isAuthenticated) {
-          context.push('/login');
-        } else {
-          context.push('/club-create');
-        }
-      },
-      child: Tooltip(
-        message: 'Tạo câu lạc bộ',
-        child: Container(
-          width: 38.0,
-          height: 38.0,
-          decoration: BoxDecoration(
-            color: const Color(0xFF60A5FA), // Vòng tròn màu xanh dương nhạt
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFBFDBFE), // Border circle bên ngoài
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSectionTitle({
     required String title,
 
@@ -1360,11 +1266,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
               const SizedBox(width: 4),
               _buildExploreTabButton(
-                label: l10n.matchesFilterScheduled,
-                statusKey: 'scheduled',
-              ),
-              const SizedBox(width: 4),
-              _buildExploreTabButton(
                 label: l10n.homeCompletedStatus,
                 statusKey: 'completed',
               ),
@@ -1386,7 +1287,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       child: GestureDetector(
         onTap: () {
           HapticFeedback.selectionClick();
-          _userManuallySelectedLiveTab = true;
           setState(() => _exploreStatus = statusKey);
         },
         behavior: HitTestBehavior.opaque,
@@ -1440,7 +1340,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildTournamentCarousel(List<Tournament> items) {
+  Widget _buildTournamentCarousel(List<HomeFeaturedTournament> items) {
     if (items.isEmpty) return const SizedBox.shrink();
 
     // Khởi động timer chuyển trang tự động nếu chưa có
@@ -1483,44 +1383,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildEmpty() {
-    final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72.0,
-            height: 72.0,
-            decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            child: const Icon(
-              Icons.search_off_rounded,
-              size: 36,
-              color: Color(0xFFB0BEC5),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            l10n.homeNoTournaments,
-            style: const TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n.homeNoTournamentsHint,
-            style: const TextStyle(fontSize: 13.0, color: Color(0xFF94A3B8)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1964,67 +1826,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
     );
   }
-
-  // ─────────────────────────────────────────────────────
-  //  LOADING & ERROR
-  // ─────────────────────────────────────────────────────
-
-  Widget _buildErrorState(Object e) {
-    final l10n = AppLocalizations.of(context)!;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.cloud_off_rounded,
-              size: 48,
-              color: Color(0xFFB0BEC5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.homeDataLoadError,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '$e',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: () => ref.refresh(tournamentsProvider),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  l10n.matchesRetry,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -2097,187 +1898,149 @@ class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class _TournamentSectionList extends ConsumerWidget {
-  final List<Tournament> tournaments;
-  final String filterStatus;
-  final String searchQuery;
-  final String contentFilter;
-  final String bracketFilter;
-  final String rankedFilter;
-  final bool enabled;
-  final String emptyMessage;
-  final Widget? sectionHeader;
-  final VoidCallback? onNoLiveMatches;
+class _HomeTournamentFinalsCard extends StatelessWidget {
+  final HomeTournamentFinals tournament;
 
-  const _TournamentSectionList({
-    required this.tournaments,
-    required this.filterStatus,
-    this.searchQuery = '',
-    this.contentFilter = 'all',
-    this.bracketFilter = 'all',
-    this.rankedFilter = 'all',
-    this.enabled = true,
-    required this.emptyMessage,
-    this.sectionHeader,
-    this.onNoLiveMatches,
-  });
+  const _HomeTournamentFinalsCard({required this.tournament});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    if (!enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
-    if (tournaments.isEmpty) {
-      if (filterStatus == 'live' && searchQuery.isEmpty) {
-        onNoLiveMatches?.call();
-      }
-      if (searchQuery.isNotEmpty) {
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Center(
-              child: Text(
-                emptyMessage,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Card(
+      color: colors.bgCard,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: colors.border.withValues(alpha: 0.55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: () => context.push('/intro/${tournament.id}'),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.emoji_events_outlined,
+                    color: AppTheme.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      tournament.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: colors.textSecondary),
+                ],
               ),
             ),
           ),
-        );
-      }
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    final activeTournaments = <Tournament>[];
-    var hasLoadingMatches = false;
-    var hasMatchError = false;
-    final failedMatchTournamentIds = <String>[];
-
-    for (final t in tournaments) {
-      final matchesAsync = ref.watch(matchesProvider(t.id));
-      if (matchesAsync.isLoading) {
-        hasLoadingMatches = true;
-        continue;
-      }
-      if (matchesAsync.hasError) {
-        hasMatchError = true;
-        failedMatchTournamentIds.add(t.id);
-        continue;
-      }
-      final matches = matchesAsync.value ?? const <MatchModel>[];
-      final valid = matches.where((m) {
-        final t1 = m.team1Name.trim().toUpperCase();
-        final t2 = m.team2Name.trim().toUpperCase();
-        final isT1Bye = t1 == 'BYE';
-        final isT2Bye = t2 == 'BYE';
-        final isT1Tbd =
-            !isT1Bye && (t1.isEmpty || t1 == 'TBD') && m.team1Id.trim().isEmpty;
-        final isT2Tbd =
-            !isT2Bye && (t2.isEmpty || t2 == 'TBD') && m.team2Id.trim().isEmpty;
-        if (isT1Bye || isT2Bye || (isT1Tbd && isT2Tbd)) return false;
-
-        final q = searchQuery.trim().toLowerCase();
-        final matchText = '${m.team1Name} ${m.team2Name} ${m.tournamentName}'
-            .toLowerCase();
-        if (q.isNotEmpty && !matchText.contains(q)) return false;
-
-        if (filterStatus == 'live') return m.isLive;
-        if (filterStatus == 'completed') {
-          final status = m.status.toUpperCase();
-          return m.isCompleted ||
-              status == 'COMPLETED' ||
-              status == 'FINISHED' ||
-              status == 'DONE' ||
-              status == 'ENDED' ||
-              m.completedAt != null;
-        }
-        if (filterStatus == 'scheduled') {
-          return m.isScheduled ||
-              (m.scheduledTime != null && !m.isLive && !m.isCompleted);
-        }
-        return true;
-      });
-
-      if (valid.isNotEmpty) {
-        activeTournaments.add(t);
-      }
-    }
-
-    if (activeTournaments.isEmpty &&
-        filterStatus == 'live' &&
-        !hasLoadingMatches &&
-        !hasMatchError &&
-        searchQuery.isEmpty) {
-      onNoLiveMatches?.call();
-    }
-
-    final statusMessage = hasLoadingMatches
-        ? l10n.homeMatchesLoading
-        : hasMatchError
-        ? l10n.homeMatchesLoadError
-        : emptyMessage;
-    final statusFeedback = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (hasLoadingMatches) ...[
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(height: 8),
-          ],
-          Text(
-            statusMessage,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF94A3B8),
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (hasMatchError && !hasLoadingMatches)
-            TextButton.icon(
-              key: const ValueKey('home-match-feed-retry'),
-              onPressed: () {
-                for (final tournamentId in failedMatchTournamentIds) {
-                  ref.invalidate(matchesProvider(tournamentId));
-                }
-              },
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.homeGlobalSearchRetry),
+          for (final match in tournament.matches)
+            InkWell(
+              onTap: () => context.push(
+                NavigationHelper.getLiveMatchRoute(tournament.id, match.id),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (match.divisionName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          match.divisionName!,
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          match.status,
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                        if (match.scheduledAt != null)
+                          Text(
+                            MaterialLocalizations.of(
+                              context,
+                            ).formatShortDate(match.scheduledAt!.toLocal()),
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _teamName(
+                            match.team1.name,
+                            colors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '${match.team1Sets}  -  ${match.team2Sets}',
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Expanded(
+                          child: _teamName(
+                            match.team2.name,
+                            colors.textPrimary,
+                            alignEnd: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (match.leg != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Text(
+                          'Lượt ${match.leg}',
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
         ],
       ),
     );
-    final hasProviderFeedback = hasLoadingMatches || hasMatchError;
-
-    return SliverMainAxisGroup(
-      slivers: [
-        if (sectionHeader != null) SliverToBoxAdapter(child: sectionHeader!),
-        if (activeTournaments.isEmpty)
-          SliverToBoxAdapter(child: statusFeedback)
-        else
-          SliverPadding(
-            padding: EdgeInsets.zero,
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => LiveTournamentWithMatchesCard(
-                  tournament: activeTournaments[index],
-                  filterStatus: filterStatus,
-                ),
-                childCount: activeTournaments.length,
-              ),
-            ),
-          ),
-        if (activeTournaments.isNotEmpty && hasProviderFeedback)
-          SliverToBoxAdapter(child: statusFeedback),
-      ],
-    );
   }
+
+  Widget _teamName(String name, Color color, {bool alignEnd = false}) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(
+          name,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: alignEnd ? TextAlign.right : TextAlign.left,
+          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        ),
+      );
 }

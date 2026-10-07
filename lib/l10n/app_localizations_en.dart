@@ -4311,6 +4311,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_pending => 'Pending';
 
   @override
+  String get clubApprovalRejected => 'Rejected';
+
+  @override
+  String get homePendingClubFilterNotice =>
+      'Some of your clubs do not match the current filters.';
+
+  @override
   String get club_sectionInfo => 'Club Info';
 
   @override

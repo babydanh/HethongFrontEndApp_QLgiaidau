@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -14,6 +15,7 @@ class DioClient {
   static const _retryCountKey = '__transient_retry_count';
   static const _authRetryKey = '__auth_retry';
   static const _rateLimitRetryKey = '__rate_limit_retry_count';
+  static const _traceStartedAtKey = '__trace_started_at_us';
   static const _maxTransientRetries = 2;
   static const _maxRateLimitRetries = 1;
 
@@ -114,7 +116,11 @@ class DioClient {
           if (_isSensitiveLocation(options)) {
             options.extra['noCache'] = true;
           }
-          if (kDebugMode) _logRequest(options);
+          if (kDebugMode) {
+            options.extra[_traceStartedAtKey] =
+                DateTime.now().microsecondsSinceEpoch;
+            _logRequest(options);
+          }
           handler.next(options);
         },
         onResponse: (response, handler) {
@@ -327,7 +333,9 @@ class DioClient {
     return error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.sendTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.connectionError;
+        error.type == DioExceptionType.connectionError ||
+        (error.response?.statusCode != null &&
+            error.response!.statusCode! >= 500);
   }
 
   /// Gọi `/auth/mobile/refresh`, thử lại khi lỗi mạng tạm thời.
@@ -410,73 +418,74 @@ class DioClient {
 
   Dio get dio => _dio;
 
-  // ── Logging gọn như file mẫu (chỉ chạy ở debug mode) ─────────────────────
-  // Dùng AppLogger (dart:developer log) để lọc theo tag DioClient trong DevTools.
+  // ── Safe request tracing (debug builds only) ─────────────────────────────
+  // Keep payloads, tokens, free-text search and personal data out of logs.
 
   void _logRequest(RequestOptions options) {
-    if (_isSensitiveLocation(options)) {
-      _log.debug(
-        '[REQUEST] ${options.method} ${_routeTemplate(options)} (location data redacted)',
-      );
-      return;
-    }
-    _log.debug('');
-    _log.debug('============= REQUEST =============');
-    _log.debug('${options.method} ${options.uri}');
-
-    if (options.queryParameters.isNotEmpty) {
-      _log.debug('Query Params:');
-      _log.debug(options.queryParameters.toString());
-    }
-
-    if (options.data != null) {
-      if (options.data is FormData) {
-        final formData = options.data as FormData;
-        _log.debug('FormData Fields:');
-        for (final field in formData.fields) {
-          _log.debug('${field.key}: ${field.value}');
-        }
-        if (formData.files.isNotEmpty) {
-          _log.debug('FormData Files:');
-          for (final file in formData.files) {
-            _log.debug('${file.key}: ${file.value.filename}');
-          }
-        }
-      } else {
-        _log.debug('Body:');
-        _log.debug(options.data.toString());
-      }
-    }
-
-    _log.debug('===================================');
+    final rawTrigger = options.extra['trigger']?.toString() ?? 'api_call';
+    final trigger = rawTrigger
+        .replaceAll(RegExp(r'[^a-zA-Z0-9_.-]'), '_')
+        .substring(0, math.min(rawTrigger.length, 64).toInt());
+    debugPrint(
+      '[DioClient] '
+      '[HTTP] start ${options.method} ${_routeTemplate(options)} '
+      'query=${_safeQuerySummary(options)} '
+      'request_bytes=${_byteLength(options.data) ?? 'unknown'} trigger=$trigger',
+    );
   }
 
   void _logResponse(Response response) {
-    if (_isSensitiveLocation(response.requestOptions)) {
-      _log.debug(
-        '[RESPONSE] ${response.statusCode} ${_routeTemplate(response.requestOptions)} (body redacted)',
-      );
-      return;
-    }
-    _log.debug(
-      '[RESPONSE] ${response.statusCode} ${response.requestOptions.uri}',
+    final options = response.requestOptions;
+    debugPrint(
+      '[DioClient] '
+      '[HTTP] done ${options.method} ${_routeTemplate(options)} '
+      'status=${response.statusCode} duration_ms=${_durationMs(options)} '
+      'response_bytes=${_responseByteLength(response)}',
     );
-    _log.debug(response.data.toString());
   }
 
   void _logError(DioException err) {
-    if (_isSensitiveLocation(err.requestOptions)) {
-      final data = err.response?.data;
-      final code = data is Map ? data['code']?.toString() : null;
-      _log.debug(
-        '[ERROR] ${err.response?.statusCode} ${_routeTemplate(err.requestOptions)} code=${code ?? 'network_error'}',
-      );
-      return;
+    final options = err.requestOptions;
+    debugPrint(
+      '[DioClient] '
+      '[HTTP] error ${options.method} ${_routeTemplate(options)} '
+      'status=${err.response?.statusCode ?? 'network'} '
+      'duration_ms=${_durationMs(options)} type=${err.type.name}',
+    );
+  }
+
+  String _safeQuerySummary(RequestOptions options) {
+    const safeKeys = {'limit', 'status', 'publicOnly', 'page', 'sort', 'order'};
+    if (options.queryParameters.isEmpty) return '{}';
+    final entries = options.queryParameters.entries.map((entry) {
+      final key = entry.key.toString();
+      final value = safeKeys.contains(key) ? entry.value : '<redacted>';
+      return '$key:$value';
+    });
+    return '{${entries.join(',')}}';
+  }
+
+  String _durationMs(RequestOptions options) {
+    final startedAt = options.extra[_traceStartedAtKey];
+    if (startedAt is! int) return 'unknown';
+    final elapsed = DateTime.now().microsecondsSinceEpoch - startedAt;
+    return (elapsed / 1000).toStringAsFixed(1);
+  }
+
+  String _responseByteLength(Response response) {
+    final contentLength = response.headers.value('content-length');
+    if (contentLength != null && int.tryParse(contentLength) != null) {
+      return contentLength;
     }
-    _log.debug('[ERROR] ${err.response?.statusCode} ${err.requestOptions.uri}');
-    _log.debug(err.message ?? 'Unknown error');
-    if (err.response?.data != null) {
-      _log.debug(err.response!.data.toString());
+    return _byteLength(response.data)?.toString() ?? 'unknown';
+  }
+
+  int? _byteLength(Object? value) {
+    if (value == null) return 0;
+    try {
+      return utf8.encode(value is String ? value : jsonEncode(value)).length;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -493,8 +502,16 @@ class DioClient {
         options.path.contains('/regions/resolve');
   }
 
-  String _routeTemplate(RequestOptions options) =>
-      options.path.split('?').first;
+  String _routeTemplate(RequestOptions options) => options.path
+      .split('?')
+      .first
+      .replaceAll(
+        RegExp(
+          r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}',
+        ),
+        ':id',
+      )
+      .replaceAll(RegExp(r'(?<=/)\d+(?=/|$)'), ':id');
 }
 
 class _TokenPair {
@@ -539,7 +556,10 @@ String friendlyDioErrorMessage(DioException e) {
     case DioExceptionType.badCertificate:
       return 'Chứng chỉ bảo mật không hợp lệ.';
     case DioExceptionType.badResponse:
-      return 'Máy chủ phản hồi lỗi (${e.response?.statusCode}).';
+      final statusCode = e.response?.statusCode;
+      return statusCode == null
+          ? (e.message ?? 'Máy chủ phản hồi lỗi.')
+          : 'Máy chủ phản hồi lỗi ($statusCode).';
     case DioExceptionType.cancel:
       return 'Yêu cầu đã bị hủy.';
     case DioExceptionType.unknown:

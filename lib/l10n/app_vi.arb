@@ -1713,6 +1713,8 @@
   "club_noMembers": "Chưa có thành viên",
   "club_noSport": "Chưa có môn thể thao",
   "club_pending": "Chờ duyệt",
+  "clubApprovalRejected": "Đã bị từ chối",
+  "homePendingClubFilterNotice": "Một số CLB của bạn không khớp bộ lọc hiện tại.",
   "club_sectionInfo": "Thông tin CLB",
   "club_statsSection": "Thống kê",
   "club_statusLabel": "Trạng thái",

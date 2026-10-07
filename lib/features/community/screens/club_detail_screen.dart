@@ -198,7 +198,9 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
         return;
       }
       try {
-        final club = await ref.read(communityDetailProvider(widget.clubId).future);
+        final club = await ref.read(
+          communityDetailProvider(widget.clubId).future,
+        );
         if (mounted) await _handleJoinAction(club);
       } catch (_) {
         if (mounted) setState(() => _didStartRequestedJoinFlow = false);
@@ -457,12 +459,50 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final clubAsync = ref.watch(communityDetailProvider(widget.clubId));
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: context.colors.bgDark,
-      body: clubAsync.when(
-        data: (club) {
-          if (club == null) {
+    return PopScope<Object?>(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          ref.read(homeClubListRefreshProvider.notifier).refresh();
+        } else {
+          _handleClubBack();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: context.colors.bgDark,
+        body: clubAsync.when(
+          data: (club) {
+            if (club == null) {
+              return Scaffold(
+                appBar: AppBar(backgroundColor: context.colors.bgDark),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.cloud_off_rounded,
+                        size: 48,
+                        color: context.colors.textMuted,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.club_clubNotFound,
+                        style: TextStyle(color: context.colors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return _buildContent(club);
+          },
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppTheme.primary),
+          ),
+          error: (e, st) {
+            _log.error('Lỗi load club detail', e, st);
             return Scaffold(
+              backgroundColor: context.colors.bgDark,
               appBar: AppBar(backgroundColor: context.colors.bgDark),
               body: Center(
                 child: Column(
@@ -471,55 +511,37 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
                     Icon(
                       Icons.cloud_off_rounded,
                       size: 48,
-                      color: context.colors.textMuted,
+                      color: context.colors.error,
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      l10n.club_clubNotFound,
+                      l10n.club_loadError,
                       style: TextStyle(color: context.colors.textSecondary),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => ref.invalidate(
+                        communityDetailProvider(widget.clubId),
+                      ),
+                      child: Text(l10n.infoRetry),
                     ),
                   ],
                 ),
               ),
             );
-          }
-          return _buildContent(club);
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
+          },
         ),
-        error: (e, st) {
-          _log.error('Lỗi load club detail', e, st);
-          return Scaffold(
-            backgroundColor: context.colors.bgDark,
-            appBar: AppBar(backgroundColor: context.colors.bgDark),
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.cloud_off_rounded,
-                    size: 48,
-                    color: context.colors.error,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.club_loadError,
-                    style: TextStyle(color: context.colors.textSecondary),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () =>
-                        ref.invalidate(communityDetailProvider(widget.clubId)),
-                    child: Text(l10n.infoRetry),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
+  }
+
+  void _handleClubBack() {
+    ref.read(homeClubListRefreshProvider.notifier).refresh();
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home?tab=3&sub=0');
+    }
   }
 
   // ─── Helpers ───

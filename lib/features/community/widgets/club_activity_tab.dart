@@ -13,7 +13,6 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
-import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/core/utils/tennis_game_point_display.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
@@ -48,11 +47,11 @@ enum _ActivityFilter { all, myMatches, ongoing, completed }
 class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     with WidgetsBindingObserver {
   static const _activityMatchPageSize = 10;
-  static const _activitySessionPageSize = 8;
 
   List<MatchModel> _matches = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
+  bool _activityFetchInFlight = false;
   bool _hasMoreActivity = false;
   int _activityDisplayLimit = _activityMatchPageSize;
   String? _errorMessage;
@@ -72,7 +71,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   final Map<String, bool> _tournamentMatchHasMore = {};
   final Map<String, String?> _sessionMatchCursors = {};
   final Map<String, bool> _sessionMatchHasMore = {};
-  String? _sessionListCursor;
   bool _sessionListHasMore = false;
   String? _standaloneMatchCursor;
   bool _standaloneMatchHasMore = false;
@@ -80,6 +78,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   bool _loadMoreQueued = false;
   bool _activityLoadMoreArmed = true;
   bool _activityScrollStarted = false;
+  bool _activitySocketListening = false;
+  bool _appIsForeground = true;
   late final MatchSocketService _matchSocket;
 
   @override
@@ -90,10 +90,30 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     // Capture the provider-owned service while the ConsumerState is mounted.
     // dispose() must not call ref.read after Riverpod has unmounted this state.
     _matchSocket = ref.read(matchSocketServiceProvider);
-    _fetchMatches();
-    _listenForActivityMatchUpdates();
+    if (_isActivityTabSelected) {
+      _fetchMatches();
+      _listenForActivityMatchUpdates();
+    } else {
+      _isLoading = false;
+    }
+    _syncActivityRefreshTimer();
+  }
+
+  bool get _isActivityTabSelected =>
+      widget.tabController == null ||
+      (widget.tabController!.index == 1 &&
+          !widget.tabController!.indexIsChanging);
+
+  void _syncActivityRefreshTimer() {
+    final shouldRun = mounted && _appIsForeground && _isActivityTabSelected;
+    if (!shouldRun) {
+      _refreshTimer?.cancel();
+      _refreshTimer = null;
+      return;
+    }
+    if (_refreshTimer?.isActive == true) return;
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) _fetchMatches(silent: true);
+      if (mounted) unawaited(_fetchMatches(silent: true));
     });
   }
 
@@ -103,22 +123,28 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     if (oldWidget.tabController != widget.tabController) {
       oldWidget.tabController?.removeListener(_onTabControllerChanged);
       widget.tabController?.addListener(_onTabControllerChanged);
+      _onTabControllerChanged();
     }
   }
 
   /// Khi user chuyển sang tab "Hoạt động" (index 1), nếu dữ liệu stale (>60s)
   /// thì tự động fetch lại để backend auto-close các kèo quá hạn.
   void _onTabControllerChanged() {
-    if (widget.tabController?.index == 1 &&
-        !widget.tabController!.indexIsChanging &&
-        mounted) {
+    if (!mounted) return;
+    if (_isActivityTabSelected) {
+      _listenForActivityMatchUpdates();
+      _syncActivitySocketRooms();
+      if (_matches.isEmpty && !_isLoading) unawaited(_fetchMatches());
       final notifier = ref.read(
         clubSocialSessionsProvider(widget.communityId).notifier,
       );
       if (notifier.isStale) {
         unawaited(notifier.refresh());
       }
+    } else {
+      _stopListeningForActivityMatchUpdates();
     }
+    _syncActivityRefreshTimer();
   }
 
   /// Khi app resume từ background, refresh Social sessions nếu data stale.
@@ -126,7 +152,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   /// → response trả về status mới nhất (OPEN quá giờ → COMPLETED).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appIsForeground = state == AppLifecycleState.resumed;
+    _syncActivityRefreshTimer();
     if (state == AppLifecycleState.resumed && mounted) {
+      if (_isActivityTabSelected) {
+        _listenForActivityMatchUpdates();
+        unawaited(_fetchMatches(silent: true));
+      }
       final notifier = ref.read(
         clubSocialSessionsProvider(widget.communityId).notifier,
       );
@@ -152,6 +184,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   }
 
   void _listenForActivityMatchUpdates() {
+    if (_activitySocketListening) return;
+    _activitySocketListening = true;
     final socket = _matchSocket;
     _socketScoreSubscription = socket.onScoreUpdate.listen(
       _handleSocketMatchUpdate,
@@ -164,6 +198,30 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     );
     socket.joinClubCommunity(widget.communityId);
     unawaited(socket.connect(null, joinMatch: false));
+  }
+
+  void _stopListeningForActivityMatchUpdates() {
+    if (!_activitySocketListening) return;
+    _activitySocketListening = false;
+    _socketScoreSubscription?.cancel();
+    _socketStatusSubscription?.cancel();
+    _socketMatchSubscription?.cancel();
+    _socketScoreSubscription = null;
+    _socketStatusSubscription = null;
+    _socketMatchSubscription = null;
+    for (final matchId in _joinedActivityMatchIds) {
+      _matchSocket.leave(matchId);
+    }
+    for (final sessionId in _joinedActivitySessionIds) {
+      _matchSocket.leaveClubMatchSession(sessionId);
+    }
+    for (final tournamentId in _joinedActivityTournamentIds) {
+      _matchSocket.leaveTournament(tournamentId);
+    }
+    _joinedActivityMatchIds.clear();
+    _joinedActivitySessionIds.clear();
+    _joinedActivityTournamentIds.clear();
+    _matchSocket.leaveClubCommunity(widget.communityId);
   }
 
   void _handleSocketMatchUpdate(Map<String, dynamic> payload) {
@@ -180,6 +238,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   }
 
   void _syncActivitySocketRooms() {
+    if (!_activitySocketListening) return;
     final socket = _matchSocket;
     unawaited(socket.connect(null, joinMatch: false));
     for (final match in _matches) {
@@ -211,20 +270,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
       _onActivityScrollPosition,
     );
     _socketRefreshTimer?.cancel();
-    _socketScoreSubscription?.cancel();
-    _socketStatusSubscription?.cancel();
-    _socketMatchSubscription?.cancel();
-    final socket = _matchSocket;
-    for (final matchId in _joinedActivityMatchIds) {
-      socket.leave(matchId);
-    }
-    for (final sessionId in _joinedActivitySessionIds) {
-      socket.leaveClubMatchSession(sessionId);
-    }
-    for (final tournamentId in _joinedActivityTournamentIds) {
-      socket.leaveTournament(tournamentId);
-    }
-    socket.leaveClubCommunity(widget.communityId);
+    _stopListeningForActivityMatchUpdates();
     _refreshTimer?.cancel();
     super.dispose();
   }
@@ -267,7 +313,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     _tournamentMatchHasMore.clear();
     _sessionMatchCursors.clear();
     _sessionMatchHasMore.clear();
-    _sessionListCursor = null;
     _sessionListHasMore = false;
     _standaloneMatchCursor = null;
     _standaloneMatchHasMore = false;
@@ -335,9 +380,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   int _compareSocialsDesc(SocialSessionModel a, SocialSessionModel b) {
     final dateA = _resolveSocialPlayDate(a);
     final dateB = _resolveSocialPlayDate(b);
-    final dateComp = dateB.compareTo(dateA); // Sắp xếp playDate mới nhất lên đầu (DESC)
+    final dateComp = dateB.compareTo(
+      dateA,
+    ); // Sắp xếp playDate mới nhất lên đầu (DESC)
     if (dateComp != 0) return dateComp;
-    return b.startAt.compareTo(a.startAt); // Cùng ngày thì giờ muộn hơn xếp trước
+    return b.startAt.compareTo(
+      a.startAt,
+    ); // Cùng ngày thì giờ muộn hơn xếp trước
   }
 
   String _formatSocialDateHeader(DateTime date) {
@@ -382,6 +431,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     bool silent = false,
     bool loadMore = false,
   }) async {
+    if (_activityFetchInFlight) return;
     if (loadMore && (_isLoadingMore || !_hasMoreActivity)) return;
 
     // The activity feed merges independent cursor streams. A first request can
@@ -410,6 +460,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
 
     final isFirstPage = !silent && !loadMore;
     final isHeadRefresh = silent && !loadMore;
+    _activityFetchInFlight = true;
     if (isFirstPage) {
       _resetActivityPaging();
       setState(() {
@@ -589,6 +640,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
         setState(() => _errorMessage = e.toString());
       }
     } finally {
+      _activityFetchInFlight = false;
       if (mounted) {
         setState(() {
           if (isFirstPage) _isLoading = false;
@@ -861,25 +913,30 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     // Dữ liệu Social của CLB (Ảnh 2 Reclub)
     // Backend trả về status OPEN,FULL,COMPLETED cho GET /by-community/:id.
     // Watch AsyncValue trực tiếp để phân biệt loading/error với rỗng thật.
-    final clubSocialsAsync =
-        ref.watch(clubSocialSessionsProvider(widget.communityId));
+    final clubSocialsAsync = ref.watch(
+      clubSocialSessionsProvider(widget.communityId),
+    );
     final clubSocials =
         clubSocialsAsync.asData?.value ?? const <SocialSessionModel>[];
-    final isLoadingSocials =
-        clubSocialsAsync.isLoading && clubSocials.isEmpty;
-    final socialsError =
-        clubSocialsAsync.hasError ? clubSocialsAsync.error : null;
-    final openSocials = clubSocials
-        .where((s) =>
-            s.status.toUpperCase() == 'OPEN' ||
-            s.status.toUpperCase() == 'FULL')
-        .toList()
-      ..sort(_compareSocialsDesc);
-    final completedSocials = clubSocials
-        .where((s) => s.status.toUpperCase() == 'COMPLETED')
-        .toList()
-      ..sort(_compareSocialsDesc);
-    final displayedSocials = _socialStatusFilter == 'OPEN' ? openSocials : completedSocials;
+    final isLoadingSocials = clubSocialsAsync.isLoading && clubSocials.isEmpty;
+    final socialsError = clubSocialsAsync.hasError
+        ? clubSocialsAsync.error
+        : null;
+    final openSocials =
+        clubSocials
+            .where(
+              (s) =>
+                  s.status.toUpperCase() == 'OPEN' ||
+                  s.status.toUpperCase() == 'FULL',
+            )
+            .toList()
+          ..sort(_compareSocialsDesc);
+    final completedSocials =
+        clubSocials.where((s) => s.status.toUpperCase() == 'COMPLETED').toList()
+          ..sort(_compareSocialsDesc);
+    final displayedSocials = _socialStatusFilter == 'OPEN'
+        ? openSocials
+        : completedSocials;
 
     final Map<String, List<SocialSessionModel>> groupedSocials = {};
     final Map<String, DateTime> groupDateMap = {};
@@ -912,7 +969,11 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
           children: [
             // ─── 1. LỊCH CHƠI & HOẠT ĐỘNG SOCIAL CLB (Ảnh 2 Reclub) ───
             // _buildWeeklyScheduleCard(colors),
-            _buildSocialFilterBar(colors, openSocials.length, completedSocials.length),
+            _buildSocialFilterBar(
+              colors,
+              openSocials.length,
+              completedSocials.length,
+            ),
             const SizedBox(height: 12),
             if (isLoadingSocials) ...[
               const Padding(
@@ -927,7 +988,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
               ),
             ] else if (socialsError != null && clubSocials.isEmpty) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Center(
                   child: Column(
                     children: [
@@ -979,16 +1043,16 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
               const SizedBox(height: 6),
             ] else ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 child: Center(
                   child: Text(
                     _socialStatusFilter == 'OPEN'
                         ? 'Chưa có hoạt động nào đang mở'
                         : 'Chưa có hoạt động nào đã kết thúc',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                    ),
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
                   ),
                 ),
               ),
@@ -1010,7 +1074,10 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.bgSurface,
                       borderRadius: BorderRadius.circular(10),
@@ -1201,52 +1268,59 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
       children: [
         content,
         if (isClubManager)
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: FloatingActionButton(
-              heroTag: 'fab_club_activity_social_${widget.communityId}',
-              backgroundColor: AppTheme.primary,
-              shape: const CircleBorder(
-                side: BorderSide(
-                  color: Colors.transparent,
+          Positioned.fill(
+            child: SafeArea(
+              top: false,
+              left: false,
+              right: false,
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16, bottom: 16),
+                  child: FloatingActionButton(
+                    heroTag: 'fab_club_activity_social_${widget.communityId}',
+                    backgroundColor: AppTheme.primary,
+                    shape: const CircleBorder(
+                      side: BorderSide(color: Colors.transparent),
+                    ),
+                    elevation: 4,
+                    onPressed: () async {
+                      final createdSession =
+                          await showModalBottomSheet<SocialSessionModel>(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => CreateSocialScreen(
+                              clubId: widget.communityId,
+                              clubName: widget.club?.name ?? 'CLB',
+                              clubLogoUrl: widget.club?.logoUrl,
+                            ),
+                          );
+                      // CreateSocialScreen đã invalidate provider khi tạo/sửa,
+                      // nhưng invalidate thêm ở đây để chắc chắn tab refresh
+                      // ngay cả khi sheet bị dismiss mà không qua _submit.
+                      if (createdSession != null) {
+                        ref.invalidate(
+                          clubSocialSessionsProvider(widget.communityId),
+                        );
+                      }
+                      if (createdSession != null && context.mounted) {
+                        await context.push(
+                          '/social/${createdSession.id}?isHost=true',
+                        );
+                        // Quay lại từ detail (join/hủy/sửa trong detail) —
+                        // load lại để filter "Mở"/"Đã xong" đúng trạng thái mới.
+                        if (mounted) {
+                          ref.invalidate(
+                            clubSocialSessionsProvider(widget.communityId),
+                          );
+                        }
+                      }
+                    },
+                    child: const Icon(Icons.add, color: Colors.white, size: 28),
+                  ),
                 ),
               ),
-              elevation: 4,
-              onPressed: () async {
-                final createdSession =
-                    await showModalBottomSheet<SocialSessionModel>(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => CreateSocialScreen(
-                    clubId: widget.communityId,
-                    clubName: widget.club?.name ?? 'CLB',
-                    clubLogoUrl: widget.club?.logoUrl,
-                  ),
-                );
-                // CreateSocialScreen đã invalidate provider khi tạo/sửa,
-                // nhưng invalidate thêm ở đây để chắc chắn tab refresh
-                // ngay cả khi sheet bị dismiss mà không qua _submit.
-                if (createdSession != null) {
-                  ref.invalidate(
-                    clubSocialSessionsProvider(widget.communityId),
-                  );
-                }
-                if (createdSession != null && context.mounted) {
-                  await context.push(
-                    '/social/${createdSession.id}?isHost=true',
-                  );
-                  // Quay lại từ detail (join/hủy/sửa trong detail) —
-                  // load lại để filter "Mở"/"Đã xong" đúng trạng thái mới.
-                  if (mounted) {
-                    ref.invalidate(
-                      clubSocialSessionsProvider(widget.communityId),
-                    );
-                  }
-                }
-              },
-              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
           ),
       ],
@@ -1444,14 +1518,21 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   ) {
     final isCompleted = session.status.toUpperCase() == 'COMPLETED';
     final currentUserId = ref.read(userProfileProvider).asData?.value.id;
-    final currentUserName = ref.read(userProfileProvider).asData?.value.fullName;
-    final isCreator = session.isHost ||
-                      (session.creatorId.isNotEmpty && session.creatorId == currentUserId) ||
-                      (session.creatorId == 'me') ||
-                      (session.participants.any((p) =>
-                          p.isHost &&
-                          (p.id == currentUserId ||
-                              (currentUserName != null && p.name == currentUserName))));
+    final currentUserName = ref
+        .read(userProfileProvider)
+        .asData
+        ?.value
+        .fullName;
+    final isCreator =
+        session.isHost ||
+        (session.creatorId.isNotEmpty && session.creatorId == currentUserId) ||
+        (session.creatorId == 'me') ||
+        (session.participants.any(
+          (p) =>
+              p.isHost &&
+              (p.id == currentUserId ||
+                  (currentUserName != null && p.name == currentUserName)),
+        ));
     final isHost = isCreator;
     final isAdmin = isClubManager;
     return InkWell(
@@ -1471,15 +1552,16 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
             children: [
               Container(
                 width: 92,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 6,
+                ),
                 decoration: BoxDecoration(
                   color: colors.bgSurface,
                   borderRadius: const BorderRadius.horizontal(
                     left: Radius.circular(AppTheme.radiusXL),
                   ),
-                  border: Border(
-                    right: BorderSide(color: colors.border),
-                  ),
+                  border: Border(right: BorderSide(color: colors.border)),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1510,10 +1592,13 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                         ),
                         decoration: BoxDecoration(
                           color: colors.success.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusSmall,
+                          ),
                         ),
                         child: Text(
                           isCompleted ? 'ĐÃ TỔ CHỨC' : 'TỔ CHỨC',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 9.5,
                             fontWeight: FontWeight.w800,
@@ -1835,7 +1920,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                                 ),
                               ],
                             ),
-                          )
+                          ),
                       ],
                     ),
                   ],
@@ -2102,8 +2187,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                             style: TextStyle(
                               fontSize: 13.5,
                               height: 1.15,
-                               fontWeight: teamNameWeight,
-                               color: teamNameColor,
+                              fontWeight: teamNameWeight,
+                              color: teamNameColor,
                             ),
                           )
                       else
@@ -2113,8 +2198,8 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13.5,
-                             fontWeight: teamNameWeight,
-                             color: teamNameColor,
+                            fontWeight: teamNameWeight,
+                            color: teamNameColor,
                           ),
                         ),
                       if (eloDelta != null) ...[
@@ -2163,12 +2248,12 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
               const SizedBox(width: 8),
               // Neo cụm điểm vào mép phải; set mới xuất hiện bên phải và
               // tự đẩy các set trước đó sang trái.
-               () {
-                 final displaySets = sets.length > 5
-                     ? sets.sublist(sets.length - 5)
-                     : sets;
-                 final startIndex = sets.length - displaySets.length;
-                 return Column(
+              () {
+                final displaySets = sets.length > 5
+                    ? sets.sublist(sets.length - 5)
+                    : sets;
+                final startIndex = sets.length - displaySets.length;
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     SingleChildScrollView(
@@ -2176,51 +2261,55 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                       reverse: true,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                         children: [
-                           if (isWinner)
-                             const Padding(
-                               padding: EdgeInsets.only(right: 8),
-                               child: Icon(
-                                 Icons.check_outlined,
-                                 size: 24,
-                                 color: Color(0xFF34A853),
-                               ),
-                             ),
-                           ...displaySets.asMap().entries.map((entry) {
-                             final setIndex = startIndex + entry.key;
-                             final score = entry.value;
-                             final opponentScore = setIndex < opponentSets.length
-                                 ? opponentSets[setIndex]
-                                 : null;
-                             final wonSet =
-                                 isCompleted && opponentScore != null && score > opponentScore;
-                             final lostSet =
-                                 isCompleted && opponentScore != null && score < opponentScore;
-                             return Container(
-                               width: 22,
-                               margin: const EdgeInsets.only(left: 5),
-                               alignment: Alignment.center,
-                               child: Text(
-                                 '$score',
-                                 style: TextStyle(
-                                   fontSize: 14,
-                                   fontWeight: wonSet
-                                       ? FontWeight.w800
-                                       : FontWeight.w400,
-                                   fontFeatures: const [
-                                     FontFeature.tabularFigures(),
-                                   ],
-                                   color: wonSet
-                                       ? colors.textPrimary
-                                       : lostSet
-                                       ? colors.textMuted
-                                       : colors.textSecondary,
-                                 ),
-                               ),
-                             );
-                           }),
-                         ],
-                       ),
+                        children: [
+                          if (isWinner)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 8),
+                              child: Icon(
+                                Icons.check_outlined,
+                                size: 24,
+                                color: Color(0xFF34A853),
+                              ),
+                            ),
+                          ...displaySets.asMap().entries.map((entry) {
+                            final setIndex = startIndex + entry.key;
+                            final score = entry.value;
+                            final opponentScore = setIndex < opponentSets.length
+                                ? opponentSets[setIndex]
+                                : null;
+                            final wonSet =
+                                isCompleted &&
+                                opponentScore != null &&
+                                score > opponentScore;
+                            final lostSet =
+                                isCompleted &&
+                                opponentScore != null &&
+                                score < opponentScore;
+                            return Container(
+                              width: 22,
+                              margin: const EdgeInsets.only(left: 5),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '$score',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: wonSet
+                                      ? FontWeight.w800
+                                      : FontWeight.w400,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                  color: wonSet
+                                      ? colors.textPrimary
+                                      : lostSet
+                                      ? colors.textMuted
+                                      : colors.textSecondary,
+                                ),
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
                     ),
                     if (currentGamePoint != null)
                       Padding(

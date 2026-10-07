@@ -1713,6 +1713,8 @@
   "club_noMembers": "No members yet",
   "club_noSport": "No sport selected",
   "club_pending": "Pending",
+  "clubApprovalRejected": "Rejected",
+  "homePendingClubFilterNotice": "Some of your clubs do not match the current filters.",
   "club_sectionInfo": "Club Info",
   "club_statsSection": "Statistics",
   "club_statusLabel": "Status",

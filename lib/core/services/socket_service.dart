@@ -19,12 +19,14 @@ class SocketService {
   Timer? _reconnectTimer;
   bool _manualDisconnect = false;
   int _reconnectAttempt = 0;
+  Future<void>? _connectionInFlight;
+  int _connectionGeneration = 0;
 
   /// Callback khi có notification realtime mới.
   void Function(Map<String, dynamic> data)? onNotification;
 
   SocketService({required TokenManager tokenManager})
-      : _tokenManager = tokenManager;
+    : _tokenManager = tokenManager;
 
   bool get isConnected => _socket?.connected ?? false;
 
@@ -33,10 +35,28 @@ class SocketService {
     _manualDisconnect = false;
     _reconnectTimer?.cancel();
     if (_socket?.connected == true) return;
+    final connectionInFlight = _connectionInFlight;
+    if (connectionInFlight != null) {
+      await connectionInFlight;
+      return;
+    }
     _disconnect();
 
+    final connection = _createConnection(_connectionGeneration);
+    _connectionInFlight = connection;
+    try {
+      await connection;
+    } finally {
+      if (identical(_connectionInFlight, connection)) {
+        _connectionInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _createConnection(int generation) async {
     try {
       final token = await _tokenManager.getAccessToken();
+      if (generation != _connectionGeneration || _manualDisconnect) return;
       if (token == null || token.isEmpty) {
         _log.warning('Không có JWT token — bỏ qua kết nối socket');
         return;
@@ -46,9 +66,9 @@ class SocketService {
       final rawBaseUrl = envApiBaseUrl.isNotEmpty
           ? envApiBaseUrl
           : (dotenv.env['API_BASE_URL'] ??
-              (kIsWeb
-                  ? 'https://sporto.asia/api/v1'
-                  : 'http://localhost:3000/api/v1'));
+                (kIsWeb
+                    ? 'https://sporto.asia/api/v1'
+                    : 'http://localhost:3000/api/v1'));
       // Lấy base server URL (bỏ /api/v1, thêm namespace /notifications)
       final serverUrl = rawBaseUrl.replaceAll(RegExp(r'/api/v1/?$'), '');
 
@@ -99,6 +119,8 @@ class SocketService {
   /// Ngắt kết nối.
   void disconnect() {
     _manualDisconnect = true;
+    _connectionGeneration++;
+    _connectionInFlight = null;
     _reconnectTimer?.cancel();
     _disconnect();
   }
@@ -117,6 +139,8 @@ class SocketService {
   /// Làm mới kết nối (khi token thay đổi).
   Future<void> reconnect() async {
     _manualDisconnect = false;
+    _connectionGeneration++;
+    _connectionInFlight = null;
     _reconnectTimer?.cancel();
     _disconnect();
     await connect();

@@ -2,14 +2,14 @@ part of '../screens/club_detail_screen.dart';
 
 extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
   Widget _buildSliverAppBar(
-      Community club,
-      AppColorsExtension colors,
-      Color sColor,
-      String emoji,
-      double topPadding,
-      AppLocalizations l10n, {
-        required bool isClubAdmin,
-      }) {
+    Community club,
+    AppColorsExtension colors,
+    Color sColor,
+    String emoji,
+    double topPadding,
+    AppLocalizations l10n, {
+    required bool isClubAdmin,
+  }) {
     final bannerUrl = _resolveImageUrl(club.bannerUrl);
     final logoUrl = _resolveImageUrl(club.logoUrl);
     final bool hasBanner = bannerUrl.isNotEmpty;
@@ -38,14 +38,16 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
     final List<Shadow>? iconShadows = _isCollapsed
         ? null
         : [
-      Shadow(
-        offset: const Offset(0, 1),
-        blurRadius: 4.0,
-        color: Colors.black.withValues(alpha: 0.5),
-      ),
-    ];
+            Shadow(
+              offset: const Offset(0, 1),
+              blurRadius: 4.0,
+              color: Colors.black.withValues(alpha: 0.5),
+            ),
+          ];
 
-    final Color currentIconColor = _isCollapsed ? colors.textPrimary : Colors.white;
+    final Color currentIconColor = _isCollapsed
+        ? colors.textPrimary
+        : Colors.white;
 
     return SliverAppBar(
       pinned: true,
@@ -58,32 +60,29 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
       backgroundColor: _isCollapsed ? colors.bgDark : Colors.transparent,
 
       // GIẢI PHÁP 1: Ép cấu hình IconTheme để triệt tiêu hoàn toàn độ mờ (opacity) mặc định từ SliverAppBar
-      iconTheme: IconThemeData(
-        color: currentIconColor,
-        opacity: 1.0,
-      ),
+      iconTheme: IconThemeData(color: currentIconColor, opacity: 1.0),
 
       leading: IconButton(
         icon: Icon(
           Icons.arrow_back_ios_rounded,
           color: currentIconColor, // Ép màu đục 100%
           size: 22,
-          shadows: iconShadows,    // Đổ bóng chống lóa khi đè lên ảnh bìa sáng màu
+          shadows: iconShadows, // Đổ bóng chống lóa khi đè lên ảnh bìa sáng màu
         ),
-        onPressed: () => context.pop(),
+        onPressed: _handleClubBack,
         splashRadius: 20,
       ),
       title: _isCollapsed
           ? Text(
-        club.name,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          color: colors.textPrimary,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      )
+              club.name,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            )
           : null,
       actions: [
         IconButton(
@@ -118,22 +117,21 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
           IconButton(
             icon: _isOpeningClubChat
                 ? SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: colors.textPrimary,
-              ),
-            )
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colors.textPrimary,
+                    ),
+                  )
                 : Icon(
-              Icons.chat_bubble_outline,
-              color: currentIconColor, // Sử dụng biến màu đồng bộ thay vì ép cứng colors.textPrimary lúc mở rộng
-              size: 22,
-              shadows: iconShadows,
-            ),
-            onPressed: _isOpeningClubChat
-                ? null
-                : () => _openClubChat(club),
+                    Icons.chat_bubble_outline,
+                    color:
+                        currentIconColor, // Sử dụng biến màu đồng bộ thay vì ép cứng colors.textPrimary lúc mở rộng
+                    size: 22,
+                    shadows: iconShadows,
+                  ),
+            onPressed: _isOpeningClubChat ? null : () => _openClubChat(club),
             padding: const EdgeInsets.symmetric(horizontal: 4),
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             splashRadius: 18,
@@ -146,11 +144,11 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
           children: [
             hasBanner
                 ? ClubNetworkImage(
-              bannerUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  fallbackBanner(),
-            )
+                    bannerUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        fallbackBanner(),
+                  )
                 : fallbackBanner(),
             // Camera icon trên ảnh bìa khi là Admin (không dùng circle)
             if (isClubAdmin)
@@ -165,8 +163,10 @@ extension _ClubDetailHeaderAppBar on _ClubDetailScreenState {
                   ),
                   tooltip: 'Đổi ảnh bìa',
                   padding: EdgeInsets.zero,
-                  constraints:
-                  const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                   splashRadius: 18,
                   onPressed: () =>
                       _showChangePhotoOptions(club: club, isLogo: false),

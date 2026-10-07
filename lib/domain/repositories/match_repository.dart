@@ -106,6 +106,7 @@ abstract class IMatchRepository {
     String? status,
     DateTime? startDate,
     DateTime? endDate,
+    String? trigger,
   });
 
   Future<
@@ -116,6 +117,7 @@ abstract class IMatchRepository {
     String? status,
     String? cursor,
     int limit = 4,
+    String? trigger,
   });
 
   /// Gửi cheer (cổ vũ) cho trận đấu — POST /matches/:id/cheer.
