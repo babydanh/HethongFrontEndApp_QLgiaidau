@@ -158,6 +158,42 @@ abstract class AppLocalizations {
   /// **'Tạo trận đấu'**
   String get club_createMatchStandalone;
 
+  /// No description provided for @club_createActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo hoạt động'**
+  String get club_createActivity;
+
+  /// No description provided for @club_createSocial.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo Social'**
+  String get club_createSocial;
+
+  /// No description provided for @club_createSocialDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Social là sự kiện xé vé diễn ra một lần'**
+  String get club_createSocialDescription;
+
+  /// No description provided for @club_createMatchQuick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trận đấu nhanh'**
+  String get club_createMatchQuick;
+
+  /// No description provided for @club_createMatchQuickDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trận đấu nhanh cho CLB'**
+  String get club_createMatchQuickDescription;
+
+  /// No description provided for @social_repeat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lặp lại Social'**
+  String get social_repeat;
+
   /// No description provided for @club_standaloneMatch.
   ///
   /// In vi, this message translates to:

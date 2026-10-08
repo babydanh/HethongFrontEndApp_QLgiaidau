@@ -1,26 +1,19 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+
+enum _SocialMoreOptionsAction { repeat, report, hide }
 
 class SocialMoreOptionsSheet extends StatelessWidget {
   const SocialMoreOptionsSheet({
     super.key,
     required this.session,
     required this.isHost,
-    required this.onRepeat,
-    required this.onEdit,
-    required this.onCancel,
-    required this.onMute,
-    required this.onReport,
   });
 
   final SocialSessionModel session;
   final bool isHost;
-  final VoidCallback onRepeat;
-  final VoidCallback onEdit;
-  final VoidCallback onCancel;
-  final VoidCallback onMute;
-  final VoidCallback onReport;
 
   static Future<void> show(
     BuildContext context,
@@ -31,8 +24,8 @@ class SocialMoreOptionsSheet extends StatelessWidget {
     required VoidCallback onCancel,
     required VoidCallback onMute,
     required VoidCallback onReport,
-  }) {
-    return showModalBottomSheet<void>(
+  }) async {
+    final action = await showModalBottomSheet<_SocialMoreOptionsAction>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -41,19 +34,17 @@ class SocialMoreOptionsSheet extends StatelessWidget {
       builder: (_) => SocialMoreOptionsSheet(
         session: session,
         isHost: isHost,
-        onRepeat: onRepeat,
-        onEdit: onEdit,
-        onCancel: onCancel,
-        onMute: onMute,
-        onReport: onReport,
       ),
     );
+    // showModalBottomSheet completes after the route's closing transition.
+    if (action == _SocialMoreOptionsAction.repeat) onRepeat();
+    if (action == _SocialMoreOptionsAction.report) onReport();
   }
 
   Widget _option(
     BuildContext context,
     String title,
-    VoidCallback action, {
+    _SocialMoreOptionsAction action, {
     IconData? icon,
     bool destructive = false,
   }) {
@@ -68,17 +59,13 @@ class SocialMoreOptionsSheet extends StatelessWidget {
           color: destructive ? colors.error : colors.textPrimary,
         ),
       ),
-      onTap: () {
-        Navigator.pop(context);
-        action();
-      },
+      onTap: () => Navigator.pop(context, action),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final isCompleted = session.status.toUpperCase() == 'COMPLETED';
     if (!isHost) {
       return SafeArea(
         child: SingleChildScrollView(
@@ -88,13 +75,13 @@ class SocialMoreOptionsSheet extends StatelessWidget {
               _option(
                 context,
                 'Báo cáo buổi Social này',
-                onReport,
+                _SocialMoreOptionsAction.report,
                 icon: Icons.report_problem_outlined,
               ),
               _option(
                 context,
                 'Ẩn các buổi của Host này',
-                () {},
+                _SocialMoreOptionsAction.hide,
                 icon: Icons.block_outlined,
               ),
               const SizedBox(height: 8),
@@ -122,15 +109,11 @@ class SocialMoreOptionsSheet extends StatelessWidget {
               ),
             ),
             Divider(height: 1, color: colors.border),
-            _option(context, 'Lặp lại kèo', onRepeat),
-            Divider(height: 1, color: colors.border),
-            if (!isCompleted) ...[
-              _option(context, 'Chỉnh sửa kèo', onEdit),
-              Divider(height: 1, color: colors.border),
-            ],
-            _option(context, 'Hủy kèo', onCancel, destructive: true),
-            Divider(height: 1, color: colors.border),
-            _option(context, 'Tắt thông báo cuộc trò chuyện', onMute),
+            _option(
+              context,
+              AppLocalizations.of(context)!.social_repeat,
+              _SocialMoreOptionsAction.repeat,
+            ),
             const SizedBox(height: 8),
           ],
         ),

@@ -80,6 +80,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
   bool _activityScrollStarted = false;
   bool _activitySocketListening = false;
   bool _appIsForeground = true;
+  bool _isOpeningCreateAction = false;
   late final MatchSocketService _matchSocket;
 
   @override
@@ -850,6 +851,91 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     );
   }
 
+  bool _canCreateClubMatch() {
+    final membership = ref
+        .read(myCommunityMembershipProvider(widget.communityId))
+        .asData
+        ?.value;
+    if (membership?.status.toUpperCase() != 'JOINED') return false;
+    final role = (membership?.role ?? widget.club?.myRole ?? '').toUpperCase();
+    final isManager = const {'OWNER', 'ADMIN', 'MODERATOR'}.contains(role);
+    final settings = ref
+        .read(communitySocialSettingsProvider(widget.communityId))
+        .asData
+        ?.value;
+    return isManager || settings?.memberMatchCreationEnabled != false;
+  }
+
+  bool _canCreateClubSocial() {
+    final membership = ref
+        .read(myCommunityMembershipProvider(widget.communityId))
+        .asData
+        ?.value;
+    final role = (membership?.role ?? widget.club?.myRole ?? '').toUpperCase();
+    return membership?.status.toUpperCase() == 'JOINED' &&
+        const {'OWNER', 'ADMIN', 'MODERATOR'}.contains(role);
+  }
+
+  Future<void> _createStandaloneMatch() async {
+    final createdMatch = await ClubStandaloneMatchDialog.show(
+      context,
+      communityId: widget.communityId,
+      clubName: widget.club?.name,
+      onMatchCreated: () => _fetchMatches(),
+    );
+    if (!mounted || createdMatch == null) return;
+    final action = await ClubStandaloneMatchResultDialog.show(
+      context,
+      match: createdMatch,
+    );
+    if (!mounted || action != ClubStandaloneMatchAction.saved) return;
+    unawaited(_fetchMatches(silent: true));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.club_matchScoreSaved),
+      ),
+    );
+  }
+
+  Future<void> _createClubSocial() async {
+    final createdSession = await showModalBottomSheet<SocialSessionModel>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CreateSocialScreen(
+        clubId: widget.communityId,
+        clubName: widget.club?.name ?? 'CLB',
+        clubLogoUrl: widget.club?.logoUrl,
+      ),
+    );
+    if (!mounted || createdSession == null) return;
+    ref.invalidate(clubSocialSessionsProvider(widget.communityId));
+    await context.push('/social/${createdSession.id}?isHost=true');
+    if (!mounted) return;
+    ref.invalidate(clubSocialSessionsProvider(widget.communityId));
+  }
+
+  Future<void> _openCreateActionSheet({required bool isManager}) async {
+    if (_isOpeningCreateAction || !_canCreateClubMatch()) return;
+    _isOpeningCreateAction = true;
+    try {
+      final action = await showModalBottomSheet<_ClubActivityAction>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => _ClubActivityActionSheet(isManager: isManager),
+      );
+      if (!mounted || action == null) return;
+      if (action == _ClubActivityAction.social) {
+        if (_canCreateClubSocial()) await _createClubSocial();
+      } else if (_canCreateClubMatch()) {
+        await _createStandaloneMatch();
+      }
+    } finally {
+      _isOpeningCreateAction = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -1064,7 +1150,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
               child: Row(
                 children: [
                   Text(
-                    'TRẬN ĐẤU CLB',
+                    'TRẬN ĐẤU NHANH',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -1109,55 +1195,6 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                     userMatches: userMatches,
                   ),
                   const Spacer(),
-                  // Nút tạo trận đấu dạng tròn với dấu + sát lề phải
-                  if (canCreateStandalone)
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        tooltip: l10n.club_createMatchStandalone,
-                        icon: const Icon(
-                          Icons.add_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                        onPressed: () async {
-                          final createdMatch =
-                              await ClubStandaloneMatchDialog.show(
-                                context,
-                                communityId: widget.communityId,
-                                clubName: widget.club?.name,
-                                onMatchCreated: () => _fetchMatches(),
-                              );
-                          if (!context.mounted || createdMatch == null) {
-                            return;
-                          }
-                          final action =
-                              await ClubStandaloneMatchResultDialog.show(
-                                context,
-                                match: createdMatch,
-                              );
-                          if (!context.mounted) return;
-                          if (action == ClubStandaloneMatchAction.saved) {
-                            unawaited(_fetchMatches(silent: true));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.club_matchScoreSaved,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -1267,7 +1304,7 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
     return Stack(
       children: [
         content,
-        if (isClubManager)
+        if (canCreateStandalone)
           Positioned.fill(
             child: SafeArea(
               top: false,
@@ -1284,40 +1321,15 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
                       side: BorderSide(color: Colors.transparent),
                     ),
                     elevation: 4,
-                    onPressed: () async {
-                      final createdSession =
-                          await showModalBottomSheet<SocialSessionModel>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => CreateSocialScreen(
-                              clubId: widget.communityId,
-                              clubName: widget.club?.name ?? 'CLB',
-                              clubLogoUrl: widget.club?.logoUrl,
-                            ),
-                          );
-                      // CreateSocialScreen đã invalidate provider khi tạo/sửa,
-                      // nhưng invalidate thêm ở đây để chắc chắn tab refresh
-                      // ngay cả khi sheet bị dismiss mà không qua _submit.
-                      if (createdSession != null) {
-                        ref.invalidate(
-                          clubSocialSessionsProvider(widget.communityId),
-                        );
-                      }
-                      if (createdSession != null && context.mounted) {
-                        await context.push(
-                          '/social/${createdSession.id}?isHost=true',
-                        );
-                        // Quay lại từ detail (join/hủy/sửa trong detail) —
-                        // load lại để filter "Mở"/"Đã xong" đúng trạng thái mới.
-                        if (mounted) {
-                          ref.invalidate(
-                            clubSocialSessionsProvider(widget.communityId),
-                          );
-                        }
-                      }
-                    },
-                    child: const Icon(Icons.add, color: Colors.white, size: 28),
+                    tooltip: l10n.club_createActivity,
+                    onPressed: () => _openCreateActionSheet(
+                      isManager: isClubManager,
+                    ),
+                    child: const Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
                 ),
               ),
@@ -2411,6 +2423,90 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
           fontSize: 12,
           fontWeight: FontWeight.w800,
           color: isWinner ? Colors.white : const Color(0xFF64748B),
+        ),
+      ),
+    );
+  }
+}
+
+enum _ClubActivityAction { social, standaloneMatch }
+
+class _ClubActivityActionSheet extends StatelessWidget {
+  const _ClubActivityActionSheet({required this.isManager});
+
+  final bool isManager;
+
+  Widget _action(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String description,
+    required _ClubActivityAction action,
+  }) {
+    final colors = context.colors;
+    return InkWell(
+      onTap: () => Navigator.of(context).pop(action),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return SafeArea(
+      child: Material(
+        color: colors.bgCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isManager) ...[
+                _action(
+                  context,
+                  icon: Icons.event_available_rounded,
+                  title: l10n.club_createSocial,
+                  description: l10n.club_createSocialDescription,
+                  action: _ClubActivityAction.social,
+                ),
+                Divider(height: 1, color: colors.border),
+              ],
+              _action(
+                context,
+                icon: Icons.sports_tennis_rounded,
+                title: l10n.club_createMatchQuick,
+                description: l10n.club_createMatchQuickDescription,
+                action: _ClubActivityAction.standaloneMatch,
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );

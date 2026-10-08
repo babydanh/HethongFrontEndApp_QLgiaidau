@@ -40,6 +40,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_createMatchStandalone => 'Create Match';
 
   @override
+  String get club_createActivity => 'Create activity';
+
+  @override
+  String get club_createSocial => 'Create Social';
+
+  @override
+  String get club_createSocialDescription => 'A one-time ticketed Social event';
+
+  @override
+  String get club_createMatchQuick => 'Create quick match';
+
+  @override
+  String get club_createMatchQuickDescription =>
+      'Create a quick match for the club';
+
+  @override
+  String get social_repeat => 'Repeat Social';
+
+  @override
   String get club_standaloneMatch => 'Standalone Match';
 
   @override

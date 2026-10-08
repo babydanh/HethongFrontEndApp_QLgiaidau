@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
@@ -772,16 +773,25 @@ Link: $shareUrl''';
     final auth = ref.read(authProvider);
     try {
       var community = session.community;
-      if (community?.name.trim().isNotEmpty != true) {
-        final details = await ref.read(
-          communityDetailProvider(communityId).future,
-        );
-        if (details != null) {
-          community = SocialCommunitySummary(
-            id: details.id,
-            name: details.name,
-            logoUrl: details.logoUrl,
+      if (community?.name.trim().isNotEmpty != true ||
+          community?.logoUrl?.trim().isNotEmpty != true) {
+        try {
+          final details = await ref.read(
+            communityDetailProvider(communityId).future,
           );
+          if (details != null) {
+            community = SocialCommunitySummary(
+              id: details.id,
+              name: community?.name.trim().isNotEmpty == true
+                  ? community!.name
+                  : details.name,
+              logoUrl: community?.logoUrl?.trim().isNotEmpty == true
+                  ? community!.logoUrl
+                  : details.logoUrl,
+            );
+          }
+        } catch (_) {
+          // Missing club imagery must not prevent the join invitation.
         }
       }
       final clubName = community?.name.trim() ?? '';
@@ -798,41 +808,130 @@ Link: $shareUrl''';
       if (membership?.status.toUpperCase() == 'JOINED') return;
       final accepted = await showDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Row(children: [
-            CircleAvatar(
-              backgroundColor: context.colors.bgSurface,
-              backgroundImage: community?.logoUrl?.isNotEmpty == true
-                  ? NetworkImage(community!.logoUrl!)
-                  : null,
-              child: community?.logoUrl?.isNotEmpty == true
-                  ? null
-                  : Icon(
-                      Icons.groups_rounded,
-                      color: context.colors.textSecondary,
-                    ),
+        builder: (dialogContext) {
+          final colors = dialogContext.colors;
+          final l10n = AppLocalizations.of(dialogContext)!;
+          final logoUrl = community?.logoUrl?.trim() ?? '';
+          final width = MediaQuery.sizeOf(dialogContext).width;
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 24,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                clubName,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            clipBehavior: Clip.none,
+            backgroundColor: colors.bgCard,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(dialogContext).height * .82,
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 46),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  clubName,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(dialogContext).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 16),
+                                Divider(height: 1, color: colors.border),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 22),
+                                  child: Text(
+                                    l10n.socialJoinClubQuestion,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(dialogContext).textTheme.bodyLarge,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Divider(height: 1, color: colors.border),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: width < 340
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(dialogContext, false),
+                                      child: Text(l10n.socialSkipClubJoin),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () => Navigator.pop(dialogContext, true),
+                                      child: Text(l10n.socialJoinClub),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, false),
+                                        child: Text(l10n.socialSkipClubJoin),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, true),
+                                        child: Text(l10n.socialJoinClub),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: -36,
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: colors.bgSurface,
+                      child: ClipOval(
+                        child: logoUrl.isEmpty
+                            ? Icon(
+                                Icons.groups_rounded,
+                                color: colors.textSecondary,
+                                size: 36,
+                              )
+                            : ClubNetworkImage(
+                                logoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.groups_rounded,
+                                  color: colors.textSecondary,
+                                  size: 36,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ]),
-          content: Text(AppLocalizations.of(context)!.socialJoinClubQuestion),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(AppLocalizations.of(context)!.socialSkipClubJoin),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(AppLocalizations.of(context)!.socialJoinClub),
-            ),
-          ],
-        ),
+          );
+        },
       );
       if (accepted == true && mounted && identical(auth, ref.read(authProvider))) {
         // Club detail owns the complete existing join flow (questions, invitation,
