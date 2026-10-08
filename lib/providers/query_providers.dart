@@ -12,7 +12,6 @@ final homeProjectionProvider = StreamProvider.autoDispose
     .family<HomeProjection, ({String sport, String matchStatus})>((ref, query) {
       final repository = ref.watch(homeProjectionRepositoryProvider);
       late StreamController<HomeProjection> controller;
-      Timer? refreshTimer;
       var refreshing = false;
 
       Future<void> refresh() async {
@@ -33,17 +32,9 @@ final homeProjectionProvider = StreamProvider.autoDispose
       controller = StreamController<HomeProjection>(
         onListen: () {
           unawaited(refresh());
-          refreshTimer = Timer.periodic(const Duration(seconds: 20), (_) {
-            unawaited(refresh());
-          });
-        },
-        onCancel: () {
-          refreshTimer?.cancel();
-          refreshTimer = null;
         },
       );
       ref.onDispose(() {
-        refreshTimer?.cancel();
         unawaited(controller.close());
       });
       return controller.stream;

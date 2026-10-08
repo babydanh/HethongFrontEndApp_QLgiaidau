@@ -1967,7 +1967,7 @@ abstract class AppLocalizations {
   /// No description provided for @noLiveMatches.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có trận đấu nào đang diễn ra'**
+  /// **'Không có trận đấu đang diễn ra'**
   String get noLiveMatches;
 
   /// No description provided for @upcomingMatches.
@@ -8969,7 +8969,7 @@ abstract class AppLocalizations {
   /// No description provided for @exploreLiveEmpty.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có trận đấu nào đang diễn ra'**
+  /// **'Không có trận đấu đang diễn ra'**
   String get exploreLiveEmpty;
 
   /// No description provided for @exploreRecentResultsTitle.

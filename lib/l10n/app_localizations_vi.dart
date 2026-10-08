@@ -996,7 +996,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveMatches => 'Trận đấu đang diễn ra';
 
   @override
-  String get noLiveMatches => 'Chưa có trận đấu nào đang diễn ra';
+  String get noLiveMatches => 'Không có trận đấu đang diễn ra';
 
   @override
   String get upcomingMatches => 'Lịch thi đấu sắp diễn ra';
@@ -4773,7 +4773,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get exploreLiveTitle => 'Trận đấu đang diễn ra';
 
   @override
-  String get exploreLiveEmpty => 'Chưa có trận đấu nào đang diễn ra';
+  String get exploreLiveEmpty => 'Không có trận đấu đang diễn ra';
 
   @override
   String get exploreRecentResultsTitle => 'Kết quả trận đấu vừa qua';

@@ -1906,141 +1906,268 @@ class _HomeTournamentFinalsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Card(
-      color: colors.bgCard,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: colors.border.withValues(alpha: 0.55)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InkWell(
-            onTap: () => context.push('/intro/${tournament.id}'),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.emoji_events_outlined,
-                    color: AppTheme.primary,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      tournament.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: () => context.push('/intro/${tournament.id}'),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                _HomeAvatar(
+                  name: tournament.name,
+                  url: tournament.logoUrl,
+                  size: 48,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    tournament.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Icon(Icons.chevron_right, color: colors.textSecondary),
+                ),
+                Icon(Icons.chevron_right, color: colors.textSecondary),
+              ],
+            ),
+          ),
+        ),
+        for (final match in tournament.matches) ...[
+          const SizedBox(height: 12),
+          _HomeMatchCard(tournamentId: tournament.id, match: match),
+        ],
+      ],
+    );
+  }
+}
+
+class _HomeMatchCard extends StatelessWidget {
+  final String tournamentId;
+  final HomeFinalMatch match;
+
+  const _HomeMatchCard({required this.tournamentId, required this.match});
+
+  String get roundLabel {
+    final branch = match.branch.toUpperCase();
+    if (branch == 'GRAND_FINALS' || branch == 'FINAL') return 'Chung kết';
+    final distance = match.lastRoundNumber - match.roundNumber;
+    if (branch == 'LOSERS' || branch == 'LOSER') {
+      if (distance == 0) return 'Chung kết nhánh thua';
+      return 'Nhánh thua - vòng ${match.roundNumber}';
+    }
+    if (branch == 'THIRD_PLACE') return 'Tranh hạng ba';
+    if (distance == 0) return 'Chung kết';
+    if (distance == 1) return 'Bán kết';
+    if (distance == 2) return 'Tứ kết';
+    return match.stageName ?? 'Vòng ${match.roundNumber}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Material(
+      color: colors.bgCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: colors.border.withValues(alpha: 0.6)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push(
+          NavigationHelper.getLiveMatchRoute(tournamentId, match.id),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.account_tree_outlined,
+                      size: 20, color: AppTheme.primary),
+                  const SizedBox(width: 8),
+                  Text(roundLabel,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      )),
+                  const SizedBox(width: 8),
+                  if (match.divisionName != null)
+                    Expanded(
+                      child: Text(
+                        match.divisionName!,
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: colors.textSecondary),
+                      ),
+                    ),
                 ],
               ),
             ),
-          ),
-          for (final match in tournament.matches)
-            InkWell(
-              onTap: () => context.push(
-                NavigationHelper.getLiveMatchRoute(tournament.id, match.id),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (match.divisionName != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          match.divisionName!,
-                          style: TextStyle(
-                            color: colors.textSecondary,
-                            fontSize: 12,
+            Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+            LayoutBuilder(builder: (context, constraints) {
+              final availableWidth = constraints.maxWidth;
+              final scoreWidth = match.scoreSets.length * 32.0;
+              final contentWidth = availableWidth > 180 + scoreWidth
+                  ? availableWidth
+                  : 180 + scoreWidth;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: contentWidth,
+                  child: Column(
+                    children: [
+                      if (match.scoreSets.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              for (var index = 0;
+                                  index < match.scoreSets.length;
+                                  index++)
+                                SizedBox(
+                                  width: 32,
+                                  child: Text(
+                                    '${index + 1}',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: colors.textMuted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
+                        child: Column(
+                          children: [
+                            _teamRow(context, match.team1, true),
+                            const SizedBox(height: 20),
+                            _teamRow(context, match.team2, false),
+                          ],
                         ),
                       ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          match.status,
-                          style: TextStyle(
-                            color: colors.textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                        if (match.scheduledAt != null)
-                          Text(
-                            MaterialLocalizations.of(
-                              context,
-                            ).formatShortDate(match.scheduledAt!.toLocal()),
-                            style: TextStyle(
-                              color: colors.textSecondary,
-                              fontSize: 11,
-                            ),
-                          ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _teamName(
-                            match.team1.name,
-                            colors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '${match.team1Sets}  -  ${match.team2Sets}',
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Expanded(
-                          child: _teamName(
-                            match.team2.name,
-                            colors.textPrimary,
-                            alignEnd: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (match.leg != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 5),
-                        child: Text(
-                          'Lượt ${match.leg}',
-                          style: TextStyle(
-                            color: colors.textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ),
-        ],
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _teamName(String name, Color color, {bool alignEnd = false}) =>
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Text(
-          name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: alignEnd ? TextAlign.right : TextAlign.left,
-          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+  Widget _teamRow(BuildContext context, HomeFinalTeam team, bool first) {
+    final colors = context.colors;
+    final members = team.members;
+    return Row(
+      children: [
+        SizedBox(
+          width: members.length > 1 ? 66 : 40,
+          child: Row(
+            children: [
+              for (final member in members.take(2))
+                Align(
+                  widthFactor: members.length > 1 ? 0.82 : 1,
+                  child: _HomeAvatar(
+                    name: member.name,
+                    url: member.avatarUrl,
+                    size: 36,
+                  ),
+                ),
+              if (members.isEmpty)
+                _HomeAvatar(name: team.name, url: team.logoUrl, size: 36),
+            ],
+          ),
         ),
-      );
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (members.isEmpty)
+                Text(team.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w600))
+              else
+                for (final member in members.take(2))
+                  Text(member.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w600)),
+            ],
+          ),
+        ),
+        for (final set in match.scoreSets)
+          SizedBox(
+            width: 32,
+            child: Text(
+              '${first ? set.team1 : set.team2}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: (first ? set.team1 > set.team2 : set.team2 > set.team1)
+                    ? AppTheme.primary
+                    : colors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _HomeAvatar extends StatelessWidget {
+  final String name;
+  final String? url;
+  final double size;
+
+  const _HomeAvatar({required this.name, required this.url, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final fallback = Center(
+      child: Text(
+        name.trim().isEmpty ? '?' : name.trim().substring(0, 1).toUpperCase(),
+        style: const TextStyle(
+          color: AppTheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppTheme.primary.withValues(alpha: 0.1),
+        border: Border.all(color: context.colors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url == null
+          ? fallback
+          : ClubNetworkImage(
+              url!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => fallback,
+            ),
+    );
+  }
 }

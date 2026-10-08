@@ -27,11 +27,13 @@ class HomeFeaturedTournament {
 class HomeTournamentFinals {
   final String id;
   final String name;
+  final String? logoUrl;
   final List<HomeFinalMatch> matches;
 
   const HomeTournamentFinals({
     required this.id,
     required this.name,
+    this.logoUrl,
     required this.matches,
   });
 
@@ -40,6 +42,7 @@ class HomeTournamentFinals {
     return HomeTournamentFinals(
       id: _requiredHomeString(json, 'id'),
       name: _requiredHomeString(json, 'name'),
+      logoUrl: _optionalHomeString(json['logoUrl']),
       matches: rawMatches is List
           ? rawMatches
                 .whereType<Map>()
@@ -57,15 +60,16 @@ class HomeFinalMatch {
   final String id;
   final String? divisionId;
   final String? divisionName;
+  final String? stageName;
   final int roundNumber;
+  final int lastRoundNumber;
   final String branch;
   final int? leg;
   final String status;
   final DateTime? scheduledAt;
   final DateTime? startedAt;
   final DateTime? completedAt;
-  final int team1Sets;
-  final int team2Sets;
+  final List<HomeSetScore> scoreSets;
   final HomeFinalTeam team1;
   final HomeFinalTeam team2;
 
@@ -73,52 +77,88 @@ class HomeFinalMatch {
     required this.id,
     this.divisionId,
     this.divisionName,
+    this.stageName,
     required this.roundNumber,
+    required this.lastRoundNumber,
     required this.branch,
     this.leg,
     required this.status,
     this.scheduledAt,
     this.startedAt,
     this.completedAt,
-    required this.team1Sets,
-    required this.team2Sets,
+    required this.scoreSets,
     required this.team1,
     required this.team2,
   });
 
   factory HomeFinalMatch.fromJson(Map<String, dynamic> json) {
-    final score = _homeMap(json['score']);
     return HomeFinalMatch(
       id: _requiredHomeString(json, 'id'),
       divisionId: _optionalHomeString(json['divisionId']),
       divisionName: _optionalHomeString(json['divisionName']),
+      stageName: _optionalHomeString(json['stageName']),
       roundNumber: _homeInt(json['roundNumber']),
+      lastRoundNumber: _homeInt(json['lastRoundNumber']),
       branch: _optionalHomeString(json['bracketBranch']) ?? '',
       leg: json['leg'] == null ? null : _homeInt(json['leg']),
       status: _requiredHomeString(json, 'status'),
       scheduledAt: _homeDate(json['scheduledAt']),
       startedAt: _homeDate(json['startedAt']),
       completedAt: _homeDate(json['completedAt']),
-      team1Sets: _homeInt(score['team1']),
-      team2Sets: _homeInt(score['team2']),
+      scoreSets: _homeList(json['scoreSets'])
+          .map(HomeSetScore.fromJson)
+          .toList(growable: false),
       team1: HomeFinalTeam.fromJson(_homeMap(json['team1'])),
       team2: HomeFinalTeam.fromJson(_homeMap(json['team2'])),
     );
   }
 }
 
+class HomeSetScore {
+  final int team1;
+  final int team2;
+
+  const HomeSetScore({required this.team1, required this.team2});
+
+  factory HomeSetScore.fromJson(Map<String, dynamic> json) => HomeSetScore(
+    team1: _homeInt(json['team1']),
+    team2: _homeInt(json['team2']),
+  );
+}
+
+class HomeTeamMember {
+  final String name;
+  final String? avatarUrl;
+
+  const HomeTeamMember({required this.name, this.avatarUrl});
+
+  factory HomeTeamMember.fromJson(Map<String, dynamic> json) => HomeTeamMember(
+    name: _requiredHomeString(json, 'name'),
+    avatarUrl: _optionalHomeString(json['avatarUrl']),
+  );
+}
+
 class HomeFinalTeam {
   final String id;
   final String name;
   final String? logoUrl;
+  final List<HomeTeamMember> members;
 
-  const HomeFinalTeam({required this.id, required this.name, this.logoUrl});
+  const HomeFinalTeam({
+    required this.id,
+    required this.name,
+    this.logoUrl,
+    required this.members,
+  });
 
   factory HomeFinalTeam.fromJson(Map<String, dynamic> json) {
     return HomeFinalTeam(
       id: _requiredHomeString(json, 'id'),
       name: _requiredHomeString(json, 'name'),
       logoUrl: _optionalHomeString(json['logoUrl']),
+      members: _homeList(json['members'])
+          .map(HomeTeamMember.fromJson)
+          .toList(growable: false),
     );
   }
 }
