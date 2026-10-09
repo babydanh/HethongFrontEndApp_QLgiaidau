@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 vps.md
+.lavish/
 
 # IntelliJ related
 *.iml
