@@ -261,6 +261,28 @@ void main() {
       expect(payload['visibility'], 'CLUB_ONLY');
     });
 
+    test('chọn quyết định sau thì xóa pin và lưu nhãn địa điểm', () {
+      final payload = buildSocialSessionUpdatePayload(
+        title: 'Kèo test',
+        description: null,
+        playFormat: 'Giao lưu',
+        startAt: DateTime(2026, 10, 5, 14),
+        durationMinutes: 90,
+        locationChanged: true,
+        place: const SocialPlace.deferred(),
+        venueName: '',
+        venueAddress: '',
+        maxSlots: 8,
+        feePerSlot: 0,
+        visibility: 'PUBLIC',
+      );
+
+      expect(payload['venueId'], isNull);
+      expect(payload['venueName'], 'Quyết định sau');
+      expect(payload['venueAddress'], 'Quyết định sau');
+      expect(payload, isNot(contains('newVenue')));
+    });
+
     test('không đổi vị trí thì không gửi toạ độ nào', () {
       final payload = buildSocialSessionUpdatePayload(
         title: 'Kèo test',

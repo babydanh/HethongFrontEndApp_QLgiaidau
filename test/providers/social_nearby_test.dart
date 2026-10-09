@@ -8,24 +8,27 @@ import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 
 void main() {
   group('Social nearby (geolocation)', () {
-    test('SocialSessionModel parse distanceKm/latitude/longitude từ server', () {
-      final model = SocialSessionModel.fromJson({
-        'id': 's1',
-        'hostUserId': 'u1',
-        'title': 'Kèo gần bạn',
-        'playFormat': 'Giao lưu',
-        'startAt': '2026-09-28T14:00:00+07:00',
-        'venueName': 'Sân A',
-        'venueAddress': 'Địa chỉ A',
-        'sport': 'pickleball',
-        'latitude': 10.7769,
-        'longitude': 106.7009,
-        'distanceKm': 1.25,
-      });
-      expect(model.latitude, 10.7769);
-      expect(model.longitude, 106.7009);
-      expect(model.distanceKm, 1.25);
-    });
+    test(
+      'SocialSessionModel parse distanceKm/latitude/longitude từ server',
+      () {
+        final model = SocialSessionModel.fromJson({
+          'id': 's1',
+          'hostUserId': 'u1',
+          'title': 'Kèo gần bạn',
+          'playFormat': 'Giao lưu',
+          'startAt': '2026-09-28T14:00:00+07:00',
+          'venueName': 'Sân A',
+          'venueAddress': 'Địa chỉ A',
+          'sport': 'pickleball',
+          'latitude': 10.7769,
+          'longitude': 106.7009,
+          'distanceKm': 1.25,
+        });
+        expect(model.latitude, 10.7769);
+        expect(model.longitude, 106.7009);
+        expect(model.distanceKm, 1.25);
+      },
+    );
 
     test('distanceKm mặc định 0.0 khi server không trả (kèo chưa ghim)', () {
       final model = SocialSessionModel.fromJson({
@@ -55,6 +58,23 @@ void main() {
       );
       expect((request.toJson()['newVenue'] as Map)['latitude'], 10.5);
       expect((request.toJson()['newVenue'] as Map)['longitude'], 106.5);
+    });
+
+    test('CreateSocialSessionRequest can defer the location', () {
+      final request = CreateSocialSessionRequest(
+        sport: 'pickleball',
+        title: 'Kèo chưa có sân',
+        startAt: DateTime(2026, 9, 28, 14),
+        venueName: 'Quyết định sau',
+        venueAddress: 'Quyết định sau',
+        locationDeferred: true,
+      );
+      final payload = request.toJson();
+      expect(payload['locationDeferred'], isTrue);
+      expect(payload, isNot(contains('newVenue')));
+      expect(payload, isNot(contains('venueId')));
+      expect(payload, isNot(contains('latitude')));
+      expect(payload, isNot(contains('longitude')));
     });
 
     test('SocialSessionModel parse distance_m và distanceDisplay', () {
@@ -96,7 +116,10 @@ void main() {
       addTearDown(container.dispose);
 
       expect(container.read(socialFilterProvider).nearbyOnly, isFalse);
-      expect(container.read(socialFilterProvider).radiusKm, defaultNearbyRadiusKm);
+      expect(
+        container.read(socialFilterProvider).radiusKm,
+        defaultNearbyRadiusKm,
+      );
 
       container.read(socialFilterProvider.notifier).setNearbyOnly(true);
       container.read(socialFilterProvider.notifier).setRadiusKm(5);
@@ -111,7 +134,9 @@ void main() {
       // trong khi chip vẫn ghi "Gần bạn" — bộ lọc không có tác dụng.
       final repository = _RecordingSocialRepository();
       final container = ProviderContainer(
-        overrides: [socialSessionRepositoryProvider.overrideWithValue(repository)],
+        overrides: [
+          socialSessionRepositoryProvider.overrideWithValue(repository),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -124,34 +149,37 @@ void main() {
       expect(repository.listByDateCalls, 0);
     });
 
-    test('có toạ độ thì nearby gọi listNearby với bán kính đang chọn', () async {
-      final repository = _RecordingSocialRepository();
-      final container = ProviderContainer(
-        overrides: [
-          socialSessionRepositoryProvider.overrideWithValue(repository),
-          userLocationProvider.overrideWith(
-            () => _FixedLocation(
-              UserLocationStatus.selected,
-              10.7769,
-              106.7009,
+    test(
+      'có toạ độ thì nearby gọi listNearby với bán kính đang chọn',
+      () async {
+        final repository = _RecordingSocialRepository();
+        final container = ProviderContainer(
+          overrides: [
+            socialSessionRepositoryProvider.overrideWithValue(repository),
+            userLocationProvider.overrideWith(
+              () => _FixedLocation(
+                UserLocationStatus.selected,
+                10.7769,
+                106.7009,
+              ),
             ),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
+          ],
+        );
+        addTearDown(container.dispose);
 
-      container.read(socialFilterProvider.notifier)
-        ..setNearbyOnly(true)
-        ..setRadiusKm(5);
+        container.read(socialFilterProvider.notifier)
+          ..setNearbyOnly(true)
+          ..setRadiusKm(5);
 
-      final sessions = await container.read(socialSessionsProvider.future);
+        final sessions = await container.read(socialSessionsProvider.future);
 
-      expect(sessions, hasLength(1));
-      expect(repository.listNearbyCalls, 1);
-      expect(repository.lastRadiusKm, 5);
-      expect(repository.lastLat, 10.7769);
-      expect(repository.listByDateCalls, 0);
-    });
+        expect(sessions, hasLength(1));
+        expect(repository.listNearbyCalls, 1);
+        expect(repository.lastRadiusKm, 5);
+        expect(repository.lastLat, 10.7769);
+        expect(repository.listByDateCalls, 0);
+      },
+    );
   });
 }
 
@@ -163,11 +191,8 @@ class _FixedLocation extends UserLocationNotifier {
   final double lng;
 
   @override
-  UserLocationState build() => UserLocationState(
-    status: status,
-    latitude: lat,
-    longitude: lng,
-  );
+  UserLocationState build() =>
+      UserLocationState(status: status, latitude: lat, longitude: lng);
 }
 
 class _RecordingSocialRepository extends Fake

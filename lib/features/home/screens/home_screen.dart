@@ -197,6 +197,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _resetTournamentCursorPagination() {
+    setState(() {
+      ++_tournamentRequestVersion;
+      _serverTournamentsList.clear();
+      _serverTournamentNextCursor = null;
+      _serverTournamentHasMore = false;
+    });
     _fetchServerTournamentPage(isLoadMore: false);
   }
 
@@ -834,11 +840,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   // ═══════════════════════════════════════════════════════
   Widget _buildExploreTab() {
     final l10n = AppLocalizations.of(context)!;
+    final isCompleted = _exploreStatus == 'completed';
     final query = (
       sport: _exploreSport,
-      matchStatus: _exploreStatus == 'live' ? 'ONGOING' : 'COMPLETED',
+      matchStatus: isCompleted ? 'COMPLETED' : 'ONGOING',
     );
-    final projectionAsync = ref.watch(homeProjectionProvider(query));
+    final projectionAsync = ref.watch(homeProjectionProvider(query)).whenData(
+      (projection) => isCompleted ? projection.completedOnly : projection,
+    );
 
     return RefreshIndicator(
       color: AppTheme.primary,

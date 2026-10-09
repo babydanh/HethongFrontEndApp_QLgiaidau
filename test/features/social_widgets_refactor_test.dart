@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/so
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 void main() {
   testWidgets(
@@ -50,6 +51,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('vi'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         home: Scaffold(
           body: Builder(
@@ -101,30 +105,53 @@ void main() {
       sport: 'pickleball',
       sportName: 'Pickleball',
     );
+    final completedSession = SocialSessionModel(
+      id: 'session-completed',
+      hostUserId: 'host-1',
+      title: 'Social đã kết thúc',
+      playFormat: 'Giao lưu',
+      startAt: DateTime(2026, 9, 25),
+      venueName: 'Sân A',
+      venueAddress: 'Địa chỉ A',
+      sport: 'pickleball',
+      sportName: 'Pickleball',
+      status: 'COMPLETED',
+    );
     var edits = 0;
     var reports = 0;
+    var repeats = 0;
+    var cancelCalls = 0;
+    var muteCalls = 0;
 
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('vi'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.lightTheme,
         home: Scaffold(
           body: Builder(
             builder: (context) {
-              void open(bool isHost) => SocialMoreOptionsSheet.show(
-                context,
-                session,
-                isHost: isHost,
-                onRepeat: () {},
-                onEdit: () => edits++,
-                onCancel: () {},
-                onMute: () {},
-                onReport: () => reports++,
-              );
+              void open(bool isHost, [SocialSessionModel? target]) =>
+                  SocialMoreOptionsSheet.show(
+                    context,
+                    target ?? session,
+                    isHost: isHost,
+                    onRepeat: () => repeats++,
+                    onEdit: () => edits++,
+                    onCancel: () => cancelCalls++,
+                    onMute: () => muteCalls++,
+                    onReport: () => reports++,
+                  );
               return Column(
                 children: [
                   TextButton(
                     onPressed: () => open(true),
                     child: const Text('Host'),
+                  ),
+                  TextButton(
+                    onPressed: () => open(true, completedSession),
+                    child: const Text('Completed host'),
                   ),
                   TextButton(
                     onPressed: () => open(false),
@@ -140,10 +167,23 @@ void main() {
 
     await tester.tap(find.text('Host'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Chỉnh sửa kèo'));
-    await tester.tap(find.text('Chỉnh sửa kèo'));
+    expect(find.text('Lặp lại Social'), findsOneWidget);
+    expect(find.text('Chỉnh sửa kèo'), findsNothing);
+    expect(find.text('Hủy kèo'), findsNothing);
+    expect(find.text('Tắt thông báo cuộc trò chuyện'), findsNothing);
+    await tester.tap(find.text('Lặp lại Social'));
     await tester.pumpAndSettle();
-    expect(edits, 1);
+    expect(repeats, 1);
+    expect(edits, 0);
+    expect(find.text('Lặp lại Social'), findsNothing);
+
+    await tester.tap(find.text('Completed host'));
+    await tester.pumpAndSettle();
+    expect(find.text('Lặp lại Social'), findsOneWidget);
+    expect(find.text('Chỉnh sửa kèo'), findsNothing);
+    await tester.tap(find.text('Lặp lại Social'));
+    await tester.pumpAndSettle();
+    expect(repeats, 2);
 
     await tester.tap(find.text('Guest'));
     await tester.pumpAndSettle();
@@ -151,5 +191,7 @@ void main() {
     await tester.tap(find.text('Báo cáo buổi Social này'));
     await tester.pumpAndSettle();
     expect(reports, 1);
+    expect(cancelCalls, 0);
+    expect(muteCalls, 0);
   });
 }

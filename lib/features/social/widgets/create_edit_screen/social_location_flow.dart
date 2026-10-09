@@ -89,7 +89,8 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   void initState() {
     super.initState();
     final initial = widget.initialPlace;
-    _inputController.text = initial?.nameFromRegion == true
+    _inputController.text =
+        initial?.isDeferred == true || initial?.nameFromRegion == true
         ? ''
         : initial?.name ?? '';
   }
@@ -338,13 +339,27 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
         const Divider(height: 1),
         SafeArea(
           top: false,
-          child: SizedBox(
-            width: double.infinity,
-            child: TextButton.icon(
-              onPressed: () => setState(() => _step = _LocationStep.input),
-              icon: const Icon(Icons.add_location_alt_outlined),
-              label: Text(l10n.socialPlaceAdd),
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () =>
+                      Navigator.of(context).pop(const SocialPlace.deferred()),
+                  icon: const Icon(Icons.schedule_outlined),
+                  label: Text(l10n.socialPlaceDecideLater),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _step = _LocationStep.input),
+                  icon: const Icon(Icons.add_location_alt_outlined),
+                  label: Text(l10n.socialPlaceAdd),
+                ),
+              ),
+            ],
           ),
         ),
       ],

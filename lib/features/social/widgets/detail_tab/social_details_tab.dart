@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:intl/intl.dart';
@@ -228,22 +227,26 @@ class SocialDetailsTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            session.venueName.toUpperCase(),
+                            session.isLocationDeferred
+                                ? session.venueName
+                                : session.venueName.toUpperCase(),
                             style: const TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.primary, // Blue location name
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            session.venueAddress,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: colors.textSecondary,
-                              height: 1.35,
+                          if (!session.isLocationDeferred) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              session.venueAddress,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                color: colors.textSecondary,
+                                height: 1.35,
+                              ),
                             ),
-                          ),
+                          ],
                           if (session.latitude != null &&
                               session.longitude != null)
                             TextButton.icon(
@@ -252,23 +255,37 @@ class SocialDetailsTab extends StatelessWidget {
                               onPressed: () async {
                                 final lat = session.latitude!;
                                 final lng = session.longitude!;
-                                final uri = Theme.of(context).platform ==
+                                final uri =
+                                    Theme.of(context).platform ==
                                         TargetPlatform.iOS
-                                    ? Uri.parse('https://maps.apple.com/?daddr=$lat,$lng')
-                                    : Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+                                    ? Uri.parse(
+                                        'https://maps.apple.com/?daddr=$lat,$lng',
+                                      )
+                                    : Uri.parse(
+                                        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng',
+                                      );
                                 try {
                                   final opened = await launchUrl(
-                                    uri, mode: LaunchMode.externalApplication,
+                                    uri,
+                                    mode: LaunchMode.externalApplication,
                                   );
                                   if (!opened && context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Không mở được ứng dụng bản đồ.')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'Không mở được ứng dụng bản đồ.',
+                                        ),
+                                      ),
                                     );
                                   }
                                 } catch (_) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Không mở được ứng dụng bản đồ.')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'Không mở được ứng dụng bản đồ.',
+                                        ),
+                                      ),
                                     );
                                   }
                                 }
@@ -415,8 +432,7 @@ class SocialDetailsTab extends StatelessWidget {
               ),
             ),
           ),
-        if (!isHost && viewerFooter != null)
-          viewerFooter!,
+        if (!isHost && viewerFooter != null) viewerFooter!,
       ],
     );
   }

@@ -3,6 +3,7 @@ class HomeFeaturedTournament {
   final String name;
   final String? bannerUrl;
   final String? sport;
+  final String? status;
   final String? registrationStatus;
 
   const HomeFeaturedTournament({
@@ -10,6 +11,7 @@ class HomeFeaturedTournament {
     required this.name,
     this.bannerUrl,
     this.sport,
+    this.status,
     this.registrationStatus,
   });
 
@@ -19,6 +21,7 @@ class HomeFeaturedTournament {
       name: _requiredHomeString(json, 'name'),
       bannerUrl: _optionalHomeString(json['bannerUrl']),
       sport: _optionalHomeString(json['sport']),
+      status: _optionalHomeString(json['status']),
       registrationStatus: _optionalHomeString(json['registrationStatus']),
     );
   }
@@ -28,12 +31,14 @@ class HomeTournamentFinals {
   final String id;
   final String name;
   final String? logoUrl;
+  final String? status;
   final List<HomeFinalMatch> matches;
 
   const HomeTournamentFinals({
     required this.id,
     required this.name,
     this.logoUrl,
+    this.status,
     required this.matches,
   });
 
@@ -43,6 +48,7 @@ class HomeTournamentFinals {
       id: _requiredHomeString(json, 'id'),
       name: _requiredHomeString(json, 'name'),
       logoUrl: _optionalHomeString(json['logoUrl']),
+      status: _optionalHomeString(json['status']),
       matches: rawMatches is List
           ? rawMatches
                 .whereType<Map>()
@@ -105,9 +111,9 @@ class HomeFinalMatch {
       scheduledAt: _homeDate(json['scheduledAt']),
       startedAt: _homeDate(json['startedAt']),
       completedAt: _homeDate(json['completedAt']),
-      scoreSets: _homeList(json['scoreSets'])
-          .map(HomeSetScore.fromJson)
-          .toList(growable: false),
+      scoreSets: _homeList(
+        json['scoreSets'],
+      ).map(HomeSetScore.fromJson).toList(growable: false),
       team1: HomeFinalTeam.fromJson(_homeMap(json['team1'])),
       team2: HomeFinalTeam.fromJson(_homeMap(json['team2'])),
     );
@@ -156,9 +162,9 @@ class HomeFinalTeam {
       id: _requiredHomeString(json, 'id'),
       name: _requiredHomeString(json, 'name'),
       logoUrl: _optionalHomeString(json['logoUrl']),
-      members: _homeList(json['members'])
-          .map(HomeTeamMember.fromJson)
-          .toList(growable: false),
+      members: _homeList(
+        json['members'],
+      ).map(HomeTeamMember.fromJson).toList(growable: false),
     );
   }
 }
@@ -171,6 +177,15 @@ class HomeProjection {
     required this.featuredTournaments,
     required this.tournaments,
   });
+
+  HomeProjection get completedOnly => HomeProjection(
+    featuredTournaments: featuredTournaments
+        .where((tournament) => tournament.status?.toUpperCase() == 'COMPLETED')
+        .toList(growable: false),
+    tournaments: tournaments
+        .where((tournament) => tournament.status?.toUpperCase() == 'COMPLETED')
+        .toList(growable: false),
+  );
 
   factory HomeProjection.fromJson(Map<String, dynamic> json) {
     return HomeProjection(

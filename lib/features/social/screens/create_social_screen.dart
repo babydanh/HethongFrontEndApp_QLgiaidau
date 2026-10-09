@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_flow.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_location_row.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_duration_sheet.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_price_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_privacy_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_setting_tile.dart';
@@ -53,7 +54,11 @@ Map<String, dynamic> buildSocialSessionUpdatePayload({
     'startAt': startAt.toIso8601String(),
     'durationMinutes': durationMinutes,
     if (locationChanged) ...{
-      if (place.venueId != null) ...{
+      if (place.isDeferred) ...{
+        'venueId': null,
+        'venueName': SocialPlace.deferredLabel,
+        'venueAddress': SocialPlace.deferredLabel,
+      } else if (place.venueId != null) ...{
         'venueId': place.venueId,
         if (venueName.isNotEmpty) 'venueName': venueName,
         if (venueAddress.isNotEmpty) 'venueAddress': venueAddress,
@@ -146,7 +151,12 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       _maxParticipants = init.maxSlots;
       _privacy = init.visibility == 'CLUB_ONLY' ? 'Nội bộ CLB' : 'Công khai';
       _price = init.feePerSlot;
-      if (init.venueName.trim().isNotEmpty &&
+      if (init.venueName == SocialPlace.deferredLabel &&
+          init.venueAddress == SocialPlace.deferredLabel &&
+          init.latitude == null &&
+          init.longitude == null) {
+        _selectedPlace = const SocialPlace.deferred();
+      } else if (init.venueName.trim().isNotEmpty &&
           init.venueAddress.trim().isNotEmpty) {
         _selectedPlace = SocialPlace(
           name: init.venueName,
@@ -470,68 +480,17 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   }
 
   String _formatDateTimeDisplay(DateTime dt) {
-    // Tên thứ lấy từ locale qua DateFormat thay vì bảng hardcode, đúng như
-    // chat_screen.dart:241 — cùng một cách, không cần thêm 7 key vào ARB.
     final localeName = Localizations.localeOf(context).toLanguageTag();
-    final weekdayName = DateFormat('EEEE', localeName).format(dt);
-    final timeStr = DateFormat('HH:mm', localeName).format(dt);
-    final dateStr = DateFormat('dd/MM/yyyy', localeName).format(dt);
-    return '$timeStr $weekdayName, $dateStr';
+    return DateFormat('dd/MM HH:mm', localeName).format(dt);
   }
 
   Future<void> _pickDateTime() async {
-    final colors = context.colors;
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDateTime,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppTheme.primary,
-              onPrimary: Colors.white,
-              surface: colors.bgCard,
-              onSurface: colors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+    FocusScope.of(context).unfocus();
+    final picked = await SocialDateTimePickerSheet.show(
+      context,
+      _selectedDateTime,
     );
-
-    if (pickedDate == null || !mounted) return;
-
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppTheme.primary,
-              onPrimary: Colors.white,
-              surface: colors.bgCard,
-              onSurface: colors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedTime == null || !mounted) return;
-
-    setState(() {
-      _selectedDateTime = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
-      );
-    });
+    if (picked != null && mounted) setState(() => _selectedDateTime = picked);
   }
 
   Future<void> _showDurationPicker() async {
@@ -560,8 +519,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       initialCenter: initialCenter,
     );
     if (selected != null && mounted) {
-      _venueNameController.text = selected.name;
-      _venueAddressController.text = selected.formattedAddress;
+      _venueNameController.text = selected.isDeferred ? '' : selected.name;
+      _venueAddressController.text = selected.isDeferred
+          ? ''
+          : selected.formattedAddress;
       setState(() {
         _selectedPlace = selected;
         _locationChanged = true;
@@ -610,25 +571,45 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
     final sport = _resolveSport(_activeSports(ref.read(categoriesProvider)));
-    if (sport.slug.isEmpty) return;
     final l10n = AppLocalizations.of(context)!;
-    final place = _selectedPlace;
-    if (place == null ||
-        !place.canApply ||
-        (widget.initialSession == null && !place.hasPin)) {
+    final selectedPlace = _selectedPlace;
+    final missing = <String>[];
+    if (sport.slug.isEmpty) missing.add(l10n.socialCreatePickSportError);
+    if (!_selectedDateTime.isAfter(DateTime.now())) {
+      missing.add(l10n.socialCreatePickFutureTimeError);
+    }
+    if (selectedPlace == null) {
+      missing.add(l10n.socialCreatePickLocationError);
+    } else if (!selectedPlace.isDeferred) {
+      if (!selectedPlace.canApply ||
+          (widget.initialSession == null && !selectedPlace.hasPin)) {
+        missing.add(l10n.socialCreatePickLocationError);
+      }
+      if (_venueNameController.text.trim().isEmpty) {
+        missing.add(l10n.socialCreateVenueNameRequired);
+      }
+      if (_venueAddressController.text.trim().isEmpty) {
+        missing.add(l10n.socialCreateVenueAddressRequired);
+      }
+    }
+    if (_privacy == 'Nội bộ CLB' && !_isClubAttached) {
+      missing.add(l10n.socialCreateClubOnlyRequiresClub);
+    }
+    final formValid = _formKey.currentState?.validate() ?? false;
+    if (!formValid && missing.isEmpty) {
+      missing.add(l10n.socialCreateLocationRequired);
+    }
+    if (missing.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.socialPlaceRequired),
+          content: Text(missing.join('\n')),
           behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
+    final place = selectedPlace!;
 
     final user = ref.read(userProfileProvider).asData?.value;
     final customTitle = _titleController.text.trim();
@@ -720,8 +701,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
           durationMinutes: (_durationHours * 60).round(),
           venueName: place.name.trim(),
           venueAddress: place.formattedAddress.trim(),
-          latitude: place.latitude!,
-          longitude: place.longitude!,
+          latitude: place.latitude,
+          longitude: place.longitude,
+          locationDeferred: place.isDeferred,
           venueId: place.venueId,
           maxSlots: _maxParticipants,
           feePerSlot: _price,
@@ -795,6 +777,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
         venueAddress: request.venueAddress,
         latitude: request.latitude,
         longitude: request.longitude,
+        locationDeferred: request.locationDeferred,
         venueId: venueId,
         maxSlots: request.maxSlots,
         feePerSlot: request.feePerSlot,
@@ -882,9 +865,19 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     final catalog = ref.watch(categoriesProvider);
     final activeSports = _activeSports(catalog);
     final sport = _resolveSport(activeSports);
-    final canSubmit = sport.slug.isNotEmpty;
 
-    return Container(
+    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+    final availableHeight =
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.paddingOf(context).top -
+        keyboardHeight -
+        16;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      margin: EdgeInsets.only(bottom: keyboardHeight),
+      height: availableHeight.clamp(0.0, double.infinity).toDouble(),
       decoration: BoxDecoration(
         color: colors.bgDark,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -1144,7 +1137,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
 
                       SocialSettingTile(
                         icon: Icons.calendar_month_outlined,
-                        label: _formatDateTimeDisplay(_selectedDateTime),
+                        label: l10n.socialCreatePickDateTime,
+                        value: _formatDateTimeDisplay(_selectedDateTime),
                         onTap: _pickDateTime,
                       ),
                       const SizedBox(height: 10),
@@ -1161,7 +1155,8 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                         place: _selectedPlace,
                         onTap: _chooseLocation,
                       ),
-                      if (_selectedPlace != null) ...[
+                      if (_selectedPlace != null &&
+                          !_selectedPlace!.isDeferred) ...[
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: _venueNameController,
@@ -1303,7 +1298,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _isSubmitting || !canSubmit ? null : _submit,
+                    onPressed: _isSubmitting ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,

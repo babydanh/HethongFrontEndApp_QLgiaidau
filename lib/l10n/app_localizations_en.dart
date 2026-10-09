@@ -14288,6 +14288,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialCreateNotesHint => 'Add notes';
 
   @override
+  String get socialCreatePickDateTime => 'Choose date and time';
+
+  @override
+  String get socialCreatePickSportError => 'Please choose a sport.';
+
+  @override
+  String get socialCreatePickFutureTimeError =>
+      'Please choose a future date and time.';
+
+  @override
+  String get socialCreatePickLocationError =>
+      'Please choose a location or \'Decide later\'.';
+
+  @override
+  String get socialCreateVenueAddressRequired =>
+      'Please enter the venue address.';
+
+  @override
+  String get socialCreateClubOnlyRequiresClub =>
+      'Club-only sessions must be linked to a club.';
+
+  @override
   String get socialCreateFeeNone => 'Free';
 
   @override
@@ -14515,6 +14537,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialPlaceSelect => 'Select location';
+
+  @override
+  String get socialPlaceDecideLater => 'Decide later';
 
   @override
   String get socialPlaceSearchHint => 'Search by name or address';

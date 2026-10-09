@@ -754,6 +754,11 @@ class ApiTournamentRepository implements ITournamentRepository {
 
       if (response.statusCode == 200) {
         final parsed = _parseTournamentList(response.data);
+        final tournaments = backendStatus == 'COMPLETED'
+            ? parsed
+                  .where((t) => t.status.toUpperCase() == 'COMPLETED')
+                  .toList()
+            : parsed;
         final raw = response.data;
         final meta = raw is Map && raw['meta'] is Map
             ? Map<String, dynamic>.from(raw['meta'] as Map)
@@ -766,7 +771,11 @@ class ApiTournamentRepository implements ITournamentRepository {
             meta['hasMore'] == true ||
             (nextCursor != null && nextCursor.isNotEmpty);
 
-        return (tournaments: parsed, nextCursor: nextCursor, hasMore: hasMore);
+        return (
+          tournaments: tournaments,
+          nextCursor: nextCursor,
+          hasMore: hasMore,
+        );
       }
       if (rethrowOnError) {
         throw StateError(

@@ -19,7 +19,9 @@ class SocialLocationRow extends StatelessWidget {
     final colors = context.colors;
     final selected = place;
     final name = selected?.name.trim() ?? '';
-    final address = selected?.formattedAddress.trim() ?? '';
+    final address = selected?.isDeferred == true
+        ? ''
+        : selected?.formattedAddress.trim() ?? '';
 
     return Semantics(
       button: true,
@@ -62,15 +64,16 @@ class SocialLocationRow extends StatelessWidget {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          Text(
-                            address,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: colors.textSecondary,
-                              fontSize: 12,
+                          if (address.isNotEmpty)
+                            Text(
+                              address,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colors.textSecondary,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
                         ],
                       ),
               ),

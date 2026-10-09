@@ -25894,6 +25894,42 @@ abstract class AppLocalizations {
   /// **'Thêm ghi chú'**
   String get socialCreateNotesHint;
 
+  /// No description provided for @socialCreatePickDateTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày và giờ'**
+  String get socialCreatePickDateTime;
+
+  /// No description provided for @socialCreatePickSportError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn môn thể thao.'**
+  String get socialCreatePickSportError;
+
+  /// No description provided for @socialCreatePickFutureTimeError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn ngày giờ diễn ra trong tương lai.'**
+  String get socialCreatePickFutureTimeError;
+
+  /// No description provided for @socialCreatePickLocationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn địa điểm hoặc \'Quyết định sau\'.'**
+  String get socialCreatePickLocationError;
+
+  /// No description provided for @socialCreateVenueAddressRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập địa chỉ sân.'**
+  String get socialCreateVenueAddressRequired;
+
+  /// No description provided for @socialCreateClubOnlyRequiresClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo nội bộ cần gắn với một CLB.'**
+  String get socialCreateClubOnlyRequiresClub;
+
   /// No description provided for @socialCreateFeeNone.
   ///
   /// In vi, this message translates to:
@@ -26295,6 +26331,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chọn địa điểm'**
   String get socialPlaceSelect;
+
+  /// No description provided for @socialPlaceDecideLater.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyết định sau'**
+  String get socialPlaceDecideLater;
 
   /// No description provided for @socialPlaceSearchHint.
   ///

@@ -14237,6 +14237,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialCreateNotesHint => 'Thêm ghi chú';
 
   @override
+  String get socialCreatePickDateTime => 'Chọn ngày và giờ';
+
+  @override
+  String get socialCreatePickSportError => 'Vui lòng chọn môn thể thao.';
+
+  @override
+  String get socialCreatePickFutureTimeError =>
+      'Vui lòng chọn ngày giờ diễn ra trong tương lai.';
+
+  @override
+  String get socialCreatePickLocationError =>
+      'Vui lòng chọn địa điểm hoặc \'Quyết định sau\'.';
+
+  @override
+  String get socialCreateVenueAddressRequired => 'Vui lòng nhập địa chỉ sân.';
+
+  @override
+  String get socialCreateClubOnlyRequiresClub =>
+      'Kèo nội bộ cần gắn với một CLB.';
+
+  @override
   String get socialCreateFeeNone => 'Không có';
 
   @override
@@ -14465,6 +14486,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialPlaceSelect => 'Chọn địa điểm';
+
+  @override
+  String get socialPlaceDecideLater => 'Quyết định sau';
 
   @override
   String get socialPlaceSearchHint => 'Tìm theo tên hoặc địa chỉ';

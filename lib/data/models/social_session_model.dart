@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/data/models/social_place.dart';
 
 class SocialCommunitySummary {
   final String id;
@@ -446,6 +447,12 @@ class SocialSessionModel {
     this.chatMessages = const [],
   });
 
+  bool get isLocationDeferred =>
+      venueName == SocialPlace.deferredLabel &&
+      venueAddress == SocialPlace.deferredLabel &&
+      latitude == null &&
+      longitude == null;
+
   /// Hiển thị khoảng cách từ server:
   /// < 1000m: "42 m"
   /// >= 1000m: "1.2 km"
@@ -875,9 +882,10 @@ class CreateSocialSessionRequest {
   final String venueName;
   final String venueAddress;
 
-  /// Tọa độ sân do host ghim map (bắt buộc cho Social mới theo backend contract).
-  final double latitude;
-  final double longitude;
+  /// Tọa độ vắng mặt khi host chọn quyết định địa điểm sau.
+  final double? latitude;
+  final double? longitude;
+  final bool locationDeferred;
   final String? venueId;
   final int maxSlots;
   final int feePerSlot;
@@ -896,8 +904,9 @@ class CreateSocialSessionRequest {
     this.durationMinutes = 120,
     required this.venueName,
     required this.venueAddress,
-    required this.latitude,
-    required this.longitude,
+    this.latitude,
+    this.longitude,
+    this.locationDeferred = false,
     this.venueId,
     this.maxSlots = 6,
     this.feePerSlot = 0,
@@ -924,10 +933,11 @@ class CreateSocialSessionRequest {
       'playFormat': playFormat,
       'startAt': formattedIsoWithOffset,
       'durationMinutes': durationMinutes,
-      if (venueId != null) 'venueId': venueId,
-      if (venueId != null) 'venueName': venueName,
-      if (venueId != null) 'venueAddress': venueAddress,
-      if (venueId == null)
+      if (locationDeferred) 'locationDeferred': true,
+      if (!locationDeferred && venueId != null) 'venueId': venueId,
+      if (!locationDeferred && venueId != null) 'venueName': venueName,
+      if (!locationDeferred && venueId != null) 'venueAddress': venueAddress,
+      if (!locationDeferred && venueId == null)
         'newVenue': {
           'name': venueName,
           'locationAddress': venueAddress,

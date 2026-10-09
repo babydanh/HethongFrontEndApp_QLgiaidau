@@ -17,15 +17,16 @@ class SocialSessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
-    final distanceMeters = session.distanceM ??
+    final distanceMeters =
+        session.distanceM ??
         (session.distanceKm > 0 ? session.distanceKm * 1000 : null);
     final distanceLabel = distanceMeters == null
         ? ''
         : distanceMeters < 1000
-            ? l10n.socialDistanceMeters(distanceMeters.round().toString())
-            : l10n.socialDistanceKilometers(
-                (distanceMeters / 1000).toStringAsFixed(1),
-              );
+        ? l10n.socialDistanceMeters(distanceMeters.round().toString())
+        : l10n.socialDistanceKilometers(
+            (distanceMeters / 1000).toStringAsFixed(1),
+          );
 
     return InkWell(
       onTap: onTap,
@@ -137,7 +138,9 @@ class SocialSessionCard extends StatelessWidget {
                           ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 160),
                             child: Text(
-                              session.venueName.toUpperCase(),
+                              session.isLocationDeferred
+                                  ? session.venueName
+                                  : session.venueName.toUpperCase(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

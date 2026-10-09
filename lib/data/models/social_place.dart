@@ -1,6 +1,22 @@
 /// A location chosen for a Social session. Coordinates are optional for old
 /// sessions and search results, but address/link previews require both.
 class SocialPlace {
+  static const deferredLabel = 'Quyết định sau';
+
+  const SocialPlace.deferred()
+    : name = deferredLabel,
+      formattedAddress = deferredLabel,
+      latitude = null,
+      longitude = null,
+      placeId = null,
+      venueId = null,
+      sourceProvince = null,
+      sourceWard = null,
+      provinceCode = null,
+      wardCode = null,
+      regionEstimated = false,
+      nameFromRegion = false;
+
   const SocialPlace({
     required this.name,
     required this.formattedAddress,
@@ -33,6 +49,11 @@ class SocialPlace {
 
   bool get hasReadableAddress => formattedAddress.trim().isNotEmpty;
   bool get hasPin => latitude != null && longitude != null;
+  bool get isDeferred =>
+      name == deferredLabel &&
+      formattedAddress == deferredLabel &&
+      !hasPin &&
+      venueId == null;
   bool get canApply => name.trim().isNotEmpty && hasReadableAddress;
   bool get canPreview => canApply && hasPin;
 
