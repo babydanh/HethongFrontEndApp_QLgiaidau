@@ -31817,7 +31817,7 @@ lib\features\home\widgets\explore_tab.dart:245: padding: EdgeInsets.symmetric(ve
 lib\features\home\widgets\explore_tab.dart:246: child: Center(
 lib\features\home\widgets\explore_tab.dart:247: child: Text(
 lib\features\home\widgets\explore_tab.dart:248: AppLocalizations.of(context)?.exploreLiveEmpty ??
-lib\features\home\widgets\explore_tab.dart:249: 'Chưa có trận đấu nào đang diễn ra',
+lib\features\home\widgets\explore_tab.dart:249: 'Không có trận đấu đang diễn ra',
 lib\features\home\widgets\explore_tab.dart:250: style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
 lib\features\home\widgets\explore_tab.dart:256: SliverList(
 lib\features\home\widgets\explore_tab.dart:257: delegate: SliverChildBuilderDelegate(
@@ -61421,7 +61421,7 @@ lib\l10n\app_localizations_vi.dart:457: String get featuredTournaments => 'Giả
 lib\l10n\app_localizations_vi.dart:459: @override
 lib\l10n\app_localizations_vi.dart:460: String get liveMatches => 'Trận đấu đang diễn ra';
 lib\l10n\app_localizations_vi.dart:462: @override
-lib\l10n\app_localizations_vi.dart:463: String get noLiveMatches => 'Chưa có trận đấu nào đang diễn ra';
+lib\l10n\app_localizations_vi.dart:463: String get noLiveMatches => 'Không có trận đấu đang diễn ra';
 lib\l10n\app_localizations_vi.dart:465: @override
 lib\l10n\app_localizations_vi.dart:466: String get upcomingMatches => 'Lịch thi đấu sắp diễn ra';
 lib\l10n\app_localizations_vi.dart:468: @override
@@ -63648,7 +63648,7 @@ lib\l10n\app_localizations_vi.dart:3783: String get exploreFeaturedTitle => 'Gi�
 lib\l10n\app_localizations_vi.dart:3785: @override
 lib\l10n\app_localizations_vi.dart:3786: String get exploreLiveTitle => 'Trận đấu đang diễn ra';
 lib\l10n\app_localizations_vi.dart:3788: @override
-lib\l10n\app_localizations_vi.dart:3789: String get exploreLiveEmpty => 'Chưa có trận đấu nào đang diễn ra';
+lib\l10n\app_localizations_vi.dart:3789: String get exploreLiveEmpty => 'Không có trận đấu đang diễn ra';
 lib\l10n\app_localizations_vi.dart:3791: @override
 lib\l10n\app_localizations_vi.dart:3792: String get exploreRecentResultsTitle => 'Kết quả trận đấu vừa qua';
 lib\l10n\app_localizations_vi.dart:3794: @override

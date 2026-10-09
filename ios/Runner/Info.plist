@@ -26,6 +26,7 @@
 	<key>NSPhotoLibraryUsageDescription</key><string>Sporto sử dụng thư viện ảnh để chọn ảnh đại diện và ảnh câu lạc bộ.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key><string>Sporto sử dụng quyền lưu ảnh khi bạn tải hình ảnh xuống.</string>
 	<key>NSLocationWhenInUseUsageDescription</key><string>Sporto dùng vị trí của bạn để sắp xếp và tìm các buổi Social gần nhất.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key><string>Sporto cần truy cập vị trí của bạn để cập nhật và hiển thị các hoạt động, buổi Social gần nhất ngay cả khi ứng dụng chạy nền.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict><key>CFBundleTypeRole</key><string>Editor</string><key>CFBundleURLName</key><string>Google Sign-In</string><key>CFBundleURLSchemes</key><array><string>$(REVERSED_CLIENT_ID)</string></array></dict>
