@@ -56,7 +56,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_createMatchQuickDescription => 'Tạo trận đấu nhanh cho CLB';
 
   @override
-  String get social_repeat => 'Lặp lại Social';
+  String get social_repeat => 'Lặp lại kèo';
 
   @override
   String get club_standaloneMatch => 'Trận đấu riêng';

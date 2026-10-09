@@ -1003,7 +1003,9 @@ Link: $shareUrl''';
       isHost: _isHost,
       onRepeat: comingSoon,
       onEdit: () {
-        if (session.status.toUpperCase() == 'COMPLETED') return;
+        if (!const {'OPEN', 'FULL'}.contains(session.status.toUpperCase())) {
+          return;
+        }
         showModalBottomSheet<void>(
           context: context,
           isScrollControlled: true,

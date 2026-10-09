@@ -191,7 +191,7 @@ abstract class AppLocalizations {
   /// No description provided for @social_repeat.
   ///
   /// In vi, this message translates to:
-  /// **'Lặp lại Social'**
+  /// **'Lặp lại kèo'**
   String get social_repeat;
 
   /// No description provided for @club_standaloneMatch.

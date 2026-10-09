@@ -3,7 +3,7 @@ import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-enum _SocialMoreOptionsAction { repeat, report, hide }
+enum _SocialMoreOptionsAction { repeat, edit, cancel, report, hide }
 
 class SocialMoreOptionsSheet extends StatelessWidget {
   const SocialMoreOptionsSheet({
@@ -38,6 +38,8 @@ class SocialMoreOptionsSheet extends StatelessWidget {
     );
     // showModalBottomSheet completes after the route's closing transition.
     if (action == _SocialMoreOptionsAction.repeat) onRepeat();
+    if (action == _SocialMoreOptionsAction.edit) onEdit();
+    if (action == _SocialMoreOptionsAction.cancel) onCancel();
     if (action == _SocialMoreOptionsAction.report) onReport();
   }
 
@@ -66,6 +68,9 @@ class SocialMoreOptionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final canManageSession = const {'OPEN', 'FULL'}.contains(
+      session.status.toUpperCase(),
+    );
     if (!isHost) {
       return SafeArea(
         child: SingleChildScrollView(
@@ -114,6 +119,19 @@ class SocialMoreOptionsSheet extends StatelessWidget {
               AppLocalizations.of(context)!.social_repeat,
               _SocialMoreOptionsAction.repeat,
             ),
+            if (canManageSession) ...[
+              _option(
+                context,
+                'Chỉnh sửa kèo',
+                _SocialMoreOptionsAction.edit,
+              ),
+              _option(
+                context,
+                'Hủy kèo',
+                _SocialMoreOptionsAction.cancel,
+                destructive: true,
+              ),
+            ],
             const SizedBox(height: 8),
           ],
         ),
