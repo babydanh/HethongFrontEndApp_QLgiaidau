@@ -154,6 +154,10 @@ void main() {
                     child: const Text('Completed host'),
                   ),
                   TextButton(
+                    onPressed: () => open(true, session.copyWith(status: 'FULL')),
+                    child: const Text('Full host'),
+                  ),
+                  TextButton(
                     onPressed: () => open(false),
                     child: const Text('Guest'),
                   ),
@@ -167,31 +171,45 @@ void main() {
 
     await tester.tap(find.text('Host'));
     await tester.pumpAndSettle();
-    expect(find.text('Lặp lại Social'), findsOneWidget);
-    expect(find.text('Chỉnh sửa kèo'), findsNothing);
-    expect(find.text('Hủy kèo'), findsNothing);
+    expect(find.text('Lặp lại kèo'), findsOneWidget);
+    expect(find.text('Chỉnh sửa kèo'), findsOneWidget);
+    expect(find.text('Hủy kèo'), findsOneWidget);
     expect(find.text('Tắt thông báo cuộc trò chuyện'), findsNothing);
-    await tester.tap(find.text('Lặp lại Social'));
+    await tester.tap(find.text('Chỉnh sửa kèo'));
+    await tester.pumpAndSettle();
+    expect(edits, 1);
+
+    await tester.tap(find.text('Host'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hủy kèo'));
+    await tester.pumpAndSettle();
+    expect(cancelCalls, 1);
+
+    await tester.tap(find.text('Full host'));
+    await tester.pumpAndSettle();
+    expect(find.text('Chỉnh sửa kèo'), findsOneWidget);
+    expect(find.text('Hủy kèo'), findsOneWidget);
+    await tester.tap(find.text('Lặp lại kèo'));
     await tester.pumpAndSettle();
     expect(repeats, 1);
-    expect(edits, 0);
-    expect(find.text('Lặp lại Social'), findsNothing);
 
     await tester.tap(find.text('Completed host'));
     await tester.pumpAndSettle();
-    expect(find.text('Lặp lại Social'), findsOneWidget);
+    expect(find.text('Lặp lại kèo'), findsOneWidget);
     expect(find.text('Chỉnh sửa kèo'), findsNothing);
-    await tester.tap(find.text('Lặp lại Social'));
+    expect(find.text('Hủy kèo'), findsNothing);
+    await tester.tap(find.text('Lặp lại kèo'));
     await tester.pumpAndSettle();
     expect(repeats, 2);
 
     await tester.tap(find.text('Guest'));
     await tester.pumpAndSettle();
     expect(find.text('Chỉnh sửa kèo'), findsNothing);
+    expect(find.text('Hủy kèo'), findsNothing);
     await tester.tap(find.text('Báo cáo buổi Social này'));
     await tester.pumpAndSettle();
     expect(reports, 1);
-    expect(cancelCalls, 0);
+    expect(cancelCalls, 1);
     expect(muteCalls, 0);
   });
 }
