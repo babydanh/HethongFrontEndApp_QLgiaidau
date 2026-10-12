@@ -420,12 +420,8 @@ class _TournamentManagementHubScreenState
   }) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
