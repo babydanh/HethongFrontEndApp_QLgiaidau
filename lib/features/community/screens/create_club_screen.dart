@@ -75,6 +75,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
+    String? createdClubId;
     try {
       final dio = ref.read(dioProvider);
 
@@ -94,9 +95,18 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
 
       _log.info('Tạo CLB: ${body['name']}');
       final response = await dio.post('/communities', data: body);
-      final clubId = response.data['data']?['id']?.toString() ?? '';
+      final payload = response.data;
+      final clubData = payload is Map ? payload['data'] : null;
+      final clubId = clubData is Map
+          ? clubData['id']?.toString().trim() ?? ''
+          : '';
+      if (clubId.isEmpty) {
+        throw const FormatException('Phản hồi tạo CLB không có mã CLB.');
+      }
       final clubStatus =
-          response.data['data']?['status']?.toString().toUpperCase() ??
+          (clubData is Map ? clubData['status'] : null)
+              ?.toString()
+              .toUpperCase() ??
           'PENDING';
 
       // CLB mới phải được duyệt trước khi tạo giải giao lưu tự động.
@@ -187,7 +197,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           ),
         );
         invalidateCommunityCollections(ref);
-        context.go('/club/$clubId');
+        createdClubId = clubId;
       }
     } catch (e, stack) {
       _log.error('Lỗi tạo CLB', e, stack);
@@ -203,6 +213,11 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+    // Keep route errors out of the API failure handler: club creation has
+    // already succeeded at this point.
+    if (mounted && createdClubId != null) {
+      context.pushReplacement('/club/$createdClubId');
     }
   }
 
@@ -386,7 +401,11 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: colors.textPrimary, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: colors.textPrimary,
+            size: 20,
+          ),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -761,26 +780,14 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
   Widget _buildSportSelector() {
     final l10n = AppLocalizations.of(context)!;
     final sports = [
-      (
-        AppConstants.sportPickleball,
-        l10n.createClubTournament_sportPickleball,
-      ),
-      (
-        AppConstants.sportBadminton,
-        l10n.createClubTournament_sportBadminton,
-      ),
-      (
-        AppConstants.sportTennis,
-        l10n.createClubTournament_sportTennis,
-      ),
+      (AppConstants.sportPickleball, l10n.createClubTournament_sportPickleball),
+      (AppConstants.sportBadminton, l10n.createClubTournament_sportBadminton),
+      (AppConstants.sportTennis, l10n.createClubTournament_sportTennis),
       (
         AppConstants.sportTableTennis,
         l10n.createClubTournament_sportTableTennis,
       ),
-      (
-        AppConstants.sportFootball,
-        l10n.createClubTournament_sportFootball,
-      ),
+      (AppConstants.sportFootball, l10n.createClubTournament_sportFootball),
     ];
     return Row(
       children: sports.map((s) {

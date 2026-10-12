@@ -99,6 +99,46 @@ void main() {
     expect(requests.single.queryParameters.keys, isNot(contains('sport')));
   });
 
+  test('completed filter returns only completed tournaments', () async {
+    dio.interceptors.clear();
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          requests.add(options);
+          handler.resolve(
+            Response<dynamic>(
+              requestOptions: options,
+              statusCode: 200,
+              data: {
+                'data': [
+                  {
+                    'id': 'completed-1',
+                    'name': 'Finished',
+                    'status': 'COMPLETED',
+                  },
+                  {
+                    'id': 'upcoming-1',
+                    'name': 'Upcoming',
+                    'status': 'UPCOMING',
+                  },
+                ],
+                'meta': {'nextCursor': null, 'hasMore': false},
+              },
+            ),
+          );
+        },
+      ),
+    );
+
+    final result = await repository.getPublicTournamentsPaged(
+      status: 'completed',
+      rethrowOnError: true,
+    );
+
+    expect(requests.single.queryParameters['status'], 'COMPLETED');
+    expect(result.tournaments.map((t) => t.id), ['completed-1']);
+  });
+
   test('finalize sends only the supported status field', () async {
     await FinalizeTournamentUseCase(repository).call('tournament-1');
 

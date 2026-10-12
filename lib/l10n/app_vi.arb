@@ -1,6 +1,21 @@
 {
   "@@locale": "vi",
+  "socialPending": "Chờ duyệt",
+  "socialCancelRequestTitle": "Hủy yêu cầu tham gia?",
+  "socialKeepRequest": "Vẫn tham gia",
+  "socialConfirmCancelRequest": "Xác nhận",
+  "socialJoinClubQuestion": "Bạn có muốn tham gia CLB không?",
+  "socialJoinClub": "Tham gia CLB",
+  "socialClubMembershipCheckError": "Không thể kiểm tra trạng thái thành viên CLB. Thử lại sau.",
+  "socialSkipClubJoin": "Để sau",
+  "socialRetryMembership": "Thử lại",
   "club_createMatchStandalone": "Tạo trận đấu",
+  "club_createActivity": "Tạo hoạt động",
+  "club_createSocial": "Tạo Social",
+  "club_createSocialDescription": "Social là sự kiện xé vé diễn ra một lần",
+  "club_createMatchQuick": "Tạo trận đấu nhanh",
+  "club_createMatchQuickDescription": "Tạo trận đấu nhanh cho CLB",
+  "social_repeat": "Lặp lại kèo",
   "club_standaloneMatch": "Trận đấu riêng",
   "club_standaloneMatchDesc": "Trận giao lưu riêng giữa các thành viên",
   "club_searchMemberHint": "Tìm theo tên thành viên...",
@@ -326,7 +341,6 @@
   "userProfileOpeningChat": "Đang mở...",
   "userProfileMessage": "Nhắn tin",
   "userProfileViewProfile": "Xem hồ sơ",
-  "userProfileViewProfileOf": "Xem hồ sơ {name}",
   "userProfileLoading": "Đang tải hồ sơ...",
   "userProfileLoadError": "Không tải được hồ sơ người dùng",
   "userProfileNoTop100": "Bạn chưa có hạng trong Top 100. Tham gia giải đấu để được xếp hạng!",
@@ -343,11 +357,6 @@
       "error": {}
     }
   },
-  "@userProfileViewProfileOf": {
-    "placeholders": {
-      "name": {}
-    }
-  },
   "@userProfileOpenTagError": {
     "placeholders": {
       "error": {}
@@ -358,7 +367,7 @@
   "viewAll": "Xem tất cả",
   "featuredTournaments": "Giải đấu nổi bật",
   "liveMatches": "Trận đấu đang diễn ra",
-  "noLiveMatches": "Chưa có trận đấu nào đang diễn ra",
+  "noLiveMatches": "Không có trận đấu đang diễn ra",
   "upcomingMatches": "Lịch thi đấu sắp diễn ra",
   "noUpcomingMatches": "Chưa có lịch thi đấu sắp diễn ra",
   "clubCommunity": "Cộng đồng câu lạc bộ",
@@ -543,15 +552,6 @@
   "matchesStatusWalkover": "Bỏ cuộc",
   "matchesCourtNotAssigned": "Chưa được xếp sân",
   "matchesCourtNameUnavailable": "Tên sân chưa được cung cấp",
-  "matchesUnplacedSection": "Trận chưa xếp đủ sân/giờ ({count})",
-  "@matchesUnplacedSection": {
-    "description": "Tiêu đề mục thu gọn cho các trận chưa có đủ sân hoặc giờ thi đấu.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "tournamentScheduleHours": "Giờ hoạt động: {start}–{end}",
   "@tournamentScheduleHours": {
     "placeholders": {
@@ -749,8 +749,6 @@
   "registerTypeSingles": "Đơn",
   "registerTypeDoubles": "Đôi",
   "registerTypeMixedDoubles": "Đôi nam nữ",
-  "registerTypeOpenSingles": "Đơn linh hoạt",
-  "registerTypeOpenDoubles": "Đôi linh hoạt",
   "registerTypeDefault": "Nội dung",
   "registerEloRange": "ELO {min}-{max}",
   "registerMaxTeams": "Tối đa {max} đội",
@@ -1236,7 +1234,6 @@
   "dashboard_searchHint": "Tìm kiếm giải đấu...",
   "dashboard_noSearchResults": "Không tìm thấy giải đấu phù hợp",
   "dashboard_noTournaments": "Bạn chưa tạo hoặc tham gia giải đấu nào",
-  "dashboard_noMoreTournaments": "Đã xem hết giải đấu",
   "dashboard_collapse": "Thu gọn",
   "dashboard_showMore": "Xem thêm ({count} giải khác)",
   "dashboard_quickActions": "Tiện ích nhanh",
@@ -1722,6 +1719,8 @@
   "club_noMembers": "Chưa có thành viên",
   "club_noSport": "Chưa có môn thể thao",
   "club_pending": "Chờ duyệt",
+  "clubApprovalRejected": "Đã bị từ chối",
+  "homePendingClubFilterNotice": "Một số CLB của bạn không khớp bộ lọc hiện tại.",
   "club_sectionInfo": "Thông tin CLB",
   "club_statsSection": "Thống kê",
   "club_statusLabel": "Trạng thái",
@@ -1909,7 +1908,7 @@
   "exploreSearchHint": "Tìm giải đấu, môn thể thao...",
   "exploreFeaturedTitle": "Giải đấu nổi bật",
   "exploreLiveTitle": "Trận đấu đang diễn ra",
-  "exploreLiveEmpty": "Chưa có trận đấu nào đang diễn ra",
+  "exploreLiveEmpty": "Không có trận đấu đang diễn ra",
   "exploreRecentResultsTitle": "Kết quả trận đấu vừa qua",
   "exploreUpcomingTitle": "Lịch thi đấu sắp diễn ra",
   "exploreViewAll": "Xem tất cả",
@@ -2919,8 +2918,6 @@
   "tournamentCategoryMenDoubles": "Đôi nam",
   "tournamentCategoryWomenDoubles": "Đôi nữ",
   "tournamentCategoryMixedDoubles": "Đôi nam nữ",
-  "tournamentCategoryOpenSingles": "Đơn linh hoạt",
-  "tournamentCategoryOpenDoubles": "Đôi linh hoạt",
   "tournamentCategoryFootballMen": "Bóng đá Nam",
   "tournamentCategoryFootballWomen": "Bóng đá Nữ",
   "tournamentCategoryFootballMixed": "Bóng đá Nam Nữ",
@@ -3937,13 +3934,12 @@
   "registerBracketDoubleElimination": "Nhánh thắng/thua",
   "registerBracketRoundRobin": "Vòng tròn",
   "registerBracketGroupStageKnockout": "Vòng bảng + loại trực tiếp",
-  "registerTeamSlotCount": "{count} suất đội",
-  "@registerTeamSlotCount": {
+  "registerParticipantCount": "{count} hồ sơ",
+  "@registerParticipantCount": {
     "placeholders": {
       "count": {}
     }
   },
-  "registerDivisionFull": "Nội dung này đã đủ suất",
   "phoneVerificationPhoneRequired": "Vui lòng cập nhật số điện thoại trước khi xác minh",
   "phoneVerificationSendFailed": "Không thể gửi mã OTP: {error}",
   "@phoneVerificationSendFailed": {
@@ -5712,6 +5708,12 @@
   "socialCreateLocationDialogTitle": "Vui lòng nhập địa điểm.",
   "socialCreatePrivacyLabel": "Quyền riêng tư",
   "socialCreateNotesHint": "Thêm ghi chú",
+  "socialCreatePickDateTime": "Chọn ngày và giờ",
+  "socialCreatePickSportError": "Vui lòng chọn môn thể thao.",
+  "socialCreatePickFutureTimeError": "Vui lòng chọn ngày giờ diễn ra trong tương lai.",
+  "socialCreatePickLocationError": "Vui lòng chọn địa điểm hoặc 'Quyết định sau'.",
+  "socialCreateVenueAddressRequired": "Vui lòng nhập địa chỉ sân.",
+  "socialCreateClubOnlyRequiresClub": "Kèo nội bộ cần gắn với một CLB.",
   "socialCreateFeeNone": "Không có",
   "socialCreateSuccess": "Tạo Social \"{title}\" thành công!",
   "@socialCreateSuccess": {
@@ -5766,6 +5768,7 @@
   "socialActiveSportsError": "Không tải được danh sách môn thể thao.",
   "socialActiveSportsRetry": "Thử lại",
   "socialLegacyInactiveSport": "Môn đã ngừng hoạt động",
+  "socialEditSportLocked": "Không đổi môn khi sửa kèo",
   "socialRegionProvinceFieldLabel": "Tỉnh / thành",
   "socialRegionProvinceFieldHint": "Chọn tỉnh",
   "socialRegionWardFieldLabel": "Phường / xã",
@@ -5796,5 +5799,55 @@
   "socialRegionCloseAction": "Đóng",
   "socialLocationReverseFailed": "Không tra được khu vực từ vị trí đã ghim.",
   "socialLocationNoAddressFound": "Chưa tìm thấy địa chỉ cho vị trí đã ghim.",
-  "tournamentManagementSettingsTooltip": "Cài đặt giải đấu"
+  "socialLocationApproximateReference": "Vị trí đã chọn",
+  "socialLocationChangeReference": "Đổi vị trí tìm kiếm",
+  "socialLocationCenterMissing": "Chưa có tâm ước lượng cho khu vực này.",
+  "socialLocationCenterLookupError": "Không thể tải tâm khu vực. Vui lòng chọn lại để thử lại.",
+  "socialNearbyNoResults": "Không có buổi Social nào gần vị trí đã chọn",
+  "socialNearbyExpandRadius": "Thử mở rộng bán kính hoặc chọn vị trí khác",
+  "socialNearbyNeedLocation": "Chưa có vị trí để lọc kèo gần bạn",
+  "socialNearbyPickLocationHint": "Chạm vào chip \"Gần bạn\" để chọn vị trí hiện tại hoặc ghim trên bản đồ",
+  "socialNearbyLoadMore": "Xem thêm",
+  "socialNearbyRetry": "Thử tải lại",
+  "socialDistanceMeters": "cách ~{distance} m",
+  "@socialDistanceMeters": { "placeholders": { "distance": { "type": "String" } } },
+  "socialDistanceKilometers": "cách ~{distance} km",
+  "@socialDistanceKilometers": { "placeholders": { "distance": { "type": "String" } } },
+  "socialPlaceVenueName": "Tên sân",
+  "socialPlaceVenueAddress": "Địa chỉ sân",
+  "socialPlaceDuplicateTitle": "Có sân gần giống trong danh bạ",
+  "socialPlaceDuplicateUse": "Dùng sân này",
+  "socialPlaceDuplicateEdit": "Sửa tên hoặc ghim",
+  "socialPlaceDuplicateEditHint": "Hãy sửa tên, địa chỉ hoặc ghim trên biểu mẫu rồi gửi lại.",
+  "socialPlaceCancel": "Hủy",
+  "socialPlaceSelect": "Chọn địa điểm",
+  "socialPlaceDecideLater": "Quyết định sau",
+  "socialPlaceSearchHint": "Tìm theo tên hoặc địa chỉ",
+  "socialPlaceSearchIdle": "Tìm địa điểm theo tên hoặc địa chỉ.",
+  "socialPlaceSearchLoading": "Đang tìm địa điểm...",
+  "socialPlaceSearchEmpty": "Không tìm thấy địa điểm phù hợp.",
+  "socialPlaceSearchError": "Không thể tìm địa điểm.",
+  "socialPlaceRetry": "Thử lại",
+  "socialPlaceAdd": "Thêm địa điểm mới",
+  "socialPlaceInputTitle": "Thêm địa điểm",
+  "socialPlaceInputHint": "Tên sân hoặc địa chỉ đầy đủ",
+  "socialPlaceMap": "Chọn từ bản đồ",
+  "socialPlaceNext": "Kế tiếp",
+  "socialPlaceBack": "Trở lại",
+  "socialPlaceConfirm": "Xác nhận",
+  "socialPlacePreviewTitle": "Xác nhận địa điểm",
+  "socialPlaceUnsupportedLink": "Không hỗ trợ liên kết địa điểm. Hãy nhập tên hoặc địa chỉ sân rồi ghim vị trí.",
+  "socialPlaceNotFound": "Không tìm thấy sân trong danh bạ.",
+  "socialPlaceUnresolvable": "Hãy kiểm tra tên, địa chỉ và ghim vị trí sân.",
+  "socialPlaceNetworkError": "Không thể tìm sân trong danh bạ. Vui lòng thử lại.",
+  "socialPlaceResolving": "Đang tìm địa điểm...",
+  "socialPlaceRequired": "Vui lòng chọn địa điểm trước khi lưu.",
+  "socialPlaceMapHint": "Chạm bản đồ để di chuyển ghim.",
+  "socialPlaceReverseError": "Hãy chọn ghim khác hoặc nhập địa chỉ sân.",
+  "socialPlaceSuggestedSection": "Gợi ý",
+  "socialPlaceAreaSection": "Khu vực hành chính",
+  "socialPlaceNoPin": "Chưa có ghim",
+  "socialPlaceSaveAreaTitle": "Lưu khu vực này?",
+  "socialPlaceSaveAreaMessage": "Không tìm thấy địa chỉ đường và ghim bản đồ cho nội dung này. Bạn có thể lưu khu vực hành chính hoặc ghim chính xác trên bản đồ.",
+  "socialPlaceSaveArea": "Lưu khu vực"
 }

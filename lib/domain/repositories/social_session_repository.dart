@@ -1,6 +1,12 @@
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 
 abstract class ISocialSessionRepository {
+  Future<void> requestJoin(String sessionId, {int ticketCount = 1});
+  Future<void> withdrawJoinRequest(String sessionId);
+  Future<List<SocialParticipantModel>> listJoinRequests(String sessionId);
+  Future<void> approveJoinRequest(String sessionId, String participantId);
+  Future<void> rejectJoinRequest(String sessionId, String participantId);
+
   /// 4.2 - Danh sách theo ngày (GET /social-sessions?date=YYYY-MM-DD)
   ///
   /// [date] bỏ trống được **chỉ khi** có [search]: backend nới `date` đúng
@@ -18,6 +24,15 @@ abstract class ISocialSessionRepository {
     double? lng,
     double? radiusKm,
     String? sortBy,
+  });
+
+  /// Nearby search uses page/limit and kilometre radius. Coordinates are request-only.
+  Future<NearbySocialSessionsResponse> listNearby({
+    required double lat,
+    required double lng,
+    double radiusKm = 10,
+    int page = 1,
+    int limit = 20,
   });
 
   /// 4.3 - Chi tiết (GET /social-sessions/:id)
@@ -44,7 +59,10 @@ abstract class ISocialSessionRepository {
   });
 
   /// 4.6 - Sửa kèo (PATCH /social-sessions/:id)
-  Future<SocialSessionModel> update(String sessionId, Map<String, dynamic> fields);
+  Future<SocialSessionModel> update(
+    String sessionId,
+    Map<String, dynamic> fields,
+  );
 
   /// 4.8 - Hủy kèo (PATCH /social-sessions/:id/cancel)
   Future<void> cancel(String sessionId);

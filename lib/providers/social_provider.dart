@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
-
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 
 final _socialClubLog = AppLogger('ClubSocialSessions');
@@ -108,11 +108,42 @@ class SocialFilterNotifier extends Notifier<SocialFilterState> {
 
 final socialFilterProvider =
     NotifierProvider<SocialFilterNotifier, SocialFilterState>(
-  SocialFilterNotifier.new,
-);
+      SocialFilterNotifier.new,
+    );
 
-class SocialSessionsNotifier
-    extends AsyncNotifier<List<SocialSessionModel>> {
+class SocialSessionsNotifier extends AsyncNotifier<List<SocialSessionModel>> {
+  int _nearbyPage = 1;
+  bool _nearbyHasMore = false;
+  bool _loadingMore = false;
+  int _nearbyGeneration = 0;
+  String? _loadMoreError;
+
+  bool get hasMoreNearby => _nearbyHasMore;
+  bool get isLoadingMore => _loadingMore;
+  String? get loadMoreError => _loadMoreError;
+
+  List<SocialSessionModel> _applyNearbyFilters(
+    List<SocialSessionModel> items,
+    SocialFilterState filter,
+  ) {
+    var visible = items;
+    if (filter.selectedSport != 'all') {
+      visible = visible.where((s) => s.sport == filter.selectedSport).toList();
+    }
+    final query = filter.searchQuery.trim().toLowerCase();
+    if (query.isNotEmpty) {
+      visible = visible
+          .where(
+            (s) =>
+                s.title.toLowerCase().contains(query) ||
+                s.venueName.toLowerCase().contains(query) ||
+                s.venueAddress.toLowerCase().contains(query),
+          )
+          .toList();
+    }
+    return visible;
+  }
+
   /// Tọa độ gửi kèm query — chỉ khi user bật "Gần bạn" VÀ đã có vị trí.
   /// Thiếu vị trí (từ chối quyền/tắt GPS) thì fallback danh sách theo giờ.
   ({double? lat, double? lng, String? sortBy}) _geoParams(
@@ -120,16 +151,46 @@ class SocialSessionsNotifier
     UserLocationState location,
   ) {
     if (filter.nearbyOnly && location.hasPosition) {
-      return (lat: location.latitude, lng: location.longitude, sortBy: 'DISTANCE');
+      return (
+        lat: location.latitude,
+        lng: location.longitude,
+        sortBy: 'DISTANCE',
+      );
     }
     return (lat: null, lng: null, sortBy: null);
   }
 
   @override
   Future<List<SocialSessionModel>> build() async {
+    final auth = ref.watch(authProvider);
+    if (auth.status == AuthStatus.validating) return const [];
     final filter = ref.watch(socialFilterProvider);
     final location = ref.watch(userLocationProvider);
     final repo = ref.watch(socialSessionRepositoryProvider);
+    final generation = ++_nearbyGeneration;
+    _nearbyPage = 1;
+    _nearbyHasMore = false;
+    _loadingMore = false;
+    _loadMoreError = null;
+
+    if (filter.nearbyOnly && location.hasPosition) {
+      final nearby = await repo.listNearby(
+        lat: location.latitude!,
+        lng: location.longitude!,
+        radiusKm: filter.radiusKm,
+        page: 1,
+        limit: 20,
+      );
+      if (generation != _nearbyGeneration) return const [];
+      _nearbyPage = nearby.page;
+      _nearbyHasMore = nearby.hasMore;
+      return _applyNearbyFilters(nearby.items, filter);
+    }
+
+    // "Gần bạn" đang bật nhưng chưa có toạ độ: trả list rỗng thay vì rơi
+    // xuống listByDate — nếu không chip vẫn ghi "Gần bạn" nhưng danh sách
+    // hiển thị mọi kèo, tức là bộ lọc không hề có tác dụng.
+    if (filter.nearbyOnly) return const [];
 
     final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
     final geo = _geoParams(filter, location);
@@ -147,28 +208,59 @@ class SocialSessionsNotifier
     return response.items;
   }
 
-  Future<void> refresh() async {
+  Future<void> loadMoreNearby() async {
+    if (_loadingMore || !_nearbyHasMore) return;
     final filter = ref.read(socialFilterProvider);
     final location = ref.read(userLocationProvider);
-    final repo = ref.read(socialSessionRepositoryProvider);
-    final dateStr = DateFormat('yyyy-MM-dd').format(filter.selectedDate);
-    final geo = _geoParams(filter, location);
+    if (!filter.nearbyOnly || !location.hasPosition) return;
+    final auth = ref.read(authProvider);
+    final generation = _nearbyGeneration;
+    _loadingMore = true;
+    _loadMoreError = null;
+    state = AsyncData(state.asData?.value ?? const <SocialSessionModel>[]);
+    try {
+      final response = await ref
+          .read(socialSessionRepositoryProvider)
+          .listNearby(
+            lat: location.latitude!,
+            lng: location.longitude!,
+            radiusKm: filter.radiusKm,
+            page: _nearbyPage + 1,
+            limit: 20,
+          );
+      if (!ref.mounted ||
+          !identical(auth, ref.read(authProvider)) ||
+          generation != _nearbyGeneration) {
+        return;
+      }
+      final existing = state.asData?.value ?? const <SocialSessionModel>[];
+      final ids = existing.map((item) => item.id).toSet();
+      final next = _applyNearbyFilters(
+        response.items,
+        filter,
+      ).where((item) => ids.add(item.id));
+      _nearbyPage = response.page;
+      _nearbyHasMore = response.hasMore;
+      state = AsyncData([...existing, ...next]);
+    } catch (_) {
+      if (ref.mounted &&
+          identical(auth, ref.read(authProvider)) &&
+          generation == _nearbyGeneration) {
+        _loadMoreError = 'Không thể tải thêm. Hãy thử lại.';
+      }
+    } finally {
+      if (ref.mounted &&
+          identical(auth, ref.read(authProvider)) &&
+          generation == _nearbyGeneration) {
+        _loadingMore = false;
+        state = AsyncData(state.asData?.value ?? const <SocialSessionModel>[]);
+      }
+    }
+  }
 
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final response = await repo.listByDate(
-        date: dateStr,
-        sport: filter.selectedSport == 'all' ? null : filter.selectedSport,
-        search: filter.searchQuery.trim().isNotEmpty
-            ? filter.searchQuery.trim()
-            : null,
-        lat: geo.lat,
-        lng: geo.lng,
-        radiusKm: geo.lat != null ? filter.radiusKm : null,
-        sortBy: geo.sortBy,
-      );
-      return response.items;
-    });
+  Future<void> refresh() async {
+    ref.invalidateSelf();
+    await AsyncValue.guard(() => future);
   }
 
   Future<JoinSessionResponse> joinSession({
@@ -216,11 +308,7 @@ class SocialSessionsNotifier
     String newStatus,
   ) async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.updatePaymentStatus(
-      sessionId,
-      userId,
-      paymentStatus: newStatus,
-    );
+    await repo.updatePaymentStatus(sessionId, userId, paymentStatus: newStatus);
     await refresh();
   }
 
@@ -300,93 +388,204 @@ class SocialSessionsNotifier
 
 final socialSessionsProvider =
     AsyncNotifierProvider<SocialSessionsNotifier, List<SocialSessionModel>>(
-  SocialSessionsNotifier.new,
-);
+      SocialSessionsNotifier.new,
+    );
 
-class SocialSessionDetailNotifier
-    extends AsyncNotifier<SocialSessionModel> {
+class SocialSessionDetailNotifier extends AsyncNotifier<SocialSessionModel> {
   final String sessionId;
   SocialSessionDetailNotifier(this.sessionId);
 
   @override
   Future<SocialSessionModel> build() async {
-    final repo = ref.watch(socialSessionRepositoryProvider);
-    return await repo.getDetail(sessionId);
+    final auth = ref.watch(authProvider);
+    if (auth.status == AuthStatus.validating) {
+      throw StateError('Session changing');
+    }
+    ref.watch(socialSessionRepositoryProvider);
+    _mutating = false;
+    _refreshGeneration++;
+    return _fetch();
+  }
+
+  int _refreshGeneration = 0;
+  bool _mutating = false;
+
+  void _checkSession(AuthState auth) {
+    if (!ref.mounted || !identical(auth, ref.read(authProvider))) {
+      throw StateError('Session changed');
+    }
   }
 
   Future<void> refresh() async {
+    final auth = ref.read(authProvider);
+    final generation = ++_refreshGeneration;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      return await ref.read(socialSessionRepositoryProvider).getDetail(sessionId);
-    });
+    final result = await AsyncValue.guard(_fetch);
+    if (!ref.mounted || !identical(auth, ref.read(authProvider))) return;
+    if (generation == _refreshGeneration) state = result;
   }
 
-  Future<JoinSessionResponse> join({int ticketCount = 1}) async {
+  Future<JoinSessionResponse> join({int ticketCount = 1}) => _mutate(
+    () => ref
+        .read(socialSessionRepositoryProvider)
+        .join(sessionId, ticketCount: ticketCount),
+  );
+
+  Future<void> requestJoin({
+    int ticketCount = 1,
+    String? userName,
+    String? userAvatar,
+  }) => _mutate(
+    () => ref
+        .read(socialSessionRepositoryProvider)
+        .requestJoin(sessionId, ticketCount: ticketCount),
+  );
+
+  Future<void> withdrawJoinRequest() {
+    final current = state.asData?.value;
+    if (current == null || current.isHost || !current.isPending) {
+      throw StateError('There is no pending request to withdraw');
+    }
+    return _mutate(
+      () => ref
+          .read(socialSessionRepositoryProvider)
+          .withdrawJoinRequest(sessionId),
+    );
+  }
+
+  Future<void> approveParticipant(SocialParticipantModel participant) =>
+      _mutate(
+        () => ref
+            .read(socialSessionRepositoryProvider)
+            .approveJoinRequest(sessionId, participant.id),
+        hostOnly: true,
+      );
+
+  Future<void> rejectParticipant(SocialParticipantModel participant) => _mutate(
+    () => ref
+        .read(socialSessionRepositoryProvider)
+        .rejectJoinRequest(sessionId, participant.id),
+    hostOnly: true,
+  );
+
+  Future<SocialSessionModel> _fetch() async {
     final repo = ref.read(socialSessionRepositoryProvider);
-    final res = await repo.join(sessionId, ticketCount: ticketCount);
-    await refresh();
-    ref.read(socialSessionsProvider.notifier).refresh();
-    return res;
+    final auth = ref.read(authProvider);
+    final detail = await repo.getDetail(sessionId);
+    _checkSession(auth);
+    final requests = detail.isHost
+        ? await repo.listJoinRequests(sessionId)
+        : <SocialParticipantModel>[];
+    _checkSession(auth);
+    return detail.copyWith(requestedParticipants: requests);
+  }
+
+  Future<T> _mutate<T>(
+    Future<T> Function() action, {
+    bool hostOnly = false,
+  }) async {
+    if (_mutating ||
+        state.isLoading ||
+        state.asData == null ||
+        !ref.read(authProvider).isAuthenticated ||
+        (hostOnly && !state.requireValue.isHost)) {
+      throw StateError('Social session is not ready for this action');
+    }
+    final auth = ref.read(authProvider);
+    _mutating = true;
+    try {
+      late final T result;
+      try {
+        result = await action();
+      } catch (_) {
+        _checkSession(auth);
+        await refresh();
+        _checkSession(auth);
+        ref.invalidate(socialSessionsProvider);
+        ref.invalidate(clubSocialSessionsProvider);
+        rethrow;
+      }
+      _checkSession(auth);
+      await refresh();
+      _checkSession(auth);
+      ref.invalidate(socialSessionsProvider);
+      ref.invalidate(clubSocialSessionsProvider);
+      if (state.hasError) {
+        throw StateError('Saved, but synchronization failed. Please refresh.');
+      }
+      return result;
+    } finally {
+      if (ref.mounted && identical(auth, ref.read(authProvider))) {
+        _mutating = false;
+      }
+    }
   }
 
   Future<void> updatePaymentStatus(String userId, String paymentStatus) async {
-    final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.updatePaymentStatus(sessionId, userId, paymentStatus: paymentStatus);
-    await refresh();
-    ref.read(socialSessionsProvider.notifier).refresh();
+    await _mutate(() async {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      await repo.updatePaymentStatus(
+        sessionId,
+        userId,
+        paymentStatus: paymentStatus,
+      );
+    }, hostOnly: true);
   }
 
   Future<void> removeParticipant(String userId) async {
-    final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.removeParticipant(sessionId, userId);
-    await refresh();
-    ref.read(socialSessionsProvider.notifier).refresh();
+    await _mutate(() async {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      await repo.removeParticipant(sessionId, userId);
+    }, hostOnly: true);
   }
 
   Future<void> addParticipant({
     required String userId,
     int ticketCount = 1,
   }) async {
-    final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.addParticipant(sessionId, userId: userId, ticketCount: ticketCount);
-    await refresh();
-    ref.read(socialSessionsProvider.notifier).refresh();
+    await _mutate(() async {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      await repo.addParticipant(
+        sessionId,
+        userId: userId,
+        ticketCount: ticketCount,
+      );
+    }, hostOnly: true);
   }
 
   Future<void> addGuestParticipant({
     required String guestName,
     int ticketCount = 1,
   }) async {
-    final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.addGuestParticipant(
-      sessionId,
-      guestName: guestName,
-      ticketCount: ticketCount,
-    );
-    await refresh();
-    ref.read(socialSessionsProvider.notifier).refresh();
+    await _mutate(() async {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      await repo.addGuestParticipant(
+        sessionId,
+        guestName: guestName,
+        ticketCount: ticketCount,
+      );
+    }, hostOnly: true);
   }
 
   Future<BatchAddParticipantsResponse> addParticipantsBatch({
     required List<String> userIds,
     int ticketCount = 1,
-  }) async {
-    final repo = ref.read(socialSessionRepositoryProvider);
-    final res = await repo.addParticipantsBatch(
-      sessionId,
-      userIds: userIds,
-      ticketCount: ticketCount,
-    );
-    await refresh();
-    ref.read(socialSessionsProvider.notifier).refresh();
-    return res;
-  }
+  }) => _mutate(
+    () => ref
+        .read(socialSessionRepositoryProvider)
+        .addParticipantsBatch(
+          sessionId,
+          userIds: userIds,
+          ticketCount: ticketCount,
+        ),
+    hostOnly: true,
+  );
 
   Future<void> cancelSession() async {
-    final repo = ref.read(socialSessionRepositoryProvider);
-    await repo.cancel(sessionId);
-    await refresh();
-    ref.read(socialSessionsProvider.notifier).refresh();
+    await _mutate(() async {
+      final repo = ref.read(socialSessionRepositoryProvider);
+      await repo.cancel(sessionId);
+    }, hostOnly: true);
   }
 
   void addChatMessage(String message, {String senderName = 'Tôi'}) {
@@ -403,9 +602,7 @@ class SocialSessionDetailNotifier
       isMe: true,
     );
     state = AsyncData(
-      current.copyWith(
-        chatMessages: [...current.chatMessages, newMessage],
-      ),
+      current.copyWith(chatMessages: [...current.chatMessages, newMessage]),
     );
   }
 }
@@ -448,6 +645,9 @@ class ClubSocialSessionsNotifier
 
   @override
   Future<List<SocialSessionModel>> build() async {
+    final auth = ref.watch(authProvider);
+    _autoRefreshTimer?.cancel();
+    if (auth.status == AuthStatus.validating) return const [];
     // Hủy timer cũ khi provider rebuild (ví dụ: hot restart).
     _autoRefreshTimer?.cancel();
 
@@ -458,6 +658,9 @@ class ClubSocialSessionsNotifier
     });
 
     final items = await _fetchSessions();
+    if (!ref.mounted || !identical(auth, ref.read(authProvider))) {
+      return const [];
+    }
 
     // Khởi tạo auto-refresh timer sau khi fetch thành công lần đầu.
     _startAutoRefreshTimer();
@@ -499,23 +702,24 @@ class ClubSocialSessionsNotifier
   /// Refresh im lặng: không set loading state, chỉ cập nhật data.
   /// Dùng cho auto-refresh timer, không gây flicker UI.
   Future<void> _silentRefresh() async {
+    final auth = ref.read(authProvider);
     try {
       final items = await _fetchSessions();
-      state = AsyncData(items);
+      if (ref.mounted && identical(auth, ref.read(authProvider))) {
+        state = AsyncData(items);
+      }
     } catch (error) {
       // Silent refresh lỗi: giữ data cũ, chỉ warn log.
       // Cron server sẽ dọn lại, lần refresh tiếp sẽ đúng.
-      _socialClubLog.warning(
-        'Silent refresh failed for $communityId: $error',
-      );
+      _socialClubLog.warning('Silent refresh failed for $communityId: $error');
     }
   }
 
   /// Refresh công khai: hiện loading indicator, dùng cho pull-to-refresh,
   /// resume app, chuyển tab.
   Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetchSessions());
+    ref.invalidateSelf();
+    await AsyncValue.guard(() => future);
   }
 
   /// Kiểm tra data đã stale chưa (quá TTL).
@@ -527,18 +731,19 @@ class ClubSocialSessionsNotifier
   }
 }
 
-final clubSocialSessionsProvider = AsyncNotifierProvider.family<
-    ClubSocialSessionsNotifier,
-    List<SocialSessionModel>,
-    String>(ClubSocialSessionsNotifier.new);
+final clubSocialSessionsProvider =
+    AsyncNotifierProvider.family<
+      ClubSocialSessionsNotifier,
+      List<SocialSessionModel>,
+      String
+    >(ClubSocialSessionsNotifier.new);
 
 /// Aliases tương thích ngược: cùng trỏ tới [clubSocialSessionsProvider]
 /// để dùng chung cơ chế auto-close, auto-refresh 5 phút và TTL 60s.
 final clubSocialSessionsQueryProvider = clubSocialSessionsProvider;
 final communitySocialSessionsQueryProvider = clubSocialSessionsProvider;
 
-
 final filteredSocialSessionsProvider =
     Provider<AsyncValue<List<SocialSessionModel>>>((ref) {
-  return ref.watch(socialSessionsProvider);
-});
+      return ref.watch(socialSessionsProvider);
+    });

@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_home_projection_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_ranking_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
@@ -24,6 +25,8 @@ import 'package:app_quanly_giaidau/domain/repositories/session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/team_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/token_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_social_session_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/backend_social_location_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/social_location_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/user_repository.dart';
@@ -36,6 +39,10 @@ final tournamentRepositoryProvider = Provider<ITournamentRepository>((ref) {
     ref.watch(matchSocketServiceProvider),
   );
 });
+
+final homeProjectionRepositoryProvider = Provider<ApiHomeProjectionRepository>(
+  (ref) => ApiHomeProjectionRepository(ref.watch(dioClientProvider)),
+);
 
 final tournamentManagementRepositoryProvider =
     Provider<TournamentManagementRepository>((ref) {
@@ -97,4 +104,10 @@ final socialSessionRepositoryProvider = Provider<ISocialSessionRepository>((
   ref,
 ) {
   return ApiSocialSessionRepository(ref.watch(dioClientProvider));
+});
+
+final socialLocationRepositoryProvider = Provider<ISocialLocationRepository>((
+  ref,
+) {
+  return BackendSocialLocationRepository(dio: ref.watch(dioClientProvider).dio);
 });

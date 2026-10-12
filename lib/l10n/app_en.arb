@@ -1,6 +1,21 @@
 {
   "@@locale": "en",
+  "socialPending": "Pending approval",
+  "socialCancelRequestTitle": "Cancel your join request?",
+  "socialKeepRequest": "Keep request",
+  "socialConfirmCancelRequest": "Confirm",
+  "socialJoinClubQuestion": "Would you like to join the club?",
+  "socialJoinClub": "Join club",
+  "socialClubMembershipCheckError": "Could not check club membership. Please try again.",
+  "socialSkipClubJoin": "Maybe later",
+  "socialRetryMembership": "Retry",
   "club_createMatchStandalone": "Create Match",
+  "club_createActivity": "Create activity",
+  "club_createSocial": "Create Social",
+  "club_createSocialDescription": "A one-time ticketed Social event",
+  "club_createMatchQuick": "Create quick match",
+  "club_createMatchQuickDescription": "Create a quick match for the club",
+  "social_repeat": "Repeat Social",
   "club_standaloneMatch": "Standalone Match",
   "club_standaloneMatchDesc": "Casual friendly match between club members",
   "club_searchMemberHint": "Search member name...",
@@ -330,7 +345,6 @@
   "userProfileOpeningChat": "Opening...",
   "userProfileMessage": "Message",
   "userProfileViewProfile": "View profile",
-  "userProfileViewProfileOf": "View {name}'s profile",
   "userProfileLoading": "Loading profile...",
   "userProfileLoadError": "Unable to load user profile",
   "userProfileNoTop100": "You are not ranked in the Top 100 yet. Join a tournament to get ranked!",
@@ -350,11 +364,6 @@
   "@userProfileOpenTagError": {
     "placeholders": {
       "error": {}
-    }
-  },
-  "@userProfileViewProfileOf": {
-    "placeholders": {
-      "name": {}
     }
   },
   "vietnam": "Vietnam",
@@ -547,15 +556,6 @@
   "matchesStatusWalkover": "Walkover",
   "matchesCourtNotAssigned": "Court not assigned",
   "matchesCourtNameUnavailable": "Court name unavailable",
-  "matchesUnplacedSection": "Matches missing court/time ({count})",
-  "@matchesUnplacedSection": {
-    "description": "Collapsed schedule section for matches missing a court or scheduled time.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "tournamentScheduleHours": "Court hours: {start}–{end}",
   "@tournamentScheduleHours": {
     "placeholders": {
@@ -753,8 +753,6 @@
   "registerTypeSingles": "Singles",
   "registerTypeDoubles": "Doubles",
   "registerTypeMixedDoubles": "Mixed Doubles",
-  "registerTypeOpenSingles": "Open singles",
-  "registerTypeOpenDoubles": "Open doubles",
   "registerTypeDefault": "Category",
   "registerEloRange": "ELO {min}-{max}",
   "registerMaxTeams": "Max {max} teams",
@@ -1236,7 +1234,6 @@
   "dashboard_searchHint": "Search tournaments...",
   "dashboard_noSearchResults": "No tournaments found",
   "dashboard_noTournaments": "You haven't created or joined any tournaments yet.",
-  "dashboard_noMoreTournaments": "You've seen all tournaments",
   "dashboard_collapse": "Collapse",
   "dashboard_showMore": "Show more ({count} more tournaments)",
   "dashboard_quickActions": "Quick Actions",
@@ -1722,6 +1719,8 @@
   "club_noMembers": "No members yet",
   "club_noSport": "No sport selected",
   "club_pending": "Pending",
+  "clubApprovalRejected": "Rejected",
+  "homePendingClubFilterNotice": "Some of your clubs do not match the current filters.",
   "club_sectionInfo": "Club Info",
   "club_statsSection": "Statistics",
   "club_statusLabel": "Status",
@@ -2919,8 +2918,6 @@
   "tournamentCategoryMenDoubles": "Men's doubles",
   "tournamentCategoryWomenDoubles": "Women's doubles",
   "tournamentCategoryMixedDoubles": "Mixed doubles",
-  "tournamentCategoryOpenSingles": "Open singles",
-  "tournamentCategoryOpenDoubles": "Open doubles",
   "tournamentCategoryFootballMen": "Men's Football",
   "tournamentCategoryFootballWomen": "Women's Football",
   "tournamentCategoryFootballMixed": "Mixed Football",
@@ -3937,13 +3934,12 @@
   "registerBracketDoubleElimination": "Winners/losers bracket",
   "registerBracketRoundRobin": "Round robin",
   "registerBracketGroupStageKnockout": "Group stage + knockout",
-  "registerTeamSlotCount": "{count} team slots",
-  "@registerTeamSlotCount": {
+  "registerParticipantCount": "{count} profiles",
+  "@registerParticipantCount": {
     "placeholders": {
       "count": {}
     }
   },
-  "registerDivisionFull": "This division is full",
   "phoneVerificationPhoneRequired": "Please update your phone number before verification",
   "phoneVerificationSendFailed": "Unable to send OTP: {error}",
   "@phoneVerificationSendFailed": {
@@ -5712,6 +5708,12 @@
   "socialCreateLocationDialogTitle": "Please enter a location.",
   "socialCreatePrivacyLabel": "Privacy",
   "socialCreateNotesHint": "Add notes",
+  "socialCreatePickDateTime": "Choose date and time",
+  "socialCreatePickSportError": "Please choose a sport.",
+  "socialCreatePickFutureTimeError": "Please choose a future date and time.",
+  "socialCreatePickLocationError": "Please choose a location or 'Decide later'.",
+  "socialCreateVenueAddressRequired": "Please enter the venue address.",
+  "socialCreateClubOnlyRequiresClub": "Club-only sessions must be linked to a club.",
   "socialCreateFeeNone": "Free",
   "socialCreateSuccess": "Session \"{title}\" created successfully!",
   "@socialCreateSuccess": {
@@ -5766,6 +5768,7 @@
   "socialActiveSportsError": "Could not load sports.",
   "socialActiveSportsRetry": "Retry",
   "socialLegacyInactiveSport": "Inactive sport",
+  "socialEditSportLocked": "Sport cannot be changed when editing a session",
   "socialRegionProvinceFieldLabel": "Province / City",
   "socialRegionProvinceFieldHint": "Select a province",
   "socialRegionWardFieldLabel": "Ward / Commune",
@@ -5796,5 +5799,55 @@
   "socialRegionCloseAction": "Close",
   "socialLocationReverseFailed": "Couldn't look up the area for this pin.",
   "socialLocationNoAddressFound": "No address found for this pin.",
-  "tournamentManagementSettingsTooltip": "Tournament settings"
+  "socialLocationApproximateReference": "Selected location",
+  "socialLocationChangeReference": "Change search location",
+  "socialLocationCenterMissing": "No approximate center is available for this area.",
+  "socialLocationCenterLookupError": "Could not load the area center. Select the area again to retry.",
+  "socialNearbyNoResults": "No Social sessions near the selected location",
+  "socialNearbyExpandRadius": "Try expanding the radius or choosing another location",
+  "socialNearbyNeedLocation": "No location yet to filter sessions near you",
+  "socialNearbyPickLocationHint": "Tap the \"Near me\" chip to use your current location or pin one on the map",
+  "socialNearbyLoadMore": "Load more",
+  "socialNearbyRetry": "Retry loading",
+  "socialDistanceMeters": "about {distance} m away",
+  "@socialDistanceMeters": { "placeholders": { "distance": { "type": "String" } } },
+  "socialDistanceKilometers": "about {distance} km away",
+  "@socialDistanceKilometers": { "placeholders": { "distance": { "type": "String" } } },
+  "socialPlaceVenueName": "Venue name",
+  "socialPlaceVenueAddress": "Venue address",
+  "socialPlaceDuplicateTitle": "A similar venue is already listed",
+  "socialPlaceDuplicateUse": "Use this venue",
+  "socialPlaceDuplicateEdit": "Edit name or pin",
+  "socialPlaceDuplicateEditHint": "Edit the name, address, or pin in the form, then submit again.",
+  "socialPlaceCancel": "Cancel",
+  "socialPlaceSelect": "Select location",
+  "socialPlaceDecideLater": "Decide later",
+  "socialPlaceSearchHint": "Search by name or address",
+  "socialPlaceSearchIdle": "Search for a place by name or address.",
+  "socialPlaceSearchLoading": "Searching places...",
+  "socialPlaceSearchEmpty": "No matching locations found.",
+  "socialPlaceSearchError": "Could not search locations.",
+  "socialPlaceRetry": "Retry",
+  "socialPlaceAdd": "Add new location",
+  "socialPlaceInputTitle": "Add a location",
+  "socialPlaceInputHint": "Venue name or full address",
+  "socialPlaceMap": "Choose from map",
+  "socialPlaceNext": "Next",
+  "socialPlaceBack": "Back",
+  "socialPlaceConfirm": "Confirm",
+  "socialPlacePreviewTitle": "Confirm location",
+  "socialPlaceUnsupportedLink": "Location links are not supported. Enter a venue name or address and pin it on the map.",
+  "socialPlaceNotFound": "No venue was found in the directory.",
+  "socialPlaceUnresolvable": "Check the venue name, address, and map pin.",
+  "socialPlaceNetworkError": "Could not search the venue directory. Please retry.",
+  "socialPlaceResolving": "Looking up location...",
+  "socialPlaceRequired": "Select a location before saving.",
+  "socialPlaceMapHint": "Tap the map to move the pin.",
+  "socialPlaceReverseError": "Choose another pin or enter a venue address.",
+  "socialPlaceSuggestedSection": "Suggestions",
+  "socialPlaceAreaSection": "Administrative areas",
+  "socialPlaceNoPin": "No map pin",
+  "socialPlaceSaveAreaTitle": "Save this area?",
+  "socialPlaceSaveAreaMessage": "No street address and map pin were found for this input. You can save the administrative area or pin the exact spot on the map.",
+  "socialPlaceSaveArea": "Save area"
 }

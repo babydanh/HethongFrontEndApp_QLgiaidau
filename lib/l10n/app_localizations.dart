@@ -98,11 +98,101 @@ abstract class AppLocalizations {
     Locale('vi'),
   ];
 
+  /// No description provided for @socialPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get socialPending;
+
+  /// No description provided for @socialCancelRequestTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy yêu cầu tham gia?'**
+  String get socialCancelRequestTitle;
+
+  /// No description provided for @socialKeepRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vẫn tham gia'**
+  String get socialKeepRequest;
+
+  /// No description provided for @socialConfirmCancelRequest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get socialConfirmCancelRequest;
+
+  /// No description provided for @socialJoinClubQuestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có muốn tham gia CLB không?'**
+  String get socialJoinClubQuestion;
+
+  /// No description provided for @socialJoinClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia CLB'**
+  String get socialJoinClub;
+
+  /// No description provided for @socialClubMembershipCheckError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể kiểm tra trạng thái thành viên CLB. Thử lại sau.'**
+  String get socialClubMembershipCheckError;
+
+  /// No description provided for @socialSkipClubJoin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để sau'**
+  String get socialSkipClubJoin;
+
+  /// No description provided for @socialRetryMembership.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get socialRetryMembership;
+
   /// No description provided for @club_createMatchStandalone.
   ///
   /// In vi, this message translates to:
   /// **'Tạo trận đấu'**
   String get club_createMatchStandalone;
+
+  /// No description provided for @club_createActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo hoạt động'**
+  String get club_createActivity;
+
+  /// No description provided for @club_createSocial.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo Social'**
+  String get club_createSocial;
+
+  /// No description provided for @club_createSocialDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Social là sự kiện xé vé diễn ra một lần'**
+  String get club_createSocialDescription;
+
+  /// No description provided for @club_createMatchQuick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trận đấu nhanh'**
+  String get club_createMatchQuick;
+
+  /// No description provided for @club_createMatchQuickDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trận đấu nhanh cho CLB'**
+  String get club_createMatchQuickDescription;
+
+  /// No description provided for @social_repeat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lặp lại kèo'**
+  String get social_repeat;
 
   /// No description provided for @club_standaloneMatch.
   ///
@@ -1814,12 +1904,6 @@ abstract class AppLocalizations {
   /// **'Xem hồ sơ'**
   String get userProfileViewProfile;
 
-  /// No description provided for @userProfileViewProfileOf.
-  ///
-  /// In vi, this message translates to:
-  /// **'Xem hồ sơ {name}'**
-  String userProfileViewProfileOf(Object name);
-
   /// No description provided for @userProfileLoading.
   ///
   /// In vi, this message translates to:
@@ -1919,7 +2003,7 @@ abstract class AppLocalizations {
   /// No description provided for @noLiveMatches.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có trận đấu nào đang diễn ra'**
+  /// **'Không có trận đấu đang diễn ra'**
   String get noLiveMatches;
 
   /// No description provided for @upcomingMatches.
@@ -3026,12 +3110,6 @@ abstract class AppLocalizations {
   /// **'Tên sân chưa được cung cấp'**
   String get matchesCourtNameUnavailable;
 
-  /// Tiêu đề mục thu gọn cho các trận chưa có đủ sân hoặc giờ thi đấu.
-  ///
-  /// In vi, this message translates to:
-  /// **'Trận chưa xếp đủ sân/giờ ({count})'**
-  String matchesUnplacedSection(int count);
-
   /// No description provided for @tournamentScheduleHours.
   ///
   /// In vi, this message translates to:
@@ -4093,18 +4171,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đôi nam nữ'**
   String get registerTypeMixedDoubles;
-
-  /// No description provided for @registerTypeOpenSingles.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đơn linh hoạt'**
-  String get registerTypeOpenSingles;
-
-  /// No description provided for @registerTypeOpenDoubles.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đôi linh hoạt'**
-  String get registerTypeOpenDoubles;
 
   /// No description provided for @registerTypeDefault.
   ///
@@ -6001,12 +6067,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bạn chưa tạo hoặc tham gia giải đấu nào'**
   String get dashboard_noTournaments;
-
-  /// No description provided for @dashboard_noMoreTournaments.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã xem hết giải đấu'**
-  String get dashboard_noMoreTournaments;
 
   /// No description provided for @dashboard_collapse.
   ///
@@ -8048,6 +8108,18 @@ abstract class AppLocalizations {
   /// **'Chờ duyệt'**
   String get club_pending;
 
+  /// No description provided for @clubApprovalRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bị từ chối'**
+  String get clubApprovalRejected;
+
+  /// No description provided for @homePendingClubFilterNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một số CLB của bạn không khớp bộ lọc hiện tại.'**
+  String get homePendingClubFilterNotice;
+
   /// No description provided for @club_sectionInfo.
   ///
   /// In vi, this message translates to:
@@ -8933,7 +9005,7 @@ abstract class AppLocalizations {
   /// No description provided for @exploreLiveEmpty.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có trận đấu nào đang diễn ra'**
+  /// **'Không có trận đấu đang diễn ra'**
   String get exploreLiveEmpty;
 
   /// No description provided for @exploreRecentResultsTitle.
@@ -14804,18 +14876,6 @@ abstract class AppLocalizations {
   /// **'Đôi nam nữ'**
   String get tournamentCategoryMixedDoubles;
 
-  /// No description provided for @tournamentCategoryOpenSingles.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đơn linh hoạt'**
-  String get tournamentCategoryOpenSingles;
-
-  /// No description provided for @tournamentCategoryOpenDoubles.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đôi linh hoạt'**
-  String get tournamentCategoryOpenDoubles;
-
   /// No description provided for @tournamentCategoryFootballMen.
   ///
   /// In vi, this message translates to:
@@ -18492,17 +18552,11 @@ abstract class AppLocalizations {
   /// **'Vòng bảng + loại trực tiếp'**
   String get registerBracketGroupStageKnockout;
 
-  /// No description provided for @registerTeamSlotCount.
+  /// No description provided for @registerParticipantCount.
   ///
   /// In vi, this message translates to:
-  /// **'{count} suất đội'**
-  String registerTeamSlotCount(Object count);
-
-  /// No description provided for @registerDivisionFull.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nội dung này đã đủ suất'**
-  String get registerDivisionFull;
+  /// **'{count} hồ sơ'**
+  String registerParticipantCount(Object count);
 
   /// No description provided for @phoneVerificationPhoneRequired.
   ///
@@ -25840,6 +25894,42 @@ abstract class AppLocalizations {
   /// **'Thêm ghi chú'**
   String get socialCreateNotesHint;
 
+  /// No description provided for @socialCreatePickDateTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày và giờ'**
+  String get socialCreatePickDateTime;
+
+  /// No description provided for @socialCreatePickSportError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn môn thể thao.'**
+  String get socialCreatePickSportError;
+
+  /// No description provided for @socialCreatePickFutureTimeError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn ngày giờ diễn ra trong tương lai.'**
+  String get socialCreatePickFutureTimeError;
+
+  /// No description provided for @socialCreatePickLocationError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn địa điểm hoặc \'Quyết định sau\'.'**
+  String get socialCreatePickLocationError;
+
+  /// No description provided for @socialCreateVenueAddressRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập địa chỉ sân.'**
+  String get socialCreateVenueAddressRequired;
+
+  /// No description provided for @socialCreateClubOnlyRequiresClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo nội bộ cần gắn với một CLB.'**
+  String get socialCreateClubOnlyRequiresClub;
+
   /// No description provided for @socialCreateFeeNone.
   ///
   /// In vi, this message translates to:
@@ -25996,6 +26086,12 @@ abstract class AppLocalizations {
   /// **'Môn đã ngừng hoạt động'**
   String get socialLegacyInactiveSport;
 
+  /// No description provided for @socialEditSportLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đổi môn khi sửa kèo'**
+  String get socialEditSportLocked;
+
   /// No description provided for @socialRegionProvinceFieldLabel.
   ///
   /// In vi, this message translates to:
@@ -26116,11 +26212,299 @@ abstract class AppLocalizations {
   /// **'Chưa tìm thấy địa chỉ cho vị trí đã ghim.'**
   String get socialLocationNoAddressFound;
 
-  /// No description provided for @tournamentManagementSettingsTooltip.
+  /// No description provided for @socialLocationApproximateReference.
   ///
   /// In vi, this message translates to:
-  /// **'Cài đặt giải đấu'**
-  String get tournamentManagementSettingsTooltip;
+  /// **'Vị trí đã chọn'**
+  String get socialLocationApproximateReference;
+
+  /// No description provided for @socialLocationChangeReference.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi vị trí tìm kiếm'**
+  String get socialLocationChangeReference;
+
+  /// No description provided for @socialLocationCenterMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tâm ước lượng cho khu vực này.'**
+  String get socialLocationCenterMissing;
+
+  /// No description provided for @socialLocationCenterLookupError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải tâm khu vực. Vui lòng chọn lại để thử lại.'**
+  String get socialLocationCenterLookupError;
+
+  /// No description provided for @socialNearbyNoResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có buổi Social nào gần vị trí đã chọn'**
+  String get socialNearbyNoResults;
+
+  /// No description provided for @socialNearbyExpandRadius.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử mở rộng bán kính hoặc chọn vị trí khác'**
+  String get socialNearbyExpandRadius;
+
+  /// No description provided for @socialNearbyNeedLocation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có vị trí để lọc kèo gần bạn'**
+  String get socialNearbyNeedLocation;
+
+  /// No description provided for @socialNearbyPickLocationHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm vào chip \"Gần bạn\" để chọn vị trí hiện tại hoặc ghim trên bản đồ'**
+  String get socialNearbyPickLocationHint;
+
+  /// No description provided for @socialNearbyLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm'**
+  String get socialNearbyLoadMore;
+
+  /// No description provided for @socialNearbyRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử tải lại'**
+  String get socialNearbyRetry;
+
+  /// No description provided for @socialDistanceMeters.
+  ///
+  /// In vi, this message translates to:
+  /// **'cách ~{distance} m'**
+  String socialDistanceMeters(String distance);
+
+  /// No description provided for @socialDistanceKilometers.
+  ///
+  /// In vi, this message translates to:
+  /// **'cách ~{distance} km'**
+  String socialDistanceKilometers(String distance);
+
+  /// No description provided for @socialPlaceVenueName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân'**
+  String get socialPlaceVenueName;
+
+  /// No description provided for @socialPlaceVenueAddress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa chỉ sân'**
+  String get socialPlaceVenueAddress;
+
+  /// No description provided for @socialPlaceDuplicateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có sân gần giống trong danh bạ'**
+  String get socialPlaceDuplicateTitle;
+
+  /// No description provided for @socialPlaceDuplicateUse.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng sân này'**
+  String get socialPlaceDuplicateUse;
+
+  /// No description provided for @socialPlaceDuplicateEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa tên hoặc ghim'**
+  String get socialPlaceDuplicateEdit;
+
+  /// No description provided for @socialPlaceDuplicateEditHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy sửa tên, địa chỉ hoặc ghim trên biểu mẫu rồi gửi lại.'**
+  String get socialPlaceDuplicateEditHint;
+
+  /// No description provided for @socialPlaceCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get socialPlaceCancel;
+
+  /// No description provided for @socialPlaceSelect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn địa điểm'**
+  String get socialPlaceSelect;
+
+  /// No description provided for @socialPlaceDecideLater.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quyết định sau'**
+  String get socialPlaceDecideLater;
+
+  /// No description provided for @socialPlaceSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên hoặc địa chỉ'**
+  String get socialPlaceSearchHint;
+
+  /// No description provided for @socialPlaceSearchIdle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm địa điểm theo tên hoặc địa chỉ.'**
+  String get socialPlaceSearchIdle;
+
+  /// No description provided for @socialPlaceSearchLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tìm địa điểm...'**
+  String get socialPlaceSearchLoading;
+
+  /// No description provided for @socialPlaceSearchEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy địa điểm phù hợp.'**
+  String get socialPlaceSearchEmpty;
+
+  /// No description provided for @socialPlaceSearchError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tìm địa điểm.'**
+  String get socialPlaceSearchError;
+
+  /// No description provided for @socialPlaceRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get socialPlaceRetry;
+
+  /// No description provided for @socialPlaceAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa điểm mới'**
+  String get socialPlaceAdd;
+
+  /// No description provided for @socialPlaceInputTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm địa điểm'**
+  String get socialPlaceInputTitle;
+
+  /// No description provided for @socialPlaceInputHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên sân hoặc địa chỉ đầy đủ'**
+  String get socialPlaceInputHint;
+
+  /// No description provided for @socialPlaceMap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn từ bản đồ'**
+  String get socialPlaceMap;
+
+  /// No description provided for @socialPlaceNext.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kế tiếp'**
+  String get socialPlaceNext;
+
+  /// No description provided for @socialPlaceBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trở lại'**
+  String get socialPlaceBack;
+
+  /// No description provided for @socialPlaceConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get socialPlaceConfirm;
+
+  /// No description provided for @socialPlacePreviewTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận địa điểm'**
+  String get socialPlacePreviewTitle;
+
+  /// No description provided for @socialPlaceUnsupportedLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không hỗ trợ liên kết địa điểm. Hãy nhập tên hoặc địa chỉ sân rồi ghim vị trí.'**
+  String get socialPlaceUnsupportedLink;
+
+  /// No description provided for @socialPlaceNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy sân trong danh bạ.'**
+  String get socialPlaceNotFound;
+
+  /// No description provided for @socialPlaceUnresolvable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy kiểm tra tên, địa chỉ và ghim vị trí sân.'**
+  String get socialPlaceUnresolvable;
+
+  /// No description provided for @socialPlaceNetworkError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tìm sân trong danh bạ. Vui lòng thử lại.'**
+  String get socialPlaceNetworkError;
+
+  /// No description provided for @socialPlaceResolving.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tìm địa điểm...'**
+  String get socialPlaceResolving;
+
+  /// No description provided for @socialPlaceRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn địa điểm trước khi lưu.'**
+  String get socialPlaceRequired;
+
+  /// No description provided for @socialPlaceMapHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm bản đồ để di chuyển ghim.'**
+  String get socialPlaceMapHint;
+
+  /// No description provided for @socialPlaceReverseError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy chọn ghim khác hoặc nhập địa chỉ sân.'**
+  String get socialPlaceReverseError;
+
+  /// No description provided for @socialPlaceSuggestedSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý'**
+  String get socialPlaceSuggestedSection;
+
+  /// No description provided for @socialPlaceAreaSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực hành chính'**
+  String get socialPlaceAreaSection;
+
+  /// No description provided for @socialPlaceNoPin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có ghim'**
+  String get socialPlaceNoPin;
+
+  /// No description provided for @socialPlaceSaveAreaTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu khu vực này?'**
+  String get socialPlaceSaveAreaTitle;
+
+  /// No description provided for @socialPlaceSaveAreaMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy địa chỉ đường và ghim bản đồ cho nội dung này. Bạn có thể lưu khu vực hành chính hoặc ghim chính xác trên bản đồ.'**
+  String get socialPlaceSaveAreaMessage;
+
+  /// No description provided for @socialPlaceSaveArea.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu khu vực'**
+  String get socialPlaceSaveArea;
 }
 
 class _AppLocalizationsDelegate

@@ -16,6 +16,8 @@ class MatchSocketService {
   final _joinedClubSessionIds = <String>{};
   final _joinedClubCommunityIds = <String>{};
   final TokenManager? _tokenManager;
+  Future<void>? _connectionInFlight;
+  int _connectionGeneration = 0;
 
   MatchSocketService({TokenManager? tokenManager})
     : _tokenManager = tokenManager;
@@ -89,6 +91,11 @@ class MatchSocketService {
     if (joinMatch && matchId != null) {
       _joinedMatchIds.add(matchId);
     }
+    final connectionInFlight = _connectionInFlight;
+    if (connectionInFlight != null) {
+      await connectionInFlight;
+      return;
+    }
     if (_socket != null) {
       if (_socket!.connected) {
         _joinTrackedRooms();
@@ -99,6 +106,18 @@ class MatchSocketService {
       return;
     }
 
+    final connection = _createConnection(_connectionGeneration);
+    _connectionInFlight = connection;
+    try {
+      await connection;
+    } finally {
+      if (identical(_connectionInFlight, connection)) {
+        _connectionInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _createConnection(int generation) async {
     try {
       var rawBaseUrl =
           dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
@@ -116,6 +135,7 @@ class MatchSocketService {
       _log.info('Connecting to match socket at $serverUrl/live');
 
       final token = await _tokenManager?.getAccessToken();
+      if (generation != _connectionGeneration) return;
       _socket = io.io(
         '$serverUrl/live',
         io.OptionBuilder()
@@ -274,6 +294,8 @@ class MatchSocketService {
   }
 
   void disconnect() {
+    _connectionGeneration++;
+    _connectionInFlight = null;
     if (_socket != null) {
       _log.info('Disconnecting match socket');
       _socket!.disconnect();

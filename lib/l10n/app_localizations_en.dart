@@ -9,7 +9,54 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get socialPending => 'Pending approval';
+
+  @override
+  String get socialCancelRequestTitle => 'Cancel your join request?';
+
+  @override
+  String get socialKeepRequest => 'Keep request';
+
+  @override
+  String get socialConfirmCancelRequest => 'Confirm';
+
+  @override
+  String get socialJoinClubQuestion => 'Would you like to join the club?';
+
+  @override
+  String get socialJoinClub => 'Join club';
+
+  @override
+  String get socialClubMembershipCheckError =>
+      'Could not check club membership. Please try again.';
+
+  @override
+  String get socialSkipClubJoin => 'Maybe later';
+
+  @override
+  String get socialRetryMembership => 'Retry';
+
+  @override
   String get club_createMatchStandalone => 'Create Match';
+
+  @override
+  String get club_createActivity => 'Create activity';
+
+  @override
+  String get club_createSocial => 'Create Social';
+
+  @override
+  String get club_createSocialDescription => 'A one-time ticketed Social event';
+
+  @override
+  String get club_createMatchQuick => 'Create quick match';
+
+  @override
+  String get club_createMatchQuickDescription =>
+      'Create a quick match for the club';
+
+  @override
+  String get social_repeat => 'Repeat Social';
 
   @override
   String get club_standaloneMatch => 'Standalone Match';
@@ -920,11 +967,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userProfileViewProfile => 'View profile';
 
   @override
-  String userProfileViewProfileOf(Object name) {
-    return 'View $name\'s profile';
-  }
-
-  @override
   String get userProfileLoading => 'Loading profile...';
 
   @override
@@ -1541,11 +1583,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchesCourtNameUnavailable => 'Court name unavailable';
 
   @override
-  String matchesUnplacedSection(int count) {
-    return 'Matches missing court/time ($count)';
-  }
-
-  @override
   String tournamentScheduleHours(String start, String end) {
     return 'Court hours: $start–$end';
   }
@@ -2129,12 +2166,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerTypeMixedDoubles => 'Mixed Doubles';
-
-  @override
-  String get registerTypeOpenSingles => 'Open singles';
-
-  @override
-  String get registerTypeOpenDoubles => 'Open doubles';
 
   @override
   String get registerTypeDefault => 'Category';
@@ -3176,9 +3207,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboard_noTournaments =>
       'You haven\'t created or joined any tournaments yet.';
-
-  @override
-  String get dashboard_noMoreTournaments => 'You\'ve seen all tournaments';
 
   @override
   String get dashboard_collapse => 'Collapse';
@@ -4300,6 +4328,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get club_pending => 'Pending';
+
+  @override
+  String get clubApprovalRejected => 'Rejected';
+
+  @override
+  String get homePendingClubFilterNotice =>
+      'Some of your clubs do not match the current filters.';
 
   @override
   String get club_sectionInfo => 'Club Info';
@@ -7982,12 +8017,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCategoryMixedDoubles => 'Mixed doubles';
 
   @override
-  String get tournamentCategoryOpenSingles => 'Open singles';
-
-  @override
-  String get tournamentCategoryOpenDoubles => 'Open doubles';
-
-  @override
   String get tournamentCategoryFootballMen => 'Men\'s Football';
 
   @override
@@ -10086,12 +10115,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerBracketGroupStageKnockout => 'Group stage + knockout';
 
   @override
-  String registerTeamSlotCount(Object count) {
-    return '$count team slots';
+  String registerParticipantCount(Object count) {
+    return '$count profiles';
   }
-
-  @override
-  String get registerDivisionFull => 'This division is full';
 
   @override
   String get phoneVerificationPhoneRequired =>
@@ -14262,6 +14288,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialCreateNotesHint => 'Add notes';
 
   @override
+  String get socialCreatePickDateTime => 'Choose date and time';
+
+  @override
+  String get socialCreatePickSportError => 'Please choose a sport.';
+
+  @override
+  String get socialCreatePickFutureTimeError =>
+      'Please choose a future date and time.';
+
+  @override
+  String get socialCreatePickLocationError =>
+      'Please choose a location or \'Decide later\'.';
+
+  @override
+  String get socialCreateVenueAddressRequired =>
+      'Please enter the venue address.';
+
+  @override
+  String get socialCreateClubOnlyRequiresClub =>
+      'Club-only sessions must be linked to a club.';
+
+  @override
   String get socialCreateFeeNone => 'Free';
 
   @override
@@ -14350,6 +14398,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Inactive sport';
 
   @override
+  String get socialEditSportLocked =>
+      'Sport cannot be changed when editing a session';
+
+  @override
   String get socialRegionProvinceFieldLabel => 'Province / City';
 
   @override
@@ -14416,5 +14468,165 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialLocationNoAddressFound => 'No address found for this pin.';
 
   @override
-  String get tournamentManagementSettingsTooltip => 'Tournament settings';
+  String get socialLocationApproximateReference => 'Selected location';
+
+  @override
+  String get socialLocationChangeReference => 'Change search location';
+
+  @override
+  String get socialLocationCenterMissing =>
+      'No approximate center is available for this area.';
+
+  @override
+  String get socialLocationCenterLookupError =>
+      'Could not load the area center. Select the area again to retry.';
+
+  @override
+  String get socialNearbyNoResults =>
+      'No Social sessions near the selected location';
+
+  @override
+  String get socialNearbyExpandRadius =>
+      'Try expanding the radius or choosing another location';
+
+  @override
+  String get socialNearbyNeedLocation =>
+      'No location yet to filter sessions near you';
+
+  @override
+  String get socialNearbyPickLocationHint =>
+      'Tap the \"Near me\" chip to use your current location or pin one on the map';
+
+  @override
+  String get socialNearbyLoadMore => 'Load more';
+
+  @override
+  String get socialNearbyRetry => 'Retry loading';
+
+  @override
+  String socialDistanceMeters(String distance) {
+    return 'about $distance m away';
+  }
+
+  @override
+  String socialDistanceKilometers(String distance) {
+    return 'about $distance km away';
+  }
+
+  @override
+  String get socialPlaceVenueName => 'Venue name';
+
+  @override
+  String get socialPlaceVenueAddress => 'Venue address';
+
+  @override
+  String get socialPlaceDuplicateTitle => 'A similar venue is already listed';
+
+  @override
+  String get socialPlaceDuplicateUse => 'Use this venue';
+
+  @override
+  String get socialPlaceDuplicateEdit => 'Edit name or pin';
+
+  @override
+  String get socialPlaceDuplicateEditHint =>
+      'Edit the name, address, or pin in the form, then submit again.';
+
+  @override
+  String get socialPlaceCancel => 'Cancel';
+
+  @override
+  String get socialPlaceSelect => 'Select location';
+
+  @override
+  String get socialPlaceDecideLater => 'Decide later';
+
+  @override
+  String get socialPlaceSearchHint => 'Search by name or address';
+
+  @override
+  String get socialPlaceSearchIdle => 'Search for a place by name or address.';
+
+  @override
+  String get socialPlaceSearchLoading => 'Searching places...';
+
+  @override
+  String get socialPlaceSearchEmpty => 'No matching locations found.';
+
+  @override
+  String get socialPlaceSearchError => 'Could not search locations.';
+
+  @override
+  String get socialPlaceRetry => 'Retry';
+
+  @override
+  String get socialPlaceAdd => 'Add new location';
+
+  @override
+  String get socialPlaceInputTitle => 'Add a location';
+
+  @override
+  String get socialPlaceInputHint => 'Venue name or full address';
+
+  @override
+  String get socialPlaceMap => 'Choose from map';
+
+  @override
+  String get socialPlaceNext => 'Next';
+
+  @override
+  String get socialPlaceBack => 'Back';
+
+  @override
+  String get socialPlaceConfirm => 'Confirm';
+
+  @override
+  String get socialPlacePreviewTitle => 'Confirm location';
+
+  @override
+  String get socialPlaceUnsupportedLink =>
+      'Location links are not supported. Enter a venue name or address and pin it on the map.';
+
+  @override
+  String get socialPlaceNotFound => 'No venue was found in the directory.';
+
+  @override
+  String get socialPlaceUnresolvable =>
+      'Check the venue name, address, and map pin.';
+
+  @override
+  String get socialPlaceNetworkError =>
+      'Could not search the venue directory. Please retry.';
+
+  @override
+  String get socialPlaceResolving => 'Looking up location...';
+
+  @override
+  String get socialPlaceRequired => 'Select a location before saving.';
+
+  @override
+  String get socialPlaceMapHint => 'Tap the map to move the pin.';
+
+  @override
+  String get socialPlaceReverseError =>
+      'Choose another pin or enter a venue address.';
+
+  @override
+  String get socialPlaceSuggestedSection => 'Suggestions';
+
+  @override
+  String get socialPlaceAreaSection => 'Administrative areas';
+
+  @override
+  String get socialPlaceNoPin => 'No map pin';
+
+  @override
+  String get socialPlaceSaveAreaTitle => 'Save this area?';
+
+  @override
+  String get socialPlaceSaveAreaMessage =>
+      'No street address and map pin were found for this input. You can save the administrative area or pin the exact spot on the map.';
+
+  @override
+  String get socialPlaceSaveArea => 'Save area';
 }

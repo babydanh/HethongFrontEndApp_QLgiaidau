@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/data/models/social_place.dart';
 
 class SocialCommunitySummary {
   final String id;
@@ -78,6 +79,8 @@ class SocialParticipantModel {
   String get apiIdentifier => isGuest ? id : userId;
 
   bool get isHost => role.toUpperCase() == 'HOST';
+  bool get isRequested =>
+      const {'REQUESTED', 'PENDING'}.contains(status.toUpperCase());
 
   String get initials {
     final trimmed = name.trim();
@@ -369,6 +372,9 @@ class SocialSessionModel {
   final double? latitude;
   final double? longitude;
 
+  /// Distance in meters from the current reference point; null means unavailable.
+  final double? distanceM;
+
   /// Khoảng cách từ user tới sân (km) — server tính qua PostGIS khi query
   /// kèm lat/lng; 0.0 = chưa có (không hiện badge).
   final double distanceKm;
@@ -388,7 +394,9 @@ class SocialSessionModel {
   final String sport;
   final String sportName;
   final List<SocialParticipantModel> participants;
+  final List<SocialParticipantModel> requestedParticipants;
   final bool isJoined;
+  final bool isPending;
   final bool isHost;
   final String? chatRoomId;
 
@@ -412,6 +420,7 @@ class SocialSessionModel {
     required this.venueAddress,
     this.latitude,
     this.longitude,
+    this.distanceM,
     this.distanceKm = 0.0,
     this.maxSlots = 6,
     this.currentSlots = 1,
@@ -429,12 +438,39 @@ class SocialSessionModel {
     required this.sport,
     required this.sportName,
     this.participants = const [],
+    this.requestedParticipants = const [],
     this.isJoined = false,
+    this.isPending = false,
     this.isHost = false,
     this.chatRoomId,
     this.matches = const [],
     this.chatMessages = const [],
   });
+
+  bool get isLocationDeferred =>
+      venueName == SocialPlace.deferredLabel &&
+      venueAddress == SocialPlace.deferredLabel &&
+      latitude == null &&
+      longitude == null;
+
+  /// Hiển thị khoảng cách từ server:
+  /// < 1000m: "42 m"
+  /// >= 1000m: "1.2 km"
+  String get distanceDisplay {
+    if (distanceM != null) {
+      if (distanceM! < 1000) {
+        return '${distanceM!.round()} m';
+      }
+      return '${(distanceM! / 1000.0).toStringAsFixed(1)} km';
+    }
+    if (distanceKm > 0) {
+      if (distanceKm < 1.0) {
+        return '${(distanceKm * 1000).round()} m';
+      }
+      return '${distanceKm.toStringAsFixed(1)} km';
+    }
+    return '';
+  }
 
   // Backward compatibility getters for UI
   String? get clubId => communityId ?? community?.id;
@@ -503,6 +539,7 @@ class SocialSessionModel {
     const days = ['', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
     return days[dt.weekday];
   }
+
   static String _fullWeekdayDisplay(DateTime dt) {
     const days = [
       '',
@@ -546,6 +583,30 @@ class SocialSessionModel {
               .toList()
         : <SocialParticipantModel>[];
 
+    final rawRequests =
+        json['requests'] ??
+        json['requestedParticipants'] ??
+        json['pendingRequests'] ??
+        json['pending_participants'];
+    final requestedList = (rawRequests is List)
+        ? rawRequests
+              .whereType<Map>()
+              .map(
+                (p) => SocialParticipantModel.fromJson(
+                  p.map((k, v) => MapEntry(k.toString(), v)),
+                ),
+              )
+              .toList()
+        : <SocialParticipantModel>[];
+
+    final combinedRequests = <String, SocialParticipantModel>{
+      for (final participant in [...requestedList, ...participantsList])
+        if (participant.isRequested) participant.id: participant,
+    }.values.toList();
+    final confirmedParticipants = participantsList
+        .where((p) => p.status.toUpperCase() == 'JOINED')
+        .toList();
+
     final rawCommunity = json['community'];
     final communityObj = (rawCommunity is Map)
         ? SocialCommunitySummary.fromJson(
@@ -588,7 +649,7 @@ class SocialSessionModel {
       categoryId: json['categoryId']?.toString(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? json['notes']?.toString(),
-      playFormat: json['playFormat']?.toString() ?? 'Giao hữu',
+      playFormat: json['playFormat']?.toString() ?? 'Giao lưu',
       playDate: json['playDate']?.toString(),
       startAt: parsedStartAt,
       durationMinutes: durationMin,
@@ -596,8 +657,21 @@ class SocialSessionModel {
       venueAddress: json['venueAddress']?.toString() ?? '',
       latitude: _toDoubleOrNull(json['latitude']),
       longitude: _toDoubleOrNull(json['longitude']),
+      distanceM: _toDoubleOrNull(
+        json['distanceMeters'] ?? json['distance_m'] ?? json['distanceM'],
+      ),
       distanceKm:
-          _toDoubleOrNull(json['distanceKm'] ?? json['distance_km']) ?? 0.0,
+          _toDoubleOrNull(json['distanceKm'] ?? json['distance_km']) ??
+          ((json['distanceMeters'] != null ||
+                  json['distance_m'] != null ||
+                  json['distanceM'] != null)
+              ? (_toDoubleOrNull(
+                      json['distanceMeters'] ??
+                          json['distance_m'] ??
+                          json['distanceM'],
+                    )! /
+                    1000.0)
+              : 0.0),
       maxSlots: (json['maxSlots'] is num)
           ? (json['maxSlots'] as num).toInt()
           : ((json['maxParticipants'] is num)
@@ -607,7 +681,10 @@ class SocialSessionModel {
           ? (json['currentSlots'] as num).toInt()
           : ((json['currentParticipants'] is num)
                 ? (json['currentParticipants'] as num).toInt()
-                : participantsList.length),
+                : confirmedParticipants.fold<int>(
+                    0,
+                    (sum, p) => sum + p.ticketCount,
+                  )),
       feePerSlot: (json['feePerSlot'] is num)
           ? (json['feePerSlot'] as num).toInt()
           : ((json['pricePerSlot'] is num)
@@ -639,8 +716,17 @@ class SocialSessionModel {
       community: communityObj,
       sport: sportKey,
       sportName: sportName,
-      participants: participantsList,
+      participants: confirmedParticipants,
+      requestedParticipants: combinedRequests,
       isJoined: json['isJoined'] == true,
+      isPending:
+          json['isJoined'] != true &&
+          (json.containsKey('joinRequestStatus')
+              ? const {
+                  'REQUESTED',
+                  'PENDING',
+                }.contains(json['joinRequestStatus']?.toString().toUpperCase())
+              : json['isPending'] == true),
       isHost: json['isHost'] == true,
       chatRoomId: json['chatRoomId']?.toString(),
       chatMessages: (json['chatMessages'] ?? json['messages']) is List
@@ -673,6 +759,7 @@ class SocialSessionModel {
     if (latitude != null) 'latitude': latitude,
     if (longitude != null) 'longitude': longitude,
     if (distanceKm > 0) 'distanceKm': distanceKm,
+    if (distanceM != null) 'distance_m': distanceM,
     'maxSlots': maxSlots,
     'currentSlots': currentSlots,
     'feePerSlot': feePerSlot,
@@ -686,7 +773,11 @@ class SocialSessionModel {
     'sport': sport,
     'sportName': sportName,
     'participants': participants.map((p) => p.toJson()).toList(),
+    'requestedParticipants': requestedParticipants
+        .map((p) => p.toJson())
+        .toList(),
     'isJoined': isJoined,
+    'isPending': isPending,
     'isHost': isHost,
     if (chatRoomId != null) 'chatRoomId': chatRoomId,
     if (chatMessages.isNotEmpty)
@@ -710,6 +801,7 @@ class SocialSessionModel {
     double? latitude,
     double? longitude,
     double? distanceKm,
+    double? distanceM,
     int? maxSlots,
     int? currentSlots,
     int? feePerSlot,
@@ -726,7 +818,9 @@ class SocialSessionModel {
     String? sport,
     String? sportName,
     List<SocialParticipantModel>? participants,
+    List<SocialParticipantModel>? requestedParticipants,
     bool? isJoined,
+    bool? isPending,
     bool? isHost,
     String? chatRoomId,
     List<SocialMatchModel>? matches,
@@ -749,6 +843,7 @@ class SocialSessionModel {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       distanceKm: distanceKm ?? this.distanceKm,
+      distanceM: distanceM ?? this.distanceM,
       maxSlots: maxSlots ?? this.maxSlots,
       currentSlots: currentSlots ?? this.currentSlots,
       feePerSlot: feePerSlot ?? this.feePerSlot,
@@ -765,7 +860,10 @@ class SocialSessionModel {
       sport: sport ?? this.sport,
       sportName: sportName ?? this.sportName,
       participants: participants ?? this.participants,
+      requestedParticipants:
+          requestedParticipants ?? this.requestedParticipants,
       isJoined: isJoined ?? this.isJoined,
+      isPending: isPending ?? this.isPending,
       isHost: isHost ?? this.isHost,
       chatRoomId: chatRoomId ?? this.chatRoomId,
       matches: matches ?? this.matches,
@@ -784,9 +882,11 @@ class CreateSocialSessionRequest {
   final String venueName;
   final String venueAddress;
 
-  /// Tọa độ sân do host ghim map (đi cặp; null = không ghim).
+  /// Tọa độ vắng mặt khi host chọn quyết định địa điểm sau.
   final double? latitude;
   final double? longitude;
+  final bool locationDeferred;
+  final String? venueId;
   final int maxSlots;
   final int feePerSlot;
   final String levelRequirement;
@@ -799,13 +899,15 @@ class CreateSocialSessionRequest {
     required this.sport,
     required this.title,
     this.description,
-    this.playFormat = 'Giao hữu',
+    this.playFormat = 'Giao lưu',
     required this.startAt,
     this.durationMinutes = 120,
     required this.venueName,
     required this.venueAddress,
     this.latitude,
     this.longitude,
+    this.locationDeferred = false,
+    this.venueId,
     this.maxSlots = 6,
     this.feePerSlot = 0,
     this.levelRequirement = 'ALL',
@@ -831,12 +933,17 @@ class CreateSocialSessionRequest {
       'playFormat': playFormat,
       'startAt': formattedIsoWithOffset,
       'durationMinutes': durationMinutes,
-      'venueName': venueName,
-      'venueAddress': venueAddress,
-      if (latitude != null && longitude != null) ...{
-        'latitude': latitude,
-        'longitude': longitude,
-      },
+      if (locationDeferred) 'locationDeferred': true,
+      if (!locationDeferred && venueId != null) 'venueId': venueId,
+      if (!locationDeferred && venueId != null) 'venueName': venueName,
+      if (!locationDeferred && venueId != null) 'venueAddress': venueAddress,
+      if (!locationDeferred && venueId == null)
+        'newVenue': {
+          'name': venueName,
+          'locationAddress': venueAddress,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
       'maxSlots': maxSlots,
       'feePerSlot': feePerSlot,
       'levelRequirement': levelRequirement,
@@ -917,6 +1024,45 @@ class SocialSessionListResponse {
           : itemsList.length,
     );
   }
+}
+
+class NearbySocialSessionsResponse {
+  final List<SocialSessionModel> items;
+  final int page;
+  final int limit;
+  final int total;
+
+  const NearbySocialSessionsResponse({
+    required this.items,
+    this.page = 1,
+    this.limit = 20,
+    this.total = 0,
+  });
+
+  factory NearbySocialSessionsResponse.fromJson(Map<String, dynamic> json) {
+    final rawData = json['data'] is Map ? json['data'] as Map : json;
+    final rawItems = rawData['items'] ?? rawData['data'];
+    final itemsList = (rawItems is List)
+        ? rawItems
+              .whereType<Map>()
+              .map(
+                (item) => SocialSessionModel.fromJson(
+                  item.map((k, v) => MapEntry(k.toString(), v)),
+                ),
+              )
+              .toList()
+        : <SocialSessionModel>[];
+
+    final meta = rawData['meta'] is Map ? rawData['meta'] as Map : const {};
+    return NearbySocialSessionsResponse(
+      items: itemsList,
+      page: (meta['page'] as num?)?.toInt() ?? 1,
+      limit: (meta['limit'] as num?)?.toInt() ?? itemsList.length,
+      total: (meta['total'] as num?)?.toInt() ?? itemsList.length,
+    );
+  }
+
+  bool get hasMore => page * limit < total;
 }
 
 class BatchAddParticipantsResponse {

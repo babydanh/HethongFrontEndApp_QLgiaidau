@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
@@ -18,8 +19,9 @@ import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_con
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_find_players_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_add_participant_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_more_options_sheet.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 class SocialDetailScreen extends ConsumerStatefulWidget {
@@ -36,9 +38,13 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   String? _removingParticipantId;
+  bool _withdrawingRequest = false;
 
   Future<void> _removeParticipant(SocialParticipantModel participant) async {
-    if (_removingParticipantId != null || participant.isHost) return;
+    if (_removingParticipantId != null || participant.isHost || !_isHost) {
+      return;
+    }
+    final auth = ref.read(authProvider);
     final currentSession = ref
         .read(socialSessionDetailProvider(widget.sessionId))
         .asData
@@ -61,13 +67,17 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true ||
+        !mounted ||
+        !identical(auth, ref.read(authProvider))) {
+      return;
+    }
     setState(() => _removingParticipantId = participant.apiIdentifier);
     try {
       await ref
           .read(socialSessionDetailProvider(widget.sessionId).notifier)
           .removeParticipant(participant.apiIdentifier);
-      if (mounted) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Đã xóa ${participant.name} khỏi buổi Social.'),
@@ -75,7 +85,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         );
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(error.toString()),
@@ -84,35 +94,48 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         );
       }
     } finally {
-      if (mounted) setState(() => _removingParticipantId = null);
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        setState(() => _removingParticipantId = null);
+      }
     }
   }
 
-  bool get _isHost {
-    if (widget.isHost != null) return widget.isHost!;
-    final session = ref
-        .read(socialSessionDetailProvider(widget.sessionId))
-        .asData
-        ?.value;
-    if (session != null) {
-      if (session.isHost) return true;
-      final currentUser = ref.read(userProfileProvider).asData?.value;
-      if (session.creatorId.isNotEmpty &&
-          currentUser != null &&
-          session.creatorId == currentUser.id) {
-        return true;
+  bool get _isHost =>
+      ref
+          .read(socialSessionDetailProvider(widget.sessionId))
+          .asData
+          ?.value
+          .isHost ==
+      true;
+
+  bool _reviewing = false;
+  Future<void> _reviewRequest(
+    SocialParticipantModel participant,
+    bool approve,
+  ) async {
+    if (_reviewing || !_isHost) return;
+    final auth = ref.read(authProvider);
+    setState(() => _reviewing = true);
+    try {
+      final notifier = ref.read(
+        socialSessionDetailProvider(widget.sessionId).notifier,
+      );
+      if (approve) {
+        await notifier.approveParticipant(participant);
+      } else {
+        await notifier.rejectParticipant(participant);
       }
-      if (session.creatorId == 'me') return true;
-      if (session.participants.any(
-        (p) =>
-            p.isHost &&
-            (p.id == currentUser?.id ||
-                (currentUser != null && p.name == currentUser.fullName)),
-      )) {
-        return true;
+    } catch (error) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
+      }
+    } finally {
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        setState(() => _reviewing = false);
       }
     }
-    return false;
   }
 
   @override
@@ -135,7 +158,14 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       socialSessionDetailProvider(widget.sessionId),
     );
 
+    ref.listen(authProvider, (previous, next) {
+      _removingParticipantId = null;
+      _reviewing = false;
+      _withdrawingRequest = false;
+    });
     return sessionAsync.when(
+      skipLoadingOnRefresh: false,
+      skipLoadingOnReload: false,
       loading: () => Scaffold(
         backgroundColor: colors.bgDark,
         appBar: AppBar(
@@ -194,7 +224,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         ),
       ),
       data: (session) {
-        final host = widget.isHost ?? session.isHost;
+        final host = session.isHost;
         final showPayment = host && session.feePerSlot > 0;
         final tabLength = 3 + (showPayment ? 1 : 0);
         if (_tabController.length != tabLength) {
@@ -290,6 +320,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                           onShareToChat: () => _shareToClubChat(session),
                         );
                       },
+                      viewerFooter: _buildBottomActionBar(
+                        context, isDark, session, colors,
+                      ),
                     ),
                     SocialParticipantsTab(
                       session: session,
@@ -298,21 +331,24 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       removingParticipantId: _removingParticipantId,
                       onAddParticipant: (slot) {
                         if (session.status.toUpperCase() == 'COMPLETED') return;
-                        SocialAddParticipantSheet.show(
-                          context,
-                          session,
-                          slot,
-                        );
+                        SocialAddParticipantSheet.show(context, session, slot);
                       },
+                      onApproveParticipant: host && !_reviewing
+                          ? (p) => _reviewRequest(p, true)
+                          : null,
+                      onRejectParticipant: host && !_reviewing
+                          ? (p) => _reviewRequest(p, false)
+                          : null,
                     ),
                     if (showPayment) SocialPaymentTab(session: session),
-                    SocialChatTab(session: session),
+                    SocialChatTab(
+                      key: ObjectKey(ref.watch(authProvider)),
+                      session: session,
+                    ),
                   ],
                 ),
               ),
 
-              // Bottom Sticky Action Bar (IMG2 & IMG3)
-              _buildBottomActionBar(context, isDark, session, colors),
             ],
           ),
         );
@@ -389,6 +425,15 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       ),
       actions: [
         IconButton(
+          tooltip: MaterialLocalizations.of(
+            context,
+          ).refreshIndicatorSemanticLabel,
+          icon: const Icon(Icons.refresh),
+          onPressed: () => ref
+              .read(socialSessionDetailProvider(widget.sessionId).notifier)
+              .refresh(),
+        ),
+        IconButton(
           icon: Icon(
             Icons.ios_share_rounded,
             color: colors.textPrimary,
@@ -438,12 +483,18 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
     if (_isHost) {
       return const SizedBox.shrink();
     }
+    final isPending = session.isPending;
+    final isJoined = session.isJoined;
+
     final canJoin =
         session.status == 'OPEN' &&
         session.currentSlots < session.maxSlots &&
-        !session.isJoined;
-    final joinLabel = session.isJoined
+        !isJoined &&
+        !isPending;
+    final joinLabel = isJoined
         ? 'Đã tham gia'
+        : isPending
+        ? AppLocalizations.of(context)!.socialPending
         : session.status == 'CANCELLED'
         ? 'Đã hủy'
         : session.status == 'COMPLETED'
@@ -501,17 +552,35 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             ),
             const SizedBox(width: 12),
 
-            // Right Button: 'Yêu cầu tham gia'
+            // Right Button: 'Yêu cầu tham gia' / 'Chờ duyệt' / 'Đã tham gia'
             Expanded(
               child: SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: canJoin
+              onPressed: canJoin
                       ? () => _handleRequestJoin(context, session)
+                      : isPending && !_withdrawingRequest
+                      ? () => _confirmWithdrawRequest(session)
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isPending
+                        ? AppTheme.primaryLight
+                        : isJoined
+                        ? colors.success
+                        : AppTheme.primary,
+                    foregroundColor: isPending
+                        ? AppTheme.primaryDark
+                        : Colors.white,
+                    disabledBackgroundColor: isPending
+                        ? AppTheme.primaryLight
+                        : isJoined
+                        ? colors.success.withValues(alpha: 0.85)
+                        : null,
+                    disabledForegroundColor: isPending
+                        ? AppTheme.primaryDark
+                        : isJoined
+                        ? Colors.white
+                        : null,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     shape: RoundedRectangleBorder(
@@ -522,12 +591,30 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                   ),
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text(
-                      joinLabel,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isJoined) ...[
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          joinLabel,
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: isPending
+                                ? AppTheme.primaryDark
+                                : isJoined
+                                ? Colors.white
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -537,6 +624,41 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _confirmWithdrawRequest(SocialSessionModel session) async {
+    final auth = ref.read(authProvider);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.socialCancelRequestTitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(AppLocalizations.of(context)!.socialKeepRequest),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(AppLocalizations.of(context)!.socialConfirmCancelRequest),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted || !identical(auth, ref.read(authProvider))) return;
+    setState(() => _withdrawingRequest = true);
+    try {
+      await ref.read(socialSessionDetailProvider(session.id).notifier).withdrawJoinRequest();
+    } catch (error) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString()), backgroundColor: context.colors.error),
+        );
+      }
+    } finally {
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        setState(() => _withdrawingRequest = false);
+      }
+    }
   }
 
   // ── Modal Tìm thêm người chơi (IMG3) ──
@@ -628,14 +750,209 @@ Link: $shareUrl''';
     );
   }
 
-  void _handleRequestJoin(BuildContext context, SocialSessionModel session) {
+  Future<void> _handleRequestJoin(
+    BuildContext context,
+    SocialSessionModel session,
+  ) async {
     if (ref.read(authProvider).status != AuthStatus.authenticated) {
       context.push(
         '/login?redirect=${Uri.encodeComponent('/social/${session.id}')}',
       );
       return;
     }
-    SocialJoinBottomSheet.show(context, session);
+    final sent = await SocialJoinBottomSheet.show(context, session);
+    if (sent == true && mounted) await _offerCommunityJoin(session);
+  }
+
+  Future<void> _offerCommunityJoin(SocialSessionModel session) async {
+    final sessionCommunityId = session.communityId?.trim();
+    final communityId = sessionCommunityId?.isNotEmpty == true
+        ? sessionCommunityId
+        : session.community?.id.trim();
+    if (communityId == null || communityId.isEmpty) return;
+    final auth = ref.read(authProvider);
+    try {
+      var community = session.community;
+      if (community?.name.trim().isNotEmpty != true ||
+          community?.logoUrl?.trim().isNotEmpty != true) {
+        try {
+          final details = await ref.read(
+            communityDetailProvider(communityId).future,
+          );
+          if (details != null) {
+            community = SocialCommunitySummary(
+              id: details.id,
+              name: community?.name.trim().isNotEmpty == true
+                  ? community!.name
+                  : details.name,
+              logoUrl: community?.logoUrl?.trim().isNotEmpty == true
+                  ? community!.logoUrl
+                  : details.logoUrl,
+            );
+          }
+        } catch (_) {
+          // Missing club imagery must not prevent the join invitation.
+        }
+      }
+      final clubName = community?.name.trim() ?? '';
+      if (clubName.isEmpty) return;
+      ref.invalidate(myCommunityMembershipProvider(communityId));
+      final membership = await ref.read(
+        myCommunityMembershipProvider(communityId).future,
+      );
+      if (!mounted ||
+          !identical(auth, ref.read(authProvider)) ||
+          ref.read(socialSessionDetailProvider(session.id)).asData?.value.isPending != true) {
+        return;
+      }
+      if (membership?.status.toUpperCase() == 'JOINED') return;
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) {
+          final colors = dialogContext.colors;
+          final l10n = AppLocalizations.of(dialogContext)!;
+          final logoUrl = community?.logoUrl?.trim() ?? '';
+          final width = MediaQuery.sizeOf(dialogContext).width;
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 24,
+            ),
+            clipBehavior: Clip.none,
+            backgroundColor: colors.bgCard,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(dialogContext).height * .82,
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 46),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  clubName,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(dialogContext).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 16),
+                                Divider(height: 1, color: colors.border),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 22),
+                                  child: Text(
+                                    l10n.socialJoinClubQuestion,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(dialogContext).textTheme.bodyLarge,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Divider(height: 1, color: colors.border),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: width < 340
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(dialogContext, false),
+                                      child: Text(l10n.socialSkipClubJoin),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () => Navigator.pop(dialogContext, true),
+                                      child: Text(l10n.socialJoinClub),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, false),
+                                        child: Text(l10n.socialSkipClubJoin),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: FilledButton(
+                                        onPressed: () =>
+                                            Navigator.pop(dialogContext, true),
+                                        child: Text(l10n.socialJoinClub),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: -36,
+                    child: CircleAvatar(
+                      radius: 36,
+                      backgroundColor: colors.bgSurface,
+                      child: ClipOval(
+                        child: logoUrl.isEmpty
+                            ? Icon(
+                                Icons.groups_rounded,
+                                color: colors.textSecondary,
+                                size: 36,
+                              )
+                            : ClubNetworkImage(
+                                logoUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.groups_rounded,
+                                  color: colors.textSecondary,
+                                  size: 36,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+      if (accepted == true && mounted && identical(auth, ref.read(authProvider))) {
+        // Club detail owns the complete existing join flow (questions, invitation,
+        // approval and pending state) and avoids a second social request.
+        context.push('/club/$communityId', extra: 'startJoinFlow');
+      }
+    } catch (_) {
+      if (mounted && identical(auth, ref.read(authProvider))) {
+        ref.invalidate(myCommunityMembershipProvider(communityId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.socialClubMembershipCheckError),
+            backgroundColor: context.colors.error,
+            action: SnackBarAction(
+              label: AppLocalizations.of(context)!.socialRetryMembership,
+              onPressed: () => _offerCommunityJoin(session),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _handleShare(SocialSessionModel session) async {
@@ -686,7 +1003,9 @@ Link: $shareUrl''';
       isHost: _isHost,
       onRepeat: comingSoon,
       onEdit: () {
-        if (session.status.toUpperCase() == 'COMPLETED') return;
+        if (!const {'OPEN', 'FULL'}.contains(session.status.toUpperCase())) {
+          return;
+        }
         showModalBottomSheet<void>(
           context: context,
           isScrollControlled: true,

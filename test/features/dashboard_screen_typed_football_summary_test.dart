@@ -42,6 +42,7 @@ ThemeData _lightPreviewTheme() {
         warning: Color(0xFFF59E0B),
         error: Color(0xFFEF4444),
         info: Color(0xFF3B82F6),
+        chipBackground: Color(0xFF3A3B3C),
       ),
     ],
   );

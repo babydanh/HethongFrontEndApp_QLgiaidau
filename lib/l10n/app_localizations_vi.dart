@@ -9,7 +9,54 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get socialPending => 'Chờ duyệt';
+
+  @override
+  String get socialCancelRequestTitle => 'Hủy yêu cầu tham gia?';
+
+  @override
+  String get socialKeepRequest => 'Vẫn tham gia';
+
+  @override
+  String get socialConfirmCancelRequest => 'Xác nhận';
+
+  @override
+  String get socialJoinClubQuestion => 'Bạn có muốn tham gia CLB không?';
+
+  @override
+  String get socialJoinClub => 'Tham gia CLB';
+
+  @override
+  String get socialClubMembershipCheckError =>
+      'Không thể kiểm tra trạng thái thành viên CLB. Thử lại sau.';
+
+  @override
+  String get socialSkipClubJoin => 'Để sau';
+
+  @override
+  String get socialRetryMembership => 'Thử lại';
+
+  @override
   String get club_createMatchStandalone => 'Tạo trận đấu';
+
+  @override
+  String get club_createActivity => 'Tạo hoạt động';
+
+  @override
+  String get club_createSocial => 'Tạo Social';
+
+  @override
+  String get club_createSocialDescription =>
+      'Social là sự kiện xé vé diễn ra một lần';
+
+  @override
+  String get club_createMatchQuick => 'Tạo trận đấu nhanh';
+
+  @override
+  String get club_createMatchQuickDescription => 'Tạo trận đấu nhanh cho CLB';
+
+  @override
+  String get social_repeat => 'Lặp lại kèo';
 
   @override
   String get club_standaloneMatch => 'Trận đấu riêng';
@@ -915,11 +962,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get userProfileViewProfile => 'Xem hồ sơ';
 
   @override
-  String userProfileViewProfileOf(Object name) {
-    return 'Xem hồ sơ $name';
-  }
-
-  @override
   String get userProfileLoading => 'Đang tải hồ sơ...';
 
   @override
@@ -973,7 +1015,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveMatches => 'Trận đấu đang diễn ra';
 
   @override
-  String get noLiveMatches => 'Chưa có trận đấu nào đang diễn ra';
+  String get noLiveMatches => 'Không có trận đấu đang diễn ra';
 
   @override
   String get upcomingMatches => 'Lịch thi đấu sắp diễn ra';
@@ -1534,11 +1576,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get matchesCourtNameUnavailable => 'Tên sân chưa được cung cấp';
-
-  @override
-  String matchesUnplacedSection(int count) {
-    return 'Trận chưa xếp đủ sân/giờ ($count)';
-  }
 
   @override
   String tournamentScheduleHours(String start, String end) {
@@ -2122,12 +2159,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get registerTypeMixedDoubles => 'Đôi nam nữ';
-
-  @override
-  String get registerTypeOpenSingles => 'Đơn linh hoạt';
-
-  @override
-  String get registerTypeOpenDoubles => 'Đôi linh hoạt';
 
   @override
   String get registerTypeDefault => 'Nội dung';
@@ -3165,9 +3196,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get dashboard_noTournaments =>
       'Bạn chưa tạo hoặc tham gia giải đấu nào';
-
-  @override
-  String get dashboard_noMoreTournaments => 'Đã xem hết giải đấu';
 
   @override
   String get dashboard_collapse => 'Thu gọn';
@@ -4292,6 +4320,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_pending => 'Chờ duyệt';
 
   @override
+  String get clubApprovalRejected => 'Đã bị từ chối';
+
+  @override
+  String get homePendingClubFilterNotice =>
+      'Một số CLB của bạn không khớp bộ lọc hiện tại.';
+
+  @override
   String get club_sectionInfo => 'Thông tin CLB';
 
   @override
@@ -4757,7 +4792,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get exploreLiveTitle => 'Trận đấu đang diễn ra';
 
   @override
-  String get exploreLiveEmpty => 'Chưa có trận đấu nào đang diễn ra';
+  String get exploreLiveEmpty => 'Không có trận đấu đang diễn ra';
 
   @override
   String get exploreRecentResultsTitle => 'Kết quả trận đấu vừa qua';
@@ -7964,12 +7999,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCategoryMixedDoubles => 'Đôi nam nữ';
 
   @override
-  String get tournamentCategoryOpenSingles => 'Đơn linh hoạt';
-
-  @override
-  String get tournamentCategoryOpenDoubles => 'Đôi linh hoạt';
-
-  @override
   String get tournamentCategoryFootballMen => 'Bóng đá Nam';
 
   @override
@@ -10061,12 +10090,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get registerBracketGroupStageKnockout => 'Vòng bảng + loại trực tiếp';
 
   @override
-  String registerTeamSlotCount(Object count) {
-    return '$count suất đội';
+  String registerParticipantCount(Object count) {
+    return '$count hồ sơ';
   }
-
-  @override
-  String get registerDivisionFull => 'Nội dung này đã đủ suất';
 
   @override
   String get phoneVerificationPhoneRequired =>
@@ -14211,6 +14237,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialCreateNotesHint => 'Thêm ghi chú';
 
   @override
+  String get socialCreatePickDateTime => 'Chọn ngày và giờ';
+
+  @override
+  String get socialCreatePickSportError => 'Vui lòng chọn môn thể thao.';
+
+  @override
+  String get socialCreatePickFutureTimeError =>
+      'Vui lòng chọn ngày giờ diễn ra trong tương lai.';
+
+  @override
+  String get socialCreatePickLocationError =>
+      'Vui lòng chọn địa điểm hoặc \'Quyết định sau\'.';
+
+  @override
+  String get socialCreateVenueAddressRequired => 'Vui lòng nhập địa chỉ sân.';
+
+  @override
+  String get socialCreateClubOnlyRequiresClub =>
+      'Kèo nội bộ cần gắn với một CLB.';
+
+  @override
   String get socialCreateFeeNone => 'Không có';
 
   @override
@@ -14301,6 +14348,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialLegacyInactiveSport => 'Môn đã ngừng hoạt động';
 
   @override
+  String get socialEditSportLocked => 'Không đổi môn khi sửa kèo';
+
+  @override
   String get socialRegionProvinceFieldLabel => 'Tỉnh / thành';
 
   @override
@@ -14368,5 +14418,164 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa tìm thấy địa chỉ cho vị trí đã ghim.';
 
   @override
-  String get tournamentManagementSettingsTooltip => 'Cài đặt giải đấu';
+  String get socialLocationApproximateReference => 'Vị trí đã chọn';
+
+  @override
+  String get socialLocationChangeReference => 'Đổi vị trí tìm kiếm';
+
+  @override
+  String get socialLocationCenterMissing =>
+      'Chưa có tâm ước lượng cho khu vực này.';
+
+  @override
+  String get socialLocationCenterLookupError =>
+      'Không thể tải tâm khu vực. Vui lòng chọn lại để thử lại.';
+
+  @override
+  String get socialNearbyNoResults =>
+      'Không có buổi Social nào gần vị trí đã chọn';
+
+  @override
+  String get socialNearbyExpandRadius =>
+      'Thử mở rộng bán kính hoặc chọn vị trí khác';
+
+  @override
+  String get socialNearbyNeedLocation => 'Chưa có vị trí để lọc kèo gần bạn';
+
+  @override
+  String get socialNearbyPickLocationHint =>
+      'Chạm vào chip \"Gần bạn\" để chọn vị trí hiện tại hoặc ghim trên bản đồ';
+
+  @override
+  String get socialNearbyLoadMore => 'Xem thêm';
+
+  @override
+  String get socialNearbyRetry => 'Thử tải lại';
+
+  @override
+  String socialDistanceMeters(String distance) {
+    return 'cách ~$distance m';
+  }
+
+  @override
+  String socialDistanceKilometers(String distance) {
+    return 'cách ~$distance km';
+  }
+
+  @override
+  String get socialPlaceVenueName => 'Tên sân';
+
+  @override
+  String get socialPlaceVenueAddress => 'Địa chỉ sân';
+
+  @override
+  String get socialPlaceDuplicateTitle => 'Có sân gần giống trong danh bạ';
+
+  @override
+  String get socialPlaceDuplicateUse => 'Dùng sân này';
+
+  @override
+  String get socialPlaceDuplicateEdit => 'Sửa tên hoặc ghim';
+
+  @override
+  String get socialPlaceDuplicateEditHint =>
+      'Hãy sửa tên, địa chỉ hoặc ghim trên biểu mẫu rồi gửi lại.';
+
+  @override
+  String get socialPlaceCancel => 'Hủy';
+
+  @override
+  String get socialPlaceSelect => 'Chọn địa điểm';
+
+  @override
+  String get socialPlaceDecideLater => 'Quyết định sau';
+
+  @override
+  String get socialPlaceSearchHint => 'Tìm theo tên hoặc địa chỉ';
+
+  @override
+  String get socialPlaceSearchIdle => 'Tìm địa điểm theo tên hoặc địa chỉ.';
+
+  @override
+  String get socialPlaceSearchLoading => 'Đang tìm địa điểm...';
+
+  @override
+  String get socialPlaceSearchEmpty => 'Không tìm thấy địa điểm phù hợp.';
+
+  @override
+  String get socialPlaceSearchError => 'Không thể tìm địa điểm.';
+
+  @override
+  String get socialPlaceRetry => 'Thử lại';
+
+  @override
+  String get socialPlaceAdd => 'Thêm địa điểm mới';
+
+  @override
+  String get socialPlaceInputTitle => 'Thêm địa điểm';
+
+  @override
+  String get socialPlaceInputHint => 'Tên sân hoặc địa chỉ đầy đủ';
+
+  @override
+  String get socialPlaceMap => 'Chọn từ bản đồ';
+
+  @override
+  String get socialPlaceNext => 'Kế tiếp';
+
+  @override
+  String get socialPlaceBack => 'Trở lại';
+
+  @override
+  String get socialPlaceConfirm => 'Xác nhận';
+
+  @override
+  String get socialPlacePreviewTitle => 'Xác nhận địa điểm';
+
+  @override
+  String get socialPlaceUnsupportedLink =>
+      'Không hỗ trợ liên kết địa điểm. Hãy nhập tên hoặc địa chỉ sân rồi ghim vị trí.';
+
+  @override
+  String get socialPlaceNotFound => 'Không tìm thấy sân trong danh bạ.';
+
+  @override
+  String get socialPlaceUnresolvable =>
+      'Hãy kiểm tra tên, địa chỉ và ghim vị trí sân.';
+
+  @override
+  String get socialPlaceNetworkError =>
+      'Không thể tìm sân trong danh bạ. Vui lòng thử lại.';
+
+  @override
+  String get socialPlaceResolving => 'Đang tìm địa điểm...';
+
+  @override
+  String get socialPlaceRequired => 'Vui lòng chọn địa điểm trước khi lưu.';
+
+  @override
+  String get socialPlaceMapHint => 'Chạm bản đồ để di chuyển ghim.';
+
+  @override
+  String get socialPlaceReverseError =>
+      'Hãy chọn ghim khác hoặc nhập địa chỉ sân.';
+
+  @override
+  String get socialPlaceSuggestedSection => 'Gợi ý';
+
+  @override
+  String get socialPlaceAreaSection => 'Khu vực hành chính';
+
+  @override
+  String get socialPlaceNoPin => 'Chưa có ghim';
+
+  @override
+  String get socialPlaceSaveAreaTitle => 'Lưu khu vực này?';
+
+  @override
+  String get socialPlaceSaveAreaMessage =>
+      'Không tìm thấy địa chỉ đường và ghim bản đồ cho nội dung này. Bạn có thể lưu khu vực hành chính hoặc ghim chính xác trên bản đồ.';
+
+  @override
+  String get socialPlaceSaveArea => 'Lưu khu vực';
 }

@@ -1,17 +1,36 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConstants {
   // ─── App Info ───
   static const String appName = 'SportO';
   static const String appTagline = 'Chơi cùng nhau';
   static const String appVersion = '1.0.0';
   static const String appDomain = 'https://sporto.asia';
+  static const String osmTileUrlDefault =
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  static String get osmTileUrl =>
+      dotenv.env['OSM_TILE_URL'] ?? osmTileUrlDefault;
+  static String get osmUserAgentPackageName {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'vn.vnsport.quanlygiaidau; $appDomain';
+    }
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return 'com.vnsport.app; $appDomain';
+    }
+    return 'sporto.asia; $appDomain';
+  }
 
   // ─── Brand Assets ───
   static const String logoIconSvg = 'assets/images/sporto_v1.svg';
   static const String logoFullSvg = 'assets/images/sporto_v1_with_text.svg';
   static const String logoFullPng = 'assets/images/sporto_v1_with_text.png';
   static const String appIconPng = 'assets/logos/icon.png';
-  static const String defaultFallbackImage = 'assets/images/sporto_v1_with_text.png';
-  static const String remoteLogoFullSvg = 'https://sporto.asia/sporto_v1_with_text.svg';
+  static const String defaultFallbackImage =
+      'assets/images/sporto_v1_with_text.png';
+  static const String remoteLogoFullSvg =
+      'https://sporto.asia/sporto_v1_with_text.svg';
   static const String remoteLogoIconSvg = 'https://sporto.asia/sporto_v1.svg';
 
   // ─── Sports ───

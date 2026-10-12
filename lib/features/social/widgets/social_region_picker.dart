@@ -29,6 +29,10 @@ class SocialRegionSelection {
 /// trường khu vực dùng chung, nên host không tải trùng. `null` = mất mạng hoặc
 /// danh mục rỗng — khu vực tuỳ chọn nên chỉ mất tiện ích, địa chỉ vẫn gõ tay.
 typedef SocialRegionCatalogue = ({List<Region> provinces, List<Region> wards});
+typedef LoadSocialRegionCatalogue = Future<SocialRegionCatalogue?> Function({
+  bool refresh,
+  String? provinceCode,
+});
 
 /// Hai trường "Tỉnh / thành" và "Phường / xã" hiện sẵn trên form, đúng hình
 /// dạng màn "Tạo giải nhanh": host thấy ngay khu vực đang chọn và sửa tay bất
@@ -54,7 +58,7 @@ class SocialRegionInlineFields extends StatefulWidget {
   final ValueChanged<SocialRegionSelection> onSelect;
 
   /// Danh mục tỉnh + phường; `refresh` ép nạp lại khi host bấm "Thử lại".
-  final Future<SocialRegionCatalogue?> Function({bool refresh}) loadCatalogue;
+  final LoadSocialRegionCatalogue loadCatalogue;
 
   @override
   State<SocialRegionInlineFields> createState() =>
@@ -269,7 +273,7 @@ class _SocialRegionListSheet extends StatefulWidget {
   /// Tỉnh đang chọn — phường chỉ được lọc trong tỉnh đó.
   final Region? province;
 
-  final Future<SocialRegionCatalogue?> Function({bool refresh}) loadCatalogue;
+  final LoadSocialRegionCatalogue loadCatalogue;
 
   @override
   State<_SocialRegionListSheet> createState() => _SocialRegionListSheetState();
@@ -310,7 +314,10 @@ class _SocialRegionListSheetState extends State<_SocialRegionListSheet> {
       _loadFailed = false;
       _empty = false;
     });
-    final catalogue = await widget.loadCatalogue(refresh: refresh);
+    final catalogue = await widget.loadCatalogue(
+      refresh: refresh,
+      provinceCode: widget.province?.code,
+    );
     if (!mounted) return;
     final options = _optionsOf(catalogue);
     setState(() {
@@ -408,7 +415,7 @@ class _SocialRegionListSheetState extends State<_SocialRegionListSheet> {
     return <String>[
       if (fullName.isNotEmpty)
         VietnamAddressParser.removeVietnameseTones(fullName),
-      ...?aliases?.map(VietnamAddressParser.removeVietnameseTones),
+      ...aliases.map(VietnamAddressParser.removeVietnameseTones),
     ];
   }
 

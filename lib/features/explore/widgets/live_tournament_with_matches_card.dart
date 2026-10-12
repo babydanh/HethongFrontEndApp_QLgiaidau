@@ -37,7 +37,7 @@ class _LiveTournamentWithMatchesCardState
 
   int _currentPageIndex = 0;
   bool _isLoading = false;
-  int _totalMatches = 0;
+  bool _hasLoadError = false;
   final Map<int, List<MatchModel>> _pageMatches = {};
   final Map<int, String?> _pageCursors = {0: null};
 
@@ -56,6 +56,7 @@ class _LiveTournamentWithMatchesCardState
       _pageCursors.clear();
       _pageCursors[0] = null;
       _currentPageIndex = 0;
+      _hasLoadError = false;
       _loadPage(0);
     }
   }
@@ -71,70 +72,44 @@ class _LiveTournamentWithMatchesCardState
     }
 
     setState(() => _isLoading = true);
+    _hasLoadError = false;
     try {
       final repo = ref.read(matchRepositoryProvider);
-      var requestCursor = _pageCursors[pageIndex];
-      List<MatchModel> visiblePageMatches = const <MatchModel>[];
-      String? visiblePageNextCursor;
-      var latestTotal = _totalMatches;
-
-      // The API cursor paginates raw fixtures, which can include BYE/TBD or
-      // mock participants hidden by the public match filter. Walk over those
-      // raw pages so a visible page never renders as an empty card.
-      for (var attempt = 0; attempt < 20; attempt++) {
-        final result = await repo.getTournamentMatchesPaged(
-          tournamentId: widget.tournament.id,
-          status: widget.filterStatus == 'all' ? null : widget.filterStatus,
-          cursor: requestCursor,
-          limit: 4,
-        );
-        latestTotal = result.total;
-        final renderableMatches = result.matches
-            .where(isRenderablePublicMatch)
-            .toList(growable: false);
-        final nextCursor = result.nextCursor?.trim();
-
-        if (renderableMatches.isNotEmpty) {
-          visiblePageMatches = result.matches;
-          visiblePageNextCursor = nextCursor;
-          break;
-        }
-
-        if (nextCursor == null ||
-            nextCursor.isEmpty ||
-            nextCursor == requestCursor) {
-          break;
-        }
-        requestCursor = nextCursor;
-      }
+      final requestCursor = _pageCursors[pageIndex];
+      final result = await repo.getTournamentMatchesPaged(
+        tournamentId: widget.tournament.id,
+        status: widget.filterStatus == 'all' ? null : widget.filterStatus,
+        cursor: requestCursor,
+        limit: 4,
+        trigger: 'home_tournament_card',
+      );
+      final visiblePageMatches = result.matches
+          .where(isRenderablePublicMatch)
+          .toList(growable: false);
+      final nextCursor = result.nextCursor?.trim();
 
       if (mounted) {
         setState(() {
-          _totalMatches = latestTotal;
           _isLoading = false;
+          _hasLoadError = false;
 
-          if (visiblePageMatches.isNotEmpty) {
-            _pageMatches[pageIndex] = visiblePageMatches;
-            _currentPageIndex = pageIndex;
-            if (visiblePageNextCursor?.isNotEmpty == true) {
-              _pageCursors[pageIndex + 1] = visiblePageNextCursor;
-            } else {
-              _pageCursors.remove(pageIndex + 1);
-            }
-          } else if (pageIndex == 0) {
-            // Cache the empty first result so the widget can collapse cleanly
-            // instead of rendering a header and an empty pagination card.
-            _pageMatches[0] = const <MatchModel>[];
+          _pageMatches[pageIndex] = visiblePageMatches;
+          _currentPageIndex = pageIndex;
+          if (nextCursor != null &&
+              nextCursor.isNotEmpty &&
+              nextCursor != requestCursor) {
+            _pageCursors[pageIndex + 1] = nextCursor;
           } else {
-            // Do not advance to a cursor page with no public matches. Removing
-            // its cursor also disables the next button on the last visible page.
-            _pageCursors.remove(pageIndex);
+            _pageCursors.remove(pageIndex + 1);
           }
         });
       }
     } catch (err) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _hasLoadError = true;
+        });
       }
     }
   }
@@ -149,8 +124,30 @@ class _LiveTournamentWithMatchesCardState
         (_pageMatches[_currentPageIndex] ?? const <MatchModel>[])
             .where(isRenderablePublicMatch)
             .toList(growable: false);
+    final hasNextCursor =
+        _pageCursors[_currentPageIndex + 1]?.trim().isNotEmpty == true;
 
-    if (currentMatches.isEmpty && !_isLoading) {
+    if (_hasLoadError && currentMatches.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.homeMatchesLoadError,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colors.textSecondary),
+            ),
+            TextButton.icon(
+              onPressed: () => _loadPage(0),
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(l10n.homeGlobalSearchRetry),
+            ),
+          ],
+        ),
+      );
+    }
+    if (currentMatches.isEmpty && !_isLoading && !hasNextCursor) {
       return const SizedBox.shrink();
     }
 
@@ -220,6 +217,11 @@ class _LiveTournamentWithMatchesCardState
                 ),
               ),
             )
+          else if (currentMatches.isEmpty && hasNextCursor)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Text('Không có trận phù hợp trên trang này.'),
+            )
           else if (widget.filterStatus == 'live')
             SizedBox(
               height: 144,
@@ -262,17 +264,14 @@ class _LiveTournamentWithMatchesCardState
             ),
 
           // ── Cursor Pagination Navigation Bar ──
-          if (currentMatches.isNotEmpty &&
+          if ((currentMatches.isNotEmpty || hasNextCursor) &&
               (_currentPageIndex > 0 ||
                   _pageMatches.containsKey(_currentPageIndex + 1) ||
                   _pageCursors[_currentPageIndex + 1]?.trim().isNotEmpty ==
                       true))
             _buildCursorPaginationBar(context, l10n),
 
-          Container(
-            height: 8,
-            color: isDark ? colors.bgDark : Colors.white,
-          ),
+          Container(height: 8, color: isDark ? colors.bgDark : Colors.white),
         ],
       ),
     );
@@ -434,7 +433,6 @@ class _LiveTournamentWithMatchesCardState
           )
         : (l10n.exploreCourtNotAssigned);
 
-
     List<String> getInitials(String name) {
       final parts = name
           .split('-')
@@ -488,10 +486,7 @@ class _LiveTournamentWithMatchesCardState
           children: [
             // ── Top Header Row: Round Badge (Left) ──
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: isDark
                     ? const Color(0xFF0284C7).withValues(alpha: 0.18)
@@ -568,7 +563,9 @@ class _LiveTournamentWithMatchesCardState
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: isWinner1 ? AppTheme.primary : colors.textPrimary,
+                        color: isWinner1
+                            ? AppTheme.primary
+                            : colors.textPrimary,
                       ),
                     ),
                   ],
@@ -635,14 +632,15 @@ class _LiveTournamentWithMatchesCardState
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: isWinner2 ? AppTheme.primary : colors.textPrimary,
+                        color: isWinner2
+                            ? AppTheme.primary
+                            : colors.textPrimary,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-
 
             const SizedBox(height: 10),
 
@@ -770,7 +768,6 @@ class _LiveTournamentWithMatchesCardState
       ),
     );
   }
-
 
   Widget _buildHorizontalLiveCard(BuildContext context, MatchModel match) {
     final colors = context.colors;
@@ -1143,9 +1140,7 @@ class _LiveTournamentWithMatchesCardState
       l10n: l10n,
     );
 
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final teamRowBg = isDark ? colors.bgElevated : const Color(0xFFF8FAFC);
 
     return GestureDetector(
       onTap: () => context.push(
@@ -1173,10 +1168,7 @@ class _LiveTournamentWithMatchesCardState
           children: [
             // ── Top Header Row: Round Badge (Left) ──
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: isDark
                     ? const Color(0xFF0284C7).withValues(alpha: 0.18)

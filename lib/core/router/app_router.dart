@@ -634,7 +634,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/club/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return ClubDetailScreen(clubId: id);
+          return ClubDetailScreen(
+            clubId: id,
+            startJoinFlow: state.extra == 'startJoinFlow',
+          );
         },
         routes: [
           GoRoute(

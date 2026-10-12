@@ -1,38 +1,43 @@
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 class DioClient {
-  final AppLogger _log;
+  static const _log = AppLogger('DioClient');
   static const _retryCountKey = '__transient_retry_count';
   static const _authRetryKey = '__auth_retry';
   static const _rateLimitRetryKey = '__rate_limit_retry_count';
+  static const _traceStartedAtKey = '__trace_started_at_us';
   static const _maxTransientRetries = 2;
   static const _maxRateLimitRetries = 1;
 
+  /// Refresh token là nút thắt của MỌI request ghi: không có nó thì 401 không
+  /// retry được. Một lần nghẽn mạng ngắn phải không làm hỏng lần ghi.
+  static const _maxRefreshRetries = 2;
+
   late final Dio _dio;
+  late final Dio _refreshDio;
   final TokenManager _tokenManager;
+  final Object Function()? sessionIdentity;
   final Map<String, _CachedGetResponse> _getCache = {};
-  Future<_TokenPair?>? _refreshInFlight;
+  Future<_RefreshResult>? _refreshInFlight;
   late final Future<String> _clientId = _loadClientId();
 
-  DioClient({required TokenManager tokenManager, Dio? dio, AppLogger? logger})
-    : _tokenManager = tokenManager,
-      _log = logger ?? const AppLogger('DioClient') {
-    const envApiBaseUrl = String.fromEnvironment('API_BASE_URL');
-    var baseUrl = envApiBaseUrl.isNotEmpty
-        ? envApiBaseUrl
-        : (dotenv.env['API_BASE_URL'] ??
-              (kIsWeb
-                  ? 'https://sporto.asia/api/v1'
-                  : 'http://localhost:3000/api/v1'));
+  DioClient({
+    required TokenManager tokenManager,
+    Dio? dio,
+    Dio? refreshDio,
+    this.sessionIdentity,
+  }) : _tokenManager = tokenManager {
+    var baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
     if (!kIsWeb && Platform.isAndroid) {
       if (baseUrl.contains('localhost')) {
         baseUrl = baseUrl.replaceAll('localhost', '10.0.2.2');
@@ -47,9 +52,9 @@ class DioClient {
         Dio(
           BaseOptions(
             baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
-            sendTimeout: const Duration(seconds: 10),
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
+            sendTimeout: const Duration(seconds: 30),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
@@ -60,16 +65,62 @@ class DioClient {
           ),
         );
 
+    // Cùng timeout với dio chính: refresh mở kết nối mới lúc access token vừa
+    // hết hạn, nên bị timeout sớm hơn chính là nghẽn chết một request ghi.
+    _refreshDio =
+        refreshDio ??
+        Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 10),
+            sendTimeout: const Duration(seconds: 10),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              if (dotenv.env['APP_API_KEY']?.isNotEmpty == true)
+                'x-app-key': dotenv.env['APP_API_KEY']!,
+            },
+          ),
+        );
+
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          final identity = sessionIdentity?.call();
+          final scoped = options.path.contains('/social-sessions');
+          if (scoped && identity != null) {
+            options.extra.putIfAbsent('socialSessionIdentity', () => identity);
+          }
           final clientId = await _clientId;
           options.headers['x-client-id'] = clientId;
           final token = await _tokenManager.getAccessToken();
+          if (scoped &&
+              sessionIdentity != null &&
+              !identical(
+                options.extra['socialSessionIdentity'],
+                sessionIdentity!(),
+              )) {
+            return handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.cancel,
+                message: 'Session changed',
+              ),
+            );
+          }
+          if (scoped) options.headers.remove('Authorization');
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }
-          if (kDebugMode) _logRequest(options);
+          if (_isSensitiveLocation(options)) {
+            options.extra['noCache'] = true;
+          }
+          if (kDebugMode) {
+            options.extra[_traceStartedAtKey] =
+                DateTime.now().microsecondsSinceEpoch;
+            _logRequest(options);
+          }
           handler.next(options);
         },
         onResponse: (response, handler) {
@@ -100,13 +151,22 @@ class DioClient {
           handler.next(response);
         },
         onError: (DioException error, handler) async {
+          if (sessionIdentity != null &&
+              error.requestOptions.extra.containsKey('socialSessionIdentity') &&
+              !identical(
+                error.requestOptions.extra['socialSessionIdentity'],
+                sessionIdentity!(),
+              )) {
+            return handler.reject(error);
+          }
           if (kDebugMode) _logError(error);
           final statusCode = error.response?.statusCode;
           if (statusCode == 401 &&
               error.requestOptions.extra[_authRetryKey] != true &&
               !error.requestOptions.path.contains('/auth/mobile/login') &&
               !error.requestOptions.path.contains('/auth/mobile/refresh')) {
-            final refreshed = await _refreshAccessToken(baseUrl);
+            final outcome = await _refreshAccessToken(baseUrl);
+            final refreshed = outcome.pair;
             if (refreshed != null) {
               final options = error.requestOptions.copyWith(
                 extra: {...error.requestOptions.extra, _authRetryKey: true},
@@ -120,6 +180,18 @@ class DioClient {
               } on DioException catch (retryError) {
                 error = retryError;
               }
+            } else if (outcome.transientFailure case final transient?) {
+              // Refresh chỉ chết vì mạng, token vẫn hợp lệ. Trả lỗi mạng thay
+              // vì 401 để UI không bắt host đăng nhập lại oang oàng.
+              return handler.reject(
+                DioException(
+                  requestOptions: error.requestOptions,
+                  type: transient.type,
+                  error: transient.error,
+                  message: 'Token refresh thất bại do mạng',
+                  stackTrace: transient.stackTrace,
+                ),
+              );
             }
           }
 
@@ -183,8 +255,12 @@ class DioClient {
 
           final retryCount =
               (error.requestOptions.extra[_retryCountKey] as int?) ?? 0;
+          // `noRetry` is opt-in cho các lần đọc mà độ trễ thêm chỉ làm tệ hơn
+          // (danh sách Social): retry lặp lại cùng một lỗi rồi vẫn fail.
+          final noRetry = error.requestOptions.extra['noRetry'] == true;
           if (method == 'GET' &&
               transient &&
+              !noRetry &&
               retryCount < _maxTransientRetries) {
             await Future<void>.delayed(
               Duration(milliseconds: 350 * (1 << retryCount)),
@@ -247,56 +323,92 @@ class DioClient {
     }
   }
 
-  Future<_TokenPair?> _refreshAccessToken(String baseUrl) {
+  Future<_RefreshResult> _refreshAccessToken(String baseUrl) {
     return _refreshInFlight ??= _performTokenRefresh(baseUrl).whenComplete(() {
       _refreshInFlight = null;
     });
   }
 
-  Future<_TokenPair?> _performTokenRefresh(String baseUrl) async {
+  static bool _isTransient(DioException error) {
+    return error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.connectionError ||
+        (error.response?.statusCode != null &&
+            error.response!.statusCode! >= 500);
+  }
+
+  /// Gọi `/auth/mobile/refresh`, thử lại khi lỗi mạng tạm thời.
+  ///
+  /// Khi hết số lần thử mà vẫn chỉ là lỗi mạng, trả về [transientFailure] và
+  /// **không** xoá token: token còn hợp lệ, chỉ là mạng chết. Request gốc phải
+  /// báo lỗi mạng chứ không được báo 401, vì 401 giả sẽ khiến UI tưởng phiên
+  /// hết hạn và bắt host đăng nhập lại oan.
+  Future<_RefreshResult> _performTokenRefresh(String baseUrl) async {
+    final identity = sessionIdentity?.call();
     final refreshToken = await _tokenManager.getRefreshToken();
+    if (sessionIdentity != null && !identical(identity, sessionIdentity!())) {
+      return const (pair: null, transientFailure: null);
+    }
     if (refreshToken == null || refreshToken.isEmpty) {
       await _tokenManager.clearTokens();
-      return null;
+      return const (pair: null, transientFailure: null);
     }
-    try {
-      final response = await Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 8),
-          receiveTimeout: const Duration(seconds: 8),
-          sendTimeout: const Duration(seconds: 8),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            if (dotenv.env['APP_API_KEY']?.isNotEmpty == true)
-              'x-app-key': dotenv.env['APP_API_KEY']!,
-          },
-        ),
-      ).post('/auth/mobile/refresh', data: {'refreshToken': refreshToken});
-      final rawData = response.data;
-      final data = rawData is Map && rawData['data'] is Map
-          ? rawData['data'] as Map
-          : rawData is Map
-          ? rawData
-          : const <String, dynamic>{};
-      final access = data['accessToken']?.toString();
-      final nextRefresh = data['refreshToken']?.toString();
-      if (access == null || nextRefresh == null) return null;
-      await _tokenManager.saveTokens(
-        accessToken: access,
-        refreshToken: nextRefresh,
-      );
-      return _TokenPair(access, nextRefresh);
-    } on DioException catch (error, stack) {
-      _log.error('Failed to refresh token', error, stack);
-      final status = error.response?.statusCode;
-      if (status == 401 || status == 403) await _tokenManager.clearTokens();
-      return null;
-    } catch (error, stack) {
-      _log.error('Unexpected refresh token error', error, stack);
-      return null;
+    DioException? lastTransient;
+    for (var attempt = 0; attempt <= _maxRefreshRetries; attempt++) {
+      try {
+        final response = await _refreshDio.post<dynamic>(
+          '/auth/mobile/refresh',
+          data: {'refreshToken': refreshToken},
+        );
+        final rawData = response.data;
+        final data = rawData is Map && rawData['data'] is Map
+            ? rawData['data'] as Map
+            : rawData is Map
+            ? rawData
+            : const <String, dynamic>{};
+        final access = data['accessToken']?.toString();
+        final nextRefresh = data['refreshToken']?.toString();
+        if (access == null || nextRefresh == null) {
+          return const (pair: null, transientFailure: null);
+        }
+        if (sessionIdentity != null &&
+            !identical(identity, sessionIdentity!())) {
+          return const (pair: null, transientFailure: null);
+        }
+        await _tokenManager.saveTokens(
+          accessToken: access,
+          refreshToken: nextRefresh,
+        );
+        return (pair: _TokenPair(access, nextRefresh), transientFailure: null);
+      } on DioException catch (error, stack) {
+        _log.error('Failed to refresh token', error, stack);
+        final status = error.response?.statusCode;
+        // 401/403 là server từ chối token: thử lại cũng vô nghĩa, và token cũ
+        // phải bị xoá để auth provider đưa user về màn đăng nhập.
+        if (sessionIdentity != null &&
+            !identical(identity, sessionIdentity!())) {
+          return const (pair: null, transientFailure: null);
+        }
+        if (status == 401 || status == 403) {
+          await _tokenManager.clearTokens();
+          return const (pair: null, transientFailure: null);
+        }
+        if (!_isTransient(error)) {
+          return const (pair: null, transientFailure: null);
+        }
+        lastTransient = error;
+        if (attempt < _maxRefreshRetries) {
+          await Future<void>.delayed(
+            Duration(milliseconds: 400 * (1 << attempt)),
+          );
+        }
+      } catch (error, stack) {
+        _log.error('Unexpected refresh token error', error, stack);
+        return const (pair: null, transientFailure: null);
+      }
     }
+    return (pair: null, transientFailure: lastTransient);
   }
 
   String _cacheKey(RequestOptions options) {
@@ -306,25 +418,100 @@ class DioClient {
 
   Dio get dio => _dio;
 
-  // ── Logging gọn như file mẫu (chỉ chạy ở debug mode) ─────────────────────
-  // Dùng AppLogger (dart:developer log) để lọc theo tag DioClient trong DevTools.
+  // ── Safe request tracing (debug builds only) ─────────────────────────────
+  // Keep payloads, tokens, free-text search and personal data out of logs.
 
   void _logRequest(RequestOptions options) {
-    _log.debug('[REQUEST] ${options.method} ${options.uri.path}');
+    final rawTrigger = options.extra['trigger']?.toString() ?? 'api_call';
+    final trigger = rawTrigger
+        .replaceAll(RegExp(r'[^a-zA-Z0-9_.-]'), '_')
+        .substring(0, math.min(rawTrigger.length, 64).toInt());
+    debugPrint(
+      '[DioClient] '
+      '[HTTP] start ${options.method} ${_routeTemplate(options)} '
+      'query=${_safeQuerySummary(options)} '
+      'request_bytes=${_byteLength(options.data) ?? 'unknown'} trigger=$trigger',
+    );
   }
 
   void _logResponse(Response response) {
-    _log.debug(
-      '[RESPONSE] ${response.statusCode} ${response.requestOptions.uri.path}',
+    final options = response.requestOptions;
+    debugPrint(
+      '[DioClient] '
+      '[HTTP] done ${options.method} ${_routeTemplate(options)} '
+      'status=${response.statusCode} duration_ms=${_durationMs(options)} '
+      'response_bytes=${_responseByteLength(response)}',
     );
   }
 
   void _logError(DioException err) {
-    _log.debug(
-      '[ERROR] ${err.response?.statusCode ?? 'network'} '
-      '${err.requestOptions.uri.path} (${err.type.name})',
+    final options = err.requestOptions;
+    debugPrint(
+      '[DioClient] '
+      '[HTTP] error ${options.method} ${_routeTemplate(options)} '
+      'status=${err.response?.statusCode ?? 'network'} '
+      'duration_ms=${_durationMs(options)} type=${err.type.name}',
     );
   }
+
+  String _safeQuerySummary(RequestOptions options) {
+    const safeKeys = {'limit', 'status', 'publicOnly', 'page', 'sort', 'order'};
+    if (options.queryParameters.isEmpty) return '{}';
+    final entries = options.queryParameters.entries.map((entry) {
+      final key = entry.key.toString();
+      final value = safeKeys.contains(key) ? entry.value : '<redacted>';
+      return '$key:$value';
+    });
+    return '{${entries.join(',')}}';
+  }
+
+  String _durationMs(RequestOptions options) {
+    final startedAt = options.extra[_traceStartedAtKey];
+    if (startedAt is! int) return 'unknown';
+    final elapsed = DateTime.now().microsecondsSinceEpoch - startedAt;
+    return (elapsed / 1000).toStringAsFixed(1);
+  }
+
+  String _responseByteLength(Response response) {
+    final contentLength = response.headers.value('content-length');
+    if (contentLength != null && int.tryParse(contentLength) != null) {
+      return contentLength;
+    }
+    return _byteLength(response.data)?.toString() ?? 'unknown';
+  }
+
+  int? _byteLength(Object? value) {
+    if (value == null) return 0;
+    try {
+      return utf8.encode(value is String ? value : jsonEncode(value)).length;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _isSensitiveLocation(RequestOptions options) {
+    final keys = options.queryParameters.keys
+        .map((key) => key.toString().toLowerCase())
+        .toSet();
+    final path = Uri.parse(options.path).path;
+    return keys.any(
+          (key) => {'lat', 'latitude', 'lng', 'lon', 'longitude'}.contains(key),
+        ) ||
+        RegExp(r'(^|/)(social-sessions|socials|venues)(/|$)').hasMatch(path) ||
+        options.path.contains('/nearby') ||
+        options.path.contains('/regions/resolve');
+  }
+
+  String _routeTemplate(RequestOptions options) => options.path
+      .split('?')
+      .first
+      .replaceAll(
+        RegExp(
+          r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}',
+        ),
+        ':id',
+      )
+      .replaceAll(RegExp(r'(?<=/)\d+(?=/|$)'), ':id');
 }
 
 class _TokenPair {
@@ -332,6 +519,10 @@ class _TokenPair {
   final String refreshToken;
   const _TokenPair(this.accessToken, this.refreshToken);
 }
+
+/// Kết quả refresh: `pair` khi thành công; `transientFailure` khi hết số lần
+/// thử mà nguyên nhân vẫn là lỗi mạng (token vẫn hợp lệ).
+typedef _RefreshResult = ({_TokenPair? pair, DioException? transientFailure});
 
 class _CachedGetResponse {
   final dynamic data;
@@ -365,7 +556,10 @@ String friendlyDioErrorMessage(DioException e) {
     case DioExceptionType.badCertificate:
       return 'Chứng chỉ bảo mật không hợp lệ.';
     case DioExceptionType.badResponse:
-      return 'Máy chủ phản hồi lỗi (${e.response?.statusCode}).';
+      final statusCode = e.response?.statusCode;
+      return statusCode == null
+          ? (e.message ?? 'Máy chủ phản hồi lỗi.')
+          : 'Máy chủ phản hồi lỗi ($statusCode).';
     case DioExceptionType.cancel:
       return 'Yêu cầu đã bị hủy.';
     case DioExceptionType.unknown:

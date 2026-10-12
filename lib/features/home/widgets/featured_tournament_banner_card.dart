@@ -2,17 +2,15 @@ import 'dart:io' show Platform;
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
-import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 
 class FeaturedTournamentBannerCard extends StatelessWidget {
-  final Tournament tournament;
+  final HomeFeaturedTournament tournament;
   final VoidCallback onTap;
 
   const FeaturedTournamentBannerCard({
@@ -37,7 +35,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
   }
 
   String _sportLabel(AppLocalizations l10n) {
-    switch (tournament.sport) {
+    switch (tournament.sport?.toUpperCase()) {
       case AppConstants.sportBadminton:
         return l10n.createClubTournament_sportBadminton;
       case AppConstants.sportTableTennis:
@@ -49,42 +47,23 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
       case AppConstants.sportTennis:
         return l10n.createClubTournament_sportTennis;
       default:
-        return tournament.sport;
+        return tournament.sport ?? '';
     }
-  }
-
-  String _statusLabel(AppLocalizations l10n) {
-    return StatusHelper.getTournamentStatusLabel(tournament.status, l10n: l10n);
-  }
-
-  Color _statusColor(BuildContext context) {
-    return StatusHelper.getTournamentStatusColor(tournament.status, context);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    // Một nguồn duy nhất cho CẢ container lẫn chữ: bannerFontSize nhân thẳng
-    // bannerHeight, nên truyền lệch chiều rộng ở đây sẽ sinh ra banner cao mà
-    // chữ nhỏ — không có cảnh báo biên dịch nào bắt được.
-    final viewportSize = MediaQuery.sizeOf(context);
     final bannerUrl = _resolveImageUrl(tournament.bannerUrl);
     final hasBanner = bannerUrl.isNotEmpty;
-    final hideText = tournament.hideFeaturedCardText;
+    final sport = tournament.sport;
+    final registrationStatus = tournament.registrationStatus;
 
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        // Cao hơn trước: bản cũ chặn cứng ở 20% chiều cao viewport, trên iPhone
-        // dọc 844px chỉ còn 169px — thấp hơn hẳn AspectRatio(16/9) cũ (~219px)
-        // nên giải nổi bật bị bẹp. Nay dọc lấy 30% (253px). Ở chế độ ngang vẫn
-        // giữ 20%, vì AspectRatio(16/9) ở 1366×768 cho ra 750px = 97.7% màn
-        // hình. Ảnh vẫn BoxFit.cover nên chỉ crop ở giữa chứ không méo.
-        height: AppResponsive.bannerHeight(
-          viewportSize.height,
-          viewportWidth: viewportSize.width,
-        ),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
         child: Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
@@ -110,7 +89,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                 )
               else
                 _FallbackBanner(colors: colors),
-              if (!hideText) ...[
+              ...[
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
@@ -134,19 +113,28 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(
-                        child: _CompactTopSportBadge(
-                          label: _sportLabel(l10n),
-                          sportKey: tournament.sport,
+                      if (sport != null)
+                        Flexible(
+                          child: _CompactTopSportBadge(
+                            label: _sportLabel(l10n),
+                            sportKey: sport,
+                          ),
+                        )
+                      else
+                        const Spacer(),
+                      if (sport != null && registrationStatus != null)
+                        const SizedBox(width: 8),
+                      if (registrationStatus != null)
+                        Flexible(
+                          child: _CompactTopStatusBadge(
+                            label: registrationStatus == 'OPEN'
+                                ? l10n.registrationOpenTag
+                                : l10n.registrationClosedTag,
+                            color: registrationStatus == 'OPEN'
+                                ? AppTheme.primary
+                                : Colors.blueGrey,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: _CompactTopStatusBadge(
-                          label: _statusLabel(l10n),
-                          color: _statusColor(context),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -162,12 +150,10 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                         tournament.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
-                          fontSize: AppResponsive.bannerFontSize(
-                            viewportSize.height,
-                            viewportWidth: viewportSize.width,
-                          ),
+                          fontSize: 17,
+                          height: 1.2,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,
                           shadows: [
@@ -179,13 +165,6 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if ((tournament.locationAddress ?? '').isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        _MetaChip(
-                          icon: Icons.location_on_rounded,
-                          label: tournament.locationAddress!,
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -296,49 +275,6 @@ class _CompactTopStatusBadge extends StatelessWidget {
           fontSize: 9.5,
           fontWeight: FontWeight.w800,
         ),
-      ),
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _MetaChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 210),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.38),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: Colors.white.withValues(alpha: 0.88)),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.92),
-                fontSize: AppResponsive.bannerFontSize(
-                  MediaQuery.sizeOf(context).height,
-                  viewportWidth: MediaQuery.sizeOf(context).width,
-                  ratio: AppResponsive.bannerCaptionRatio,
-                ),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

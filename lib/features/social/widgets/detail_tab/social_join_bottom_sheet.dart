@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -28,6 +29,12 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   bool _isSubmitting = false;
+  late final AuthState _openedSession;
+  @override
+  void initState() {
+    super.initState();
+    _openedSession = ref.read(authProvider);
+  }
 
   int get _remainingSlots =>
       widget.session.maxParticipants - widget.session.currentParticipants;
@@ -41,6 +48,9 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authProvider, (previous, next) {
+      if (!identical(_openedSession, next)) Navigator.of(context).pop();
+    });
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currencyFormatter = NumberFormat.currency(
       locale: 'vi_VN',
@@ -332,7 +342,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
                         )
                       : Text(
                           _remainingSlots > 0
-                              ? 'Xác nhận tham gia'
+                              ? 'Gửi yêu cầu tham gia'
                               : 'Đã hết chỗ',
                           style: const TextStyle(
                             fontSize: 15.5,
@@ -379,18 +389,26 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
   }
 
   Future<void> _handleConfirmJoin() async {
+    if (_isSubmitting || !identical(_openedSession, ref.read(authProvider))) {
+      return;
+    }
     setState(() => _isSubmitting = true);
     try {
       await ref
-          .read(socialSessionsProvider.notifier)
-          .joinSession(sessionId: widget.session.id, ticketCount: _ticketCount);
+          .read(socialSessionDetailProvider(widget.session.id).notifier)
+          .requestJoin(
+            ticketCount: _ticketCount,
+            userName: _nameController.text.trim().isNotEmpty
+                ? _nameController.text.trim()
+                : null,
+          );
 
-      if (mounted) {
+      if (mounted && identical(_openedSession, ref.read(authProvider))) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '🎉 Đăng ký thành công $_ticketCount vé buổi ${widget.session.title}!',
+              'Đã gửi yêu cầu tham gia buổi ${widget.session.title}. Đang chờ Host duyệt!',
             ),
             backgroundColor: const Color(0xFF16A34A),
             behavior: SnackBarBehavior.floating,
@@ -398,7 +416,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
         );
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && identical(_openedSession, ref.read(authProvider))) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(error.toString()),
@@ -408,7 +426,7 @@ class _SocialJoinBottomSheetState extends ConsumerState<SocialJoinBottomSheet> {
         );
       }
     } finally {
-      if (mounted) {
+      if (mounted && identical(_openedSession, ref.read(authProvider))) {
         setState(() => _isSubmitting = false);
       }
     }

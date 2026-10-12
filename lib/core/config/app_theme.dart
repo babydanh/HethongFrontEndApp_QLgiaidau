@@ -15,6 +15,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   final Color warning;
   final Color error;
   final Color info;
+  final Color chipBackground;
 
   const AppColorsExtension({
     required this.bgDark,
@@ -30,6 +31,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     required this.warning,
     required this.error,
     required this.info,
+    required this.chipBackground,
   });
 
   @override
@@ -47,6 +49,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     Color? warning,
     Color? error,
     Color? info,
+    Color? chipBackground,
   }) {
     return AppColorsExtension(
       bgDark: bgDark ?? this.bgDark,
@@ -62,6 +65,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
       warning: warning ?? this.warning,
       error: error ?? this.error,
       info: info ?? this.info,
+      chipBackground: chipBackground ?? this.chipBackground,
     );
   }
 
@@ -85,13 +89,17 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
       warning: Color.lerp(warning, other.warning, t)!,
       error: Color.lerp(error, other.error, t)!,
       info: Color.lerp(info, other.info, t)!,
+      chipBackground: Color.lerp(chipBackground, other.chipBackground, t)!,
     );
   }
 }
 
 extension AppThemeContext on BuildContext {
   AppColorsExtension get colors =>
-      Theme.of(this).extension<AppColorsExtension>()!;
+      Theme.of(this).extension<AppColorsExtension>() ??
+      (Theme.of(this).brightness == Brightness.dark
+          ? AppTheme._darkColors
+          : AppTheme._lightColors);
 
   LinearGradient get primaryGradient => const LinearGradient(
     begin: Alignment.topLeft,
@@ -169,6 +177,7 @@ class AppTheme {
     warning: Color(0xFFF59E0B),
     error: Color(0xFFEF4444),
     info: Color(0xFF1D8EF8),
+    chipBackground: Color(0xFF3A3B3C),
   );
 
   static const AppColorsExtension _lightColors = AppColorsExtension(
@@ -187,6 +196,7 @@ class AppTheme {
     warning: Color(0xFFF59E0B),
     error: Color(0xFFEF4444),
     info: Color(0xFF3B82F6),
+    chipBackground: Color(0xFFF1F5F9),
   );
 
   static ThemeData _buildTheme(

@@ -124,5 +124,4 @@ ios/Flutter/ephemeral/
 integration_test/
 test_reports/
 .codex-runtime*
-
-**/docs/
+.worktrees/

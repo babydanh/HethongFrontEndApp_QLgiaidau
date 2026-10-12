@@ -36,11 +36,25 @@ final myCommunitiesProvider = FutureProvider<List<Community>>((ref) async {
   return repo.getMyCommunities();
 });
 
+/// Signals mounted Home screens to reload their cursor-backed club list.
+final homeClubListRefreshProvider =
+    NotifierProvider<HomeClubListRefreshNotifier, int>(
+      HomeClubListRefreshNotifier.new,
+    );
+
+class HomeClubListRefreshNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void refresh() => state++;
+}
+
 /// Makes every visible CLB list refetch after a mutation. `communitiesProvider`
 /// is a family, so invalidating the family also covers search/province variants.
 void invalidateCommunityCollections(dynamic ref) {
   ref.invalidate(communitiesProvider);
   ref.invalidate(myCommunitiesProvider);
+  ref.read(homeClubListRefreshProvider.notifier).refresh();
 }
 
 /// Provider chi tiết 1 CLB
