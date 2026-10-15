@@ -53,6 +53,17 @@ Bracket SHALL hiện đúng `columns` của phản hồi (tối đa 4 cột, kh�
 - **WHEN** `bracket` là null kèm `bracketReason`
 - **THEN** nút Bracket trong điều khiển tắt kèm lý do, không hiện gì trên video
 
+### Requirement: Lý do tắt nút Bracket lấy khi mở điều khiển
+Khi người có quyền điều khiển mở bảng điều khiển overlay, App SHALL gọi `GET /matches/:id/overlay` một lần để đọc `bracketReason`, kể cả khi cả hai cờ overlay đang tắt; việc này MUST NOT phụ thuộc vào cơ chế làm mới (chỉ chạy khi overlay bật) và MUST NOT chặn người điều khiển khi chưa có dữ liệu.
+
+#### Scenario: Mở bảng điều khiển khi chưa bật overlay nào
+- **WHEN** người điều khiển mở bảng điều khiển và phản hồi có `bracketReason`
+- **THEN** nút Bracket tắt kèm lý do ngay khi dữ liệu về, nút H2H vẫn bật được
+
+#### Scenario: Chưa có phản hồi hoặc lỗi
+- **WHEN** yêu cầu đang chạy, lỗi mạng hoặc trả 404
+- **THEN** nút Bracket vẫn bấm được và bảng điều khiển không hiện lỗi
+
 ### Requirement: Khung cố định co đều
 Mỗi overlay SHALL được vẽ trên khung thiết kế cố định (H2H 1320×225, Bracket 1568×882) và co đều theo bề rộng khung chứa video bằng `FittedBox`; MUST NOT reflow chữ theo cỡ màn hình và MUST NOT gây RenderFlex overflow.
 
