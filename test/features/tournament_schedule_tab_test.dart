@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -228,6 +229,12 @@ void main() {
 
     await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
     expect(find.byType(TextField).hitTestable(), findsOneWidget);
+
+    await _tapTab(tester, find.widgetWithText(Tab, 'Tài trợ'));
+    // TabBarView chỉ giữ trang đang chọn: thấy SponsorsTab = tab và trang khớp.
+    expect(find.byType(SponsorsTab), findsOneWidget);
+    expect(find.text('Fixture Sponsor'), findsOneWidget);
+    expect(find.byType(TextField).hitTestable(), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
