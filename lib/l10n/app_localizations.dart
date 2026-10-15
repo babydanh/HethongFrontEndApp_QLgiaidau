@@ -24358,12 +24358,6 @@ abstract class AppLocalizations {
   /// **'Nhận diện & thư viện ảnh'**
   String get tournamentManagementBranding;
 
-  /// No description provided for @tournamentManagementBrandingDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tải ảnh nhận diện và quản lý thư viện ảnh của giải đấu.'**
-  String get tournamentManagementBrandingDescription;
-
   /// No description provided for @tournamentManagementCancel.
   ///
   /// In vi, this message translates to:
@@ -24730,12 +24724,6 @@ abstract class AppLocalizations {
   /// **'Cài đặt chung'**
   String get tournamentManagementGeneral;
 
-  /// No description provided for @tournamentManagementGeneralDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Cập nhật tên, mô tả, chế độ hiển thị và các mốc thời gian chính của giải đấu.'**
-  String get tournamentManagementGeneralDescription;
-
   /// No description provided for @tournamentManagementInitialCourtCount.
   ///
   /// In vi, this message translates to:
@@ -24753,18 +24741,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.'**
   String get tournamentManagementLifecycleDescription;
-
-  /// No description provided for @tournamentManagementLiveOperations.
-  ///
-  /// In vi, this message translates to:
-  /// **'Vận hành trực tiếp'**
-  String get tournamentManagementLiveOperations;
-
-  /// No description provided for @tournamentManagementLiveOperationsDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Mở không gian hiện có để vận hành các trận đấu trực tiếp.'**
-  String get tournamentManagementLiveOperationsDescription;
 
   /// No description provided for @tournamentManagementLivestream.
   ///
@@ -24873,12 +24849,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Mở vận hành'**
   String get tournamentManagementOpenOperations;
-
-  /// No description provided for @tournamentManagementOperationsGroup.
-  ///
-  /// In vi, this message translates to:
-  /// **'VẬN HÀNH'**
-  String get tournamentManagementOperationsGroup;
 
   /// No description provided for @tournamentManagementOpsRouteDescription.
   ///

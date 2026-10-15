@@ -13424,10 +13424,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementBranding => 'Branding & gallery';
 
   @override
-  String get tournamentManagementBrandingDescription =>
-      'Upload tournament identity images and manage the photo gallery.';
-
-  @override
   String get tournamentManagementCancel => 'Cancel';
 
   @override
@@ -13639,10 +13635,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementGeneral => 'General settings';
 
   @override
-  String get tournamentManagementGeneralDescription =>
-      'Update the tournament name, description, visibility and key dates.';
-
-  @override
   String get tournamentManagementInitialCourtCount => 'Initial court count';
 
   @override
@@ -13651,13 +13643,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementLifecycleDescription =>
       'Use the server-supported tournament transitions. Authorization is enforced by the server.';
-
-  @override
-  String get tournamentManagementLiveOperations => 'Live operations';
-
-  @override
-  String get tournamentManagementLiveOperationsDescription =>
-      'Open the existing workspace for live match operations.';
 
   @override
   String get tournamentManagementLivestream => 'Livestream';
@@ -13715,9 +13700,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementOpenOperations => 'Open operations';
-
-  @override
-  String get tournamentManagementOperationsGroup => 'OPERATIONS';
 
   @override
   String get tournamentManagementOpsRouteDescription =>

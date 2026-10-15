@@ -13378,10 +13378,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementBranding => 'Nhận diện & thư viện ảnh';
 
   @override
-  String get tournamentManagementBrandingDescription =>
-      'Tải ảnh nhận diện và quản lý thư viện ảnh của giải đấu.';
-
-  @override
   String get tournamentManagementCancel => 'Hủy';
 
   @override
@@ -13594,10 +13590,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementGeneral => 'Cài đặt chung';
 
   @override
-  String get tournamentManagementGeneralDescription =>
-      'Cập nhật tên, mô tả, chế độ hiển thị và các mốc thời gian chính của giải đấu.';
-
-  @override
   String get tournamentManagementInitialCourtCount => 'Số sân ban đầu';
 
   @override
@@ -13606,13 +13598,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementLifecycleDescription =>
       'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.';
-
-  @override
-  String get tournamentManagementLiveOperations => 'Vận hành trực tiếp';
-
-  @override
-  String get tournamentManagementLiveOperationsDescription =>
-      'Mở không gian hiện có để vận hành các trận đấu trực tiếp.';
 
   @override
   String get tournamentManagementLivestream => 'Phát trực tiếp';
@@ -13670,9 +13655,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementOpenOperations => 'Mở vận hành';
-
-  @override
-  String get tournamentManagementOperationsGroup => 'VẬN HÀNH';
 
   @override
   String get tournamentManagementOpsRouteDescription =>

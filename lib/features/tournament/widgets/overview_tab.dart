@@ -20,7 +20,7 @@ class OverviewTab extends StatefulWidget {
   final String? inviteCode;
   final bool hasSliverBanner;
   final bool compact;
-  final VoidCallback? onEditGeneral;
+  final VoidCallback? onEditInformation;
   final VoidCallback? onEditBranding;
   final VoidCallback? onEditSchedule;
   final VoidCallback? onEditRegistration;
@@ -38,7 +38,7 @@ class OverviewTab extends StatefulWidget {
     this.inviteCode,
     this.hasSliverBanner = false,
     this.compact = false,
-    this.onEditGeneral,
+    this.onEditInformation,
     this.onEditBranding,
     this.onEditSchedule,
     this.onEditRegistration,
@@ -274,7 +274,7 @@ class _OverviewTabState extends State<OverviewTab> {
                         // Tên giải đấu lớn & nổi bật (ở ngoài card, tạo visual hierarchy mạnh mẽ)
                         _editableItem(
                           key: const ValueKey('tournament-overview-name-edit'),
-                          onTap: widget.onEditGeneral,
+                          onTap: widget.onEditInformation,
                           sectionLabel: l10n.tournamentManagementGeneral,
                           child: Row(
                             children: [
@@ -290,7 +290,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                   ),
                                 ),
                               ),
-                              _editIndicator(widget.onEditGeneral),
+                              _editIndicator(widget.onEditInformation),
                             ],
                           ),
                         ),
@@ -632,7 +632,7 @@ class _OverviewTabState extends State<OverviewTab> {
                           key: const ValueKey(
                             'tournament-overview-description-edit',
                           ),
-                          onTap: widget.onEditGeneral,
+                          onTap: widget.onEditInformation,
                           sectionLabel: l10n.tournamentManagementGeneral,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -650,7 +650,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                       ),
                                     ),
                                   ),
-                                  _editIndicator(widget.onEditGeneral),
+                                  _editIndicator(widget.onEditInformation),
                                 ],
                               ),
                               const SizedBox(height: 6),

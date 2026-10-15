@@ -270,7 +270,7 @@ class _TournamentManagementHubScreenState
           child: TournamentManagementSummary(
             tournament: tournament,
             teamCount: teamCount,
-            onEditGeneral: () =>
+            onEditInformation: () =>
                 _openSection(TournamentManagementSection.information),
             onEditSchedule: () =>
                 _openSection(TournamentManagementSection.schedule),
@@ -317,7 +317,7 @@ class _TournamentManagementHubScreenState
                 hasSliverBanner: true,
                 compact: true,
                 overlapHandles: overlapHandles,
-                onEditGeneral: () =>
+                onEditInformation: () =>
                     _openSection(TournamentManagementSection.information),
                 onEditBranding: () =>
                     _openSection(TournamentManagementSection.information),

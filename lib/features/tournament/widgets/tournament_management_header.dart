@@ -96,7 +96,7 @@ class TournamentManagementBanner extends StatelessWidget {
 class TournamentManagementSummary extends StatelessWidget {
   final Tournament tournament;
   final int teamCount;
-  final VoidCallback? onEditGeneral;
+  final VoidCallback? onEditInformation;
   final VoidCallback? onEditSchedule;
   final VoidCallback? onEditRegistration;
   final VoidCallback? onEditFinance;
@@ -106,7 +106,7 @@ class TournamentManagementSummary extends StatelessWidget {
     super.key,
     required this.tournament,
     required this.teamCount,
-    this.onEditGeneral,
+    this.onEditInformation,
     this.onEditSchedule,
     this.onEditRegistration,
     this.onEditFinance,
@@ -172,7 +172,7 @@ class TournamentManagementSummary extends StatelessWidget {
                     MergeSemantics(
                       child: InkWell(
                         key: const ValueKey('tournament-overview-name-edit'),
-                        onTap: onEditGeneral,
+                        onTap: onEditInformation,
                         borderRadius: BorderRadius.circular(8),
                         child: Row(
                           children: [
