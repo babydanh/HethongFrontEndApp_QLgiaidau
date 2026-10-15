@@ -123,7 +123,6 @@ Future<void> _tapSave(WidgetTester tester, AppLocalizations l10n) async {
     FilledButton,
     l10n.tournamentManagementSave,
   );
-  await tester.ensureVisible(saveButton);
   await tester.tap(saveButton);
   await tester.pumpAndSettle();
 }
@@ -507,5 +506,28 @@ void main() {
     await _tapSave(tester, l10n);
 
     expect(find.text(message), findsOneWidget);
+  });
+
+  testWidgets('registration save bar stays at the bottom, outside the list, above the keyboard', (
+    tester,
+  ) async {
+    await _pumpSection(tester, TournamentManagementSection.registration);
+    final saveButton = find.widgetWithText(
+      FilledButton,
+      _l10n(tester).tournamentManagementSave,
+    );
+
+    expect(
+      find.descendant(of: find.byType(ListView), matching: saveButton),
+      findsNothing,
+    );
+    expect(tester.getBottomLeft(saveButton).dy, greaterThan(1400 - 120));
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: 500);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+
+    expect(tester.getBottomLeft(saveButton).dy, lessThanOrEqualTo(1400 - 500));
+    expect(tester.takeException(), isNull);
   });
 }

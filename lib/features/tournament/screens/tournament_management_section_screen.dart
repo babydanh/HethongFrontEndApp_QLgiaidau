@@ -64,13 +64,9 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
         TournamentManagementVenuesSection(tournamentId: tournament.id),
       ],
     ),
-    TournamentManagementSection.registration => _SettingsPage(
-      children: [
-        _TournamentSettingsForm(
-          tournament: tournament,
-          group: _SettingsGroup.registration,
-        ),
-      ],
+    TournamentManagementSection.registration => _TournamentSettingsForm(
+      tournament: tournament,
+      group: _SettingsGroup.registration,
     ),
     TournamentManagementSection.permissions =>
       TournamentManagementPeopleSection(
@@ -121,6 +117,42 @@ class _SettingsPage extends StatelessWidget {
       ],
     ],
   );
+}
+
+/// Thanh dưới cố định của trang Đăng ký: đường kẻ mảnh phía trên, có SafeArea đáy.
+class _StickySaveBar extends StatelessWidget {
+  const _StickySaveBar({required this.error, required this.button});
+
+  final String? error;
+  final Widget button;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border(top: BorderSide(color: colors.border)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (error != null) ...[
+                _InlineError(text: error!),
+                const SizedBox(height: 8),
+              ],
+              Align(alignment: Alignment.centerRight, child: button),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Hai nhóm cài đặt. Mỗi nhóm có form và nút Lưu riêng.
@@ -243,39 +275,66 @@ class _TournamentSettingsFormState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TournamentManagementSectionCard(
+    final card = TournamentManagementSectionCard(
       title: _title(l10n),
       subtitle: _groupDescription(l10n),
       showHeader: false,
       child: Column(
         children: [
           ..._fields(context, l10n),
-          if (_errorMessage != null) ...[
-            const SizedBox(height: 12),
-            _InlineError(text: _errorMessage!),
-          ],
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              onPressed: _isSaving || _locked ? null : _save,
-              icon: _isSaving
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_outlined),
-              label: Text(
-                _isSaving
-                    ? l10n.tournamentManagementSaving
-                    : l10n.tournamentManagementSave,
-              ),
+          if (!_hasStickySave) ...[
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 12),
+              _InlineError(text: _errorMessage!),
+            ],
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: _saveButton(l10n),
             ),
-          ),
+          ],
         ],
       ),
     );
+    if (!_hasStickySave) return card;
+    // Trang Đăng ký: nút Lưu dính đáy, nằm ngoài ListView nên không bị cuộn.
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [card],
+          ),
+        ),
+        _StickySaveBar(
+          error: _errorMessage,
+          button: _saveButton(
+            l10n,
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+          ),
+        ),
+      ],
+    );
   }
+
+  bool get _hasStickySave => widget.group == _SettingsGroup.registration;
+
+  Widget _saveButton(AppLocalizations l10n, {ButtonStyle? style}) =>
+      FilledButton.icon(
+        onPressed: _isSaving || _locked ? null : _save,
+        style: style,
+        icon: _isSaving
+            ? const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.save_outlined),
+        label: Text(
+          _isSaving
+              ? l10n.tournamentManagementSaving
+              : l10n.tournamentManagementSave,
+        ),
+      );
 
   String _title(AppLocalizations l10n) => switch (widget.group) {
     _SettingsGroup.information => l10n.manageSettingsInfoSection,
