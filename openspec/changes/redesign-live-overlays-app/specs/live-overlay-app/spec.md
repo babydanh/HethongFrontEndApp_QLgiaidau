@@ -34,6 +34,10 @@ H2H SHALL hiện đúng `h2h` của phản hồi: logo, tiêu đề `title`, nh�
 - **WHEN** `url` null hoặc tải ảnh thất bại
 - **THEN** hiện chữ cái đầu `initial` thay ảnh, không văng lỗi
 
+#### Scenario: Một bên chưa có VĐV nào trong danh sách avatar
+- **WHEN** `avatars` của một bên là mảng rỗng (đã gặp ở 3/14 trận thử trên production 2026-10-15; tên bên lấy từ `name`)
+- **THEN** hiện một avatar chữ cái đầu của `name` (hoặc dấu hỏi nếu `name` rỗng), không để khoảng trống và không báo lỗi
+
 #### Scenario: Không có H2H
 - **WHEN** `h2h` là null
 - **THEN** không hiện gì
