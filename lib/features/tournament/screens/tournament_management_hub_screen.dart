@@ -718,8 +718,8 @@ class _TournamentManagementHubScreenState
     ),
     TournamentManagementSection.schedule => _SectionDetails(
       Icons.event_outlined,
-      l10n.manageSettingsScheduleSection,
-      l10n.manageSettingsScheduleSectionDescription,
+      l10n.manageSettingsVenueSection,
+      l10n.manageSettingsVenueSectionDescription,
       AppTheme.secondary,
     ),
     TournamentManagementSection.registration => _SectionDetails(

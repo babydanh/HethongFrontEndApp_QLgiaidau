@@ -11,7 +11,9 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,10 +61,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     ),
     TournamentManagementSection.schedule => _SettingsPage(
       children: [
-        _TournamentSettingsForm(
-          tournament: tournament,
-          group: _SettingsGroup.schedule,
-        ),
         TournamentManagementVenuesSection(tournamentId: tournament.id),
       ],
     ),
@@ -125,8 +123,8 @@ class _SettingsPage extends StatelessWidget {
   );
 }
 
-/// Ba nhóm cài đặt. Mỗi nhóm có form và nút Lưu riêng.
-enum _SettingsGroup { information, schedule, registration }
+/// Hai nhóm cài đặt. Mỗi nhóm có form và nút Lưu riêng.
+enum _SettingsGroup { information, registration }
 
 /// Form của một nhóm cài đặt. Chỉ gửi các trường thuộc nhóm đó.
 class _TournamentSettingsForm extends ConsumerStatefulWidget {
@@ -152,10 +150,9 @@ class _TournamentSettingsFormState
   // Mô tả lưu dạng HTML (Editor.js của web xuất ra HTML). Dùng state thay vì
   // TextEditingController vì RichTextField là WebView, không nhận controller.
   late String _description = widget.tournament.description;
-  late String _visibility =
-      widget.tournament.visibility.toUpperCase() == 'PRIVATE'
-      ? 'PRIVATE'
-      : 'PUBLIC';
+  late String _visibility = _savedVisibility;
+  late String _registrationMode = _savedRegistrationMode;
+  late String _pairingMode = _savedPairingMode;
   late bool _hideFeaturedCardText = widget.tournament.hideFeaturedCardText;
   late DateTime? _startDate = widget.tournament.startDate;
   late DateTime? _endDate = widget.tournament.endDate;
@@ -163,7 +160,76 @@ class _TournamentSettingsFormState
       widget.tournament.registrationStartDate;
   late DateTime? _registrationEndDate = widget.tournament.registrationEndDate;
   bool _isSaving = false;
-  String? _error;
+  String? _errorMessage;
+
+  String get _savedVisibility =>
+      widget.tournament.visibility.toUpperCase() == 'PRIVATE'
+      ? 'PRIVATE'
+      : 'PUBLIC';
+
+  String get _savedRegistrationMode =>
+      switch (widget.tournament.registrationMode?.toUpperCase()) {
+        'APPROVAL' => 'APPROVAL',
+        'INVITE_ONLY' => 'INVITE_ONLY',
+        _ => 'OPEN',
+      };
+
+  String get _savedPairingMode =>
+      widget.tournament.doublesPairingMode?.toUpperCase() == 'SELF'
+      ? 'SELF'
+      : 'ORGANIZER';
+
+  /// Giải đã khoá đăng ký: mọi điều khiển và nút Lưu bị khoá.
+  bool get _locked => widget.tournament.isRegistrationLocked;
+
+  /// Giải đã đóng (chưa khoá): chỉ được gia hạn hạn chót đăng ký.
+  bool get _closed =>
+      widget.tournament.status.toUpperCase() == 'REGISTRATION_CLOSED';
+
+  bool get _settingsEditable => !_isSaving && !_locked && !_closed;
+
+  bool get _deadlineEditable => !_isSaving && !_locked;
+
+  bool get _regenerateEnabled =>
+      !_isSaving && !_isActing && !_locked && !_closed;
+
+  String? get _inviteCode {
+    final code = widget.tournament.inviteCode;
+    return code == null || code.isEmpty ? null : code;
+  }
+
+  bool get _showsInvite =>
+      (_visibility == 'PRIVATE' || _registrationMode == 'INVITE_ONLY') &&
+      _inviteCode != null;
+
+  /// Giống web: chỉ hiện cặp ghép khi giải có nội dung đôi.
+  bool get _hasDoublesContent {
+    const doubles = {'DOUBLES', 'MIXED_DOUBLES'};
+    final tournament = widget.tournament;
+    return doubles.contains(tournament.format.toUpperCase()) ||
+        tournament.divisions.any(
+          (division) => doubles.contains(division.matchType.toUpperCase()),
+        );
+  }
+
+  /// Hạn chót mới phải sau hạn đã lưu thì mới gia hạn được.
+  bool get _deadlineExtended {
+    final value = _registrationEndDate;
+    final saved = widget.tournament.registrationEndDate;
+    return value != null && (saved == null || _isAfterDateTime(value, saved));
+  }
+
+  /// Giống web: giải Lite của cộng đồng chỉ giữ INVITE_ONLY, còn lại là OPEN.
+  String _effectiveRegistrationMode() {
+    final tournament = widget.tournament;
+    final isLite =
+        tournament.isLite || tournament.tournamentConfig['isLite'] == true;
+    final hasCommunity = (tournament.communityId ?? '').isNotEmpty;
+    if (hasCommunity && isLite) {
+      return _registrationMode == 'INVITE_ONLY' ? 'INVITE_ONLY' : 'OPEN';
+    }
+    return _registrationMode;
+  }
 
   @override
   String get _actionTournamentId => widget.tournament.id;
@@ -184,15 +250,15 @@ class _TournamentSettingsFormState
       child: Column(
         children: [
           ..._fields(context, l10n),
-          if (_error != null) ...[
+          if (_errorMessage != null) ...[
             const SizedBox(height: 12),
-            _InlineError(text: _errorText(l10n)),
+            _InlineError(text: _errorMessage!),
           ],
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton.icon(
-              onPressed: _isSaving ? null : _save,
+              onPressed: _isSaving || _locked ? null : _save,
               icon: _isSaving
                   ? const SizedBox.square(
                       dimension: 16,
@@ -213,13 +279,11 @@ class _TournamentSettingsFormState
 
   String _title(AppLocalizations l10n) => switch (widget.group) {
     _SettingsGroup.information => l10n.manageSettingsInfoSection,
-    _SettingsGroup.schedule => l10n.manageSettingsScheduleSection,
     _SettingsGroup.registration => l10n.tournamentManagementRegistration,
   };
 
   String _groupDescription(AppLocalizations l10n) => switch (widget.group) {
     _SettingsGroup.information => l10n.manageSettingsInfoSectionDescription,
-    _SettingsGroup.schedule => l10n.manageSettingsScheduleSectionDescription,
     _SettingsGroup.registration =>
       l10n.manageSettingsRegistrationSectionDescription,
   };
@@ -261,33 +325,18 @@ class _TournamentSettingsFormState
                 : (value) => setState(() => _hideFeaturedCardText = value),
           ),
         ],
-        _SettingsGroup.schedule => [
-          _dateField(
-            context,
-            l10n.tournamentManagementStartDate,
-            _startDate,
-            () => _pickDate(
-              _startDate,
-              (value) => setState(() => _startDate = value),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _dateField(
-            context,
-            l10n.tournamentManagementEndDate,
-            _endDate,
-            () => _pickDate(
-              _endDate,
-              (value) => setState(() => _endDate = value),
-            ),
-          ),
-        ],
         _SettingsGroup.registration => [
+          if (_locked)
+            _hint(context, l10n.tournamentManagementRegistrationLockedHint)
+          else if (_closed)
+            _hint(context, l10n.tournamentManagementRegistrationClosedHint),
           _dateField(
             context,
-            l10n.tournamentManagementRegistrationStarts,
-            _registrationStartDate,
-            () => _pickDate(
+            buttonKey: const ValueKey('registration-opens'),
+            label: l10n.tournamentManagementRegistrationStarts,
+            value: _registrationStartDate,
+            enabled: _settingsEditable,
+            onTap: () => _pickDate(
               _registrationStartDate,
               (value) => setState(() => _registrationStartDate = value),
             ),
@@ -295,38 +344,113 @@ class _TournamentSettingsFormState
           const SizedBox(height: 8),
           _dateField(
             context,
-            l10n.tournamentManagementRegistrationEnds,
-            _registrationEndDate,
-            () => _pickDate(
+            buttonKey: const ValueKey('registration-deadline'),
+            label: l10n.tournamentManagementRegistrationEnds,
+            value: _registrationEndDate,
+            enabled: _deadlineEditable,
+            onTap: () => _pickDate(
               _registrationEndDate,
               (value) => setState(() => _registrationEndDate = value),
             ),
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _visibility,
-            decoration: InputDecoration(
-              labelText: l10n.tournamentManagementVisibility,
-              border: const OutlineInputBorder(),
+          const SizedBox(height: 8),
+          _dateField(
+            context,
+            buttonKey: const ValueKey('tournament-opening'),
+            label: l10n.tournamentManagementStartDate,
+            value: _startDate,
+            enabled: _settingsEditable,
+            onTap: () => _pickDate(
+              _startDate,
+              (value) => setState(() => _startDate = value),
             ),
-            items: [
-              DropdownMenuItem(
-                value: 'PUBLIC',
-                child: Text(l10n.tournamentManagementPublic),
-              ),
-              DropdownMenuItem(
-                value: 'PRIVATE',
-                child: Text(l10n.tournamentManagementPrivate),
-              ),
-            ],
-            onChanged: _isSaving
-                ? null
-                : (value) {
-                    if (value != null) setState(() => _visibility = value);
-                  },
           ),
-          const SizedBox(height: 16),
-          _inviteRow(context, l10n),
+          const SizedBox(height: 8),
+          _dateField(
+            context,
+            buttonKey: const ValueKey('tournament-closing'),
+            label: l10n.tournamentManagementEndDate,
+            value: _endDate,
+            enabled: _settingsEditable,
+            onTap: () => _pickDate(
+              _endDate,
+              (value) => setState(() => _endDate = value),
+            ),
+          ),
+          const Divider(height: 32),
+          SwitchListTile(
+            key: const ValueKey('registration-public'),
+            contentPadding: EdgeInsets.zero,
+            value: _visibility == 'PUBLIC',
+            title: Text(l10n.tournamentManagementPublic),
+            onChanged: _settingsEditable
+                ? (value) =>
+                      setState(() => _visibility = value ? 'PUBLIC' : 'PRIVATE')
+                : null,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.tournamentManagementRegistrationMode,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SegmentedButton<String>(
+                style: SegmentedButton.styleFrom(
+                  minimumSize: const Size(0, 44),
+                ),
+                segments: [
+                  ButtonSegment(
+                    value: 'OPEN',
+                    label: Text(l10n.tournamentManagementRegistrationModeOpen),
+                  ),
+                  ButtonSegment(
+                    value: 'APPROVAL',
+                    label: Text(
+                      l10n.tournamentManagementRegistrationModeApproval,
+                    ),
+                  ),
+                  ButtonSegment(
+                    value: 'INVITE_ONLY',
+                    label: Text(
+                      l10n.tournamentManagementRegistrationModeInviteOnly,
+                    ),
+                  ),
+                ],
+                selected: {_registrationMode},
+                onSelectionChanged: _settingsEditable
+                    ? (selection) =>
+                          setState(() => _registrationMode = selection.first)
+                    : null,
+              ),
+            ),
+          ),
+          if (_hasDoublesContent) ...[
+            const Divider(height: 32),
+            SwitchListTile(
+              key: const ValueKey('registration-pairing'),
+              contentPadding: EdgeInsets.zero,
+              value: _pairingMode == 'ORGANIZER',
+              title: Text(l10n.tournamentManagementPairing),
+              subtitle: Text(
+                _pairingMode == 'SELF'
+                    ? l10n.tournamentManagementPairingSelf
+                    : l10n.tournamentManagementPairingOrganizer,
+              ),
+              onChanged: _settingsEditable
+                  ? (value) => setState(
+                      () => _pairingMode = value ? 'ORGANIZER' : 'SELF',
+                    )
+                  : null,
+            ),
+          ],
+          if (_showsInvite) ...[
+            const Divider(height: 32),
+            _inviteSection(context, l10n, _inviteCode!),
+          ],
           if (_actionFailed) ...[
             const SizedBox(height: 8),
             _InlineError(text: l10n.tournamentManagementActionError),
@@ -338,23 +462,32 @@ class _TournamentSettingsFormState
         ],
       };
 
-  Widget _inviteRow(BuildContext context, AppLocalizations l10n) {
+  Widget _hint(BuildContext context, String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+  );
+
+  Widget _inviteSection(
+    BuildContext context,
+    AppLocalizations l10n,
+    String code,
+  ) {
     final textTheme = Theme.of(context).textTheme;
-    final code = widget.tournament.inviteCode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Expanded(
-              child: Text(l10n.manageSettingsInviteCode, style: textTheme.bodyMedium),
+              child: Text(
+                l10n.manageSettingsInviteCode,
+                style: textTheme.bodyMedium,
+              ),
             ),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                code == null || code.isEmpty
-                    ? l10n.tournamentManagementNotSet
-                    : code,
+                code,
                 style: textTheme.bodyMedium,
                 textAlign: TextAlign.end,
                 overflow: TextOverflow.ellipsis,
@@ -363,70 +496,78 @@ class _TournamentSettingsFormState
           ],
         ),
         const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: _isActing || _isSaving
-              ? null
-              : () => _runAction(
-                  () => ref
-                      .read(tournamentManagementRepositoryProvider)
-                      .regenerateInviteCode(widget.tournament.id),
-                  l10n.tournamentManagementRegenerateInviteConfirm,
-                ),
-          icon: const Icon(Icons.autorenew_rounded),
-          label: Text(l10n.tournamentManagementRegenerateInvite),
-          style: OutlinedButton.styleFrom(minimumSize: const Size(64, 44)),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              onPressed: _isSaving || _isActing
+                  ? null
+                  : () => _copyInvite(code, l10n),
+              icon: const Icon(Icons.copy_rounded),
+              label: Text(l10n.tournamentManagementCopy),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(64, 44)),
+            ),
+            OutlinedButton.icon(
+              onPressed: _regenerateEnabled
+                  ? () => _runAction(
+                      () => ref
+                          .read(tournamentManagementRepositoryProvider)
+                          .regenerateInviteCode(widget.tournament.id),
+                      l10n.tournamentManagementRegenerateInviteConfirm,
+                    )
+                  : null,
+              icon: const Icon(Icons.autorenew_rounded),
+              label: Text(l10n.tournamentManagementRegenerateInvite),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(64, 44)),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  String _errorText(AppLocalizations l10n) => switch (_error) {
-    'validation' => l10n.tournamentManagementRequiredFields,
-    'dateRange' => l10n.tournamentManagementEndAfterStart,
-    'registrationRange' => l10n.tournamentManagementRegistrationEndAfterStart,
-    'registrationBeforeStart' => l10n.tournamentManagementStartAfterRegistration,
-    _ => l10n.tournamentManagementSaveError,
-  };
-
-  /// Kiểm tra của nhóm hiện tại; `null` khi hợp lệ. Kiểm tra chéo nhóm dùng
-  /// giá trị đã lưu của giải, không dùng giá trị đang nhập ở nhóm khác.
-  String? _validate() => switch (widget.group) {
-    _SettingsGroup.information =>
-      _nameController.text.trim().isEmpty ? 'validation' : null,
-    _SettingsGroup.schedule => _scheduleError(),
-    _SettingsGroup.registration => _registrationError(),
-  };
-
-  /// Ngày kết thúc không trước ngày bắt đầu; ngày bắt đầu giải không trước
-  /// hạn kết thúc đăng ký đã lưu.
-  String? _scheduleError() {
-    final start = _startDate;
-    final end = _endDate;
-    final savedRegistrationEnd = widget.tournament.registrationEndDate;
-    if (start != null && end != null && _isBeforeDateTime(end, start)) {
-      return 'dateRange';
-    }
-    if (start != null &&
-        savedRegistrationEnd != null &&
-        _isBeforeDateTime(start, savedRegistrationEnd)) {
-      return 'registrationBeforeStart';
-    }
-    return null;
+  Future<void> _copyInvite(String code, AppLocalizations l10n) async {
+    await Clipboard.setData(ClipboardData(text: code));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.tournamentManagementInviteCodeCopied)),
+    );
   }
 
-  /// Hạn kết thúc đăng ký phải sau hạn mở; và không được muộn hơn ngày bắt
-  /// đầu giải đã lưu.
-  String? _registrationError() {
-    final start = _registrationStartDate;
-    final end = _registrationEndDate;
-    final savedStart = widget.tournament.startDate;
-    if (start != null && end != null && !_isAfterDateTime(end, start)) {
-      return 'registrationRange';
+  /// Kiểm tra theo đúng thứ tự của web; `null` khi hợp lệ.
+  String? _validate(AppLocalizations l10n) => switch (widget.group) {
+    _SettingsGroup.information =>
+      _nameController.text.trim().isEmpty
+          ? l10n.tournamentManagementRequiredFields
+          : null,
+    _SettingsGroup.registration => _registrationError(l10n),
+  };
+
+  String? _registrationError(AppLocalizations l10n) {
+    final registrationStart = _registrationStartDate;
+    final registrationEnd = _registrationEndDate;
+    final start = _startDate;
+    final end = _endDate;
+    if (registrationStart != null &&
+        registrationEnd != null &&
+        !_isAfterDateTime(registrationEnd, registrationStart)) {
+      return l10n.tournamentManagementRegistrationEndAfterStart;
     }
-    if (savedStart != null &&
-        end != null &&
-        _isBeforeDateTime(savedStart, end)) {
-      return 'registrationBeforeStart';
+    if (registrationEnd != null &&
+        !_isAfterDateTime(registrationEnd, DateTime.now())) {
+      return l10n.tournamentManagementRegistrationDeadlineInFuture;
+    }
+    if (start != null &&
+        registrationEnd != null &&
+        _isBeforeDateTime(start, registrationEnd)) {
+      return l10n.tournamentManagementStartAfterRegistration;
+    }
+    if (start != null && end != null && _isBeforeDateTime(end, start)) {
+      return l10n.tournamentManagementEndAfterStart;
+    }
+    if (_closed && !_locked && !_deadlineExtended) {
+      return l10n.tournamentManagementClosedDeadlineExtensionOnly;
     }
     return null;
   }
@@ -442,33 +583,48 @@ class _TournamentSettingsFormState
           ...saved.tournamentConfig,
           'hideFeaturedCardText': _hideFeaturedCardText,
         };
-      case _SettingsGroup.schedule:
-        _addDateUpdate(payload, 'startDate', _startDate, saved.startDate);
-        _addDateUpdate(payload, 'endDate', _endDate, saved.endDate);
       case _SettingsGroup.registration:
-        payload['visibility'] = _visibility;
-        _addDateUpdate(
-          payload,
-          'registrationStartDate',
-          _registrationStartDate,
-          saved.registrationStartDate,
-        );
         _addDateUpdate(
           payload,
           'registrationEndDate',
           _registrationEndDate,
           saved.registrationEndDate,
         );
+        // Giải đã đóng chỉ gửi hạn chót đăng ký; máy chủ từ chối phần còn lại.
+        if (_closed && !_locked) return payload;
+        _addDateUpdate(
+          payload,
+          'registrationStartDate',
+          _registrationStartDate,
+          saved.registrationStartDate,
+        );
+        _addDateUpdate(payload, 'startDate', _startDate, saved.startDate);
+        _addDateUpdate(payload, 'endDate', _endDate, saved.endDate);
+        if (_visibility != _savedVisibility) {
+          payload['visibility'] = _visibility;
+        }
+        final mode = _effectiveRegistrationMode();
+        final pairingChanged =
+            _hasDoublesContent && _pairingMode != _savedPairingMode;
+        if (mode != _savedRegistrationMode || pairingChanged) {
+          payload['tournamentConfig'] = {
+            ...saved.tournamentConfig,
+            'registrationMode': mode,
+            if (_hasDoublesContent) 'doublesPairingMode': _pairingMode,
+          };
+        }
     }
     return payload;
   }
 
   Widget _dateField(
-    BuildContext context,
-    String label,
-    DateTime? value,
-    VoidCallback onTap,
-  ) {
+    BuildContext context, {
+    required Key buttonKey,
+    required String label,
+    required DateTime? value,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final localValue = value?.toLocal();
     final dateLabel = localValue == null
@@ -484,7 +640,8 @@ class _TournamentSettingsFormState
         Expanded(
           flex: 3,
           child: OutlinedButton.icon(
-            onPressed: _isSaving ? null : onTap,
+            key: buttonKey,
+            onPressed: enabled ? onTap : null,
             icon: const Icon(Icons.calendar_today_outlined, size: 17),
             label: Text(
               dateLabel,
@@ -529,15 +686,16 @@ class _TournamentSettingsFormState
   }
 
   Future<void> _save() async {
-    if (_isSaving) return;
-    final error = _validate();
-    if (error != null) {
-      setState(() => _error = error);
+    if (_isSaving || _locked) return;
+    final l10n = AppLocalizations.of(context)!;
+    final validationError = _validate(l10n);
+    if (validationError != null) {
+      setState(() => _errorMessage = validationError);
       return;
     }
     setState(() {
       _isSaving = true;
-      _error = null;
+      _errorMessage = null;
     });
     try {
       await ref
@@ -546,14 +704,15 @@ class _TournamentSettingsFormState
       if (!mounted) return;
       ref.invalidate(tournamentProvider(widget.tournament.id));
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.tournamentManagementSaved,
-          ),
-        ),
+        SnackBar(content: Text(l10n.tournamentManagementSaved)),
       );
-    } catch (_) {
-      if (mounted) setState(() => _error = 'save');
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _errorMessage =
+              _serverMessage(error) ?? l10n.tournamentManagementSaveError,
+        );
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -743,6 +902,15 @@ bool _isAfterDateTime(DateTime value, DateTime other) =>
 
 bool _isBeforeDateTime(DateTime value, DateTime other) =>
     value.toLocal().isBefore(other.toLocal());
+
+/// Thông báo do máy chủ trả về (trường `message`), nếu có.
+String? _serverMessage(Object error) {
+  if (error is! DioException) return null;
+  final data = error.response?.data;
+  if (data is! Map) return null;
+  final message = data['message'];
+  return message is String && message.trim().isNotEmpty ? message : null;
+}
 
 class _ExistingOperationsDestination extends StatelessWidget {
   const _ExistingOperationsDestination({

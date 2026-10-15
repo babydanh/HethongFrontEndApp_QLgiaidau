@@ -13503,10 +13503,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementEndAfterStart =>
-      'The tournament end date must be after its start date.';
+      'The closing date must be after the opening date';
 
   @override
-  String get tournamentManagementEndDate => 'End date';
+  String get tournamentManagementEndDate => 'Closing date';
 
   @override
   String get tournamentManagementEntryFee => 'Entry fee';
@@ -13934,10 +13934,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementRegistrationEndAfterStart =>
-      'Registration must end after it starts.';
+      'The registration deadline must be after the opening date';
 
   @override
-  String get tournamentManagementRegistrationEnds => 'Registration ends';
+  String get tournamentManagementRegistrationEnds => 'Registration deadline';
 
   @override
   String get tournamentManagementRegistrationLocked => 'Registration locked';
@@ -13950,10 +13950,53 @@ class AppLocalizationsEn extends AppLocalizations {
       'Registration rejected.';
 
   @override
-  String get tournamentManagementRegistrationStarts => 'Registration starts';
+  String get tournamentManagementRegistrationStarts => 'Registration opens';
 
   @override
   String get tournamentManagementRegistrationWindow => 'Registration window';
+
+  @override
+  String get tournamentManagementRegistrationMode => 'Registration mode';
+
+  @override
+  String get tournamentManagementRegistrationModeOpen => 'Open';
+
+  @override
+  String get tournamentManagementRegistrationModeApproval => 'Approval';
+
+  @override
+  String get tournamentManagementRegistrationModeInviteOnly => 'Invite code';
+
+  @override
+  String get tournamentManagementRegistrationDeadlineInFuture =>
+      'The registration deadline must be after the current time.';
+
+  @override
+  String get tournamentManagementRegistrationClosedHint =>
+      'Registration is closed. You can extend the deadline here, but saving does not reopen registration. Reopen registration separately when you are ready.';
+
+  @override
+  String get tournamentManagementRegistrationLockedHint =>
+      'Registration is locked. Reopen registration before making changes.';
+
+  @override
+  String get tournamentManagementClosedDeadlineExtensionOnly =>
+      'For a closed tournament, the deadline can only be extended past the current deadline.';
+
+  @override
+  String get tournamentManagementPairing => 'Doubles pairing';
+
+  @override
+  String get tournamentManagementPairingOrganizer => 'Organizer pairs';
+
+  @override
+  String get tournamentManagementPairingSelf => 'Players pair themselves';
+
+  @override
+  String get tournamentManagementCopy => 'Copy';
+
+  @override
+  String get tournamentManagementInviteCodeCopied => 'Invite code copied';
 
   @override
   String get tournamentManagementReject => 'Reject';
@@ -14175,10 +14218,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementStartAfterRegistration =>
-      'The tournament must start on or after registration closes.';
+      'The opening date must be after the registration deadline';
 
   @override
-  String get tournamentManagementStartDate => 'Start date';
+  String get tournamentManagementStartDate => 'Opening date';
 
   @override
   String get tournamentManagementStatusCancelled => 'Cancelled';
@@ -14247,9 +14290,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementVenuesEmptyDescription =>
       'Add a venue and its courts for this tournament.';
-
-  @override
-  String get tournamentManagementVisibility => 'Visibility';
 
   @override
   String get tournamentManagementYes => 'Yes';
@@ -14947,15 +14987,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tournament name, description, logo and banner.';
 
   @override
-  String get manageSettingsScheduleSection => 'Schedule & venue';
+  String get manageSettingsVenueSection => 'Venue';
 
   @override
-  String get manageSettingsScheduleSectionDescription =>
-      'Start and end dates, venues and courts.';
+  String get manageSettingsVenueSectionDescription =>
+      'Venues and courts for the tournament.';
 
   @override
   String get manageSettingsRegistrationSectionDescription =>
-      'Visibility, registration deadlines and invite code.';
+      'Registration mode, tournament dates, pairing and invite code.';
 
   @override
   String get manageSettingsCompetitionSection => 'Competition';

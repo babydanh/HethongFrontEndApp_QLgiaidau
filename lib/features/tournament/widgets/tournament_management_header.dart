@@ -131,7 +131,7 @@ class TournamentManagementSummary extends StatelessWidget {
         itemKey: const ValueKey('tournament-overview-dates-edit'),
         label: l10n.tournamentManagementKpiDates,
         value: _dateRange(t.startDate, t.endDate),
-        onTap: onEditSchedule,
+        onTap: onEditRegistration,
       ),
       _SummaryKpi(
         itemKey: const ValueKey('tournament-overview-athletes-edit'),

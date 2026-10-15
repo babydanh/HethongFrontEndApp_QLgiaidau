@@ -24493,13 +24493,13 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementEndAfterStart.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày kết thúc giải đấu phải sau ngày bắt đầu.'**
+  /// **'Ngày bế mạc phải sau ngày khai mạc'**
   String get tournamentManagementEndAfterStart;
 
   /// No description provided for @tournamentManagementEndDate.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày kết thúc'**
+  /// **'Ngày bế mạc'**
   String get tournamentManagementEndDate;
 
   /// No description provided for @tournamentManagementEntryFee.
@@ -25249,13 +25249,13 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRegistrationEndAfterStart.
   ///
   /// In vi, this message translates to:
-  /// **'Thời gian kết thúc đăng ký phải sau thời gian bắt đầu.'**
+  /// **'Hạn chót đăng ký phải sau ngày mở đăng ký'**
   String get tournamentManagementRegistrationEndAfterStart;
 
   /// No description provided for @tournamentManagementRegistrationEnds.
   ///
   /// In vi, this message translates to:
-  /// **'Kết thúc đăng ký'**
+  /// **'Hạn chót đăng ký'**
   String get tournamentManagementRegistrationEnds;
 
   /// No description provided for @tournamentManagementRegistrationLocked.
@@ -25279,7 +25279,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRegistrationStarts.
   ///
   /// In vi, this message translates to:
-  /// **'Bắt đầu đăng ký'**
+  /// **'Mở đăng ký'**
   String get tournamentManagementRegistrationStarts;
 
   /// No description provided for @tournamentManagementRegistrationWindow.
@@ -25287,6 +25287,84 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thời gian đăng ký'**
   String get tournamentManagementRegistrationWindow;
+
+  /// No description provided for @tournamentManagementRegistrationMode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ nhận đăng ký'**
+  String get tournamentManagementRegistrationMode;
+
+  /// No description provided for @tournamentManagementRegistrationModeOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự do'**
+  String get tournamentManagementRegistrationModeOpen;
+
+  /// No description provided for @tournamentManagementRegistrationModeApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xét duyệt'**
+  String get tournamentManagementRegistrationModeApproval;
+
+  /// No description provided for @tournamentManagementRegistrationModeInviteOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã mời'**
+  String get tournamentManagementRegistrationModeInviteOnly;
+
+  /// No description provided for @tournamentManagementRegistrationDeadlineInFuture.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạn chót đăng ký phải sau thời điểm hiện tại'**
+  String get tournamentManagementRegistrationDeadlineInFuture;
+
+  /// No description provided for @tournamentManagementRegistrationClosedHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký đã đóng. Bạn có thể gia hạn hạn đóng tại đây, nhưng thao tác lưu không mở lại cổng đăng ký. Hãy dùng thao tác mở lại riêng khi đã sẵn sàng.'**
+  String get tournamentManagementRegistrationClosedHint;
+
+  /// No description provided for @tournamentManagementRegistrationLockedHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký đã khóa. Cần mở lại đăng ký trước khi chỉnh sửa.'**
+  String get tournamentManagementRegistrationLockedHint;
+
+  /// No description provided for @tournamentManagementClosedDeadlineExtensionOnly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Với giải đã đóng, chỉ có thể gia hạn vượt qua hạn hiện tại.'**
+  String get tournamentManagementClosedDeadlineExtensionOnly;
+
+  /// No description provided for @tournamentManagementPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép đôi'**
+  String get tournamentManagementPairing;
+
+  /// No description provided for @tournamentManagementPairingOrganizer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổ chức ghép'**
+  String get tournamentManagementPairingOrganizer;
+
+  /// No description provided for @tournamentManagementPairingSelf.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV tự ghép'**
+  String get tournamentManagementPairingSelf;
+
+  /// No description provided for @tournamentManagementCopy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép'**
+  String get tournamentManagementCopy;
+
+  /// No description provided for @tournamentManagementInviteCodeCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép mã mời'**
+  String get tournamentManagementInviteCodeCopied;
 
   /// No description provided for @tournamentManagementReject.
   ///
@@ -25687,13 +25765,13 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementStartAfterRegistration.
   ///
   /// In vi, this message translates to:
-  /// **'Giải đấu phải bắt đầu vào hoặc sau khi kết thúc đăng ký.'**
+  /// **'Ngày khai mạc phải sau hạn chót đăng ký'**
   String get tournamentManagementStartAfterRegistration;
 
   /// No description provided for @tournamentManagementStartDate.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày bắt đầu'**
+  /// **'Ngày khai mạc'**
   String get tournamentManagementStartDate;
 
   /// No description provided for @tournamentManagementStatusCancelled.
@@ -25821,12 +25899,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thêm địa điểm và sân cho giải đấu này.'**
   String get tournamentManagementVenuesEmptyDescription;
-
-  /// No description provided for @tournamentManagementVisibility.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chế độ hiển thị'**
-  String get tournamentManagementVisibility;
 
   /// No description provided for @tournamentManagementYes.
   ///
@@ -27082,22 +27154,22 @@ abstract class AppLocalizations {
   /// **'Tên, mô tả, logo và ảnh bìa của giải đấu.'**
   String get manageSettingsInfoSectionDescription;
 
-  /// No description provided for @manageSettingsScheduleSection.
+  /// No description provided for @manageSettingsVenueSection.
   ///
   /// In vi, this message translates to:
-  /// **'Lịch & địa điểm'**
-  String get manageSettingsScheduleSection;
+  /// **'Địa điểm'**
+  String get manageSettingsVenueSection;
 
-  /// No description provided for @manageSettingsScheduleSectionDescription.
+  /// No description provided for @manageSettingsVenueSectionDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày bắt đầu, kết thúc và địa điểm, sân thi đấu.'**
-  String get manageSettingsScheduleSectionDescription;
+  /// **'Địa điểm và sân thi đấu của giải.'**
+  String get manageSettingsVenueSectionDescription;
 
   /// No description provided for @manageSettingsRegistrationSectionDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Chế độ hiển thị, hạn đăng ký và mã mời.'**
+  /// **'Chế độ đăng ký, thời gian giải, ghép đôi và mã mời.'**
   String get manageSettingsRegistrationSectionDescription;
 
   /// No description provided for @manageSettingsCompetitionSection.

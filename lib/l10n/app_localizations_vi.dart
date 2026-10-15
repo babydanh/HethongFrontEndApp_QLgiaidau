@@ -13457,10 +13457,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementEndAfterStart =>
-      'Ngày kết thúc giải đấu phải sau ngày bắt đầu.';
+      'Ngày bế mạc phải sau ngày khai mạc';
 
   @override
-  String get tournamentManagementEndDate => 'Ngày kết thúc';
+  String get tournamentManagementEndDate => 'Ngày bế mạc';
 
   @override
   String get tournamentManagementEntryFee => 'Lệ phí tham gia';
@@ -13888,10 +13888,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementRegistrationEndAfterStart =>
-      'Thời gian kết thúc đăng ký phải sau thời gian bắt đầu.';
+      'Hạn chót đăng ký phải sau ngày mở đăng ký';
 
   @override
-  String get tournamentManagementRegistrationEnds => 'Kết thúc đăng ký';
+  String get tournamentManagementRegistrationEnds => 'Hạn chót đăng ký';
 
   @override
   String get tournamentManagementRegistrationLocked => 'Đã khóa đăng ký';
@@ -13903,10 +13903,53 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRegistrationRejected => 'Đã từ chối đăng ký.';
 
   @override
-  String get tournamentManagementRegistrationStarts => 'Bắt đầu đăng ký';
+  String get tournamentManagementRegistrationStarts => 'Mở đăng ký';
 
   @override
   String get tournamentManagementRegistrationWindow => 'Thời gian đăng ký';
+
+  @override
+  String get tournamentManagementRegistrationMode => 'Chế độ nhận đăng ký';
+
+  @override
+  String get tournamentManagementRegistrationModeOpen => 'Tự do';
+
+  @override
+  String get tournamentManagementRegistrationModeApproval => 'Xét duyệt';
+
+  @override
+  String get tournamentManagementRegistrationModeInviteOnly => 'Mã mời';
+
+  @override
+  String get tournamentManagementRegistrationDeadlineInFuture =>
+      'Hạn chót đăng ký phải sau thời điểm hiện tại';
+
+  @override
+  String get tournamentManagementRegistrationClosedHint =>
+      'Đăng ký đã đóng. Bạn có thể gia hạn hạn đóng tại đây, nhưng thao tác lưu không mở lại cổng đăng ký. Hãy dùng thao tác mở lại riêng khi đã sẵn sàng.';
+
+  @override
+  String get tournamentManagementRegistrationLockedHint =>
+      'Đăng ký đã khóa. Cần mở lại đăng ký trước khi chỉnh sửa.';
+
+  @override
+  String get tournamentManagementClosedDeadlineExtensionOnly =>
+      'Với giải đã đóng, chỉ có thể gia hạn vượt qua hạn hiện tại.';
+
+  @override
+  String get tournamentManagementPairing => 'Ghép đôi';
+
+  @override
+  String get tournamentManagementPairingOrganizer => 'Tổ chức ghép';
+
+  @override
+  String get tournamentManagementPairingSelf => 'VĐV tự ghép';
+
+  @override
+  String get tournamentManagementCopy => 'Sao chép';
+
+  @override
+  String get tournamentManagementInviteCodeCopied => 'Đã sao chép mã mời';
 
   @override
   String get tournamentManagementReject => 'Từ chối';
@@ -14127,10 +14170,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementStartAfterRegistration =>
-      'Giải đấu phải bắt đầu vào hoặc sau khi kết thúc đăng ký.';
+      'Ngày khai mạc phải sau hạn chót đăng ký';
 
   @override
-  String get tournamentManagementStartDate => 'Ngày bắt đầu';
+  String get tournamentManagementStartDate => 'Ngày khai mạc';
 
   @override
   String get tournamentManagementStatusCancelled => 'Đã hủy';
@@ -14198,9 +14241,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementVenuesEmptyDescription =>
       'Thêm địa điểm và sân cho giải đấu này.';
-
-  @override
-  String get tournamentManagementVisibility => 'Chế độ hiển thị';
 
   @override
   String get tournamentManagementYes => 'Có';
@@ -14898,15 +14938,15 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tên, mô tả, logo và ảnh bìa của giải đấu.';
 
   @override
-  String get manageSettingsScheduleSection => 'Lịch & địa điểm';
+  String get manageSettingsVenueSection => 'Địa điểm';
 
   @override
-  String get manageSettingsScheduleSectionDescription =>
-      'Ngày bắt đầu, kết thúc và địa điểm, sân thi đấu.';
+  String get manageSettingsVenueSectionDescription =>
+      'Địa điểm và sân thi đấu của giải.';
 
   @override
   String get manageSettingsRegistrationSectionDescription =>
-      'Chế độ hiển thị, hạn đăng ký và mã mời.';
+      'Chế độ đăng ký, thời gian giải, ghép đôi và mã mời.';
 
   @override
   String get manageSettingsCompetitionSection => 'Thi đấu';

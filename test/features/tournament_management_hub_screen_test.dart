@@ -264,8 +264,11 @@ testWidgets('overview tournament title opens the information editor', (
 
     final targets = <(String, String Function(AppLocalizations))>[
       ('tournament-overview-banner-edit', (l) => l.manageSettingsInfoSection),
-      ('tournament-overview-dates-edit', (l) => l.manageSettingsScheduleSection),
-      ('tournament-overview-location-edit', (l) => l.manageSettingsScheduleSection),
+      (
+        'tournament-overview-dates-edit',
+        (l) => l.tournamentManagementRegistration,
+      ),
+      ('tournament-overview-location-edit', (l) => l.manageSettingsVenueSection),
       ('tournament-overview-entry-fee-edit', (l) => l.tournamentManagementFinance),
     ];
 
@@ -652,7 +655,7 @@ testWidgets('overview tournament title opens the information editor', (
 
     expect(find.text(l10n.tournamentManagementSetupGroup), findsOneWidget);
     expect(find.text(l10n.manageSettingsInfoSection), findsOneWidget);
-    expect(find.text(l10n.manageSettingsScheduleSection), findsOneWidget);
+    expect(find.text(l10n.manageSettingsVenueSection), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegistration), findsOneWidget);
     expect(find.text(l10n.manageSettingsCompetitionSection), findsOneWidget);
 
@@ -769,11 +772,11 @@ testWidgets('overview tournament title opens the information editor', (
     expect(find.text(l10n.tournamentManagementDescription), findsOneWidget);
     expect(find.text(l10n.tournamentManagementBrandAssets), findsOneWidget);
     expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
-    expect(find.text(l10n.tournamentManagementVisibility), findsNothing);
+    expect(find.text(l10n.tournamentManagementPublic), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('schedule editor pairs dates with venues, without registration fields', (
+  testWidgets('venue editor shows venues only, without dates or registration fields', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 1200);
@@ -789,14 +792,14 @@ testWidgets('overview tournament title opens the information editor', (
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
-    await tester.tap(find.text(l10n.manageSettingsScheduleSection).first);
+    await tester.tap(find.text(l10n.manageSettingsVenueSection).first);
     await tester.pumpAndSettle();
 
-    expect(find.text(l10n.tournamentManagementStartDate), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementEndDate), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementChooseDate), findsNWidgets(2));
     expect(find.text(l10n.tournamentManagementVenues), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementVisibility), findsNothing);
+    expect(find.text(l10n.tournamentManagementStartDate), findsNothing);
+    expect(find.text(l10n.tournamentManagementEndDate), findsNothing);
+    expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
+    expect(find.text(l10n.tournamentManagementPublic), findsNothing);
     expect(find.text(l10n.tournamentManagementRegistrationStarts), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -926,8 +929,8 @@ testWidgets('overview tournament title opens the information editor', (
     await tester.tap(find.text(l10n.tournamentManagementRegistration).first);
     await tester.pumpAndSettle();
 
-    expect(find.text(l10n.manageSettingsInviteCode), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementVisibility), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementRegistrationMode), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementPublic), findsOneWidget);
     expect(find.byType(VerticalDivider), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -950,7 +953,7 @@ testWidgets('overview tournament title opens the information editor', (
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('registration editor holds visibility, deadlines and invite code only', (
+  testWidgets('registration editor holds visibility, mode, dates and deadlines', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 1200);
@@ -969,13 +972,14 @@ testWidgets('overview tournament title opens the information editor', (
     await tester.tap(find.text(l10n.tournamentManagementRegistration).first);
     await tester.pumpAndSettle();
 
-    expect(find.text(l10n.tournamentManagementVisibility), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementPublic), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementRegistrationMode), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegistrationStarts), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegistrationEnds), findsOneWidget);
-    expect(find.text(l10n.manageSettingsInviteCode), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementRegenerateInvite), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementStartDate), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementEndDate), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementRegenerateInvite), findsNothing);
     expect(find.text(l10n.tournamentManagementName), findsNothing);
-    expect(find.text(l10n.tournamentManagementStartDate), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

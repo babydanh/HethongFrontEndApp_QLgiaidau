@@ -307,8 +307,8 @@ class _OverviewTabState extends State<OverviewTab> {
                                 key: const ValueKey(
                                   'tournament-overview-dates-edit',
                                 ),
-                                onTap: widget.onEditSchedule,
-                                sectionLabel: l10n.manageSettingsScheduleSection,
+                                onTap: widget.onEditRegistration,
+                                sectionLabel: l10n.tournamentManagementKpiDates,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
@@ -325,7 +325,9 @@ class _OverviewTabState extends State<OverviewTab> {
                                             size: 18,
                                             color: AppTheme.primary,
                                           ),
-                                          _editIndicator(widget.onEditSchedule),
+                                          _editIndicator(
+                                            widget.onEditRegistration,
+                                          ),
                                         ],
                                       ),
                                       const SizedBox(height: 8),
@@ -779,8 +781,8 @@ class _OverviewTabState extends State<OverviewTab> {
                           key: const ValueKey(
                             'tournament-overview-timeline-edit',
                           ),
-                          onTap: widget.onEditSchedule,
-                          sectionLabel: l10n.manageSettingsScheduleSection,
+                          onTap: widget.onEditRegistration,
+                          sectionLabel: l10n.tournamentManagementRegistration,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -791,7 +793,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                       'LỘ TRÌNH GIẢI ĐẤU',
                                     ),
                                   ),
-                                  _editIndicator(widget.onEditSchedule),
+                                  _editIndicator(widget.onEditRegistration),
                                 ],
                               ),
                               const SizedBox(height: 8),
