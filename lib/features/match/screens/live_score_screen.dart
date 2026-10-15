@@ -691,7 +691,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           onPressed: () => context.pop(),
         ),
         actions: [
-          if (!widget.isViewer && canOpenScoring)
+          if (canOpenScoring)
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: match.isScheduled
@@ -2180,20 +2180,27 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           onTap: () => _toggleScoreboardVisibility(match),
                         ),
                         const SizedBox(width: 8),
-                        LiveOverlayToggleChips(
-                          h2hVisible: match.h2hOverlayVisible,
-                          bracketVisible: match.bracketOverlayVisible,
-                          bracketAvailable: effectiveId.isNotEmpty,
-                          matchEnded: match.isCompleted,
-                          pendingKind: _pendingOverlayKind,
-                          onToggle: (kind, visible) => _setOverlayVisibility(
-                            match,
-                            kind,
-                            visible: visible,
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: LiveOverlayToggleChips(
+                                h2hVisible: match.h2hOverlayVisible,
+                                bracketVisible: match.bracketOverlayVisible,
+                                bracketAvailable: effectiveId.isNotEmpty,
+                                matchEnded: match.isCompleted,
+                                pendingKind: _pendingOverlayKind,
+                                onToggle: (kind, visible) => _setOverlayVisibility(
+                                  match,
+                                  kind,
+                                  visible: visible,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ],
-                      const Spacer(),
+                      ] else const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 4,
@@ -2607,25 +2614,34 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// trắng]. Không thu nhỏ so với web để hai bên nhìn giống nhau.
   Widget _liveScoreOverlay(dynamic match, dynamic score) {
     final finished = match.isCompleted == true;
+    // Positioned chỉ có left/top nên con nhận ràng buộc rộng vô hạn, còn
+    // Column stretch cần rộng hữu hạn: IntrinsicWidth chốt theo hàng rộng
+    // nhất; IntrinsicHeight chốt chiều cao từng hàng để ô điểm kéo đều.
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
-      child: Container(
-        color: Colors.black.withValues(alpha: 0.75),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _liveScoreRow(
-              name: match.team1Name as String,
-              score: score.score1 as int,
-              finished: finished,
-            ),
-            _liveScoreRow(
-              name: match.team2Name as String,
-              score: score.score2 as int,
-              finished: finished,
-            ),
-          ],
+      child: IntrinsicWidth(
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.75),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              IntrinsicHeight(
+                child: _liveScoreRow(
+                  name: match.team1Name as String,
+                  score: score.score1 as int,
+                  finished: finished,
+                ),
+              ),
+              IntrinsicHeight(
+                child: _liveScoreRow(
+                  name: match.team2Name as String,
+                  score: score.score2 as int,
+                  finished: finished,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2640,8 +2656,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 132),
+        SizedBox(
+          width: 132,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Align(
