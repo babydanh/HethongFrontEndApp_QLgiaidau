@@ -241,5 +241,20 @@ void main() {
       final t = Tournament.fromJson(json, '1');
       expect(t.visibility, 'PUBLIC');
     });
+
+    test('collects linked venue ids from venue and tournamentConfig', () {
+      final json = {
+        'name': 'Test',
+        'venue': {'id': 'venue-main', 'name': 'Nhà thi đấu'},
+        'tournamentConfig': {
+          'venueIds': ['venue-extra', 'venue-main', '', 42],
+        },
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      };
+      final t = Tournament.fromJson(json, '1');
+      expect(t.venueIds, ['venue-main', 'venue-extra']);
+      expect(Tournament.fromJson(t.toJson(), '1').venueIds, t.venueIds);
+    });
   });
 }

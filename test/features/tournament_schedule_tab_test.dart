@@ -23,6 +23,7 @@ class _UnauthenticatedNotifier extends AuthNotifier {
 Tournament _fixtureTournament({
   int? minutesPerSet,
   bool withSponsor = false,
+  bool withVenue = false,
 }) => Tournament.fromJson({
   'name': 'Schedule tab smoke fixture',
   'sport': 'pickleball',
@@ -32,7 +33,11 @@ Tournament _fixtureTournament({
   'visibility': 'PUBLIC',
   'creatorId': 'fixture-owner',
   'maxTeams': 8,
-  'venue': {'name': 'Sporto Arena', 'locationAddress': 'District 1'},
+  'venue': {
+    if (withVenue) 'id': 'venue-1',
+    'name': 'Sporto Arena',
+    'locationAddress': 'District 1',
+  },
   'tournamentConfig': {
     'scheduleDate': '2026-08-12',
     'operatingStart': '08:00',
@@ -86,6 +91,7 @@ Future<void> _pumpTournamentDetail(
   Stream<List<MatchModel>>? matchStream,
   int? minutesPerSet,
   bool withSponsor = false,
+  List<String>? venueCourts,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -94,7 +100,12 @@ Future<void> _pumpTournamentDetail(
           (ref, params) async => _fixtureTournament(
             minutesPerSet: minutesPerSet,
             withSponsor: withSponsor,
+            withVenue: venueCourts != null,
           ),
+        ),
+        publicVenueCourtNamesProvider.overrideWith(
+          (ref, venueId) async =>
+              venueId == 'venue-1' ? venueCourts ?? const [] : const [],
         ),
         tournamentDivisionsProvider.overrideWith(
           (ref, tournamentId) async => const <Map<String, dynamic>>[],
@@ -355,7 +366,41 @@ void main() {
     expect(find.textContaining('Player 2'), findsNothing);
   });
 
-  testWidgets('schedule is empty when every match is still unplaced', (
+  testWidgets('unplaced-only schedule still shows the venue court grid', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('en'),
+      venueCourts: const ['Sân 2', 'Sân 1'],
+      matches: [
+        _scheduleMatch(1),
+        _scheduleMatch(2, scheduledTime: DateTime(2026, 8, 12, 10)),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
+
+    final frame = find.byKey(const ValueKey('schedule-frame'));
+    expect(frame, findsOneWidget);
+    final grid = tester.widget<ScheduleGrid>(
+      find.descendant(of: frame, matching: find.byType(ScheduleGrid)),
+    );
+    expect(grid.courts, ['Sân 1', 'Sân 2']);
+    expect(grid.matches, isEmpty);
+    expect(find.text('No matches yet'), findsNothing);
+    expect(find.textContaining('Player 1'), findsNothing);
+    expect(find.textContaining('Player 2'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('schedule without any known court shows the empty state', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -369,7 +414,7 @@ void main() {
       tester,
       locale: const Locale('en'),
       matches: [
-        _scheduleMatch(1, courtId: 'court-1', court: 'Court 1'),
+        _scheduleMatch(1),
         _scheduleMatch(2, scheduledTime: DateTime(2026, 8, 12, 10)),
       ],
     );
@@ -379,7 +424,6 @@ void main() {
     expect(find.text('No matches yet'), findsOneWidget);
     expect(find.text('No matches match the selected filter'), findsNothing);
     expect(find.textContaining('Player 1'), findsNothing);
-    expect(find.textContaining('Player 2'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

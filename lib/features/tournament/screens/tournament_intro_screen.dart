@@ -855,6 +855,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           tournamentId: widget.tournamentId,
           isLite: tournament.isLite,
           scheduleSettings: tournament.scheduleSettings,
+          venueIds: tournament.venueIds,
           tournamentVenueName: tournament.venueName,
           tournamentLocationAddress: tournament.locationAddress,
           divisionNameById: {

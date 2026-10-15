@@ -168,6 +168,23 @@ final tournamentDivisionsProvider =
       return [];
     });
 
+/// Tên sân của một địa điểm, đọc từ `GET /venues/:id` (endpoint công khai) để
+/// lưới lịch có cột sân ngay cả khi chưa trận nào được xếp vào sân.
+final publicVenueCourtNamesProvider = FutureProvider.autoDispose
+    .family<List<String>, String>((ref, venueId) async {
+      final dio = ref.watch(dioClientProvider).dio;
+      final response = await dio.get('/venues/${Uri.encodeComponent(venueId)}');
+      final body = response.data;
+      final venue = body is Map && body['data'] is Map ? body['data'] : body;
+      final courts = venue is Map ? venue['courts'] : null;
+      if (courts is! List) return const [];
+      return [
+        for (final court in courts)
+          if (court is Map)
+            ?(court['courtName'] ?? court['name'])?.toString().trim(),
+      ].where((name) => name.isNotEmpty).toList();
+    });
+
 final matchesWithDivisionProvider =
     StreamProvider.family<
       List<MatchModel>,

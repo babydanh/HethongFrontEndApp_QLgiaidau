@@ -13,6 +13,9 @@ class MatchesTab extends ConsumerStatefulWidget {
   final String tournamentId;
   final bool isLite;
   final Map<String, dynamic> scheduleSettings;
+
+  /// Địa điểm của giải; sân của chúng là cột lưới kể cả khi chưa có trận xếp.
+  final List<String> venueIds;
   final String? tournamentVenueName;
   final String? tournamentLocationAddress;
   final Map<String, String> divisionNameById;
@@ -22,6 +25,7 @@ class MatchesTab extends ConsumerStatefulWidget {
     required this.tournamentId,
     this.isLite = false,
     this.scheduleSettings = const {},
+    this.venueIds = const [],
     this.tournamentVenueName,
     this.tournamentLocationAddress,
     this.divisionNameById = const {},
@@ -54,6 +58,12 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           ? liteBracketMatchesProvider(widget.tournamentId)
           : matchesProvider(widget.tournamentId),
     );
+    // Sân của các địa điểm gắn với giải; lỗi mạng/khách chưa đăng nhập chỉ
+    // làm thiếu cột cấu hình, cột từ trận đã xếp vẫn còn.
+    final venueCourtNames = [
+      for (final venueId in widget.venueIds)
+        ...?ref.watch(publicVenueCourtNamesProvider(venueId)).value,
+    ];
 
     return matchesAsync.when(
       data: (allMatches) {
@@ -120,16 +130,14 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
             ),
           );
         final hours = _configuredHours(l10n);
-        // Trận chưa có giờ hoặc sân không hiện trên lịch công khai; lịch chỉ
-        // có trận chưa xếp thì để trống.
-        final hasVisibleMatches = courtGroups.isNotEmpty;
 
         // ── Dữ liệu cho lưới ──
-        // Cột sân gom từ TOÀN BỘ trận của division, KHÔNG lọc theo ngày: nếu lấy
-        // từ courtGroups (đã lọc ngày) thì sân hôm nay không có trận sẽ mất
-        // cột, và số cột nhảy theo từng ngày. Lọc ngày chỉ quyết định trận nào
-        // hiện trong ô, không quyết định có bao nhiêu cột.
+        // Cột sân = sân của địa điểm giải + sân từ TOÀN BỘ trận, KHÔNG lọc theo
+        // ngày: sân không có trận hôm nay vẫn giữ cột, số cột không nhảy theo
+        // ngày. Trận chưa xếp (thiếu giờ/sân) không bao giờ vẽ vào ô; lịch chỉ
+        // có trận chưa xếp vẫn hiện lưới trống nếu biết sân.
         final gridCourts = <String>{
+          ...venueCourtNames,
           for (final match in allMatches) ?_courtDisplayName(match),
         }.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         final gridMatches = courtGroups
@@ -191,7 +199,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                   ],
                 ),
               ),
-            if (!hasVisibleMatches)
+            if (gridCourts.isEmpty)
               _buildEmptyState(
                 l10n,
                 colors,

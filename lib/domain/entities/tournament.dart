@@ -85,6 +85,10 @@ class Tournament {
   final List<String> registrationFormDivisionIds;
   final List<TournamentSponsor> sponsors;
 
+  /// Địa điểm gắn với giải: địa điểm chính (`venue.id`) rồi tới các địa điểm
+  /// thêm trong `tournamentConfig.venueIds`. Dùng để lấy cột sân cho lịch.
+  final List<String> venueIds;
+
   const Tournament({
     required this.id,
     required this.name,
@@ -144,6 +148,7 @@ class Tournament {
     this.registrationFields = const [],
     this.registrationFormDivisionIds = const [],
     this.sponsors = const [],
+    this.venueIds = const [],
   });
 
   /// Club Super Lite is the intentionally minimal club flow. Configured
@@ -217,6 +222,15 @@ class Tournament {
       ])
         if (config[key] != null) key: config[key],
     };
+    final venueIds = <String>{
+      for (final raw in [
+        if (json['venue'] is Map) (json['venue'] as Map)['id'],
+        json['venueId'],
+        if (json['venueIds'] is List) ...json['venueIds'] as List,
+        if (config['venueIds'] is List) ...config['venueIds'] as List,
+      ])
+        if (raw is String && raw.trim().isNotEmpty) raw.trim(),
+    }.toList();
 
     String bracketTypeVal =
         (config['bracketType']?.toString() ??
@@ -476,6 +490,7 @@ class Tournament {
       registrationFields: registrationFields,
       registrationFormDivisionIds: registrationFormDivisionIds,
       sponsors: parsedSponsors,
+      venueIds: venueIds,
     );
   }
 
@@ -541,6 +556,7 @@ class Tournament {
       if (prizeDescription != null) 'prizeDescription': prizeDescription,
       if (contactInfo != null) 'contactInfo': contactInfo,
       'divisions': divisions.map((e) => e.toJson()).toList(),
+      if (venueIds.isNotEmpty) 'venueIds': venueIds,
       if (sponsors.isNotEmpty)
         'sponsors': sponsors
             .map(
@@ -624,6 +640,7 @@ class Tournament {
     int? minTeamSize,
     int? maxReserve,
     List<TournamentSponsor>? sponsors,
+    List<String>? venueIds,
   }) {
     return Tournament(
       id: id ?? this.id,
@@ -683,6 +700,7 @@ class Tournament {
       isSuperLite: isSuperLite ?? this.isSuperLite,
       isRegistrationLocked: isRegistrationLocked ?? this.isRegistrationLocked,
       sponsors: sponsors ?? this.sponsors,
+      venueIds: venueIds ?? this.venueIds,
     );
   }
 
