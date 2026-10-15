@@ -1256,9 +1256,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewBracket => 'View Bracket';
 
   @override
-  String get viewBracketSubtitle => 'Match schedule & results';
-
-  @override
   String get endTournament => 'End Tournament';
 
   @override
@@ -7124,6 +7121,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveDiscussionTab => 'Discussion';
 
   @override
+  String get liveNoSignalLabel => 'No live signal yet';
+
+  @override
+  String get schedulePrint => 'Print schedule';
+
+  @override
+  String get liveScoreboardToggle => 'Scoreboard';
+
+  @override
+  String get liveOverlayChipH2h => 'H2H';
+
+  @override
+  String get liveOverlayChipBracket => 'Bracket';
+
+  @override
+  String get liveOverlaySaveError => 'Could not save. Try again.';
+
+  @override
+  String get liveOverlayMatchEnded => 'Match ended';
+
+  @override
+  String get liveH2hTitle => 'HEAD TO HEAD';
+
+  @override
+  String get liveH2hTournamentLabel => 'TOURNAMENT:';
+
+  @override
+  String get liveH2hMatchIntro => 'MATCH INTRODUCTION';
+
+  @override
+  String get liveH2hGoodLuck => 'GOOD LUCK TO BOTH TEAMS!';
+
+  @override
+  String get liveBracketCurrentMatch => 'LIVE NOW';
+
+  @override
+  String get liveBracketEmpty => 'No bracket data for this division yet';
+
+  @override
+  String get liveBracketTitle => 'TOURNAMENT BRACKET';
+
+  @override
+  String get liveBracketTournamentFallback => 'SPORTO TOURNAMENT';
+
+  @override
+  String get liveBracketWin => 'WIN';
+
+  @override
+  String get liveScoreboardToggleError =>
+      'Could not change scoreboard visibility';
+
+  @override
   String get liveSinglesElo => 'Singles ELO';
 
   @override
@@ -12165,6 +12214,334 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsNoParticipants => 'No participants in this division yet.';
 
   @override
+  String get opsAddAthlete => 'Add athlete';
+
+  @override
+  String get rosterImportTitle => 'Import athletes from Excel';
+
+  @override
+  String get rosterImportOpen => 'Import Excel';
+
+  @override
+  String get rosterImportClose => 'Close';
+
+  @override
+  String get rosterImportPickFile => 'Choose Excel file';
+
+  @override
+  String get rosterImportReading => 'Reading file...';
+
+  @override
+  String get rosterImportHint =>
+      'Choose an .xlsx file in the template format to preview the data before importing.';
+
+  @override
+  String get rosterImportReadFailed =>
+      'Could not read the Excel file. Please check the file.';
+
+  @override
+  String rosterImportNoSheetHeader(String sheet) {
+    return 'Skipped sheet \"$sheet\": no header row found.';
+  }
+
+  @override
+  String get rosterImportNoRows => 'The file has no athlete rows.';
+
+  @override
+  String get rosterImportAutoApprove =>
+      'Auto-approve athletes after import (when the tournament allows)';
+
+  @override
+  String get rosterImportChecking => 'Checking on the server...';
+
+  @override
+  String get rosterImportRetry => 'Retry';
+
+  @override
+  String get rosterImportPreviewFailed =>
+      'Could not check the data. Please try again.';
+
+  @override
+  String get rosterImportNoEligibleRows => 'No rows are eligible to import.';
+
+  @override
+  String rosterImportTooManyRows(int total, int max) {
+    return 'The file has $total rows, above the limit of $max per import.';
+  }
+
+  @override
+  String rosterImportDivisionUnmatched(String name) {
+    return 'Division \"$name\" does not match any division of this tournament.';
+  }
+
+  @override
+  String rosterImportCapacityShortfall(String name) {
+    return 'Division \"$name\" does not have enough slots for all rows.';
+  }
+
+  @override
+  String rosterImportCapacityInfo(int requested, int remaining) {
+    return 'Needs $requested slots, $remaining remaining.';
+  }
+
+  @override
+  String rosterImportSummary(int eligible, int total) {
+    return '$eligible/$total rows eligible';
+  }
+
+  @override
+  String rosterImportCommit(int count) {
+    return 'Import $count athletes';
+  }
+
+  @override
+  String get rosterImportCommitting => 'Importing...';
+
+  @override
+  String get rosterImportCommitFailed =>
+      'Import failed. Your selection is kept so you can retry.';
+
+  @override
+  String rosterImportImported(int count) {
+    return 'Imported $count athletes.';
+  }
+
+  @override
+  String get rosterImportReplayed =>
+      'This import was already recorded earlier.';
+
+  @override
+  String get rosterImportWillImport => 'Will import';
+
+  @override
+  String get rosterImportWillSkip => 'Skipped';
+
+  @override
+  String rosterImportRowSource(int row, String sheet) {
+    return 'Row $row · $sheet';
+  }
+
+  @override
+  String get rosterImportCustomResponseInvalid => 'Invalid note';
+
+  @override
+  String get rosterImportNoAccountMatch => 'No account matches the email';
+
+  @override
+  String rosterImportAccountLabel(int player) {
+    return 'Athlete $player';
+  }
+
+  @override
+  String get rosterImportChooseAccount => 'Choose an account...';
+
+  @override
+  String get rosterImportLeaveUnlinked => 'Leave unlinked';
+
+  @override
+  String rosterImportCandidateLabel(String name, String email) {
+    return '$name ($email)';
+  }
+
+  @override
+  String get rosterImportStatusFound => 'Account found';
+
+  @override
+  String get rosterImportStatusNotFound => 'No account found';
+
+  @override
+  String get rosterImportStatusInvalidEmail => 'Invalid email';
+
+  @override
+  String get rosterImportStatusMissingEmail => 'Missing email';
+
+  @override
+  String get rosterImportStatusMissingName => 'Missing name';
+
+  @override
+  String get rosterImportStatusDuplicateInFile => 'Duplicate in file';
+
+  @override
+  String get rosterImportStatusDuplicateInTournament =>
+      'Already registered in this tournament';
+
+  @override
+  String get rosterImportStatusPlayer2Required => 'Athlete 2 details required';
+
+  @override
+  String get rosterImportStatusPlayer2NotAllowed =>
+      'Singles division does not take athlete 2';
+
+  @override
+  String get rosterImportStatusDivisionUnknown => 'Division not recognized';
+
+  @override
+  String get rosterImportStatusUnknown => 'Needs review';
+
+  @override
+  String get rosterImportTemplateFailed =>
+      'Could not create the template. Please try again.';
+
+  @override
+  String get rosterImportDownloadTemplate => 'Download template';
+
+  @override
+  String get opsAddAthleteEmail => 'Email';
+
+  @override
+  String get opsAddAthleteSearchHint =>
+      'Search by name (at least 2 characters) or type a full email.';
+
+  @override
+  String get opsAddAthleteSearchFailed => 'Could not search accounts.';
+
+  @override
+  String opsAddAthleteSelectedCount(int count) {
+    return 'Selected: $count';
+  }
+
+  @override
+  String get opsAddAthleteSelectionLimit => 'You can select up to 25 athletes.';
+
+  @override
+  String opsAddAthleteAddSelectedCount(int count) {
+    return 'Add $count athletes';
+  }
+
+  @override
+  String opsAddAthleteMultipleSuccess(int count) {
+    return 'Added $count athletes.';
+  }
+
+  @override
+  String opsAddAthletePartialSummary(
+    int addedCount,
+    int failedCount,
+    int unattemptedCount,
+  ) {
+    return 'Stopped at the first error — added: $addedCount; failed: $failedCount; not attempted: $unattemptedCount. Check the roster before retrying.';
+  }
+
+  @override
+  String get opsAddAthletePairToggle => 'Pair up';
+
+  @override
+  String get opsAddAthletePairRequirement =>
+      'Select 2–25 athletes from the same source (friends, club, or email) to pair them.';
+
+  @override
+  String get opsAddAthletePairSubmit => 'Pair up';
+
+  @override
+  String opsAddAthletePairSuccess(int pairCount, int pendingCount) {
+    return 'Paired $pairCount teams. $pendingCount athletes are waiting for a partner.';
+  }
+
+  @override
+  String opsAddAthletePairGroup(String n) {
+    return '$n';
+  }
+
+  @override
+  String get opsAddAthletePairWaiting => 'Waiting';
+
+  @override
+  String get opsAddAthleteAdded => 'Added';
+
+  @override
+  String get opsAddAthleteGuestEmail => 'Contact email';
+
+  @override
+  String get opsAddAthleteGuestEmailHint =>
+      'Email, if provided, is saved as tournament contact.';
+
+  @override
+  String get opsAddAthleteTitle => 'Add athletes to the roster';
+
+  @override
+  String get opsAddAthleteDescription =>
+      'Search friends and club members, or enter a name for an individual or pair division.';
+
+  @override
+  String get opsAddAthleteAccounts => 'Friends & clubs';
+
+  @override
+  String get opsAddAthleteDirect => 'Enter a name';
+
+  @override
+  String get opsAddAthleteSearch => 'Search athletes';
+
+  @override
+  String get opsAddAthleteTeam => 'Existing team';
+
+  @override
+  String get opsAddAthleteSelectTeam => 'Select a team';
+
+  @override
+  String get opsAddAthleteTeamRequired =>
+      'Choose an existing team before searching.';
+
+  @override
+  String get opsAddAthleteNoTeams =>
+      'No eligible football teams are available in this division.';
+
+  @override
+  String get opsAddAthleteFriends => 'Friend';
+
+  @override
+  String get opsAddAthleteClub => 'Club';
+
+  @override
+  String get opsAddAthleteLoading => 'Loading athletes…';
+
+  @override
+  String get opsAddAthleteEmpty => 'No athletes match this search.';
+
+  @override
+  String get opsAddAthleteNoCandidates =>
+      'No friends or club members are available to add.';
+
+  @override
+  String get opsAddAthleteName => 'Athlete name';
+
+  @override
+  String get opsAddAthleteNameRequired => 'Enter an athlete name.';
+
+  @override
+  String get opsAddAthleteNameTooLong =>
+      'Name must be 255 characters or fewer.';
+
+  @override
+  String get opsAddAthleteAddAction => 'Add';
+
+  @override
+  String get opsAddAthleteMain => 'Main';
+
+  @override
+  String get opsAddAthleteReserve => 'Reserve';
+
+  @override
+  String get opsAddAthleteSuccess => 'Athlete added.';
+
+  @override
+  String get opsAddAthleteFailed => 'Could not add the athlete.';
+
+  @override
+  String get opsAddAthleteApprovalFailed =>
+      'Athlete added, but automatic approval failed. Review the roster before changing the status.';
+
+  @override
+  String get opsAddAthleteOutcomeUnknown =>
+      'The result is uncertain. The roster was refreshed; check for the athlete before retrying.';
+
+  @override
+  String get opsAddAthleteRefreshFailed =>
+      'Roster refresh failed. Refresh the roster before retrying.';
+
+  @override
+  String get opsAddAthleteRefresh => 'Refresh roster';
+
+  @override
   String get opsSearchRoster => 'Search by team or player name';
 
   @override
@@ -12322,6 +12699,80 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementCameraManualAssignFailed =>
       'Could not pin that camera to the match.';
+
+  @override
+  String get tournamentManagementCameraCheckStatus => 'Check camera signal';
+
+  @override
+  String get tournamentManagementCameraCheckingStatus => 'Checking signal…';
+
+  @override
+  String get tournamentManagementCameraCheckAgain => 'Check again';
+
+  @override
+  String get tournamentManagementCameraSignalOnline => 'Signal detected';
+
+  @override
+  String get tournamentManagementCameraSignalOffline => 'No signal detected';
+
+  @override
+  String get tournamentManagementCameraArchived => 'Camera archived';
+
+  @override
+  String get tournamentManagementCameraStatusError =>
+      'Could not check camera signal.';
+
+  @override
+  String get tournamentManagementCameraAccessDenied =>
+      'You do not have permission to view this camera.';
+
+  @override
+  String get tournamentManagementCameraUnavailable =>
+      'Camera information is unavailable.';
+
+  @override
+  String get tournamentManagementRecordingCatalog => 'Recording files';
+
+  @override
+  String get tournamentManagementRecordingTitle => 'Match recordings';
+
+  @override
+  String get tournamentManagementRecordingDay => 'Recording day';
+
+  @override
+  String get tournamentManagementRecordingLoading => 'Loading recordings…';
+
+  @override
+  String get tournamentManagementRecordingFilesLoading => 'Loading files…';
+
+  @override
+  String get tournamentManagementRecordingLoadError =>
+      'Could not load recording list.';
+
+  @override
+  String get tournamentManagementRecordingNoCamera =>
+      'No camera is assigned to this match.';
+
+  @override
+  String get tournamentManagementRecordingNoDays =>
+      'No recordings were found for this match.';
+
+  @override
+  String get tournamentManagementRecordingNoFiles =>
+      'No recordings found for this day.';
+
+  @override
+  String get tournamentManagementRecordingAccessDenied =>
+      'You do not have permission to view recordings for this match.';
+
+  @override
+  String get tournamentManagementRecordingUnavailable =>
+      'Recording information is unavailable.';
+
+  @override
+  String tournamentManagementRecordingFileSize(int size) {
+    return '$size bytes';
+  }
 
   @override
   String get opsSpecialOperation => 'Special operation';
@@ -13446,6 +13897,63 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose a section to edit supported tournament settings or open an existing organizer workspace.';
 
   @override
+  String get tournamentManagementTabAthletes => 'Athletes';
+
+  @override
+  String get tournamentManagementTabBracket => 'Bracket';
+
+  @override
+  String get tournamentManagementTabSettings => 'Settings';
+
+  @override
+  String get tournamentManagementKpiDates => 'Dates';
+
+  @override
+  String get tournamentManagementKpiAthletes => 'Athletes';
+
+  @override
+  String get tournamentManagementKpiFee => 'Entry fee';
+
+  @override
+  String get tournamentManagementKpiFree => 'Free';
+
+  @override
+  String get tournamentManagementKpiRegistrationDeadline => 'Reg. closes';
+
+  @override
+  String get registerTypeOpenSingles => 'Open singles';
+
+  @override
+  String get registerTypeOpenDoubles => 'Open doubles';
+
+  @override
+  String get registerDivisionFull => 'This division is full';
+
+  @override
+  String registerTeamSlotCount(Object count) {
+    return '$count team slots';
+  }
+
+  @override
+  String get tournamentCategoryOpenSingles => 'Open singles';
+
+  @override
+  String get tournamentCategoryOpenDoubles => 'Open doubles';
+
+  @override
+  String get dashboard_noMoreTournaments => 'You\'ve seen all tournaments';
+
+  @override
+  String userProfileViewProfileOf(Object name) {
+    return 'View $name\'s profile';
+  }
+
+  @override
+  String matchesUnplacedSection(int count) {
+    return 'Unplaced ($count)';
+  }
+
+  @override
   String get tournamentManagementParticipantApproved => 'Approved';
 
   @override
@@ -13742,10 +14250,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementSchedule => 'Schedule';
-
-  @override
-  String get tournamentManagementScheduleDescription =>
-      'Open the existing operations workspace to review the schedule.';
 
   @override
   String get tournamentManagementSeed => 'Seed';

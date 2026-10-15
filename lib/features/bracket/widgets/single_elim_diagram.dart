@@ -26,6 +26,11 @@ class SingleElimDiagram extends StatefulWidget {
   final BracketSlotUnassignCallback? onUnassignSlot;
   final ValueChanged<MatchModel>? onDoubleTapMatch;
 
+  /// Chỉ-xem: chỉ cuộn ngang, chiều cao theo canvas (không chéo, không zoom)
+  /// thay cho `InteractiveViewer`. Cuộn dọc thuộc trang cha. Mặc định giữ hành
+  /// vi cũ cho màn organizer.
+  final bool scrollOnly;
+
   const SingleElimDiagram({
     super.key,
     required this.matches,
@@ -37,6 +42,7 @@ class SingleElimDiagram extends StatefulWidget {
     this.onSlotDrop,
     this.onUnassignSlot,
     this.onDoubleTapMatch,
+    this.scrollOnly = false,
   });
 
   @override
@@ -235,18 +241,14 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final canvasSize = Size(canvasW + 80, canvasH + 80);
-        _centerInitialView(
-          Size(constraints.maxWidth, constraints.maxHeight),
-          canvasSize,
-        );
+        if (!widget.scrollOnly) {
+          _centerInitialView(
+            Size(constraints.maxWidth, constraints.maxHeight),
+            canvasSize,
+          );
+        }
 
-        return InteractiveViewer(
-          transformationController: _tc,
-          constrained: false,
-          boundaryMargin: const EdgeInsets.all(800),
-          minScale: 0.25,
-          maxScale: 2.5,
-          child: RepaintBoundary(
+        final content = RepaintBoundary(
             child: Padding(
               padding: const EdgeInsets.all(40),
               child: SizedBox(
@@ -311,7 +313,22 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                 ),
               ),
             ),
-          ),
+        );
+        if (widget.scrollOnly) {
+          // Chỉ-xem: chỉ cuộn ngang. Cuộn dọc thuộc trang cha, không lồng hai
+          // vùng cuộn dọc.
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: content,
+          );
+        }
+        return InteractiveViewer(
+          transformationController: _tc,
+          constrained: false,
+          boundaryMargin: const EdgeInsets.all(800),
+          minScale: 0.25,
+          maxScale: 2.5,
+          child: content,
         );
       },
     );

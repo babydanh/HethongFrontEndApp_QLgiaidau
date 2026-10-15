@@ -2468,12 +2468,6 @@ abstract class AppLocalizations {
   /// **'Xem Bracket'**
   String get viewBracket;
 
-  /// No description provided for @viewBracketSubtitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Sơ đồ thi đấu & kết quả'**
-  String get viewBracketSubtitle;
-
   /// No description provided for @endTournament.
   ///
   /// In vi, this message translates to:
@@ -13238,6 +13232,108 @@ abstract class AppLocalizations {
   /// **'Phòng thảo luận'**
   String get liveDiscussionTab;
 
+  /// No description provided for @liveNoSignalLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tín hiệu phát trực tiếp'**
+  String get liveNoSignalLabel;
+
+  /// No description provided for @schedulePrint.
+  ///
+  /// In vi, this message translates to:
+  /// **'In lịch'**
+  String get schedulePrint;
+
+  /// No description provided for @liveScoreboardToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng điểm'**
+  String get liveScoreboardToggle;
+
+  /// No description provided for @liveOverlayChipH2h.
+  ///
+  /// In vi, this message translates to:
+  /// **'H2H'**
+  String get liveOverlayChipH2h;
+
+  /// No description provided for @liveOverlayChipBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ'**
+  String get liveOverlayChipBracket;
+
+  /// No description provided for @liveOverlaySaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lưu được, thử lại'**
+  String get liveOverlaySaveError;
+
+  /// No description provided for @liveOverlayMatchEnded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đã kết thúc'**
+  String get liveOverlayMatchEnded;
+
+  /// No description provided for @liveH2hTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'HEAD TO HEAD'**
+  String get liveH2hTitle;
+
+  /// No description provided for @liveH2hTournamentLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'GIẢI ĐẤU:'**
+  String get liveH2hTournamentLabel;
+
+  /// No description provided for @liveH2hMatchIntro.
+  ///
+  /// In vi, this message translates to:
+  /// **'MATCH INTRODUCTION'**
+  String get liveH2hMatchIntro;
+
+  /// No description provided for @liveH2hGoodLuck.
+  ///
+  /// In vi, this message translates to:
+  /// **'CHÚC HAI ĐỘI THI ĐẤU TỐT!'**
+  String get liveH2hGoodLuck;
+
+  /// No description provided for @liveBracketCurrentMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐANG DIỄN RA'**
+  String get liveBracketCurrentMatch;
+
+  /// No description provided for @liveBracketEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu nhánh đấu cho nội dung này'**
+  String get liveBracketEmpty;
+
+  /// No description provided for @liveBracketTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'SƠ ĐỒ ĐẤU'**
+  String get liveBracketTitle;
+
+  /// No description provided for @liveBracketTournamentFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'SPORTO TOURNAMENT'**
+  String get liveBracketTournamentFallback;
+
+  /// No description provided for @liveBracketWin.
+  ///
+  /// In vi, this message translates to:
+  /// **'WIN'**
+  String get liveBracketWin;
+
+  /// No description provided for @liveScoreboardToggleError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đổi được trạng thái bảng điểm'**
+  String get liveScoreboardToggleError;
+
   /// No description provided for @liveSinglesElo.
   ///
   /// In vi, this message translates to:
@@ -22084,6 +22180,550 @@ abstract class AppLocalizations {
   /// **'Nội dung này chưa có người tham gia.'**
   String get opsNoParticipants;
 
+  /// No description provided for @opsAddAthlete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm VĐV'**
+  String get opsAddAthlete;
+
+  /// No description provided for @rosterImportTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập VĐV từ Excel'**
+  String get rosterImportTitle;
+
+  /// No description provided for @rosterImportOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập Excel'**
+  String get rosterImportOpen;
+
+  /// No description provided for @rosterImportClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get rosterImportClose;
+
+  /// No description provided for @rosterImportPickFile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn file Excel'**
+  String get rosterImportPickFile;
+
+  /// No description provided for @rosterImportReading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đọc file...'**
+  String get rosterImportReading;
+
+  /// No description provided for @rosterImportHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn file .xlsx theo mẫu để xem trước dữ liệu trước khi nhập.'**
+  String get rosterImportHint;
+
+  /// No description provided for @rosterImportReadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đọc được file Excel. Vui lòng kiểm tra lại file.'**
+  String get rosterImportReadFailed;
+
+  /// No description provided for @rosterImportNoSheetHeader.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua sheet \"{sheet}\": không tìm thấy dòng tiêu đề.'**
+  String rosterImportNoSheetHeader(String sheet);
+
+  /// No description provided for @rosterImportNoRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'File không có dòng VĐV nào.'**
+  String get rosterImportNoRows;
+
+  /// No description provided for @rosterImportAutoApprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự duyệt VĐV sau khi nhập (khi giải cho phép)'**
+  String get rosterImportAutoApprove;
+
+  /// No description provided for @rosterImportChecking.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kiểm tra trên máy chủ...'**
+  String get rosterImportChecking;
+
+  /// No description provided for @rosterImportRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get rosterImportRetry;
+
+  /// No description provided for @rosterImportPreviewFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kiểm tra được dữ liệu. Vui lòng thử lại.'**
+  String get rosterImportPreviewFailed;
+
+  /// No description provided for @rosterImportNoEligibleRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có dòng nào đủ điều kiện để nhập.'**
+  String get rosterImportNoEligibleRows;
+
+  /// No description provided for @rosterImportTooManyRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'File có {total} dòng, vượt giới hạn {max} dòng mỗi lần nhập.'**
+  String rosterImportTooManyRows(int total, int max);
+
+  /// No description provided for @rosterImportDivisionUnmatched.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung \"{name}\" không khớp nội dung nào của giải.'**
+  String rosterImportDivisionUnmatched(String name);
+
+  /// No description provided for @rosterImportCapacityShortfall.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung \"{name}\" không đủ suất để nhập hết các dòng.'**
+  String rosterImportCapacityShortfall(String name);
+
+  /// No description provided for @rosterImportCapacityInfo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần {requested} suất, còn {remaining} suất.'**
+  String rosterImportCapacityInfo(int requested, int remaining);
+
+  /// No description provided for @rosterImportSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{eligible}/{total} dòng đủ điều kiện'**
+  String rosterImportSummary(int eligible, int total);
+
+  /// No description provided for @rosterImportCommit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập {count} VĐV'**
+  String rosterImportCommit(int count);
+
+  /// No description provided for @rosterImportCommitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang nhập...'**
+  String get rosterImportCommitting;
+
+  /// No description provided for @rosterImportCommitFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập VĐV thất bại. Dữ liệu đã chọn vẫn được giữ để thử lại.'**
+  String get rosterImportCommitFailed;
+
+  /// No description provided for @rosterImportImported.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã nhập {count} VĐV.'**
+  String rosterImportImported(int count);
+
+  /// No description provided for @rosterImportReplayed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lần nhập này đã được ghi nhận trước đó.'**
+  String get rosterImportReplayed;
+
+  /// No description provided for @rosterImportWillImport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sẽ nhập'**
+  String get rosterImportWillImport;
+
+  /// No description provided for @rosterImportWillSkip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua'**
+  String get rosterImportWillSkip;
+
+  /// No description provided for @rosterImportRowSource.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dòng {row} · {sheet}'**
+  String rosterImportRowSource(int row, String sheet);
+
+  /// No description provided for @rosterImportCustomResponseInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú không hợp lệ'**
+  String get rosterImportCustomResponseInvalid;
+
+  /// No description provided for @rosterImportNoAccountMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có tài khoản trùng email'**
+  String get rosterImportNoAccountMatch;
+
+  /// No description provided for @rosterImportAccountLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV {player}'**
+  String rosterImportAccountLabel(int player);
+
+  /// No description provided for @rosterImportChooseAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tài khoản...'**
+  String get rosterImportChooseAccount;
+
+  /// No description provided for @rosterImportLeaveUnlinked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống (không liên kết)'**
+  String get rosterImportLeaveUnlinked;
+
+  /// No description provided for @rosterImportCandidateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} ({email})'**
+  String rosterImportCandidateLabel(String name, String email);
+
+  /// No description provided for @rosterImportStatusFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có tài khoản'**
+  String get rosterImportStatusFound;
+
+  /// No description provided for @rosterImportStatusNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tài khoản'**
+  String get rosterImportStatusNotFound;
+
+  /// No description provided for @rosterImportStatusInvalidEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email không hợp lệ'**
+  String get rosterImportStatusInvalidEmail;
+
+  /// No description provided for @rosterImportStatusMissingEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiếu email'**
+  String get rosterImportStatusMissingEmail;
+
+  /// No description provided for @rosterImportStatusMissingName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiếu tên'**
+  String get rosterImportStatusMissingName;
+
+  /// No description provided for @rosterImportStatusDuplicateInFile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trùng trong file'**
+  String get rosterImportStatusDuplicateInFile;
+
+  /// No description provided for @rosterImportStatusDuplicateInTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký trong giải'**
+  String get rosterImportStatusDuplicateInTournament;
+
+  /// No description provided for @rosterImportStatusPlayer2Required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiếu thông tin VĐV 2'**
+  String get rosterImportStatusPlayer2Required;
+
+  /// No description provided for @rosterImportStatusPlayer2NotAllowed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung đơn không nhận VĐV 2'**
+  String get rosterImportStatusPlayer2NotAllowed;
+
+  /// No description provided for @rosterImportStatusDivisionUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không xác định được nội dung'**
+  String get rosterImportStatusDivisionUnknown;
+
+  /// No description provided for @rosterImportStatusUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần kiểm tra lại'**
+  String get rosterImportStatusUnknown;
+
+  /// No description provided for @rosterImportTemplateFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tạo được file mẫu. Vui lòng thử lại.'**
+  String get rosterImportTemplateFailed;
+
+  /// No description provided for @rosterImportDownloadTemplate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải mẫu'**
+  String get rosterImportDownloadTemplate;
+
+  /// No description provided for @opsAddAthleteEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get opsAddAthleteEmail;
+
+  /// No description provided for @opsAddAthleteSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập ít nhất 2 ký tự để tìm theo tên, hoặc nhập đầy đủ email.'**
+  String get opsAddAthleteSearchHint;
+
+  /// No description provided for @opsAddAthleteSearchFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm được tài khoản.'**
+  String get opsAddAthleteSearchFailed;
+
+  /// No description provided for @opsAddAthleteSelectedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chọn: {count}'**
+  String opsAddAthleteSelectedCount(int count);
+
+  /// No description provided for @opsAddAthleteSelectionLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ có thể chọn tối đa 25 VĐV.'**
+  String get opsAddAthleteSelectionLimit;
+
+  /// No description provided for @opsAddAthleteAddSelectedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm {count} VĐV'**
+  String opsAddAthleteAddSelectedCount(int count);
+
+  /// No description provided for @opsAddAthleteMultipleSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm {count} VĐV.'**
+  String opsAddAthleteMultipleSuccess(int count);
+
+  /// No description provided for @opsAddAthletePartialSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã dừng ở lỗi đầu tiên — thành công: {addedCount}; thất bại: {failedCount}; chưa thực hiện: {unattemptedCount}. Hãy kiểm tra danh sách trước khi thử lại.'**
+  String opsAddAthletePartialSummary(
+    int addedCount,
+    int failedCount,
+    int unattemptedCount,
+  );
+
+  /// No description provided for @opsAddAthletePairToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép đôi'**
+  String get opsAddAthletePairToggle;
+
+  /// No description provided for @opsAddAthletePairRequirement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn 2–25 VĐV cùng một nguồn (bạn bè, CLB hoặc email) để ghép đôi.'**
+  String get opsAddAthletePairRequirement;
+
+  /// No description provided for @opsAddAthletePairSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép đôi'**
+  String get opsAddAthletePairSubmit;
+
+  /// No description provided for @opsAddAthletePairSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghép {pairCount} đôi. {pendingCount} VĐV lẻ đang chờ đồng đội.'**
+  String opsAddAthletePairSuccess(int pairCount, int pendingCount);
+
+  /// No description provided for @opsAddAthletePairGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'{n}'**
+  String opsAddAthletePairGroup(String n);
+
+  /// No description provided for @opsAddAthletePairWaiting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ ghép'**
+  String get opsAddAthletePairWaiting;
+
+  /// No description provided for @opsAddAthleteAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm'**
+  String get opsAddAthleteAdded;
+
+  /// No description provided for @opsAddAthleteGuestEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email liên hệ'**
+  String get opsAddAthleteGuestEmail;
+
+  /// No description provided for @opsAddAthleteGuestEmailHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email (nếu có) được lưu làm thông tin liên hệ của giải.'**
+  String get opsAddAthleteGuestEmailHint;
+
+  /// No description provided for @opsAddAthleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm VĐV vào danh sách'**
+  String get opsAddAthleteTitle;
+
+  /// No description provided for @opsAddAthleteDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm bạn bè, thành viên CLB hoặc nhập tên cho nội dung cá nhân hay đôi.'**
+  String get opsAddAthleteDescription;
+
+  /// No description provided for @opsAddAthleteAccounts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè & CLB'**
+  String get opsAddAthleteAccounts;
+
+  /// No description provided for @opsAddAthleteDirect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên'**
+  String get opsAddAthleteDirect;
+
+  /// No description provided for @opsAddAthleteSearch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm vận động viên'**
+  String get opsAddAthleteSearch;
+
+  /// No description provided for @opsAddAthleteTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội hiện có'**
+  String get opsAddAthleteTeam;
+
+  /// No description provided for @opsAddAthleteSelectTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn đội'**
+  String get opsAddAthleteSelectTeam;
+
+  /// No description provided for @opsAddAthleteTeamRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn một đội hiện có trước khi tìm kiếm.'**
+  String get opsAddAthleteTeamRequired;
+
+  /// No description provided for @opsAddAthleteNoTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có đội bóng phù hợp trong nội dung này.'**
+  String get opsAddAthleteNoTeams;
+
+  /// No description provided for @opsAddAthleteFriends.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè'**
+  String get opsAddAthleteFriends;
+
+  /// No description provided for @opsAddAthleteClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'CLB'**
+  String get opsAddAthleteClub;
+
+  /// No description provided for @opsAddAthleteLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải vận động viên…'**
+  String get opsAddAthleteLoading;
+
+  /// No description provided for @opsAddAthleteEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có vận động viên phù hợp với tìm kiếm.'**
+  String get opsAddAthleteEmpty;
+
+  /// No description provided for @opsAddAthleteNoCandidates.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có bạn bè hoặc thành viên CLB để thêm.'**
+  String get opsAddAthleteNoCandidates;
+
+  /// No description provided for @opsAddAthleteName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên vận động viên'**
+  String get opsAddAthleteName;
+
+  /// No description provided for @opsAddAthleteNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên vận động viên.'**
+  String get opsAddAthleteNameRequired;
+
+  /// No description provided for @opsAddAthleteNameTooLong.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên không được vượt quá 255 ký tự.'**
+  String get opsAddAthleteNameTooLong;
+
+  /// No description provided for @opsAddAthleteAddAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm'**
+  String get opsAddAthleteAddAction;
+
+  /// No description provided for @opsAddAthleteMain.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chính'**
+  String get opsAddAthleteMain;
+
+  /// No description provided for @opsAddAthleteReserve.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dự bị'**
+  String get opsAddAthleteReserve;
+
+  /// No description provided for @opsAddAthleteSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm vận động viên.'**
+  String get opsAddAthleteSuccess;
+
+  /// No description provided for @opsAddAthleteFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thêm vận động viên.'**
+  String get opsAddAthleteFailed;
+
+  /// No description provided for @opsAddAthleteApprovalFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm vận động viên nhưng tự động duyệt thất bại. Hãy kiểm tra danh sách trước khi đổi trạng thái.'**
+  String get opsAddAthleteApprovalFailed;
+
+  /// No description provided for @opsAddAthleteOutcomeUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xác định được kết quả. Danh sách đã được làm mới; hãy kiểm tra trước khi thử lại.'**
+  String get opsAddAthleteOutcomeUnknown;
+
+  /// No description provided for @opsAddAthleteRefreshFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải lại được danh sách. Hãy làm mới roster trước khi thử lại.'**
+  String get opsAddAthleteRefreshFailed;
+
+  /// No description provided for @opsAddAthleteRefresh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm mới danh sách'**
+  String get opsAddAthleteRefresh;
+
   /// No description provided for @opsSearchRoster.
   ///
   /// In vi, this message translates to:
@@ -22323,6 +22963,132 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không gán được camera cho trận.'**
   String get tournamentManagementCameraManualAssignFailed;
+
+  /// No description provided for @tournamentManagementCameraCheckStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra tín hiệu camera'**
+  String get tournamentManagementCameraCheckStatus;
+
+  /// No description provided for @tournamentManagementCameraCheckingStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kiểm tra tín hiệu…'**
+  String get tournamentManagementCameraCheckingStatus;
+
+  /// No description provided for @tournamentManagementCameraCheckAgain.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra lại'**
+  String get tournamentManagementCameraCheckAgain;
+
+  /// No description provided for @tournamentManagementCameraSignalOnline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có tín hiệu'**
+  String get tournamentManagementCameraSignalOnline;
+
+  /// No description provided for @tournamentManagementCameraSignalOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tín hiệu'**
+  String get tournamentManagementCameraSignalOffline;
+
+  /// No description provided for @tournamentManagementCameraArchived.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera đã lưu trữ'**
+  String get tournamentManagementCameraArchived;
+
+  /// No description provided for @tournamentManagementCameraStatusError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kiểm tra được tín hiệu camera.'**
+  String get tournamentManagementCameraStatusError;
+
+  /// No description provided for @tournamentManagementCameraAccessDenied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn không có quyền xem camera này.'**
+  String get tournamentManagementCameraAccessDenied;
+
+  /// No description provided for @tournamentManagementCameraUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin camera hiện không khả dụng.'**
+  String get tournamentManagementCameraUnavailable;
+
+  /// No description provided for @tournamentManagementRecordingCatalog.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách bản ghi'**
+  String get tournamentManagementRecordingCatalog;
+
+  /// No description provided for @tournamentManagementRecordingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản ghi của trận'**
+  String get tournamentManagementRecordingTitle;
+
+  /// No description provided for @tournamentManagementRecordingDay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày ghi hình'**
+  String get tournamentManagementRecordingDay;
+
+  /// No description provided for @tournamentManagementRecordingLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách bản ghi…'**
+  String get tournamentManagementRecordingLoading;
+
+  /// No description provided for @tournamentManagementRecordingFilesLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải tệp…'**
+  String get tournamentManagementRecordingFilesLoading;
+
+  /// No description provided for @tournamentManagementRecordingLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách bản ghi.'**
+  String get tournamentManagementRecordingLoadError;
+
+  /// No description provided for @tournamentManagementRecordingNoCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu chưa được gán camera.'**
+  String get tournamentManagementRecordingNoCamera;
+
+  /// No description provided for @tournamentManagementRecordingNoDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy ngày có bản ghi của trận này.'**
+  String get tournamentManagementRecordingNoDays;
+
+  /// No description provided for @tournamentManagementRecordingNoFiles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có bản ghi trong ngày này.'**
+  String get tournamentManagementRecordingNoFiles;
+
+  /// No description provided for @tournamentManagementRecordingAccessDenied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn không có quyền xem bản ghi của trận đấu này.'**
+  String get tournamentManagementRecordingAccessDenied;
+
+  /// No description provided for @tournamentManagementRecordingUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin bản ghi hiện không khả dụng.'**
+  String get tournamentManagementRecordingUnavailable;
+
+  /// No description provided for @tournamentManagementRecordingFileSize.
+  ///
+  /// In vi, this message translates to:
+  /// **'{size} byte'**
+  String tournamentManagementRecordingFileSize(int size);
 
   /// No description provided for @opsSpecialOperation.
   ///
@@ -24382,6 +25148,108 @@ abstract class AppLocalizations {
   /// **'Chọn mục để chỉnh sửa cài đặt được hỗ trợ hoặc mở không gian vận hành hiện có.'**
   String get tournamentManagementOverviewHint;
 
+  /// No description provided for @tournamentManagementTabAthletes.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV'**
+  String get tournamentManagementTabAthletes;
+
+  /// No description provided for @tournamentManagementTabBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng đấu'**
+  String get tournamentManagementTabBracket;
+
+  /// No description provided for @tournamentManagementTabSettings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt'**
+  String get tournamentManagementTabSettings;
+
+  /// No description provided for @tournamentManagementKpiDates.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thi đấu'**
+  String get tournamentManagementKpiDates;
+
+  /// No description provided for @tournamentManagementKpiAthletes.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV'**
+  String get tournamentManagementKpiAthletes;
+
+  /// No description provided for @tournamentManagementKpiFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lệ phí'**
+  String get tournamentManagementKpiFee;
+
+  /// No description provided for @tournamentManagementKpiFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get tournamentManagementKpiFree;
+
+  /// No description provided for @tournamentManagementKpiRegistrationDeadline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạn ĐK'**
+  String get tournamentManagementKpiRegistrationDeadline;
+
+  /// No description provided for @registerTypeOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get registerTypeOpenSingles;
+
+  /// No description provided for @registerTypeOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get registerTypeOpenDoubles;
+
+  /// No description provided for @registerDivisionFull.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này đã đủ suất'**
+  String get registerDivisionFull;
+
+  /// No description provided for @registerTeamSlotCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} suất đội'**
+  String registerTeamSlotCount(Object count);
+
+  /// No description provided for @tournamentCategoryOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get tournamentCategoryOpenSingles;
+
+  /// No description provided for @tournamentCategoryOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get tournamentCategoryOpenDoubles;
+
+  /// No description provided for @dashboard_noMoreTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xem hết giải đấu'**
+  String get dashboard_noMoreTournaments;
+
+  /// No description provided for @userProfileViewProfileOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem hồ sơ {name}'**
+  String userProfileViewProfileOf(Object name);
+
+  /// Tiêu đề ô Chưa xếp trong lưới lịch: trận chưa có đủ sân hoặc giờ thi đấu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp ({count})'**
+  String matchesUnplacedSection(int count);
+
   /// No description provided for @tournamentManagementParticipantApproved.
   ///
   /// In vi, this message translates to:
@@ -24403,7 +25271,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementParticipantPendingPartner.
   ///
   /// In vi, this message translates to:
-  /// **'Đang chờ ghép đồng đội'**
+  /// **'Chờ ghép'**
   String get tournamentManagementParticipantPendingPartner;
 
   /// No description provided for @tournamentManagementParticipantRejected.
@@ -24891,12 +25759,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Lịch thi đấu'**
   String get tournamentManagementSchedule;
-
-  /// No description provided for @tournamentManagementScheduleDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Mở không gian vận hành hiện có để xem lịch thi đấu.'**
-  String get tournamentManagementScheduleDescription;
 
   /// No description provided for @tournamentManagementSeed.
   ///

@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -18,7 +19,7 @@ class _UnauthenticatedNotifier extends AuthNotifier {
   AuthState build() => const AuthState();
 }
 
-Tournament _fixtureTournament() => Tournament.fromJson({
+Tournament _fixtureTournament({int? minutesPerSet}) => Tournament.fromJson({
   'name': 'Schedule tab smoke fixture',
   'sport': 'pickleball',
   'format': 'DOUBLES',
@@ -33,6 +34,7 @@ Tournament _fixtureTournament() => Tournament.fromJson({
     'operatingStart': '08:00',
     'operatingEnd': '18:00',
     'stepMinutes': 15,
+    'minutesPerSet': ?minutesPerSet,
   },
   'createdAt': '2026-01-01T00:00:00.000Z',
   'updatedAt': '2026-01-01T00:00:00.000Z',
@@ -61,7 +63,7 @@ MatchModel _scheduleMatch(
   courtName: courtName,
   scheduledTime: scheduledTime,
   updatedAt: DateTime.utc(2026, 1, 1),
-  timeLimitMinutes: durationMinutes,
+  durationMinutes: durationMinutes,
 );
 
 Future<void> _pumpTournamentDetail(
@@ -69,12 +71,14 @@ Future<void> _pumpTournamentDetail(
   required Locale locale,
   List<MatchModel> matches = const [],
   Stream<List<MatchModel>>? matchStream,
+  int? minutesPerSet,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         tournamentIntroWithInviteProvider.overrideWith(
-          (ref, params) async => _fixtureTournament(),
+          (ref, params) async =>
+              _fixtureTournament(minutesPerSet: minutesPerSet),
         ),
         tournamentDivisionsProvider.overrideWith(
           (ref, tournamentId) async => const <Map<String, dynamic>>[],
@@ -113,6 +117,46 @@ Finder _matchCardSurface(String playerName) => find
     )
     .first;
 
+Future<void> _pumpGrid(
+  WidgetTester tester, {
+  required List<MatchModel> matches,
+  required int minutesPerSet,
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.lightTheme,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('vi'),
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ScheduleGrid(
+            courts: [for (final match in matches) match.court],
+            matches: matches,
+            startHour: 8,
+            endHour: 18,
+            minutesPerSet: minutesPerSet,
+            onTapMatch: (_) {},
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Chiều cao thẻ trận trong lưới; thẻ cao tỉ lệ với thời lượng hiển thị.
+double _cardHeight(WidgetTester tester, MatchModel match) => tester
+    .getSize(
+      find
+          .descendant(
+            of: find.byKey(ValueKey('schedule-match-${match.id}')),
+            matching: find.byType(GestureDetector),
+          )
+          .first,
+    )
+    .height;
+
 Future<void> _scrollHorizontallyTo(
   WidgetTester tester,
   Finder target,
@@ -135,32 +179,6 @@ Future<void> _tapTab(WidgetTester tester, Finder target) async {
   await _scrollHorizontallyTo(tester, target, find.byType(TabBar).first);
   await tester.tap(target);
   await tester.pumpAndSettle();
-}
-
-Future<void> _tapStatusFilter(WidgetTester tester, Finder target) async {
-  final scrollView = find
-      .ancestor(of: target, matching: find.byType(SingleChildScrollView))
-      .first;
-  await _scrollHorizontallyTo(tester, target, scrollView);
-  await tester.tap(target);
-  await tester.pumpAndSettle();
-}
-
-Future<void> _dragListUntilVisible(
-  WidgetTester tester,
-  Finder scrollable,
-  String text,
-) async {
-  final target = find.text(text);
-  for (
-    var attempt = 0;
-    attempt < 8 && target.hitTestable().evaluate().isEmpty;
-    attempt++
-  ) {
-    await tester.drag(scrollable, const Offset(0, -120));
-    await tester.pump(const Duration(milliseconds: 300));
-  }
-  expect(target.hitTestable(), findsOneWidget);
 }
 
 void main() {
@@ -262,7 +280,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('unplaced matches stay available in a collapsed section', (
+  testWidgets('schedule grid and unplaced cell share one bordered frame', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -276,56 +294,105 @@ void main() {
       tester,
       locale: const Locale('en'),
       matches: [
-        _scheduleMatch(17, scheduledTime: DateTime(2026, 8, 12, 12)),
         _scheduleMatch(
-          18,
-          courtId: 'court-unknown',
-          court: 'Sporto Arena',
-          scheduledTime: DateTime(2026, 8, 12, 13),
+          1,
+          courtId: 'court-1',
+          court: 'Court 1',
+          scheduledTime: DateTime(2026, 8, 12, 9),
         ),
-        _scheduleMatch(19),
+        _scheduleMatch(2),
       ],
     );
-    final scheduleTab = find.widgetWithText(Tab, 'Schedule');
-    await _tapTab(tester, scheduleTab);
+    await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
 
-    final section = find.text('Matches missing court/time (3)');
-    expect(section, findsOneWidget);
-    expect(find.text('Court not assigned'), findsNothing);
-
-    final unplacedPanel = find.byKey(
-      const ValueKey('schedule-unplaced-matches'),
+    final frame = find.byKey(const ValueKey('schedule-frame'));
+    expect(frame, findsOneWidget);
+    expect(
+      find.descendant(of: frame, matching: find.byType(ScheduleGrid)),
+      findsOneWidget,
     );
-    final unplacedHeader = find.byKey(
-      const ValueKey('schedule-unplaced-header'),
-    );
-    expect(unplacedHeader.hitTestable(), findsOneWidget);
-    await tester.tap(unplacedHeader);
-    await tester.pump();
-    final collapsedPanelHeight = tester.getSize(unplacedPanel).height;
-    await tester.pump(const Duration(milliseconds: 125));
-    final transitioningPanelHeight = tester.getSize(unplacedPanel).height;
-    await tester.pump(const Duration(milliseconds: 150));
-    final expandedPanelHeight = tester.getSize(unplacedPanel).height;
-    expect(transitioningPanelHeight, greaterThan(collapsedPanelHeight));
-    expect(expandedPanelHeight, greaterThan(transitioningPanelHeight));
-    await tester.pumpAndSettle();
-    expect(find.text('Court not assigned'), findsOneWidget);
+    final unplaced = find.byKey(const ValueKey('schedule-unplaced-section'));
+    expect(find.descendant(of: frame, matching: unplaced), findsOneWidget);
+  });
 
-    final unplacedScrollable = find
-        .descendant(of: unplacedPanel, matching: find.byType(Scrollable))
-        .first;
-    for (final text in [
-      'Court not assigned',
-      'Player 17',
-      'Court name unavailable',
-      'Player 18',
-      'Not scheduled',
-      'Player 19',
-    ]) {
-      await _dragListUntilVisible(tester, unplacedScrollable, text);
-    }
-    expect(tester.takeException(), isNull);
+  testWidgets('default schedule date is the first date with matches', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('en'),
+      matches: [
+        _scheduleMatch(
+          1,
+          courtId: 'court-1',
+          court: 'Court 1',
+          team1Name: 'Thirteenth Player',
+          scheduledTime: DateTime(2026, 8, 13, 9),
+        ),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
+
+    expect(find.textContaining('Thirteenth Player'), findsOneWidget);
+  });
+
+  testWidgets('matches without time or court sit in the unplaced cell', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('vi'),
+      matches: [
+        _scheduleMatch(
+          1,
+          courtId: 'court-1',
+          court: 'Court 1',
+          scheduledTime: DateTime(2026, 8, 12, 9),
+        ),
+        _scheduleMatch(2, team1Name: 'Unset Time A', team2Name: 'Unset Time B'),
+        _scheduleMatch(
+          3,
+          team1Name: 'Unset Court A',
+          team2Name: 'Unset Court B',
+          scheduledTime: DateTime(2026, 8, 12, 10),
+        ),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
+
+    final unplaced = find.byKey(const ValueKey('schedule-unplaced-section'));
+    expect(
+      find.descendant(
+        of: unplaced,
+        matching: find.textContaining('Unset Time A'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: unplaced,
+        matching: find.textContaining('Unset Court A'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: unplaced, matching: find.textContaining('Player 1')),
+      findsNothing,
+    );
   });
 
   testWidgets('schedule tab label is localized in English', (tester) async {
@@ -359,59 +426,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('unplaced matches respect status and search filters', (
-    tester,
-  ) async {
-    await _pumpTournamentDetail(
-      tester,
-      locale: const Locale('en'),
-      matches: [
-        _scheduleMatch(
-          1,
-          status: 'scheduled',
-          scheduledTime: DateTime(2026, 8, 12, 12),
-        ),
-        _scheduleMatch(2, status: 'completed'),
-        _scheduleMatch(3, status: 'live'),
-      ],
-    );
-
-    final scheduleTab = find.widgetWithText(Tab, 'Schedule');
-    await _tapTab(tester, scheduleTab);
-
-    await _tapStatusFilter(tester, find.text('Scheduled (1)'));
-    expect(find.text('Matches missing court/time (1)'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-header')));
-    await tester.pumpAndSettle();
-    expect(find.text('Player 1'), findsOneWidget);
-    expect(find.text('Player 2'), findsNothing);
-    expect(find.text('Player 3'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-header')));
-    await tester.pumpAndSettle();
-
-    await _tapStatusFilter(tester, find.text('All (3)'));
-    await tester.enterText(find.byType(TextField).first, 'Player 3');
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(find.text('Matches missing court/time (1)'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('schedule-unplaced-header')));
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(seconds: 1));
-    final unplacedPlayer = find.descendant(
-      of: find.byKey(const ValueKey('schedule-unplaced-matches')),
-      matching: find.text('Player 3'),
-    );
-    expect(unplacedPlayer, findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('schedule-unplaced-matches')),
-        matching: find.text('Player 1'),
-      ),
-      findsNothing,
-    );
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('schedule filters and keeps navigation fixed while scrolling', (
+  testWidgets('schedule keeps search without status filter chips', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -454,8 +469,7 @@ void main() {
       locale: const Locale('en'),
       matches: matches,
     );
-    final scheduleTab = find.widgetWithText(Tab, 'Schedule');
-    await _tapTab(tester, scheduleTab);
+    await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
     for (
       var attempt = 0;
       attempt < 10 && find.byType(TextField).evaluate().isEmpty;
@@ -467,43 +481,294 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
     expect(find.text('Court 1'), findsOneWidget);
     expect(find.textContaining('Court hours'), findsOneWidget);
-    final liveFilter = find.text('Live (1)');
-    await _tapStatusFilter(tester, liveFilter);
-    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('All (19)'), findsNothing);
+    expect(find.text('Live (1)'), findsNothing);
+    expect(find.text('Completed (1)'), findsNothing);
     expect(find.text('Player 5'), findsOneWidget);
-    final completedFilter = find.text('Completed (1)');
-    await _tapStatusFilter(tester, completedFilter);
-    await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('Player 9'), findsOneWidget);
-    expect(find.text('0 - 0'), findsOneWidget);
 
-    final allFilter = find.text('All (19)');
-    await _tapStatusFilter(tester, allFilter);
-    await tester.pump(const Duration(milliseconds: 200));
+    final frame = tester.getRect(find.byKey(const ValueKey('schedule-frame')));
+    expect(frame.left, 0);
+    expect(frame.right, 390);
+
     final searchField = find.byType(TextField).first;
     await tester.enterText(searchField, 'SearchOnly Player');
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('Player 5'), findsNothing);
+    expect(find.text('Player 9'), findsNothing);
     expect(find.text('Opponent 1'), findsOneWidget);
     await tester.enterText(searchField, '');
     await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('Player 5'), findsOneWidget);
+    expect(find.text('Player 9'), findsOneWidget);
 
     final backButton = find.byIcon(Icons.arrow_back_ios_rounded).first;
     final backTopBeforeScroll = tester.getRect(backButton).top;
-    for (final heading in ['Court 2', 'Court 3', 'Court 4']) {
-      for (
-        var attempt = 0;
-        attempt < 8 && find.text(heading).evaluate().isEmpty;
-        attempt++
-      ) {
-        await tester.dragFrom(const Offset(200, 450), const Offset(0, -800));
-        await tester.pump(const Duration(milliseconds: 300));
-      }
-      expect(find.text(heading), findsOneWidget);
+    for (var attempt = 0; attempt < 4; attempt++) {
+      await tester.dragFrom(const Offset(200, 450), const Offset(0, -800));
+      await tester.pump(const Duration(milliseconds: 300));
     }
-
     expect(tester.getRect(backButton).top, backTopBeforeScroll);
-
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('horizontal court scroll leaves the time column fixed', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('en'),
+      matches: [
+        for (var court = 1; court <= 4; court++)
+          _scheduleMatch(
+            court,
+            courtId: 'court-$court',
+            courtName: 'Court $court',
+            scheduledTime: DateTime(2026, 8, 12, 8),
+          ),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
+
+    final frame = find.byKey(const ValueKey('schedule-frame'));
+    await tester.ensureVisible(frame);
+    await tester.pumpAndSettle();
+    final timeLabel = find.text('08:00').first;
+    final quarterHourLabel = find.text('08:15').first;
+    expect(
+      tester.getRect(quarterHourLabel).top - tester.getRect(timeLabel).top,
+      120,
+    );
+    expect(tester.widget<Text>(timeLabel).style?.fontSize, 12);
+    final timeLeftBefore = tester.getRect(timeLabel).left;
+    final gridRect = tester.getRect(
+      find.descendant(of: frame, matching: find.byType(ScheduleGrid)),
+    );
+    expect(tester.getRect(timeLabel).right, gridRect.left + 55);
+    final frameBeforeScroll = tester.getRect(frame);
+    await tester.dragFrom(
+      Offset(frameBeforeScroll.left + 200, frameBeforeScroll.top + 80),
+      const Offset(-360, 0),
+    );
+    await tester.pumpAndSettle();
+
+    final frameRect = tester.getRect(frame);
+    final courtFour = tester.getRect(find.text('Court 4'));
+    expect(courtFour.left, greaterThanOrEqualTo(frameRect.left + 56));
+    expect(courtFour.right, lessThanOrEqualTo(frameRect.right));
+    expect(tester.getRect(timeLabel).left, timeLeftBefore);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('default ScheduleGrid preserves its existing scale', (
+    tester,
+  ) async {
+    final match = _scheduleMatch(
+      1,
+      court: 'Court 1',
+      scheduledTime: DateTime(2026, 8, 12, 9),
+    );
+    await _pumpGrid(tester, matches: [match], minutesPerSet: 15);
+
+    final hourLabel = find.text('09:00').first;
+    final quarterLabel = find.text('09:15').first;
+    expect(
+      tester.getRect(quarterLabel).top - tester.getRect(hourLabel).top,
+      144,
+    );
+    expect(tester.widget<Text>(hourLabel).style?.fontSize, 10.5);
+    expect(
+      tester.widget<Text>(quarterLabel).style?.fontWeight,
+      FontWeight.w500,
+    );
+  });
+
+  group('schedule card duration fallback', () {
+    final slot = DateTime(2026, 8, 12, 9);
+
+    testWidgets('BO3 fallback multiplies minutesPerSet by 3 sets', (
+      tester,
+    ) async {
+      final fallback = _scheduleMatch(
+        1,
+        court: 'Court 1',
+        scheduledTime: slot,
+      ).copyWith(sportRules: const {'bestOf': 3});
+      final saved = _scheduleMatch(
+        2,
+        court: 'Court 2',
+        scheduledTime: slot,
+        durationMinutes: 60,
+      );
+      await _pumpGrid(tester, matches: [fallback, saved], minutesPerSet: 20);
+
+      expect(
+        _cardHeight(tester, fallback),
+        closeTo(_cardHeight(tester, saved), 0.01),
+      );
+    });
+
+    testWidgets('BO5 fallback multiplies minutesPerSet by 5 sets', (
+      tester,
+    ) async {
+      final fallback = _scheduleMatch(
+        1,
+        court: 'Court 1',
+        scheduledTime: slot,
+      ).copyWith(sportRules: const {'bestOf': 5});
+      final saved = _scheduleMatch(
+        2,
+        court: 'Court 2',
+        scheduledTime: slot,
+        durationMinutes: 100,
+      );
+      await _pumpGrid(tester, matches: [fallback, saved], minutesPerSet: 20);
+
+      expect(
+        _cardHeight(tester, fallback),
+        closeTo(_cardHeight(tester, saved), 0.01),
+      );
+    });
+
+    testWidgets('match without sport rules falls back to one set', (
+      tester,
+    ) async {
+      final fallback = _scheduleMatch(1, court: 'Court 1', scheduledTime: slot);
+      final saved = _scheduleMatch(
+        2,
+        court: 'Court 2',
+        scheduledTime: slot,
+        durationMinutes: 20,
+      );
+      await _pumpGrid(tester, matches: [fallback, saved], minutesPerSet: 20);
+
+      expect(
+        _cardHeight(tester, fallback),
+        closeTo(_cardHeight(tester, saved), 0.01),
+      );
+    });
+
+    testWidgets('LITE scoring counts one set regardless of bestOf', (
+      tester,
+    ) async {
+      final fallback = _scheduleMatch(
+        1,
+        court: 'Court 1',
+        scheduledTime: slot,
+      ).copyWith(sportRules: const {'scoringMode': 'FREE', 'bestOf': 3});
+      final saved = _scheduleMatch(
+        2,
+        court: 'Court 2',
+        scheduledTime: slot,
+        durationMinutes: 20,
+      );
+      await _pumpGrid(tester, matches: [fallback, saved], minutesPerSet: 20);
+
+      expect(
+        _cardHeight(tester, fallback),
+        closeTo(_cardHeight(tester, saved), 0.01),
+      );
+    });
+
+    testWidgets('saved durationMinutes wins over minutesPerSet fallback', (
+      tester,
+    ) async {
+      final saved = _scheduleMatch(
+        1,
+        court: 'Court 1',
+        scheduledTime: slot,
+        durationMinutes: 45,
+      ).copyWith(sportRules: const {'bestOf': 3});
+      final reference = _scheduleMatch(
+        2,
+        court: 'Court 2',
+        scheduledTime: slot,
+        durationMinutes: 45,
+      );
+      await _pumpGrid(tester, matches: [saved, reference], minutesPerSet: 20);
+
+      expect(
+        _cardHeight(tester, saved),
+        closeTo(_cardHeight(tester, reference), 0.01),
+      );
+    });
+
+    testWidgets('schedule tab reads minutesPerSet from tournament config', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      final fallback = _scheduleMatch(
+        1,
+        courtId: 'court-1',
+        court: 'Court 1',
+        scheduledTime: slot,
+      ).copyWith(sportRules: const {'bestOf': 3});
+      final saved = _scheduleMatch(
+        2,
+        courtId: 'court-2',
+        court: 'Court 2',
+        scheduledTime: slot,
+        durationMinutes: 60,
+      );
+      await _pumpTournamentDetail(
+        tester,
+        locale: const Locale('en'),
+        minutesPerSet: 20,
+        matches: [fallback, saved],
+      );
+      await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
+
+      expect(
+        _cardHeight(tester, fallback),
+        closeTo(_cardHeight(tester, saved), 0.01),
+      );
+    });
+
+    testWidgets('schedule tab defaults to 15 minutes per set when unset', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      final fallback = _scheduleMatch(
+        1,
+        courtId: 'court-1',
+        court: 'Court 1',
+        scheduledTime: slot,
+      ).copyWith(sportRules: const {'bestOf': 3});
+      final saved = _scheduleMatch(
+        2,
+        courtId: 'court-2',
+        court: 'Court 2',
+        scheduledTime: slot,
+        durationMinutes: 45,
+      );
+      await _pumpTournamentDetail(
+        tester,
+        locale: const Locale('en'),
+        matches: [fallback, saved],
+      );
+      await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
+
+      expect(
+        _cardHeight(tester, fallback),
+        closeTo(_cardHeight(tester, saved), 0.01),
+      );
+    });
   });
 }

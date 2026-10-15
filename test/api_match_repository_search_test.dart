@@ -66,4 +66,88 @@ void main() {
     expect(requests.single.path, '/matches');
     expect(page.matches.single.tournamentName, 'Bracket Cup');
   });
+
+  test(
+    'public match list reads backend scheduledAt and matchConfig duration',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test/api/v1'));
+      final repository = ApiMatchRepository(
+        DioClient(tokenManager: _NoTokenManager(), dio: dio),
+        _UnusedMatchSocketService(),
+      );
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            handler.resolve(
+              Response<dynamic>(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'data': [
+                    {
+                      'id': 'match-1',
+                      'tournamentId': 'tournament-1',
+                      'status': 'SCHEDULED',
+                      'scheduledAt': '2026-08-12T01:15:00.000Z',
+                      'matchConfig': {'durationMinutes': 15},
+                    },
+                  ],
+                  'meta': {'total': 1, 'hasMore': false},
+                },
+              ),
+            );
+          },
+        ),
+      );
+
+      final page = await repository.getPublicMatchesPaged();
+
+      final match = page.matches.single;
+      expect(match.scheduledTime?.toUtc(), DateTime.utc(2026, 8, 12, 1, 15));
+      expect(match.durationMinutes, 15);
+    },
+  );
+
+  test(
+    'public match list maps courtId and courtName into MatchModel',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final dio = Dio(BaseOptions(baseUrl: 'https://api.example.test/api/v1'));
+      final repository = ApiMatchRepository(
+        DioClient(tokenManager: _NoTokenManager(), dio: dio),
+        _UnusedMatchSocketService(),
+      );
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            handler.resolve(
+              Response<dynamic>(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'data': [
+                    {
+                      'id': 'match-2',
+                      'tournamentId': 'tournament-1',
+                      'status': 'SCHEDULED',
+                      'courtId': 'court-1',
+                      'courtName': 'Court 1',
+                    },
+                  ],
+                  'meta': {'total': 1, 'hasMore': false},
+                },
+              ),
+            );
+          },
+        ),
+      );
+
+      final page = await repository.getPublicMatchesPaged();
+
+      final match = page.matches.single;
+      expect(match.courtId, 'court-1');
+      expect(match.courtName, 'Court 1');
+    },
+  );
 }

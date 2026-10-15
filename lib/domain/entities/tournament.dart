@@ -14,6 +14,7 @@ class Tournament {
   final String? category;
   final String bracketType;
   final String status;
+  final String? rawStatus;
   final String visibility;
   final String adminToken;
   final String refereeToken;
@@ -93,6 +94,7 @@ class Tournament {
     this.category,
     required this.bracketType,
     this.status = 'draft',
+    this.rawStatus,
     this.visibility = 'PUBLIC',
     required this.adminToken,
     required this.refereeToken,
@@ -362,6 +364,7 @@ class Tournament {
       category: parsedCategory,
       bracketType: bracketTypeVal,
       status: mappedStatus,
+      rawStatus: json['status']?.toString(),
       visibility: parsedVisibility == 'PRIVATE' ? 'PRIVATE' : 'PUBLIC',
       adminToken: json['adminToken'] ?? json['inviteCode'] ?? '',
       refereeToken: json['refereeToken'] ?? json['inviteCode'] ?? '',
@@ -573,6 +576,7 @@ class Tournament {
     String? category,
     String? bracketType,
     String? status,
+    String? rawStatus,
     String? visibility,
     String? adminToken,
     String? refereeToken,
@@ -630,6 +634,7 @@ class Tournament {
       category: category ?? this.category,
       bracketType: bracketType ?? this.bracketType,
       status: status ?? this.status,
+      rawStatus: rawStatus ?? (status == null ? this.rawStatus : status),
       visibility: visibility ?? this.visibility,
       adminToken: adminToken ?? this.adminToken,
       refereeToken: refereeToken ?? this.refereeToken,
