@@ -22,7 +22,7 @@ class OverviewTab extends StatefulWidget {
   final bool compact;
   final VoidCallback? onEditGeneral;
   final VoidCallback? onEditBranding;
-  final VoidCallback? onEditVenues;
+  final VoidCallback? onEditSchedule;
   final VoidCallback? onEditRegistration;
   final VoidCallback? onEditFinance;
   final List<SliverOverlapAbsorberHandle> overlapHandles;
@@ -40,7 +40,7 @@ class OverviewTab extends StatefulWidget {
     this.compact = false,
     this.onEditGeneral,
     this.onEditBranding,
-    this.onEditVenues,
+    this.onEditSchedule,
     this.onEditRegistration,
     this.onEditFinance,
     this.overlapHandles = const [],
@@ -307,8 +307,8 @@ class _OverviewTabState extends State<OverviewTab> {
                                 key: const ValueKey(
                                   'tournament-overview-dates-edit',
                                 ),
-                                onTap: widget.onEditGeneral,
-                                sectionLabel: l10n.tournamentManagementGeneral,
+                                onTap: widget.onEditSchedule,
+                                sectionLabel: l10n.manageSettingsScheduleSection,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 10,
@@ -325,7 +325,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                             size: 18,
                                             color: AppTheme.primary,
                                           ),
-                                          _editIndicator(widget.onEditGeneral),
+                                          _editIndicator(widget.onEditSchedule),
                                         ],
                                       ),
                                       const SizedBox(height: 8),
@@ -481,7 +481,7 @@ class _OverviewTabState extends State<OverviewTab> {
                         key: const ValueKey(
                           'tournament-overview-location-edit',
                         ),
-                        onTap: widget.onEditVenues,
+                        onTap: widget.onEditSchedule,
                         sectionLabel: l10n.tournamentManagementVenues,
                         child: Container(
                           key: const ValueKey(
@@ -530,7 +530,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                   ],
                                 ),
                               ),
-                              _editIndicator(widget.onEditVenues),
+                              _editIndicator(widget.onEditSchedule),
                             ],
                           ),
                         ),
@@ -779,8 +779,8 @@ class _OverviewTabState extends State<OverviewTab> {
                           key: const ValueKey(
                             'tournament-overview-timeline-edit',
                           ),
-                          onTap: widget.onEditGeneral,
-                          sectionLabel: l10n.tournamentManagementGeneral,
+                          onTap: widget.onEditSchedule,
+                          sectionLabel: l10n.manageSettingsScheduleSection,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -791,7 +791,7 @@ class _OverviewTabState extends State<OverviewTab> {
                                       'LỘ TRÌNH GIẢI ĐẤU',
                                     ),
                                   ),
-                                  _editIndicator(widget.onEditGeneral),
+                                  _editIndicator(widget.onEditSchedule),
                                 ],
                               ),
                               const SizedBox(height: 8),

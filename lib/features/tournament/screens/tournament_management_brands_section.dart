@@ -51,8 +51,8 @@ class _TournamentManagementBrandsSectionState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TournamentManagementSectionCard(
           title: l10n.tournamentManagementBrandAssets,

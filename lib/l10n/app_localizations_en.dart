@@ -269,6 +269,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSecurityTab => 'Security';
 
   @override
+  String get accountSettingsAccountSection => 'Account';
+
+  @override
+  String get accountSettingsAppSection => 'App';
+
+  @override
+  String get accountSettingsShortcuts => 'Shortcuts';
+
+  @override
+  String get accountSettingsPersonalProfile => 'Personal profile';
+
+  @override
+  String get accountSettingsOrganizerTab => 'Organizer';
+
+  @override
+  String get accountSettingsOrganizerRoleTitle => 'Organizer role';
+
+  @override
+  String get accountSettingsOrganizerVerified => 'You are an organizer';
+
+  @override
+  String get accountSettingsOrganizerVerifiedDescription =>
+      'Your account has been granted the organizer role.';
+
+  @override
+  String get accountSettingsOrganizerNotRegistered => 'No organizer role yet';
+
+  @override
+  String get accountSettingsOrganizerDescription =>
+      'Submit an application with a contact phone number and evidence image to request organizer access.';
+
+  @override
+  String get accountSettingsOrganizerOpenApplication =>
+      'Open organizer application';
+
+  @override
   String get settingsSystemTitle => 'System Options';
 
   @override
@@ -14930,4 +14966,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialPlaceSaveArea => 'Save area';
+
+  @override
+  String get manageSettingsInfoSection => 'Tournament info';
+
+  @override
+  String get manageSettingsInfoSectionDescription =>
+      'Tournament name, description, logo and banner.';
+
+  @override
+  String get manageSettingsScheduleSection => 'Schedule & venue';
+
+  @override
+  String get manageSettingsScheduleSectionDescription =>
+      'Start and end dates, venues and courts.';
+
+  @override
+  String get manageSettingsRegistrationSectionDescription =>
+      'Visibility, registration deadlines and invite code.';
+
+  @override
+  String get manageSettingsCompetitionSection => 'Competition';
+
+  @override
+  String get manageSettingsOtherSection => 'Other';
+
+  @override
+  String get manageSettingsInviteCode => 'Invite code';
 }

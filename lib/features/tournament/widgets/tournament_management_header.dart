@@ -97,6 +97,8 @@ class TournamentManagementSummary extends StatelessWidget {
   final Tournament tournament;
   final int teamCount;
   final VoidCallback? onEditGeneral;
+  final VoidCallback? onEditSchedule;
+  final VoidCallback? onEditRegistration;
   final VoidCallback? onEditFinance;
   final VoidCallback? onOpenAthletes;
 
@@ -105,6 +107,8 @@ class TournamentManagementSummary extends StatelessWidget {
     required this.tournament,
     required this.teamCount,
     this.onEditGeneral,
+    this.onEditSchedule,
+    this.onEditRegistration,
     this.onEditFinance,
     this.onOpenAthletes,
   });
@@ -127,7 +131,7 @@ class TournamentManagementSummary extends StatelessWidget {
         itemKey: const ValueKey('tournament-overview-dates-edit'),
         label: l10n.tournamentManagementKpiDates,
         value: _dateRange(t.startDate, t.endDate),
-        onTap: onEditGeneral,
+        onTap: onEditSchedule,
       ),
       _SummaryKpi(
         itemKey: const ValueKey('tournament-overview-athletes-edit'),
@@ -147,7 +151,7 @@ class TournamentManagementSummary extends StatelessWidget {
         itemKey: const ValueKey('tournament-management-kpi-deadline'),
         label: l10n.tournamentManagementKpiRegistrationDeadline,
         value: deadline == null ? '—' : DateFormat('dd/MM').format(deadline),
-        onTap: onEditGeneral,
+        onTap: onEditRegistration,
       ),
     ];
 

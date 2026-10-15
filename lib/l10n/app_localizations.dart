@@ -602,6 +602,72 @@ abstract class AppLocalizations {
   /// **'Bảo mật'**
   String get settingsSecurityTab;
 
+  /// No description provided for @accountSettingsAccountSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản'**
+  String get accountSettingsAccountSection;
+
+  /// No description provided for @accountSettingsAppSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ứng dụng'**
+  String get accountSettingsAppSection;
+
+  /// No description provided for @accountSettingsShortcuts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lối tắt'**
+  String get accountSettingsShortcuts;
+
+  /// No description provided for @accountSettingsPersonalProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hồ sơ cá nhân'**
+  String get accountSettingsPersonalProfile;
+
+  /// No description provided for @accountSettingsOrganizerTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổ chức'**
+  String get accountSettingsOrganizerTab;
+
+  /// No description provided for @accountSettingsOrganizerRoleTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vai trò Ban Tổ Chức'**
+  String get accountSettingsOrganizerRoleTitle;
+
+  /// No description provided for @accountSettingsOrganizerVerified.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đã là Ban Tổ Chức'**
+  String get accountSettingsOrganizerVerified;
+
+  /// No description provided for @accountSettingsOrganizerVerifiedDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài khoản đã được cấp vai trò Ban Tổ Chức.'**
+  String get accountSettingsOrganizerVerifiedDescription;
+
+  /// No description provided for @accountSettingsOrganizerNotRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có vai trò Ban Tổ Chức'**
+  String get accountSettingsOrganizerNotRegistered;
+
+  /// No description provided for @accountSettingsOrganizerDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi đơn kèm số điện thoại liên hệ và ảnh minh chứng để xin cấp quyền Ban Tổ Chức.'**
+  String get accountSettingsOrganizerDescription;
+
+  /// No description provided for @accountSettingsOrganizerOpenApplication.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở đơn đăng ký Ban Tổ Chức'**
+  String get accountSettingsOrganizerOpenApplication;
+
   /// No description provided for @settingsSystemTitle.
   ///
   /// In vi, this message translates to:
@@ -27051,6 +27117,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Lưu khu vực'**
   String get socialPlaceSaveArea;
+
+  /// No description provided for @manageSettingsInfoSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin giải'**
+  String get manageSettingsInfoSection;
+
+  /// No description provided for @manageSettingsInfoSectionDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên, mô tả, logo và ảnh bìa của giải đấu.'**
+  String get manageSettingsInfoSectionDescription;
+
+  /// No description provided for @manageSettingsScheduleSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch & địa điểm'**
+  String get manageSettingsScheduleSection;
+
+  /// No description provided for @manageSettingsScheduleSectionDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày bắt đầu, kết thúc và địa điểm, sân thi đấu.'**
+  String get manageSettingsScheduleSectionDescription;
+
+  /// No description provided for @manageSettingsRegistrationSectionDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ hiển thị, hạn đăng ký và mã mời.'**
+  String get manageSettingsRegistrationSectionDescription;
+
+  /// No description provided for @manageSettingsCompetitionSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thi đấu'**
+  String get manageSettingsCompetitionSection;
+
+  /// No description provided for @manageSettingsOtherSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get manageSettingsOtherSection;
+
+  /// No description provided for @manageSettingsInviteCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã mời'**
+  String get manageSettingsInviteCode;
 }
 
 class _AppLocalizationsDelegate

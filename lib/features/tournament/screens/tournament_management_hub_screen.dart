@@ -45,20 +45,17 @@ class _TournamentManagementHubScreenState
     extends ConsumerState<TournamentManagementHubScreen>
     with SingleTickerProviderStateMixin {
   static const _setupSections = [
-    TournamentManagementSection.general,
-    TournamentManagementSection.branding,
-    TournamentManagementSection.venues,
+    TournamentManagementSection.information,
+    TournamentManagementSection.schedule,
+    TournamentManagementSection.registration,
     TournamentManagementSection.divisions,
   ];
-  static const _operationsSections = [
-    TournamentManagementSection.liveOperations,
+  static const _otherSections = [
     TournamentManagementSection.teams,
     TournamentManagementSection.draw,
     TournamentManagementSection.sponsors,
     TournamentManagementSection.finance,
     TournamentManagementSection.livestream,
-  ];
-  static const _systemSections = [
     TournamentManagementSection.permissions,
     TournamentManagementSection.tokens,
   ];
@@ -73,7 +70,7 @@ class _TournamentManagementHubScreenState
       SliverOverlapAbsorberHandle();
 
   TournamentManagementSection _selectedSection =
-      TournamentManagementSection.general;
+      TournamentManagementSection.information;
   TournamentManagementSection? _openedSection;
   bool _isCollapsed = false;
   bool _isTabBarPinned = false;
@@ -260,7 +257,7 @@ class _TournamentManagementHubScreenState
                       tournament: tournament,
                       resolveImageUrl: _resolveImageUrl,
                       onEdit: () =>
-                          _openSection(TournamentManagementSection.branding),
+                          _openSection(TournamentManagementSection.information),
                     ),
                   ),
           ),
@@ -274,7 +271,11 @@ class _TournamentManagementHubScreenState
             tournament: tournament,
             teamCount: teamCount,
             onEditGeneral: () =>
-                _openSection(TournamentManagementSection.general),
+                _openSection(TournamentManagementSection.information),
+            onEditSchedule: () =>
+                _openSection(TournamentManagementSection.schedule),
+            onEditRegistration: () =>
+                _openSection(TournamentManagementSection.registration),
             onEditFinance: () =>
                 _openSection(TournamentManagementSection.finance),
             onOpenAthletes: () =>
@@ -317,9 +318,13 @@ class _TournamentManagementHubScreenState
                 compact: true,
                 overlapHandles: overlapHandles,
                 onEditGeneral: () =>
-                    _openSection(TournamentManagementSection.general),
-                onEditVenues: () =>
-                    _openSection(TournamentManagementSection.venues),
+                    _openSection(TournamentManagementSection.information),
+                onEditBranding: () =>
+                    _openSection(TournamentManagementSection.information),
+                onEditSchedule: () =>
+                    _openSection(TournamentManagementSection.schedule),
+                onEditRegistration: () =>
+                    _openSection(TournamentManagementSection.registration),
                 onEditFinance: () =>
                     _openSection(TournamentManagementSection.finance),
               ),
@@ -428,25 +433,54 @@ class _TournamentManagementHubScreenState
                 sections: _setupSections,
               ),
               const SizedBox(height: 12),
-              _buildSectionGroup(
-                context,
-                isTablet: isTablet,
-                title: l10n.tournamentManagementOperationsGroup,
-                icon: Icons.sports_score_rounded,
-                sections: _operationsSections,
-              ),
+              _buildOtherSectionsGroup(context, isTablet: isTablet),
               const SizedBox(height: 12),
-              _buildSectionGroup(
-                context,
-                isTablet: isTablet,
-                title: l10n.tournamentManagementSystemGroup,
-                icon: Icons.admin_panel_settings_outlined,
-                sections: _systemSections,
-              ),
+              TournamentLifecycleCard(tournament: widget.tournament),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOtherSectionsGroup(
+    BuildContext context, {
+    required bool isTablet,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: colors.border),
+        child: ExpansionTile(
+          leading: const Icon(
+            Icons.more_horiz_rounded,
+            color: AppTheme.primary,
+          ),
+          title: Text(
+            l10n.manageSettingsOtherSection,
+            style: TextStyle(
+              color: colors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+            ),
+          ),
+          children: [
+            for (var index = 0; index < _otherSections.length; index++) ...[
+              _buildSectionAction(
+                context,
+                l10n,
+                isTablet,
+                _otherSections[index],
+              ),
+              if (index != _otherSections.length - 1)
+                Divider(height: 1, indent: 50, color: colors.border),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -676,27 +710,27 @@ class _TournamentManagementHubScreenState
     AppLocalizations l10n,
     TournamentManagementSection section,
   ) => switch (section) {
-    TournamentManagementSection.general => _SectionDetails(
-      Icons.settings_outlined,
-      l10n.tournamentManagementGeneral,
-      l10n.tournamentManagementGeneralDescription,
+    TournamentManagementSection.information => _SectionDetails(
+      Icons.article_outlined,
+      l10n.manageSettingsInfoSection,
+      l10n.manageSettingsInfoSectionDescription,
       AppTheme.primary,
     ),
-    TournamentManagementSection.branding => _SectionDetails(
-      Icons.palette_outlined,
-      l10n.tournamentManagementBranding,
-      l10n.tournamentManagementBrandingDescription,
+    TournamentManagementSection.schedule => _SectionDetails(
+      Icons.event_outlined,
+      l10n.manageSettingsScheduleSection,
+      l10n.manageSettingsScheduleSectionDescription,
       AppTheme.secondary,
     ),
-    TournamentManagementSection.venues => _SectionDetails(
-      Icons.place_outlined,
-      l10n.tournamentManagementVenues,
-      l10n.tournamentManagementVenuesDescription,
-      AppTheme.secondary,
+    TournamentManagementSection.registration => _SectionDetails(
+      Icons.how_to_reg_outlined,
+      l10n.tournamentManagementRegistration,
+      l10n.manageSettingsRegistrationSectionDescription,
+      AppTheme.primary,
     ),
     TournamentManagementSection.divisions => _SectionDetails(
       Icons.category_outlined,
-      l10n.tournamentManagementDivisions,
+      l10n.manageSettingsCompetitionSection,
       l10n.tournamentManagementDivisionsDescription,
       AppTheme.secondary,
     ),
@@ -710,12 +744,6 @@ class _TournamentManagementHubScreenState
       Icons.casino_rounded,
       l10n.manageDraw,
       l10n.manageDrawSubtitle,
-      context.colors.warning,
-    ),
-    TournamentManagementSection.liveOperations => _SectionDetails(
-      Icons.sports_score_rounded,
-      l10n.tournamentManagementLiveOperations,
-      l10n.tournamentManagementLiveOperationsDescription,
       context.colors.warning,
     ),
     TournamentManagementSection.sponsors => _SectionDetails(

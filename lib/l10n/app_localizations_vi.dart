@@ -269,6 +269,43 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsSecurityTab => 'Bảo mật';
 
   @override
+  String get accountSettingsAccountSection => 'Tài khoản';
+
+  @override
+  String get accountSettingsAppSection => 'Ứng dụng';
+
+  @override
+  String get accountSettingsShortcuts => 'Lối tắt';
+
+  @override
+  String get accountSettingsPersonalProfile => 'Hồ sơ cá nhân';
+
+  @override
+  String get accountSettingsOrganizerTab => 'Tổ chức';
+
+  @override
+  String get accountSettingsOrganizerRoleTitle => 'Vai trò Ban Tổ Chức';
+
+  @override
+  String get accountSettingsOrganizerVerified => 'Bạn đã là Ban Tổ Chức';
+
+  @override
+  String get accountSettingsOrganizerVerifiedDescription =>
+      'Tài khoản đã được cấp vai trò Ban Tổ Chức.';
+
+  @override
+  String get accountSettingsOrganizerNotRegistered =>
+      'Chưa có vai trò Ban Tổ Chức';
+
+  @override
+  String get accountSettingsOrganizerDescription =>
+      'Gửi đơn kèm số điện thoại liên hệ và ảnh minh chứng để xin cấp quyền Ban Tổ Chức.';
+
+  @override
+  String get accountSettingsOrganizerOpenApplication =>
+      'Mở đơn đăng ký Ban Tổ Chức';
+
+  @override
   String get settingsSystemTitle => 'Tùy chọn hệ thống';
 
   @override
@@ -14880,4 +14917,31 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialPlaceSaveArea => 'Lưu khu vực';
+
+  @override
+  String get manageSettingsInfoSection => 'Thông tin giải';
+
+  @override
+  String get manageSettingsInfoSectionDescription =>
+      'Tên, mô tả, logo và ảnh bìa của giải đấu.';
+
+  @override
+  String get manageSettingsScheduleSection => 'Lịch & địa điểm';
+
+  @override
+  String get manageSettingsScheduleSectionDescription =>
+      'Ngày bắt đầu, kết thúc và địa điểm, sân thi đấu.';
+
+  @override
+  String get manageSettingsRegistrationSectionDescription =>
+      'Chế độ hiển thị, hạn đăng ký và mã mời.';
+
+  @override
+  String get manageSettingsCompetitionSection => 'Thi đấu';
+
+  @override
+  String get manageSettingsOtherSection => 'Khác';
+
+  @override
+  String get manageSettingsInviteCode => 'Mã mời';
 }

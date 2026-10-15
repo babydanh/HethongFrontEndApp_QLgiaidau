@@ -55,8 +55,8 @@ class _TournamentManagementVenuesSectionState
             onRetry: _reload,
           );
         final venues = snapshot.data ?? const <Map<String, dynamic>>[];
-        return ListView(
-          padding: const EdgeInsets.all(16),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             TournamentManagementSectionCard(
               title: l10n.tournamentManagementVenues,
