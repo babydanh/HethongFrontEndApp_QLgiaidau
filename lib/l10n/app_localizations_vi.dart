@@ -1254,9 +1254,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get viewBracket => 'Xem Bracket';
 
   @override
-  String get viewBracketSubtitle => 'Sơ đồ thi đấu & kết quả';
-
-  @override
   String get endTournament => 'Kết thúc giải đấu';
 
   @override
@@ -7117,6 +7114,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveDiscussionTab => 'Phòng thảo luận';
 
   @override
+  String get liveNoSignalLabel => 'Chưa có tín hiệu phát trực tiếp';
+
+  @override
+  String get liveScoreboardToggle => 'Bảng điểm';
+
+  @override
+  String get liveOverlayChipH2h => 'H2H';
+
+  @override
+  String get liveOverlayChipBracket => 'Sơ đồ';
+
+  @override
+  String get liveOverlaySaveError => 'Không lưu được, thử lại';
+
+  @override
+  String get liveOverlayMatchEnded => 'Trận đã kết thúc';
+
+  @override
+  String get liveH2hTitle => 'HEAD TO HEAD';
+
+  @override
+  String get liveH2hTournamentLabel => 'GIẢI ĐẤU:';
+
+  @override
+  String get liveBracketCurrentMatch => 'ĐANG DIỄN RA';
+
+  @override
+  String get liveBracketEmpty => 'Chưa có dữ liệu nhánh đấu cho nội dung này';
+
+  @override
+  String get liveBracketWin => 'WIN';
+
+  @override
+  String get liveScoreboardToggleError => 'Không đổi được trạng thái bảng điểm';
+
+  @override
   String get liveSinglesElo => 'ELO Đơn';
 
   @override
@@ -12129,6 +12162,99 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsNoParticipants => 'Nội dung này chưa có người tham gia.';
 
   @override
+  String get opsAddAthlete => 'Thêm VĐV';
+
+  @override
+  String get opsAddAthleteTitle => 'Thêm VĐV vào danh sách';
+
+  @override
+  String get opsAddAthleteDescription =>
+      'Tìm bạn bè, thành viên CLB hoặc nhập tên cho nội dung cá nhân hay đôi.';
+
+  @override
+  String get opsAddAthleteAccounts => 'Bạn bè & CLB';
+
+  @override
+  String get opsAddAthleteDirect => 'Nhập tên';
+
+  @override
+  String get opsAddAthleteSearch => 'Tìm vận động viên';
+
+  @override
+  String get opsAddAthleteSearchNameHint =>
+      'Tìm theo tên cần ít nhất 2 ký tự. Luồng này chưa hỗ trợ tìm bằng email.';
+
+  @override
+  String get opsAddAthleteTeam => 'Đội hiện có';
+
+  @override
+  String get opsAddAthleteSelectTeam => 'Chọn đội';
+
+  @override
+  String get opsAddAthleteTeamRequired =>
+      'Chọn một đội hiện có trước khi tìm kiếm.';
+
+  @override
+  String get opsAddAthleteNoTeams =>
+      'Không có đội bóng phù hợp trong nội dung này.';
+
+  @override
+  String get opsAddAthleteFriends => 'Bạn bè';
+
+  @override
+  String get opsAddAthleteClub => 'CLB';
+
+  @override
+  String get opsAddAthleteLoading => 'Đang tải vận động viên…';
+
+  @override
+  String get opsAddAthleteEmpty =>
+      'Không có vận động viên phù hợp với tìm kiếm.';
+
+  @override
+  String get opsAddAthleteNoCandidates =>
+      'Không có bạn bè hoặc thành viên CLB để thêm.';
+
+  @override
+  String get opsAddAthleteName => 'Tên vận động viên';
+
+  @override
+  String get opsAddAthleteNameRequired => 'Nhập tên vận động viên.';
+
+  @override
+  String get opsAddAthleteNameTooLong => 'Tên không được vượt quá 255 ký tự.';
+
+  @override
+  String get opsAddAthleteAddAction => 'Thêm';
+
+  @override
+  String get opsAddAthleteMain => 'Chính';
+
+  @override
+  String get opsAddAthleteReserve => 'Dự bị';
+
+  @override
+  String get opsAddAthleteSuccess => 'Đã thêm vận động viên.';
+
+  @override
+  String get opsAddAthleteFailed => 'Không thể thêm vận động viên.';
+
+  @override
+  String get opsAddAthleteApprovalFailed =>
+      'Đã thêm vận động viên nhưng tự động duyệt thất bại. Hãy kiểm tra danh sách trước khi đổi trạng thái.';
+
+  @override
+  String get opsAddAthleteOutcomeUnknown =>
+      'Chưa xác định được kết quả. Danh sách đã được làm mới; hãy kiểm tra trước khi thử lại.';
+
+  @override
+  String get opsAddAthleteRefreshFailed =>
+      'Không tải lại được danh sách. Hãy làm mới roster trước khi thử lại.';
+
+  @override
+  String get opsAddAthleteRefresh => 'Làm mới danh sách';
+
+  @override
   String get opsSearchRoster => 'Tìm theo tên đội hoặc vận động viên';
 
   @override
@@ -12284,6 +12410,83 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementCameraManualAssignFailed =>
       'Không gán được camera cho trận.';
+
+  @override
+  String get tournamentManagementCameraCheckStatus =>
+      'Kiểm tra tín hiệu camera';
+
+  @override
+  String get tournamentManagementCameraCheckingStatus =>
+      'Đang kiểm tra tín hiệu…';
+
+  @override
+  String get tournamentManagementCameraCheckAgain => 'Kiểm tra lại';
+
+  @override
+  String get tournamentManagementCameraSignalOnline => 'Đã có tín hiệu';
+
+  @override
+  String get tournamentManagementCameraSignalOffline => 'Chưa có tín hiệu';
+
+  @override
+  String get tournamentManagementCameraArchived => 'Camera đã lưu trữ';
+
+  @override
+  String get tournamentManagementCameraStatusError =>
+      'Không kiểm tra được tín hiệu camera.';
+
+  @override
+  String get tournamentManagementCameraAccessDenied =>
+      'Bạn không có quyền xem camera này.';
+
+  @override
+  String get tournamentManagementCameraUnavailable =>
+      'Thông tin camera hiện không khả dụng.';
+
+  @override
+  String get tournamentManagementRecordingCatalog => 'Danh sách bản ghi';
+
+  @override
+  String get tournamentManagementRecordingTitle => 'Bản ghi của trận';
+
+  @override
+  String get tournamentManagementRecordingDay => 'Ngày ghi hình';
+
+  @override
+  String get tournamentManagementRecordingLoading =>
+      'Đang tải danh sách bản ghi…';
+
+  @override
+  String get tournamentManagementRecordingFilesLoading => 'Đang tải tệp…';
+
+  @override
+  String get tournamentManagementRecordingLoadError =>
+      'Không tải được danh sách bản ghi.';
+
+  @override
+  String get tournamentManagementRecordingNoCamera =>
+      'Trận đấu chưa được gán camera.';
+
+  @override
+  String get tournamentManagementRecordingNoDays =>
+      'Không tìm thấy ngày có bản ghi của trận này.';
+
+  @override
+  String get tournamentManagementRecordingNoFiles =>
+      'Không có bản ghi trong ngày này.';
+
+  @override
+  String get tournamentManagementRecordingAccessDenied =>
+      'Bạn không có quyền xem bản ghi của trận đấu này.';
+
+  @override
+  String get tournamentManagementRecordingUnavailable =>
+      'Thông tin bản ghi hiện không khả dụng.';
+
+  @override
+  String tournamentManagementRecordingFileSize(int size) {
+    return '$size byte';
+  }
 
   @override
   String get opsSpecialOperation => 'Xử lý đặc biệt';
@@ -13401,6 +13604,63 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chọn mục để chỉnh sửa cài đặt được hỗ trợ hoặc mở không gian vận hành hiện có.';
 
   @override
+  String get tournamentManagementTabAthletes => 'VĐV';
+
+  @override
+  String get tournamentManagementTabBracket => 'Bảng đấu';
+
+  @override
+  String get tournamentManagementTabSettings => 'Cài đặt';
+
+  @override
+  String get tournamentManagementKpiDates => 'Thi đấu';
+
+  @override
+  String get tournamentManagementKpiAthletes => 'VĐV';
+
+  @override
+  String get tournamentManagementKpiFee => 'Lệ phí';
+
+  @override
+  String get tournamentManagementKpiFree => 'Miễn phí';
+
+  @override
+  String get tournamentManagementKpiRegistrationDeadline => 'Hạn ĐK';
+
+  @override
+  String get registerTypeOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get registerTypeOpenDoubles => 'Đôi linh hoạt';
+
+  @override
+  String get registerDivisionFull => 'Nội dung này đã đủ suất';
+
+  @override
+  String registerTeamSlotCount(Object count) {
+    return '$count suất đội';
+  }
+
+  @override
+  String get tournamentCategoryOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get tournamentCategoryOpenDoubles => 'Đôi linh hoạt';
+
+  @override
+  String get dashboard_noMoreTournaments => 'Đã xem hết giải đấu';
+
+  @override
+  String userProfileViewProfileOf(Object name) {
+    return 'Xem hồ sơ $name';
+  }
+
+  @override
+  String matchesUnplacedSection(int count) {
+    return 'Chưa xếp ($count)';
+  }
+
+  @override
   String get tournamentManagementParticipantApproved => 'Đã duyệt';
 
   @override
@@ -13418,8 +13678,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementParticipantPending => 'Chờ duyệt';
 
   @override
-  String get tournamentManagementParticipantPendingPartner =>
-      'Đang chờ ghép đồng đội';
+  String get tournamentManagementParticipantPendingPartner => 'Chờ ghép';
 
   @override
   String get tournamentManagementParticipantRejected => 'Đã từ chối';
@@ -13695,10 +13954,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementSchedule => 'Lịch thi đấu';
-
-  @override
-  String get tournamentManagementScheduleDescription =>
-      'Mở không gian vận hành hiện có để xem lịch thi đấu.';
 
   @override
   String get tournamentManagementSeed => 'Hạt giống';

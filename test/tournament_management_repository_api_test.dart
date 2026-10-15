@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
+import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -604,6 +605,108 @@ void main() {
       expect(backend.only.path, '/tournaments/$tournamentId/gallery/2');
       expect(backend.only.data, isNull);
     });
+  });
+
+  group('add athletes', () {
+    test(
+      'candidate search scopes source, participant and fresh results',
+      () async {
+        backend.onGet('/tournaments/$tournamentId/add-athletes/candidates', {
+          'items': [
+            {'userId': 'user-1', 'fullName': 'Athlete One'},
+          ],
+        });
+
+        final candidates = await repository.listAddAthleteCandidates(
+          tournamentId,
+          source: AddAthleteSource.club,
+          query: '  Athlete  ',
+          participantId: 'team-1',
+        );
+
+        expect(candidates.single.userId, 'user-1');
+        expect(candidates.single.fullName, 'Athlete One');
+        expect(backend.only.method, 'GET');
+        expect(
+          backend.only.path,
+          '/tournaments/$tournamentId/add-athletes/candidates',
+        );
+        expect(backend.only.queryParameters, {
+          'source': 'CLUB',
+          'q': 'Athlete',
+          'limit': 25,
+          'participantId': 'team-1',
+        });
+        expect(backend.only.extra['noCache'], isTrue);
+      },
+    );
+
+    test(
+      'football candidate addition posts the existing team and role',
+      () async {
+        backend.onPost('/tournaments/$tournamentId/add-athletes/candidates', {
+          'participantId': 'team-1',
+        });
+
+        final participantId = await repository.addAthleteCandidate(
+          tournamentId,
+          source: AddAthleteSource.friends,
+          userId: 'user-1',
+          tournamentDivisionId: 'division-1',
+          participantId: 'team-1',
+          role: FootballRosterRole.reserve,
+        );
+
+        expect(participantId, 'team-1');
+        expect(backend.only.method, 'POST');
+        expect(
+          backend.only.path,
+          '/tournaments/$tournamentId/add-athletes/candidates',
+        );
+        expect(backend.only.data, {
+          'source': 'FRIENDS',
+          'userId': 'user-1',
+          'tournamentDivisionId': 'division-1',
+          'participantId': 'team-1',
+          'role': 'RESERVE',
+        });
+      },
+    );
+
+    test('direct name posts only name and optional division', () async {
+      backend.onPost('/tournaments/$tournamentId/add-athletes/direct', {
+        'participantId': 'participant-1',
+      });
+
+      final participantId = await repository.addAthleteDirect(
+        tournamentId,
+        name: 'Direct athlete',
+        tournamentDivisionId: 'division-1',
+      );
+
+      expect(participantId, 'participant-1');
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/add-athletes/direct',
+      );
+      expect(backend.only.data, {
+        'name': 'Direct athlete',
+        'tournamentDivisionId': 'division-1',
+      });
+    });
+
+    test(
+      'missing participant id is not reported as a successful add',
+      () async {
+        backend.onPost('/tournaments/$tournamentId/add-athletes/direct', {});
+
+        await expectLater(
+          repository.addAthleteDirect(tournamentId, name: 'Direct athlete'),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
   });
 
   group('divisions and seeding', () {

@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/data/models/camera_live_status_model.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/court_camera_repository.dart';
 import 'package:dio/dio.dart';
@@ -36,7 +37,9 @@ class ApiCourtCameraRepository implements ICourtCameraRepository {
       return value
           .map((row) {
             if (row is Map<String, dynamic>) return row;
-            throw const FormatException('Expected object rows in API response.');
+            throw const FormatException(
+              'Expected object rows in API response.',
+            );
           })
           .toList(growable: false);
     }
@@ -74,5 +77,21 @@ class ApiCourtCameraRepository implements ICourtCameraRepository {
       '/livestream/matches/$matchId/assign-camera',
       data: {'cameraId': cameraId},
     );
+  }
+
+  @override
+  Future<CameraLiveStatusModel> getCameraLiveStatus(String cameraId) async {
+    final status = CameraLiveStatusModel.fromJson(
+      _map(
+        await _dio.get(
+          '/livestream/cameras/$cameraId/status',
+          options: Options(extra: const <String, Object?>{'noCache': true}),
+        ),
+      ),
+    );
+    if (status.cameraId != cameraId) {
+      throw const FormatException('Invalid camera status response.');
+    }
+    return status;
   }
 }

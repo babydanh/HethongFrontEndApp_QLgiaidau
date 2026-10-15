@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/data/models/home_projection.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,7 +10,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 
 class FeaturedTournamentBannerCard extends StatelessWidget {
-  final HomeFeaturedTournament tournament;
+  final Tournament tournament;
   final VoidCallback onTap;
 
   const FeaturedTournamentBannerCard({
@@ -35,7 +35,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
   }
 
   String _sportLabel(AppLocalizations l10n) {
-    switch (tournament.sport?.toUpperCase()) {
+    switch (tournament.sport.toUpperCase()) {
       case AppConstants.sportBadminton:
         return l10n.createClubTournament_sportBadminton;
       case AppConstants.sportTableTennis:
@@ -47,7 +47,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
       case AppConstants.sportTennis:
         return l10n.createClubTournament_sportTennis;
       default:
-        return tournament.sport ?? '';
+        return tournament.sport;
     }
   }
 
@@ -58,7 +58,6 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
     final bannerUrl = _resolveImageUrl(tournament.bannerUrl);
     final hasBanner = bannerUrl.isNotEmpty;
     final sport = tournament.sport;
-    final registrationStatus = tournament.registrationStatus;
 
     return GestureDetector(
       onTap: onTap,
@@ -113,28 +112,12 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (sport != null)
-                        Flexible(
-                          child: _CompactTopSportBadge(
-                            label: _sportLabel(l10n),
-                            sportKey: sport,
-                          ),
-                        )
-                      else
-                        const Spacer(),
-                      if (sport != null && registrationStatus != null)
-                        const SizedBox(width: 8),
-                      if (registrationStatus != null)
-                        Flexible(
-                          child: _CompactTopStatusBadge(
-                            label: registrationStatus == 'OPEN'
-                                ? l10n.registrationOpenTag
-                                : l10n.registrationClosedTag,
-                            color: registrationStatus == 'OPEN'
-                                ? AppTheme.primary
-                                : Colors.blueGrey,
-                          ),
+                      Flexible(
+                        child: _CompactTopSportBadge(
+                          label: _sportLabel(l10n),
+                          sportKey: sport,
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -246,35 +229,6 @@ class _CompactTopSportBadge extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CompactTopStatusBadge extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _CompactTopStatusBadge({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        softWrap: false,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 9.5,
-          fontWeight: FontWeight.w800,
-        ),
       ),
     );
   }

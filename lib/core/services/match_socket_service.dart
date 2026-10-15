@@ -37,6 +37,10 @@ class MatchSocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   final _registrationUpdateController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _scoreboardVisibilityController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _overlayVisibilityController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onScoreUpdate =>
       _scoreUpdateController.stream;
@@ -51,6 +55,12 @@ class MatchSocketService {
       _tournamentMatchUpdateController.stream;
   Stream<Map<String, dynamic>> get onRegistrationUpdate =>
       _registrationUpdateController.stream;
+
+  Stream<Map<String, dynamic>> get onScoreboardVisibility =>
+      _scoreboardVisibilityController.stream;
+
+  Stream<Map<String, dynamic>> get onOverlayVisibility =>
+      _overlayVisibilityController.stream;
 
   /// An toàn parse socket payload: accept Map hoặc JSON string.
   /// Log warning nếu format lạ, không throw.
@@ -212,6 +222,20 @@ class MatchSocketService {
         final parsed = _parsePayload(data);
         if (parsed != null) {
           _registrationUpdateController.add(parsed);
+        }
+      });
+      _socket!.on('scoreboard:visibility', (data) {
+        _log.info('Socket scoreboard:visibility received');
+        final parsed = _parsePayload(data);
+        if (parsed != null) {
+          _scoreboardVisibilityController.add(parsed);
+        }
+      });
+      _socket!.on('overlay:visibility', (data) {
+        _log.info('Socket overlay:visibility received');
+        final parsed = _parsePayload(data);
+        if (parsed != null) {
+          _overlayVisibilityController.add(parsed);
         }
       });
 

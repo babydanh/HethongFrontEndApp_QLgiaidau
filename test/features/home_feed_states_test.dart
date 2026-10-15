@@ -102,6 +102,8 @@ void main() {
       tournamentId: _tournament.id,
       round: 1,
       matchNumber: 1,
+      team1Id: 'team-alpha-id',
+      team2Id: 'team-beta-id',
       team1Name: 'Team Alpha',
       team2Name: 'Team Beta',
       status: 'scheduled',
@@ -126,31 +128,87 @@ void main() {
     tester.view.resetDevicePixelRatio();
   });
 
-  testWidgets('home bỏ tiêu đề section và link "Xem tất cả", nội dung còn nguyên', (
+  testWidgets(
+    'home bỏ tiêu đề section và link "Xem tất cả", nội dung còn nguyên',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 844);
+      tester.view.devicePixelRatio = 1;
+
+      await tester.pumpWidget(
+        _homeApp((ref, tournamentId) => Stream.value(const <MatchModel>[])),
+      );
+      await tester.pumpAndSettle();
+
+      // Người dùng yêu cầu bỏ cho gọn: "Giải đấu nổi bật" + "Xem tất cả" của nó,
+      // và tiêu đề lịch thi đấu sắp diễn ra + "Xem tất cả" của nó.
+      expect(find.text('Featured Tournaments'), findsNothing);
+      expect(find.text('Upcoming Matches'), findsNothing);
+      expect(find.text('View All'), findsNothing);
+
+      // Bỏ tiêu đề không được nuốt mất nội dung của section.
+      expect(find.text('Synthetic tournament'), findsWidgets);
+      expect(find.text('No upcoming matches'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    },
+  );
+  testWidgets('header animation does not rebuild active scroll content', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 844);
     tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
 
+    final matches = List.generate(8, _scrollMatch);
     await tester.pumpWidget(
-      _homeApp((ref, tournamentId) => Stream.value(const <MatchModel>[])),
+      _homeApp(
+        (ref, tournamentId) => Stream.value(matches),
+        cardMatches: matches,
+      ),
     );
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Upcoming').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Home team 0'), findsOneWidget);
 
-    // Người dùng yêu cầu bỏ cho gọn: "Giải đấu nổi bật" + "Xem tất cả" của nó,
-    // và tiêu đề lịch thi đấu sắp diễn ra + "Xem tất cả" của nó.
-    expect(find.text('Featured Tournaments'), findsNothing);
-    expect(find.text('Upcoming Matches'), findsNothing);
-    expect(find.text('View All'), findsNothing);
+    final scrollView = find.byType(CustomScrollView).first;
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(of: scrollView, matching: find.byType(Scrollable)).first,
+    );
+    final initialScrollView = tester.widget<CustomScrollView>(scrollView);
+    final headerBuilderFinder = find
+        .ancestor(of: scrollView, matching: find.byType(AnimatedBuilder))
+        .first;
+    final headerAnimation =
+        tester.widget<AnimatedBuilder>(headerBuilderFinder).animation
+            as Animation<double>;
 
-    // Bỏ tiêu đề không được nuốt mất nội dung của section.
-    expect(find.text('Synthetic tournament'), findsWidgets);
-    expect(find.text('No upcoming matches'), findsOneWidget);
+    expect(scrollable.position.maxScrollExtent, greaterThan(60));
+    await tester.dragFrom(const Offset(180, 700), const Offset(0, -220));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 140));
+
+    expect(scrollable.position.pixels, greaterThan(60));
+    expect(headerAnimation.value, greaterThan(0));
+    final collapsedProgress = headerAnimation.value;
+    await tester.dragFrom(const Offset(180, 700), const Offset(0, 220));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 140));
+
+    expect(scrollable.position.pixels, lessThanOrEqualTo(40));
+    expect(headerAnimation.value, lessThan(collapsedProgress));
+    expect(
+      identical(tester.widget<CustomScrollView>(scrollView), initialScrollView),
+      isTrue,
+    );
     expect(tester.takeException(), isNull);
-
     await tester.pumpWidget(const SizedBox.shrink());
-    tester.view.resetPhysicalSize();
-    tester.view.resetDevicePixelRatio();
   });
 }
 
@@ -208,6 +266,19 @@ final _tournament = Tournament(
   createdAt: DateTime.utc(2026, 1, 1),
   updatedAt: DateTime.utc(2026, 1, 1),
   startDate: DateTime.utc(2026, 10, 1),
+);
+MatchModel _scrollMatch(int index) => MatchModel(
+  id: 'scroll-match-$index',
+  tournamentId: _tournament.id,
+  round: 1,
+  matchNumber: index + 1,
+  team1Id: 'home-team-id-$index',
+  team2Id: 'away-team-id-$index',
+  team1Name: 'Home team $index',
+  team2Name: 'Away team $index',
+  status: 'scheduled',
+  bracketPosition: BracketPosition(round: 1, position: index + 1),
+  updatedAt: DateTime.utc(2026, 9, 27),
 );
 
 final _community = Community(id: 'synthetic-club', name: 'Synthetic club');

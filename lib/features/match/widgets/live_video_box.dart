@@ -2,11 +2,14 @@ import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_playback_repository.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_player.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final matchPlaybackProvider =
-    FutureProvider.family<MatchPlaybackModel?, String>((ref, matchId) async {
+final matchPlaybackProvider = FutureProvider.family<MatchPlaybackModel?, String>((
+  ref,
+  matchId,
+) async {
   final client = ref.watch(dioClientProvider);
   final repository = ApiMatchPlaybackRepository(client);
   try {
@@ -71,24 +74,31 @@ class _NoSignalBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.videocam_outlined, color: Colors.white24, size: 36),
-          const SizedBox(height: 10),
-          Text(
-            'Chưa có tín hiệu phát trực tiếp',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        color: Colors.black,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.videocam_outlined,
+              color: Colors.white24,
+              size: 36,
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Text(
+              AppLocalizations.of(context)!.liveNoSignalLabel,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

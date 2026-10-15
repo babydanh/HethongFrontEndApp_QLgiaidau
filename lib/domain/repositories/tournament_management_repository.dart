@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
+import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
 
 abstract interface class TournamentManagementRepository {
   Future<List<Map<String, dynamic>>> getVenues(String id);
@@ -60,6 +61,25 @@ abstract interface class TournamentManagementRepository {
     String participantId,
     String status,
   );
+  Future<List<AddAthleteCandidate>> listAddAthleteCandidates(
+    String id, {
+    required AddAthleteSource source,
+    String? query,
+    String? participantId,
+  });
+  Future<String> addAthleteCandidate(
+    String id, {
+    required AddAthleteSource source,
+    required String userId,
+    String? tournamentDivisionId,
+    String? participantId,
+    FootballRosterRole? role,
+  });
+  Future<String> addAthleteDirect(
+    String id, {
+    required String name,
+    String? tournamentDivisionId,
+  });
 
   Future<List<String>> getGallery(String id);
   Future<void> addGalleryImage(String id, String url);

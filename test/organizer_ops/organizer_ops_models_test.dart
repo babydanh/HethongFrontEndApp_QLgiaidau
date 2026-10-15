@@ -68,4 +68,14 @@ void main() {
     expect(entry.actorName, 'operator@example.com');
     expect(entry.createdAt.toUtc().year, 2026);
   });
+  test('parses football team id for organizer roster additions', () {
+    dynamic participant = OrganizerOpsParticipant.fromJson({
+      'id': 'participant-1',
+      'teamName': 'Team A',
+      'teamStatus': 'COMPLETE',
+      'footballTeamId': 'football-team-1',
+    });
+
+    expect(participant.footballTeamId, 'football-team-1');
+  });
 }

@@ -29,6 +29,8 @@ import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_discussion_message.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
 
 class _HeartModel {
   final double startX;
@@ -109,7 +111,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   late TabController _tabController;
-  int _selectedViewerTab = 0;
+  int _selectedViewerTab = 1;
+  LiveOverlayKind? _pendingOverlayKind;
+  // Overlay bị nút đóng ẩn cục bộ; đổi cờ server sẽ xóa trạng thái này.
+  LiveOverlayKind? _dismissedOverlay;
   final List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = false;
   StreamSubscription? _commentSub;
@@ -185,7 +190,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: _selectedViewerTab,
+    );
 
     _livePulseCtrl = AnimationController(
       vsync: this,
@@ -584,6 +593,25 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         tournamentId: effectiveTournamentId,
         matchId: widget.matchId,
       )),
+    );
+
+    // Nút đóng chỉ ẩn cục bộ; đổi cờ server (socket hoặc snapshot) thì xóa.
+    ref.listen(
+      singleMatchProvider((
+        tournamentId: effectiveTournamentId,
+        matchId: widget.matchId,
+      )),
+      (previous, next) {
+        final before = previous?.value;
+        final after = next.value;
+        if (before == null || after == null) return;
+        final flagsChanged =
+            before.h2hOverlayVisible != after.h2hOverlayVisible ||
+            before.bracketOverlayVisible != after.bracketOverlayVisible;
+        if (flagsChanged && _dismissedOverlay != null) {
+          setState(() => _dismissedOverlay = null);
+        }
+      },
     );
 
     ref.watch(
@@ -1337,7 +1365,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final l10n = AppLocalizations.of(context)!;
     final currentScore = _currentLiveScore(match);
     if (widget.isViewer || canOpenScoring) {
-      return _buildViewerState(match, canOpenScoring: canOpenScoring);
+      return _buildViewerState(match, canControl: canOpenScoring);
     }
 
     return Column(
@@ -1640,183 +1668,635 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  VIEWER STATE — Người xem
-  // ═══════════════════════════════════════════════════════════
-  Widget _buildViewerState(MatchModel match, {required bool canOpenScoring}) {
+  Future<void> _toggleScoreboardVisibility(MatchModel match) async {
     final l10n = AppLocalizations.of(context)!;
-    final currentScore = _currentLiveScore(match);
-    final effectiveId = _effectiveTournamentId(match);
-    final params = (tournamentId: effectiveId, matchId: widget.matchId);
+    try {
+      await ref
+          .read(matchRepositoryProvider)
+          .setScoreboardVisibility(
+            match.id,
+            visible: !match.scoreboardVisible,
+            isClubMatch: match.clubMatchSessionId?.isNotEmpty == true,
+          );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ErrorParser.parse(e, l10n.liveScoreboardToggleError)),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
-    return Column(
+  Future<void> _setOverlayVisibility(
+    MatchModel match,
+    LiveOverlayKind kind, {
+    required bool visible,
+  }) async {
+    if (_pendingOverlayKind != null) return;
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _pendingOverlayKind = kind);
+    try {
+      await ref
+          .read(matchRepositoryProvider)
+          .setOverlayVisibility(
+            match.id,
+            kind: kind,
+            visible: visible,
+            isClubMatch: match.clubMatchSessionId?.isNotEmpty == true,
+          );
+      // Ghi thành công: làm mới snapshot; socket overlay:visibility cập nhật realtime.
+      ref.invalidate(
+        singleMatchProvider((
+          tournamentId: _effectiveTournamentId(),
+          matchId: widget.matchId,
+        )),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.liveOverlaySaveError),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _pendingOverlayKind = null);
+    }
+  }
+
+  void _dismissOverlay(LiveOverlayKind kind) {
+    setState(() => _dismissedOverlay = kind);
+  }
+
+  Widget _withCloseButton(Widget overlay, {required VoidCallback onClose}) {
+    return Stack(
+      fit: StackFit.passthrough,
       children: [
+        overlay,
+        Positioned(
+          top: 4,
+          right: 4,
+          child: LiveOverlayCloseButton(onPressed: onClose),
+        ),
+      ],
+    );
+  }
 
-        // ─── Live Video Stream Player Box (Mockup) ───
-        Container(
-          margin: EdgeInsets.fromLTRB(12, canOpenScoring ? 10 : 12, 12, 6),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                border: Border.all(color: context.colors.border, width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+  Widget _liveControlIcon({
+    required IconData icon,
+    required String tooltip,
+    required bool active,
+    required VoidCallback onTap,
+  }) {
+    return IconButton(
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+      iconSize: 16,
+      icon: Icon(icon, color: active ? AppTheme.primary : Colors.white54),
+      onPressed: onTap,
+    );
+  }
+
+  Widget _buildH2hOverlay(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
+    final tournament = match.tournamentName;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        // Chừa 48 px bên phải cho nút đóng.
+        padding: const EdgeInsets.fromLTRB(8, 8, 48, 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.liveH2hTitle,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
               ),
-              child: Stack(
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: _h2hTeam(
+                    name: match.team1Name,
+                    avatarUrl: match.team1MemberInfos.isNotEmpty
+                        ? match.team1MemberInfos.first.avatarUrl
+                        : null,
+                    elo: match.team1EloPoints,
+                  ),
+                ),
+                const Text(
+                  'V',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Expanded(
+                  child: _h2hTeam(
+                    name: match.team2Name,
+                    avatarUrl: match.team2MemberInfos.isNotEmpty
+                        ? match.team2MemberInfos.first.avatarUrl
+                        : null,
+                    elo: match.team2EloPoints,
+                  ),
+                ),
+              ],
+            ),
+            if (tournament != null && tournament.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${l10n.liveH2hTournamentLabel} $tournament',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white54, fontSize: 8),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _h2hTeam({required String name, String? avatarUrl, int? elo}) {
+    final l10n = AppLocalizations.of(context)!;
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final fallback = Container(
+      color: Colors.white12,
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipOval(
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: avatarUrl == null || avatarUrl.isEmpty
+                ? fallback
+                : Image.network(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => fallback,
+                  ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          elo == null ? l10n.liveNoElo : 'ELO $elo',
+          style: const TextStyle(color: Colors.white70, fontSize: 8),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBracketOverlay(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
+    final tournamentId = _effectiveTournamentId(match);
+    final bracketAsync = tournamentId.isEmpty
+        ? null
+        : ref.watch(
+            bracketMatchesWithDivisionProvider((
+              tournamentId: tournamentId,
+              divisionId: match.divisionId,
+            )),
+          );
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        // Chừa 48 px bên phải cho nút đóng.
+        padding: const EdgeInsets.fromLTRB(8, 8, 48, 8),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: bracketAsync == null
+            ? _bracketEmpty(l10n)
+            : bracketAsync.when(
+                loading: () => const Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                error: (_, _) => _bracketEmpty(l10n),
+                data: (bracketMatches) =>
+                    _bracketRounds(match, bracketMatches, l10n),
+              ),
+      ),
+    );
+  }
+
+  Widget _bracketEmpty(AppLocalizations l10n) {
+    return Center(
+      child: Text(
+        l10n.liveBracketEmpty,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white70, fontSize: 10),
+      ),
+    );
+  }
+
+  Widget _bracketRounds(
+    MatchModel current,
+    List<MatchModel> matches,
+    AppLocalizations l10n,
+  ) {
+    if (matches.isEmpty) return _bracketEmpty(l10n);
+    final rounds = <int, List<MatchModel>>{};
+    for (final m in matches) {
+      rounds.putIfAbsent(m.round, () => <MatchModel>[]).add(m);
+    }
+    final keys = rounds.keys.toList()..sort();
+    final last = keys.last;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final round in keys)
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
-                  // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
-                  LiveVideoBox(matchId: widget.matchId),
-
-                  // Bảng điểm đè khung hình, đúng bố cục web: HAI HÀNG CHỒNG ở
-                  // góc trên trái, mỗi hàng là [tên viết tắt | điểm nền trắng].
-                  // Web không thu nhỏ gì, app cũng vậy — cùng kích thước chữ và
-                  // ô điểm để người xem nhìn hai bên giống nhau.
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: _liveScoreOverlay(match, currentScore),
-                  ),
-                  // TV Broadcast overlay for Camera source
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.videocam_rounded,
-                            size: 10,
-                            color: Colors.white.withValues(alpha: 0.7),
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            l10n.liveCameraLabel,
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white.withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ],
-                      ),
+                  Text(
+                    _bracketRoundLabel(round, last, l10n).toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  // Video controls overlay (Bottom bar)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: 0.8),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            match.isLive ? '02:40' : '--:--',
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 1,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Colors.white54,
-                                width: 0.5,
-                              ),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                            child: const Text(
-                              // Live streams are capped at 30 fps.
-                              '1080p 30fps',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 7,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.volume_up_rounded,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.fullscreen_rounded,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Big central Play Button (simulating ready state)
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
+                  const SizedBox(height: 4),
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final m in rounds[round] ?? const <MatchModel>[])
+                          _bracketMatchCard(m, current, l10n),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  String _bracketRoundLabel(int round, int last, AppLocalizations l10n) {
+    if (round == last) return l10n.matchTableRoundFinal;
+    if (round == last - 1) return l10n.matchTableRoundSemifinal;
+    if (round == last - 2) return l10n.matchTableRoundQuarterfinal;
+    return l10n.matchTableRound(round);
+  }
+
+  Widget _bracketMatchCard(
+    MatchModel m,
+    MatchModel current,
+    AppLocalizations l10n,
+  ) {
+    final isCurrent = m.id == current.id;
+    const sky = Color(0xFF38BDF8);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      constraints: const BoxConstraints(minWidth: 96, maxWidth: 140),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        border: Border.all(color: isCurrent ? sky : Colors.white24),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _bracketTeamLine(
+            m.team1Name,
+            won: m.winnerId.isNotEmpty && m.winnerId == m.team1Id,
+            l10n: l10n,
+          ),
+          _bracketTeamLine(
+            m.team2Name,
+            won: m.winnerId.isNotEmpty && m.winnerId == m.team2Id,
+            l10n: l10n,
+          ),
+          if (isCurrent)
+            Text(
+              l10n.liveBracketCurrentMatch,
+              style: const TextStyle(
+                color: sky,
+                fontSize: 7,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bracketTeamLine(
+    String name, {
+    required bool won,
+    required AppLocalizations l10n,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white, fontSize: 9),
+          ),
+        ),
+        if (won)
+          Text(
+            l10n.liveBracketWin,
+            style: const TextStyle(
+              color: Colors.greenAccent,
+              fontSize: 7,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  VIEWER STATE — Người xem
+  // ═══════════════════════════════════════════════════════════
+  Widget _buildViewerState(MatchModel match, {required bool canControl}) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentScore = _currentLiveScore(match);
+    final effectiveId = _effectiveTournamentId(match);
+    // Cờ server quyết định overlay; nút đóng chỉ ẩn cục bộ overlay đó.
+    final serverOverlay = liveOverlayToShow(
+      h2hVisible: match.h2hOverlayVisible,
+      bracketVisible: match.bracketOverlayVisible,
+      matchEnded: match.isCompleted,
+    );
+    final overlayToShow = serverOverlay == _dismissedOverlay
+        ? null
+        : serverOverlay;
+    final params = (tournamentId: effectiveId, matchId: widget.matchId);
+
+    return Column(
+      children: [
+        // ─── Live Video Stream Player Box (Mockup) ───
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.zero,
+            border: Border.all(color: context.colors.border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
+              // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
+              LiveVideoBox(matchId: widget.matchId),
+
+              // Bảng điểm đè khung hình, đúng bố cục web: HAI HÀNG CHỒNG ở
+              // góc trên trái, mỗi hàng là [tên viết tắt | điểm nền trắng].
+              // Web không thu nhỏ gì, app cũng vậy — cùng kích thước chữ và
+              // ô điểm để người xem nhìn hai bên giống nhau.
+              if (match.scoreboardVisible)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: _liveScoreOverlay(match, currentScore),
+                ),
+              // TV Broadcast overlay for Camera source
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.videocam_rounded,
+                        size: 10,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        l10n.liveCameraLabel,
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Video controls overlay (Bottom bar)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.8),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      if (canControl) ...[
+                        const SizedBox(width: 6),
+                        _liveControlIcon(
+                          icon: Icons.leaderboard_outlined,
+                          tooltip: l10n.liveScoreboardToggle,
+                          active: match.scoreboardVisible,
+                          onTap: () => _toggleScoreboardVisibility(match),
+                        ),
+                        const SizedBox(width: 8),
+                        LiveOverlayToggleChips(
+                          h2hVisible: match.h2hOverlayVisible,
+                          bracketVisible: match.bracketOverlayVisible,
+                          bracketAvailable: effectiveId.isNotEmpty,
+                          matchEnded: match.isCompleted,
+                          pendingKind: _pendingOverlayKind,
+                          onToggle: (kind, visible) => _setOverlayVisibility(
+                            match,
+                            kind,
+                            visible: visible,
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white54, width: 0.5),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: const Text(
+                          '1080p 60fps',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.volume_up_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.fullscreen_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Overlay theo cờ server: một overlay một lúc, 240 ms easeOutCubic.
+              Positioned(
+                left: 8,
+                right: 8,
+                bottom: liveOverlayBottomInset,
+                child: AnimatedSwitcher(
+                  duration: liveOverlayMotionDuration(context),
+                  switchInCurve: liveOverlayMotionCurve,
+                  switchOutCurve: liveOverlayMotionCurve,
+                  child: overlayToShow == LiveOverlayKind.h2h
+                      ? KeyedSubtree(
+                          key: const ValueKey('live-overlay-h2h'),
+                          child: _withCloseButton(
+                            _buildH2hOverlay(match),
+                            onClose: () =>
+                                _dismissOverlay(LiveOverlayKind.h2h),
+                          ),
+                        )
+                      : const SizedBox.shrink(
+                          key: ValueKey('live-overlay-h2h-hidden'),
+                        ),
+                ),
+              ),
+              Positioned(
+                left: 8,
+                right: 8,
+                top: 8,
+                bottom: liveOverlayBottomInset,
+                child: AnimatedSwitcher(
+                  duration: liveOverlayMotionDuration(context),
+                  switchInCurve: liveOverlayMotionCurve,
+                  switchOutCurve: liveOverlayMotionCurve,
+                  child: overlayToShow == LiveOverlayKind.bracket
+                      ? KeyedSubtree(
+                          key: const ValueKey('live-overlay-bracket'),
+                          child: _withCloseButton(
+                            _buildBracketOverlay(match),
+                            onClose: () =>
+                                _dismissOverlay(LiveOverlayKind.bracket),
+                          ),
+                        )
+                      : const SizedBox.shrink(
+                          key: ValueKey('live-overlay-bracket-hidden'),
+                        ),
+                ),
+              ),
+              // Big central Play Button (simulating ready state)
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
 
         // ─── Viewer Count Badge (Sockets Realtime) ───
@@ -2112,8 +2592,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// "Đoàn Bảo Ngọc" → "D. Ngọc". Giữ chữ cái đầu để phân biệt và tên cuối
   /// vì đó là cách gọi quen thuộc nhất.
   String _compactTeamName(String name) {
-    final words =
-        name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    final words = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toList();
     if (words.isEmpty) return '';
     if (words.length == 1) return words.first;
     return '${words.first.characters.first}. ${words.last}';
@@ -2185,7 +2668,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           child: Text(
             '$score',
             style: TextStyle(
-              color: finished ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+              color: finished
+                  ? const Color(0xFF94A3B8)
+                  : const Color(0xFF0F172A),
               fontSize: 14,
               fontWeight: FontWeight.w900,
               fontFeatures: const [FontFeature.tabularFigures()],

@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_finance_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
-import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_venues_section.dart';
@@ -22,12 +21,9 @@ enum TournamentManagementSection {
   general,
   branding,
   venues,
-  registration,
   divisions,
-  schedule,
   teams,
   draw,
-  bracket,
   liveOperations,
   sponsors,
   finance,
@@ -63,11 +59,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     TournamentManagementSection.venues => TournamentManagementVenuesSection(
       tournamentId: tournament.id,
     ),
-    TournamentManagementSection.registration =>
-      TournamentManagementPeopleSection(
-        tournament: tournament,
-        showRegistration: true,
-      ),
     TournamentManagementSection.permissions =>
       TournamentManagementPeopleSection(
         tournament: tournament,
@@ -81,7 +72,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     TournamentManagementSection.finance => TournamentManagementFinanceSection(
       tournament: tournament,
     ),
-    TournamentManagementSection.schedule ||
     TournamentManagementSection.liveOperations => OrganizerOpsScreen(
       tournamentId: tournament.id,
       isEmbedded: true,
@@ -98,10 +88,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     TournamentManagementSection.draw => _ExistingOperationsDestination(
       route: '$actionRouteBase/draw',
       icon: Icons.casino_rounded,
-    ),
-    TournamentManagementSection.bracket => BracketViewScreen(
-      tournamentId: tournament.id,
-      isEmbedded: true,
     ),
     TournamentManagementSection.tokens => _ExistingOperationsDestination(
       route: '$actionRouteBase/tokens',
