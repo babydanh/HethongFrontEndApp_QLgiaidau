@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "dart": {
+      "command": "D:\\DevTools\\flutter\\bin\\cache\\dart-sdk\\bin\\dart.exe",
+      "args": [
+        "mcp-server",
+        "--force-roots-fallback",
+        "--enable",
+        "cli",
+        "--enable",
+        "flutter_app_lifecycle"
+      ]
+    }
+  }
+}
