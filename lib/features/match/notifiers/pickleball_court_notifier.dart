@@ -9,6 +9,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 CourtState _courtFromScoreDetails(Map<String, dynamic>? scoreDetails) =>
     CourtState.fromJson(scoreDetails?['courtState']);
 
+/// Trạng thái hiển thị khi có bản server. Server chưa có lượt giao (mở màn
+/// không ghi nên server có thể chưa có) thì giữ lượt suy tại chỗ.
+CourtState _displayFromServer(CourtState server, CourtState local) =>
+    server.turnStart == null && local.turnStart != null
+    ? server.copyWith(turnStart: local.turnStart)
+    : server;
+
 /// Đội (1 hoặc 2) vừa được cộng điểm gần nhất trong phiên. Rally giao theo
 /// đội này. Null khi chưa quan sát được điểm nào.
 class PickleballLastScoringTeamNotifier extends Notifier<int?> {
@@ -80,6 +87,10 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
   int _pendingWrites = 0;
   int _writeSeq = 0;
   bool _disposed = false;
+  /// Lần đồng bộ đầu tiên (mở màn): chỉ suy lượt tại chỗ, không ghi server.
+  bool _hasSynced = false;
+  /// Các lỗi ghi đã báo trong phiên; cùng một loại chỉ báo một lần.
+  final Set<String> _reportedErrors = <String>{};
 
   @override
   CourtState build() {
@@ -91,7 +102,7 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
       final match = next.value;
       if (match == null) return;
       _server = _courtFromScoreDetails(match.scoreDetails);
-      if (_pendingWrites == 0) state = _server;
+      if (_pendingWrites == 0) state = _displayFromServer(_server, state);
     });
     return _server;
   }
@@ -111,14 +122,23 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
     return _persist(next);
   }
 
-  /// Sau mỗi điểm: suy lại lượt giao và mốc đổi sân. Chỉ ghi khi cài đặt đổi.
+  /// Sau mỗi điểm và khi mở màn: suy lại lượt giao và mốc đổi sân. Lần đầu
+  /// (mở màn) chỉ suy tại chỗ, không ghi server; các thay đổi sau đó mới ghi.
   Future<Object?> syncAutomatic() async {
     final context = ref.read(pickleballCourtContextProvider(_arg));
     if (context == null) return null;
     final reconciled = reconcileCourtState(state, context);
+    if (!_hasSynced) {
+      _hasSynced = true;
+      state = reconciled;
+      return null;
+    }
     if (!needsServerWrite(state, reconciled)) return null;
     return _persist(reconciled);
   }
+
+  /// Báo lỗi ghi cho người dùng: true lần đầu gặp [message] trong phiên này.
+  bool claimErrorReport(String message) => _reportedErrors.add(message);
 
   Future<Object?> _persist(CourtState next) async {
     final seq = ++_writeSeq;
@@ -134,7 +154,9 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
       if (seq == _writeSeq && !_disposed) state = _server;
       return null;
     } catch (error) {
-      if (seq == _writeSeq && !_disposed) state = _server;
+      if (seq == _writeSeq && !_disposed) {
+        state = _displayFromServer(_server, state);
+      }
       return error;
     } finally {
       _pendingWrites--;

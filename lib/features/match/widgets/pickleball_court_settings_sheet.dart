@@ -50,19 +50,24 @@ class PickleballCourtSettingsSheet extends ConsumerWidget {
     Future<void> run(
       CourtState Function(CourtState state, CourtContext context) action,
     ) async {
-      final error = await ref
-          .read(pickleballCourtNotifierProvider(params).notifier)
-          .apply(action);
-      if (error != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            content: Text(
-              ErrorParser.parse(error, l10n.pickleballCourtSaveError, l10n),
-            ),
-          ),
-        );
-      }
+      final notifier = ref.read(
+        pickleballCourtNotifierProvider(params).notifier,
+      );
+      final error = await notifier.apply(action);
+      if (error == null || !context.mounted) return;
+      final message = ErrorParser.parse(
+        error,
+        l10n.pickleballCourtSaveError,
+        l10n,
+      );
+      // Cùng một loại lỗi chỉ báo một lần trong phiên (backend chưa deploy → 404).
+      if (!notifier.claimErrorReport(message)) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(message),
+        ),
+      );
     }
 
     return SafeArea(

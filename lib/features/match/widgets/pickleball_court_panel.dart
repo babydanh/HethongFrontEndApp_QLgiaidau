@@ -31,8 +31,6 @@ class PickleballCourtPanel extends ConsumerStatefulWidget {
 }
 
 class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
-  /// Lỗi đồng bộ tự động gần nhất đã báo; tránh toast lặp cho cùng một lỗi.
-  String? _lastSyncError;
 
   @override
   void initState() {
@@ -43,18 +41,19 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
   }
 
   Future<void> _sync() async {
-    final error = await ref
-        .read(pickleballCourtNotifierProvider(widget.params).notifier)
-        .syncAutomatic();
-    if (error == null) {
-      _lastSyncError = null;
-      return;
-    }
-    if (!mounted) return;
+    final notifier = ref.read(
+      pickleballCourtNotifierProvider(widget.params).notifier,
+    );
+    final error = await notifier.syncAutomatic();
+    if (error == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    final message = ErrorParser.parse(error, l10n.pickleballCourtSaveError, l10n);
-    if (message == _lastSyncError) return;
-    _lastSyncError = message;
+    final message = ErrorParser.parse(
+      error,
+      l10n.pickleballCourtSaveError,
+      l10n,
+    );
+    // Backend chưa deploy trả lỗi ở mỗi điểm: chỉ báo một lần cho mỗi loại lỗi.
+    if (!notifier.claimErrorReport(message)) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,

@@ -459,4 +459,31 @@ void main() {
       expect(state.history, hasLength(CourtState.historyLimit));
     });
   });
+
+  group('ô giao đôi theo VĐV của lượt', () {
+    test('người giao theo ô hiện tại của VĐV lượt, không theo chẵn/lẻ điểm đội', () {
+      const start = CourtState(startingRightTeam1: 0);
+      // Đội 1 mở lượt ở 3-2: VĐV P1 đứng ô phải.
+      final opened = reconcileCourtState(start, ctx(s1: 3, s2: 2));
+      final atThree = resolveCourtLayout(opened, ctx(s1: 3, s2: 2));
+      expect(atThree.serverPlayerIndex, 1);
+      expect(atThree.serverCell, CourtCell.right);
+      expect(atThree.team1.rightPlayerIndex, 1);
+
+      // Đội 1 ghi điểm lên 4: P1 vẫn giao, nhưng sang ô trái.
+      final atFour = resolveCourtLayout(opened, ctx(s1: 4, s2: 2));
+      expect(atFour.serverPlayerIndex, 1);
+      expect(atFour.serverCell, CourtCell.left);
+      expect(atFour.team1.rightPlayerIndex, 0);
+
+      // Đội 1 thua pha ở 4: đồng đội P0 vào giao lần 2, đứng ô phải.
+      final second = resolveCourtLayout(
+        opened,
+        ctx(s1: 4, s2: 2, serverNumber: 2),
+      );
+      expect(second.serverPlayerIndex, 0);
+      expect(second.serverCell, CourtCell.right);
+      expect(second.callServerNumber, 2);
+    });
+  });
 }
