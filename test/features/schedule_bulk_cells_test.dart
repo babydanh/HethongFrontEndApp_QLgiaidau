@@ -55,6 +55,7 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
   WidgetTester tester, {
   required int fromSlot,
   required int toSlot,
+  required int placedDuration,
 }) async {
   ({List<_Cell> cells, List<MatchModel> waiting})? captured;
 
@@ -75,7 +76,7 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
             child: TournamentScheduleCourtGrid(
               tournamentId: 't-1',
               matches: [
-                _placed(hour: 7, minute: 0, duration: 45),
+                _placed(hour: 7, minute: 0, duration: placedDuration),
                 _waiting('w1'),
                 _waiting('w2'),
               ],
@@ -137,6 +138,7 @@ void main() {
       tester,
       fromSlot: 0,
       toSlot: 3,
+      placedDuration: 45,
     );
 
     expect(captured, isNotNull);
@@ -161,6 +163,7 @@ void main() {
       tester,
       fromSlot: 0,
       toSlot: 2,
+      placedDuration: 15,
     );
 
     expect(captured, isNotNull);
