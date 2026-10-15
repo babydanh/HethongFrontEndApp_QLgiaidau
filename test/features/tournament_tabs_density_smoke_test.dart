@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_accordion.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -203,7 +204,35 @@ List<MatchModel> _fixtureMatches() => [
   ),
 ];
 
+/// Vùng nội dung mở ra dưới hàng hạng mục (dùng chung cho Đang diễn ra / Đội / Bảng đấu).
+Finder _divisionContent(String divisionId) =>
+    find.byKey(ValueKey('division-content-$divisionId'));
+
 void _registerDivisionTransitionTests() {
+  testWidgets('live, teams and bracket tabs share one division list widget', (
+    tester,
+  ) async {
+    // Mỗi tab dựng màn mới: thẻ trận live có hoạt ảnh lặp nên không chuyển tab
+    // tiếp bằng pumpAndSettle được.
+    for (final tab in ['Đang diễn ra', 'Danh sách đội', 'Bảng đấu']) {
+      await _pumpDivisionTransitionScreen(tester);
+      await _openTab(tester, tab);
+      expect(find.byType(DivisionAccordion), findsOneWidget, reason: tab);
+      expect(
+        find.text('Division 1').hitTestable(),
+        findsOneWidget,
+        reason: tab,
+      );
+      if (tab == 'Đang diễn ra') {
+        // Hàng hạng mục không còn dòng phụ "Đánh Đơn/Đánh Đôi" riêng của tab live.
+        expect(find.text('Đánh Đôi'), findsNothing);
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 1));
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('changing a live division animates its expansion', (
     tester,
   ) async {
@@ -213,22 +242,8 @@ void _registerDivisionTransitionTests() {
 
     final targetDivision = find.text('Division 1');
     expect(targetDivision.hitTestable(), findsOneWidget);
-    final divisionRow = find
-        .ancestor(
-          of: targetDivision,
-          matching: find.byWidgetPredicate(
-            (widget) =>
-                widget is Container &&
-                widget.margin == const EdgeInsets.only(bottom: 4),
-          ),
-        )
-        .first;
-    final expansion = find.descendant(
-      of: divisionRow,
-      matching: find.byType(AnimatedCrossFade),
-    );
+    final expansion = _divisionContent('division-1');
     final collapsedHeight = tester.getSize(expansion).height;
-
     await tester.tap(targetDivision);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
@@ -247,20 +262,7 @@ void _registerDivisionTransitionTests() {
     expect(find.byType(LiveTab), findsOneWidget);
 
     final targetDivision = find.text('Division 1');
-    final divisionRow = find
-        .ancestor(
-          of: targetDivision,
-          matching: find.byWidgetPredicate(
-            (widget) =>
-                widget is Container &&
-                widget.margin == const EdgeInsets.only(bottom: 4),
-          ),
-        )
-        .first;
-    final expansion = find.descendant(
-      of: divisionRow,
-      matching: find.byType(AnimatedCrossFade),
-    );
+    final expansion = _divisionContent('division-1');
 
     await tester.tap(targetDivision);
     await tester.pump();

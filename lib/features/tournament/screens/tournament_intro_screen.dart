@@ -20,7 +20,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_accordion.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
@@ -930,168 +930,33 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-  /// Compact division rows with optional row-local content.
+  /// Danh sách hạng mục dùng chung cho các tab (xem [DivisionAccordion]).
+  /// Bấm hạng mục đang chọn thì thu/mở nội dung; bấm hạng mục khác thì chọn và mở.
   Widget _buildDivisionsSelectorList(
     Tournament tournament,
     AppColorsExtension colors, {
     Widget Function(TournamentDivision division)? selectedContentBuilder,
   }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...List.generate(tournament.divisions.length, (index) {
-            final div = tournament.divisions[index];
-            final isSelected = div.id == _selectedDivisionId;
-            final maxP = div.maxParticipants ?? 0;
-            final curP = div.participantCount;
-            final countLabel = maxP > 0 ? '$curP/$maxP' : '$curP';
-            final isFull =
-                (maxP > 0 && curP >= maxP) ||
-                tournament.status.toLowerCase() == 'completed';
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MergeSemantics(
-                  child: Semantics(
-                    button: true,
-                    selected: isSelected,
-                    label: '${div.name}, $countLabel',
-                    child: InkWell(
-                      onTap: () {
-                        if (_selectedDivisionId == div.id) {
-                          if (selectedContentBuilder != null) {
-                            setState(
-                              () => _divisionExpanded = !_divisionExpanded,
-                            );
-                          }
-                          return;
-                        }
-                        setState(() {
-                          _selectedDivisionId = div.id;
-                          _selectedDivision = div.name;
-                          if (selectedContentBuilder != null) {
-                            _divisionExpanded = true;
-                          }
-                        });
-                      },
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 44),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 2,
-                            vertical: 4,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 3,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppTheme.primary
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(width: 7),
-                              Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppTheme.primary.withValues(alpha: 0.12)
-                                      : colors.bgSurface,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Center(
-                                  child: BracketFormatIcons.getIcon(
-                                    div.bracketType,
-                                    fallbackBracketType: tournament.bracketType,
-                                    size: 15,
-                                    color: isSelected
-                                        ? AppTheme.primary
-                                        : colors.textMuted,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  div.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w800
-                                        : FontWeight.w600,
-                                    color: isSelected
-                                        ? AppTheme.primary
-                                        : colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              if (isFull) ...[
-                                Icon(
-                                  Icons.check_circle_rounded,
-                                  size: 13,
-                                  color: colors.textMuted,
-                                ),
-                                const SizedBox(width: 7),
-                              ],
-                              Icon(
-                                Icons.people_alt_outlined,
-                                size: 13,
-                                color: colors.textMuted,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                countLabel,
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textSecondary,
-                                ),
-                              ),
-                              if (selectedContentBuilder != null) ...[
-                                const SizedBox(width: 4),
-                                Icon(
-                                  isSelected && _divisionExpanded
-                                      ? Icons.expand_less_rounded
-                                      : Icons.expand_more_rounded,
-                                  size: 18,
-                                  color: colors.textMuted,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.topCenter,
-                  child:
-                      isSelected &&
-                          _divisionExpanded &&
-                          selectedContentBuilder != null
-                      ? selectedContentBuilder(div)
-                      : const SizedBox.shrink(),
-                ),
-                if (index < tournament.divisions.length - 1)
-                  Divider(height: 1, thickness: 1, color: colors.border),
-              ],
-            );
-          }),
-        ],
-      ),
+    return DivisionAccordion(
+      divisions: tournament.divisions,
+      selectedDivisionId: _selectedDivisionId,
+      expanded: _divisionExpanded,
+      fallbackBracketType: tournament.bracketType,
+      isCompleted: tournament.status.toLowerCase() == 'completed',
+      contentBuilder: selectedContentBuilder,
+      onTapDivision: (div) {
+        if (_selectedDivisionId == div.id) {
+          if (selectedContentBuilder != null) {
+            setState(() => _divisionExpanded = !_divisionExpanded);
+          }
+          return;
+        }
+        setState(() {
+          _selectedDivisionId = div.id;
+          _selectedDivision = div.name;
+          if (selectedContentBuilder != null) _divisionExpanded = true;
+        });
+      },
     );
   }
 
