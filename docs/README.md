@@ -44,6 +44,7 @@ Nhãn:
 - Kiểm i18n (đã kiểm: file tồn tại; CHƯA chạy): `scripts/check_equal_arb_values.py` liệt kê key có giá trị EN = VI (dấu hiệu chưa dịch); `scripts/audit_l10n_literals.py` tìm chuỗi hardcode trong code.
 - Test: `flutter_test`, `mocktail`; `integration_test` có trong `dev_dependencies` nhưng repo KHÔNG có thư mục integration test.
 - Không có tài liệu kiến trúc trong repo. Muốn biết tầng nào làm gì, đọc `lib/core`, `lib/domain`, `lib/data`, `lib/features`, `lib/providers`.
+- Nạp ngữ cảnh (đã kiểm): omp chỉ nạp MỘT file ngữ cảnh dự án. Nếu có `.github/copilot-instructions.md` thì file đó được nạp và `AGENTS.md` bị bỏ qua (thư mục thử có cả hai: chỉ copilot được nạp). Repo này đặt `.omp/settings.json` với `disabledProviders: ["github"]` để `AGENTS.md` được nạp. Hệ quả: `.github/copilot-instructions.md` không còn tự nạp; đọc nó khi làm animation.
 - Tham chiếu cũ cần biết: `D:/Duancanhan/Project_QuanLyGiaiDau/AGENTS.md` (cấp dự án) mục 10 nhắc một file `api_service.dart` trong `lib/data/`; file này KHÔNG tồn tại trong repo (kiểm bằng `git ls-files`).
 
 ## Lệnh (đã chạy thật, 2026-10-15, worktree `agent-standard` từ `origin/main` `1274c57`)
@@ -57,6 +58,7 @@ Nhãn:
 | So khớp key `app_vi.arb` / `app_en.arb` (python, đọc JSON) | exit 0: 4400 key mỗi file, 0 key lệch | chỉ kiểm tên key, không kiểm chất lượng bản dịch |
 | `openspec validate --all --strict` | exit 0, 1 change đạt | `agent-docs-map` có `skip_specs: true` |
 | `python C:/Users/GIGABYTE/.omp/scripts/openspec-gate.py` | exit 0 | "validate strict ok, không change nào còn task dở" |
+| `omp -p --no-session "KHÔNG gọi tool, KHÔNG đọc file… LOADED"` chạy trong worktree | exit 0; liệt kê `~/.omp/agent/AGENTS.md` và `AGENTS.md` của worktree, không có copilot | Sau khi thêm `.omp/settings.json` (`disabledProviders: ["github"]`). Trước đó chỉ nạp `.github/copilot-instructions.md`, không nạp `AGENTS.md` |
 | `flutter analyze` toàn repo; chạy toàn bộ `test/` | CHƯA CHẠY | Không thử trong lượt này vì nặng; theo skill `cloud-test-runner` |
 
 `flutter pub get` (hook của worktree) đã đổi 7 phiên bản trong `pubspec.lock` đã commit (15 dòng) và ghi lại 7 file `generated_plugin_registrant`/`generated_plugins` của Linux, macOS, Windows. Thay đổi bị hoàn lại trong worktree, không commit.
@@ -69,7 +71,7 @@ Nhãn:
 - Ở gốc có 27 file scratch dạng dotfile/script được track (ví dụ `.scan_l10n.py`, `.repair_arb_tail.ps1`, `.l10n-hardcoded-scan.json`, `.untranslated-messages.json`). Không phải tài liệu; không dựa vào.
 - Thư mục `changes/` (1 file `.png`: `changes/search-compact-tournament-cards-20260927/evidence/`) có vẻ là dấu vết của quy trình cũ (`new-change.ps1` của workflow cấp dự án; suy luận từ tên thư mục). Giữ làm lưu trữ.
 
-## Bộ tài liệu `.md` đang được git theo dõi (80 file)
+## Bộ tài liệu `.md` đang được git theo dõi (82 file)
 
 | Đường dẫn (gom theo thư mục khi lớn) | Số file | Nhãn | Ghi chú |
 |---|---|---|---|
@@ -83,6 +85,7 @@ Nhãn:
 | `test_docs/flutter-test-plan.md` | 1 | kế hoạch cũ | Kế hoạch test, sửa 2026-07-14, 881 dòng |
 | `test_docs/testcases-*.md` (4 file) | 4 | tham khảo | Test case sửa 2026-07-14: Auth/Payment/Notification, Bracket/Match/Ranking, Community/Referee/Admin, Home/Dashboard/Upload. Cùng thư mục có `testcases.json`, `testcases.xlsx`, `update-results.py` (không phải md) |
 | `assets/icons/README.md`, `assets/images/README.md`, `ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md` | 3 | tham khảo | Ghi chú thư mục 4 dòng |
+| `AGENTS.md`, `docs/README.md` | 2 | chuẩn | Luật cho agent và chính bản đồ này (ở gốc repo và `docs/`) |
 
 ## Ghi tài liệu mới ở đâu
 
