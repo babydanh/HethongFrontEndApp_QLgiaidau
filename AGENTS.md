@@ -31,7 +31,7 @@ omp chỉ tự nạp file này (gốc repo) và `AGENTS.md` toàn cục. `D:/Dua
 
 ## Kế hoạch và thay đổi
 
-- OpenSpec là THÍ ĐIỂM (từ 2026-10-15, chưa là chuẩn dự án): thay đổi mới ở `openspec/changes/<id>/` qua `/opsx-propose` → dừng chờ người dùng nói apply → `/opsx-apply` → `/opsx-archive`. KHÔNG tạo `*_PLAN.md` / `*_SPEC.md` ở `docs/` hay thư mục cha.
+- OpenSpec (từ 2026-10-15, cùng Web/Backend): thay đổi mới ở `openspec/changes/<id>/` qua `/opsx-propose` → dừng chờ người dùng nói apply → `/opsx-apply` → `/opsx-archive`. KHÔNG tạo `*_PLAN.md` / `*_SPEC.md` ở `docs/` hay thư mục cha.
 - Trong repo này OpenSpec thay mục "Change protocol" của `AGENTS.md` cấp dự án; các mục khác vẫn áp dụng.
 - Làm trong worktree riêng (skill `git-worktree-lanes`); gộp bằng `merge-lane.py <worktree> --check "python C:/Users/GIGABYTE/.omp/scripts/openspec-gate.py"`.
 - Thêm hay đổi vai trò một tài liệu: sửa `docs/README.md` trong cùng commit.
