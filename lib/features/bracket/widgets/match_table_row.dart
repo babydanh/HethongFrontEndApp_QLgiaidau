@@ -78,10 +78,7 @@ class MatchTableRow extends StatelessWidget {
     if (fromEnd == 0) return l10n.matchTableRoundFinal;
     if (fromEnd == 1) return l10n.matchTableRoundSemifinal;
     if (fromEnd == 2) return l10n.matchTableRoundQuarterfinal;
-    if (fromEnd == 3) return l10n.matchTableRoundOf(8);
-    if (fromEnd == 4) return l10n.matchTableRoundOf(16);
-    if (fromEnd == 5) return l10n.matchTableRoundOf(32);
-    if (fromEnd >= 6) return l10n.matchTableRoundOf(1 << fromEnd);
+    if (fromEnd >= 3) return MatchRoundLabel.roundOfMatches(l10n, 1 << fromEnd);
     return l10n.matchTableRound(round);
   }
 

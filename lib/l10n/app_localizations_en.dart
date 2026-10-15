@@ -3370,11 +3370,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String scheduleCardRoundMatch(String round, int matchNumber) {
-    return '$round • Match $matchNumber';
-  }
-
-  @override
   String organizer_refereesLoadError(Object error) {
     return 'Could not load referee list.\n$error';
   }
@@ -10616,8 +10611,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchTableRoundQuarterfinal => 'Quarterfinal';
 
   @override
-  String matchTableRoundOf(Object size) {
-    return 'Round of 1/$size';
+  String matchTableRoundOf(Object size, Object players) {
+    return 'Round of $players';
   }
 
   @override

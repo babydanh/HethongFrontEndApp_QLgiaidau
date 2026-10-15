@@ -9,6 +9,10 @@ class MatchRoundLabel {
 
   static const Set<int> knockoutRoundSizes = {2, 4, 8, 16, 32, 64, 128};
 
+  /// Tên vòng loại trực tiếp có [matches] trận: vi "Vòng 1/8", en "Round of 16".
+  static String roundOfMatches(AppLocalizations l10n, int matches) =>
+      l10n.matchTableRoundOf(matches, matches * 2);
+
   static String _normalize(String? text) =>
       (text ?? '').trim().toUpperCase().replaceAll(RegExp(r'[\s-]+'), '_');
 
@@ -17,18 +21,28 @@ class MatchRoundLabel {
     final stageName = _normalize(match.stageName);
     final groupName = _normalize(match.groupName);
     final branch = _normalize(match.bracketPosition.bracket);
-    final format = _normalize(bracketType ?? match.tournamentConfig?['bracketType']?.toString());
+    final format = _normalize(
+      bracketType ?? match.tournamentConfig?['bracketType']?.toString(),
+    );
 
-    if (stageType == 'ROUND_ROBIN' || stageType == 'GROUP_STAGE' || format == 'ROUND_ROBIN') {
+    if (stageType == 'ROUND_ROBIN' ||
+        stageType == 'GROUP_STAGE' ||
+        format == 'ROUND_ROBIN') {
       return true;
     }
-    if (stageType == 'SINGLE_ELIMINATION' || stageType == 'DOUBLE_ELIMINATION') {
+    if (stageType == 'SINGLE_ELIMINATION' ||
+        stageType == 'DOUBLE_ELIMINATION') {
       return false;
     }
-    if (branch == 'GROUP' || branch == 'GROUPS' || branch == 'GROUP_STAGE' || branch == 'ROUND_ROBIN') {
+    if (branch == 'GROUP' ||
+        branch == 'GROUPS' ||
+        branch == 'GROUP_STAGE' ||
+        branch == 'ROUND_ROBIN') {
       return true;
     }
-    if (stageName.contains('GROUP') || stageName.contains('VONG_BANG') || stageName.contains('BẢNG')) {
+    if (stageName.contains('GROUP') ||
+        stageName.contains('VONG_BANG') ||
+        stageName.contains('BẢNG')) {
       return true;
     }
     if (stageName.contains('KNOCKOUT') ||
@@ -64,7 +78,7 @@ class MatchRoundLabel {
     if (fromEnd == 2) return strings.matchTableRoundQuarterfinal;
     if (fromEnd >= 3 && fromEnd <= 7) {
       // Vòng có 2^fromEnd trận = "Vòng 1/2^fromEnd" (16 VĐV → Vòng 1/8), như web.
-      return strings.matchTableRoundOf(1 << fromEnd);
+      return roundOfMatches(strings, 1 << fromEnd);
     }
     return strings.matchTableRoundQualifying;
   }
@@ -97,10 +111,7 @@ class MatchRoundLabel {
     return strings.crossTableLegTitle(title, match.leg ?? 1);
   }
 
-  static String formatStageOrGroupName(
-    String? raw, {
-    AppLocalizations? l10n,
-  }) {
+  static String formatStageOrGroupName(String? raw, {AppLocalizations? l10n}) {
     if (raw == null || raw.trim().isEmpty) return '';
     final trimmed = raw.trim();
     final upper = trimmed.toUpperCase();
@@ -163,7 +174,8 @@ class MatchRoundLabel {
   }) {
     final strings =
         l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
-    final bracketType = tournament?.bracketType ??
+    final bracketType =
+        tournament?.bracketType ??
         tournament?.format ??
         match.tournamentConfig?['bracketType']?.toString() ??
         '';
@@ -172,7 +184,9 @@ class MatchRoundLabel {
     if (branch == 'MAIN') branch = 'WINNERS';
 
     // 1. Grand Finals (Double Elimination)
-    if (branch == 'GRAND_FINALS' || branch == 'GRAND_FINAL' || branch == 'FINAL') {
+    if (branch == 'GRAND_FINALS' ||
+        branch == 'GRAND_FINAL' ||
+        branch == 'FINAL') {
       return short ? 'CK Tổng' : strings.matchRoundGrandFinal;
     }
     if (branch == 'GRAND_FINAL_RESET') {
@@ -189,10 +203,14 @@ class MatchRoundLabel {
 
     // Step A: Resolution by counting matches of the same round in allMatches list
     if (allMatches != null && allMatches.isNotEmpty) {
-      final sameRoundMatches = allMatches.where((m) =>
-          m.round == match.round &&
-          _normalize(m.bracketPosition.bracket) == branch &&
-          _normalize(m.stageName) == _normalize(match.stageName)).toList();
+      final sameRoundMatches = allMatches
+          .where(
+            (m) =>
+                m.round == match.round &&
+                _normalize(m.bracketPosition.bracket) == branch &&
+                _normalize(m.stageName) == _normalize(match.stageName),
+          )
+          .toList();
 
       if (sameRoundMatches.isNotEmpty) {
         final slotCount = sameRoundMatches.length * 2;
@@ -203,17 +221,21 @@ class MatchRoundLabel {
         } else if (slotCount == 8) {
           baseLabel = strings.matchTableRoundQuarterfinal;
         } else if (knockoutRoundSizes.contains(slotCount)) {
-          baseLabel = strings.matchTableRoundOf(sameRoundMatches.length);
+          baseLabel = roundOfMatches(strings, sameRoundMatches.length);
         }
       }
 
       if (baseLabel.isEmpty) {
         final stageMatches = allMatches
-            .where((m) =>
-                _normalize(m.bracketPosition.bracket) == branch &&
-                _normalize(m.stageName) == _normalize(match.stageName))
+            .where(
+              (m) =>
+                  _normalize(m.bracketPosition.bracket) == branch &&
+                  _normalize(m.stageName) == _normalize(match.stageName),
+            )
             .toList();
-        final maxRound = stageMatches.map((m) => m.round).fold(match.round, math.max);
+        final maxRound = stageMatches
+            .map((m) => m.round)
+            .fold(match.round, math.max);
         final fromEnd = maxRound - match.round;
         if (fromEnd <= 0) {
           baseLabel = strings.matchTableRoundFinal;
@@ -222,14 +244,15 @@ class MatchRoundLabel {
         } else if (fromEnd == 2) {
           baseLabel = strings.matchTableRoundQuarterfinal;
         } else if (fromEnd >= 3 && fromEnd <= 7) {
-          baseLabel = strings.matchTableRoundOf(1 << fromEnd);
+          baseLabel = roundOfMatches(strings, 1 << fromEnd);
         }
       }
     }
 
     // Step B: Resolution from bracketSize / maxTeams
     if (baseLabel.isEmpty) {
-      final size = bracketSize ??
+      final size =
+          bracketSize ??
           tournament?.maxTeams ??
           (match.tournamentConfig?['bracketSize'] as num?)?.toInt();
 
@@ -243,7 +266,7 @@ class MatchRoundLabel {
         } else if (slots == 8) {
           baseLabel = strings.matchTableRoundQuarterfinal;
         } else if (knockoutRoundSizes.contains(slots)) {
-          baseLabel = strings.matchTableRoundOf(slots ~/ 2);
+          baseLabel = roundOfMatches(strings, slots ~/ 2);
         }
       }
     }
@@ -253,18 +276,21 @@ class MatchRoundLabel {
       final stageName = (match.stageName ?? '').toLowerCase();
       if (stageName.contains('chung kết') || stageName.contains('final')) {
         baseLabel = strings.matchTableRoundFinal;
-      } else if (stageName.contains('bán kết') || stageName.contains('semifinal')) {
+      } else if (stageName.contains('bán kết') ||
+          stageName.contains('semifinal')) {
         baseLabel = strings.matchTableRoundSemifinal;
-      } else if (stageName.contains('tứ kết') || stageName.contains('quarterfinal')) {
+      } else if (stageName.contains('tứ kết') ||
+          stageName.contains('quarterfinal')) {
         baseLabel = strings.matchTableRoundQuarterfinal;
       } else if (stageName.contains('1/16') || stageName.contains('vòng 16')) {
-        baseLabel = short ? 'Vòng 16' : strings.matchTableRoundOf(16);
+        baseLabel = roundOfMatches(strings, 16);
       } else if (stageName.contains('1/32') || stageName.contains('vòng 32')) {
-        baseLabel = short ? 'Vòng 32' : strings.matchTableRoundOf(32);
+        baseLabel = roundOfMatches(strings, 32);
       } else if (stageName.contains('1/64') || stageName.contains('vòng 64')) {
-        baseLabel = short ? 'Vòng 64' : strings.matchTableRoundOf(64);
-      } else if (stageName.contains('1/128') || stageName.contains('vòng 128')) {
-        baseLabel = short ? 'Vòng 128' : strings.matchTableRoundOf(128);
+        baseLabel = roundOfMatches(strings, 64);
+      } else if (stageName.contains('1/128') ||
+          stageName.contains('vòng 128')) {
+        baseLabel = roundOfMatches(strings, 128);
       }
     }
 

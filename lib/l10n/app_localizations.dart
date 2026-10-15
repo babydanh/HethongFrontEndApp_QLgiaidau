@@ -6356,12 +6356,6 @@ abstract class AppLocalizations {
   /// **'Vòng {round} • Trận {matchNumber}'**
   String organizer_matchTitle(Object round, Object matchNumber);
 
-  /// Footer thẻ trận trong lưới lịch: tên vòng chuẩn (vd. Vòng 1/8, Tứ kết) và số trận.
-  ///
-  /// In vi, this message translates to:
-  /// **'{round} • Trận {matchNumber}'**
-  String scheduleCardRoundMatch(String round, int matchNumber);
-
   /// No description provided for @organizer_refereesLoadError.
   ///
   /// In vi, this message translates to:
@@ -19428,11 +19422,11 @@ abstract class AppLocalizations {
   /// **'Tứ kết'**
   String get matchTableRoundQuarterfinal;
 
-  /// No description provided for @matchTableRoundOf.
+  /// Vòng loại trực tiếp: {size} = số trận của vòng (vi: Vòng 1/8), {players} = số VĐV (en: Round of 16).
   ///
   /// In vi, this message translates to:
   /// **'Vòng 1/{size}'**
-  String matchTableRoundOf(Object size);
+  String matchTableRoundOf(Object size, Object players);
 
   /// No description provided for @matchTableRound.
   ///

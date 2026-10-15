@@ -910,6 +910,7 @@ class ApiTournamentRepository implements ITournamentRepository {
           for (final stage in stages) {
             final stageName = stage['name']?.toString();
             final stageType = stage['type']?.toString();
+            final stageDivisionId = stage['tournamentDivisionId']?.toString();
             final groups = stage['groups'] is List
                 ? List<dynamic>.from(stage['groups'] as List)
                 : const <dynamic>[];
@@ -927,6 +928,7 @@ class ApiTournamentRepository implements ITournamentRepository {
                       groupName: groupName,
                       stageName: stageName,
                       stageType: stageType,
+                      divisionId: stageDivisionId,
                     ),
                   );
                 } catch (e) {
@@ -1154,6 +1156,7 @@ class ApiTournamentRepository implements ITournamentRepository {
     String? groupName,
     String? stageName,
     String? stageType,
+    String? divisionId,
   }) {
     final p1 = json['participant1'] as Map<String, dynamic>?;
     final p2 = json['participant2'] as Map<String, dynamic>?;
@@ -1315,6 +1318,8 @@ class ApiTournamentRepository implements ITournamentRepository {
       groupName: resolvedGroupName,
       stageName: resolvedStageName,
       stageType: resolvedStageType,
+      // Lịch Lite đọc trận từ bracket; thiếu hạng mục thì thẻ trận mất tên hạng mục.
+      divisionId: json['divisionId']?.toString() ?? divisionId,
     );
   }
 

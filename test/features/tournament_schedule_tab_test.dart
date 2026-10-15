@@ -499,10 +499,55 @@ void main() {
       find.descendant(of: card, matching: find.text('Đôi Nam')),
       findsOneWidget,
     );
+    // Footer chỉ còn tên vòng, không kèm "Trận N".
     expect(
-      find.descendant(of: card, matching: find.text('Vòng 1/8 • Trận 1')),
+      find.descendant(of: card, matching: find.text('Vòng 1/8')),
       findsOneWidget,
     );
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Trận')),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('each division has its own header colour', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('vi'),
+      divisions: const [
+        {'id': 'div-1', 'name': 'Đôi Nam'},
+        {'id': 'div-2', 'name': 'Đôi Nữ'},
+      ],
+      matches: [
+        _scheduleMatch(
+          1,
+          divisionId: 'div-1',
+          courtName: 'Sân 1',
+          scheduledTime: DateTime(2026, 8, 12, 8),
+        ),
+        _scheduleMatch(
+          2,
+          divisionId: 'div-2',
+          courtName: 'Sân 2',
+          scheduledTime: DateTime(2026, 8, 12, 8),
+        ),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
+
+    Color? colourOf(String division) =>
+        tester.widget<Text>(find.text(division)).style?.color;
+    expect(colourOf('Đôi Nam'), isNotNull);
+    expect(colourOf('Đôi Nữ'), isNotNull);
+    expect(colourOf('Đôi Nam'), isNot(colourOf('Đôi Nữ')));
     expect(tester.takeException(), isNull);
   });
 
@@ -524,6 +569,8 @@ void main() {
         _scheduleMatch(
           1,
           courtName: 'Sân 1',
+          team1Name: 'Nguyễn Văn An',
+          team2Name: 'QA Bổ sung 15 - QA Bổ sung 16',
           scheduledTime: DateTime(2026, 8, 12, 8),
         ),
       ],
@@ -533,6 +580,15 @@ void main() {
     final card = find.byKey(const ValueKey('schedule-match-schedule-match-1'));
     expect(
       find.descendant(of: card, matching: find.text('Đơn Nam')),
+      findsOneWidget,
+    );
+    // Tên rút gọn như lịch web.
+    expect(
+      find.descendant(of: card, matching: find.text('Văn An')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.text('sung 15 / sung 16')),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);

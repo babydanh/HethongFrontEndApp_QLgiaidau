@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_team_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 typedef _ScheduledMatchLane = ({MatchModel match, int lane});
@@ -46,9 +47,12 @@ class ScheduleGrid extends StatefulWidget {
   final String? selectedMatchId;
   final ValueChanged<String> onTapMatch;
 
-  /// Tên vòng chuẩn theo sơ đồ (vd. "Vòng 1/8", "Tứ kết") cho footer thẻ.
-  /// Null thì footer giữ "Vòng R • Trận N" theo số vòng thô.
+  /// Tên vòng chuẩn theo sơ đồ (vd. "Vòng 1/8", "Tứ kết") làm footer thẻ.
+  /// Null thì footer giữ "Vòng R • Trận N" theo số vòng thô (lưới BTC).
   final String Function(MatchModel match)? roundLabelOf;
+
+  /// Rút gọn tên đội như lịch web (lịch công khai). Lưới BTC giữ tên đầy đủ.
+  final bool shortTeamNames;
 
   /// Phút mỗi set BTC cấu hình; dùng khi trận chưa có `durationMinutes`.
   final int minutesPerSet;
@@ -80,6 +84,7 @@ class ScheduleGrid extends StatefulWidget {
     this.onDropMatch,
     this.onRangeSelected,
     this.roundLabelOf,
+    this.shortTeamNames = false,
   });
 
   @override
@@ -572,14 +577,11 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (divisionName != null)
-                        Text(
-                          divisionName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: style.fg,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _divisionChip(
+                            divisionName,
+                            _divisionColorFor(match) ?? style.fg,
                           ),
                         ),
                       Expanded(child: _compactContent(match, style)),
@@ -592,19 +594,70 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Tên hạng mục của trận. Trận không mang `divisionId` mà giải chỉ có một
-  /// hạng mục thì đó chính là hạng mục của trận.
-  String? _divisionNameFor(MatchModel match) {
-    final divisionId = match.divisionId;
+  /// Hạng mục của trận. Trận không mang `divisionId` mà giải chỉ có một hạng
+  /// mục thì đó chính là hạng mục của trận.
+  String? _divisionIdFor(MatchModel match) {
     final names = widget.divisionNameById;
-    final name =
-        (divisionId != null
-                ? names[divisionId]
-                : names.length == 1
-                ? names.values.single
-                : null)
-            ?.trim();
+    final divisionId = match.divisionId;
+    if (divisionId != null)
+      return names.containsKey(divisionId) ? divisionId : null;
+    return names.length == 1 ? names.keys.single : null;
+  }
+
+  String? _divisionNameFor(MatchModel match) {
+    final divisionId = _divisionIdFor(match);
+    final name = divisionId == null
+        ? null
+        : widget.divisionNameById[divisionId]?.trim();
     return name == null || name.isEmpty ? null : name;
+  }
+
+  /// Mỗi hạng mục một màu cố định theo thứ tự hạng mục của giải (Đôi Nam, Đôi Nữ…
+  /// khác màu). Chỉ dùng token theme; không dùng màu lỗi để khỏi lẫn với LIVE.
+  Color? _divisionColorFor(MatchModel match) {
+    final divisionId = _divisionIdFor(match);
+    if (divisionId == null) return null;
+    final colors = context.colors;
+    final palette = [
+      AppTheme.primary,
+      colors.warning,
+      colors.success,
+      AppTheme.secondaryDark,
+      AppTheme.primaryDark,
+      colors.info,
+    ];
+    final index = widget.divisionNameById.keys.toList().indexOf(divisionId);
+    return palette[index % palette.length];
+  }
+
+  Widget _divisionChip(String name, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0.5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  /// Tên trên thẻ. Lịch công khai ([ScheduleGrid.shortTeamNames]) rút gọn như
+  /// lịch web (mỗi VĐV 2 từ cuối, cặp nối " / "); lưới BTC giữ tên đầy đủ.
+  String _shortName(MatchModel match, int side) {
+    final name = side == 0 ? match.team1Name : match.team2Name;
+    if (!widget.shortTeamNames) return name;
+    final members =
+        (side == 0 ? match.team1Members : match.team2Members) ?? const [];
+    return scheduleShortTeamName(name, members: members);
   }
 
   double _minimumHeightFor(int duration, String? divisionName) {
@@ -652,9 +705,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   Widget _compactContent(MatchModel match, _CardStyle style) {
     return Row(
       children: [
-        _teamName(match, match.team1Id, match.team1Name, style),
+        _teamName(match, match.team1Id, _shortName(match, 0), style),
         _compactCenter(match, style),
-        _teamName(match, match.team2Id, match.team2Name, style),
+        _teamName(match, match.team2Id, _shortName(match, 1), style),
       ],
     );
   }
@@ -687,15 +740,33 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _fullHeader(match, start, style, divisionName),
+        _fullHeader(
+          match,
+          start,
+          style,
+          divisionName,
+          _divisionColorFor(match),
+        ),
         // Hai đội căn giữa giữa header và footer, như justify-between của web.
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _competitorRow(match, match.team1Id, match.team1Name, 0, style),
+              _competitorRow(
+                match,
+                match.team1Id,
+                _shortName(match, 0),
+                0,
+                style,
+              ),
               Divider(height: 1, thickness: 1, color: colors.borderLight),
-              _competitorRow(match, match.team2Id, match.team2Name, 1, style),
+              _competitorRow(
+                match,
+                match.team2Id,
+                _shortName(match, 1),
+                1,
+                style,
+              ),
             ],
           ),
         ),
@@ -704,12 +775,14 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Header thẻ: giờ bên trái, LIVE bên phải; style trung tính không theo status.
+  /// Header thẻ: giờ bên trái, nhãn hạng mục (màu riêng mỗi hạng mục) và LIVE
+  /// bên phải; vạch trái cùng màu hạng mục để lướt là phân biệt được.
   Widget _fullHeader(
     MatchModel match,
     DateTime start,
     _CardStyle style,
     String? divisionName,
+    Color? divisionColor,
   ) {
     final time =
         '${start.hour.toString().padLeft(2, '0')}:'
@@ -719,7 +792,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       decoration: BoxDecoration(
         color: style.headerBg,
         border: Border(
-          left: BorderSide(color: style.accent, width: 3),
+          left: BorderSide(color: divisionColor ?? style.accent, width: 3),
           bottom: BorderSide(color: context.colors.border),
         ),
       ),
@@ -742,17 +815,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             Flexible(
               child: Padding(
                 padding: const EdgeInsets.only(left: 4),
-                child: Text(
-                  divisionName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: style.fg,
-                  ),
-                ),
+                child: _divisionChip(divisionName, divisionColor ?? style.fg),
               ),
             ),
           if (match.isLive) _liveBadge(),
@@ -761,15 +824,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Footer thẻ: "tên vòng • Trận N" trên nền xám nhạt như web. Trận đã có tỷ số
-  /// nhưng không có dữ liệu set thì hiện tổng điểm bên phải, để không mất kết quả.
+  /// Footer thẻ: tên vòng chuẩn (vd. "Vòng 1/8") trên nền xám nhạt như web. Trận đã
+  /// có tỷ số nhưng không có dữ liệu set thì hiện tổng điểm bên phải.
   Widget _fullFooter(MatchModel match, _CardStyle style) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final roundLabelOf = widget.roundLabelOf;
     final title = roundLabelOf == null
         ? l10n.organizer_matchTitle(match.round, match.matchNumber)
-        : l10n.scheduleCardRoundMatch(roundLabelOf(match), match.matchNumber);
+        : roundLabelOf(match);
     final showTotal =
         match.scoreHistory.isEmpty && (match.isLive || match.isCompleted);
     return Container(

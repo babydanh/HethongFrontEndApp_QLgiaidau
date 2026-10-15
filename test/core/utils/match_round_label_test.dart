@@ -18,6 +18,7 @@ MatchModel _match(int round, int number) => MatchModel(
 
 void main() {
   final vi = lookupAppLocalizations(const Locale('vi'));
+  final en = lookupAppLocalizations(const Locale('en'));
 
   // Quy ước như web: vòng có N trận = "Vòng 1/N" (16 VĐV → 8 trận → Vòng 1/8).
   group('knockout round names follow the 1/N-matches convention', () {
@@ -25,6 +26,8 @@ void main() {
       expect(MatchRoundLabel.knockoutRoundName(1, 4, l10n: vi), 'Vòng 1/8');
       expect(MatchRoundLabel.knockoutRoundName(1, 5, l10n: vi), 'Vòng 1/16');
       expect(MatchRoundLabel.knockoutRoundName(2, 4, l10n: vi), 'Tứ kết');
+      // Tiếng Anh dùng số VĐV theo quy ước quốc tế.
+      expect(MatchRoundLabel.knockoutRoundName(1, 4, l10n: en), 'Round of 16');
     });
 
     test('same-round match count: 8 matches is Vòng 1/8', () {
@@ -59,15 +62,27 @@ void main() {
 
     test('bracket size fallback: 16 slots in round 1 is Vòng 1/8', () {
       expect(
-        MatchRoundLabel.formatRound(match: _match(1, 1), bracketSize: 16, l10n: vi),
+        MatchRoundLabel.formatRound(
+          match: _match(1, 1),
+          bracketSize: 16,
+          l10n: vi,
+        ),
         'Vòng 1/8',
       );
       expect(
-        MatchRoundLabel.formatRound(match: _match(1, 1), bracketSize: 32, l10n: vi),
+        MatchRoundLabel.formatRound(
+          match: _match(1, 1),
+          bracketSize: 32,
+          l10n: vi,
+        ),
         'Vòng 1/16',
       );
       expect(
-        MatchRoundLabel.formatRound(match: _match(2, 1), bracketSize: 16, l10n: vi),
+        MatchRoundLabel.formatRound(
+          match: _match(2, 1),
+          bracketSize: 16,
+          l10n: vi,
+        ),
         'Tứ kết',
       );
     });

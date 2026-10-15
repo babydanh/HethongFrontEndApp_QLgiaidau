@@ -3359,11 +3359,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String scheduleCardRoundMatch(String round, int matchNumber) {
-    return '$round • Trận $matchNumber';
-  }
-
-  @override
   String organizer_refereesLoadError(Object error) {
     return 'Không thể tải danh sách trọng tài.\n$error';
   }
@@ -10586,7 +10581,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchTableRoundQuarterfinal => 'Tứ kết';
 
   @override
-  String matchTableRoundOf(Object size) {
+  String matchTableRoundOf(Object size, Object players) {
     return 'Vòng 1/$size';
   }
 

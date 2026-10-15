@@ -1302,14 +1302,6 @@
   "organizer_noMatches": "Chưa có trận đấu nào được tạo.",
   "organizer_noTime": "Chưa xếp giờ",
   "organizer_matchTitle": "Vòng {round} • Trận {matchNumber}",
-  "scheduleCardRoundMatch": "{round} • Trận {matchNumber}",
-  "@scheduleCardRoundMatch": {
-    "description": "Footer thẻ trận trong lưới lịch: tên vòng chuẩn (vd. Vòng 1/8, Tứ kết) và số trận.",
-    "placeholders": {
-      "round": {"type": "String"},
-      "matchNumber": {"type": "int"}
-    }
-  },
   "organizer_refereesLoadError": "Không thể tải danh sách trọng tài.\n{error}",
   "organizer_noReferees": "Giải này chưa có trọng tài nào được gắn.",
   "organizer_refereeAccepted": "Đã nhận",
@@ -4209,8 +4201,10 @@
   "matchTableUpcoming": "SẮP ĐẤU",
   "matchTableUnassignedCourt": "Chưa xếp sân",
   "@matchTableRoundOf": {
+    "description": "Vòng loại trực tiếp: {size} = số trận của vòng (vi: Vòng 1/8), {players} = số VĐV (en: Round of 16).",
     "placeholders": {
-      "size": {}
+      "size": {},
+      "players": {}
     }
   },
   "@matchTableRound": {

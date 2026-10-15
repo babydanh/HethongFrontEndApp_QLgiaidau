@@ -242,6 +242,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                     emphasizeTimeLabels: true,
                     onTapMatch: _openMatchById,
                     roundLabelOf: roundLabelOf,
+                    shortTeamNames: true,
                   ),
                 ),
               ),
