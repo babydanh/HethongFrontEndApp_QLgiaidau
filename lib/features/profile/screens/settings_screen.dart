@@ -17,16 +17,20 @@ import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flo
 import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flow.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/language_setting_card.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/extensions/string_extensions.dart';
 
-/// Màn hình Cài đặt — 3 tab: Hồ sơ, Ngân hàng, Bảo mật.
+/// Màn hình Cài đặt — 4 tab: Hồ sơ, Ngân hàng, Tổ chức, Bảo mật.
 ///
 /// Tính năng đồng bộ với web (/profile/edit):
 /// - Hồ sơ: upload avatar + ảnh bìa, ngày sinh, giới tính (khóa + yêu cầu đổi),
-///   khu vực tranh tài (tỉnh/thành từ API), validate giống backend
+///   khu vực tranh tài (tỉnh/thành từ API), validate giống backend;
+///   xác minh email + SĐT ở cuối form
 /// - Ngân hàng: chọn ví điện tử/ngân hàng, tên chủ TK tự viết hoa không dấu
-/// - Bảo mật: xác minh email + SĐT, đổi mật khẩu, xóa tài khoản (vùng nguy hiểm)
+/// - Tổ chức: trạng thái vai trò Ban Tổ Chức, mở luồng đăng ký
+///   (OrganizerVerificationSheet)
+/// - Bảo mật: đổi mật khẩu, phiên đăng nhập, quyền riêng tư, xóa tài khoản
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -41,7 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -81,6 +85,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           indicatorColor: AppTheme.primary,
           indicatorWeight: 3,
           labelColor: AppTheme.primary,
@@ -96,13 +101,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           tabs: [
             Tab(text: l10n.settingsProfileTab),
             Tab(text: l10n.settingsBankTab),
+            Tab(text: l10n.accountSettingsOrganizerTab),
             Tab(text: l10n.settingsSecurityTab),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [_ProfileTab(), _BankTab(), _SecurityTab()],
+        children: const [
+          _ProfileTab(),
+          _BankTab(),
+          _OrganizerTab(),
+          _SecurityTab(),
+        ],
       ),
     );
   }
@@ -656,6 +667,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               const SizedBox(height: 24),
               _saveButton(context, _isLoading, () => _save(genderLocked)),
             ]),
+            const SizedBox(height: 24),
+            const _VerificationSection(),
             const SizedBox(height: 32),
           ],
         ),
@@ -1267,7 +1280,208 @@ class _BankTabState extends ConsumerState<_BankTab> {
 }
 
 // ═════════════════════════════════════════════════════════════════════════
-//  TAB 3: BẢO MẬT — xác minh, đổi mật khẩu, xóa tài khoản
+//  TAB 3: TỔ CHỨC — trạng thái vai trò Ban Tổ Chức + mở đơn đăng ký
+// ═════════════════════════════════════════════════════════════════════════
+class _OrganizerTab extends ConsumerWidget {
+  const _OrganizerTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final profileAsync = ref.watch(userProfileProvider);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle(colors, l10n.accountSettingsOrganizerRoleTitle),
+          const SizedBox(height: 10),
+          profileAsync.when(
+            data: (profile) {
+              final isOrganizer = profile.hasRole('ORGANIZER');
+              final accent = isOrganizer ? colors.success : AppTheme.primary;
+              return _card(colors, [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        isOrganizer
+                            ? Icons.verified_rounded
+                            : Icons.how_to_reg_outlined,
+                        color: accent,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isOrganizer
+                                ? l10n.accountSettingsOrganizerVerified
+                                : l10n.accountSettingsOrganizerNotRegistered,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isOrganizer
+                                ? l10n.accountSettingsOrganizerVerifiedDescription
+                                : l10n.accountSettingsOrganizerDescription,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              height: 1.4,
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (!isOrganizer) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 44,
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => OrganizerVerificationSheet.show(context),
+                      icon: const Icon(Icons.how_to_reg_rounded, size: 18),
+                      label: Text(
+                        l10n.accountSettingsOrganizerOpenApplication,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ]);
+            },
+            loading: () => const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, _) => _buildErrorState(
+              context,
+              colors,
+              l10n.settingsStatusLoadError,
+              () => ref.invalidate(userProfileProvider),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+//  XÁC MINH EMAIL / SĐT — hiển thị cuối form tab HỒ SƠ
+// ═════════════════════════════════════════════════════════════════════════
+class _VerificationSection extends ConsumerWidget {
+  const _VerificationSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final profileAsync = ref.watch(userProfileProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Trạng thái xác thực
+        _sectionTitle(colors, l10n.settingsVerificationStatus),
+        const SizedBox(height: 10),
+        _card(colors, [
+          ...profileAsync.when(
+            data: (profile) => [
+              _securityRow(
+                context,
+                colors,
+                icon: Icons.email_outlined,
+                title: l10n.emailLabel,
+                verified: profile.isEmailVerified == true,
+                fallbackText: profile.email,
+              ),
+              _divider(colors),
+              _securityRow(
+                context,
+                colors,
+                icon: Icons.phone_android_rounded,
+                title: l10n.infoPhone,
+                verified: profile.isPhoneVerified == true,
+                fallbackText:
+                    profile.phoneNumber ?? (l10n.settingsPhoneNotUpdated),
+              ),
+              if (profile.isEmailVerified != true) ...[
+                _divider(colors),
+                _actionRow(
+                  colors,
+                  icon: Icons.mark_email_unread_rounded,
+                  title: l10n.settingsVerifyEmail,
+                  subtitle: l10n.settingsVerifyEmailSubtitle,
+                  onTap: () => startEmailVerificationFlow(
+                    context,
+                    ref,
+                    profile.email ?? '',
+                  ),
+                ),
+              ],
+              if (profile.isPhoneVerified != true) ...[
+                _divider(colors),
+                _actionRow(
+                  colors,
+                  icon: Icons.sms_rounded,
+                  title: l10n.settingsVerifyPhone,
+                  subtitle: l10n.settingsVerifyPhoneSubtitle,
+                  onTap: () => startPhoneVerificationFlow(
+                    context,
+                    ref,
+                    profile.phoneNumber ?? '',
+                  ),
+                ),
+              ],
+            ],
+            loading: () => [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+            error: (_, _) => [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  l10n.settingsStatusLoadError,
+                  style: TextStyle(color: colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        ]),
+      ],
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+//  TAB 4: BẢO MẬT — đổi mật khẩu, phiên đăng nhập, quyền riêng tư, xóa tài khoản
 // ═════════════════════════════════════════════════════════════════════════
 class _SecurityTab extends ConsumerWidget {
   const _SecurityTab();
@@ -1386,86 +1600,12 @@ class _SecurityTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final profileAsync = ref.watch(userProfileProvider);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Trạng thái xác thực
-          _sectionTitle(colors, l10n.settingsVerificationStatus),
-          const SizedBox(height: 10),
-          _card(colors, [
-            ...profileAsync.when(
-              data: (profile) => [
-                _securityRow(
-                  context,
-                  colors,
-                  icon: Icons.email_outlined,
-                  title: l10n.emailLabel,
-                  verified: profile.isEmailVerified == true,
-                  fallbackText: profile.email,
-                ),
-                _divider(colors),
-                _securityRow(
-                  context,
-                  colors,
-                  icon: Icons.phone_android_rounded,
-                  title: l10n.infoPhone,
-                  verified: profile.isPhoneVerified == true,
-                  fallbackText:
-                      profile.phoneNumber ?? (l10n.settingsPhoneNotUpdated),
-                ),
-                if (profile.isEmailVerified != true) ...[
-                  _divider(colors),
-                  _actionRow(
-                    colors,
-                    icon: Icons.mark_email_unread_rounded,
-                    title: l10n.settingsVerifyEmail,
-                    subtitle: l10n.settingsVerifyEmailSubtitle,
-                    onTap: () => startEmailVerificationFlow(
-                      context,
-                      ref,
-                      profile.email ?? '',
-                    ),
-                  ),
-                ],
-                if (profile.isPhoneVerified != true) ...[
-                  _divider(colors),
-                  _actionRow(
-                    colors,
-                    icon: Icons.sms_rounded,
-                    title: l10n.settingsVerifyPhone,
-                    subtitle: l10n.settingsVerifyPhoneSubtitle,
-                    onTap: () => startPhoneVerificationFlow(
-                      context,
-                      ref,
-                      profile.phoneNumber ?? '',
-                    ),
-                  ),
-                ],
-              ],
-              loading: () => [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ],
-              error: (_, _) => [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    l10n.settingsStatusLoadError,
-                    style: TextStyle(color: colors.textSecondary),
-                  ),
-                ),
-              ],
-            ),
-          ]),
-          const SizedBox(height: 24),
-
           // Đổi mật khẩu
           _sectionTitle(colors, l10n.settingsPasswordSection),
           const SizedBox(height: 10),
@@ -1529,20 +1669,6 @@ class _SecurityTab extends ConsumerWidget {
 
           // Thông báo Câu lạc bộ
           const _ClubNotificationSettingsCard(),
-          const SizedBox(height: 24),
-
-          // Báo cáo của tôi
-          _sectionTitle(colors, l10n.settingsCommunitySafety),
-          const SizedBox(height: 10),
-          _card(colors, [
-            _actionRow(
-              colors,
-              icon: Icons.flag_outlined,
-              title: l10n.settingsMyReports,
-              subtitle: l10n.settingsMyReportsSubtitle,
-              onTap: () => context.push('/profile/reports'),
-            ),
-          ]),
           const SizedBox(height: 24),
 
           // Vùng nguy hiểm
@@ -1676,33 +1802,36 @@ class _StrangerMessagesSettingsCardState
             data: (profile) {
               final currentValue =
                   _value ?? profile.allowStrangerMessages ?? false;
-              return SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                secondary: Icon(
-                  Icons.mark_unread_chat_alt_outlined,
-                  color: AppTheme.primary,
-                ),
-                title: Text(
-                  l.settingsStrangerMessages,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
+              return Material(
+                type: MaterialType.transparency,
+                child: SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Icon(
+                    Icons.mark_unread_chat_alt_outlined,
+                    color: AppTheme.primary,
                   ),
-                ),
-                subtitle: Text(
-                  '${currentValue ? l.settingsStrangerMessagesOn : l.settingsStrangerMessagesOff}\n${l.settingsStrangerMessagesDescription}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.35,
-                    color: colors.textSecondary,
+                  title: Text(
+                    l.settingsStrangerMessages,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textPrimary,
+                    ),
                   ),
+                  subtitle: Text(
+                    '${currentValue ? l.settingsStrangerMessagesOn : l.settingsStrangerMessagesOff}\n${l.settingsStrangerMessagesDescription}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.35,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                  value: currentValue,
+                  onChanged: _isUpdating
+                      ? null
+                      : (value) => _update(value, currentValue),
+                  activeThumbColor: AppTheme.primary,
                 ),
-                value: currentValue,
-                onChanged: _isUpdating
-                    ? null
-                    : (value) => _update(value, currentValue),
-                activeThumbColor: AppTheme.primary,
               );
             },
             loading: () => const Padding(
