@@ -46,6 +46,10 @@ class ScheduleGrid extends StatefulWidget {
   final String? selectedMatchId;
   final ValueChanged<String> onTapMatch;
 
+  /// Tên vòng chuẩn theo sơ đồ (vd. "Vòng 1/8", "Tứ kết") cho footer thẻ.
+  /// Null thì footer giữ "Vòng R • Trận N" theo số vòng thô.
+  final String Function(MatchModel match)? roundLabelOf;
+
   /// Phút mỗi set BTC cấu hình; dùng khi trận chưa có `durationMinutes`.
   final int minutesPerSet;
 
@@ -75,6 +79,7 @@ class ScheduleGrid extends StatefulWidget {
     this.day,
     this.onDropMatch,
     this.onRangeSelected,
+    this.roundLabelOf,
   });
 
   @override
@@ -435,11 +440,17 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   /// Số cột điểm = số set đã có trong scoreHistory. Trận chưa có set thì không có cột.
   int _scoreColumnsOf(MatchModel match) => match.scoreHistory.length;
 
-  /// Bề rộng một lane: chia đều phần bề rộng còn lại cho mọi lane đang hiện,
-  /// không hẹp hơn `_minCourtLaneWidth`. Dưới mức đó lưới cuộn ngang, không cắt card.
+  /// Bề rộng một lane: vừa thì chia đều cho mọi lane. Không vừa thì chia đúng số
+  /// lane trọn vẹn vừa màn (điện thoại = 2 sân), phần còn lại cuộn ngang — không
+  /// cột nào bị cắt dở ở mép phải.
   double _laneWidthFor(double availableWidth, int totalLanes) {
     final fit = availableWidth / totalLanes;
-    return fit < _minCourtLaneWidth ? _minCourtLaneWidth : fit;
+    if (fit >= _minCourtLaneWidth) return fit;
+    final visible = (availableWidth / _minCourtLaneWidth).floor().clamp(
+      1,
+      totalLanes,
+    );
+    return availableWidth / visible;
   }
 
   Widget _courtColumn(
@@ -581,10 +592,18 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
+  /// Tên hạng mục của trận. Trận không mang `divisionId` mà giải chỉ có một
+  /// hạng mục thì đó chính là hạng mục của trận.
   String? _divisionNameFor(MatchModel match) {
     final divisionId = match.divisionId;
-    if (divisionId == null) return null;
-    final name = widget.divisionNameById[divisionId]?.trim();
+    final names = widget.divisionNameById;
+    final name =
+        (divisionId != null
+                ? names[divisionId]
+                : names.length == 1
+                ? names.values.single
+                : null)
+            ?.trim();
     return name == null || name.isEmpty ? null : name;
   }
 
@@ -742,11 +761,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Footer thẻ: "Vòng R • Trận N" trên nền xám nhạt như web. Trận đã có tỷ số
+  /// Footer thẻ: "tên vòng • Trận N" trên nền xám nhạt như web. Trận đã có tỷ số
   /// nhưng không có dữ liệu set thì hiện tổng điểm bên phải, để không mất kết quả.
   Widget _fullFooter(MatchModel match, _CardStyle style) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final roundLabelOf = widget.roundLabelOf;
+    final title = roundLabelOf == null
+        ? l10n.organizer_matchTitle(match.round, match.matchNumber)
+        : l10n.scheduleCardRoundMatch(roundLabelOf(match), match.matchNumber);
     final showTotal =
         match.scoreHistory.isEmpty && (match.isLive || match.isCompleted);
     return Container(
@@ -759,7 +782,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         children: [
           Expanded(
             child: Text(
-              l10n.organizer_matchTitle(match.round, match.matchNumber),
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 
 class MatchesTab extends ConsumerStatefulWidget {
@@ -152,6 +153,17 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           widget.scheduleSettings['operatingEnd'],
           fallback: 22,
         );
+        // Tên vòng tính trên toàn bộ trận cùng hạng mục (không lọc ngày/tìm kiếm),
+        // để số trận mỗi vòng đúng như sơ đồ: 8 trận → "Vòng 1/8".
+        final matchesByDivision = <String?, List<MatchModel>>{};
+        for (final match in allMatches) {
+          (matchesByDivision[match.divisionId] ??= []).add(match);
+        }
+        String roundLabelOf(MatchModel match) => MatchRoundLabel.formatRound(
+          match: match,
+          allMatches: matchesByDivision[match.divisionId],
+          l10n: l10n,
+        );
 
         return Column(
           children: [
@@ -229,6 +241,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                     slotHeight: 120,
                     emphasizeTimeLabels: true,
                     onTapMatch: _openMatchById,
+                    roundLabelOf: roundLabelOf,
                   ),
                 ),
               ),

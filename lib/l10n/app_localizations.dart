@@ -6356,6 +6356,12 @@ abstract class AppLocalizations {
   /// **'Vòng {round} • Trận {matchNumber}'**
   String organizer_matchTitle(Object round, Object matchNumber);
 
+  /// Footer thẻ trận trong lưới lịch: tên vòng chuẩn (vd. Vòng 1/8, Tứ kết) và số trận.
+  ///
+  /// In vi, this message translates to:
+  /// **'{round} • Trận {matchNumber}'**
+  String scheduleCardRoundMatch(String round, int matchNumber);
+
   /// No description provided for @organizer_refereesLoadError.
   ///
   /// In vi, this message translates to:

@@ -63,8 +63,8 @@ class MatchRoundLabel {
     if (fromEnd == 1) return strings.matchTableRoundSemifinal;
     if (fromEnd == 2) return strings.matchTableRoundQuarterfinal;
     if (fromEnd >= 3 && fromEnd <= 7) {
-      final size = 1 << (fromEnd + 1);
-      return short ? 'Vòng $size' : strings.matchTableRoundOf(size);
+      // Vòng có 2^fromEnd trận = "Vòng 1/2^fromEnd" (16 VĐV → Vòng 1/8), như web.
+      return strings.matchTableRoundOf(1 << fromEnd);
     }
     return strings.matchTableRoundQualifying;
   }
@@ -203,9 +203,7 @@ class MatchRoundLabel {
         } else if (slotCount == 8) {
           baseLabel = strings.matchTableRoundQuarterfinal;
         } else if (knockoutRoundSizes.contains(slotCount)) {
-          baseLabel = short
-              ? 'Vòng $slotCount'
-              : strings.matchTableRoundOf(slotCount);
+          baseLabel = strings.matchTableRoundOf(sameRoundMatches.length);
         }
       }
 
@@ -224,8 +222,7 @@ class MatchRoundLabel {
         } else if (fromEnd == 2) {
           baseLabel = strings.matchTableRoundQuarterfinal;
         } else if (fromEnd >= 3 && fromEnd <= 7) {
-          final size = 1 << (fromEnd + 1);
-          baseLabel = short ? 'Vòng $size' : strings.matchTableRoundOf(size);
+          baseLabel = strings.matchTableRoundOf(1 << fromEnd);
         }
       }
     }
@@ -246,9 +243,7 @@ class MatchRoundLabel {
         } else if (slots == 8) {
           baseLabel = strings.matchTableRoundQuarterfinal;
         } else if (knockoutRoundSizes.contains(slots)) {
-          baseLabel = short
-              ? 'Vòng $slots'
-              : strings.matchTableRoundOf(slots);
+          baseLabel = strings.matchTableRoundOf(slots ~/ 2);
         }
       }
     }

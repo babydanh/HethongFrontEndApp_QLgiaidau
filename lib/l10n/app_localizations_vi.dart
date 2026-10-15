@@ -3359,6 +3359,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String scheduleCardRoundMatch(String round, int matchNumber) {
+    return '$round • Trận $matchNumber';
+  }
+
+  @override
   String organizer_refereesLoadError(Object error) {
     return 'Không thể tải danh sách trọng tài.\n$error';
   }

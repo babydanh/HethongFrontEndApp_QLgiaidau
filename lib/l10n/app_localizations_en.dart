@@ -3370,6 +3370,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String scheduleCardRoundMatch(String round, int matchNumber) {
+    return '$round • Match $matchNumber';
+  }
+
+  @override
   String organizer_refereesLoadError(Object error) {
     return 'Could not load referee list.\n$error';
   }

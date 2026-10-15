@@ -1302,6 +1302,14 @@
   "organizer_noMatches": "No matches have been created yet.",
   "organizer_noTime": "Not scheduled",
   "organizer_matchTitle": "Round {round} • Match {matchNumber}",
+  "scheduleCardRoundMatch": "{round} • Match {matchNumber}",
+  "@scheduleCardRoundMatch": {
+    "description": "Match card footer in the schedule grid: standard round name (e.g. Round of 16, Quarterfinal) and match number.",
+    "placeholders": {
+      "round": {"type": "String"},
+      "matchNumber": {"type": "int"}
+    }
+  },
   "organizer_refereesLoadError": "Could not load referee list.\n{error}",
   "organizer_noReferees": "No referees have been assigned to this tournament yet.",
   "organizer_refereeAccepted": "Accepted",

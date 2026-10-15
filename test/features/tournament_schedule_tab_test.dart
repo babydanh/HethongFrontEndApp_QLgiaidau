@@ -24,6 +24,7 @@ Tournament _fixtureTournament({
   int? minutesPerSet,
   bool withSponsor = false,
   bool withVenue = false,
+  List<Map<String, dynamic>> divisions = const [],
 }) => Tournament.fromJson({
   'name': 'Schedule tab smoke fixture',
   'sport': 'pickleball',
@@ -45,6 +46,7 @@ Tournament _fixtureTournament({
     'stepMinutes': 15,
     'minutesPerSet': ?minutesPerSet,
   },
+  if (divisions.isNotEmpty) 'divisions': divisions,
   if (withSponsor)
     'sponsors': [
       {
@@ -68,6 +70,7 @@ MatchModel _scheduleMatch(
   String status = 'scheduled',
   DateTime? scheduledTime,
   int? durationMinutes,
+  String? divisionId,
 }) => MatchModel(
   id: 'schedule-match-$matchNumber',
   round: 1,
@@ -82,6 +85,7 @@ MatchModel _scheduleMatch(
   scheduledTime: scheduledTime,
   updatedAt: DateTime.utc(2026, 1, 1),
   durationMinutes: durationMinutes,
+  divisionId: divisionId,
 );
 
 Future<void> _pumpTournamentDetail(
@@ -92,6 +96,7 @@ Future<void> _pumpTournamentDetail(
   int? minutesPerSet,
   bool withSponsor = false,
   List<String>? venueCourts,
+  List<Map<String, dynamic>> divisions = const [],
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -101,6 +106,7 @@ Future<void> _pumpTournamentDetail(
             minutesPerSet: minutesPerSet,
             withSponsor: withSponsor,
             withVenue: venueCourts != null,
+            divisions: divisions,
           ),
         ),
         publicVenueCourtNamesProvider.overrideWith(
@@ -424,6 +430,111 @@ void main() {
     expect(find.text('No matches yet'), findsOneWidget);
     expect(find.text('No matches match the selected filter'), findsNothing);
     expect(find.textContaining('Player 1'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('narrow screen shows exactly two court columns', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('en'),
+      matches: [
+        for (var court = 1; court <= 4; court++)
+          _scheduleMatch(
+            court,
+            courtName: 'Court $court',
+            scheduledTime: DateTime(2026, 8, 12, 8),
+          ),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
+
+    final grid = tester.getRect(find.byType(ScheduleGrid));
+    final card = tester.getRect(
+      find.byKey(const ValueKey('schedule-match-schedule-match-1')),
+    );
+    // Cột giờ 56px; phần còn lại chia đúng 2 sân, thẻ chừa 3px mỗi bên.
+    expect(card.width, closeTo((grid.width - 56) / 2 - 6, 1));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('card shows division and knockout round like the bracket', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('vi'),
+      divisions: const [
+        {'id': 'div-1', 'name': 'Đôi Nam'},
+        {'id': 'div-2', 'name': 'Đôi Nữ'},
+      ],
+      matches: [
+        // Vòng 1 của nhánh 16 VĐV = 8 trận = "Vòng 1/8".
+        for (var n = 1; n <= 8; n++)
+          _scheduleMatch(
+            n,
+            divisionId: 'div-1',
+            courtName: n == 1 ? 'Sân 1' : null,
+            scheduledTime: n == 1 ? DateTime(2026, 8, 12, 8) : null,
+          ),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
+
+    final card = find.byKey(const ValueKey('schedule-match-schedule-match-1'));
+    expect(
+      find.descendant(of: card, matching: find.text('Đôi Nam')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.text('Vòng 1/8 • Trận 1')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('single-division tournament still labels cards', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('vi'),
+      divisions: const [
+        {'id': 'div-1', 'name': 'Đơn Nam'},
+      ],
+      matches: [
+        _scheduleMatch(
+          1,
+          courtName: 'Sân 1',
+          scheduledTime: DateTime(2026, 8, 12, 8),
+        ),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
+
+    final card = find.byKey(const ValueKey('schedule-match-schedule-match-1'));
+    expect(
+      find.descendant(of: card, matching: find.text('Đơn Nam')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
