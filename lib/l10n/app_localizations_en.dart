@@ -949,6 +949,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userProfileClubTagsTitle => 'CLUB TITLES';
 
   @override
+  String userProfileViewProfileOf(Object name) {
+    return 'View $name\'s profile';
+  }
+
+  @override
   String get userProfileEditTag => 'Edit tag';
 
   @override

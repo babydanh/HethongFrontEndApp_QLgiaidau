@@ -339,6 +339,12 @@
   "userProfileClubMemberRole": "Club member",
   "userProfileEloStarting": "Starting ELO",
   "userProfileClubTagsTitle": "CLUB TITLES",
+  "userProfileViewProfileOf": "View {name}'s profile",
+  "@userProfileViewProfileOf": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "userProfileEditTag": "Edit tag",
   "userProfileAssignTag": "+ Assign tag",
   "userProfileNoClubTags": "No club titles yet",

@@ -1868,6 +1868,12 @@ abstract class AppLocalizations {
   /// **'DANH HIỆU CLB'**
   String get userProfileClubTagsTitle;
 
+  /// No description provided for @userProfileViewProfileOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem hồ sơ {name}'**
+  String userProfileViewProfileOf(Object name);
+
   /// No description provided for @userProfileEditTag.
   ///
   /// In vi, this message translates to:
