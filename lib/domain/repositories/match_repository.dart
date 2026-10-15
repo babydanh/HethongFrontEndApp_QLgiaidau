@@ -74,6 +74,13 @@ abstract class IMatchRepository {
     bool useLiteParticipantAccess = false,
   });
 
+  /// Ghi cài đặt sân pickleball lên server (`PATCH /matches/:id/court-state`).
+  /// Trả về trận đã cập nhật, cùng shape với GET match.
+  Future<MatchModel> updateCourtState(
+    String matchId,
+    Map<String, dynamic> courtState,
+  );
+
   Future<void> advanceWinner(
     String tournamentId,
     String nextMatchId, {

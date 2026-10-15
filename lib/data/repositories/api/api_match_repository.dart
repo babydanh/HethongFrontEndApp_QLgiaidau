@@ -938,9 +938,13 @@ class ApiMatchRepository implements IMatchRepository {
       sportKey: incoming.sportKey ?? previous.sportKey,
       sportRules: incoming.sportRules ?? previous.sportRules,
       tournamentConfig: incoming.tournamentConfig ?? previous.tournamentConfig,
-      scoreDetails: hasScorePayload
-          ? incoming.scoreDetails
-          : previous.scoreDetails,
+      scoreDetails: mergeCourtState(
+        selected: hasScorePayload
+            ? incoming.scoreDetails
+            : previous.scoreDetails,
+        incoming: incoming.scoreDetails,
+        previous: previous.scoreDetails,
+      ),
       score1: hasScorePayload ? incoming.score1 : previous.score1,
       score2: hasScorePayload ? incoming.score2 : previous.score2,
       sets: hasScorePayload ? incoming.sets : previous.sets,
@@ -1153,6 +1157,39 @@ class ApiMatchRepository implements IMatchRepository {
         message?.trim().isNotEmpty == true
             ? message
             : _l10n.matchScoreUpdateError,
+      );
+    }
+  }
+
+  @override
+  Future<MatchModel> updateCourtState(
+    String matchId,
+    Map<String, dynamic> courtState,
+  ) async {
+    try {
+      final response = await _dioClient.dio.patch(
+        '/matches/$matchId/court-state',
+        data: {'courtState': courtState},
+      );
+      final body = response.data;
+      final raw = body is Map && body['data'] is Map ? body['data'] : body;
+      if (raw is! Map) {
+        throw Exception(_l10n.pickleballCourtSaveError);
+      }
+      return _parseMatch(Map<String, dynamic>.from(raw));
+    } on DioException catch (error) {
+      final body = error.response?.data;
+      final rawMessage = body is Map ? body['message'] : null;
+      final message = rawMessage is List
+          ? rawMessage
+                .whereType<Object>()
+                .map((item) => item.toString())
+                .join('\n')
+          : rawMessage?.toString();
+      throw Exception(
+        message?.trim().isNotEmpty == true
+            ? message
+            : _l10n.pickleballCourtSaveError,
       );
     }
   }
@@ -1473,4 +1510,20 @@ class ApiMatchRepository implements IMatchRepository {
       winnerId: winnerId,
     );
   }
+}
+
+/// Giữ `courtState` khi socket merge scoreDetails. Payload không mang
+/// courtState thì dùng courtState đang có (updateScore không gửi courtState
+/// thì giữ nguyên). Các field khác của scoreDetails không đổi.
+Map<String, dynamic>? mergeCourtState({
+  required Map<String, dynamic>? selected,
+  required Map<String, dynamic>? incoming,
+  required Map<String, dynamic>? previous,
+}) {
+  final hasIncomingCourt = incoming?.containsKey('courtState') ?? false;
+  final court = hasIncomingCourt
+      ? incoming!['courtState']
+      : previous?['courtState'];
+  if (selected == null && court == null) return null;
+  return {...?selected, 'courtState': ?court};
 }

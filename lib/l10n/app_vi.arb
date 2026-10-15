@@ -704,6 +704,28 @@
   "pickleballLoseServe": "Mất quyền giao",
   "pickleballTeam1": "Đội 1",
   "pickleballTeam2": "Đội 2",
+  "pickleballCourtTitle": "Sơ đồ sân",
+  "pickleballCourtSettings": "Cài đặt sân",
+  "pickleballCourtStartingRight": "VĐV đứng ô phải lúc xuất phát",
+  "pickleballCourtPlayerLabel": "VĐV {number}",
+  "@pickleballCourtPlayerLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "pickleballCourtSwapNow": "Đổi sân ngay",
+  "pickleballCourtAutoSwitch": "Tự đổi sân",
+  "pickleballCourtAutoSwitchHint": "Tự đổi sân sau mỗi set và ở mốc giữa set quyết định",
+  "pickleballCourtServerOverride": "Người đang giao",
+  "pickleballCourtUndo": "Hoàn tác",
+  "pickleballCourtRestoreAutomatic": "Khôi phục tự động",
+  "pickleballCourtNoServingTeam": "Chưa có đội giao",
+  "pickleballCourtCallLabel": "Lời hô",
+  "pickleballCourtRightCell": "Ô phải",
+  "pickleballCourtLeftCell": "Ô trái",
+  "pickleballCourtSaveError": "Không lưu được sơ đồ sân. Đã giữ cài đặt của máy chủ.",
   "tennisTiebreakInfo": "TIEBREAK · Mỗi pha bóng được 1 điểm, chạm {points} và cách 2 để thắng set",
   "tennisPointsLabel": "15 • 30 • 40",
   "tennisTiebreakLabel": "Tiebreak",

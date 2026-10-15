@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/tennis_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_panel.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/badminton_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/table_tennis_score_panel.dart';
@@ -15,6 +16,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/utils/score_validation_localizer.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 SportRuleKind _resolveMatchSportKind(MatchModel match) {
@@ -746,6 +748,13 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
         children: [
+          if (kind == SportRuleKind.pickleball && !isLite) ...[
+            PickleballCourtPanel(
+              params: params,
+              canScore: ref.watch(authProvider).canScore,
+            ),
+            const SizedBox(height: 8),
+          ],
           Expanded(
             child: kind == SportRuleKind.football
                 ? FootballScorePanel(

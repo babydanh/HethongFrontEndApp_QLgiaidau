@@ -2036,6 +2036,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballTeam2 => 'Team 2';
 
   @override
+  String get pickleballCourtTitle => 'Court';
+
+  @override
+  String get pickleballCourtSettings => 'Court settings';
+
+  @override
+  String get pickleballCourtStartingRight => 'Starting right-court player';
+
+  @override
+  String pickleballCourtPlayerLabel(int number) {
+    return 'Player $number';
+  }
+
+  @override
+  String get pickleballCourtSwapNow => 'Switch ends now';
+
+  @override
+  String get pickleballCourtAutoSwitch => 'Auto switch ends';
+
+  @override
+  String get pickleballCourtAutoSwitchHint =>
+      'Switch ends after each set and at the midpoint of the deciding set';
+
+  @override
+  String get pickleballCourtServerOverride => 'Current server';
+
+  @override
+  String get pickleballCourtUndo => 'Undo';
+
+  @override
+  String get pickleballCourtRestoreAutomatic => 'Restore automatic';
+
+  @override
+  String get pickleballCourtNoServingTeam => 'No serving team yet';
+
+  @override
+  String get pickleballCourtCallLabel => 'Call';
+
+  @override
+  String get pickleballCourtRightCell => 'Right';
+
+  @override
+  String get pickleballCourtLeftCell => 'Left';
+
+  @override
+  String get pickleballCourtSaveError =>
+      'Could not save the court. Server settings were kept.';
+
+  @override
   String tennisTiebreakInfo(Object points) {
     return 'TIEBREAK · Each rally scores 1 point, first to $points by 2 wins the set';
   }
