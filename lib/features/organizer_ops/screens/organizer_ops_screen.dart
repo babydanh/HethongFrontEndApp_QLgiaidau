@@ -7,9 +7,11 @@ import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.da
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/schedule_fullscreen_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_schedule_court_grid.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/add_athlete_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/domain/entities/match_schedule.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -60,6 +62,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   String _opsMatchFilter = 'ongoing';
   String? _focusedMatchId;
   late OrganizerOpsMatchesView _matchesView;
+
+  /// Bản nháp xếp tự động chờ áp dụng trên lưới; rỗng khi không có bản nháp.
+  List<MatchModel> _draftMatches = const [];
+  int _draftSkipped = 0;
+  ({int done, int total})? _draftProgress;
 
   @override
   void initState() {
@@ -786,15 +793,25 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       minutes: scheduledDurationMinutes(target, minutesPerSet: minutesPerSet),
       minutesPerSet: minutesPerSet,
     )) {
-      _showScheduleMessage(messenger, l10n.tournamentManagementActionError);
+      _showScheduleMessage(messenger, l10n.scheduleQuickClash);
       return;
     }
 
-    final ok = await _writeSchedule(matchId, courtId, courtName, scheduledAt);
+    final snapshot = await _writeSlot(
+      matchId,
+      ScheduleSlot(
+        courtId: courtId,
+        courtName: courtName,
+        scheduledAt: scheduledAt,
+      ),
+    );
     if (!mounted) return;
-    if (!ok) {
+    if (snapshot == null) {
       _showScheduleMessage(messenger, l10n.tournamentManagementActionError);
       return;
+    }
+    if (_serverMoved(snapshot, courtId: courtId, scheduledAt: scheduledAt)) {
+      _showScheduleMessage(messenger, l10n.scheduleQuickServerMoved(1));
     }
     ref.invalidate(
       matchesWithDivisionProvider((
@@ -802,29 +819,6 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         divisionId: divisionId,
       )),
     );
-  }
-
-  /// Ghi lịch một trận; trả về false nếu máy chủ lỗi (không ném ra ngoài).
-  Future<bool> _writeSchedule(
-    String matchId,
-    String courtId,
-    String courtName,
-    DateTime scheduledAt,
-  ) async {
-    try {
-      await ref
-          .read(matchRepositoryProvider)
-          .updateSchedule(
-            widget.tournamentId,
-            matchId,
-            courtId: courtId.isEmpty ? null : courtId,
-            courtName: courtName,
-            scheduledAt: scheduledAt,
-          );
-      return true;
-    } catch (_) {
-      return false;
-    }
   }
 
   /// Có trận nào trên cùng sân chồng lấn khoảng [scheduledAt, +minutes) không.
@@ -907,15 +901,18 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       busy.add((court: cells[i].courtName, start: start, end: end));
     }
 
+    var moved = 0;
     for (var i = 0; i < count; i++) {
-      final ok = await _writeSchedule(
+      final snapshot = await _writeSlot(
         waiting[i].id,
-        cells[i].courtId,
-        cells[i].courtName,
-        cells[i].at,
+        ScheduleSlot(
+          courtId: cells[i].courtId,
+          courtName: cells[i].courtName,
+          scheduledAt: cells[i].at,
+        ),
       );
       if (!mounted) return;
-      if (!ok) {
+      if (snapshot == null) {
         // Đã ghi được i trận trước đó; nói rõ phần đã ghi rồi tải lại để thấy
         // đúng thực tế (không có API ghi hàng loạt nên không nguyên tử).
         _showScheduleMessage(
@@ -930,8 +927,18 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         );
         return;
       }
+      if (_serverMoved(
+        snapshot,
+        courtId: cells[i].courtId,
+        scheduledAt: cells[i].at,
+      )) {
+        moved++;
+      }
     }
     if (!mounted) return;
+    if (moved > 0) {
+      _showScheduleMessage(messenger, l10n.scheduleQuickServerMoved(moved));
+    }
     ref.invalidate(
       matchesWithDivisionProvider((
         tournamentId: widget.tournamentId,
@@ -948,6 +955,860 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
 
   void _showScheduleMessage(ScaffoldMessengerState messenger, String message) {
     messenger.showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// Sân của giải cho các ô chọn sân. Trả về null (đã báo lỗi) nếu không tải
+  /// được hoặc giải chưa có sân.
+  Future<List<ScheduleCourt>?> _loadScheduleCourts(
+    AppLocalizations l10n,
+    ScaffoldMessengerState messenger,
+  ) async {
+    try {
+      final courts = parseScheduleCourts(
+        await ref
+            .read(tournamentManagementRepositoryProvider)
+            .getVenues(widget.tournamentId),
+      );
+      if (courts.isNotEmpty) return courts;
+      _showScheduleMessage(messenger, l10n.scheduleQuickNoCourts);
+    } catch (error) {
+      _showScheduleMessage(
+        messenger,
+        ErrorParser.parse(error, l10n.opsLoadFailed, l10n),
+      );
+    }
+    return null;
+  }
+
+  /// Kéo một trận thả lên trận khác: đổi chỗ hai trận, hoặc đưa trận từ khay
+  /// vào ô của trận đích. Kiểm trùng trước, xác nhận rồi mới ghi.
+  Future<void> _swapMatches({
+    required BuildContext context,
+    required List<MatchModel> visible,
+    required String draggedId,
+    required String targetId,
+    required int minutesPerSet,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final dragged = _findMatch(visible, draggedId);
+    final target = _findMatch(visible, targetId);
+    if (dragged == null || target == null || dragged.id == target.id) return;
+    if (isScheduleLocked(dragged) || isScheduleLocked(target)) {
+      _showScheduleMessage(messenger, l10n.scheduleQuickLocked);
+      return;
+    }
+    final targetSlot = scheduleSlotOf(target);
+    if (targetSlot == null) return;
+    final draggedSlot = scheduleSlotOf(dragged);
+    final planned = <String, ({String court, DateTime at, int minutes})?>{
+      dragged.id: (
+        court: targetSlot.courtName,
+        at: targetSlot.scheduledAt,
+        minutes: scheduledDurationMinutes(
+          dragged,
+          minutesPerSet: minutesPerSet,
+        ),
+      ),
+      target.id: draggedSlot == null
+          ? null
+          : (
+              court: draggedSlot.courtName,
+              at: draggedSlot.scheduledAt,
+              minutes: scheduledDurationMinutes(
+                target,
+                minutesPerSet: minutesPerSet,
+              ),
+            ),
+    };
+    if (_overlapsAfter(
+      visible: visible,
+      planned: planned,
+      minutesPerSet: minutesPerSet,
+    )) {
+      _showScheduleMessage(messenger, l10n.scheduleQuickClash);
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.scheduleQuickSwapTitle),
+        content: Text(
+          l10n.scheduleQuickSwapMessage(
+            _pairLabel(dragged),
+            _pairLabel(target),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.matchCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.scheduleQuickSwapConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final report = await runScheduleSwap(
+      draggedId: dragged.id,
+      draggedSlot: draggedSlot,
+      targetId: target.id,
+      targetSlot: targetSlot,
+      write: _writeSlot,
+    );
+    if (!mounted) return;
+    ref.invalidate(matchesWithDivisionProvider);
+    final outcome = switch (report.result) {
+      ScheduleSwapResult.swapped => l10n.scheduleQuickSwapDone,
+      ScheduleSwapResult.aborted => l10n.scheduleQuickSwapAborted,
+      ScheduleSwapResult.rolledBack => l10n.scheduleQuickSwapRolledBack,
+      ScheduleSwapResult.partial => l10n.scheduleQuickSwapPartial,
+    };
+    final moved = report.movedMatchIds.length;
+    _showScheduleMessage(
+      messenger,
+      moved == 0
+          ? outcome
+          : '$outcome ${l10n.scheduleQuickServerMoved(moved)}',
+    );
+  }
+
+  /// Đặt cùng thời lượng cho các trận đã chọn trong vùng. Kiểm trùng cả lô
+  /// trước khi ghi; lỗi giữa chừng thì dừng và tải lại lịch.
+  Future<void> _bulkDuration({
+    required BuildContext context,
+    required List<MatchModel> visible,
+    required List<MatchModel> matches,
+    required int minutes,
+    required int minutesPerSet,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final editable = [
+      for (final match in matches)
+        if (!isScheduleLocked(match) && match.scheduledTime != null) match,
+    ];
+    if (editable.isEmpty) return;
+    final planned = <String, ({String court, DateTime at, int minutes})?>{
+      for (final match in editable)
+        match.id: (
+          court: _courtNameOf(match),
+          at: match.scheduledTime!,
+          minutes: minutes,
+        ),
+    };
+    if (_overlapsAfter(
+      visible: visible,
+      planned: planned,
+      minutesPerSet: minutesPerSet,
+    )) {
+      _showScheduleMessage(messenger, l10n.scheduleQuickClash);
+      return;
+    }
+    var done = 0;
+    for (final match in editable) {
+      try {
+        await ref
+            .read(matchRepositoryProvider)
+            .updateSchedule(
+              widget.tournamentId,
+              match.id,
+              durationMinutes: minutes,
+            );
+      } catch (_) {
+        if (!mounted) return;
+        ref.invalidate(matchesWithDivisionProvider);
+        _showScheduleMessage(
+          messenger,
+          l10n.scheduleQuickBulkFailed(done, editable.length),
+        );
+        return;
+      }
+      done++;
+    }
+    if (!mounted) return;
+    ref.invalidate(matchesWithDivisionProvider);
+    _showScheduleMessage(messenger, l10n.scheduleQuickBulkDone(done));
+  }
+
+  /// Dời cả nhóm trận đã chọn sang sân khác, giữ nguyên giờ. Kiểm trùng cả lô
+  /// trước khi ghi; lỗi giữa chừng thì dừng và tải lại lịch.
+  Future<void> _bulkMoveCourt({
+    required BuildContext context,
+    required List<MatchModel> visible,
+    required List<MatchModel> matches,
+    required ScheduleCourt court,
+    required int minutesPerSet,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final editable = [
+      for (final match in matches)
+        if (!isScheduleLocked(match) && match.scheduledTime != null) match,
+    ];
+    if (editable.isEmpty) return;
+    final planned = <String, ({String court, DateTime at, int minutes})?>{
+      for (final match in editable)
+        match.id: (
+          court: court.name,
+          at: match.scheduledTime!,
+          minutes: scheduledDurationMinutes(
+            match,
+            minutesPerSet: minutesPerSet,
+          ),
+        ),
+    };
+    if (_overlapsAfter(
+      visible: visible,
+      planned: planned,
+      minutesPerSet: minutesPerSet,
+    )) {
+      _showScheduleMessage(messenger, l10n.scheduleQuickClash);
+      return;
+    }
+    var done = 0;
+    var moved = 0;
+    for (final match in editable) {
+      final slot = ScheduleSlot(
+        courtId: court.id,
+        courtName: court.name,
+        scheduledAt: match.scheduledTime!,
+      );
+      final saved = await _writeSlot(match.id, slot);
+      if (!mounted) return;
+      if (saved == null) {
+        ref.invalidate(matchesWithDivisionProvider);
+        _showScheduleMessage(
+          messenger,
+          l10n.scheduleQuickBulkFailed(done, editable.length),
+        );
+        return;
+      }
+      done++;
+      if (_serverMoved(
+        saved,
+        courtId: court.id,
+        scheduledAt: slot.scheduledAt,
+      )) {
+        moved++;
+      }
+    }
+    if (!mounted) return;
+    ref.invalidate(matchesWithDivisionProvider);
+    final summary = l10n.scheduleQuickBulkDone(done);
+    _showScheduleMessage(
+      messenger,
+      moved == 0
+          ? summary
+          : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
+    );
+  }
+
+  /// Ô trống trên lưới: chọn một trận chờ để xếp vào đúng sân và giờ đó.
+  Future<void> _showEmptyCellPicker({
+    required BuildContext context,
+    required List<MatchModel> visible,
+    required String? divisionId,
+    required int minutesPerSet,
+    required String courtId,
+    required String courtName,
+    required DateTime at,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final waiting = [
+      for (final match in visible)
+        if (_isWaiting(match) && !isScheduleLocked(match)) match,
+    ];
+    var query = '';
+    final picked = await showModalBottomSheet<MatchModel>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final needle = query.trim().toLowerCase();
+          final shown = [
+            for (final match in waiting)
+              if (needle.isEmpty ||
+                  _pairLabel(match).toLowerCase().contains(needle))
+                match,
+          ];
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                8,
+                16,
+                MediaQuery.viewInsetsOf(context).bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.scheduleQuickPickerTitle(
+                      courtName,
+                      _hhmm(at.hour * 60 + at.minute),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: l10n.scheduleQuickPickerSearch,
+                      prefixIcon: const Icon(Icons.search_rounded),
+                    ),
+                    onChanged: (value) => setSheetState(() => query = value),
+                  ),
+                  const SizedBox(height: 8),
+                  if (shown.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(l10n.scheduleQuickPickerEmpty),
+                    )
+                  else
+                    Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          for (final match in shown)
+                            ListTile(
+                              key: ValueKey('schedule-picker-${match.id}'),
+                              minVerticalPadding: 14,
+                              title: Text(
+                                _pairLabel(match),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () => Navigator.pop(sheetContext, match),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    if (picked == null || !context.mounted) return;
+    await _scheduleMatchDrop(
+      context: context,
+      visible: visible,
+      matchId: picked.id,
+      courtId: courtId,
+      courtName: courtName,
+      scheduledAt: at,
+      divisionId: divisionId,
+      minutesPerSet: minutesPerSet,
+    );
+  }
+
+  /// ⚡ Xếp tự động: chọn nội dung, sân, ngày, giờ bắt đầu và thời lượng, rồi
+  /// xem trước. Máy chủ chỉ tính kế hoạch, không ghi. Bản nháp hiện trên lưới
+  /// và chỉ ghi khi người dùng áp dụng.
+  Future<void> _showAutoScheduleSheet({
+    required BuildContext context,
+    required List<ScheduleDivision> divisions,
+    required String? initialDivisionId,
+    required Map<String, dynamic> scheduleSettings,
+    required List<MatchModel> visible,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final courts = await _loadScheduleCourts(l10n, messenger);
+    if (courts == null || !context.mounted) return;
+
+    final minutesPerSet =
+        (scheduleSettings['minutesPerSet'] as num?)?.toInt() ?? 15;
+    final startHour = _settingHour(scheduleSettings['operatingStart'], 7);
+    final endHour = _settingHour(scheduleSettings['operatingEnd'], 22);
+    final startChoices = quickScheduleMinutes(
+      startHour: startHour,
+      endHour: endHour,
+    );
+    MatchModel? firstWaiting;
+    for (final match in visible) {
+      if (_isWaiting(match) && !isScheduleLocked(match)) {
+        firstWaiting = match;
+        break;
+      }
+    }
+    var duration = firstWaiting == null
+        ? 60
+        : scheduledDurationMinutes(
+            firstWaiting,
+            minutesPerSet: minutesPerSet,
+          );
+    final durationOptions = <int>{...scheduleDurationOptions, duration}.toList()
+      ..sort();
+    final selectedDivisions = <String>{?initialDivisionId};
+    if (selectedDivisions.isEmpty && divisions.isNotEmpty) {
+      selectedDivisions.add(divisions.first.id);
+    }
+    final selectedCourts = <String>{for (final court in courts) court.id};
+    var day = _dayOnly(DateTime.now());
+    var startMinute = startChoices.isEmpty
+        ? startHour * 60
+        : startChoices.first;
+    var busy = false;
+    String? error;
+
+    final result =
+        await showModalBottomSheet<({List<MatchModel> drafts, int skipped})>(
+          context: context,
+          isScrollControlled: true,
+          showDragHandle: true,
+          builder: (sheetContext) => StatefulBuilder(
+            builder: (context, setSheetState) {
+              final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.scheduleQuickAutoTitle,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      l10n.scheduleQuickAutoDivisions,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final division in divisions)
+                          FilterChip(
+                            label: Text(division.name),
+                            selected: selectedDivisions.contains(division.id),
+                            onSelected: (on) => setSheetState(() {
+                              if (on) {
+                                selectedDivisions.add(division.id);
+                              } else {
+                                selectedDivisions.remove(division.id);
+                              }
+                            }),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.scheduleQuickCourt,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final court in courts)
+                          FilterChip(
+                            label: Text(court.name),
+                            selected: selectedCourts.contains(court.id),
+                            onSelected: (on) => setSheetState(() {
+                              if (on) {
+                                selectedCourts.add(court.id);
+                              } else {
+                                selectedCourts.remove(court.id);
+                              }
+                            }),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100),
+                          initialDate: day,
+                        );
+                        if (picked == null || !context.mounted) return;
+                        setSheetState(() => day = _dayOnly(picked));
+                      },
+                      icon: const Icon(Icons.event_rounded),
+                      label: Text(
+                        '${l10n.scheduleQuickDate}: ${_dateText(day)}',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      initialValue: startMinute,
+                      decoration: InputDecoration(
+                        labelText: l10n.scheduleQuickStart,
+                        prefixIcon: const Icon(Icons.schedule_rounded),
+                      ),
+                      items: [
+                        for (final minute in startChoices)
+                          DropdownMenuItem<int>(
+                            value: minute,
+                            child: Text(_hhmm(minute)),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setSheetState(() => startMinute = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      initialValue: duration,
+                      decoration: InputDecoration(
+                        labelText: l10n.scheduleQuickDuration,
+                        prefixIcon: const Icon(Icons.timer_outlined),
+                      ),
+                      items: [
+                        for (final minutes in durationOptions)
+                          DropdownMenuItem<int>(
+                            value: minutes,
+                            child: Text(l10n.scheduleQuickMinutes(minutes)),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setSheetState(() => duration = value);
+                        }
+                      },
+                    ),
+                    if (error != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        error!,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    FilledButton.icon(
+                      onPressed: busy
+                          ? null
+                          : () async {
+                              if (selectedDivisions.isEmpty ||
+                                  selectedCourts.isEmpty) {
+                                setSheetState(
+                                  () => error =
+                                      l10n.scheduleQuickAutoNeedSelection,
+                                );
+                                return;
+                              }
+                              setSheetState(() {
+                                busy = true;
+                                error = null;
+                              });
+                              try {
+                                final preview = await _previewAutoSchedule(
+                                  divisionIds: selectedDivisions,
+                                  courts: [
+                                    for (final court in courts)
+                                      if (selectedCourts.contains(court.id))
+                                        court,
+                                  ],
+                                  day: day,
+                                  startMinute: startMinute,
+                                  endHour: endHour,
+                                  durationMinutes: duration,
+                                );
+                                if (!sheetContext.mounted) return;
+                                if (preview.drafts.isEmpty) {
+                                  setSheetState(() {
+                                    busy = false;
+                                    error = l10n.scheduleQuickAutoNoFit;
+                                  });
+                                  return;
+                                }
+                                Navigator.pop(sheetContext, preview);
+                              } catch (failure) {
+                                if (!sheetContext.mounted) return;
+                                setSheetState(() {
+                                  busy = false;
+                                  error = ErrorParser.parse(
+                                    failure,
+                                    l10n.opsLoadFailed,
+                                    l10n,
+                                  );
+                                });
+                              }
+                            },
+                      icon: busy
+                          ? const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.auto_fix_high_rounded),
+                      label: Text(l10n.scheduleQuickAutoPreview),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+    if (result == null || !mounted) return;
+    setState(() {
+      _draftMatches = result.drafts;
+      _draftSkipped = result.skipped;
+      _draftProgress = null;
+    });
+  }
+
+  /// Lấy trận chờ của các nội dung đã chọn rồi nhờ máy chủ xếp thử. Không ghi.
+  Future<({List<MatchModel> drafts, int skipped})> _previewAutoSchedule({
+    required Set<String> divisionIds,
+    required List<ScheduleCourt> courts,
+    required DateTime day,
+    required int startMinute,
+    required int endHour,
+    required int durationMinutes,
+  }) async {
+    final waiting = <MatchModel>[];
+    for (final divisionId in divisionIds) {
+      final matches = await ref.read(
+        matchesWithDivisionProvider((
+          tournamentId: widget.tournamentId,
+          divisionId: divisionId,
+        )).future,
+      );
+      waiting.addAll(
+        matches.where(
+          (match) => _isWaiting(match) && !isScheduleLocked(match),
+        ),
+      );
+    }
+    if (waiting.isEmpty) return (drafts: const <MatchModel>[], skipped: 0);
+    final dayStart = _dayOnly(day);
+    final plan = await ref
+        .read(matchRepositoryProvider)
+        .previewSchedulePlan(
+          widget.tournamentId,
+          day: dayStart,
+          courtIds: [for (final court in courts) court.id],
+          matchIds: [for (final match in waiting) match.id],
+          windowStart: dayStart.add(Duration(minutes: startMinute)),
+          windowEnd: dayStart.add(Duration(minutes: endHour * 60)),
+          durationMinutes: durationMinutes,
+        );
+    final byId = {for (final match in waiting) match.id: match};
+    final courtNames = {for (final court in courts) court.id: court.name};
+    final drafts = <MatchModel>[
+      for (final assignment in plan.assignments)
+        if (byId[assignment.matchId] != null)
+          scheduleDraftOf(
+            byId[assignment.matchId]!,
+            assignment: assignment,
+            courtName: courtNames[assignment.courtId] ?? '',
+            durationMinutes: plan.durationMinutes,
+          ),
+    ];
+    return (drafts: drafts, skipped: plan.skipped.length);
+  }
+
+  /// Ghi các bản nháp xếp tự động theo thứ tự. Gặp lỗi thì dừng, bỏ bản nháp và
+  /// tải lại lịch để thấy đúng phần đã ghi.
+  Future<void> _applyDraft({required BuildContext context}) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final drafts = _draftMatches;
+    if (drafts.isEmpty || _draftProgress != null) return;
+    setState(() => _draftProgress = (done: 0, total: drafts.length));
+    var done = 0;
+    var moved = 0;
+    var failed = false;
+    for (final draft in drafts) {
+      final slot = scheduleSlotOf(draft);
+      if (slot == null) {
+        failed = true;
+        break;
+      }
+      final saved = await _writeSlot(
+        draft.id,
+        slot,
+        durationMinutes: draft.durationMinutes,
+      );
+      if (!mounted) return;
+      if (saved == null) {
+        failed = true;
+        break;
+      }
+      done++;
+      if (_serverMoved(
+        saved,
+        courtId: slot.courtId,
+        scheduledAt: slot.scheduledAt,
+      )) {
+        moved++;
+      }
+      setState(() => _draftProgress = (done: done, total: drafts.length));
+    }
+    if (!mounted) return;
+    setState(() {
+      _draftMatches = const [];
+      _draftSkipped = 0;
+      _draftProgress = null;
+    });
+    ref.invalidate(matchesWithDivisionProvider);
+    if (failed) {
+      _showScheduleMessage(
+        messenger,
+        l10n.scheduleQuickBulkFailed(done, drafts.length),
+      );
+      return;
+    }
+    final summary = l10n.scheduleQuickAutoApplied(done, drafts.length);
+    _showScheduleMessage(
+      messenger,
+      moved == 0
+          ? summary
+          : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
+    );
+  }
+
+  /// Ghi một ô lịch: [slot] null là gỡ trận khỏi lịch. Trả về lịch server đang
+  /// lưu, hoặc null nếu ghi lỗi (không ném ra ngoài).
+  Future<MatchScheduleSnapshot?> _writeSlot(
+    String matchId,
+    ScheduleSlot? slot, {
+    int? durationMinutes,
+  }) async {
+    final repository = ref.read(matchRepositoryProvider);
+    try {
+      if (slot == null) {
+        return await repository.updateSchedule(
+          widget.tournamentId,
+          matchId,
+          clear: const {
+            MatchScheduleField.courtId,
+            MatchScheduleField.courtName,
+            MatchScheduleField.scheduledAt,
+          },
+        );
+      }
+      return await repository.updateSchedule(
+        widget.tournamentId,
+        matchId,
+        courtId: slot.courtId.isEmpty ? null : slot.courtId,
+        courtName: slot.courtName,
+        scheduledAt: slot.scheduledAt,
+        durationMinutes: durationMinutes,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Máy chủ có thể dời trận sang giờ hoặc sân khác khi trùng lịch: so với yêu
+  /// cầu để báo người dùng.
+  static bool _serverMoved(
+    MatchScheduleSnapshot placed, {
+    required String courtId,
+    required DateTime scheduledAt,
+  }) {
+    final at = placed.scheduledAt;
+    if (at == null || !at.isAtSameMomentAs(scheduledAt)) return true;
+    return courtId.isNotEmpty &&
+        placed.courtId != null &&
+        placed.courtId != courtId;
+  }
+
+  /// Chồng lấn sau khi áp dụng [planned] (id trận → khoảng mới; null là gỡ khỏi
+  /// lịch). Trận không nằm trong [planned] giữ nguyên lịch hiện tại. Chỉ xét
+  /// trận cùng sân và cùng ngày.
+  static bool _overlapsAfter({
+    required List<MatchModel> visible,
+    required Map<String, ({String court, DateTime at, int minutes})?> planned,
+    required int minutesPerSet,
+  }) {
+    final spans = <({String court, DateTime day, int start, int end})>[];
+    void add(String court, DateTime at, int minutes) {
+      final local = at.toLocal();
+      final start = local.hour * 60 + local.minute;
+      spans.add((
+        court: court,
+        day: _dayOnly(local),
+        start: start,
+        end: start + minutes,
+      ));
+    }
+
+    for (final match in visible) {
+      if (planned.containsKey(match.id)) {
+        final next = planned[match.id];
+        if (next != null) add(next.court, next.at, next.minutes);
+        continue;
+      }
+      final at = match.scheduledTime;
+      final court = _courtNameOf(match);
+      if (at == null || court.isEmpty) continue;
+      add(
+        court,
+        at,
+        scheduledDurationMinutes(match, minutesPerSet: minutesPerSet),
+      );
+    }
+    for (var i = 0; i < spans.length; i++) {
+      for (var j = i + 1; j < spans.length; j++) {
+        final a = spans[i];
+        final b = spans[j];
+        if (a.court != b.court || !_sameLocalDay(a.day, b.day)) continue;
+        if (a.start < b.end && b.start < a.end) return true;
+      }
+    }
+    return false;
+  }
+
+  static DateTime _dayOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  static String _dateText(DateTime day) =>
+      '${day.day.toString().padLeft(2, '0')}/'
+      '${day.month.toString().padLeft(2, '0')}/${day.year}';
+
+  static String _hhmm(int minute) =>
+      '${(minute ~/ 60).toString().padLeft(2, '0')}:'
+      '${(minute % 60).toString().padLeft(2, '0')}';
+
+  /// Giờ mở/đóng sân trong cài đặt: số, hoặc chuỗi kiểu "07:00".
+  static int _settingHour(Object? value, int fallback) {
+    if (value is num) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value.split(':').first.trim()) ?? fallback;
+    }
+    return fallback;
+  }
+
+  /// Trận chờ xếp lịch: chưa có giờ hoặc chưa có tên sân (cùng quy ước khay chờ).
+  static bool _isWaiting(MatchModel match) =>
+      match.scheduledTime == null || _courtNameOf(match).isEmpty;
+
+  static MatchModel? _findMatch(List<MatchModel> matches, String id) {
+    for (final match in matches) {
+      if (match.id == id) return match;
+    }
+    return null;
+  }
+
+  /// Nhãn trận theo hai đội, dùng cho khung chọn và hộp xác nhận.
+  static String _pairLabel(MatchModel match) {
+    final first = match.team1Name.trim();
+    final second = match.team2Name.trim();
+    if (first.isEmpty && second.isEmpty) return match.id;
+    return '${first.isEmpty ? '?' : first} – ${second.isEmpty ? '?' : second}';
   }
 
   Widget _buildMatchesSliver(
@@ -1010,7 +1871,22 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 break;
               }
             }
-            if (target != null) _showMatchActions(context, target);
+            if (target == null) return;
+            if (isScheduleLocked(target)) {
+              _showMatchActions(
+                context,
+                target,
+                visible: visible,
+                divisionId: divisionId,
+              );
+            } else {
+              _showQuickScheduleSheet(
+                context,
+                target,
+                visible: visible,
+                divisionId: divisionId,
+              );
+            }
           }
 
           void dropMatch(
@@ -1041,6 +1917,58 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             minutesPerSet: minutesPerSet,
           );
 
+          void emptyCellTap(String courtId, String courtName, DateTime at) =>
+              _showEmptyCellPicker(
+                context: context,
+                visible: visible,
+                divisionId: divisionId,
+                minutesPerSet: minutesPerSet,
+                courtId: courtId,
+                courtName: courtName,
+                at: at,
+              );
+
+          void swapMatches(String draggedId, String targetId) => _swapMatches(
+            context: context,
+            visible: visible,
+            draggedId: draggedId,
+            targetId: targetId,
+            minutesPerSet: minutesPerSet,
+          );
+
+          void bulkDuration(List<MatchModel> matches, int minutes) =>
+              _bulkDuration(
+                context: context,
+                visible: visible,
+                matches: matches,
+                minutes: minutes,
+                minutesPerSet: minutesPerSet,
+              );
+
+          void bulkMoveCourt(List<MatchModel> matches, ScheduleCourt court) =>
+              _bulkMoveCourt(
+                context: context,
+                visible: visible,
+                matches: matches,
+                court: court,
+                minutesPerSet: minutesPerSet,
+              );
+
+          void openAutoSchedule() => _showAutoScheduleSheet(
+            context: context,
+            divisions: divisionOptions,
+            initialDivisionId: divisionId,
+            scheduleSettings: scheduleSettings,
+            visible: visible,
+          );
+
+          void applyDraft() => _applyDraft(context: context);
+
+          void cancelDraft() => setState(() {
+            _draftMatches = const [];
+            _draftSkipped = 0;
+          });
+
           return SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1068,6 +1996,14 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     selectedMatchId: focusedMatchId,
                     onTapMatch: readOnly ? null : openMatch,
                     onScheduleDrop: readOnly ? null : dropMatch,
+                    onTapEmptyCell: readOnly ? null : emptyCellTap,
+                    onScheduleSwap: readOnly ? null : swapMatches,
+                    onAutoSchedule: readOnly ? null : openAutoSchedule,
+                    draftMatches: _draftMatches,
+                    draftSkippedCount: _draftSkipped,
+                    draftProgress: _draftProgress,
+                    onApplyDraft: readOnly ? null : applyDraft,
+                    onCancelDraft: readOnly ? null : cancelDraft,
                     divisions: divisionOptions,
                     selectedDivisionId: divisionId,
                     onDivisionSelected: selectDivision,
@@ -1080,7 +2016,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                           divisions: divisionOptions,
                           onDivisionSelected: selectDivision,
                           onScheduleDrop: readOnly ? null : dropMatch,
-                    onBulkSchedule: readOnly ? null : bulkSchedule,
+                          onBulkSchedule: readOnly ? null : bulkSchedule,
+                          onTapEmptyCell: readOnly ? null : emptyCellTap,
+                          onScheduleSwap: readOnly ? null : swapMatches,
+                          onBulkDuration: readOnly ? null : bulkDuration,
+                          onBulkMoveCourt: readOnly ? null : bulkMoveCourt,
                           onTapMatch: readOnly ? null : openMatch,
                         ),
                       ),
@@ -1138,7 +2078,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   isFocused: match.id == focusedMatchId,
                   onTap: readOnly
                       ? null
-                      : () => _showMatchActions(context, match),
+                      : () => _showMatchActions(
+                          context,
+                          match,
+                          visible: matches,
+                          divisionId: divisionId,
+                        ),
                 );
               }
               rowIndex -= section.matches.length;
@@ -1262,7 +2207,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     reasonController.dispose();
   }
 
-  Future<void> _showMatchActions(BuildContext context, MatchModel match) async {
+  Future<void> _showMatchActions(
+    BuildContext context,
+    MatchModel match, {
+    required List<MatchModel> visible,
+    required String? divisionId,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -1327,7 +2277,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return;
     }
     if (action == 'schedule') {
-      await _showScheduleSheet(context, match);
+        await _showQuickScheduleSheet(
+          context,
+          match,
+          visible: visible,
+          divisionId: divisionId,
+        );
       return;
     }
     await _showSpecialOperationSheet(context, match);
@@ -1581,15 +2536,52 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     reasonController.dispose();
   }
 
-  Future<void> _showScheduleSheet(
+  /// Xếp nhanh một trận: sân, ngày, giờ bắt đầu (bước 15 phút), thời lượng và
+  /// trọng tài. Chồng lấn cùng sân bị chặn trước khi ghi. Gỡ lịch xoá sân, tên
+  /// sân và giờ. Trận đang diễn ra hoặc đã kết thúc không đổi lịch.
+  Future<void> _showQuickScheduleSheet(
     BuildContext context,
-    MatchModel match,
-  ) async {
+    MatchModel match, {
+    required List<MatchModel> visible,
+    required String? divisionId,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
-    final courtController = TextEditingController(text: match.court);
-    DateTime? scheduledAt = match.scheduledTime;
-    var submitting = false;
-    var selectedRefereeId = match.refereeId;
+    final messenger = ScaffoldMessenger.of(context);
+    if (isScheduleLocked(match)) {
+      _showScheduleMessage(messenger, l10n.scheduleQuickLocked);
+      return;
+    }
+    final settings =
+        ref
+            .read(tournamentProvider(widget.tournamentId))
+            .value
+            ?.scheduleSettings ??
+        const <String, dynamic>{};
+    final minutesPerSet = (settings['minutesPerSet'] as num?)?.toInt() ?? 15;
+    final courts = await _loadScheduleCourts(l10n, messenger);
+    if (courts == null || !context.mounted) return;
+
+    final startChoices = quickScheduleMinutes(
+      startHour: _settingHour(settings['operatingStart'], 7),
+      endHour: _settingHour(settings['operatingEnd'], 22),
+    );
+    final current = match.scheduledTime?.toLocal();
+    final initialRefereeId = match.refereeId;
+    var courtId = courts.any((court) => court.id == match.courtId)
+        ? match.courtId!
+        : courts.first.id;
+    var day = _dayOnly(current ?? DateTime.now());
+    var startMinute = current == null
+        ? (startChoices.isEmpty ? 7 * 60 : startChoices.first)
+        : current.hour * 60 + current.minute;
+    var duration = scheduledDurationMinutes(
+      match,
+      minutesPerSet: minutesPerSet,
+    );
+    var refereeId = initialRefereeId;
+    final startOptions = <int>{...startChoices, startMinute}.toList()..sort();
+    final durationOptions = <int>{...scheduleDurationOptions, duration}.toList()
+      ..sort();
     final readModel = _selectedDivisionId == null
         ? null
         : ref
@@ -1606,19 +2598,22 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         (referee) => referee.status?.toUpperCase() == 'ACCEPTED',
       ),
     ];
-    if (selectedRefereeId != null &&
-        selectedRefereeId.isNotEmpty &&
-        !referees.any((referee) => referee.id == selectedRefereeId)) {
+    if (initialRefereeId != null &&
+        initialRefereeId.isNotEmpty &&
+        !referees.any((referee) => referee.id == initialRefereeId)) {
       referees.insert(
         0,
         OrganizerOpsReferee(
-          id: selectedRefereeId,
-          userId: selectedRefereeId,
+          id: initialRefereeId,
+          userId: initialRefereeId,
           fullName: match.refereeName ?? l10n.matchMainReferee,
           status: 'ACCEPTED',
         ),
       );
     }
+    var submitting = false;
+    String? error;
+    final hasSchedule = current != null;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -1626,142 +2621,222 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       showDragHandle: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) {
+          Future<void> submit({
+            required Future<MatchScheduleSnapshot> Function() write,
+            required ScheduleSlot? requested,
+          }) async {
+            setSheetState(() {
+              submitting = true;
+              error = null;
+            });
+            try {
+              final saved = await write();
+              if (!sheetContext.mounted) return;
+              Navigator.pop(sheetContext);
+              ref.invalidate(
+                matchesWithDivisionProvider((
+                  tournamentId: widget.tournamentId,
+                  divisionId: divisionId,
+                )),
+              );
+              if (divisionId != null) {
+                ref.invalidate(
+                  organizerOpsReadModelProvider((
+                    tournamentId: widget.tournamentId,
+                    divisionId: divisionId,
+                  )),
+                );
+              }
+              final moved =
+                  requested != null &&
+                  _serverMoved(
+                    saved,
+                    courtId: requested.courtId,
+                    scheduledAt: requested.scheduledAt,
+                  );
+              _showScheduleMessage(
+                messenger,
+                moved ? l10n.scheduleQuickServerMoved(1) : l10n.opsSaved,
+              );
+            } catch (failure) {
+              if (!sheetContext.mounted) return;
+              setSheetState(() {
+                submitting = false;
+                error = ErrorParser.parse(failure, l10n.opsLoadFailed, l10n);
+              });
+            }
+          }
+
           final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-          return Padding(
+          return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  l10n.matchScheduledTime,
+                  l10n.scheduleQuickSheetTitle,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 14),
-                TextField(
-                  controller: courtController,
+                DropdownButtonFormField<String>(
+                  initialValue: courtId,
                   decoration: InputDecoration(
-                    labelText: l10n.matchCourtLabel,
+                    labelText: l10n.scheduleQuickCourt,
                     prefixIcon: const Icon(Icons.place_outlined),
                   ),
+                  items: [
+                    for (final court in courts)
+                      DropdownMenuItem<String>(
+                        value: court.id,
+                        child: Text(
+                          court.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setSheetState(() => courtId = value);
+                  },
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () async {
-                    final date = await showDatePicker(
+                    final picked = await showDatePicker(
                       context: context,
-                      firstDate: DateTime.now().subtract(
-                        const Duration(days: 1),
-                      ),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      initialDate: scheduledAt ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2100),
+                      initialDate: day,
                     );
-                    if (date == null || !context.mounted) return;
-                    final time = await showTimePicker(
-                      context: context,
-                      initialTime: scheduledAt == null
-                          ? TimeOfDay.now()
-                          : TimeOfDay.fromDateTime(scheduledAt!),
-                    );
-                    if (time == null) return;
-                    setSheetState(() {
-                      scheduledAt = DateTime(
-                        date.year,
-                        date.month,
-                        date.day,
-                        time.hour,
-                        time.minute,
-                      );
-                    });
+                    if (picked == null || !context.mounted) return;
+                    setSheetState(() => day = _dayOnly(picked));
                   },
                   icon: const Icon(Icons.event_rounded),
-                  label: Text(
-                    scheduledAt == null
-                        ? l10n.matchNotScheduled
-                        : scheduledAt!.toLocal().toString(),
+                  label: Text('${l10n.scheduleQuickDate}: ${_dateText(day)}'),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: startMinute,
+                  decoration: InputDecoration(
+                    labelText: l10n.scheduleQuickStart,
+                    prefixIcon: const Icon(Icons.schedule_rounded),
                   ),
+                  items: [
+                    for (final minute in startOptions)
+                      DropdownMenuItem<int>(
+                        value: minute,
+                        child: Text(_hhmm(minute)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setSheetState(() => startMinute = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int>(
+                  initialValue: duration,
+                  decoration: InputDecoration(
+                    labelText: l10n.scheduleQuickDuration,
+                    prefixIcon: const Icon(Icons.timer_outlined),
+                  ),
+                  items: [
+                    for (final minutes in durationOptions)
+                      DropdownMenuItem<int>(
+                        value: minutes,
+                        child: Text(l10n.scheduleQuickMinutes(minutes)),
+                      ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setSheetState(() => duration = value);
+                  },
                 ),
                 if (referees.isNotEmpty) ...[
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedRefereeId,
+                    initialValue: refereeId,
                     decoration: InputDecoration(
                       labelText: l10n.matchMainReferee,
                       prefixIcon: const Icon(Icons.sports_outlined),
                     ),
-                    items: referees
-                        .map(
-                          (referee) => DropdownMenuItem<String>(
-                            value: referee.id,
-                            child: Text(
-                              referee.email == null || referee.email!.isEmpty
-                                  ? referee.fullName
-                                  : '${referee.fullName} · ${referee.email}',
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                    items: [
+                      for (final referee in referees)
+                        DropdownMenuItem<String>(
+                          value: referee.id,
+                          child: Text(
+                            referee.email == null || referee.email!.isEmpty
+                                ? referee.fullName
+                                : '${referee.fullName} · ${referee.email}',
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        )
-                        .toList(),
+                        ),
+                    ],
                     onChanged: (value) =>
-                        setSheetState(() => selectedRefereeId = value),
+                        setSheetState(() => refereeId = value),
+                  ),
+                ],
+                if (error != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 14),
                 FilledButton.icon(
                   onPressed: submitting
                       ? null
-                      : () async {
-                          setSheetState(() => submitting = true);
-                          try {
-                            await ref
+                      : () {
+                          final scheduledAt = DateTime(
+                            day.year,
+                            day.month,
+                            day.day,
+                            startMinute ~/ 60,
+                            startMinute % 60,
+                          );
+                          final chosen = courts.firstWhere(
+                            (court) => court.id == courtId,
+                          );
+                          if (_overlapsAfter(
+                            visible: visible,
+                            planned: {
+                              match.id: (
+                                court: chosen.name,
+                                at: scheduledAt,
+                                minutes: duration,
+                              ),
+                            },
+                            minutesPerSet: minutesPerSet,
+                          )) {
+                            setSheetState(
+                              () => error = l10n.scheduleQuickClash,
+                            );
+                            return;
+                          }
+                          submit(
+                            write: () => ref
                                 .read(matchRepositoryProvider)
                                 .updateSchedule(
                                   widget.tournamentId,
                                   match.id,
-                                  courtName: courtController.text.trim().isEmpty
-                                      ? null
-                                      : courtController.text.trim(),
-                                  courtAddress: match.courtAddress.isEmpty
-                                      ? null
-                                      : match.courtAddress,
-                                  refereeId: selectedRefereeId,
+                                  courtId: chosen.id,
+                                  courtName: chosen.name,
                                   scheduledAt: scheduledAt,
-                                );
-                            if (!context.mounted) return;
-                            Navigator.pop(context);
-                            ref.invalidate(
-                              matchesWithDivisionProvider((
-                                tournamentId: widget.tournamentId,
-                                divisionId: _selectedDivisionId,
-                              )),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.opsSaved)),
-                            );
-                            ref.invalidate(
-                              organizerOpsReadModelProvider((
-                                tournamentId: widget.tournamentId,
-                                divisionId: _selectedDivisionId!,
-                              )),
-                            );
-                          } catch (error) {
-                            if (!context.mounted) return;
-                            setSheetState(() => submitting = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  ErrorParser.parse(
-                                    error,
-                                    l10n.opsLoadFailed,
-                                    l10n,
-                                  ),
+                                  refereeId: refereeId,
+                                  durationMinutes: duration,
                                 ),
-                              ),
-                            );
-                          }
+                            requested: ScheduleSlot(
+                              courtId: chosen.id,
+                              courtName: chosen.name,
+                              scheduledAt: scheduledAt,
+                            ),
+                          );
                         },
                   icon: submitting
                       ? const SizedBox.square(
@@ -1771,13 +2846,35 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       : const Icon(Icons.save_rounded),
                   label: Text(l10n.matchSaveChanges),
                 ),
+                if (hasSchedule) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: submitting
+                        ? null
+                        : () => submit(
+                            write: () => ref
+                                .read(matchRepositoryProvider)
+                                .updateSchedule(
+                                  widget.tournamentId,
+                                  match.id,
+                                  clear: const {
+                                    MatchScheduleField.courtId,
+                                    MatchScheduleField.courtName,
+                                    MatchScheduleField.scheduledAt,
+                                  },
+                                ),
+                            requested: null,
+                          ),
+                    icon: const Icon(Icons.event_busy_outlined),
+                    label: Text(l10n.scheduleQuickClear),
+                  ),
+                ],
               ],
             ),
           );
         },
       ),
     );
-    courtController.dispose();
   }
 
   String? _resolveDivisionId(List<_OpsDivision> divisions) {

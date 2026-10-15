@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_team_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -68,6 +69,16 @@ class ScheduleGrid extends StatefulWidget {
   /// Có giá trị thì nhấn giữ rồi kéo trên lưới để chọn một vùng ô.
   final void Function(ScheduleRange range)? onRangeSelected;
 
+  /// Chạm vào một ô trống (sân, giờ): mở chọn trận chờ để xếp vào ô đó.
+  final void Function(String court, DateTime at)? onTapEmptyCell;
+
+  /// Thả một trận lên thẻ của trận khác: đổi chỗ hai trận.
+  final void Function(String draggedMatchId, String targetMatchId)?
+  onDropOnMatch;
+
+  /// Các trận là bản nháp xếp tự động: vẽ khác biệt và không tương tác.
+  final Set<String> draftMatchIds;
+
   const ScheduleGrid({
     super.key,
     required this.courts,
@@ -85,6 +96,9 @@ class ScheduleGrid extends StatefulWidget {
     this.onRangeSelected,
     this.roundLabelOf,
     this.shortTeamNames = false,
+    this.onTapEmptyCell,
+    this.onDropOnMatch,
+    this.draftMatchIds = const {},
   });
 
   @override
@@ -490,28 +504,13 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                 ),
             ],
           ),
-          // Ô nhận thả nằm DƯỚI thẻ trận để bấm mở trận vẫn hoạt động.
-          if (dropEnabled)
+          // Ô trống nằm DƯỚI thẻ trận để bấm mở trận vẫn hoạt động.
+          if (dropEnabled || widget.onTapEmptyCell != null)
             Positioned.fill(
               child: Column(
                 children: [
                   for (var index = 0; index < _slotCount; index++)
-                    DragTarget<String>(
-                      key: ValueKey('schedule-slot-$court-$index'),
-                      onWillAcceptWithDetails: (details) =>
-                          details.data.trim().isNotEmpty,
-                      onAcceptWithDetails: (details) => widget.onDropMatch!(
-                        details.data,
-                        court,
-                        _slotStart(index),
-                      ),
-                      builder: (context, candidates, rejected) => Container(
-                        height: _slotHeight,
-                        color: candidates.isEmpty
-                            ? null
-                            : AppTheme.primary.withValues(alpha: 0.12),
-                      ),
-                    ),
+                    _emptySlot(court, index, colors, dropEnabled),
                 ],
               ),
             ),
@@ -519,6 +518,45 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             _matchCard(placement.match, placement.lane, colors, laneWidth),
         ],
       ),
+    );
+  }
+
+  /// Ô 15 phút trống của sân [court]: nhận thả trận để xếp lịch và nhận chạm để
+  /// mở danh sách trận chờ. Thẻ trận đặt phía trên nên ô này không nuốt cử chỉ.
+  Widget _emptySlot(
+    String court,
+    int index,
+    AppColorsExtension colors,
+    bool dropEnabled,
+  ) {
+    final tappable = widget.onTapEmptyCell != null;
+    return DragTarget<String>(
+      key: ValueKey('schedule-slot-$court-$index'),
+      onWillAcceptWithDetails: (details) =>
+          dropEnabled && details.data.trim().isNotEmpty,
+      onAcceptWithDetails: (details) =>
+          widget.onDropMatch!(details.data, court, _slotStart(index)),
+      builder: (context, candidates, rejected) {
+        final hovering = candidates.isNotEmpty;
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: tappable
+              ? () => widget.onTapEmptyCell!(court, _slotStart(index))
+              : null,
+          child: Container(
+            height: _slotHeight,
+            alignment: Alignment.center,
+            color: hovering ? AppTheme.primary.withValues(alpha: 0.12) : null,
+            child: tappable && !hovering
+                ? Icon(
+                    Icons.add_rounded,
+                    size: 16,
+                    color: colors.textMuted.withValues(alpha: 0.4),
+                  )
+                : null,
+          ),
+        );
+      },
     );
   }
 
@@ -555,6 +593,86 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         ? minimumHeight
         : calculatedHeight;
     final style = _cardStyle(match, colors);
+    final isDraft = widget.draftMatchIds.contains(match.id);
+    // Trận đã đấu hoặc đã kết thúc không được kéo đi và không nhận thả vào.
+    final movable = !isDraft && !isScheduleLocked(match);
+
+    Widget card = GestureDetector(
+      onTap: isDraft ? null : () => widget.onTapMatch(match.id),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: style.decoration,
+        child: duration < _compactBelowMinutes
+            ? Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5,
+                  vertical: 3,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (divisionName != null)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: _divisionChip(
+                          divisionName,
+                          _divisionColorFor(match) ?? style.fg,
+                        ),
+                      ),
+                    Expanded(child: _compactContent(match, style)),
+                  ],
+                ),
+              )
+            : _fullContent(match, start, style, divisionName),
+      ),
+    );
+
+    if (isDraft) {
+      card = Opacity(
+        opacity: 0.85,
+        child: CustomPaint(
+          foregroundPainter: _DashedBorderPainter(
+            color: AppTheme.primary,
+            radius: 6,
+          ),
+          child: card,
+        ),
+      );
+    }
+    if (movable && widget.onDropMatch != null) {
+      card = LongPressDraggable<String>(
+        data: match.id,
+        feedback: _dragFeedback(match, laneWidth, colors),
+        childWhenDragging: Opacity(opacity: 0.35, child: card),
+        child: card,
+      );
+    }
+    if (movable && widget.onDropOnMatch != null) {
+      final target = card;
+      card = DragTarget<String>(
+        onWillAcceptWithDetails: (details) =>
+            details.data.trim().isNotEmpty && details.data != match.id,
+        onAcceptWithDetails: (details) =>
+            widget.onDropOnMatch!(details.data, match.id),
+        builder: (context, candidates, rejected) => candidates.isEmpty
+            ? target
+            : Stack(
+                children: [
+                  target,
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppTheme.primary, width: 2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      );
+    }
 
     return Positioned(
       key: ValueKey('schedule-match-${match.id}'),
@@ -562,33 +680,34 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       left: lane * laneWidth + 3,
       width: laneWidth - 6,
       height: height,
-      child: GestureDetector(
-        onTap: () => widget.onTapMatch(match.id),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: style.decoration,
-          child: duration < _compactBelowMinutes
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 3,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (divisionName != null)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: _divisionChip(
-                            divisionName,
-                            _divisionColorFor(match) ?? style.fg,
-                          ),
-                        ),
-                      Expanded(child: _compactContent(match, style)),
-                    ],
-                  ),
-                )
-              : _fullContent(match, start, style, divisionName),
+      child: card,
+    );
+  }
+
+  /// Hình theo ngón tay khi kéo thẻ: tên hai đội, nổi trên lưới.
+  Widget _dragFeedback(
+    MatchModel match,
+    double laneWidth,
+    AppColorsExtension colors,
+  ) {
+    return Material(
+      elevation: 4,
+      color: colors.bgCard,
+      borderRadius: BorderRadius.circular(6),
+      child: SizedBox(
+        width: laneWidth - 6,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Text(
+            '${_shortName(match, 0)} - ${_shortName(match, 1)}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
         ),
       ),
     );
@@ -599,8 +718,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   String? _divisionIdFor(MatchModel match) {
     final names = widget.divisionNameById;
     final divisionId = match.divisionId;
-    if (divisionId != null)
+    if (divisionId != null) {
       return names.containsKey(divisionId) ? divisionId : null;
+    }
     return names.length == 1 ? names.keys.single : null;
   }
 
@@ -972,4 +1092,42 @@ class _CourtLayout {
 
   final List<_ScheduledMatchLane> placements;
   final int laneCount;
+}
+
+/// Viền nét đứt cho thẻ nháp xếp tự động.
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  static const double _dash = 6;
+  static const double _gap = 4;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    ).deflate(0.75);
+    final path = Path()..addRRect(rect);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final end = distance + _dash > metric.length
+            ? metric.length
+            : distance + _dash;
+        canvas.drawPath(metric.extractPath(distance, end), paint);
+        distance += _dash + _gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.radius != radius;
 }

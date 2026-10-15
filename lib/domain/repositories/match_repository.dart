@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
+import 'package:app_quanly_giaidau/domain/entities/match_schedule.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
@@ -14,7 +15,10 @@ abstract class IMatchRepository {
   Stream<List<MatchModel>> watchLive(String tournamentId);
   Stream<MatchModel?> watchMatch(String tournamentId, String matchId);
 
-  Future<void> updateSchedule(
+  /// Chỉ gửi trường nào được truyền; trường không truyền giữ nguyên trên
+  /// server. Trường trong [clear] được gửi null để xoá (ví dụ gỡ lịch).
+  /// Trả về lịch server đang lưu, có thể khác lịch đã yêu cầu nếu server dời.
+  Future<MatchScheduleSnapshot> updateSchedule(
     String tournamentId,
     String matchId, {
     String? courtName,
@@ -26,6 +30,23 @@ abstract class IMatchRepository {
     String? courtId,
     String? refereeId,
     DateTime? scheduledAt,
+
+    /// Thời lượng riêng của trận (ghi vào cấu hình trận).
+    int? durationMinutes,
+    Set<MatchScheduleField> clear = const {},
+  });
+
+  /// Xem trước xếp tự động. Không ghi gì xuống server.
+  Future<SchedulePlanPreview> previewSchedulePlan(
+    String tournamentId, {
+    required DateTime day,
+    required List<String> courtIds,
+    required List<String> matchIds,
+    required DateTime windowStart,
+    required DateTime windowEnd,
+    required int durationMinutes,
+    int minimumStartIntervalMinutes = 15,
+    int changeoverMinutes = 0,
   });
   Future<void> updateLiveState(
     String tournamentId,

@@ -24,6 +24,10 @@ class ScheduleFullscreenScreen extends ConsumerStatefulWidget {
     required this.onDivisionSelected,
     this.onScheduleDrop,
     this.onBulkSchedule,
+    this.onTapEmptyCell,
+    this.onScheduleSwap,
+    this.onBulkDuration,
+    this.onBulkMoveCourt,
     this.onTapMatch,
   });
 
@@ -52,6 +56,21 @@ class ScheduleFullscreenScreen extends ConsumerStatefulWidget {
   onBulkSchedule;
 
   final ValueChanged<String>? onTapMatch;
+
+  /// Chạm vào ô trống: màn gọi mở chọn trận chờ để xếp vào ô đó.
+  final void Function(String courtId, String courtName, DateTime at)?
+  onTapEmptyCell;
+
+  /// Đổi chỗ hai trận khi thả trận lên thẻ trận khác; màn gọi lo ghi lịch.
+  final void Function(String draggedMatchId, String targetMatchId)?
+  onScheduleSwap;
+
+  /// Đặt thời lượng cho các trận đã xếp trong vùng chọn.
+  final void Function(List<MatchModel> matches, int minutes)? onBulkDuration;
+
+  /// Dời các trận đã xếp trong vùng chọn sang sân khác, giữ nguyên giờ.
+  final void Function(List<MatchModel> matches, ScheduleCourt court)?
+  onBulkMoveCourt;
 
   @override
   ConsumerState<ScheduleFullscreenScreen> createState() =>
@@ -131,6 +150,10 @@ class _ScheduleFullscreenScreenState
             onDivisionSelected: widget.onDivisionSelected,
             onScheduleDrop: widget.onScheduleDrop,
             onBulkSchedule: widget.onBulkSchedule,
+            onTapEmptyCell: widget.onTapEmptyCell,
+            onScheduleSwap: widget.onScheduleSwap,
+            onBulkDuration: widget.onBulkDuration,
+            onBulkMoveCourt: widget.onBulkMoveCourt,
             onTapMatch: widget.onTapMatch,
           ),
         ),

@@ -14916,4 +14916,147 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get manageSettingsInviteCode => 'Mã mời';
+
+  @override
+  String get scheduleQuickAutoButton => 'Xếp tự động';
+
+  @override
+  String get scheduleQuickBulkDuration => 'Đặt thời lượng';
+
+  @override
+  String scheduleQuickBulkDurationTitle(int count) {
+    return 'Đặt thời lượng cho $count trận';
+  }
+
+  @override
+  String scheduleQuickMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String get scheduleQuickBulkMoveCourt => 'Dời sân';
+
+  @override
+  String scheduleQuickBulkMoveCourtTitle(int count) {
+    return 'Dời $count trận sang sân khác';
+  }
+
+  @override
+  String scheduleQuickDraftSummary(int count, int skipped) {
+    return 'Bản nháp: $count trận, bỏ qua $skipped';
+  }
+
+  @override
+  String scheduleQuickDraftProgress(int done, int total) {
+    return 'Đang ghi $done/$total';
+  }
+
+  @override
+  String get scheduleQuickDraftCancel => 'Huỷ bản nháp';
+
+  @override
+  String scheduleQuickDraftApply(int count) {
+    return 'Áp dụng ($count trận)';
+  }
+
+  @override
+  String get scheduleQuickSheetTitle => 'Xếp nhanh';
+
+  @override
+  String get scheduleQuickCourt => 'Sân';
+
+  @override
+  String get scheduleQuickDate => 'Ngày';
+
+  @override
+  String get scheduleQuickStart => 'Giờ bắt đầu';
+
+  @override
+  String get scheduleQuickDuration => 'Thời lượng';
+
+  @override
+  String get scheduleQuickClear => 'Gỡ lịch';
+
+  @override
+  String get scheduleQuickLocked =>
+      'Trận đang diễn ra hoặc đã kết thúc, không đổi lịch được.';
+
+  @override
+  String get scheduleQuickNoCourts =>
+      'Giải chưa có sân. Thêm sân ở mục Sân trước khi xếp lịch.';
+
+  @override
+  String get scheduleQuickClash => 'Trùng sân và giờ với trận khác.';
+
+  @override
+  String scheduleQuickServerMoved(int count) {
+    return 'Máy chủ đã dời $count trận sang ô khác do trùng lịch.';
+  }
+
+  @override
+  String scheduleQuickPickerTitle(String court, String time) {
+    return 'Xếp trận vào $court lúc $time';
+  }
+
+  @override
+  String get scheduleQuickPickerSearch => 'Tìm theo tên đội';
+
+  @override
+  String get scheduleQuickPickerEmpty => 'Không còn trận chờ để xếp.';
+
+  @override
+  String get scheduleQuickSwapTitle => 'Đổi chỗ hai trận?';
+
+  @override
+  String scheduleQuickSwapMessage(String first, String second) {
+    return '$first và $second sẽ đổi sân và giờ cho nhau.';
+  }
+
+  @override
+  String get scheduleQuickSwapConfirm => 'Đổi chỗ';
+
+  @override
+  String get scheduleQuickSwapDone => 'Đã đổi chỗ.';
+
+  @override
+  String get scheduleQuickSwapAborted => 'Không đổi được, lịch giữ nguyên.';
+
+  @override
+  String get scheduleQuickSwapRolledBack => 'Đổi chỗ thất bại, đã hoàn tác.';
+
+  @override
+  String get scheduleQuickSwapPartial =>
+      'Đổi chỗ chưa trọn vẹn, hãy kiểm tra lại lịch.';
+
+  @override
+  String scheduleQuickBulkDone(int count) {
+    return 'Đã cập nhật $count trận.';
+  }
+
+  @override
+  String scheduleQuickBulkFailed(int done, int total) {
+    return 'Lỗi sau $done/$total trận. Đã tải lại lịch.';
+  }
+
+  @override
+  String get scheduleQuickAutoTitle => 'Xếp tự động';
+
+  @override
+  String get scheduleQuickAutoDivisions => 'Nội dung';
+
+  @override
+  String get scheduleQuickAutoPreview => 'Xem trước';
+
+  @override
+  String get scheduleQuickAutoNeedSelection =>
+      'Chọn ít nhất một nội dung và một sân.';
+
+  @override
+  String get scheduleQuickAutoNoFit =>
+      'Không xếp được trận nào trong khung giờ đã chọn.';
+
+  @override
+  String scheduleQuickAutoApplied(int done, int total) {
+    return 'Đã xếp $done/$total trận.';
+  }
 }

@@ -16,6 +16,30 @@ typedef ScheduleCourt = ({String id, String name});
 /// Một nội dung thi đấu để chọn trong thanh công cụ.
 typedef ScheduleDivision = ({String id, String name});
 
+/// Đọc sân của giải từ danh sách cơ sở (mỗi cơ sở có mảng `courts`). Sân thiếu
+/// tên bị bỏ qua; trùng tên thì giữ bản ghi sau cùng. Kết quả sắp theo tên.
+List<ScheduleCourt> parseScheduleCourts(List<Map<String, dynamic>> venues) {
+  final byName = <String, ScheduleCourt>{};
+  for (final venue in venues) {
+    final courts = venue['courts'];
+    if (courts is! List) continue;
+    for (final court in courts) {
+      if (court is! Map) continue;
+      final name = (court['name'] ?? court['courtName'] ?? '')
+          .toString()
+          .trim();
+      if (name.isEmpty) continue;
+      byName[name] = (
+        id: (court['id'] ?? court['courtId'] ?? '').toString(),
+        name: name,
+      );
+    }
+  }
+  final sorted = byName.values.toList()
+    ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  return sorted;
+}
+
 /// Lưới lịch thi đấu cho BTC: cột là **sân của giải** (lấy từ mục Sân, không
 /// suy từ trận), kèm chọn ngày, chọn sân, và khay trận chưa xếp để kéo lên lưới.
 ///
@@ -35,6 +59,16 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
     this.divisions = const [],
     this.selectedDivisionId,
     this.onDivisionSelected,
+    this.onTapEmptyCell,
+    this.onScheduleSwap,
+    this.onBulkDuration,
+    this.onBulkMoveCourt,
+    this.onAutoSchedule,
+    this.draftMatches = const [],
+    this.draftSkippedCount = 0,
+    this.onApplyDraft,
+    this.onCancelDraft,
+    this.draftProgress,
   });
 
   final String tournamentId;
@@ -70,6 +104,39 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
   final String? selectedDivisionId;
   final ValueChanged<String>? onDivisionSelected;
 
+  /// Chạm vào ô trống: mở chọn trận chờ để xếp vào đúng sân và giờ đó.
+  final void Function(String courtId, String courtName, DateTime at)?
+  onTapEmptyCell;
+
+  /// Thả trận lên thẻ trận khác để đổi chỗ hai trận (kể cả trận từ khay).
+  final void Function(String draggedMatchId, String targetMatchId)?
+  onScheduleSwap;
+
+  /// Đặt thời lượng cho các trận đã xếp trong vùng chọn. Null thì không hiện nút.
+  final void Function(List<MatchModel> matches, int minutes)? onBulkDuration;
+
+  /// Dời các trận đã xếp trong vùng chọn sang sân khác, giữ nguyên giờ.
+  final void Function(List<MatchModel> matches, ScheduleCourt court)?
+  onBulkMoveCourt;
+
+  /// Mở xếp tự động (nút ⚡). Null thì không hiện nút.
+  final VoidCallback? onAutoSchedule;
+
+  /// Bản nháp xếp tự động: hiện đứt nét, không kéo được, chưa tính là đã xếp.
+  final List<MatchModel> draftMatches;
+
+  /// Số trận server bỏ qua trong lần xem trước gần nhất.
+  final int draftSkippedCount;
+
+  /// Áp dụng bản nháp (ghi xuống server). Null thì thanh bản nháp không có nút.
+  final VoidCallback? onApplyDraft;
+
+  /// Huỷ bản nháp, không ghi gì xuống server.
+  final VoidCallback? onCancelDraft;
+
+  /// Tiến độ khi đang ghi bản nháp (đã ghi / tổng). Null khi không ghi.
+  final ({int done, int total})? draftProgress;
+
   @override
   ConsumerState<TournamentScheduleCourtGrid> createState() =>
       _TournamentScheduleCourtGridState();
@@ -94,29 +161,22 @@ class _TournamentScheduleCourtGridState
     _courtsFuture = _loadCourts();
   }
 
+  @override
+  void didUpdateWidget(TournamentScheduleCourtGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Bản nháp mở đúng ngày của nháp để người dùng thấy ngay.
+    if (identical(oldWidget.draftMatches, widget.draftMatches)) return;
+    final first = widget.draftMatches.isEmpty
+        ? null
+        : widget.draftMatches.first.scheduledTime;
+    if (first != null) _day = _dayOnly(first.toLocal());
+  }
+
   Future<List<ScheduleCourt>> _loadCourts() async {
     final venues = await ref
         .read(tournamentManagementRepositoryProvider)
         .getVenues(widget.tournamentId);
-    final byName = <String, ScheduleCourt>{};
-    for (final venue in venues) {
-      final courts = venue['courts'];
-      if (courts is! List) continue;
-      for (final court in courts) {
-        if (court is! Map) continue;
-        final name = (court['name'] ?? court['courtName'] ?? '')
-            .toString()
-            .trim();
-        if (name.isEmpty) continue;
-        byName[name] = (
-          id: (court['id'] ?? court['courtId'] ?? '').toString(),
-          name: name,
-        );
-      }
-    }
-    final sorted = byName.values.toList()
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    return sorted;
+    return parseScheduleCourts(venues);
   }
 
   int get _startHour =>
@@ -219,25 +279,52 @@ class _TournamentScheduleCourtGridState
             if (selectedCourts.contains(court.name)) court.name,
         ];
 
-        final days = _daysOf(widget.matches);
+        final days = _daysOf([...widget.matches, ...widget.draftMatches]);
         final day = _day ?? (days.isNotEmpty ? days.first : null);
         _day = day;
 
+        final draftIds = {for (final match in widget.draftMatches) match.id};
         final placed = [
           for (final match in widget.matches)
             if (_isPlaced(match) &&
+                !draftIds.contains(match.id) &&
+                (day == null ||
+                    _dayOnly(match.scheduledTime!.toLocal()) == day))
+              match,
+        ];
+        final drafts = [
+          for (final match in widget.draftMatches)
+            if (match.scheduledTime != null &&
                 (day == null ||
                     _dayOnly(match.scheduledTime!.toLocal()) == day))
               match,
         ];
         final waiting = [
           for (final match in widget.matches)
-            if (!_isPlaced(match)) match,
+            if (!_isPlaced(match) && !draftIds.contains(match.id)) match,
         ];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (widget.onAutoSchedule != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
+                  0,
+                ),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    key: const ValueKey('schedule-auto-button'),
+                    onPressed: widget.onAutoSchedule,
+                    icon: const Icon(Icons.bolt_rounded, size: 18),
+                    label: Text(l10n.scheduleQuickAutoButton),
+                  ),
+                ),
+              ),
             _toolbar(
               context,
               l10n,
@@ -247,6 +334,7 @@ class _TournamentScheduleCourtGridState
               widget.matches.length,
             ),
             if (days.length > 1) _dayPicker(context, days, day),
+            if (widget.draftMatches.isNotEmpty) _draftBar(context, l10n),
             if (visibleCourts.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -259,7 +347,8 @@ class _TournamentScheduleCourtGridState
             else
               ScheduleGrid(
                 courts: visibleCourts,
-                matches: placed,
+                matches: [...placed, ...drafts],
+                draftMatchIds: draftIds,
                 startHour: _startHour,
                 endHour: _endHour,
                 minutesPerSet: _minutesPerSet,
@@ -284,12 +373,28 @@ class _TournamentScheduleCourtGridState
                           scheduledAt,
                         );
                       },
-                onRangeSelected: widget.onBulkSchedule == null
+                onDropOnMatch: widget.onScheduleSwap,
+                onTapEmptyCell: widget.onTapEmptyCell == null
                     ? null
-                    : (range) => setState(() => _range = range),
+                    : (courtName, at) => widget.onTapEmptyCell!(
+                        _courtIdOf(courtName),
+                        courtName,
+                        at,
+                      ),
+                onRangeSelected: _hasRangeActions
+                    ? (range) => setState(() => _range = range)
+                    : null,
               ),
-            if (widget.onBulkSchedule != null && _range != null)
-              _bulkBar(context, l10n, visibleCourts, placed, day, waiting),
+            if (_hasRangeActions && _range != null)
+              _bulkBar(
+                context,
+                l10n,
+                visibleCourts,
+                placed,
+                drafts,
+                day,
+                waiting,
+              ),
             if (widget.onScheduleDrop != null && waiting.isNotEmpty)
               _waitingTray(context, l10n, waiting),
           ],
@@ -379,19 +484,61 @@ class _TournamentScheduleCourtGridState
     return match.court.trim();
   }
 
-  /// Thanh xác nhận xếp hàng loạt: cho biết sẽ xếp bao nhiêu trận vào vùng chọn.
+  /// Có thao tác theo vùng chọn (xếp hàng loạt, đặt thời lượng, dời sân) không.
+  bool get _hasRangeActions =>
+      widget.onBulkSchedule != null ||
+      widget.onBulkDuration != null ||
+      widget.onBulkMoveCourt != null;
+
+  /// Các thời lượng chọn được khi đặt hàng loạt (phút).
+  static const List<int> _bulkDurationOptions = [15, 30, 45, 60, 75, 90, 120];
+
+  /// Trận đã xếp có ô bắt đầu nằm trong vùng chọn, trên các sân đang hiện.
+  List<MatchModel> _matchesInRange(
+    ScheduleRange range,
+    List<String> visibleCourts,
+    List<MatchModel> placed,
+  ) {
+    final result = <MatchModel>[];
+    for (final match in placed) {
+      final at = match.scheduledTime;
+      if (at == null) continue;
+      final courtIndex = visibleCourts.indexOf(_courtNameOf(match));
+      if (courtIndex < range.firstCourt || courtIndex > range.lastCourt) {
+        continue;
+      }
+      final minutes = at.hour * 60 + at.minute - _startHour * 60;
+      if (minutes < 0) continue;
+      final slot = minutes ~/ 15;
+      if (slot < range.firstSlot || slot > range.lastSlot) continue;
+      result.add(match);
+    }
+    return result;
+  }
+
+  /// Thanh thao tác theo vùng chọn: xếp các trận chờ vào ô trống, hoặc đặt
+  /// thời lượng / dời sân cho các trận đã xếp nằm trong vùng.
   Widget _bulkBar(
     BuildContext context,
     AppLocalizations l10n,
     List<String> visibleCourts,
     List<MatchModel> placed,
+    List<MatchModel> drafts,
     DateTime? day,
     List<MatchModel> waiting,
   ) {
     final colors = context.colors;
-    final plan = _bulkPlan(_range!, visibleCourts, placed, day, waiting);
+    final range = _range!;
+    final plan = _bulkPlan(
+      range,
+      visibleCourts,
+      [...placed, ...drafts],
+      day,
+      waiting,
+    );
     final cells = plan.cells;
     final batch = plan.batch;
+    final inRange = _matchesInRange(range, visibleCourts, placed);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
@@ -399,10 +546,14 @@ class _TournamentScheduleCourtGridState
         AppSpacing.sm,
         0,
       ),
-      child: Row(
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.xs,
         children: [
-          Expanded(
-            child: Text(
+          if (widget.onBulkSchedule != null) ...[
+            Text(
               '${l10n.opsUnscheduled}: ${batch.length}/${cells.length}',
               style: TextStyle(
                 fontSize: 12,
@@ -410,20 +561,181 @@ class _TournamentScheduleCourtGridState
                 color: colors.textSecondary,
               ),
             ),
-          ),
-          FilledButton.icon(
-            key: const ValueKey('schedule-bulk-schedule-button'),
-            onPressed: batch.isEmpty
-                ? null
-                : () {
-                    final selected = cells;
-                    setState(() => _range = null);
-                    widget.onBulkSchedule!(selected, batch);
-                  },
-            icon: const Icon(Icons.playlist_add_check_rounded, size: 16),
-            label: Text('${batch.length}'),
-          ),
+            FilledButton.icon(
+              key: const ValueKey('schedule-bulk-schedule-button'),
+              onPressed: batch.isEmpty
+                  ? null
+                  : () {
+                      final selected = cells;
+                      setState(() => _range = null);
+                      widget.onBulkSchedule!(selected, batch);
+                    },
+              icon: const Icon(Icons.playlist_add_check_rounded, size: 16),
+              label: Text('${batch.length}'),
+            ),
+          ],
+          if (widget.onBulkDuration != null && inRange.isNotEmpty)
+            TextButton.icon(
+              key: const ValueKey('schedule-bulk-duration-button'),
+              onPressed: () => _pickBulkDuration(context, inRange),
+              icon: const Icon(Icons.timer_outlined, size: 16),
+              label: Text(l10n.scheduleQuickBulkDuration),
+            ),
+          if (widget.onBulkMoveCourt != null && inRange.isNotEmpty)
+            TextButton.icon(
+              key: const ValueKey('schedule-bulk-court-button'),
+              onPressed: () => _pickBulkCourt(context, inRange),
+              icon: const Icon(Icons.swap_horiz_rounded, size: 16),
+              label: Text(l10n.scheduleQuickBulkMoveCourt),
+            ),
         ],
+      ),
+    );
+  }
+
+  /// Chọn thời lượng rồi đặt cho các trận trong vùng chọn.
+  Future<void> _pickBulkDuration(
+    BuildContext context,
+    List<MatchModel> matches,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final minutes = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text(
+                l10n.scheduleQuickBulkDurationTitle(matches.length),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final option in _bulkDurationOptions)
+                    ListTile(
+                      key: ValueKey('schedule-bulk-duration-$option'),
+                      title: Text(l10n.scheduleQuickMinutes(option)),
+                      onTap: () => Navigator.of(sheetContext).pop(option),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (minutes == null || !mounted) return;
+    setState(() => _range = null);
+    widget.onBulkDuration?.call(matches, minutes);
+  }
+
+  /// Chọn sân đích rồi dời các trận trong vùng sang sân đó, giữ nguyên giờ.
+  Future<void> _pickBulkCourt(
+    BuildContext context,
+    List<MatchModel> matches,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final courts = _allCourts;
+    final picked = await showModalBottomSheet<ScheduleCourt>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text(
+                l10n.scheduleQuickBulkMoveCourtTitle(matches.length),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final court in courts)
+                    ListTile(
+                      key: ValueKey('schedule-bulk-court-${court.id}'),
+                      title: Text(court.name),
+                      onTap: () => Navigator.of(sheetContext).pop(court),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _range = null);
+    widget.onBulkMoveCourt?.call(matches, picked);
+  }
+
+  /// Thanh bản nháp xếp tự động: số trận sẽ ghi, số trận server bỏ qua, và nút
+  /// áp dụng hoặc huỷ. Đang ghi thì hiện tiến độ và khoá hai nút.
+  Widget _draftBar(BuildContext context, AppLocalizations l10n) {
+    final colors = context.colors;
+    final count = widget.draftMatches.length;
+    final progress = widget.draftProgress;
+    final busy = progress != null;
+    final status = progress == null
+        ? l10n.scheduleQuickDraftSummary(count, widget.draftSkippedCount)
+        : l10n.scheduleQuickDraftProgress(progress.done, progress.total);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        0,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: AppTheme.primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5)),
+        ),
+        child: Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              status,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: colors.textPrimary,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            TextButton(
+              key: const ValueKey('schedule-draft-cancel'),
+              onPressed: busy ? null : widget.onCancelDraft,
+              child: Text(l10n.scheduleQuickDraftCancel),
+            ),
+            FilledButton(
+              key: const ValueKey('schedule-draft-apply'),
+              onPressed: busy ? null : widget.onApplyDraft,
+              child: Text(l10n.scheduleQuickDraftApply(count)),
+            ),
+          ],
+        ),
       ),
     );
   }

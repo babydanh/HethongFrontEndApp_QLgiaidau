@@ -14965,4 +14965,147 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manageSettingsInviteCode => 'Invite code';
+
+  @override
+  String get scheduleQuickAutoButton => 'Auto schedule';
+
+  @override
+  String get scheduleQuickBulkDuration => 'Set duration';
+
+  @override
+  String scheduleQuickBulkDurationTitle(int count) {
+    return 'Set duration for $count matches';
+  }
+
+  @override
+  String scheduleQuickMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get scheduleQuickBulkMoveCourt => 'Move court';
+
+  @override
+  String scheduleQuickBulkMoveCourtTitle(int count) {
+    return 'Move $count matches to another court';
+  }
+
+  @override
+  String scheduleQuickDraftSummary(int count, int skipped) {
+    return 'Draft: $count matches, $skipped skipped';
+  }
+
+  @override
+  String scheduleQuickDraftProgress(int done, int total) {
+    return 'Saving $done/$total';
+  }
+
+  @override
+  String get scheduleQuickDraftCancel => 'Discard draft';
+
+  @override
+  String scheduleQuickDraftApply(int count) {
+    return 'Apply ($count matches)';
+  }
+
+  @override
+  String get scheduleQuickSheetTitle => 'Quick schedule';
+
+  @override
+  String get scheduleQuickCourt => 'Court';
+
+  @override
+  String get scheduleQuickDate => 'Date';
+
+  @override
+  String get scheduleQuickStart => 'Start time';
+
+  @override
+  String get scheduleQuickDuration => 'Duration';
+
+  @override
+  String get scheduleQuickClear => 'Unschedule';
+
+  @override
+  String get scheduleQuickLocked =>
+      'Live or finished matches can\'t be rescheduled.';
+
+  @override
+  String get scheduleQuickNoCourts =>
+      'No courts yet. Add courts in the Venues section first.';
+
+  @override
+  String get scheduleQuickClash =>
+      'Overlaps another match on the same court and time.';
+
+  @override
+  String scheduleQuickServerMoved(int count) {
+    return 'The server moved $count match(es) to another slot because of a clash.';
+  }
+
+  @override
+  String scheduleQuickPickerTitle(String court, String time) {
+    return 'Schedule a match on $court at $time';
+  }
+
+  @override
+  String get scheduleQuickPickerSearch => 'Search by team';
+
+  @override
+  String get scheduleQuickPickerEmpty => 'No waiting matches to schedule.';
+
+  @override
+  String get scheduleQuickSwapTitle => 'Swap these two matches?';
+
+  @override
+  String scheduleQuickSwapMessage(String first, String second) {
+    return '$first and $second will trade court and time.';
+  }
+
+  @override
+  String get scheduleQuickSwapConfirm => 'Swap';
+
+  @override
+  String get scheduleQuickSwapDone => 'Swapped.';
+
+  @override
+  String get scheduleQuickSwapAborted => 'Swap failed; schedule unchanged.';
+
+  @override
+  String get scheduleQuickSwapRolledBack => 'Swap failed; changes rolled back.';
+
+  @override
+  String get scheduleQuickSwapPartial =>
+      'Swap incomplete; please check the schedule.';
+
+  @override
+  String scheduleQuickBulkDone(int count) {
+    return 'Updated $count matches.';
+  }
+
+  @override
+  String scheduleQuickBulkFailed(int done, int total) {
+    return 'Failed after $done/$total matches. Schedule reloaded.';
+  }
+
+  @override
+  String get scheduleQuickAutoTitle => 'Auto schedule';
+
+  @override
+  String get scheduleQuickAutoDivisions => 'Divisions';
+
+  @override
+  String get scheduleQuickAutoPreview => 'Preview';
+
+  @override
+  String get scheduleQuickAutoNeedSelection =>
+      'Pick at least one division and one court.';
+
+  @override
+  String get scheduleQuickAutoNoFit => 'No match fits the chosen time window.';
+
+  @override
+  String scheduleQuickAutoApplied(int done, int total) {
+    return 'Scheduled $done/$total matches.';
+  }
 }

@@ -27117,6 +27117,234 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Mã mời'**
   String get manageSettingsInviteCode;
+
+  /// No description provided for @scheduleQuickAutoButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp tự động'**
+  String get scheduleQuickAutoButton;
+
+  /// No description provided for @scheduleQuickBulkDuration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt thời lượng'**
+  String get scheduleQuickBulkDuration;
+
+  /// No description provided for @scheduleQuickBulkDurationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt thời lượng cho {count} trận'**
+  String scheduleQuickBulkDurationTitle(int count);
+
+  /// No description provided for @scheduleQuickMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{minutes} phút'**
+  String scheduleQuickMinutes(int minutes);
+
+  /// No description provided for @scheduleQuickBulkMoveCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dời sân'**
+  String get scheduleQuickBulkMoveCourt;
+
+  /// No description provided for @scheduleQuickBulkMoveCourtTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dời {count} trận sang sân khác'**
+  String scheduleQuickBulkMoveCourtTitle(int count);
+
+  /// No description provided for @scheduleQuickDraftSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản nháp: {count} trận, bỏ qua {skipped}'**
+  String scheduleQuickDraftSummary(int count, int skipped);
+
+  /// No description provided for @scheduleQuickDraftProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang ghi {done}/{total}'**
+  String scheduleQuickDraftProgress(int done, int total);
+
+  /// No description provided for @scheduleQuickDraftCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ bản nháp'**
+  String get scheduleQuickDraftCancel;
+
+  /// No description provided for @scheduleQuickDraftApply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng ({count} trận)'**
+  String scheduleQuickDraftApply(int count);
+
+  /// No description provided for @scheduleQuickSheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp nhanh'**
+  String get scheduleQuickSheetTitle;
+
+  /// No description provided for @scheduleQuickCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân'**
+  String get scheduleQuickCourt;
+
+  /// No description provided for @scheduleQuickDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày'**
+  String get scheduleQuickDate;
+
+  /// No description provided for @scheduleQuickStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ bắt đầu'**
+  String get scheduleQuickStart;
+
+  /// No description provided for @scheduleQuickDuration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời lượng'**
+  String get scheduleQuickDuration;
+
+  /// No description provided for @scheduleQuickClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ lịch'**
+  String get scheduleQuickClear;
+
+  /// No description provided for @scheduleQuickLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đang diễn ra hoặc đã kết thúc, không đổi lịch được.'**
+  String get scheduleQuickLocked;
+
+  /// No description provided for @scheduleQuickNoCourts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải chưa có sân. Thêm sân ở mục Sân trước khi xếp lịch.'**
+  String get scheduleQuickNoCourts;
+
+  /// No description provided for @scheduleQuickClash.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trùng sân và giờ với trận khác.'**
+  String get scheduleQuickClash;
+
+  /// No description provided for @scheduleQuickServerMoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Máy chủ đã dời {count} trận sang ô khác do trùng lịch.'**
+  String scheduleQuickServerMoved(int count);
+
+  /// No description provided for @scheduleQuickPickerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp trận vào {court} lúc {time}'**
+  String scheduleQuickPickerTitle(String court, String time);
+
+  /// No description provided for @scheduleQuickPickerSearch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm theo tên đội'**
+  String get scheduleQuickPickerSearch;
+
+  /// No description provided for @scheduleQuickPickerEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không còn trận chờ để xếp.'**
+  String get scheduleQuickPickerEmpty;
+
+  /// No description provided for @scheduleQuickSwapTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi chỗ hai trận?'**
+  String get scheduleQuickSwapTitle;
+
+  /// No description provided for @scheduleQuickSwapMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'{first} và {second} sẽ đổi sân và giờ cho nhau.'**
+  String scheduleQuickSwapMessage(String first, String second);
+
+  /// No description provided for @scheduleQuickSwapConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi chỗ'**
+  String get scheduleQuickSwapConfirm;
+
+  /// No description provided for @scheduleQuickSwapDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đổi chỗ.'**
+  String get scheduleQuickSwapDone;
+
+  /// No description provided for @scheduleQuickSwapAborted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đổi được, lịch giữ nguyên.'**
+  String get scheduleQuickSwapAborted;
+
+  /// No description provided for @scheduleQuickSwapRolledBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi chỗ thất bại, đã hoàn tác.'**
+  String get scheduleQuickSwapRolledBack;
+
+  /// No description provided for @scheduleQuickSwapPartial.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi chỗ chưa trọn vẹn, hãy kiểm tra lại lịch.'**
+  String get scheduleQuickSwapPartial;
+
+  /// No description provided for @scheduleQuickBulkDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật {count} trận.'**
+  String scheduleQuickBulkDone(int count);
+
+  /// No description provided for @scheduleQuickBulkFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi sau {done}/{total} trận. Đã tải lại lịch.'**
+  String scheduleQuickBulkFailed(int done, int total);
+
+  /// No description provided for @scheduleQuickAutoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp tự động'**
+  String get scheduleQuickAutoTitle;
+
+  /// No description provided for @scheduleQuickAutoDivisions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get scheduleQuickAutoDivisions;
+
+  /// No description provided for @scheduleQuickAutoPreview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trước'**
+  String get scheduleQuickAutoPreview;
+
+  /// No description provided for @scheduleQuickAutoNeedSelection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ít nhất một nội dung và một sân.'**
+  String get scheduleQuickAutoNeedSelection;
+
+  /// No description provided for @scheduleQuickAutoNoFit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không xếp được trận nào trong khung giờ đã chọn.'**
+  String get scheduleQuickAutoNoFit;
+
+  /// No description provided for @scheduleQuickAutoApplied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xếp {done}/{total} trận.'**
+  String scheduleQuickAutoApplied(int done, int total);
 }
 
 class _AppLocalizationsDelegate

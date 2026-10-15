@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
+import 'package:app_quanly_giaidau/domain/entities/match_schedule.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -972,7 +973,7 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
-  Future<void> updateSchedule(
+  Future<MatchScheduleSnapshot> updateSchedule(
     String tournamentId,
     String matchId, {
     String? courtName,
@@ -980,17 +981,120 @@ class ApiMatchRepository implements IMatchRepository {
     String? courtId,
     String? refereeId,
     DateTime? scheduledAt,
+    int? durationMinutes,
+    Set<MatchScheduleField> clear = const {},
   }) async {
-    await _dioClient.dio.patch(
+    final provided = {
+      if (courtId != null) MatchScheduleField.courtId,
+      if (courtName != null) MatchScheduleField.courtName,
+      if (courtAddress != null) MatchScheduleField.courtAddress,
+      if (scheduledAt != null) MatchScheduleField.scheduledAt,
+    };
+    assert(
+      provided.intersection(clear).isEmpty,
+      'Một trường không được vừa gán giá trị vừa bị xoá.',
+    );
+    // Chỉ gửi trường được truyền: JSON null trên server nghĩa là xoá trường đó,
+    // nên gửi null cho trường không liên quan sẽ làm mất lịch của trận.
+    final response = await _dioClient.dio.patch<Object?>(
       '/matches/$matchId/schedule',
       data: {
-        'courtName': courtName,
-        'courtAddress': courtAddress,
-        'courtId': courtId,
-        'refereeId': refereeId,
-        'scheduledAt': scheduledAt?.toUtc().toIso8601String(),
+        'courtName': ?courtName,
+        'courtAddress': ?courtAddress,
+        'courtId': ?courtId,
+        'refereeId': ?refereeId,
+        if (scheduledAt != null)
+          'scheduledAt': scheduledAt.toUtc().toIso8601String(),
+        if (durationMinutes != null)
+          'matchConfig': {'durationMinutes': durationMinutes},
+        for (final field in clear) field.wireName: null,
       },
     );
+    final json = _envelopeData(response.data);
+    final courtIdValue = json['courtId']?.toString();
+    final courtNameValue = json['courtName']?.toString();
+    return (
+      scheduledAt: DateParser.parseDateOptional(json['scheduledAt']),
+      courtId: courtIdValue == null || courtIdValue.isEmpty
+          ? null
+          : courtIdValue,
+      courtName: courtNameValue == null || courtNameValue.isEmpty
+          ? null
+          : courtNameValue,
+    );
+  }
+
+  @override
+  Future<SchedulePlanPreview> previewSchedulePlan(
+    String tournamentId, {
+    required DateTime day,
+    required List<String> courtIds,
+    required List<String> matchIds,
+    required DateTime windowStart,
+    required DateTime windowEnd,
+    required int durationMinutes,
+    int minimumStartIntervalMinutes = 15,
+    int changeoverMinutes = 0,
+  }) async {
+    final response = await _dioClient.dio.post<Object?>(
+      '/tournaments/$tournamentId/schedule-plans',
+      data: {
+        'date': _calendarDayText(day),
+        'courtIds': courtIds,
+        'matchIds': matchIds,
+        'durationMinutes': durationMinutes,
+        'changeoverMinutes': changeoverMinutes,
+        'minimumStartIntervalMinutes': minimumStartIntervalMinutes,
+        'operatingWindow': {
+          'start': windowStart.toUtc().toIso8601String(),
+          'end': windowEnd.toUtc().toIso8601String(),
+        },
+        'strategy': 'ROUND_ORDER_EARLIEST_AVAILABLE',
+      },
+    );
+    final json = _envelopeData(response.data);
+    final readiness = json['readiness'] is Map
+        ? json['readiness'] as Map
+        : const <dynamic, dynamic>{};
+    return SchedulePlanPreview(
+      durationMinutes:
+          (json['durationMinutes'] as num?)?.toInt() ?? durationMinutes,
+      assignments: <SchedulePlanAssignment>[
+        for (final item in (json['assignments'] as List? ?? const []))
+          if (item is Map)
+            (
+              matchId: item['matchId'].toString(),
+              courtId: item['courtId'].toString(),
+              scheduledAt: DateTime.parse(
+                item['scheduledAt'].toString(),
+              ).toLocal(),
+            ),
+      ],
+      skipped: <SchedulePlanSkip>[
+        for (final item in (json['skipped'] as List? ?? const []))
+          if (item is Map)
+            (
+              matchId: item['matchId'].toString(),
+              reason: item['reason']?.toString() ?? '',
+            ),
+      ],
+      eligibleCount: (readiness['eligibleCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  /// Lấy phần `data` của envelope `{status, message, data}`; nếu không có
+  /// envelope thì dùng chính body.
+  Map<dynamic, dynamic> _envelopeData(Object? body) {
+    if (body is Map && body['data'] is Map) return body['data'] as Map;
+    if (body is Map) return body;
+    return const <dynamic, dynamic>{};
+  }
+
+  String _calendarDayText(DateTime day) {
+    final y = day.year.toString().padLeft(4, '0');
+    final m = day.month.toString().padLeft(2, '0');
+    final d = day.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   @override
