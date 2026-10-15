@@ -12404,24 +12404,6 @@ abstract class AppLocalizations {
   /// **'Online'**
   String get settingsOnline;
 
-  /// No description provided for @settingsCommunitySafety.
-  ///
-  /// In vi, this message translates to:
-  /// **'An toàn cộng đồng'**
-  String get settingsCommunitySafety;
-
-  /// No description provided for @settingsMyReports.
-  ///
-  /// In vi, this message translates to:
-  /// **'Báo cáo của tôi'**
-  String get settingsMyReports;
-
-  /// No description provided for @settingsMyReportsSubtitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Theo dõi trạng thái và kết quả xử lý báo cáo'**
-  String get settingsMyReportsSubtitle;
-
   /// No description provided for @settingsDangerZone.
   ///
   /// In vi, this message translates to:

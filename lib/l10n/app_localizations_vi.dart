@@ -6646,16 +6646,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsOnline => 'Online';
 
   @override
-  String get settingsCommunitySafety => 'An toàn cộng đồng';
-
-  @override
-  String get settingsMyReports => 'Báo cáo của tôi';
-
-  @override
-  String get settingsMyReportsSubtitle =>
-      'Theo dõi trạng thái và kết quả xử lý báo cáo';
-
-  @override
   String get settingsDangerZone => 'Vùng nguy hiểm';
 
   @override

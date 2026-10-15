@@ -128,8 +128,8 @@ void main() {
     await _tapTab(tester, l10n.settingsSecurityTab);
 
     expect(find.text(l10n.settingsChangePassword), findsOneWidget);
-    expect(find.text(l10n.settingsMyReports), findsNothing);
-    expect(find.text(l10n.settingsCommunitySafety), findsNothing);
+    expect(find.text('Báo cáo của tôi'), findsNothing);
+    expect(find.text('An toàn cộng đồng'), findsNothing);
   });
 
   testWidgets('Tab Tổ chức hiện trạng thái chưa đăng ký và mở luồng đăng ký BTC', (

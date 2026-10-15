@@ -6654,16 +6654,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsOnline => 'Online';
 
   @override
-  String get settingsCommunitySafety => 'Community safety';
-
-  @override
-  String get settingsMyReports => 'My reports';
-
-  @override
-  String get settingsMyReportsSubtitle =>
-      'Track report status and resolution results';
-
-  @override
   String get settingsDangerZone => 'Danger zone';
 
   @override
