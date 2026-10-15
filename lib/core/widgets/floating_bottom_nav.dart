@@ -1,8 +1,14 @@
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/features/rankings/utils/best_ranking.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 
-class FloatingBottomNav extends StatelessWidget {
+class FloatingBottomNav extends ConsumerWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
   final VoidCallback onMenuTap;
@@ -17,9 +23,35 @@ class FloatingBottomNav extends StatelessWidget {
   static const int _menuIndex = 2;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    // Chỉ nghe hồ sơ khi đã đăng nhập: khách không phát sinh request /me.
+    final isAuthenticated = ref.watch(
+      authProvider.select((s) => s.isAuthenticated),
+    );
+    final profile = isAuthenticated
+        ? ref.watch(userProfileProvider.select((p) => p.asData?.value))
+        : null;
+    // Hạng nổi bật để tô viền avatar; chỉ nghe khi đã đăng nhập.
+    final ranking = isAuthenticated
+        ? ref.watch(
+            userRankingsProvider.select(
+              (r) => bestRankingOf(r.asData?.value ?? const <PlayerRanking>[]),
+            ),
+          )
+        : null;
+    final avatarUrl = profile?.avatarUrl;
+    final fullName = profile?.fullName;
+    final avatar = (avatarUrl != null && avatarUrl.isNotEmpty)
+        ? _NavAvatar(
+            url: avatarUrl,
+            name: (fullName != null && fullName.isNotEmpty)
+                ? fullName
+                : 'SportO',
+            ranking: ranking,
+          )
+        : null;
 
     const activeColor = AppTheme.primary;
     final inactiveColor = isDark
@@ -82,6 +114,7 @@ class FloatingBottomNav extends StatelessWidget {
                       isSelected: currentIndex == tab.internalIndex,
                       activeColor: activeColor,
                       inactiveColor: inactiveColor,
+                      avatar: tab.internalIndex == _menuIndex ? avatar : null,
                       onTap: () => tab.internalIndex == _menuIndex
                           ? onMenuTap()
                           : onTabSelected(tab.internalIndex),
@@ -101,6 +134,7 @@ class FloatingBottomNav extends StatelessWidget {
     required Color activeColor,
     required Color inactiveColor,
     required VoidCallback onTap,
+    _NavAvatar? avatar,
   }) {
     return Semantics(
       button: true,
@@ -126,11 +160,13 @@ class FloatingBottomNav extends StatelessWidget {
                           borderRadius: BorderRadius.circular(9),
                         )
                       : null,
-                  child: Icon(
-                    isSelected ? tab.activeIcon : tab.icon,
-                    color: isSelected ? activeColor : inactiveColor,
-                    size: 22,
-                  ),
+                  child: avatar != null
+                      ? _AvatarBadge(avatar: avatar)
+                      : Icon(
+                          isSelected ? tab.activeIcon : tab.icon,
+                          color: isSelected ? activeColor : inactiveColor,
+                          size: 22,
+                        ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -147,6 +183,38 @@ class FloatingBottomNav extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Dữ liệu avatar của người dùng hiện tại trên thanh điều hướng.
+class _NavAvatar {
+  final String url;
+  final String name;
+  final PlayerRanking? ranking;
+
+  const _NavAvatar({required this.url, required this.name, this.ranking});
+}
+
+/// Avatar tròn 26px; viền và glow theo hạng ELO giống web (`RankAvatar.tsx`).
+class _AvatarBadge extends StatelessWidget {
+  final _NavAvatar avatar;
+
+  const _AvatarBadge({required this.avatar});
+
+  @override
+  Widget build(BuildContext context) {
+    final ranking = avatar.ranking;
+    return Center(
+      child: RankAvatar(
+        imageUrl: avatar.url,
+        name: avatar.name,
+        elo: ranking?.eloPoints ?? 0,
+        tierName: ranking?.tierName,
+        matchesPlayed: ranking?.matchesPlayed ?? 0,
+        size: 26,
+        ringWidth: 2,
       ),
     );
   }

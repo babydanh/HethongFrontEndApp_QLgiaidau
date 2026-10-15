@@ -13,6 +13,9 @@ class TierPalette {
   final Color soft;
   final Color badgeBg;
   final Color border;
+
+  /// Màu vòng avatar, khớp `RANK_BORDER_COLORS` của web (`RankAvatar.tsx`).
+  final Color ring;
   final LinearGradient gradient;
 
   const TierPalette({
@@ -23,6 +26,7 @@ class TierPalette {
     required this.soft,
     required this.badgeBg,
     required this.border,
+    required this.ring,
     required this.gradient,
   });
 
@@ -35,6 +39,7 @@ class TierPalette {
     soft: Color(0xFFFEF3C7),
     badgeBg: Color(0xFFD97706),
     border: Color(0xFFFCD34D),
+    ring: Color(0xFFFBBF24),
     gradient: LinearGradient(colors: [Color(0xFFFDE68A), Color(0xFFF59E0B)]),
   );
 
@@ -46,6 +51,7 @@ class TierPalette {
     soft: Color(0xFFF8C4B4),
     badgeBg: Color(0xFFDC2626),
     border: Color(0xFFFCA5A5),
+    ring: Color(0xFFF43F5E),
     gradient: LinearGradient(colors: [Color(0xFFFCA5A5), Color(0xFFEF4444)]),
   );
 
@@ -57,6 +63,7 @@ class TierPalette {
     soft: Color(0xFFFBE8E0),
     badgeBg: Color(0xFFEF4444),
     border: Color(0xFFFECACA),
+    ring: Color(0xFFFDA4AF),
     gradient: LinearGradient(colors: [Color(0xFFFCA5A5), Color(0xFFEF4444)]),
   );
 
@@ -68,6 +75,7 @@ class TierPalette {
     soft: Color(0xFFBFDBFE),
     badgeBg: Color(0xFF2563EB),
     border: Color(0xFF93C5FD),
+    ring: Color(0xFF3B82F6),
     gradient: LinearGradient(colors: [Color(0xFF93C5FD), Color(0xFF3B82F6)]),
   );
 
@@ -79,6 +87,7 @@ class TierPalette {
     soft: Color(0xFFEFF6FF),
     badgeBg: Color(0xFF3B82F6),
     border: Color(0xFFBFDBFE),
+    ring: Color(0xFF93C5FD),
     gradient: LinearGradient(colors: [Color(0xFF93C5FD), Color(0xFF3B82F6)]),
   );
 
@@ -90,6 +99,7 @@ class TierPalette {
     soft: Color(0xFFA7F3D0),
     badgeBg: Color(0xFF059669),
     border: Color(0xFF6EE7B7),
+    ring: Color(0xFF10B981),
     gradient: LinearGradient(colors: [Color(0xFF6EE7B7), Color(0xFF10B981)]),
   );
 
@@ -101,6 +111,7 @@ class TierPalette {
     soft: Color(0xFFECFDF5),
     badgeBg: Color(0xFF10B981),
     border: Color(0xFFA7F3D0),
+    ring: Color(0xFF6EE7B7),
     gradient: LinearGradient(colors: [Color(0xFF6EE7B7), Color(0xFF10B981)]),
   );
 
@@ -112,6 +123,7 @@ class TierPalette {
     soft: Color(0xFFE2E8F0),
     badgeBg: Color(0xFF475569),
     border: Color(0xFFCBD5E1),
+    ring: Color(0xFF64748B),
     gradient: LinearGradient(colors: [Color(0xFFCBD5E1), Color(0xFF64748B)]),
   );
 
@@ -123,8 +135,12 @@ class TierPalette {
     soft: Color(0xFFF1F1F1),
     badgeBg: Color(0xFF78716C),
     border: Color(0xFFD1D1D1),
+    ring: Color(0xFFCBD5E1),
     gradient: LinearGradient(colors: [Color(0xFFF1F1F1), Color(0xFFD1D1D1)]),
   );
+
+  /// Vòng avatar của người chưa có hạng (web: `ring-slate-300`).
+  static const Color unrankedRing = Color(0xFFCBD5E1);
 
   /// Lấy palette theo tier (nếu null/empty → tính theo ELO).
   static TierPalette from(EloTier? tier) {

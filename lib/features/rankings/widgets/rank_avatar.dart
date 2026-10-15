@@ -29,7 +29,7 @@ class RankAvatar extends StatelessWidget {
         (tierName != null && tierName!.isNotEmpty) ||
         matchesPlayed > 0;
     final palette = TierPalette.fromElo(elo, tierName);
-    final ringColor = ranked ? palette.border : Colors.blueGrey.shade300;
+    final ringColor = ranked ? palette.ring : TierPalette.unrankedRing;
     final innerSize = size - (ringWidth * 2);
 
     return Container(
@@ -39,12 +39,13 @@ class RankAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: ringColor,
+        // Glow như web (`0 0 16px -2px <màu>60` ở avatar 48px), co theo kích thước.
         boxShadow: ranked
             ? [
                 BoxShadow(
-                  color: ringColor.withValues(alpha: 0.4),
-                  blurRadius: 8,
-                  spreadRadius: 1,
+                  color: ringColor.withValues(alpha: 0x60 / 0xFF),
+                  blurRadius: size / 3,
+                  spreadRadius: -size / 24,
                 ),
               ]
             : null,
