@@ -6,7 +6,7 @@ omp chỉ tự nạp file này (gốc repo) và `AGENTS.md` toàn cục. `D:/Dua
 ## Đọc trước khi làm
 
 1. `docs/README.md`: bản đồ "câu hỏi → file" và nhãn chuẩn / tham khảo / kế hoạch cũ. Đừng tin tài liệu nhãn "kế hoạch cũ".
-2. Animation, transition, chuyển động: đọc `.agents/skills/flutter-animation/SKILL.md` và `.github/copilot-instructions.md` trước. Hai file này KHÔNG tự nạp ở repo này (`.omp/settings.json` tắt provider `github` để `AGENTS.md` được nạp).
+2. Animation, transition, chuyển động: đọc `.agents/skills/flutter-animation/SKILL.md` và `.github/copilot-instructions.md` trước. File thứ hai KHÔNG tự nạp ở repo này (`.omp/config.yml` tắt đúng file đó để `AGENTS.md` được nạp).
 3. Chuỗi hiển thị: `lib/l10n/app_vi.arb` (template) và `app_en.arb`; key phải có ở cả hai, rồi `flutter gen-l10n`. Không sửa tay `lib/l10n/app_localizations*.dart` (code sinh).
 
 ## Lệnh (kết quả thật: docs/README.md)

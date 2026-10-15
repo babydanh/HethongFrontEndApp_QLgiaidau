@@ -44,7 +44,7 @@ Nhãn:
 - Kiểm i18n (đã kiểm: file tồn tại; CHƯA chạy): `scripts/check_equal_arb_values.py` liệt kê key có giá trị EN = VI (dấu hiệu chưa dịch); `scripts/audit_l10n_literals.py` tìm chuỗi hardcode trong code.
 - Test: `flutter_test`, `mocktail`; `integration_test` có trong `dev_dependencies` nhưng repo KHÔNG có thư mục integration test.
 - Không có tài liệu kiến trúc trong repo. Muốn biết tầng nào làm gì, đọc `lib/core`, `lib/domain`, `lib/data`, `lib/features`, `lib/providers`.
-- Nạp ngữ cảnh (đã kiểm): omp chỉ nạp MỘT file ngữ cảnh dự án. Nếu có `.github/copilot-instructions.md` thì file đó được nạp và `AGENTS.md` bị bỏ qua (thư mục thử có cả hai: chỉ copilot được nạp). Repo này đặt `.omp/settings.json` với `disabledProviders: ["github"]` để `AGENTS.md` được nạp. Hệ quả: `.github/copilot-instructions.md` không còn tự nạp; đọc nó khi làm animation.
+- Nạp ngữ cảnh (đã kiểm): omp nạp file ngữ cảnh theo độ sâu thư mục; ở cùng độ sâu, provider ưu tiên cao hơn thắng. `.github/copilot-instructions.md` (provider `github`) thắng `AGENTS.md` gốc (provider `agents-md`), nên khi có cả hai thì `AGENTS.md` bị bỏ qua (đã kiểm: thư mục thử và worktree App). Repo này đặt `.omp/config.yml` với `disabledExtensions: [context-file:project:copilot-instructions.md]`: chỉ file đó bị loại trước khi chọn, `AGENTS.md` giành lại vị trí; provider `github` vẫn đóng góp phần khác. Hệ quả: copilot-instructions không còn tự nạp; đọc nó khi làm animation.
 - Tham chiếu cũ cần biết: `D:/Duancanhan/Project_QuanLyGiaiDau/AGENTS.md` (cấp dự án) mục 10 nhắc một file `api_service.dart` trong `lib/data/`; file này KHÔNG tồn tại trong repo (kiểm bằng `git ls-files`).
 
 ## Lệnh (đã chạy thật, 2026-10-15, worktree `agent-standard` từ `origin/main` `1274c57`)
@@ -58,7 +58,8 @@ Nhãn:
 | So khớp key `app_vi.arb` / `app_en.arb` (python, đọc JSON) | exit 0: 4400 key mỗi file, 0 key lệch | chỉ kiểm tên key, không kiểm chất lượng bản dịch |
 | `openspec validate --all --strict` | exit 0, 1 change đạt | `agent-docs-map` có `skip_specs: true` |
 | `python C:/Users/GIGABYTE/.omp/scripts/openspec-gate.py` | exit 0 | "validate strict ok, không change nào còn task dở" |
-| `omp -p --no-session "KHÔNG gọi tool, KHÔNG đọc file… LOADED"` chạy trong worktree | exit 0; liệt kê `~/.omp/agent/AGENTS.md` và `AGENTS.md` của worktree, không có copilot | Sau khi thêm `.omp/settings.json` (`disabledProviders: ["github"]`). Trước đó chỉ nạp `.github/copilot-instructions.md`, không nạp `AGENTS.md` |
+| `omp -p --no-session "KHÔNG gọi tool, KHÔNG đọc file… LOADED"` chạy trong worktree | exit 0; liệt kê `~/.omp/agent/AGENTS.md` và `AGENTS.md` của worktree, không có copilot | Sau khi thêm `.omp/config.yml` (`disabledExtensions: context-file:project:copilot-instructions.md`). Trước đó chỉ nạp `.github/copilot-instructions.md`, không nạp `AGENTS.md` |
+| `omp -p --no-session` liệt kê tool `mcp__dart_*` trong worktree | exit 0; 23 tool | Đếm từ danh sách tool trong system prompt, chưa gọi tool dart nào |
 | `flutter analyze` toàn repo; chạy toàn bộ `test/` | CHƯA CHẠY | Không thử trong lượt này vì nặng; theo skill `cloud-test-runner` |
 
 `flutter pub get` (hook của worktree) đã đổi 7 phiên bản trong `pubspec.lock` đã commit (15 dòng) và ghi lại 7 file `generated_plugin_registrant`/`generated_plugins` của Linux, macOS, Windows. Thay đổi bị hoàn lại trong worktree, không commit.
