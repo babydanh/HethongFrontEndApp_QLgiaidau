@@ -752,15 +752,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     tabHeaders.add(const Tab(height: 28, text: 'Bảng đấu'));
     tabIds.add('bracket');
 
-    // 7. Tab [Tài trợ] (nếu có)
+    // 7. Lịch thi đấu.
+    tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
+    tabIds.add('schedule');
+
+    // 8. Tab [Tài trợ] (nếu có) luôn là tab cuối.
     if (hasSponsors) {
       tabHeaders.add(Tab(height: 28, text: l10n.tabSponsors));
       tabIds.add('sponsors');
     }
-
-    // 8. Lịch thi đấu luôn là tab cuối.
-    tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
-    tabIds.add('schedule');
 
     _updateTabController(tabIds, defaultIndex: overviewIndex);
     final controller = _tabController!;
@@ -845,16 +845,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       ),
     );
 
-    // Tài trợ
-    if (hasSponsors) {
-      tabViews.add(
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: 160),
-          child: SponsorsTab(sponsors: tournament.sponsors),
-        ),
-      );
-    }
     // Lịch thi đấu: một lưới chung cho mọi division, không lọc theo division.
     tabViews.add(
       SingleChildScrollView(
@@ -874,6 +864,17 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ),
       ),
     );
+
+    // Tài trợ (tab cuối)
+    if (hasSponsors) {
+      tabViews.add(
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 160),
+          child: SponsorsTab(sponsors: tournament.sponsors),
+        ),
+      );
+    }
 
     final isClubLite = tournament.isClubLite;
     final topPadding = MediaQuery.of(context).padding.top;

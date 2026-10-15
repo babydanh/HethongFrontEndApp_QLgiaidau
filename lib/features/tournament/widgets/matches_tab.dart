@@ -120,15 +120,9 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
             ),
           );
         final hours = _configuredHours(l10n);
-        final unplacedMatches = matches
-            .where(
-              (match) =>
-                  match.scheduledTime == null ||
-                  _courtDisplayName(match) == null,
-            )
-            .toList();
-        final hasVisibleMatches =
-            courtGroups.isNotEmpty || unplacedMatches.isNotEmpty;
+        // Trận chưa có giờ hoặc sân không hiện trên lịch công khai; lịch chỉ
+        // có trận chưa xếp thì để trống.
+        final hasVisibleMatches = courtGroups.isNotEmpty;
 
         // ── Dữ liệu cho lưới ──
         // Cột sân gom từ TOÀN BỘ trận của division, KHÔNG lọc theo ngày: nếu lấy
@@ -201,7 +195,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
               _buildEmptyState(
                 l10n,
                 colors,
-                hasSourceMatches: allMatches.isNotEmpty,
+                hasSourceMatches: allMatches.any(_isPlaced),
               )
             else ...[
               // Lưới sân nằm trong một khung bo viền duy nhất.
@@ -215,30 +209,18 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ScheduleGrid(
-                        courts: gridCourts,
-                        matches: gridMatches,
-                        startHour: gridStartHour,
-                        endHour: gridEndHour,
-                        minutesPerSet: _minutesPerSetOf(
-                          widget.scheduleSettings['minutesPerSet'],
-                        ),
-                        divisionNameById: widget.divisionNameById,
-                        slotHeight: 120,
-                        emphasizeTimeLabels: true,
-                        onTapMatch: _openMatchById,
-                      ),
-                      if (unplacedMatches.isNotEmpty) ...[
-                        const Divider(height: 1),
-                        ScheduleUnplacedSection(
-                          matches: unplacedMatches,
-                          onTapMatch: _openMatchById,
-                        ),
-                      ],
-                    ],
+                  child: ScheduleGrid(
+                    courts: gridCourts,
+                    matches: gridMatches,
+                    startHour: gridStartHour,
+                    endHour: gridEndHour,
+                    minutesPerSet: _minutesPerSetOf(
+                      widget.scheduleSettings['minutesPerSet'],
+                    ),
+                    divisionNameById: widget.divisionNameById,
+                    slotHeight: 120,
+                    emphasizeTimeLabels: true,
+                    onTapMatch: _openMatchById,
                   ),
                 ),
               ),
@@ -468,6 +450,10 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
     if (parsed == null || parsed == 0) return 15;
     return parsed < 5 ? 5 : parsed;
   }
+
+  /// Trận đã xếp = có giờ và có sân; chỉ những trận này lên lịch công khai.
+  bool _isPlaced(MatchModel match) =>
+      match.scheduledTime != null && _courtDisplayName(match) != null;
 
   /// Mở màn chi tiết trận từ thẻ trong lưới — dùng chung đường dẫn với thẻ thường.
   void _openMatchById(String matchId) {

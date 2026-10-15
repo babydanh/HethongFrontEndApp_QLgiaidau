@@ -5261,8 +5261,8 @@
   "clubMatchSessionComplete": "Chốt kết quả",
   "clubMatchSessionEloStatus": "Trạng thái ELO: {status}",
   "clubMatchSessionSelfSource": "Tự đăng ký",
-  "clubMatchSessionMandatorySource": "BQT chỉ định"
-  ,"clubMatchSessionAssignMembers": "BQT thêm thành viên",
+  "clubMatchSessionMandatorySource": "BQT chỉ định",
+"clubMatchSessionAssignMembers": "BQT thêm thành viên",
   "clubMatchSessionAssign": "Thêm người đã chọn",
   "clubMatchSessionAssigned": "Đã thêm thành viên vào buổi giao lưu",
   "clubMatchSessionUnnamedMember": "Thành viên chưa đặt tên",
@@ -5271,8 +5271,8 @@
   "clubMatchSessionPreferredOpponent": "Muốn đối đầu",
   "clubMatchSessionAvoidPlayer": "Muốn tránh ghép",
   "clubMatchSessionSavePreferences": "Lưu nguyện vọng",
-  "clubMatchSessionPreferencesSaved": "Đã lưu nguyện vọng"
-  ,"clubMatchSessionStartAt": "Ngày giờ bắt đầu",
+  "clubMatchSessionPreferencesSaved": "Đã lưu nguyện vọng",
+"clubMatchSessionStartAt": "Ngày giờ bắt đầu",
   "clubMatchSessionEndAt": "Ngày giờ kết thúc",
   "clubMatchSessionOptionalDate": "Không bắt buộc — chạm để chọn",
   "clubMatchSessionSchedule": "Lịch giao lưu",
@@ -5283,8 +5283,8 @@
   "clubMatchSessionCancel": "Hủy buổi giao lưu",
   "clubMatchSessionRemoveParticipant": "Xóa người tham gia",
   "clubMatchSessionRemoveParticipantConfirm": "Xóa người này khỏi buổi giao lưu?",
-  "clubMatchSessionParticipantRemoved": "Đã xóa người tham gia"
-  ,"clubMatchSessionStatusOpen": "Đang mở đăng ký",
+  "clubMatchSessionParticipantRemoved": "Đã xóa người tham gia",
+"clubMatchSessionStatusOpen": "Đang mở đăng ký",
   "clubMatchSessionStatusLive": "Đang diễn ra",
   "clubMatchSessionStatusClosed": "Đã đóng đăng ký",
   "clubMatchSessionStatusEnded": "Đã kết thúc",
@@ -5520,15 +5520,6 @@
   "@userProfileViewProfileOf": {
     "placeholders": {
       "name": {}
-    }
-  },
-  "matchesUnplacedSection": "Chưa xếp ({count})",
-  "@matchesUnplacedSection": {
-    "description": "Tiêu đề ô Chưa xếp trong lưới lịch: trận chưa có đủ sân hoặc giờ thi đấu.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
     }
   },
   "tournamentManagementParticipantApproved": "Đã duyệt",
@@ -5789,8 +5780,8 @@
   "tournamentManagementLivestreamDeviceNameLabel": "Tên thiết bị",
   "tournamentManagementLivestreamDeviceNameHint": "Ví dụ: Điện thoại sân 1",
   "tournamentManagementLivestreamDeviceNameRequired": "Nhập tên thiết bị trước.",
-  "tournamentManagementLivestreamDeviceNameLengthInvalid": "Tên thiết bị phải có từ 2 đến 255 ký tự."
-  ,"socialOpenCreateTitle": "Tạo kèo",
+  "tournamentManagementLivestreamDeviceNameLengthInvalid": "Tên thiết bị phải có từ 2 đến 255 ký tự.",
+"socialOpenCreateTitle": "Tạo kèo",
   "socialClubCreateTitle": "Tạo buổi giao lưu",
   "socialOpenUpdateTitle": "Cập nhật kèo",
   "socialClubUpdateTitle": "Cập nhật buổi giao lưu",
@@ -5951,32 +5942,5 @@
   "socialPlaceNoPin": "Chưa có ghim",
   "socialPlaceSaveAreaTitle": "Lưu khu vực này?",
   "socialPlaceSaveAreaMessage": "Không tìm thấy địa chỉ đường và ghim bản đồ cho nội dung này. Bạn có thể lưu khu vực hành chính hoặc ghim chính xác trên bản đồ.",
-  "socialPlaceSaveArea": "Lưu khu vực",
-  "registerDivisionFull": "Nội dung này đã đủ suất",
-  "registerTeamSlotCount": "{count} suất đội",
-  "@registerTeamSlotCount": {
-    "placeholders": {
-      "count": {}
-    }
-  },
-  "userProfileViewProfileOf": "Xem hồ sơ {name}",
-  "@userProfileViewProfileOf": {
-    "placeholders": {
-      "name": {}
-    }
-  },
-  "matchesUnplacedSection": "Chưa xếp ({count})",
-  "@matchesUnplacedSection": {
-    "description": "Tiêu đề ô Chưa xếp trong lưới lịch: trận chưa có đủ sân hoặc giờ thi đấu.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "tournamentCategoryOpenSingles": "Đơn linh hoạt",
-  "tournamentCategoryOpenDoubles": "Đôi linh hoạt",
-  "registerTypeOpenSingles": "Đơn linh hoạt",
-  "registerTypeOpenDoubles": "Đôi linh hoạt",
-  "dashboard_noMoreTournaments": "Đã xem hết giải đấu"
+  "socialPlaceSaveArea": "Lưu khu vực"
 }

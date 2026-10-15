@@ -403,23 +403,9 @@ void main() {
     expect(find.text('Player Alpha / Player Beta'), findsOneWidget);
 
     await _openTab(tester, 'Lịch thi đấu');
-    final unplacedCell = find.byKey(
-      const ValueKey('schedule-unplaced-section'),
-    );
-    expect(
-      find.descendant(
-        of: unplacedCell,
-        matching: find.textContaining('Player Epsilon'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: unplacedCell,
-        matching: find.textContaining('Player Zeta'),
-      ),
-      findsOneWidget,
-    );
+    // Cả hai trận fixture đều chưa có giờ/sân: lịch công khai để trống.
+    expect(find.byKey(const ValueKey('schedule-frame')), findsNothing);
+    expect(find.text('Chưa có trận đấu'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

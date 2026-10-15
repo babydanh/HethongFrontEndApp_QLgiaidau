@@ -19,7 +19,10 @@ class _UnauthenticatedNotifier extends AuthNotifier {
   AuthState build() => const AuthState();
 }
 
-Tournament _fixtureTournament({int? minutesPerSet}) => Tournament.fromJson({
+Tournament _fixtureTournament({
+  int? minutesPerSet,
+  bool withSponsor = false,
+}) => Tournament.fromJson({
   'name': 'Schedule tab smoke fixture',
   'sport': 'pickleball',
   'format': 'DOUBLES',
@@ -36,6 +39,15 @@ Tournament _fixtureTournament({int? minutesPerSet}) => Tournament.fromJson({
     'stepMinutes': 15,
     'minutesPerSet': ?minutesPerSet,
   },
+  if (withSponsor)
+    'sponsors': [
+      {
+        'id': 'sponsor-1',
+        'displayName': 'Fixture Sponsor',
+        'logoUrl': 'https://example.com/sponsor.png',
+        'isPublic': true,
+      },
+    ],
   'createdAt': '2026-01-01T00:00:00.000Z',
   'updatedAt': '2026-01-01T00:00:00.000Z',
 }, 'schedule-fixture');
@@ -72,13 +84,16 @@ Future<void> _pumpTournamentDetail(
   List<MatchModel> matches = const [],
   Stream<List<MatchModel>>? matchStream,
   int? minutesPerSet,
+  bool withSponsor = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         tournamentIntroWithInviteProvider.overrideWith(
-          (ref, params) async =>
-              _fixtureTournament(minutesPerSet: minutesPerSet),
+          (ref, params) async => _fixtureTournament(
+            minutesPerSet: minutesPerSet,
+            withSponsor: withSponsor,
+          ),
         ),
         tournamentDivisionsProvider.overrideWith(
           (ref, tournamentId) async => const <Map<String, dynamic>>[],
@@ -197,6 +212,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('sponsor tab is last, right after the schedule tab', (
+    tester,
+  ) async {
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('vi'),
+      withSponsor: true,
+    );
+
+    final tabBar = tester.widget<TabBar>(find.byType(TabBar).first);
+    final labels = [for (final tab in tabBar.tabs) (tab as Tab).text];
+    expect(labels.last, 'Tài trợ');
+    expect(labels[labels.length - 2], 'Lịch thi đấu');
+
+    await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
+    expect(find.byType(TextField).hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('schedule stays selected when a live tab is inserted', (
     tester,
   ) async {
@@ -280,7 +314,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('schedule grid and unplaced cell share one bordered frame', (
+  testWidgets('schedule frame holds only the grid, no unplaced section', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -311,8 +345,35 @@ void main() {
       find.descendant(of: frame, matching: find.byType(ScheduleGrid)),
       findsOneWidget,
     );
-    final unplaced = find.byKey(const ValueKey('schedule-unplaced-section'));
-    expect(find.descendant(of: frame, matching: unplaced), findsOneWidget);
+    expect(find.textContaining('Player 2'), findsNothing);
+  });
+
+  testWidgets('schedule is empty when every match is still unplaced', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await _pumpTournamentDetail(
+      tester,
+      locale: const Locale('en'),
+      matches: [
+        _scheduleMatch(1, courtId: 'court-1', court: 'Court 1'),
+        _scheduleMatch(2, scheduledTime: DateTime(2026, 8, 12, 10)),
+      ],
+    );
+    await _tapTab(tester, find.widgetWithText(Tab, 'Schedule'));
+
+    expect(find.byKey(const ValueKey('schedule-frame')), findsNothing);
+    expect(find.text('No matches yet'), findsOneWidget);
+    expect(find.text('No matches match the selected filter'), findsNothing);
+    expect(find.textContaining('Player 1'), findsNothing);
+    expect(find.textContaining('Player 2'), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('default schedule date is the first date with matches', (
@@ -343,9 +404,7 @@ void main() {
     expect(find.textContaining('Thirteenth Player'), findsOneWidget);
   });
 
-  testWidgets('matches without time or court sit in the unplaced cell', (
-    tester,
-  ) async {
+  testWidgets('matches without time or court are not shown', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(() {
@@ -374,25 +433,9 @@ void main() {
     );
     await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
 
-    final unplaced = find.byKey(const ValueKey('schedule-unplaced-section'));
-    expect(
-      find.descendant(
-        of: unplaced,
-        matching: find.textContaining('Unset Time A'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: unplaced,
-        matching: find.textContaining('Unset Court A'),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: unplaced, matching: find.textContaining('Player 1')),
-      findsNothing,
-    );
+    expect(find.textContaining('Player 1'), findsOneWidget);
+    expect(find.textContaining('Unset Time A'), findsNothing);
+    expect(find.textContaining('Unset Court A'), findsNothing);
   });
 
   testWidgets('schedule tab label is localized in English', (tester) async {

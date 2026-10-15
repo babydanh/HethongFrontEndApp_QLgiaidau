@@ -5862,15 +5862,6 @@
       "name": {}
     }
   },
-  "matchesUnplacedSection": "Unplaced ({count})",
-  "@matchesUnplacedSection": {
-    "description": "Title of the Unplaced cell in the schedule grid: matches missing a court or scheduled time.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "tournamentCategoryOpenSingles": "Open singles",
   "tournamentCategoryOpenDoubles": "Open doubles",
   "registerTypeOpenSingles": "Open singles",
