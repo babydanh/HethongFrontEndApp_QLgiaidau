@@ -13759,11 +13759,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard_noMoreTournaments => 'You\'ve seen all tournaments';
 
   @override
-  String userProfileViewProfileOf(Object name) {
-    return 'View $name\'s profile';
-  }
-
-  @override
   String get tournamentManagementParticipantApproved => 'Approved';
 
   @override
@@ -15153,4 +15148,258 @@ class AppLocalizationsEn extends AppLocalizations {
   String scheduleQuickAutoApplied(int done, int total) {
     return 'Scheduled $done/$total matches.';
   }
+
+  @override
+  String get schedulePrint => 'Print schedule';
+
+  @override
+  String get liveH2hMatchIntro => 'MATCH INTRODUCTION';
+
+  @override
+  String get liveH2hGoodLuck => 'GOOD LUCK TO BOTH TEAMS!';
+
+  @override
+  String get liveBracketTitle => 'TOURNAMENT BRACKET';
+
+  @override
+  String get liveBracketTournamentFallback => 'SPORTO TOURNAMENT';
+
+  @override
+  String get rosterImportTitle => 'Import athletes from Excel';
+
+  @override
+  String get rosterImportOpen => 'Import Excel';
+
+  @override
+  String get rosterImportClose => 'Close';
+
+  @override
+  String get rosterImportPickFile => 'Choose Excel file';
+
+  @override
+  String get rosterImportReading => 'Reading file...';
+
+  @override
+  String get rosterImportHint =>
+      'Choose an .xlsx file in the template format to preview the data before importing.';
+
+  @override
+  String get rosterImportReadFailed =>
+      'Could not read the Excel file. Please check the file.';
+
+  @override
+  String rosterImportNoSheetHeader(String sheet) {
+    return 'Skipped sheet \"$sheet\": no header row found.';
+  }
+
+  @override
+  String get rosterImportNoRows => 'The file has no athlete rows.';
+
+  @override
+  String get rosterImportAutoApprove =>
+      'Auto-approve athletes after import (when the tournament allows)';
+
+  @override
+  String get rosterImportChecking => 'Checking on the server...';
+
+  @override
+  String get rosterImportRetry => 'Retry';
+
+  @override
+  String get rosterImportPreviewFailed =>
+      'Could not check the data. Please try again.';
+
+  @override
+  String get rosterImportNoEligibleRows => 'No rows are eligible to import.';
+
+  @override
+  String rosterImportTooManyRows(int total, int max) {
+    return 'The file has $total rows, above the limit of $max per import.';
+  }
+
+  @override
+  String rosterImportDivisionUnmatched(String name) {
+    return 'Division \"$name\" does not match any division of this tournament.';
+  }
+
+  @override
+  String rosterImportCapacityShortfall(String name) {
+    return 'Division \"$name\" does not have enough slots for all rows.';
+  }
+
+  @override
+  String rosterImportCapacityInfo(int requested, int remaining) {
+    return 'Needs $requested slots, $remaining remaining.';
+  }
+
+  @override
+  String rosterImportSummary(int eligible, int total) {
+    return '$eligible/$total rows eligible';
+  }
+
+  @override
+  String rosterImportCommit(int count) {
+    return 'Import $count athletes';
+  }
+
+  @override
+  String get rosterImportCommitting => 'Importing...';
+
+  @override
+  String get rosterImportCommitFailed =>
+      'Import failed. Your selection is kept so you can retry.';
+
+  @override
+  String rosterImportImported(int count) {
+    return 'Imported $count athletes.';
+  }
+
+  @override
+  String get rosterImportReplayed =>
+      'This import was already recorded earlier.';
+
+  @override
+  String get rosterImportWillImport => 'Will import';
+
+  @override
+  String get rosterImportWillSkip => 'Skipped';
+
+  @override
+  String rosterImportRowSource(int row, String sheet) {
+    return 'Row $row · $sheet';
+  }
+
+  @override
+  String get rosterImportCustomResponseInvalid => 'Invalid note';
+
+  @override
+  String get rosterImportNoAccountMatch => 'No account matches the email';
+
+  @override
+  String rosterImportAccountLabel(int player) {
+    return 'Athlete $player';
+  }
+
+  @override
+  String get rosterImportChooseAccount => 'Choose an account...';
+
+  @override
+  String get rosterImportLeaveUnlinked => 'Leave unlinked';
+
+  @override
+  String rosterImportCandidateLabel(String name, String email) {
+    return '$name ($email)';
+  }
+
+  @override
+  String get rosterImportStatusFound => 'Account found';
+
+  @override
+  String get rosterImportStatusNotFound => 'No account found';
+
+  @override
+  String get rosterImportStatusInvalidEmail => 'Invalid email';
+
+  @override
+  String get rosterImportStatusMissingEmail => 'Missing email';
+
+  @override
+  String get rosterImportStatusMissingName => 'Missing name';
+
+  @override
+  String get rosterImportStatusDuplicateInFile => 'Duplicate in file';
+
+  @override
+  String get rosterImportStatusDuplicateInTournament =>
+      'Already registered in this tournament';
+
+  @override
+  String get rosterImportStatusPlayer2Required => 'Athlete 2 details required';
+
+  @override
+  String get rosterImportStatusPlayer2NotAllowed =>
+      'Singles division does not take athlete 2';
+
+  @override
+  String get rosterImportStatusDivisionUnknown => 'Division not recognized';
+
+  @override
+  String get rosterImportStatusUnknown => 'Needs review';
+
+  @override
+  String get rosterImportTemplateFailed =>
+      'Could not create the template. Please try again.';
+
+  @override
+  String get rosterImportDownloadTemplate => 'Download template';
+
+  @override
+  String get opsAddAthleteEmail => 'Email';
+
+  @override
+  String get opsAddAthleteSearchHint =>
+      'Search by name (at least 2 characters) or type a full email.';
+
+  @override
+  String get opsAddAthleteSearchFailed => 'Could not search accounts.';
+
+  @override
+  String opsAddAthleteSelectedCount(int count) {
+    return 'Selected: $count';
+  }
+
+  @override
+  String get opsAddAthleteSelectionLimit => 'You can select up to 25 athletes.';
+
+  @override
+  String opsAddAthleteAddSelectedCount(int count) {
+    return 'Add $count athletes';
+  }
+
+  @override
+  String opsAddAthleteMultipleSuccess(int count) {
+    return 'Added $count athletes.';
+  }
+
+  @override
+  String opsAddAthletePartialSummary(
+    int addedCount,
+    int failedCount,
+    int unattemptedCount,
+  ) {
+    return 'Stopped at the first error — added: $addedCount; failed: $failedCount; not attempted: $unattemptedCount. Check the roster before retrying.';
+  }
+
+  @override
+  String get opsAddAthletePairToggle => 'Pair up';
+
+  @override
+  String get opsAddAthletePairRequirement =>
+      'Select 2–25 athletes from the same source (friends, club, or email) to pair them.';
+
+  @override
+  String get opsAddAthletePairSubmit => 'Pair up';
+
+  @override
+  String opsAddAthletePairSuccess(int pairCount, int pendingCount) {
+    return 'Paired $pairCount teams. $pendingCount athletes are waiting for a partner.';
+  }
+
+  @override
+  String opsAddAthletePairGroup(String n) {
+    return '$n';
+  }
+
+  @override
+  String get opsAddAthletePairWaiting => 'Waiting';
+
+  @override
+  String get opsAddAthleteAdded => 'Added';
+
+  @override
+  String get opsAddAthleteGuestEmail => 'Contact email';
+
+  @override
+  String get opsAddAthleteGuestEmailHint =>
+      'Email, if provided, is saved as tournament contact.';
 }

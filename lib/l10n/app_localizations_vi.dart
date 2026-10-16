@@ -13714,11 +13714,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboard_noMoreTournaments => 'Đã xem hết giải đấu';
 
   @override
-  String userProfileViewProfileOf(Object name) {
-    return 'Xem hồ sơ $name';
-  }
-
-  @override
   String get tournamentManagementParticipantApproved => 'Đã duyệt';
 
   @override
@@ -15104,4 +15099,258 @@ class AppLocalizationsVi extends AppLocalizations {
   String scheduleQuickAutoApplied(int done, int total) {
     return 'Đã xếp $done/$total trận.';
   }
+
+  @override
+  String get schedulePrint => 'In lịch';
+
+  @override
+  String get liveH2hMatchIntro => 'MATCH INTRODUCTION';
+
+  @override
+  String get liveH2hGoodLuck => 'CHÚC HAI ĐỘI THI ĐẤU TỐT!';
+
+  @override
+  String get liveBracketTitle => 'SƠ ĐỒ ĐẤU';
+
+  @override
+  String get liveBracketTournamentFallback => 'SPORTO TOURNAMENT';
+
+  @override
+  String get rosterImportTitle => 'Nhập VĐV từ Excel';
+
+  @override
+  String get rosterImportOpen => 'Nhập Excel';
+
+  @override
+  String get rosterImportClose => 'Đóng';
+
+  @override
+  String get rosterImportPickFile => 'Chọn file Excel';
+
+  @override
+  String get rosterImportReading => 'Đang đọc file...';
+
+  @override
+  String get rosterImportHint =>
+      'Chọn file .xlsx theo mẫu để xem trước dữ liệu trước khi nhập.';
+
+  @override
+  String get rosterImportReadFailed =>
+      'Không đọc được file Excel. Vui lòng kiểm tra lại file.';
+
+  @override
+  String rosterImportNoSheetHeader(String sheet) {
+    return 'Bỏ qua sheet \"$sheet\": không tìm thấy dòng tiêu đề.';
+  }
+
+  @override
+  String get rosterImportNoRows => 'File không có dòng VĐV nào.';
+
+  @override
+  String get rosterImportAutoApprove =>
+      'Tự duyệt VĐV sau khi nhập (khi giải cho phép)';
+
+  @override
+  String get rosterImportChecking => 'Đang kiểm tra trên máy chủ...';
+
+  @override
+  String get rosterImportRetry => 'Thử lại';
+
+  @override
+  String get rosterImportPreviewFailed =>
+      'Không kiểm tra được dữ liệu. Vui lòng thử lại.';
+
+  @override
+  String get rosterImportNoEligibleRows =>
+      'Không có dòng nào đủ điều kiện để nhập.';
+
+  @override
+  String rosterImportTooManyRows(int total, int max) {
+    return 'File có $total dòng, vượt giới hạn $max dòng mỗi lần nhập.';
+  }
+
+  @override
+  String rosterImportDivisionUnmatched(String name) {
+    return 'Nội dung \"$name\" không khớp nội dung nào của giải.';
+  }
+
+  @override
+  String rosterImportCapacityShortfall(String name) {
+    return 'Nội dung \"$name\" không đủ suất để nhập hết các dòng.';
+  }
+
+  @override
+  String rosterImportCapacityInfo(int requested, int remaining) {
+    return 'Cần $requested suất, còn $remaining suất.';
+  }
+
+  @override
+  String rosterImportSummary(int eligible, int total) {
+    return '$eligible/$total dòng đủ điều kiện';
+  }
+
+  @override
+  String rosterImportCommit(int count) {
+    return 'Nhập $count VĐV';
+  }
+
+  @override
+  String get rosterImportCommitting => 'Đang nhập...';
+
+  @override
+  String get rosterImportCommitFailed =>
+      'Nhập VĐV thất bại. Dữ liệu đã chọn vẫn được giữ để thử lại.';
+
+  @override
+  String rosterImportImported(int count) {
+    return 'Đã nhập $count VĐV.';
+  }
+
+  @override
+  String get rosterImportReplayed => 'Lần nhập này đã được ghi nhận trước đó.';
+
+  @override
+  String get rosterImportWillImport => 'Sẽ nhập';
+
+  @override
+  String get rosterImportWillSkip => 'Bỏ qua';
+
+  @override
+  String rosterImportRowSource(int row, String sheet) {
+    return 'Dòng $row · $sheet';
+  }
+
+  @override
+  String get rosterImportCustomResponseInvalid => 'Ghi chú không hợp lệ';
+
+  @override
+  String get rosterImportNoAccountMatch => 'Không có tài khoản trùng email';
+
+  @override
+  String rosterImportAccountLabel(int player) {
+    return 'VĐV $player';
+  }
+
+  @override
+  String get rosterImportChooseAccount => 'Chọn tài khoản...';
+
+  @override
+  String get rosterImportLeaveUnlinked => 'Để trống (không liên kết)';
+
+  @override
+  String rosterImportCandidateLabel(String name, String email) {
+    return '$name ($email)';
+  }
+
+  @override
+  String get rosterImportStatusFound => 'Đã có tài khoản';
+
+  @override
+  String get rosterImportStatusNotFound => 'Chưa có tài khoản';
+
+  @override
+  String get rosterImportStatusInvalidEmail => 'Email không hợp lệ';
+
+  @override
+  String get rosterImportStatusMissingEmail => 'Thiếu email';
+
+  @override
+  String get rosterImportStatusMissingName => 'Thiếu tên';
+
+  @override
+  String get rosterImportStatusDuplicateInFile => 'Trùng trong file';
+
+  @override
+  String get rosterImportStatusDuplicateInTournament => 'Đã đăng ký trong giải';
+
+  @override
+  String get rosterImportStatusPlayer2Required => 'Thiếu thông tin VĐV 2';
+
+  @override
+  String get rosterImportStatusPlayer2NotAllowed =>
+      'Nội dung đơn không nhận VĐV 2';
+
+  @override
+  String get rosterImportStatusDivisionUnknown =>
+      'Không xác định được nội dung';
+
+  @override
+  String get rosterImportStatusUnknown => 'Cần kiểm tra lại';
+
+  @override
+  String get rosterImportTemplateFailed =>
+      'Không tạo được file mẫu. Vui lòng thử lại.';
+
+  @override
+  String get rosterImportDownloadTemplate => 'Tải mẫu';
+
+  @override
+  String get opsAddAthleteEmail => 'Email';
+
+  @override
+  String get opsAddAthleteSearchHint =>
+      'Nhập ít nhất 2 ký tự để tìm theo tên, hoặc nhập đầy đủ email.';
+
+  @override
+  String get opsAddAthleteSearchFailed => 'Không tìm được tài khoản.';
+
+  @override
+  String opsAddAthleteSelectedCount(int count) {
+    return 'Đã chọn: $count';
+  }
+
+  @override
+  String get opsAddAthleteSelectionLimit => 'Chỉ có thể chọn tối đa 25 VĐV.';
+
+  @override
+  String opsAddAthleteAddSelectedCount(int count) {
+    return 'Thêm $count VĐV';
+  }
+
+  @override
+  String opsAddAthleteMultipleSuccess(int count) {
+    return 'Đã thêm $count VĐV.';
+  }
+
+  @override
+  String opsAddAthletePartialSummary(
+    int addedCount,
+    int failedCount,
+    int unattemptedCount,
+  ) {
+    return 'Đã dừng ở lỗi đầu tiên — thành công: $addedCount; thất bại: $failedCount; chưa thực hiện: $unattemptedCount. Hãy kiểm tra danh sách trước khi thử lại.';
+  }
+
+  @override
+  String get opsAddAthletePairToggle => 'Ghép đôi';
+
+  @override
+  String get opsAddAthletePairRequirement =>
+      'Chọn 2–25 VĐV cùng một nguồn (bạn bè, CLB hoặc email) để ghép đôi.';
+
+  @override
+  String get opsAddAthletePairSubmit => 'Ghép đôi';
+
+  @override
+  String opsAddAthletePairSuccess(int pairCount, int pendingCount) {
+    return 'Đã ghép $pairCount đôi. $pendingCount VĐV lẻ đang chờ đồng đội.';
+  }
+
+  @override
+  String opsAddAthletePairGroup(String n) {
+    return '$n';
+  }
+
+  @override
+  String get opsAddAthletePairWaiting => 'Chờ ghép';
+
+  @override
+  String get opsAddAthleteAdded => 'Đã thêm';
+
+  @override
+  String get opsAddAthleteGuestEmail => 'Email liên hệ';
+
+  @override
+  String get opsAddAthleteGuestEmailHint =>
+      'Email (nếu có) được lưu làm thông tin liên hệ của giải.';
 }

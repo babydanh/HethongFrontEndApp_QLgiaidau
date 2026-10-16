@@ -24952,12 +24952,6 @@ abstract class AppLocalizations {
   /// **'Đã xem hết giải đấu'**
   String get dashboard_noMoreTournaments;
 
-  /// No description provided for @userProfileViewProfileOf.
-  ///
-  /// In vi, this message translates to:
-  /// **'Xem hồ sơ {name}'**
-  String userProfileViewProfileOf(Object name);
-
   /// No description provided for @tournamentManagementParticipantApproved.
   ///
   /// In vi, this message translates to:
@@ -27423,6 +27417,418 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã xếp {done}/{total} trận.'**
   String scheduleQuickAutoApplied(int done, int total);
+
+  /// No description provided for @schedulePrint.
+  ///
+  /// In vi, this message translates to:
+  /// **'In lịch'**
+  String get schedulePrint;
+
+  /// No description provided for @liveH2hMatchIntro.
+  ///
+  /// In vi, this message translates to:
+  /// **'MATCH INTRODUCTION'**
+  String get liveH2hMatchIntro;
+
+  /// No description provided for @liveH2hGoodLuck.
+  ///
+  /// In vi, this message translates to:
+  /// **'CHÚC HAI ĐỘI THI ĐẤU TỐT!'**
+  String get liveH2hGoodLuck;
+
+  /// No description provided for @liveBracketTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'SƠ ĐỒ ĐẤU'**
+  String get liveBracketTitle;
+
+  /// No description provided for @liveBracketTournamentFallback.
+  ///
+  /// In vi, this message translates to:
+  /// **'SPORTO TOURNAMENT'**
+  String get liveBracketTournamentFallback;
+
+  /// No description provided for @rosterImportTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập VĐV từ Excel'**
+  String get rosterImportTitle;
+
+  /// No description provided for @rosterImportOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập Excel'**
+  String get rosterImportOpen;
+
+  /// No description provided for @rosterImportClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get rosterImportClose;
+
+  /// No description provided for @rosterImportPickFile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn file Excel'**
+  String get rosterImportPickFile;
+
+  /// No description provided for @rosterImportReading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đọc file...'**
+  String get rosterImportReading;
+
+  /// No description provided for @rosterImportHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn file .xlsx theo mẫu để xem trước dữ liệu trước khi nhập.'**
+  String get rosterImportHint;
+
+  /// No description provided for @rosterImportReadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đọc được file Excel. Vui lòng kiểm tra lại file.'**
+  String get rosterImportReadFailed;
+
+  /// No description provided for @rosterImportNoSheetHeader.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua sheet \"{sheet}\": không tìm thấy dòng tiêu đề.'**
+  String rosterImportNoSheetHeader(String sheet);
+
+  /// No description provided for @rosterImportNoRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'File không có dòng VĐV nào.'**
+  String get rosterImportNoRows;
+
+  /// No description provided for @rosterImportAutoApprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự duyệt VĐV sau khi nhập (khi giải cho phép)'**
+  String get rosterImportAutoApprove;
+
+  /// No description provided for @rosterImportChecking.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kiểm tra trên máy chủ...'**
+  String get rosterImportChecking;
+
+  /// No description provided for @rosterImportRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get rosterImportRetry;
+
+  /// No description provided for @rosterImportPreviewFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kiểm tra được dữ liệu. Vui lòng thử lại.'**
+  String get rosterImportPreviewFailed;
+
+  /// No description provided for @rosterImportNoEligibleRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có dòng nào đủ điều kiện để nhập.'**
+  String get rosterImportNoEligibleRows;
+
+  /// No description provided for @rosterImportTooManyRows.
+  ///
+  /// In vi, this message translates to:
+  /// **'File có {total} dòng, vượt giới hạn {max} dòng mỗi lần nhập.'**
+  String rosterImportTooManyRows(int total, int max);
+
+  /// No description provided for @rosterImportDivisionUnmatched.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung \"{name}\" không khớp nội dung nào của giải.'**
+  String rosterImportDivisionUnmatched(String name);
+
+  /// No description provided for @rosterImportCapacityShortfall.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung \"{name}\" không đủ suất để nhập hết các dòng.'**
+  String rosterImportCapacityShortfall(String name);
+
+  /// No description provided for @rosterImportCapacityInfo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần {requested} suất, còn {remaining} suất.'**
+  String rosterImportCapacityInfo(int requested, int remaining);
+
+  /// No description provided for @rosterImportSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{eligible}/{total} dòng đủ điều kiện'**
+  String rosterImportSummary(int eligible, int total);
+
+  /// No description provided for @rosterImportCommit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập {count} VĐV'**
+  String rosterImportCommit(int count);
+
+  /// No description provided for @rosterImportCommitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang nhập...'**
+  String get rosterImportCommitting;
+
+  /// No description provided for @rosterImportCommitFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập VĐV thất bại. Dữ liệu đã chọn vẫn được giữ để thử lại.'**
+  String get rosterImportCommitFailed;
+
+  /// No description provided for @rosterImportImported.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã nhập {count} VĐV.'**
+  String rosterImportImported(int count);
+
+  /// No description provided for @rosterImportReplayed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lần nhập này đã được ghi nhận trước đó.'**
+  String get rosterImportReplayed;
+
+  /// No description provided for @rosterImportWillImport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sẽ nhập'**
+  String get rosterImportWillImport;
+
+  /// No description provided for @rosterImportWillSkip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua'**
+  String get rosterImportWillSkip;
+
+  /// No description provided for @rosterImportRowSource.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dòng {row} · {sheet}'**
+  String rosterImportRowSource(int row, String sheet);
+
+  /// No description provided for @rosterImportCustomResponseInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú không hợp lệ'**
+  String get rosterImportCustomResponseInvalid;
+
+  /// No description provided for @rosterImportNoAccountMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có tài khoản trùng email'**
+  String get rosterImportNoAccountMatch;
+
+  /// No description provided for @rosterImportAccountLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV {player}'**
+  String rosterImportAccountLabel(int player);
+
+  /// No description provided for @rosterImportChooseAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tài khoản...'**
+  String get rosterImportChooseAccount;
+
+  /// No description provided for @rosterImportLeaveUnlinked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống (không liên kết)'**
+  String get rosterImportLeaveUnlinked;
+
+  /// No description provided for @rosterImportCandidateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} ({email})'**
+  String rosterImportCandidateLabel(String name, String email);
+
+  /// No description provided for @rosterImportStatusFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có tài khoản'**
+  String get rosterImportStatusFound;
+
+  /// No description provided for @rosterImportStatusNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tài khoản'**
+  String get rosterImportStatusNotFound;
+
+  /// No description provided for @rosterImportStatusInvalidEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email không hợp lệ'**
+  String get rosterImportStatusInvalidEmail;
+
+  /// No description provided for @rosterImportStatusMissingEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiếu email'**
+  String get rosterImportStatusMissingEmail;
+
+  /// No description provided for @rosterImportStatusMissingName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiếu tên'**
+  String get rosterImportStatusMissingName;
+
+  /// No description provided for @rosterImportStatusDuplicateInFile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trùng trong file'**
+  String get rosterImportStatusDuplicateInFile;
+
+  /// No description provided for @rosterImportStatusDuplicateInTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký trong giải'**
+  String get rosterImportStatusDuplicateInTournament;
+
+  /// No description provided for @rosterImportStatusPlayer2Required.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiếu thông tin VĐV 2'**
+  String get rosterImportStatusPlayer2Required;
+
+  /// No description provided for @rosterImportStatusPlayer2NotAllowed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung đơn không nhận VĐV 2'**
+  String get rosterImportStatusPlayer2NotAllowed;
+
+  /// No description provided for @rosterImportStatusDivisionUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không xác định được nội dung'**
+  String get rosterImportStatusDivisionUnknown;
+
+  /// No description provided for @rosterImportStatusUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần kiểm tra lại'**
+  String get rosterImportStatusUnknown;
+
+  /// No description provided for @rosterImportTemplateFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tạo được file mẫu. Vui lòng thử lại.'**
+  String get rosterImportTemplateFailed;
+
+  /// No description provided for @rosterImportDownloadTemplate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải mẫu'**
+  String get rosterImportDownloadTemplate;
+
+  /// No description provided for @opsAddAthleteEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get opsAddAthleteEmail;
+
+  /// No description provided for @opsAddAthleteSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập ít nhất 2 ký tự để tìm theo tên, hoặc nhập đầy đủ email.'**
+  String get opsAddAthleteSearchHint;
+
+  /// No description provided for @opsAddAthleteSearchFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm được tài khoản.'**
+  String get opsAddAthleteSearchFailed;
+
+  /// No description provided for @opsAddAthleteSelectedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chọn: {count}'**
+  String opsAddAthleteSelectedCount(int count);
+
+  /// No description provided for @opsAddAthleteSelectionLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ có thể chọn tối đa 25 VĐV.'**
+  String get opsAddAthleteSelectionLimit;
+
+  /// No description provided for @opsAddAthleteAddSelectedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm {count} VĐV'**
+  String opsAddAthleteAddSelectedCount(int count);
+
+  /// No description provided for @opsAddAthleteMultipleSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm {count} VĐV.'**
+  String opsAddAthleteMultipleSuccess(int count);
+
+  /// No description provided for @opsAddAthletePartialSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã dừng ở lỗi đầu tiên — thành công: {addedCount}; thất bại: {failedCount}; chưa thực hiện: {unattemptedCount}. Hãy kiểm tra danh sách trước khi thử lại.'**
+  String opsAddAthletePartialSummary(
+    int addedCount,
+    int failedCount,
+    int unattemptedCount,
+  );
+
+  /// No description provided for @opsAddAthletePairToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép đôi'**
+  String get opsAddAthletePairToggle;
+
+  /// No description provided for @opsAddAthletePairRequirement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn 2–25 VĐV cùng một nguồn (bạn bè, CLB hoặc email) để ghép đôi.'**
+  String get opsAddAthletePairRequirement;
+
+  /// No description provided for @opsAddAthletePairSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép đôi'**
+  String get opsAddAthletePairSubmit;
+
+  /// No description provided for @opsAddAthletePairSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghép {pairCount} đôi. {pendingCount} VĐV lẻ đang chờ đồng đội.'**
+  String opsAddAthletePairSuccess(int pairCount, int pendingCount);
+
+  /// No description provided for @opsAddAthletePairGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'{n}'**
+  String opsAddAthletePairGroup(String n);
+
+  /// No description provided for @opsAddAthletePairWaiting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ ghép'**
+  String get opsAddAthletePairWaiting;
+
+  /// No description provided for @opsAddAthleteAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm'**
+  String get opsAddAthleteAdded;
+
+  /// No description provided for @opsAddAthleteGuestEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email liên hệ'**
+  String get opsAddAthleteGuestEmail;
+
+  /// No description provided for @opsAddAthleteGuestEmailHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email (nếu có) được lưu làm thông tin liên hệ của giải.'**
+  String get opsAddAthleteGuestEmailHint;
 }
 
 class _AppLocalizationsDelegate
