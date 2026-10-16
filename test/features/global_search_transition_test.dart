@@ -93,7 +93,10 @@ void main() {
       find.byType(GlobalSearchScreen, skipOffstage: false),
       findsOneWidget,
     );
-    final fade = find.byType(FadeTransition, skipOffstage: false).first;
+    final fade = find.ancestor(
+      of: find.byType(GlobalSearchScreen, skipOffstage: false),
+      matching: find.byType(FadeTransition, skipOffstage: false),
+    );
     expect(fade, findsOneWidget);
     expect(
       tester.widget<FadeTransition>(fade).opacity.value,
