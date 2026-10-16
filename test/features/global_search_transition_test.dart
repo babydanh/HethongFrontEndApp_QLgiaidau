@@ -89,10 +89,8 @@ void main() {
     await tester.tap(find.byKey(const Key('open-search')));
     await tester.pump();
     final searchScaffold = find.byType(Scaffold).last;
-    final fade = find.ancestor(
-      of: find.byType(GlobalSearchScreen),
-      matching: find.byType(FadeTransition),
-    );
+    expect(find.byType(GlobalSearchScreen), findsOneWidget);
+    final fade = find.byType(FadeTransition).first;
     expect(fade, findsOneWidget);
     expect(
       tester.widget<FadeTransition>(fade).opacity.value,
