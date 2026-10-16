@@ -1546,45 +1546,6 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   @override
-  Future<void> setScoreboardVisibility(
-    String matchId, {
-    required bool visible,
-    required bool isClubMatch,
-  }) async {
-    final path = isClubMatch
-        ? '/club-match-sessions/matches/$matchId/scoreboard-visibility'
-        : '/matches/$matchId/scoreboard-visibility';
-    await _dioClient.dio.patch(path, data: {'visible': visible});
-  }
-
-  @override
-  Future<({bool h2hOverlayVisible, bool bracketOverlayVisible})>
-  setOverlayVisibility(
-    String matchId, {
-    required LiveOverlayKind kind,
-    required bool visible,
-    required bool isClubMatch,
-  }) async {
-    final path = isClubMatch
-        ? '/club-match-sessions/matches/$matchId/overlay-visibility'
-        : '/matches/$matchId/overlay-visibility';
-    final response = await _dioClient.dio.patch(
-      path,
-      data: {'kind': kind.wireValue, 'visible': visible},
-    );
-    // TransformInterceptor bọc response: trạng thái nằm trong `data`.
-    final envelope = response.data;
-    final payload = envelope is Map ? envelope['data'] : null;
-    if (payload is! Map) {
-      throw const FormatException('overlay-visibility response has no data');
-    }
-    return (
-      h2hOverlayVisible: payload['h2hOverlayVisible'] == true,
-      bracketOverlayVisible: payload['bracketOverlayVisible'] == true,
-    );
-  }
-
-  @override
   Future<
     ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})
   >
