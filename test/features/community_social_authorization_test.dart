@@ -18,9 +18,9 @@ void main() {
 
   test('edit club exposes exact-name guarded deletion through community route', () {
     final screen = source('lib/features/community/screens/edit_club_screen.dart');
-    expect(screen, contains('Vùng nguy hiểm'));
+    expect(screen, contains('editClub_dangerTitle'));
     expect(screen, contains('deleteCommunity'));
-    expect(screen, contains('Tên CLB hiện tại'));
+    expect(screen, contains('editClub_confirmName'));
     expect(screen, contains("context.go('/club/"));
   });
 }

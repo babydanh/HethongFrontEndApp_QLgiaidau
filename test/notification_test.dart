@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 void main() {
   group('AppNotification icon mapping', () {
@@ -55,28 +56,30 @@ void main() {
   });
 
   group('AppNotification timeAgo', () {
+    // UI gọi localizedTimeAgo(l10n) theo locale app (mặc định vi); timeAgo đọc locale thiết bị.
+    final vi = lookupAppLocalizations(const Locale('vi'));
     test('returns "Vừa xong" for < 1 min', () {
       final n = AppNotification(id: '1', type: 'T', title: 'T',
           createdAt: DateTime.now().subtract(const Duration(seconds: 30)));
-      expect(n.timeAgo, 'Vừa xong');
+      expect(n.localizedTimeAgo(vi), 'Vừa xong');
     });
 
     test('returns "X phút trước" for < 60 min', () {
       final n = AppNotification(id: '1', type: 'T', title: 'T',
           createdAt: DateTime.now().subtract(const Duration(minutes: 5)));
-      expect(n.timeAgo, '5 phút trước');
+      expect(n.localizedTimeAgo(vi), '5 phút trước');
     });
 
     test('returns "X giờ trước" for < 24h', () {
       final n = AppNotification(id: '1', type: 'T', title: 'T',
           createdAt: DateTime.now().subtract(const Duration(hours: 3)));
-      expect(n.timeAgo, '3 giờ trước');
+      expect(n.localizedTimeAgo(vi), '3 giờ trước');
     });
 
     test('returns "X ngày trước" for < 7 days', () {
       final n = AppNotification(id: '1', type: 'T', title: 'T',
           createdAt: DateTime.now().subtract(const Duration(days: 2)));
-      expect(n.timeAgo, '2 ngày trước');
+      expect(n.localizedTimeAgo(vi), '2 ngày trước');
     });
 
     test('returns date for 7+ days', () {

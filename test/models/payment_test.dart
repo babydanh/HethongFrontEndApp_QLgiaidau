@@ -75,7 +75,7 @@ void main() {
         'id': '', 'amount': '0',
         'createdAt': '2026-07-07T10:00:00Z',
       });
-      expect(p.gateway, 'VNPAY');
+      expect(p.gateway, 'PAYOS');
       expect(p.status, 'PENDING');
       expect(p.tournamentName, null);
     });

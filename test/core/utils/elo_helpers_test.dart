@@ -33,13 +33,13 @@ void main() {
   }
 
   group('EloHelpers.getBestRankForCategory', () {
-    test('ưu tiên nhiều trận hơn trước ELO cao hơn', () {
+    test('ưu tiên ELO cao hơn trước số trận (khớp web getBestRankForCategory)', () {
       final best = EloHelpers.getBestRankForCategory([
         ranking(id: 'low-played-high-elo', elo: 1700, played: 4),
         ranking(id: 'high-played-low-elo', elo: 1300, played: 12),
       ]);
 
-      expect(best?.id, 'high-played-low-elo');
+      expect(best?.id, 'low-played-high-elo');
     });
 
     test('nếu số trận bằng nhau thì chọn ELO cao hơn', () {

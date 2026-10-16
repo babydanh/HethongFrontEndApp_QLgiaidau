@@ -871,8 +871,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           // ── RECENT MATCH ACTIVITY ──
           Row(
             children: [
-              _sectionLabel(colors, 'Hoạt động trận đấu gần nhất'),
-              const Spacer(),
+              Expanded(
+                child: _sectionLabel(colors, 'Hoạt động trận đấu gần nhất'),
+              ),
               GestureDetector(
                 onTap: () {
                   // Switch to Achievements/Stats tab
@@ -921,8 +922,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           // ── UPCOMING TOURNAMENT PREVIEW ──
           Row(
             children: [
-              _sectionLabel(colors, 'Giải đấu sắp tới'),
-              const Spacer(),
+              Expanded(
+                child: _sectionLabel(colors, 'Giải đấu sắp tới'),
+              ),
               GestureDetector(
                 onTap: () => _tabController.animateTo(1),
                 child: const Text(
@@ -980,8 +982,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           // ── SPORT RANKINGS (Từng môn thể thao) ──
           Row(
             children: [
-              _sectionLabel(colors, 'Xếp hạng & Trình độ môn thi đấu'),
-              const Spacer(),
+              Expanded(
+                child: _sectionLabel(colors, 'Xếp hạng & Trình độ môn thi đấu'),
+              ),
               GestureDetector(
                 onTap: () => context.push('/profile/elo'),
                 child: const Text(
@@ -2079,13 +2082,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: colors.textSecondary,
-            letterSpacing: 0.2,
+        Flexible(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: colors.textSecondary,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
       ],

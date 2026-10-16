@@ -34,6 +34,7 @@ class FakeFlutterSecureStorage extends Fake implements FlutterSecureStorage {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('ApiResponse Tests', () {
     test('should parse JSON response successfully', () {
       final json = {
@@ -60,6 +61,7 @@ void main() {
     late TokenManager tokenManager;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       fakeStorage = FakeFlutterSecureStorage();
       tokenManager = TokenManager(secureStorage: fakeStorage);
     });

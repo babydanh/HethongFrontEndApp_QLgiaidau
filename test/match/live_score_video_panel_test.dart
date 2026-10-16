@@ -114,6 +114,7 @@ Future<void> _pumpLiveScore(
       ],
       child: MaterialApp(
         theme: AppTheme.lightTheme,
+        locale: const Locale('vi'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const LiveScoreScreen(

@@ -74,31 +74,28 @@ class _NoSignalBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
-        color: Colors.black,
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.videocam_outlined,
-              color: Colors.white24,
-              size: 36,
+    return Container(
+      color: Colors.black,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.videocam_outlined,
+            color: Colors.white24,
+            size: 36,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            AppLocalizations.of(context)!.liveNoSignalLabel,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 10),
-            Text(
-              AppLocalizations.of(context)!.liveNoSignalLabel,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

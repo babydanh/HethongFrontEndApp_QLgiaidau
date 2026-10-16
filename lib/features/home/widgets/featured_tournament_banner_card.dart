@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -59,11 +60,16 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
     final hasBanner = bannerUrl.isNotEmpty;
     final sport = tournament.sport;
     final registrationStatus = tournament.registrationStatus;
+    final viewportSize = MediaQuery.sizeOf(context);
 
     return GestureDetector(
       onTap: onTap,
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
+      child: SizedBox(
+        width: double.infinity,
+        height: AppResponsive.bannerHeight(
+          viewportSize.height,
+          viewportWidth: viewportSize.width,
+        ),
         child: Container(
           decoration: BoxDecoration(
             color: colors.bgCard,
@@ -150,9 +156,12 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                         tournament.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 17,
+                          fontSize: AppResponsive.bannerFontSize(
+                            viewportSize.height,
+                            viewportWidth: viewportSize.width,
+                          ),
                           height: 1.2,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,

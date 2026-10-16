@@ -76,6 +76,7 @@ class MatchMemberInfo {
   factory MatchMemberInfo.fromJson(Map<String, dynamic> json) {
     final profile = json['profile'];
     final user = json['user'];
+    final ranking = json['ranking'] is Map ? json['ranking'] as Map : null;
     return MatchMemberInfo(
       userId:
           json['userId']?.toString() ??
@@ -90,8 +91,12 @@ class MatchMemberInfo {
           'Vận động viên',
       eloPoints: json['eloPoints'] is num
           ? (json['eloPoints'] as num).toInt()
-          : int.tryParse(json['eloPoints']?.toString() ?? ''),
-      tierName: json['tierName']?.toString() ?? json['tier_name']?.toString(),
+          : int.tryParse(json['eloPoints']?.toString() ?? '') ??
+                int.tryParse(ranking?['eloPoints']?.toString() ?? ''),
+      tierName:
+          json['tierName']?.toString() ??
+          json['tier_name']?.toString() ??
+          ranking?['tierName']?.toString(),
       isMock: json['isMock'] == true || json['is_mock'] == true,
       avatarUrl:
           json['avatarUrl']?.toString() ??

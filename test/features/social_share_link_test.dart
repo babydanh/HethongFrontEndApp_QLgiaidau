@@ -19,7 +19,7 @@ SocialSessionModel sessionWithCode(String? code) =>
     });
 
 void main() {
-  testWidgets('Social details and invite sheet use the short share URL', (
+  testWidgets('Social details hides old ID link and invite sheet uses short share URL', (
     tester,
   ) async {
     final session = sessionWithCode('abc12345678');
@@ -38,7 +38,7 @@ void main() {
         ),
       ),
     );
-    expect(find.text(expectedUrl), findsOneWidget);
+    expect(find.textContaining('/social/${session.id}'), findsNothing);
 
     await tester.pumpWidget(
       MaterialApp(

@@ -4,18 +4,25 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
-    'TournamentBanner đăng ký phải đi qua route đăng ký thật, không mở sheet giả',
+    'Đăng ký từ tournament intro đi qua route /register thật, không mở sheet giả',
     () {
-      final source = File(
+      final intro = File(
+        'lib/features/tournament/screens/tournament_intro_screen.dart',
+      ).readAsStringSync();
+      final banner = File(
         'lib/features/tournament/widgets/tournament_banner.dart',
       ).readAsStringSync();
 
+      // Intro dựng URI đăng ký thật rồi đẩy qua TournamentRegisterBar.
+      expect(intro, contains("pathSegments: ['register', tournament.id]"));
       expect(
-        source,
-        contains("context.push('/register/\${widget.tournament.id}')"),
+        intro,
+        contains('onRegister: () => context.push(registrationUri)'),
       );
-      expect(source, isNot(contains('TournamentRegistrationSheet')));
-      expect(source, isNot(contains('showModalBottomSheet')));
+      expect(intro, isNot(contains('TournamentRegistrationSheet')));
+      // TournamentBanner không còn CTA đăng ký và không mở sheet giả.
+      expect(banner, isNot(contains('TournamentRegistrationSheet')));
+      expect(banner, isNot(contains('showModalBottomSheet')));
     },
   );
 

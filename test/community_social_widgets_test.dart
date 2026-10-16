@@ -11,7 +11,7 @@ void main() {
     expect(card, contains('CommunityPollWidget'));
     expect(poll, contains('votePoll'));
     expect(poll, contains('addPollOption'));
-    expect(tournament, contains('/intro/'));
+    expect(tournament, contains('/tournaments/\$tournamentId'));
 
   });
 }

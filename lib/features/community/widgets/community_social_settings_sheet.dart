@@ -430,11 +430,14 @@ class _CommunitySocialSettingsSheetState
   }
 
   Widget _toggle(String title, bool value, ValueChanged<bool> onChanged) =>
-      SwitchListTile.adaptive(
-        contentPadding: EdgeInsets.zero,
-        title: Text(title),
-        value: value,
-        onChanged: onChanged,
+      Material(
+        color: Colors.transparent,
+        child: SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: Text(title),
+          value: value,
+          onChanged: onChanged,
+        ),
       );
   Widget _select(
     String title,

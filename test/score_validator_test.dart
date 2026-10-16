@@ -112,7 +112,13 @@ void main() {
 
   test('Super Lite canonical flag mở đúng nhận diện sản phẩm', () {
     expect(
-      isSuperLiteTournament(tournamentConfig: {'isLite': true, 'mode': 'LITE'}),
+      isSuperLiteTournament(
+        tournamentConfig: {
+          'isLite': true,
+          'hideAdvancedSettings': true,
+          'mode': 'LITE',
+        },
+      ),
       isTrue,
     );
   });

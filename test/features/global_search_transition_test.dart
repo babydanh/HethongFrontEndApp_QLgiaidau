@@ -81,7 +81,7 @@ Future<void> _pumpSearchHost(
 }
 
 void main() {
-  testWidgets('header search reveals with a wave and returns to Home', (
+  testWidgets('header search fades in and returns to Home', (
     tester,
   ) async {
     await _pumpSearchHost(tester, disableAnimations: false);
@@ -89,35 +89,28 @@ void main() {
     await tester.tap(find.byKey(const Key('open-search')));
     await tester.pump();
     final searchScaffold = find.byType(Scaffold).last;
-    expect(tester.getTopLeft(searchScaffold).dy, lessThan(0));
-    final waveReveal = find.byKey(const ValueKey('global-search-wave-reveal'));
-    expect(waveReveal, findsOneWidget);
-    final waveSize = tester.getSize(waveReveal);
-    final startClip = tester
-        .widget<ClipPath>(waveReveal)
-        .clipper!
-        .getClip(waveSize);
-    expect(startClip.getBounds().height, closeTo(0, 0.01));
+    final fade = find.ancestor(
+      of: find.byType(GlobalSearchScreen),
+      matching: find.byType(FadeTransition),
+    );
+    expect(fade, findsOneWidget);
+    expect(
+      tester.widget<FadeTransition>(fade).opacity.value,
+      closeTo(0, 0.01),
+    );
+    expect(tester.getTopLeft(searchScaffold).dy, 0);
 
     await tester.pump(const Duration(milliseconds: 100));
-    final movingClip = tester
-        .widget<ClipPath>(waveReveal)
-        .clipper!
-        .getClip(waveSize);
-    expect(movingClip.getBounds().height, greaterThan(waveSize.height * 0.5));
-    expect(movingClip.getBounds().height, lessThan(waveSize.height));
-    final waveTangent = movingClip.computeMetrics().single.getTangentForOffset(
-      waveSize.width + waveSize.height * 0.75,
-    );
-    expect(waveTangent, isNotNull);
-    expect(waveTangent!.vector.dy.abs(), greaterThan(0.001));
+    final midOpacity = tester.widget<FadeTransition>(fade).opacity.value;
+    expect(midOpacity, greaterThan(0));
+    expect(midOpacity, lessThan(1));
+    expect(tester.getTopLeft(searchScaffold).dy, 0);
 
     await tester.pump(const Duration(milliseconds: 260));
-    final settledClip = tester
-        .widget<ClipPath>(waveReveal)
-        .clipper!
-        .getClip(waveSize);
-    expect(settledClip.getBounds().height, closeTo(waveSize.height, 0.01));
+    expect(
+      tester.widget<FadeTransition>(fade).opacity.value,
+      closeTo(1, 0.01),
+    );
     expect(tester.getTopLeft(searchScaffold).dy, 0);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
@@ -133,15 +126,13 @@ void main() {
     await tester.tap(find.byKey(const Key('open-search')));
     await tester.pump();
 
-    final waveReveal = find.byKey(const ValueKey('global-search-wave-reveal'));
-    final waveSize = tester.getSize(waveReveal);
-    final reducedMotionClip = tester
-        .widget<ClipPath>(waveReveal)
-        .clipper!
-        .getClip(waveSize);
+    expect(find.byType(GlobalSearchScreen), findsOneWidget);
     expect(
-      reducedMotionClip.getBounds().height,
-      closeTo(waveSize.height, 0.01),
+      find.ancestor(
+        of: find.byType(GlobalSearchScreen),
+        matching: find.byType(FadeTransition),
+      ),
+      findsNothing,
     );
     expect(tester.getTopLeft(find.byType(Scaffold).last).dy, 0);
   });

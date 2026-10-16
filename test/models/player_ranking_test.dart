@@ -90,18 +90,22 @@ void main() {
       },
     );
 
-    test('should handle eloPoints as string by falling back to 0', () {
-      // Note: fromJson uses ((...) as num).toInt() which throws on String
-      // This test documents the limitation - eloPoints must be num type from API
-      expect(
-        () => PlayerRanking.fromJson({
-          'id': 'rank-1',
-          'userId': 'user-1',
-          'fullName': 'Test',
-          'eloPoints': '1500',
-        }),
-        throwsA(isA<TypeError>()),
-      );
+    test('should parse numeric string eloPoints and fall back to 0 for non-numeric', () {
+      final numeric = PlayerRanking.fromJson({
+        'id': 'rank-1',
+        'userId': 'user-1',
+        'fullName': 'Test',
+        'eloPoints': '1500',
+      });
+      final invalid = PlayerRanking.fromJson({
+        'id': 'rank-1',
+        'userId': 'user-1',
+        'fullName': 'Test',
+        'eloPoints': 'abc',
+      });
+
+      expect(numeric.eloPoints, 1500);
+      expect(invalid.eloPoints, 0);
     });
   });
 

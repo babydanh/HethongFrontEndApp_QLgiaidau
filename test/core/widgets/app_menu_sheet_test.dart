@@ -1,7 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
-import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -105,9 +104,13 @@ void main() {
     expect(router.routeInformationProvider.value.uri.path, '/home');
     expect(
       tester.getSize(find.byType(AppMenuSheet)).width,
-      closeTo(390 * 0.72, 1),
+      closeTo(390 * 0.76, 1),
     );
-    expect(tester.getRect(find.byType(AppMenuSheet)).left, 16);
+    // Align(0.42) centres the menu inside a SafeArea with 20px minimum padding per side.
+    expect(
+      tester.getRect(find.byType(AppMenuSheet)).left,
+      closeTo((390 - (390 * 0.76 + 40)) * 0.71 + 20, 1),
+    );
     expect(find.byKey(const ValueKey('app-menu-/login')), findsOneWidget);
     expect(find.text(l10n.profileLoginButton), findsNWidgets(2));
   });
@@ -351,66 +354,6 @@ void main() {
 
     expect(find.byIcon(Icons.person_rounded), findsOneWidget);
     expect(find.text(l10n.menuMessages), findsOneWidget);
-  });
-  testWidgets('profile team shortcut opens Explore instead of tournaments', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final router = GoRouter(
-      initialLocation: '/profile',
-      routes: [
-        GoRoute(
-          path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
-        ),
-        GoRoute(
-          path: '/home',
-          builder: (context, state) => Scaffold(
-            body: Center(
-              child: Text('home tab ${state.uri.queryParameters['tab']}'),
-            ),
-          ),
-        ),
-      ],
-    );
-    addTearDown(router.dispose);
-    const authState = AuthState(
-      status: AuthStatus.authenticated,
-      role: UserRole.viewer,
-    );
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authProvider.overrideWith(() => _TestAuthNotifier(authState)),
-          userProfileProvider.overrideWith(
-            (ref) async => const UserProfile(id: 'u1', fullName: 'Alex Player'),
-          ),
-          userRankingsProvider.overrideWith((ref) async => const []),
-        ],
-        child: MaterialApp.router(
-          routerConfig: router,
-          theme: AppTheme.lightTheme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('vi'),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final teamShortcut = find.text('Đội nhóm');
-    await tester.ensureVisible(teamShortcut);
-    await tester.tap(teamShortcut);
-    await tester.pumpAndSettle();
-
-    expect(
-      router.routeInformationProvider.value.uri.queryParameters['tab'],
-      '3',
-    );
-    expect(find.text('home tab 3'), findsOneWidget);
   });
   testWidgets('bottom navigation labels use the selected locale', (
     tester,

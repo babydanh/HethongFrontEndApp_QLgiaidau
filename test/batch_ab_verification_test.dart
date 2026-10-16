@@ -49,7 +49,7 @@ void main() {
       ).readAsStringSync();
       // Every .on() callback calls _parsePayload before adding to controller
       final callCount = 'final parsed = _parsePayload(data);'.allMatches(source).length;
-      expect(callCount, 5, reason: 'All 5 event types (score, status, viewer, comment, cheer) must parse');
+      expect(callCount, 9, reason: 'All 9 socket listeners (score, status, viewer, comment, cheer, tournament match:update, registration:update, scoreboard:visibility, overlay:visibility) must parse');
     });
   });
 
@@ -215,7 +215,7 @@ void main() {
       final source = File(
         'lib/data/models/payment_model.dart',
       ).readAsStringSync();
-      expect(source, contains("'purpose': 'REGISTRATION_FEE'"));
+      expect(source, contains("'purpose': purpose ?? 'REGISTRATION_FEE'"));
       expect(source, contains('purpose'));
     });
 

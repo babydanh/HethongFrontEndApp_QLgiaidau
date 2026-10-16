@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 void main() {
   group('TC-FLUTTER-NOTIFICATION-014: AppNotification.fromJson', () {
@@ -178,12 +179,14 @@ void main() {
   });
 
   group('TC-FLUTTER-NOTIFICATION-016: AppNotification.timeAgo', () {
+    // UI gọi localizedTimeAgo(l10n) theo locale app (mặc định vi); timeAgo đọc locale thiết bị.
+    final vi = lookupAppLocalizations(const Locale('vi'));
     test('returns "Vua xong" for less than 1 minute', () {
       final notif = AppNotification(
         id: '1', type: 'SYSTEM', title: 'Test',
         createdAt: DateTime.now().subtract(const Duration(seconds: 30)),
       );
-      expect(notif.timeAgo, 'Vừa xong');
+      expect(notif.localizedTimeAgo(vi), 'Vừa xong');
     });
 
     test('returns "X phut truoc" for less than 60 minutes', () {
@@ -191,7 +194,7 @@ void main() {
         id: '1', type: 'SYSTEM', title: 'Test',
         createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
       );
-      expect(notif.timeAgo, '15 phút trước');
+      expect(notif.localizedTimeAgo(vi), '15 phút trước');
     });
 
     test('returns "X gio truoc" for less than 24 hours', () {
@@ -199,7 +202,7 @@ void main() {
         id: '1', type: 'SYSTEM', title: 'Test',
         createdAt: DateTime.now().subtract(const Duration(hours: 3)),
       );
-      expect(notif.timeAgo, '3 giờ trước');
+      expect(notif.localizedTimeAgo(vi), '3 giờ trước');
     });
 
     test('returns "X ngay truoc" for less than 7 days', () {
@@ -207,7 +210,7 @@ void main() {
         id: '1', type: 'SYSTEM', title: 'Test',
         createdAt: DateTime.now().subtract(const Duration(days: 5)),
       );
-      expect(notif.timeAgo, '5 ngày trước');
+      expect(notif.localizedTimeAgo(vi), '5 ngày trước');
     });
 
     test('returns date format for 7+ days', () {
