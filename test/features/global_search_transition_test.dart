@@ -24,6 +24,7 @@ class _EmptyMatchRepository extends Fake implements IMatchRepository {
     String? status,
     DateTime? startDate,
     DateTime? endDate,
+    String? trigger,
   }) async => (
     matches: const <MatchModel>[],
     nextCursor: null,

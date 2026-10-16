@@ -5850,5 +5850,32 @@
   "socialPlaceNoPin": "Chưa có ghim",
   "socialPlaceSaveAreaTitle": "Lưu khu vực này?",
   "socialPlaceSaveAreaMessage": "Không tìm thấy địa chỉ đường và ghim bản đồ cho nội dung này. Bạn có thể lưu khu vực hành chính hoặc ghim chính xác trên bản đồ.",
-  "socialPlaceSaveArea": "Lưu khu vực"
+  "socialPlaceSaveArea": "Lưu khu vực",
+  "registerDivisionFull": "Nội dung này đã đủ suất",
+  "registerTeamSlotCount": "{count} suất đội",
+  "@registerTeamSlotCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "userProfileViewProfileOf": "Xem hồ sơ {name}",
+  "@userProfileViewProfileOf": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "matchesUnplacedSection": "Chưa xếp ({count})",
+  "@matchesUnplacedSection": {
+    "description": "Tiêu đề ô Chưa xếp trong lưới lịch: trận chưa có đủ sân hoặc giờ thi đấu.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentCategoryOpenSingles": "Đơn linh hoạt",
+  "tournamentCategoryOpenDoubles": "Đôi linh hoạt",
+  "registerTypeOpenSingles": "Đơn linh hoạt",
+  "registerTypeOpenDoubles": "Đôi linh hoạt",
+  "dashboard_noMoreTournaments": "Đã xem hết giải đấu"
 }

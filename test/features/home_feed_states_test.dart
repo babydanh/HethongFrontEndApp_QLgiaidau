@@ -179,7 +179,7 @@ Widget _homeApp(
       ),
       communityDetailProvider.overrideWith((ref, id) async => _community),
       liveMatchesProvider.overrideWith(
-        (ref) => Future.value(const <MatchModel>[]),
+        (ref, tournamentId) => Stream.value(const <MatchModel>[]),
       ),
       unreadCountProvider.overrideWith((ref) => Future.value(0)),
       regionRepositoryProvider.overrideWith((ref) => _FakeRegionRepository()),
@@ -226,6 +226,7 @@ class _FakeMatchRepository extends Fake implements IMatchRepository {
     String? status,
     String? cursor,
     int limit = 4,
+    String? trigger,
   }) async => (
     matches: matches,
     nextCursor: null,

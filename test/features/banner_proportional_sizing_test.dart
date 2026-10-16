@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
@@ -203,7 +204,13 @@ void main() {
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: FeaturedTournamentBannerCard(
-                tournament: _tournament,
+                // The featured banner reads the home projection, not the full Tournament.
+                tournament: HomeFeaturedTournament(
+                  id: _tournament.id,
+                  name: _tournament.name,
+                  sport: _tournament.sport,
+                  status: _tournament.status,
+                ),
                 onTap: _noop,
               ),
             ),

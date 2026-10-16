@@ -14632,4 +14632,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get socialPlaceSaveArea => 'Save area';
+
+  @override
+  String get registerDivisionFull => 'This division is full';
+
+  @override
+  String registerTeamSlotCount(Object count) {
+    return '$count team slots';
+  }
+
+  @override
+  String userProfileViewProfileOf(Object name) {
+    return 'View $name\'s profile';
+  }
+
+  @override
+  String matchesUnplacedSection(int count) {
+    return 'Unplaced ($count)';
+  }
+
+  @override
+  String get tournamentCategoryOpenSingles => 'Open singles';
+
+  @override
+  String get tournamentCategoryOpenDoubles => 'Open doubles';
+
+  @override
+  String get registerTypeOpenSingles => 'Open singles';
+
+  @override
+  String get registerTypeOpenDoubles => 'Open doubles';
+
+  @override
+  String get dashboard_noMoreTournaments => 'You\'ve seen all tournaments';
 }

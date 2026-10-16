@@ -5194,8 +5194,8 @@
   "clubMatchSessionComplete": "Complete result",
   "clubMatchSessionEloStatus": "ELO status: {status}",
   "clubMatchSessionSelfSource": "Self-registered",
-  "clubMatchSessionMandatorySource": "Assigned by club manager"
-  ,"clubMatchSessionAssignMembers": "Assign members",
+  "clubMatchSessionMandatorySource": "Assigned by club manager",
+"clubMatchSessionAssignMembers": "Assign members",
   "clubMatchSessionAssign": "Assign selected",
   "clubMatchSessionAssigned": "Members assigned to the session",
   "clubMatchSessionUnnamedMember": "Unnamed member",
@@ -5204,8 +5204,8 @@
   "clubMatchSessionPreferredOpponent": "Preferred opponent",
   "clubMatchSessionAvoidPlayer": "Avoid pairing with",
   "clubMatchSessionSavePreferences": "Save preferences",
-  "clubMatchSessionPreferencesSaved": "Preferences saved"
-  ,"clubMatchSessionStartAt": "Start date and time",
+  "clubMatchSessionPreferencesSaved": "Preferences saved",
+"clubMatchSessionStartAt": "Start date and time",
   "clubMatchSessionEndAt": "End date and time",
   "clubMatchSessionOptionalDate": "Optional — tap to choose",
   "clubMatchSessionSchedule": "Session schedule",
@@ -5216,8 +5216,8 @@
   "clubMatchSessionCancel": "Cancel session",
   "clubMatchSessionRemoveParticipant": "Remove participant",
   "clubMatchSessionRemoveParticipantConfirm": "Remove this participant from the session?",
-  "clubMatchSessionParticipantRemoved": "Participant removed"
-  ,"clubMatchSessionStatusOpen": "Registration open",
+  "clubMatchSessionParticipantRemoved": "Participant removed",
+"clubMatchSessionStatusOpen": "Registration open",
   "clubMatchSessionStatusLive": "Live",
   "clubMatchSessionStatusClosed": "Registration closed",
   "clubMatchSessionStatusEnded": "Ended",
@@ -5688,8 +5688,8 @@
   "tournamentManagementLivestreamDeviceNameLabel": "Device name",
   "tournamentManagementLivestreamDeviceNameHint": "Example: Court 1 phone",
   "tournamentManagementLivestreamDeviceNameRequired": "Enter a device name first.",
-  "tournamentManagementLivestreamDeviceNameLengthInvalid": "Enter a device name between 2 and 255 characters."
-  ,"socialOpenCreateTitle": "Create session",
+  "tournamentManagementLivestreamDeviceNameLengthInvalid": "Enter a device name between 2 and 255 characters.",
+"socialOpenCreateTitle": "Create session",
   "socialClubCreateTitle": "Create club social session",
   "socialOpenUpdateTitle": "Update session",
   "socialClubUpdateTitle": "Update club social session",
@@ -5850,5 +5850,32 @@
   "socialPlaceNoPin": "No map pin",
   "socialPlaceSaveAreaTitle": "Save this area?",
   "socialPlaceSaveAreaMessage": "No street address and map pin were found for this input. You can save the administrative area or pin the exact spot on the map.",
-  "socialPlaceSaveArea": "Save area"
+  "socialPlaceSaveArea": "Save area",
+  "registerDivisionFull": "This division is full",
+  "registerTeamSlotCount": "{count} team slots",
+  "@registerTeamSlotCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "userProfileViewProfileOf": "View {name}'s profile",
+  "@userProfileViewProfileOf": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "matchesUnplacedSection": "Unplaced ({count})",
+  "@matchesUnplacedSection": {
+    "description": "Title of the Unplaced cell in the schedule grid: matches missing a court or scheduled time.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tournamentCategoryOpenSingles": "Open singles",
+  "tournamentCategoryOpenDoubles": "Open doubles",
+  "registerTypeOpenSingles": "Open singles",
+  "registerTypeOpenDoubles": "Open doubles",
+  "dashboard_noMoreTournaments": "You've seen all tournaments"
 }

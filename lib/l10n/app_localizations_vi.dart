@@ -14581,4 +14581,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get socialPlaceSaveArea => 'Lưu khu vực';
+
+  @override
+  String get registerDivisionFull => 'Nội dung này đã đủ suất';
+
+  @override
+  String registerTeamSlotCount(Object count) {
+    return '$count suất đội';
+  }
+
+  @override
+  String userProfileViewProfileOf(Object name) {
+    return 'Xem hồ sơ $name';
+  }
+
+  @override
+  String matchesUnplacedSection(int count) {
+    return 'Chưa xếp ($count)';
+  }
+
+  @override
+  String get tournamentCategoryOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get tournamentCategoryOpenDoubles => 'Đôi linh hoạt';
+
+  @override
+  String get registerTypeOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get registerTypeOpenDoubles => 'Đôi linh hoạt';
+
+  @override
+  String get dashboard_noMoreTournaments => 'Đã xem hết giải đấu';
 }

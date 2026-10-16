@@ -26511,6 +26511,60 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Lưu khu vực'**
   String get socialPlaceSaveArea;
+
+  /// No description provided for @registerDivisionFull.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này đã đủ suất'**
+  String get registerDivisionFull;
+
+  /// No description provided for @registerTeamSlotCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} suất đội'**
+  String registerTeamSlotCount(Object count);
+
+  /// No description provided for @userProfileViewProfileOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem hồ sơ {name}'**
+  String userProfileViewProfileOf(Object name);
+
+  /// Tiêu đề ô Chưa xếp trong lưới lịch: trận chưa có đủ sân hoặc giờ thi đấu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp ({count})'**
+  String matchesUnplacedSection(int count);
+
+  /// No description provided for @tournamentCategoryOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get tournamentCategoryOpenSingles;
+
+  /// No description provided for @tournamentCategoryOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get tournamentCategoryOpenDoubles;
+
+  /// No description provided for @registerTypeOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get registerTypeOpenSingles;
+
+  /// No description provided for @registerTypeOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get registerTypeOpenDoubles;
+
+  /// No description provided for @dashboard_noMoreTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xem hết giải đấu'**
+  String get dashboard_noMoreTournaments;
 }
 
 class _AppLocalizationsDelegate

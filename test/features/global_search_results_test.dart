@@ -73,6 +73,7 @@ class _SearchMatchRepository extends Fake implements IMatchRepository {
     String? status,
     DateTime? startDate,
     DateTime? endDate,
+    String? trigger,
   }) async {
     requestedCategoryIds.add(categoryId);
     return (
