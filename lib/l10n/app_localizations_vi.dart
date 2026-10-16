@@ -13595,6 +13595,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.';
 
   @override
+  String get tournamentManagementLiveOperations => 'Vận hành trực tiếp';
+
+  @override
+  String get tournamentManagementLiveOperationsDescription =>
+      'Mở không gian hiện có để vận hành các trận đấu trực tiếp.';
+
+  @override
   String get tournamentManagementLivestream => 'Phát trực tiếp';
 
   @override

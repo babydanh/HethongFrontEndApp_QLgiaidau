@@ -51,6 +51,7 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection.divisions,
   ];
   static const _otherSections = [
+    TournamentManagementSection.liveOperations,
     TournamentManagementSection.teams,
     TournamentManagementSection.draw,
     TournamentManagementSection.sponsors,
@@ -775,6 +776,12 @@ class _TournamentManagementHubScreenState
       l10n.manageTokens,
       l10n.manageTokensSubtitle,
       AppTheme.adminColor,
+    ),
+    TournamentManagementSection.liveOperations => _SectionDetails(
+      Icons.sports_score_rounded,
+      l10n.tournamentManagementLiveOperations,
+      l10n.tournamentManagementLiveOperationsDescription,
+      context.colors.warning,
     ),
   };
 

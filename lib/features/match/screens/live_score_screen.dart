@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -18,6 +20,8 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
+import 'package:app_quanly_giaidau/features/match/utils/overlay_team_name.dart';
+import 'package:app_quanly_giaidau/features/match/utils/live_bracket_scope.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
@@ -1763,7 +1767,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   Widget _buildH2hOverlay(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
-    final tournament = match.tournamentName;
+    final tournament = (match.tournamentName ?? '').trim();
+    final roundLabel = MatchRoundLabel.formatRound(
+      match: match,
+      l10n: l10n,
+    ).trim();
+    // Web: roundName || categoryName || tournamentName || 'MATCH INTRODUCTION'.
+    // App không có categoryName nên lấy vòng đấu rồi tới tên giải.
+    final headerLabel = roundLabel.isNotEmpty
+        ? roundLabel
+        : (tournament.isNotEmpty ? tournament : l10n.liveH2hMatchIntro);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       child: Container(
@@ -1776,16 +1789,45 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              l10n.liveH2hTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1,
-              ),
+            Row(
+              children: [
+                ColorFiltered(
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                  child: Image.asset(AppConstants.logoFullPng, height: 16),
+                ),
+                const SizedBox(width: 6),
+                Container(width: 1, height: 14, color: Colors.white24),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.liveH2hTitle,
+                  style: const TextStyle(
+                    color: AppTheme.secondary,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const Spacer(),
+                Flexible(
+                  child: Text(
+                    headerLabel.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -1797,14 +1839,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                     elo: match.team1EloPoints,
                   ),
                 ),
-                const Text(
-                  'V',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                _h2hVersusBadge(),
                 Expanded(
                   child: _h2hTeam(
                     name: match.team2Name,
@@ -1812,72 +1847,144 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ? match.team2MemberInfos.first.avatarUrl
                         : null,
                     elo: match.team2EloPoints,
+                    mirrored: true,
                   ),
                 ),
               ],
             ),
-            if (tournament != null && tournament.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                '${l10n.liveH2hTournamentLabel} $tournament',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white54, fontSize: 8),
+            const SizedBox(height: 8),
+            Text(
+              tournament.isNotEmpty
+                  ? '${l10n.liveH2hTournamentLabel} ${tournament.toUpperCase()}'
+                  : l10n.liveH2hGoodLuck,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
               ),
-            ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _h2hTeam({required String name, String? avatarUrl, int? elo}) {
-    final l10n = AppLocalizations.of(context)!;
-    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
-    final fallback = Container(
-      color: Colors.white12,
+  /// Chữ V vát góc như bản web (nền chuyển sắc xanh, in nghiêng).
+  Widget _h2hVersusBadge() {
+    return Container(
+      width: 30,
+      height: 30,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: const TextStyle(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppTheme.primary, AppTheme.secondary],
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: const Text(
+        'V',
+        style: TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.bold,
+          fontSize: 15,
+          fontWeight: FontWeight.w900,
+          fontStyle: FontStyle.italic,
         ),
       ),
     );
-    return Column(
+  }
+
+  /// Một bên trong H2H: avatar tròn + chip ELO + tên. Bên phải [mirrored] để
+  /// soi gương như bản web (avatar nằm ngoài, chữ căn phải).
+  Widget _h2hTeam({
+    required String name,
+    String? avatarUrl,
+    int? elo,
+    bool mirrored = false,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final trimmed = name.trim();
+    final initial = trimmed.isNotEmpty ? trimmed[0].toUpperCase() : '?';
+    final colors = context.colors;
+    final fallback = Container(
+      color: mirrored ? colors.bgDark : colors.bgElevated,
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: mirrored ? colors.error : AppTheme.secondary,
+          fontWeight: FontWeight.w900,
+          fontSize: 15,
+        ),
+      ),
+    );
+    final avatar = Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white30, width: 2),
+      ),
+      child: ClipOval(
+        child: avatarUrl == null || avatarUrl.isEmpty
+            ? fallback
+            : Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => fallback,
+              ),
+      ),
+    );
+    final info = Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: mirrored
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              color: AppTheme.secondary.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: AppTheme.secondary.withValues(alpha: 0.4),
+              ),
+            ),
+            child: Text(
+              elo == null ? l10n.liveNoElo : '$elo ELO',
+              style: const TextStyle(
+                color: AppTheme.secondary,
+                fontSize: 8,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: mirrored ? TextAlign.right : TextAlign.left,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+    return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        ClipOval(
-          child: SizedBox(
-            width: 32,
-            height: 32,
-            child: avatarUrl == null || avatarUrl.isEmpty
-                ? fallback
-                : Image.network(
-                    avatarUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => fallback,
-                  ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          elo == null ? l10n.liveNoElo : 'ELO $elo',
-          style: const TextStyle(color: Colors.white70, fontSize: 8),
-        ),
-      ],
+      children: mirrored
+          ? [info, const SizedBox(width: 8), avatar]
+          : [avatar, const SizedBox(width: 8), info],
     );
   }
 
@@ -1892,39 +1999,103 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               divisionId: match.divisionId,
             )),
           );
+    final tournament = (match.tournamentName ?? '').trim();
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       child: Container(
         // Chừa 48 px bên phải cho nút đóng.
         padding: const EdgeInsets.fromLTRB(8, 8, 48, 8),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(6),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              context.colors.bgElevated.withValues(alpha: 0.95),
+              context.colors.bgDark.withValues(alpha: 0.95),
+            ],
+          ),
+          border: Border.all(color: Colors.white24),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: bracketAsync == null
-            ? _bracketEmpty(l10n)
-            : bracketAsync.when(
-                loading: () => const Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Đầu thẻ: logo + tên giải + tiêu đề sơ đồ, giống web.
+            Row(
+              children: [
+                ColorFiltered(
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                  child: Image.asset(AppConstants.logoFullPng, height: 20),
+                ),
+                const SizedBox(width: 8),
+                Container(width: 1, height: 18, color: Colors.white24),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        (tournament.isNotEmpty
+                                ? tournament
+                                : l10n.liveBracketTournamentFallback)
+                            .toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppTheme.secondary,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      Text(
+                        l10n.liveBracketTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                error: (_, _) => _bracketEmpty(l10n),
-                data: (bracketMatches) =>
-                    _bracketRounds(match, bracketMatches, l10n),
-              ),
-      ),
-    );
-  }
-
-  Widget _bracketEmpty(AppLocalizations l10n) {
-    return Center(
-      child: Text(
-        l10n.liveBracketEmpty,
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white70, fontSize: 10),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: bracketAsync == null
+                  ? _bracketEmpty(l10n)
+                  : bracketAsync.when(
+                      loading: () => const Center(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      error: (_, _) => _bracketEmpty(l10n),
+                      // DESIGN.md §3: sơ đồ nhánh đấu bọc để zoom/pan.
+                      data: (bracketMatches) {
+                        final scoped = liveBracketScope(bracketMatches, match);
+                        if (scoped.isEmpty) return _bracketEmpty(l10n);
+                        return InteractiveViewer(
+                          constrained: false,
+                          minScale: 0.8,
+                          maxScale: 3,
+                          child: _bracketRounds(match, scoped, l10n),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1941,49 +2112,45 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     }
     final keys = rounds.keys.toList()..sort();
     final last = keys.last;
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final round in keys)
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final round in keys)
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.colors.chipBackground,
+                    border: Border.all(color: context.colors.border),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
                     _bracketRoundLabel(round, last, l10n).toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.6,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final m in rounds[round] ?? const <MatchModel>[])
-                          _bracketMatchCard(m, current, l10n),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 6),
+                for (final m in rounds[round] ?? const <MatchModel>[])
+                  _bracketMatchCard(m, current, l10n),
+              ],
             ),
-        ],
-      ),
+          ),
+      ],
     );
-  }
-
-  String _bracketRoundLabel(int round, int last, AppLocalizations l10n) {
-    if (round == last) return l10n.matchTableRoundFinal;
-    if (round == last - 1) return l10n.matchTableRoundSemifinal;
-    if (round == last - 2) return l10n.matchTableRoundQuarterfinal;
-    return l10n.matchTableRound(round);
   }
 
   Widget _bracketMatchCard(
@@ -1992,7 +2159,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     AppLocalizations l10n,
   ) {
     final isCurrent = m.id == current.id;
-    const sky = Color(0xFF38BDF8);
+    final sky = AppTheme.secondary;
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       constraints: const BoxConstraints(minWidth: 96, maxWidth: 140),
@@ -2017,17 +2184,42 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             l10n: l10n,
           ),
           if (isCurrent)
-            Text(
-              l10n.liveBracketCurrentMatch,
-              style: const TextStyle(
-                color: sky,
-                fontSize: 7,
-                fontWeight: FontWeight.bold,
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 3),
+              padding: const EdgeInsets.symmetric(vertical: 1.5),
+              color: AppTheme.secondary,
+              child: Text(
+                l10n.liveBracketCurrentMatch,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: context.colors.bgDark,
+                  fontSize: 7,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.4,
+                ),
               ),
             ),
         ],
       ),
     );
+  }
+
+  Widget _bracketEmpty(AppLocalizations l10n) {
+    return Center(
+      child: Text(
+        l10n.liveBracketEmpty,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white70, fontSize: 10),
+      ),
+    );
+  }
+
+  String _bracketRoundLabel(int round, int last, AppLocalizations l10n) {
+    if (round == last) return l10n.matchTableRoundFinal;
+    if (round == last - 1) return l10n.matchTableRoundSemifinal;
+    if (round == last - 2) return l10n.matchTableRoundQuarterfinal;
+    return l10n.matchTableRound(round);
   }
 
   Widget _bracketTeamLine(
@@ -2540,19 +2732,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  /// Rút gọn tên cho overlay, y hệt web: "Trịnh Quang Minh" → "T. Minh",
-  /// "Đoàn Bảo Ngọc" → "D. Ngọc". Giữ chữ cái đầu để phân biệt và tên cuối
-  /// vì đó là cách gọi quen thuộc nhất.
-  String _compactTeamName(String name) {
-    final words = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
-    if (words.isEmpty) return '';
-    if (words.length == 1) return words.first;
-    return '${words.first.characters.first}. ${words.last}';
-  }
 
   /// Bảng điểm hai hàng chồng ở góc trên trái, giống hệt web
   /// (`LiveScoreboardOverlay.tsx`): mỗi hàng là [tên viết tắt | ô điểm nền
@@ -2608,7 +2787,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                _compactTeamName(name).toUpperCase(),
+                shortTeamName(name),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
@@ -15,6 +16,7 @@ class AddAthleteSheet extends ConsumerStatefulWidget {
     required this.tournament,
     required this.divisionId,
     required this.divisionName,
+    required this.divisionMatchType,
     required this.divisionEntryFee,
     required this.effectiveEntryFee,
     required this.participants,
@@ -24,6 +26,8 @@ class AddAthleteSheet extends ConsumerStatefulWidget {
   final Tournament tournament;
   final String divisionId;
   final String divisionName;
+  /// matchType của division (SINGLES, DOUBLES, MIXED_DOUBLES...); null = không bật ghép cặp.
+  final String? divisionMatchType;
   final double? divisionEntryFee;
   final double? effectiveEntryFee;
   final List<OrganizerOpsParticipant> participants;
@@ -35,28 +39,74 @@ class AddAthleteSheet extends ConsumerStatefulWidget {
 
 class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   static const _directNameMax = 255;
+  static const _directEmailMax = 254;
+  static const _candidateLimit = 25;
   static const _searchDebounce = Duration(milliseconds: 250);
+  static const _pairSourceOrder = [
+    AddAthleteSource.friends,
+    AddAthleteSource.club,
+    AddAthleteSource.email,
+  ];
 
   final _searchController = TextEditingController();
   final _directNameController = TextEditingController();
+  final _directEmailController = TextEditingController();
   final _footballTeams = <OrganizerOpsParticipant>[];
+  // Kết quả tìm theo tên (bạn bè + CLB), đã gộp theo userId.
   final _candidates = <_SourcedCandidate>[];
-  String? _selectedCandidateId;
+  // Kết quả tìm theo email; null khi chưa có kết quả cho truy vấn hiện tại.
+  List<_SourcedCandidate>? _emailResults;
+  // Danh sách đang chọn, giữ thứ tự bấm (quyết định nhãn cặp).
+  final _selected = <_SourcedCandidate>[];
+  // userId đã thêm thành công trong phiên mở sheet.
+  final _addedUserIds = <String>{};
+  // userId đang được xử lý, để hiện spinner đúng dòng.
+  final _pendingUserIds = <String>{};
 
   late final bool _isFootball;
   late final bool _canAutoApprove;
+  late final bool _canUsePairMode;
   _AddAthleteTab _activeTab = _AddAthleteTab.accounts;
+  bool _pairMode = false;
   String _query = '';
+  String? _loadedCandidateQuery;
   String? _selectedTeamParticipantId;
   String? _candidateError;
+  String? _emailError;
   String? _directError;
+  String? _batchSummary;
   Timer? _searchTimer;
   int _candidateRequestVersion = 0;
+  int _emailRequestVersion = 0;
   bool _loadingCandidates = false;
+  bool _searchingEmail = false;
   bool _mutationInFlight = false;
   bool _refreshing = false;
   bool _staleNotice = false;
   bool _requiresRefresh = false;
+
+  bool get _canSubmit =>
+      !_mutationInFlight && !_refreshing && !_requiresRefresh;
+  bool get _isEmailQuery => _query.trim().contains('@');
+  bool get _pairingActive => _canUsePairMode && _pairMode;
+
+  /// Nguồn chung của mọi VĐV đang chọn; null nếu không có nguồn nào chung.
+  AddAthleteSource? get _pairSource {
+    if (!_pairingActive) return null;
+    for (final source in _pairSourceOrder) {
+      if (_selected.every((entry) => entry.sources.contains(source))) {
+        return source;
+      }
+    }
+    return null;
+  }
+
+  bool get _pairSelectionReady => _pairSource != null && _selected.length >= 2;
+
+  bool get _submitDisabled {
+    if (!_canSubmit) return true;
+    return _pairingActive ? !_pairSelectionReady : _selected.isEmpty;
+  }
 
   @override
   void initState() {
@@ -66,6 +116,9 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     _isFootball =
         rules?['kind'] == 'FOOTBALL' ||
         (scoring is Map && scoring['kind'] == 'FOOTBALL');
+    final matchType = widget.divisionMatchType?.trim().toUpperCase();
+    _canUsePairMode =
+        !_isFootball && (matchType == 'DOUBLES' || matchType == 'MIXED_DOUBLES');
     final effectiveFee =
         widget.effectiveEntryFee ??
         widget.divisionEntryFee ??
@@ -80,7 +133,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     );
     if (!_isFootball) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_loadCandidates('', null));
+        if (mounted) unawaited(_loadCandidates(''));
       });
     }
   }
@@ -89,15 +142,17 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   void dispose() {
     _searchTimer?.cancel();
     _candidateRequestVersion++;
+    _emailRequestVersion++;
     _searchController.dispose();
     _directNameController.dispose();
+    _directEmailController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
     return PopScope(
       canPop: !_mutationInFlight,
       child: SafeArea(
@@ -115,7 +170,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                 child: SizedBox.expand(
                   child: Material(
                     key: const ValueKey('add-athlete-sheet'),
-                    color: colors.surface,
+                    color: colors.bgCard,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
@@ -129,7 +184,6 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SizedBox(height: 4),
-                                const SizedBox(height: 18),
                                 _buildHeader(context, l10n),
                                 if (_isFootball) ...[
                                   const SizedBox(height: 20),
@@ -165,11 +219,12 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   }
 
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.person_add_alt_1_rounded, color: colors.primary),
+        Icon(Icons.person_add_alt_1_rounded, color: AppTheme.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -177,22 +232,23 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
             children: [
               Text(
                 l10n.opsAddAthleteTitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                style: textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 l10n.opsAddAthleteDescription,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colors.textSecondary,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
                 '${widget.tournament.name} · ${widget.divisionName}',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
+                style: textTheme.labelMedium?.copyWith(
+                  color: colors.textMuted,
                 ),
               ),
             ],
@@ -211,10 +267,11 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   }
 
   Widget _buildTeamPicker(BuildContext context, AppLocalizations l10n) {
+    final colors = context.colors;
     if (_footballTeams.isEmpty) {
       return Text(
         l10n.opsAddAthleteNoTeams,
-        style: TextStyle(color: Theme.of(context).colorScheme.error),
+        style: TextStyle(color: colors.error),
       );
     }
     return DropdownButtonFormField<String>(
@@ -224,8 +281,8 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
       decoration: InputDecoration(
         labelText: l10n.opsAddAthleteTeam,
         border: const OutlineInputBorder(),
+        hint: Text(l10n.opsAddAthleteSelectTeam),
       ),
-      hint: Text(l10n.opsAddAthleteSelectTeam),
       items: _footballTeams
           .map(
             (team) => DropdownMenuItem<String>(
@@ -261,34 +318,31 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   }
 
   Widget _buildStaleNotice(BuildContext context, AppLocalizations l10n) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colors.tertiaryContainer,
+        color: colors.warning.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: colors.onTertiaryContainer),
+          Icon(Icons.info_outline_rounded, color: colors.warning),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               _requiresRefresh
                   ? l10n.opsAddAthleteRefreshFailed
                   : l10n.opsAddAthleteOutcomeUnknown,
-              style: TextStyle(color: colors.onTertiaryContainer),
+              style: TextStyle(color: colors.textPrimary),
             ),
           ),
           if (_requiresRefresh)
             TextButton(
-              onPressed: _refreshing ? null : _refreshAfterUncertainOutcome,
-              child: _refreshing
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(l10n.opsAddAthleteRefresh),
+              onPressed: _refreshing
+                  ? null
+                  : () => unawaited(_refreshAfterUncertainOutcome()),
+              child: _refreshing ? _spinner() : Text(l10n.opsAddAthleteRefresh),
             ),
         ],
       ),
@@ -296,21 +350,34 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   }
 
   Widget _buildAccountContent(BuildContext context, AppLocalizations l10n) {
+    final colors = context.colors;
     final isTeamMissing = _isFootball && _selectedTeamParticipantId == null;
     final query = _query.trim();
-    final needsNameSearchHint =
-        query.contains('@') || (query.isNotEmpty && query.length < 2);
+    final emailMode = _isEmailQuery;
+    final searchable = _searchModeFor(query) != _SearchMode.none;
+    final visible = emailMode
+        ? (_emailResults ?? const <_SourcedCandidate>[])
+        : _candidates;
+    final error = emailMode ? _emailError : _candidateError;
+    final loading = emailMode ? _searchingEmail : _loadingCandidates;
+    final showResults = emailMode
+        ? _emailResults != null
+        : _loadedCandidateQuery == query && searchable;
+    final selectedIds = {for (final entry in _selected) entry.candidate.userId};
+    final resultRows = showResults
+        ? visible
+              .where((entry) => !selectedIds.contains(entry.candidate.userId))
+              .toList(growable: false)
+        : const <_SourcedCandidate>[];
+    final rows = [..._selected, ...resultRows];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
           key: const ValueKey('add-athlete-search'),
           controller: _searchController,
-          enabled:
-              !_mutationInFlight &&
-              !_requiresRefresh &&
-              !_refreshing &&
-              !isTeamMissing,
+          enabled: _canSubmit && !isTeamMissing,
           textInputAction: TextInputAction.search,
           onChanged: _onSearchChanged,
           decoration: InputDecoration(
@@ -321,61 +388,120 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
         ),
         if (isTeamMissing) ...[
           const SizedBox(height: 8),
-          Text(l10n.opsAddAthleteTeamRequired),
-        ],
-        if (_candidateError != null) ...[
-          const SizedBox(height: 12),
           Text(
-            _candidateError!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+            l10n.opsAddAthleteTeamRequired,
+            style: TextStyle(color: colors.textSecondary),
           ),
         ],
-        if (_loadingCandidates) ...[
+        if (!isTeamMissing && query.isNotEmpty && !searchable) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.opsAddAthleteSearchHint,
+            style: TextStyle(color: colors.textMuted, fontSize: 12),
+          ),
+        ],
+        if (_canUsePairMode) ...[
+          const SizedBox(height: 8),
+          SwitchListTile(
+            key: const ValueKey('add-athlete-pair-toggle'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.opsAddAthletePairToggle),
+            value: _pairMode,
+            onChanged: _mutationInFlight
+                ? null
+                : (value) => setState(() {
+                    _batchSummary = null;
+                    _pairMode = value;
+                  }),
+          ),
+          if (_pairingActive && !_pairSelectionReady)
+            Text(
+              l10n.opsAddAthletePairRequirement,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            ),
+        ],
+        if (_selected.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.opsAddAthleteSelectedCount(_selected.length),
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+        if (_selected.length >= _candidateLimit) ...[
+          const SizedBox(height: 4),
+          Text(
+            l10n.opsAddAthleteSelectionLimit,
+            style: TextStyle(color: colors.error, fontSize: 12),
+          ),
+        ],
+        if (_batchSummary != null) ...[
+          const SizedBox(height: 8),
+          Text(_batchSummary!, style: TextStyle(color: colors.textSecondary)),
+        ],
+        if (!isTeamMissing && error != null) ...[
+          const SizedBox(height: 12),
+          Text(error, style: TextStyle(color: colors.error)),
+        ],
+        if (!isTeamMissing && error == null && loading) ...[
           const SizedBox(height: 16),
           const LinearProgressIndicator(),
           const SizedBox(height: 8),
-          Text(l10n.opsAddAthleteLoading),
-        ] else if (!isTeamMissing && _candidateError == null) ...[
+          Text(
+            l10n.opsAddAthleteLoading,
+            style: TextStyle(color: colors.textSecondary),
+          ),
+        ],
+        if (!isTeamMissing &&
+            error == null &&
+            !loading &&
+            showResults &&
+            visible.isEmpty) ...[
           const SizedBox(height: 12),
-          if (needsNameSearchHint)
-            Text(l10n.opsAddAthleteSearchNameHint)
-          else if (_candidates.isEmpty)
-            Text(
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
               query.isEmpty
                   ? l10n.opsAddAthleteNoCandidates
                   : l10n.opsAddAthleteEmpty,
-            )
-          else
-            ..._candidates.map(
-              (candidate) => _buildCandidateCard(context, l10n, candidate),
+              style: TextStyle(color: colors.textSecondary),
             ),
+          ),
         ],
+        if (!isTeamMissing)
+          for (final entry in rows) _buildCandidateRow(context, l10n, entry),
       ],
     );
   }
 
-  Widget _buildCandidateCard(
+  Widget _buildCandidateRow(
     BuildContext context,
     AppLocalizations l10n,
     _SourcedCandidate entry,
   ) {
-    final colors = Theme.of(context).colorScheme;
-    final isSelected = _selectedCandidateId == entry.candidate.userId;
+    final colors = context.colors;
+    final userId = entry.candidate.userId;
+    final isSelected = _selected.any((item) => item.candidate.userId == userId);
+    final isAdded = _addedUserIds.contains(userId);
+    final disabled =
+        _mutationInFlight ||
+        isAdded ||
+        (!isSelected && _selected.length >= _candidateLimit);
+    final isPending = _pendingUserIds.contains(userId);
+    final pairBadge = _pairBadge(context, l10n, userId);
     return Card(
       margin: const EdgeInsets.only(top: 8),
-      color: isSelected ? colors.secondaryContainer : null,
+      color: isSelected ? colors.bgElevated : colors.bgCard,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        key: ValueKey(
-          'add-athlete-candidate-select-${entry.candidate.userId}',
-        ),
-        onTap: _canSubmit
-            ? () => setState(() {
-                _selectedCandidateId = isSelected
-                    ? null
-                    : entry.candidate.userId;
-              })
-            : null,
+        key: ValueKey('add-athlete-candidate-select-$userId'),
+        onTap: disabled ? null : () => _toggleCandidate(entry),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 44),
           child: Padding(
@@ -384,10 +510,10 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: colors.surface,
+                  backgroundColor: colors.bgSurface,
                   child: Icon(
                     Icons.person_outline_rounded,
-                    color: colors.primary,
+                    color: AppTheme.primary,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -398,20 +524,22 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                     children: [
                       Text(
                         entry.candidate.fullName,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
                       ),
+                      const SizedBox(height: 4),
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
                         children: [
                           for (final source in entry.sources)
                             Text(
-                              source == AddAthleteSource.friends
-                                  ? l10n.opsAddAthleteFriends
-                                  : l10n.opsAddAthleteClub,
+                              _sourceLabel(l10n, source),
                               style: TextStyle(
-                                color: colors.onSurfaceVariant,
                                 fontSize: 12,
+                                color: colors.textSecondary,
                               ),
                             ),
                         ],
@@ -419,11 +547,24 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                     ],
                   ),
                 ),
+                if (pairBadge != null) ...[const SizedBox(width: 8), pairBadge],
+                if (isPending) ...[
+                  const SizedBox(width: 8),
+                  _spinner(),
+                ],
+                if (isAdded) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.opsAddAthleteAdded,
+                    style: TextStyle(fontSize: 12, color: colors.textMuted),
+                  ),
+                ],
+                const SizedBox(width: 8),
                 Icon(
                   isSelected
                       ? Icons.check_circle_rounded
                       : Icons.radio_button_unchecked_rounded,
-                  color: isSelected ? colors.primary : colors.outline,
+                  color: isSelected ? AppTheme.primary : colors.textMuted,
                 ),
               ],
             ),
@@ -433,83 +574,120 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     );
   }
 
-
-  Widget _buildCandidateFooter(
+  Widget? _pairBadge(
     BuildContext context,
     AppLocalizations l10n,
+    String userId,
   ) {
-    final colors = Theme.of(context).colorScheme;
-    final candidate = _selectedCandidate;
-    final enabled =
-        _canSubmit && (!_isFootball || _selectedTeamParticipantId != null);
+    if (!_pairingActive) return null;
+    final index = _selected.indexWhere(
+      (item) => item.candidate.userId == userId,
+    );
+    if (index < 0) return null;
+    final colors = context.colors;
+    final isWaiting = index == _selected.length - 1 && index.isEven;
+    final label = isWaiting
+        ? l10n.opsAddAthletePairWaiting
+        : l10n.opsAddAthletePairGroup(String.fromCharCode(65 + index ~/ 2));
+    final accent = isWaiting ? colors.warning : AppTheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accent),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
+      ),
+    );
+  }
+
+  String _sourceLabel(AppLocalizations l10n, AddAthleteSource source) {
+    return switch (source) {
+      AddAthleteSource.friends => l10n.opsAddAthleteFriends,
+      AddAthleteSource.club => l10n.opsAddAthleteClub,
+      AddAthleteSource.email => l10n.opsAddAthleteEmail,
+    };
+  }
+
+  Widget _buildCandidateFooter(BuildContext context, AppLocalizations l10n) {
+    final colors = context.colors;
+    final Widget actions;
+    if (_isFootball) {
+      final teamReady =
+          _canSubmit && _selectedTeamParticipantId != null && _selected.isNotEmpty;
+      actions = Row(
+        children: [
+          Expanded(
+            child: FilledButton.icon(
+              key: const ValueKey('add-athlete-candidate-main'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+              ),
+              onPressed: teamReady
+                  ? () => unawaited(
+                      _submitSelected(role: FootballRosterRole.main),
+                    )
+                  : null,
+              icon: _mutationInFlight
+                  ? _spinner()
+                  : const Icon(Icons.check_rounded),
+              label: Text(l10n.opsAddAthleteMain),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: OutlinedButton(
+              key: const ValueKey('add-athlete-candidate-reserve'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+              ),
+              onPressed: teamReady
+                  ? () => unawaited(
+                      _submitSelected(role: FootballRosterRole.reserve),
+                    )
+                  : null,
+              child: Text(l10n.opsAddAthleteReserve),
+            ),
+          ),
+        ],
+      );
+    } else {
+      final count = _selected.length;
+      actions = FilledButton.icon(
+        key: const ValueKey('add-athlete-candidate-submit'),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+        onPressed: _submitDisabled
+            ? null
+            : () => unawaited(
+                _pairingActive ? _submitPairs() : _submitSelected(),
+              ),
+        icon: _mutationInFlight
+            ? _spinner()
+            : const Icon(Icons.person_add_alt_1_rounded),
+        label: Text(
+          _pairingActive
+              ? l10n.opsAddAthletePairSubmit
+              : count > 0
+              ? l10n.opsAddAthleteAddSelectedCount(count)
+              : l10n.opsAddAthleteAddAction,
+        ),
+      );
+    }
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(top: BorderSide(color: colors.outlineVariant)),
+        color: colors.bgCard,
+        border: Border(top: BorderSide(color: colors.border)),
       ),
-      child: _isFootball
-          ? Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    key: const ValueKey('add-athlete-candidate-main'),
-                    onPressed: candidate == null || !enabled
-                        ? null
-                        : () => unawaited(
-                            _submitCandidate(
-                              candidate,
-                              role: FootballRosterRole.main,
-                            ),
-                          ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
-                    ),
-                    child: _mutationInFlight
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.opsAddAthleteMain),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    key: const ValueKey('add-athlete-candidate-reserve'),
-                    onPressed: candidate == null || !enabled
-                        ? null
-                        : () => unawaited(
-                            _submitCandidate(
-                              candidate,
-                              role: FootballRosterRole.reserve,
-                            ),
-                          ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
-                    ),
-                    child: Text(l10n.opsAddAthleteReserve),
-                  ),
-                ),
-              ],
-            )
-          : FilledButton.icon(
-              key: const ValueKey('add-athlete-candidate-submit'),
-              onPressed: candidate == null || !enabled
-                  ? null
-                  : () => unawaited(_submitCandidate(candidate)),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-              ),
-              icon: _mutationInFlight
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.person_add_alt_1_rounded),
-              label: Text(l10n.opsAddAthleteAddAction),
-            ),
+      child: actions,
     );
   }
 
@@ -520,8 +698,8 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
         TextField(
           key: const ValueKey('add-athlete-direct-name'),
           controller: _directNameController,
-          enabled: !_mutationInFlight && !_requiresRefresh && !_refreshing,
-          textInputAction: TextInputAction.done,
+          enabled: _canSubmit,
+          textInputAction: TextInputAction.next,
           onChanged: (value) {
             setState(() {
               _directError = value.length > _directNameMax
@@ -529,7 +707,6 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                   : null;
             });
           },
-          onSubmitted: (_) => unawaited(_submitDirectName()),
           decoration: InputDecoration(
             labelText: l10n.opsAddAthleteName,
             border: const OutlineInputBorder(),
@@ -538,130 +715,165 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           ),
         ),
         const SizedBox(height: 12),
+        TextField(
+          key: const ValueKey('add-athlete-direct-email'),
+          controller: _directEmailController,
+          enabled: _canSubmit,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.done,
+          maxLength: _directEmailMax,
+          onSubmitted: (_) => unawaited(_submitGuest()),
+          decoration: InputDecoration(
+            labelText: l10n.opsAddAthleteGuestEmail,
+            helperText: l10n.opsAddAthleteGuestEmailHint,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
         FilledButton.icon(
           key: const ValueKey('add-athlete-direct-submit'),
-          onPressed: _canSubmit ? () => unawaited(_submitDirectName()) : null,
-          icon: const Icon(Icons.person_add_alt_1_rounded),
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+          onPressed: _canSubmit ? () => unawaited(_submitGuest()) : null,
+          icon: _mutationInFlight
+              ? _spinner()
+              : const Icon(Icons.person_add_alt_1_rounded),
           label: Text(l10n.opsAddAthlete),
         ),
       ],
     );
   }
 
-  bool get _canSubmit =>
-      !_mutationInFlight && !_refreshing && !_requiresRefresh;
-  _SourcedCandidate? get _selectedCandidate {
-    final selectedId = _selectedCandidateId;
-    if (selectedId == null) return null;
-    for (final candidate in _candidates) {
-      if (candidate.candidate.userId == selectedId) return candidate;
-    }
-    return null;
-  }
-
-  void _selectFootballTeam(String? participantId) {
-    _searchTimer?.cancel();
-    setState(() {
-      _selectedTeamParticipantId = participantId;
-      _selectedCandidateId = null;
-      _candidateError = null;
-      _candidates.clear();
-      _loadingCandidates = participantId != null;
-    });
-    if (participantId != null) {
-      unawaited(_loadCandidates(_query, participantId));
-    } else {
-      _candidateRequestVersion++;
-    }
+  Widget _spinner() {
+    return const SizedBox.square(
+      dimension: 18,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    );
   }
 
   void _selectTab(_AddAthleteTab tab) {
     if (tab == _activeTab || _mutationInFlight || _requiresRefresh) return;
     _searchTimer?.cancel();
     _candidateRequestVersion++;
+    _emailRequestVersion++;
     setState(() {
       _activeTab = tab;
       _candidateError = null;
+      _emailError = null;
       _candidates.clear();
-      _selectedCandidateId = null;
-      _loadingCandidates =
-          tab == _AddAthleteTab.accounts &&
-          (!_isFootball || _selectedTeamParticipantId != null);
+      _emailResults = null;
+      _loadedCandidateQuery = null;
+      _selected.clear();
+      _batchSummary = null;
+      _loadingCandidates = false;
+      _searchingEmail = false;
       _directError = null;
     });
     if (tab == _AddAthleteTab.accounts &&
         (!_isFootball || _selectedTeamParticipantId != null)) {
-      unawaited(_loadCandidates(_query, _selectedTeamParticipantId));
+      _runSearchNow(_query.trim());
     }
+  }
+
+  void _selectFootballTeam(String? participantId) {
+    if (_mutationInFlight || _requiresRefresh) return;
+    _searchTimer?.cancel();
+    _candidateRequestVersion++;
+    _emailRequestVersion++;
+    setState(() {
+      _selectedTeamParticipantId = participantId;
+      _selected.clear();
+      _candidates.clear();
+      _emailResults = null;
+      _loadedCandidateQuery = null;
+      _candidateError = null;
+      _emailError = null;
+      _batchSummary = null;
+      _staleNotice = false;
+      _loadingCandidates = false;
+      _searchingEmail = false;
+    });
+    if (participantId != null) _runSearchNow(_query.trim());
   }
 
   void _onSearchChanged(String value) {
     _searchTimer?.cancel();
     _candidateRequestVersion++;
+    _emailRequestVersion++;
     final query = value.trim();
-    final canSearch =
-        query.isEmpty || (!query.contains('@') && query.length >= 2);
+    final mode = _searchModeFor(query);
     setState(() {
       _query = value;
       _candidateError = null;
-      _selectedCandidateId = null;
+      _emailError = null;
       _candidates.clear();
+      _emailResults = null;
+      _loadedCandidateQuery = null;
       _staleNotice = false;
-      _loadingCandidates = canSearch;
+      _loadingCandidates = mode == _SearchMode.names;
+      _searchingEmail = mode == _SearchMode.email;
     });
-    if (!canSearch) return;
+    if (mode == _SearchMode.none) return;
     _searchTimer = Timer(_searchDebounce, () {
-      unawaited(_loadCandidates(value, _selectedTeamParticipantId));
+      if (mounted) _runSearchNow(query);
     });
   }
 
-  Future<void> _loadCandidates(String query, String? participantId) async {
-    final requestVersion = ++_candidateRequestVersion;
-    final normalizedQuery = query.trim();
-    if (normalizedQuery.isNotEmpty &&
-        (normalizedQuery.contains('@') || normalizedQuery.length < 2)) {
-      if (mounted && requestVersion == _candidateRequestVersion) {
-        setState(() {
-          _candidates.clear();
-          _selectedCandidateId = null;
-          _candidateError = null;
-          _loadingCandidates = false;
-        });
-      }
-      return;
+  void _runSearchNow(String query) {
+    final mode = _searchModeFor(query);
+    if (mode == _SearchMode.names) {
+      unawaited(_loadCandidates(query));
+    } else if (mode == _SearchMode.email) {
+      unawaited(_searchEmail(query));
     }
+  }
+
+  void _toggleCandidate(_SourcedCandidate entry) {
+    final userId = entry.candidate.userId;
+    final index = _selected.indexWhere(
+      (item) => item.candidate.userId == userId,
+    );
+    setState(() {
+      _batchSummary = null;
+      if (index >= 0) {
+        _selected.removeAt(index);
+      } else if (_selected.length < _candidateLimit) {
+        _selected.add(entry);
+      }
+    });
+  }
+
+  Future<void> _loadCandidates(String query) async {
+    final requestVersion = ++_candidateRequestVersion;
+    final participantId = _selectedTeamParticipantId;
     if (_isFootball && (participantId == null || participantId.isEmpty)) {
       if (mounted) {
         setState(() {
           _candidates.clear();
-          _selectedCandidateId = null;
+          _loadedCandidateQuery = null;
           _candidateError = null;
           _loadingCandidates = false;
         });
       }
       return;
     }
-
     if (mounted) {
       setState(() {
         _loadingCandidates = true;
         _candidateError = null;
-        _selectedCandidateId = null;
       });
     }
     final l10n = AppLocalizations.of(context)!;
+    final repository = ref.read(tournamentManagementRepositoryProvider);
+    const sources = [AddAthleteSource.friends, AddAthleteSource.club];
     try {
-      final sources = AddAthleteSource.values;
       final sourceLists = await Future.wait(
         sources.map(
-          (source) => ref
-              .read(tournamentManagementRepositoryProvider)
-              .listAddAthleteCandidates(
-                widget.tournament.id,
-                source: source,
-                query: normalizedQuery,
-                participantId: _isFootball ? participantId : null,
-              ),
+          (source) => repository.listAddAthleteCandidates(
+            widget.tournament.id,
+            source: source,
+            query: query,
+            participantId: _isFootball ? participantId : null,
+          ),
         ),
       );
       if (!mounted || requestVersion != _candidateRequestVersion) return;
@@ -679,12 +891,14 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
         _candidates
           ..clear()
           ..addAll(merged.values);
+        _loadedCandidateQuery = query;
         _loadingCandidates = false;
       });
     } catch (error) {
       if (!mounted || requestVersion != _candidateRequestVersion) return;
       setState(() {
         _candidates.clear();
+        _loadedCandidateQuery = null;
         _candidateError = ErrorParser.parse(
           error,
           l10n.opsAddAthleteFailed,
@@ -695,49 +909,228 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     }
   }
 
-  Future<void> _submitCandidate(
-    _SourcedCandidate entry, {
-    FootballRosterRole? role,
-  }) async {
-    if (!_canSubmit) return;
+  Future<void> _searchEmail(String email) async {
+    final participantId = _selectedTeamParticipantId;
+    if (_isFootball && (participantId == null || participantId.isEmpty)) {
+      return;
+    }
+    final requestVersion = ++_emailRequestVersion;
+    final l10n = AppLocalizations.of(context)!;
+    if (mounted) {
+      setState(() {
+        _searchingEmail = true;
+        _emailError = null;
+        _emailResults = null;
+      });
+    }
+    try {
+      final items = await ref
+          .read(tournamentManagementRepositoryProvider)
+          .searchAddAthleteCandidates(
+            widget.tournament.id,
+            email: email,
+            participantId: _isFootball ? participantId : null,
+          );
+      if (!mounted || requestVersion != _emailRequestVersion) return;
+      final mapped = items.map(_entryFromSearch).toList(growable: false);
+      setState(() {
+        if (mapped.any((entry) => entry == null)) {
+          _emailResults = null;
+          _emailError = l10n.opsAddAthleteSearchFailed;
+        } else {
+          _emailResults = mapped
+              .whereType<_SourcedCandidate>()
+              .toList(growable: false);
+        }
+      });
+    } catch (error) {
+      if (!mounted || requestVersion != _emailRequestVersion) return;
+      setState(() {
+        _emailResults = null;
+        _emailError = ErrorParser.parse(
+          error,
+          l10n.opsAddAthleteSearchFailed,
+          l10n,
+        );
+      });
+    } finally {
+      if (mounted && requestVersion == _emailRequestVersion) {
+        setState(() => _searchingEmail = false);
+      }
+    }
+  }
+
+  _SourcedCandidate? _entryFromSearch(AddAthleteSearchCandidate item) {
+    if (item.sources.isEmpty) return null;
+    final entry = _SourcedCandidate(
+      candidate: AddAthleteCandidate(
+        userId: item.userId,
+        fullName: item.fullName,
+      ),
+    );
+    entry.sources.addAll(item.sources);
+    return entry;
+  }
+
+  Future<void> _reloadAfterMutation({required bool failed}) async {
+    final query = _query.trim();
+    if (query.contains('@')) {
+      if (failed && mounted) setState(() => _emailResults = null);
+      return;
+    }
+    if (_searchModeFor(query) == _SearchMode.names) {
+      await _loadCandidates(query);
+    }
+  }
+
+  Future<void> _submitSelected({FootballRosterRole? role}) async {
+    if (!_canSubmit || _selected.isEmpty) return;
     if (_isFootball && (_selectedTeamParticipantId == null || role == null)) {
       return;
     }
-    setState(() => _mutationInFlight = true);
+    final l10n = AppLocalizations.of(context)!;
+    final repository = ref.read(tournamentManagementRepositoryProvider);
+    final selection = List<_SourcedCandidate>.of(_selected);
+    setState(() {
+      _mutationInFlight = true;
+      _staleNotice = false;
+      _batchSummary = null;
+      _pendingUserIds
+        ..clear()
+        ..addAll(selection.map((entry) => entry.candidate.userId));
+    });
+    var addedCount = 0;
+    var approvalFailureCount = 0;
+    var failedIndex = -1;
+    Object? failure;
     try {
-      final participantId = await ref
-          .read(tournamentManagementRepositoryProvider)
-          .addAthleteCandidate(
+      // Thêm tuần tự như web: dừng ở lỗi đầu tiên, các VĐV sau đó chưa được thử.
+      for (var index = 0; index < selection.length; index++) {
+        final entry = selection[index];
+        final userId = entry.candidate.userId;
+        try {
+          final participantId = await repository.addAthleteCandidate(
             widget.tournament.id,
             source: entry.sources.first,
-            userId: entry.candidate.userId,
+            userId: userId,
             tournamentDivisionId: _isFootball ? null : widget.divisionId,
             participantId: _isFootball ? _selectedTeamParticipantId : null,
             role: role,
           );
-      await _finishSuccessfulAdd(participantId);
-      if (mounted && !_isFootball) {
-        await _loadCandidates(_query, null);
-      } else if (mounted && _selectedTeamParticipantId != null) {
-        await _loadCandidates(_query, _selectedTeamParticipantId);
+          addedCount++;
+          if (mounted) {
+            setState(() {
+              _addedUserIds.add(userId);
+              _selected.removeWhere((item) => item.candidate.userId == userId);
+              _pendingUserIds.remove(userId);
+            });
+          }
+          if (await _tryAutoApprove(participantId)) approvalFailureCount++;
+        } catch (error) {
+          failure = error;
+          failedIndex = index;
+          break;
+        }
       }
+      if (!mounted) return;
+      final failedError = failure;
+      final messages = <String>[];
+      if (failedError != null) {
+        final unattempted = selection.length - failedIndex - 1;
+        setState(() {
+          _batchSummary = l10n.opsAddAthletePartialSummary(
+            addedCount,
+            1,
+            unattempted,
+          );
+        });
+        messages.add(
+          ErrorParser.parse(failedError, l10n.opsAddAthleteFailed, l10n),
+        );
+      } else if (addedCount > 1) {
+        messages.add(l10n.opsAddAthleteMultipleSuccess(addedCount));
+      } else if (addedCount == 1) {
+        messages.add(l10n.opsAddAthleteSuccess);
+      }
+      if (approvalFailureCount > 0) {
+        messages.add(l10n.opsAddAthleteApprovalFailed);
+      }
+      if (addedCount > 0 || failedError != null) {
+        final refreshed = await _tryRefreshRoster();
+        if (!mounted) return;
+        setState(() {
+          _staleNotice = failedError != null || !refreshed;
+          _requiresRefresh = !refreshed;
+        });
+      }
+      if (messages.isNotEmpty) _showMessage(messages.join('\n'));
+      await _reloadAfterMutation(failed: failedError != null);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _mutationInFlight = false;
+          _pendingUserIds.clear();
+        });
+      }
+    }
+  }
+
+  Future<void> _submitPairs() async {
+    final source = _pairSource;
+    if (!_canSubmit || !_pairSelectionReady || source == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    final repository = ref.read(tournamentManagementRepositoryProvider);
+    final userIds = _selected
+        .map((entry) => entry.candidate.userId)
+        .toList(growable: false);
+    setState(() {
+      _mutationInFlight = true;
+      _staleNotice = false;
+      _batchSummary = null;
+      _pendingUserIds
+        ..clear()
+        ..addAll(userIds);
+    });
+    try {
+      final pairs = await repository.addAthletePairs(
+        widget.tournament.id,
+        source: source,
+        tournamentDivisionId: widget.divisionId,
+        userIds: userIds,
+      );
+      final pendingCount = pairs.where((pair) => pair.isPendingPartner).length;
+      final pairCount = pairs.length - pendingCount;
+      if (!mounted) return;
+      setState(() {
+        _addedUserIds.addAll(userIds);
+        _selected.clear();
+      });
+      _showMessage(l10n.opsAddAthletePairSuccess(pairCount, pendingCount));
+      final refreshed = await _tryRefreshRoster();
+      if (!mounted) return;
+      setState(() {
+        _staleNotice = !refreshed;
+        _requiresRefresh = !refreshed;
+      });
+      await _reloadAfterMutation(failed: false);
     } catch (error) {
       await _handleUncertainFailure(error);
     } finally {
       if (mounted) {
         setState(() {
           _mutationInFlight = false;
-          _selectedCandidateId = null;
+          _pendingUserIds.clear();
         });
       }
     }
   }
 
-  Future<void> _submitDirectName() async {
+  Future<void> _submitGuest() async {
     if (!_canSubmit) return;
     final l10n = AppLocalizations.of(context)!;
     final name = _directNameController.text.trim();
-    if (name.isEmpty) {
+    final email = _directEmailController.text.trim();
+    if (name.isEmpty && email.isEmpty) {
       setState(() => _directError = l10n.opsAddAthleteNameRequired);
       return;
     }
@@ -745,7 +1138,6 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
       setState(() => _directError = l10n.opsAddAthleteNameTooLong);
       return;
     }
-
     setState(() {
       _mutationInFlight = true;
       _directError = null;
@@ -755,10 +1147,12 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           .read(tournamentManagementRepositoryProvider)
           .addAthleteDirect(
             widget.tournament.id,
-            name: name,
+            name: name.isEmpty ? email.split('@').first : name,
+            email: email.isEmpty ? null : email,
             tournamentDivisionId: widget.divisionId,
           );
       _directNameController.clear();
+      _directEmailController.clear();
       await _finishSuccessfulAdd(participantId);
     } catch (error) {
       await _handleUncertainFailure(error);
@@ -811,14 +1205,14 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     final refreshed = await _tryRefreshRoster();
     if (!mounted) return;
     setState(() => _requiresRefresh = !refreshed);
+    final l10n = AppLocalizations.of(context)!;
     if (refreshed) {
-      final l10n = AppLocalizations.of(context)!;
       _showMessage(ErrorParser.parse(error, l10n.opsAddAthleteFailed, l10n));
       if (_activeTab == _AddAthleteTab.accounts) {
-        await _loadCandidates(_query, _selectedTeamParticipantId);
+        await _reloadAfterMutation(failed: true);
       }
     } else {
-      _showMessage(AppLocalizations.of(context)!.opsAddAthleteRefreshFailed);
+      _showMessage(l10n.opsAddAthleteRefreshFailed);
     }
   }
 
@@ -829,7 +1223,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     if (!mounted) return;
     setState(() => _requiresRefresh = !refreshed);
     if (refreshed && _activeTab == _AddAthleteTab.accounts) {
-      await _loadCandidates(_query, _selectedTeamParticipantId);
+      await _reloadAfterMutation(failed: false);
     }
     if (mounted) setState(() => _refreshing = false);
   }
@@ -851,6 +1245,21 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
 }
 
 enum _AddAthleteTab { accounts, direct }
+
+/// Chế độ tìm kiếm theo truy vấn; khớp quy tắc của AddAthleteModal web.
+enum _SearchMode { none, names, email }
+
+const _nameSearchMax = 100;
+
+_SearchMode _searchModeFor(String query) {
+  if (query.isEmpty) return _SearchMode.names;
+  if (query.contains('@')) {
+    return query.length >= 2 ? _SearchMode.email : _SearchMode.none;
+  }
+  return query.length >= 2 && query.length <= _nameSearchMax
+      ? _SearchMode.names
+      : _SearchMode.none;
+}
 
 class _SourcedCandidate {
   _SourcedCandidate({required this.candidate});

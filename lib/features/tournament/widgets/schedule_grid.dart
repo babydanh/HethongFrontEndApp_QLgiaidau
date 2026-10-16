@@ -79,6 +79,14 @@ class ScheduleGrid extends StatefulWidget {
   /// Các trận là bản nháp xếp tự động: vẽ khác biệt và không tương tác.
   final Set<String> draftMatchIds;
 
+  /// Kéo tay nắm ở cột giờ để đổi chiều cao hàng: lưới báo chiều cao mới, host
+  /// giữ state (lưới không tự đổi). Null thì không hiện tay nắm.
+  final ValueChanged<double>? onSlotHeightChanged;
+
+  /// Giới hạn chiều cao một ô 15 phút khi kéo giãn.
+  static const double minSlotHeight = 96;
+  static const double maxSlotHeight = 288;
+
   const ScheduleGrid({
     super.key,
     required this.courts,
@@ -99,6 +107,7 @@ class ScheduleGrid extends StatefulWidget {
     this.onTapEmptyCell,
     this.onDropOnMatch,
     this.draftMatchIds = const {},
+    this.onSlotHeightChanged,
   });
 
   @override
@@ -139,6 +148,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   void _extendRange(Offset local) {
     if (_rangeAnchor == null) return;
     _rangeFocus = _cellAt(local);
+  }
+
+  /// Kéo tay nắm ở cột giờ: báo chiều cao hàng mới cho host (lưới không tự đổi).
+  void _resizeSlots(double deltaY) {
+    final next = (widget.slotHeight + deltaY)
+        .clamp(ScheduleGrid.minSlotHeight, ScheduleGrid.maxSlotHeight)
+        .toDouble();
+    if (next == widget.slotHeight) return;
+    widget.onSlotHeightChanged?.call(next);
   }
 
   void _commitRange() {
@@ -248,10 +266,19 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                       color: colors.bgCard,
                       border: Border(bottom: BorderSide(color: colors.border)),
                     ),
-                    child: Icon(
-                      Icons.schedule_rounded,
-                      size: 15,
-                      color: colors.textMuted,
+                    child: Listener(
+                      key: const ValueKey('schedule-scale-handle'),
+                      behavior: HitTestBehavior.opaque,
+                      onPointerMove: widget.onSlotHeightChanged == null
+                          ? null
+                          : (event) => _resizeSlots(event.delta.dy),
+                      child: Icon(
+                        widget.onSlotHeightChanged == null
+                            ? Icons.schedule_rounded
+                            : Icons.unfold_more_rounded,
+                        size: 15,
+                        color: colors.textMuted,
+                      ),
                     ),
                   ),
                   Expanded(

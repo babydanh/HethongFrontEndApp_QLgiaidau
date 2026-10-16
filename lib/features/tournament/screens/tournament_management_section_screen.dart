@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_finance_section.dart';
@@ -30,6 +31,7 @@ enum TournamentManagementSection {
   livestream,
   permissions,
   tokens,
+  liveOperations,
 }
 
 class TournamentManagementSectionScreen extends ConsumerWidget {
@@ -86,6 +88,10 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
         tournamentId: tournament.id,
         communityId: tournament.communityId,
       ),
+    TournamentManagementSection.liveOperations => OrganizerOpsScreen(
+      tournamentId: tournament.id,
+      isEmbedded: true,
+    ),
     TournamentManagementSection.teams => _ExistingOperationsDestination(
       route: '$actionRouteBase/teams',
       icon: Icons.groups_rounded,

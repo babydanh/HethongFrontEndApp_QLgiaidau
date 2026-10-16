@@ -13640,6 +13640,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the server-supported tournament transitions. Authorization is enforced by the server.';
 
   @override
+  String get tournamentManagementLiveOperations => 'Live operations';
+
+  @override
+  String get tournamentManagementLiveOperationsDescription =>
+      'Open the existing workspace for live match operations.';
+
+  @override
   String get tournamentManagementLivestream => 'Livestream';
 
   @override

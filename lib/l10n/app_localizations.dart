@@ -24730,6 +24730,18 @@ abstract class AppLocalizations {
   /// **'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.'**
   String get tournamentManagementLifecycleDescription;
 
+  /// No description provided for @tournamentManagementLiveOperations.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận hành trực tiếp'**
+  String get tournamentManagementLiveOperations;
+
+  /// No description provided for @tournamentManagementLiveOperationsDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở không gian hiện có để vận hành các trận đấu trực tiếp.'**
+  String get tournamentManagementLiveOperationsDescription;
+
   /// No description provided for @tournamentManagementLivestream.
   ///
   /// In vi, this message translates to:

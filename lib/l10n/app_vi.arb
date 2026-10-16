@@ -5507,6 +5507,8 @@
   "tournamentManagementInitialCourtCount": "Số sân ban đầu",
   "tournamentManagementLifecycle": "Vòng đời giải đấu",
   "tournamentManagementLifecycleDescription": "Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.",
+  "tournamentManagementLiveOperations": "Vận hành trực tiếp",
+  "tournamentManagementLiveOperationsDescription": "Mở không gian hiện có để vận hành các trận đấu trực tiếp.",
   "tournamentManagementLivestream": "Phát trực tiếp",
   "tournamentManagementLivestreamDescription": "Mở không gian trận đấu trực tiếp được hỗ trợ.",
   "tournamentManagementLoadError": "Không thể tải mục này.",

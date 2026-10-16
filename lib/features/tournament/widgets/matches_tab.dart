@@ -132,6 +132,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           );
         final hours = _configuredHours(l10n);
 
+
         // ── Dữ liệu cho lưới ──
         // Cột sân = sân của địa điểm giải + sân từ TOÀN BỘ trận, KHÔNG lọc theo
         // ngày: sân không có trận hôm nay vẫn giữ cột, số cột không nhảy theo

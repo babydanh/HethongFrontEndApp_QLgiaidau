@@ -5432,6 +5432,8 @@
   "tournamentManagementInitialCourtCount": "Initial court count",
   "tournamentManagementLifecycle": "Tournament lifecycle",
   "tournamentManagementLifecycleDescription": "Use the server-supported tournament transitions. Authorization is enforced by the server.",
+  "tournamentManagementLiveOperations": "Live operations",
+  "tournamentManagementLiveOperationsDescription": "Open the existing workspace for live match operations.",
   "tournamentManagementLivestream": "Livestream",
   "tournamentManagementLivestreamDescription": "Open the supported live-match workspace.",
   "tournamentManagementLoadError": "Could not load this section.",

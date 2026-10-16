@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_spacing.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
+import 'package:app_quanly_giaidau/core/services/schedule_print_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
@@ -56,6 +57,7 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
     this.onScheduleDrop,
     this.onOpenFullscreen,
     this.onBulkSchedule,
+    this.onPrint,
     this.divisions = const [],
     this.selectedDivisionId,
     this.onDivisionSelected,
@@ -98,6 +100,10 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
     List<MatchModel> waiting,
   )?
   onBulkSchedule;
+
+  /// Ghi đè thao tác in (dùng cho test). Null thì in bằng [SchedulePrintService]
+  /// với chính dữ liệu lưới đang hiện.
+  final Future<void> Function()? onPrint;
 
   /// Nội dung thi đấu để chọn trong thanh công cụ (như dropdown của web).
   final List<ScheduleDivision> divisions;
@@ -145,6 +151,9 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
 class _TournamentScheduleCourtGridState
     extends ConsumerState<TournamentScheduleCourtGrid> {
   late Future<List<ScheduleCourt>> _courtsFuture;
+
+  /// Chiều cao một ô 15 phút; host giữ state, lưới chỉ báo khi kéo tay nắm.
+  double _slotHeight = 144;
 
   /// Null = hiện tất cả sân.
   Set<String>? _selectedCourts;
@@ -384,6 +393,9 @@ class _TournamentScheduleCourtGridState
                 onRangeSelected: _hasRangeActions
                     ? (range) => setState(() => _range = range)
                     : null,
+                slotHeight: _slotHeight,
+                onSlotHeightChanged: (height) =>
+                    setState(() => _slotHeight = height),
               ),
             if (_hasRangeActions && _range != null)
               _bulkBar(
@@ -740,6 +752,27 @@ class _TournamentScheduleCourtGridState
     );
   }
 
+  /// In mặc định: dùng chính dữ liệu lưới đang hiện. Test truyền [onPrint] để
+  /// thay thao tác này.
+  Future<void> _printSchedule() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await SchedulePrintService.printSchedule(
+        title: l10n.tabSchedule,
+        courts: _allCourtNames,
+        matches: widget.matches,
+        startHour: _startHour,
+        endHour: _endHour,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.tournamentManagementExportError)),
+      );
+    }
+  }
+
   /// Xuất lịch ra Excel (dùng lại dịch vụ xuất sẵn có của app).
   Future<void> _exportSchedule() async {
     if (_exporting) return;
@@ -851,6 +884,12 @@ class _TournamentScheduleCourtGridState
               padding: const EdgeInsets.symmetric(horizontal: 10),
               side: BorderSide(color: colors.border),
             ),
+          ),
+          IconButton(
+            key: const ValueKey('schedule-print-button'),
+            tooltip: l10n.schedulePrint,
+            onPressed: widget.onPrint ?? _printSchedule,
+            icon: Icon(Icons.print_outlined, color: colors.textMuted),
           ),
           IconButton(
             key: const ValueKey('schedule-export-button'),

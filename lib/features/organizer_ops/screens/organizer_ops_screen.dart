@@ -570,6 +570,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         tournament: tournament,
         divisionId: division.id,
         divisionName: division.name,
+        divisionMatchType: division.matchType,
         divisionEntryFee: division.entryFee,
         effectiveEntryFee: division.effectiveEntryFee,
         participants: participants,

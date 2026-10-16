@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/services/roster_template_service.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/add_athlete_sheet.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -73,6 +75,7 @@ class _TournamentManagementAthletesTabState
         tournament: widget.tournament,
         divisionId: division.id,
         divisionName: division.name,
+        divisionMatchType: division.matchType,
         divisionEntryFee: fee('entryFee'),
         effectiveEntryFee: fee('effectiveEntryFee'),
         participants: participants,
@@ -83,6 +86,41 @@ class _TournamentManagementAthletesTabState
         },
       ),
     );
+  }
+
+  Future<void> _importRoster(TournamentDivision division) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (_) => RosterImportSheet(
+        tournament: widget.tournament,
+        defaultDivision: division,
+        onRefresh: () async {
+          if (!mounted) return;
+          ref.invalidate(tournamentDivisionsProvider(widget.tournament.id));
+          _reload();
+        },
+      ),
+    );
+  }
+
+  /// Tải file mẫu xlsx đúng ngôn ngữ đang dùng. Lỗi hiện thông báo thay vì văng ra ngoài.
+  Future<void> _downloadTemplate() async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    try {
+      await shareRosterTemplate(
+        locale: Localizations.localeOf(context).languageCode,
+      );
+    } catch (_) {
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.rosterImportTemplateFailed)),
+        );
+    }
   }
 
   @override
@@ -125,6 +163,8 @@ class _TournamentManagementAthletesTabState
                   duration: _expandDuration,
                   onToggle: () => _toggle(division.id),
                   onAddAthlete: (list) => _addAthlete(division, list),
+                  onImportExcel: () => _importRoster(division),
+                  onDownloadTemplate: _downloadTemplate,
                 ),
             ],
           ),
@@ -143,6 +183,8 @@ class _DivisionRow extends StatelessWidget {
     required this.duration,
     required this.onToggle,
     required this.onAddAthlete,
+    required this.onImportExcel,
+    required this.onDownloadTemplate,
   });
 
   final TournamentDivision division;
@@ -152,6 +194,8 @@ class _DivisionRow extends StatelessWidget {
   final Duration duration;
   final VoidCallback onToggle;
   final void Function(List<OrganizerOpsParticipant>) onAddAthlete;
+  final VoidCallback onImportExcel;
+  final VoidCallback onDownloadTemplate;
 
   bool _isPending(OrganizerOpsParticipant item) => const {
     'PENDING',
@@ -260,10 +304,28 @@ class _DivisionRow extends StatelessWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-                          child: FilledButton.icon(
-                            onPressed: () => onAddAthlete(participants),
-                            icon: const Icon(Icons.person_add_alt_1_rounded),
-                            label: Text(l10n.opsAddAthlete),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              FilledButton.icon(
+                                onPressed: () => onAddAthlete(participants),
+                                icon: const Icon(Icons.person_add_alt_1_rounded),
+                                label: Text(l10n.opsAddAthlete),
+                              ),
+                              OutlinedButton.icon(
+                                key: const ValueKey('athletes-import-excel'),
+                                onPressed: onImportExcel,
+                                icon: const Icon(Icons.upload_file_rounded),
+                                label: Text(l10n.rosterImportOpen),
+                              ),
+                              OutlinedButton.icon(
+                                key: const ValueKey('athletes-download-template'),
+                                onPressed: onDownloadTemplate,
+                                icon: const Icon(Icons.download_rounded),
+                                label: Text(l10n.rosterImportDownloadTemplate),
+                              ),
+                            ],
                           ),
                         ),
                         TournamentManagementPeopleSection(

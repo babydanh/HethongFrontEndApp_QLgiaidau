@@ -104,25 +104,6 @@ abstract interface class TournamentManagementRepository {
     String id,
     RosterImportBatchRequest request,
   );
-  Future<List<AddAthleteCandidate>> listAddAthleteCandidates(
-    String id, {
-    required AddAthleteSource source,
-    String? query,
-    String? participantId,
-  });
-  Future<String> addAthleteCandidate(
-    String id, {
-    required AddAthleteSource source,
-    required String userId,
-    String? tournamentDivisionId,
-    String? participantId,
-    FootballRosterRole? role,
-  });
-  Future<String> addAthleteDirect(
-    String id, {
-    required String name,
-    String? tournamentDivisionId,
-  });
 
   Future<List<String>> getGallery(String id);
   Future<void> addGalleryImage(String id, String url);
