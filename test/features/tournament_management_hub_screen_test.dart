@@ -185,6 +185,7 @@ class _RecordingManagementRepository extends _EmptyTournamentManagementRepositor
   Future<String> addAthleteDirect(
     String id, {
     required String name,
+    String? email,
     String? tournamentDivisionId,
   }) async {
     directNames.add(name);
@@ -220,7 +221,7 @@ Future<void> _openSettings(WidgetTester tester) async {
 }
 
 void main() {
-testWidgets('overview tournament title opens the information editor', (
+  testWidgets('overview tournament title opens the information editor', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 1200);
@@ -910,6 +911,56 @@ testWidgets('overview tournament title opens the information editor', (
     expect(financeTitleInAppBar, findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('operations retains live operations and the final section', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          introTeamsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => const []),
+          tournamentRepositoryProvider.overrideWithValue(
+            _EmptyTournamentRepository(),
+          ),
+          tournamentProvider(
+            'tournament-1',
+          ).overrideWith((ref) => Stream.value(_tournament('in_progress'))),
+          tournamentDivisionsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => <Map<String, dynamic>>[]),
+        ],
+        child: _app(
+          _tournament('in_progress'),
+          managementRepository: _EmptyTournamentManagementRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await _openSettings(tester);
+    await tester.tap(find.text(l10n.manageSettingsOtherSection));
+    await tester.pumpAndSettle();
+    final liveOperations = find.text(l10n.tournamentManagementLiveOperations);
+    await tester.ensureVisible(liveOperations);
+    await tester.tap(liveOperations);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip(l10n.opsRefresh), findsOneWidget);
+    expect(find.byTooltip(l10n.tournamentManagementBack), findsOneWidget);
+
+    await tester.tap(find.byTooltip(l10n.tournamentManagementBack));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(l10n.tournamentManagementLivestream, skipOffstage: false),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('tablet navigation updates the management detail section', (
     tester,
   ) async {
@@ -1457,6 +1508,45 @@ testWidgets('overview tournament title opens the information editor', (
       await tester.tap(rowMixed);
       await tester.pumpAndSettle();
       expect(bodyMixed, findsNothing);
+    });
+
+    testWidgets('expanded row shows the Excel import and template buttons', (
+      tester,
+    ) async {
+      await pumpAthletes(tester);
+
+      await tester.ensureVisible(rowMixed);
+      await tester.tap(rowMixed);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('athletes-import-excel')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('athletes-download-template')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tapping Excel import opens the roster import sheet', (
+      tester,
+    ) async {
+      await pumpAthletes(tester);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+
+      await tester.ensureVisible(rowMixed);
+      await tester.tap(rowMixed);
+      await tester.pumpAndSettle();
+
+      final importButton = find.byKey(const ValueKey('athletes-import-excel'));
+      await tester.ensureVisible(importButton);
+      await tester.tap(importButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.rosterImportTitle), findsOneWidget);
     });
 
     testWidgets('pending registration lives inside its own division row', (

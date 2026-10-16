@@ -136,6 +136,7 @@ class _TournamentManagementRepository
   Future<String> addAthleteDirect(
     String id, {
     required String name,
+    String? email,
     String? tournamentDivisionId,
   }) async {
     directNames.add(name);
@@ -371,6 +372,7 @@ void main() {
           AddAthleteCandidate(userId: 'shared', fullName: 'Club duplicate'),
           AddAthleteCandidate(userId: 'club', fullName: 'Club athlete'),
         ],
+        AddAthleteSource.email => const <AddAthleteCandidate>[],
       },
     );
     await tester.pumpWidget(

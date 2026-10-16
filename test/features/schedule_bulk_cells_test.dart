@@ -10,16 +10,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 typedef _Cell = ({String courtId, String courtName, DateTime at});
 
+const _defaultCourts = <Map<String, dynamic>>[
+  {'id': 'court-1', 'name': 'Sân 1'},
+];
+
 class _VenuesRepository implements TournamentManagementRepository {
+  _VenuesRepository({List<Map<String, dynamic>>? courts})
+    : courts = courts ?? _defaultCourts;
+
+  final List<Map<String, dynamic>> courts;
+
   @override
   Future<List<Map<String, dynamic>>> getVenues(String id) async => [
-    {
-      'id': 'venue-1',
-      'name': 'Nhà thi đấu',
-      'courts': [
-        {'id': 'court-1', 'name': 'Sân 1'},
-      ],
-    },
+    {'id': 'venue-1', 'name': 'Nhà thi đấu', 'courts': courts},
   ];
 
   @override
@@ -56,6 +59,8 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
   required int fromSlot,
   required int toSlot,
   required int placedDuration,
+  List<Map<String, dynamic>>? courts,
+  bool expectEnabled = true,
 }) async {
   ({List<_Cell> cells, List<MatchModel> waiting})? captured;
 
@@ -63,7 +68,7 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
     ProviderScope(
       overrides: [
         tournamentManagementRepositoryProvider.overrideWithValue(
-          _VenuesRepository(),
+          _VenuesRepository(courts: courts),
         ),
       ],
       child: MaterialApp(
@@ -116,7 +121,7 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
   expect(bulkFinder, findsOneWidget);
   expect(
     tester.widget<FilledButton>(bulkFinder).onPressed,
-    isNotNull,
+    expectEnabled ? isNotNull : isNull,
     reason: 'vùng còn ô trống thì nút xếp lô phải bật',
   );
   await tester.tap(bulkFinder);
@@ -172,5 +177,26 @@ void main() {
     ];
     expect(times, ['7:15', '7:30']);
     expect(captured.waiting.map((m) => m.id), ['w1', 'w2']);
+  });
+
+  testWidgets('a court without an id is never scheduled', (tester) async {
+    tester.view.physicalSize = const Size(600, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // Ghi lịch cần id sân; sân chưa có id thì không được xếp vào.
+    final captured = await _selectRangeAndConfirm(
+      tester,
+      fromSlot: 0,
+      toSlot: 2,
+      placedDuration: 15,
+      courts: const [
+        {'name': 'Sân 1'},
+      ],
+      expectEnabled: false,
+    );
+
+    expect(captured, isNull);
   });
 }

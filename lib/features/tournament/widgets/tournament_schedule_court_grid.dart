@@ -460,6 +460,8 @@ class _TournamentScheduleCourtGridState
         if (next >= waiting.length) break;
         if (index < 0 || index >= visibleCourts.length) continue;
         final name = visibleCourts[index];
+        // Sân chưa có id không ghi được lịch: không xếp trận vào sân này.
+        if (_courtIdOf(name).isEmpty) continue;
         final start = slot * 15 + _startHour * 60;
         final match = waiting[next];
         final end =
