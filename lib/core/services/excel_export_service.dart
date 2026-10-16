@@ -243,4 +243,103 @@ class ExcelExportService {
       }
     }
   }
+
+  /// Ma trận lịch để in/xuất: hàng là từng khung 15 phút, cột là từng sân.
+  ///
+  /// Hàm thuần (không I/O) để kiểm thử được: trận nằm ở hàng đúng khung giờ bắt
+  /// đầu và cột đúng sân của nó; ô còn lại để trống.
+  static List<List<String>> buildScheduleMatrix({
+    required List<String> courts,
+    required List<MatchModel> matches,
+    required int startHour,
+    required int endHour,
+  }) {
+    final rows = <List<String>>[
+      ['', ...courts],
+    ];
+    if (courts.isEmpty || endHour <= startHour) return rows;
+
+    for (var minute = startHour * 60; minute < endHour * 60; minute += 15) {
+      final label =
+          '${(minute ~/ 60).toString().padLeft(2, '0')}:'
+          '${(minute % 60).toString().padLeft(2, '0')}';
+      final row = <String>[label];
+      for (final court in courts) {
+        row.add(_scheduleCellLabel(matches, court, minute));
+      }
+      rows.add(row);
+    }
+    return rows;
+  }
+
+  /// Tên trận bắt đầu trong khung [minute] ở [court], trống nếu không có.
+  static String _scheduleCellLabel(
+    List<MatchModel> matches,
+    String court,
+    int minute,
+  ) {
+    for (final match in matches) {
+      final start = match.scheduledTime;
+      if (start == null) continue;
+      final matchCourt = (match.courtName?.trim().isNotEmpty ?? false)
+          ? match.courtName!.trim()
+          : match.court.trim();
+      if (matchCourt != court) continue;
+      if (start.hour * 60 + start.minute != minute) continue;
+      return '${match.team1Name} - ${match.team2Name}';
+    }
+    return '';
+  }
+
+  /// Xuất lịch thi đấu ra Excel rồi mở bảng chia sẻ.
+  static Future<void> exportSchedule({
+    required String title,
+    required List<String> courts,
+    required List<MatchModel> matches,
+    required int startHour,
+    required int endHour,
+  }) async {
+    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final excel = Excel.createExcel();
+    final sheet = excel[l10n.exportData];
+    excel.setDefaultSheet(l10n.exportData);
+    if (excel.tables.containsKey('Sheet1')) {
+      excel.delete('Sheet1');
+    }
+
+    for (final row in buildScheduleMatrix(
+      courts: courts,
+      matches: matches,
+      startHour: startHour,
+      endHour: endHour,
+    )) {
+      sheet.appendRow([for (final cell in row) TextCellValue(cell)]);
+    }
+
+    final fileBytes = excel.save();
+    if (fileBytes == null) return;
+
+    final fileName =
+        '${title.replaceAll(RegExp(r'[^A-Za-z0-9_\\-]'), '_')}'
+        '_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+    if (kIsWeb) {
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([
+        XFile.fromData(
+          Uint8List.fromList(fileBytes),
+          name: fileName,
+          mimeType:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ),
+      ], text: l10n.exportData);
+    } else {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsBytes(fileBytes);
+      if (Platform.isAndroid || Platform.isIOS) {
+        // ignore: deprecated_member_use
+        await Share.shareXFiles([XFile(file.path)], text: l10n.exportData);
+      }
+    }
+  }
 }

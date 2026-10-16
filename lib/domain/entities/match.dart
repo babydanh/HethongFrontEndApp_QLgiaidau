@@ -168,6 +168,9 @@ class MatchModel {
   final DateTime? startedAt;
   final DateTime? completedAt;
   final int? timeLimitMinutes;
+
+  /// Thời lượng ô lịch (phút): `durationMinutes` hoặc `matchConfig.durationMinutes`. Khác `timeLimitMinutes` (giới hạn trận).
+  final int? durationMinutes;
   final DateTime updatedAt;
 
   /// Monotonic version from backend (optimistic lock + realtime ordering, NOTE-7).
@@ -207,6 +210,15 @@ class MatchModel {
   /// True nếu đây là trận BYE (miễn đấu) do backend đánh dấu
   final bool isBye;
 
+  /// Bảng điểm có đang hiện trên khung video không. Backend mặc định true.
+  final bool scoreboardVisible;
+
+  /// H2H overlay đang hiện theo cờ server. Server ép chỉ một overlay hiện tại một lúc.
+  final bool h2hOverlayVisible;
+
+  /// Sơ đồ nhánh overlay đang hiện theo cờ server.
+  final bool bracketOverlayVisible;
+
   const MatchModel({
     required this.id,
     this.tournamentId,
@@ -241,6 +253,7 @@ class MatchModel {
     this.startedAt,
     this.completedAt,
     this.timeLimitMinutes,
+    this.durationMinutes,
     required this.updatedAt,
     this.revision,
     this.refereeName,
@@ -267,7 +280,20 @@ class MatchModel {
     this.stageType,
     this.divisionId,
     this.isBye = false,
+    this.scoreboardVisible = true,
+    this.h2hOverlayVisible = false,
+    this.bracketOverlayVisible = false,
   });
+
+  static int? durationMinutesFromJson(Map<String, dynamic> json) {
+    final top = json['durationMinutes'];
+    if (top is num) return top.toInt();
+    final config = json['matchConfig'];
+    if (config is Map && config['durationMinutes'] is num) {
+      return (config['durationMinutes'] as num).toInt();
+    }
+    return null;
+  }
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
     int parseInt(dynamic value, {int fallback = 0}) {
@@ -555,10 +581,13 @@ class MatchModel {
               ?.map((e) => MatchEvent.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      scheduledTime: DateParser.parseDateOptional(json['scheduledTime']),
+      scheduledTime: DateParser.parseDateOptional(
+        json['scheduledTime'] ?? json['scheduledAt'],
+      ),
       startedAt: DateParser.parseDateOptional(json['startedAt']),
       completedAt: DateParser.parseDateOptional(json['completedAt']),
       timeLimitMinutes: json['timeLimitMinutes'] as int?,
+      durationMinutes: durationMinutesFromJson(json),
       updatedAt: DateParser.parseDate(json['updatedAt']),
       refereeName: json['refereeName'],
       revision: json['revision'] as int?,
@@ -634,6 +663,9 @@ class MatchModel {
           scoreDetails?['division_id']?.toString() ??
           scoreDetails?['divisionId']?.toString(),
       isBye: json['isBye'] ?? json['is_bye'] ?? false,
+      scoreboardVisible: json['scoreboardVisible'] != false,
+      h2hOverlayVisible: json['h2hOverlayVisible'] == true,
+      bracketOverlayVisible: json['bracketOverlayVisible'] == true,
     );
   }
 
@@ -666,6 +698,7 @@ class MatchModel {
       'startedAt': startedAt?.toIso8601String(),
       'completedAt': completedAt?.toIso8601String(),
       'timeLimitMinutes': timeLimitMinutes,
+      'durationMinutes': durationMinutes,
       'updatedAt': updatedAt.toIso8601String(),
       if (revision != null) 'revision': revision,
       if (clubMatchSessionId != null) 'clubMatchSessionId': clubMatchSessionId,
@@ -725,6 +758,7 @@ class MatchModel {
     DateTime? startedAt,
     DateTime? completedAt,
     int? timeLimitMinutes,
+    int? durationMinutes,
     DateTime? updatedAt,
     int? revision,
     String? refereeName,
@@ -751,6 +785,9 @@ class MatchModel {
     String? stageType,
     String? divisionId,
     bool? isBye,
+    bool? scoreboardVisible,
+    bool? h2hOverlayVisible,
+    bool? bracketOverlayVisible,
   }) {
     return MatchModel(
       id: id ?? this.id,
@@ -784,6 +821,7 @@ class MatchModel {
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
       timeLimitMinutes: timeLimitMinutes ?? this.timeLimitMinutes,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
       updatedAt: updatedAt ?? this.updatedAt,
       revision: revision ?? this.revision,
       refereeName: refereeName ?? this.refereeName,
@@ -810,6 +848,10 @@ class MatchModel {
       stageType: stageType ?? this.stageType,
       divisionId: divisionId ?? this.divisionId,
       isBye: isBye ?? this.isBye,
+      scoreboardVisible: scoreboardVisible ?? this.scoreboardVisible,
+      h2hOverlayVisible: h2hOverlayVisible ?? this.h2hOverlayVisible,
+      bracketOverlayVisible:
+          bracketOverlayVisible ?? this.bracketOverlayVisible,
     );
   }
 

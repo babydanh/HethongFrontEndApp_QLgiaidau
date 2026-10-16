@@ -1,4 +1,6 @@
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
+import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
+import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 
 abstract interface class TournamentManagementRepository {
   Future<List<Map<String, dynamic>>> getVenues(String id);
@@ -59,6 +61,48 @@ abstract interface class TournamentManagementRepository {
     String id,
     String participantId,
     String status,
+  );
+  Future<List<AddAthleteCandidate>> listAddAthleteCandidates(
+    String id, {
+    required AddAthleteSource source,
+    String? query,
+    String? participantId,
+  });
+  Future<String> addAthleteCandidate(
+    String id, {
+    required AddAthleteSource source,
+    required String userId,
+    String? tournamentDivisionId,
+    String? participantId,
+    FootballRosterRole? role,
+  });
+  Future<String> addAthleteDirect(
+    String id, {
+    required String name,
+    String? email,
+    String? tournamentDivisionId,
+  });
+  Future<List<AddAthleteSearchCandidate>> searchAddAthleteCandidates(
+    String id, {
+    String? name,
+    String? email,
+    String? participantId,
+  });
+  Future<List<AddedAthletePair>> addAthletePairs(
+    String id, {
+    required AddAthleteSource source,
+    required String tournamentDivisionId,
+    required List<String> userIds,
+  });
+  Future<RosterImportBatchPreview> previewRosterImportBatch(
+    String id,
+    RosterImportBatchRequest request,
+  );
+  /// Ghi các dòng đủ điều kiện. Idempotency-Key được tính từ nội dung request,
+  /// nên gửi lại đúng payload không tạo bản ghi trùng.
+  Future<RosterImportBatchResult> importRosterBatch(
+    String id,
+    RosterImportBatchRequest request,
   );
 
   Future<List<String>> getGallery(String id);

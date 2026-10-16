@@ -2,6 +2,8 @@ import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
+import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
+import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -603,6 +605,247 @@ void main() {
       expect(backend.only.method, 'DELETE');
       expect(backend.only.path, '/tournaments/$tournamentId/gallery/2');
       expect(backend.only.data, isNull);
+    });
+  });
+
+  group('add athletes', () {
+    test(
+      'candidate search scopes source, participant and fresh results',
+      () async {
+        backend.onGet('/tournaments/$tournamentId/add-athletes/candidates', {
+          'items': [
+            {'userId': 'user-1', 'fullName': 'Athlete One'},
+          ],
+        });
+
+        final candidates = await repository.listAddAthleteCandidates(
+          tournamentId,
+          source: AddAthleteSource.club,
+          query: '  Athlete  ',
+          participantId: 'team-1',
+        );
+
+        expect(candidates.single.userId, 'user-1');
+        expect(candidates.single.fullName, 'Athlete One');
+        expect(backend.only.method, 'GET');
+        expect(
+          backend.only.path,
+          '/tournaments/$tournamentId/add-athletes/candidates',
+        );
+        expect(backend.only.queryParameters, {
+          'source': 'CLUB',
+          'q': 'Athlete',
+          'limit': 25,
+          'participantId': 'team-1',
+        });
+        expect(backend.only.extra['noCache'], isTrue);
+      },
+    );
+
+    test(
+      'football candidate addition posts the existing team and role',
+      () async {
+        backend.onPost('/tournaments/$tournamentId/add-athletes/candidates', {
+          'participantId': 'team-1',
+        });
+
+        final participantId = await repository.addAthleteCandidate(
+          tournamentId,
+          source: AddAthleteSource.friends,
+          userId: 'user-1',
+          tournamentDivisionId: 'division-1',
+          participantId: 'team-1',
+          role: FootballRosterRole.reserve,
+        );
+
+        expect(participantId, 'team-1');
+        expect(backend.only.method, 'POST');
+        expect(
+          backend.only.path,
+          '/tournaments/$tournamentId/add-athletes/candidates',
+        );
+        expect(backend.only.data, {
+          'source': 'FRIENDS',
+          'userId': 'user-1',
+          'tournamentDivisionId': 'division-1',
+          'participantId': 'team-1',
+          'role': 'RESERVE',
+        });
+      },
+    );
+
+    test('direct name posts only name and optional division', () async {
+      backend.onPost('/tournaments/$tournamentId/add-athletes/direct', {
+        'participantId': 'participant-1',
+      });
+
+      final participantId = await repository.addAthleteDirect(
+        tournamentId,
+        name: 'Direct athlete',
+        tournamentDivisionId: 'division-1',
+      );
+
+      expect(participantId, 'participant-1');
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/add-athletes/direct',
+      );
+      expect(backend.only.data, {
+        'name': 'Direct athlete',
+        'tournamentDivisionId': 'division-1',
+      });
+    });
+
+    test('direct athlete with email posts the email with the name', () async {
+      backend.onPost('/tournaments/$tournamentId/add-athletes/direct', {
+        'participantId': 'participant-1',
+      });
+
+      await repository.addAthleteDirect(
+        tournamentId,
+        name: 'Direct athlete',
+        email: 'direct@example.test',
+      );
+
+      expect(backend.only.data, {
+        'name': 'Direct athlete',
+        'email': 'direct@example.test',
+      });
+    });
+
+    test(
+      'missing participant id is not reported as a successful add',
+      () async {
+        backend.onPost('/tournaments/$tournamentId/add-athletes/direct', {});
+
+        await expectLater(
+          repository.addAthleteDirect(tournamentId, name: 'Direct athlete'),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
+  });
+
+  group('roster import batches', () {
+    final previewPath =
+        '/tournaments/$tournamentId/roster-import-batches/preview';
+    final commitPath = '/tournaments/$tournamentId/roster-import-batches';
+
+    RosterImportBatchRequest rosterRequest({String name = 'Nguyen Van A'}) {
+      return RosterImportBatchRequest(
+        groups: [
+          RosterImportBatchGroup(
+            divisionId: 'division-1',
+            participants: [
+              RosterImportBatchItem(
+                clientRowIndex: 0,
+                player1Name: name,
+                player1Email: 'a@example.test',
+                teamName: name,
+                sourceRowIndex: 2,
+                sourceSheetName: 'Mau_Dang_Ky',
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    test('preview posts to the preview route and parses the total', () async {
+      backend.onPost(previewPath, {
+        'totalParticipants': 1,
+        'groups': <Object?>[],
+      });
+
+      final preview = await repository.previewRosterImportBatch(
+        tournamentId,
+        rosterRequest(),
+      );
+
+      expect(backend.only.method, 'POST');
+      expect(backend.only.path, previewPath);
+      expect(preview.totalParticipants, 1);
+    });
+
+    test('commit sends teamName and sheet provenance on every row', () async {
+      backend.onPost(commitPath, {'importedCount': 1, 'replayed': false});
+
+      await repository.importRosterBatch(tournamentId, rosterRequest());
+
+      final groups = (backend.only.data as Map)['groups'] as List;
+      final participants = (groups.single as Map)['participants'] as List;
+      final participant = participants.single as Map;
+      expect(participant['teamName'], 'Nguyen Van A');
+      expect(participant['sourceRowIndex'], 2);
+      expect(participant['sourceSheetName'], 'Mau_Dang_Ky');
+    });
+
+    test('commit sends customResponses.notes only for rows with notes', () async {
+      backend.onPost(commitPath, {'importedCount': 2, 'replayed': false});
+
+      await repository.importRosterBatch(
+        tournamentId,
+        RosterImportBatchRequest(
+          groups: [
+            RosterImportBatchGroup(
+              divisionId: 'division-1',
+              participants: [
+                RosterImportBatchItem(
+                  clientRowIndex: 0,
+                  player1Name: 'Nguyen Van A',
+                  teamName: 'Nguyen Van A',
+                  sourceRowIndex: 2,
+                  customResponses: {'notes': 'Đăng ký muộn'},
+                ),
+                RosterImportBatchItem(
+                  clientRowIndex: 1,
+                  player1Name: 'Tran Thi B',
+                  teamName: 'Tran Thi B',
+                  sourceRowIndex: 3,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final groups = (backend.only.data as Map)['groups'] as List;
+      final participants = (groups.single as Map)['participants'] as List;
+      expect((participants[0] as Map)['customResponses'], {
+        'notes': 'Đăng ký muộn',
+      });
+      expect((participants[1] as Map).containsKey('customResponses'), isFalse);
+    });
+
+    test('retrying the same payload reuses the Idempotency-Key', () async {
+      backend.onPost(commitPath, {'importedCount': 1, 'replayed': false});
+
+      await repository.importRosterBatch(tournamentId, rosterRequest());
+      await repository.importRosterBatch(tournamentId, rosterRequest());
+
+      final keys = backend.requests
+          .map((r) => r.headers['Idempotency-Key'])
+          .toList();
+      expect(keys, hasLength(2));
+      expect(keys.first, startsWith('roster:$tournamentId:'));
+      expect(keys[1], keys.first);
+    });
+
+    test('a different payload gets a different Idempotency-Key', () async {
+      backend.onPost(commitPath, {'importedCount': 1, 'replayed': false});
+
+      await repository.importRosterBatch(tournamentId, rosterRequest());
+      await repository.importRosterBatch(
+        tournamentId,
+        rosterRequest(name: 'Tran Thi B'),
+      );
+
+      final keys = backend.requests
+          .map((r) => r.headers['Idempotency-Key'])
+          .toList();
+      expect(keys, hasLength(2));
+      expect(keys[1], isNot(keys.first));
     });
   });
 

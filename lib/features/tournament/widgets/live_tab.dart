@@ -54,6 +54,10 @@ class _LiveTabState extends State<LiveTab> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
+    // Avoid AnimatedSize's layout-time exception with a zero-duration crossfade.
+    final transitionDuration = MediaQuery.disableAnimationsOf(context)
+        ? const Duration(milliseconds: 1)
+        : const Duration(milliseconds: 250);
 
     if (widget.liveMatches.isEmpty && widget.divisions.isEmpty) {
       return Center(
@@ -296,7 +300,7 @@ class _LiveTabState extends State<LiveTab> {
                         const SizedBox(width: 6),
                         AnimatedRotation(
                           turns: isExpanded ? 0.5 : 0.0,
-                          duration: const Duration(milliseconds: 250),
+                          duration: transitionDuration,
                           curve: Curves.fastOutSlowIn,
                           child: Icon(
                             Icons.keyboard_arrow_down_rounded,
@@ -373,7 +377,7 @@ class _LiveTabState extends State<LiveTab> {
                   crossFadeState: isExpanded
                       ? CrossFadeState.showSecond
                       : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 250),
+                  duration: transitionDuration,
                   sizeCurve: Curves.fastOutSlowIn,
                   firstCurve: Curves.easeOut,
                   secondCurve: Curves.easeIn,

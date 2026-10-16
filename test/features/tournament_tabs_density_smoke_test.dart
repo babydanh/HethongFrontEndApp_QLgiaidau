@@ -1,9 +1,9 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -34,6 +34,129 @@ Tournament _fixtureTournament() => Tournament.fromJson({
   'createdAt': '2026-01-01T00:00:00.000Z',
   'updatedAt': '2026-01-01T00:00:00.000Z',
 }, _tournamentId);
+
+Tournament _divisionTransitionTournament() => Tournament.fromJson({
+  'name': 'Division transition fixture',
+  'sport': 'badminton',
+  'format': 'SINGLES',
+  'bracketType': 'single_elimination',
+  'status': 'in_progress',
+  'visibility': 'PUBLIC',
+  'creatorId': 'fixture-owner',
+  'maxTeams': 16,
+  'createdAt': '2026-01-01T00:00:00.000Z',
+  'updatedAt': '2026-01-01T00:00:00.000Z',
+  'divisions': [
+    for (var index = 0; index < 2; index++)
+      {
+        'id': 'division-$index',
+        'name': 'Division $index',
+        'matchType': index.isEven ? 'SINGLES' : 'DOUBLES',
+        'bracketType': 'single_elimination',
+        'maxParticipants': 16,
+        'participantCount': 2,
+      },
+  ],
+}, _tournamentId);
+
+List<MatchModel> _divisionTransitionMatches() {
+  final match = _fixtureMatches().first;
+  return [
+    match.copyWith(id: 'division-zero-match', divisionId: 'division-0'),
+    match.copyWith(id: 'division-one-match', divisionId: 'division-1'),
+  ];
+}
+
+Future<void> _pumpDivisionTransitionScreen(
+  WidgetTester tester, {
+  bool disableAnimations = false,
+}) async {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  final router = GoRouter(
+    initialLocation: '/tournaments/$_tournamentId',
+    routes: [
+      GoRoute(
+        path: '/tournaments/:id',
+        builder: (context, state) {
+          final screen = TournamentIntroScreen(
+            tournamentId: state.pathParameters['id']!,
+          );
+          return disableAnimations
+              ? MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(disableAnimations: true),
+                  child: screen,
+                )
+              : screen;
+        },
+      ),
+    ],
+  );
+  addTearDown(router.dispose);
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        tournamentIntroWithInviteProvider.overrideWith(
+          (ref, params) async => _divisionTransitionTournament(),
+        ),
+        tournamentDivisionsProvider.overrideWith(
+          (ref, tournamentId) async => const <Map<String, dynamic>>[],
+        ),
+        introTeamsProvider.overrideWith((ref, tournamentId) async => const []),
+        followedTournamentsProvider.overrideWith((ref) async => const []),
+        matchesProvider.overrideWith(
+          (ref, tournamentId) => Stream.value(_divisionTransitionMatches()),
+        ),
+        bracketMatchesProvider.overrideWith(
+          (ref, tournamentId) => Stream.value(const <MatchModel>[]),
+        ),
+        tournamentResultProvider.overrideWith(
+          (ref, params) => Stream.value({'awards': const []}),
+        ),
+        authProvider.overrideWith(_GuestAuthNotifier.new),
+        userProfileProvider.overrideWith(
+          (ref) async => const UserProfile(id: '', fullName: 'Guest'),
+        ),
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        theme: AppTheme.lightTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('vi'),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _openTab(WidgetTester tester, String label) async {
+  final tab = find.widgetWithText(Tab, label);
+  final tabBar = find.byType(TabBar).first;
+  for (var attempt = 0; attempt < 8; attempt++) {
+    final viewport = tester.getRect(tabBar);
+    final tabRect = tester.getRect(tab);
+    if (tabRect.left >= viewport.left && tabRect.right <= viewport.right) {
+      break;
+    }
+    await tester.drag(
+      tabBar,
+      Offset(tabRect.left < viewport.left ? 300 : -300, 0),
+    );
+    await tester.pumpAndSettle();
+  }
+  await tester.tap(tab);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump();
+  expect(tester.takeException(), isNull, reason: 'tab: $label');
+}
 
 List<Team> _fixtureTeams() => [
   Team(
@@ -79,6 +202,112 @@ List<MatchModel> _fixtureMatches() => [
     updatedAt: DateTime(2026, 1, 1),
   ),
 ];
+
+void _registerDivisionTransitionTests() {
+  testWidgets('changing a live division animates its expansion', (
+    tester,
+  ) async {
+    await _pumpDivisionTransitionScreen(tester);
+    await _openTab(tester, 'Đang diễn ra');
+    expect(find.byType(LiveTab), findsOneWidget);
+
+    final targetDivision = find.text('Division 1');
+    expect(targetDivision.hitTestable(), findsOneWidget);
+    final divisionRow = find
+        .ancestor(
+          of: targetDivision,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.margin == const EdgeInsets.only(bottom: 4),
+          ),
+        )
+        .first;
+    final expansion = find.descendant(
+      of: divisionRow,
+      matching: find.byType(AnimatedCrossFade),
+    );
+    final collapsedHeight = tester.getSize(expansion).height;
+
+    await tester.tap(targetDivision);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final intermediateHeight = tester.getSize(expansion).height;
+    await tester.pump(const Duration(milliseconds: 160));
+    final expandedHeight = tester.getSize(expansion).height;
+
+    expect(intermediateHeight, greaterThan(collapsedHeight));
+    expect(expandedHeight, greaterThan(intermediateHeight));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('division expansion respects reduced motion', (tester) async {
+    await _pumpDivisionTransitionScreen(tester, disableAnimations: true);
+    await _openTab(tester, 'Đang diễn ra');
+    expect(find.byType(LiveTab), findsOneWidget);
+
+    final targetDivision = find.text('Division 1');
+    final divisionRow = find
+        .ancestor(
+          of: targetDivision,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Container &&
+                widget.margin == const EdgeInsets.only(bottom: 4),
+          ),
+        )
+        .first;
+    final expansion = find.descendant(
+      of: divisionRow,
+      matching: find.byType(AnimatedCrossFade),
+    );
+
+    await tester.tap(targetDivision);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
+    final immediateHeight = tester.getSize(expansion).height;
+    await tester.pump(const Duration(milliseconds: 300));
+    final finalHeight = tester.getSize(expansion).height;
+
+    expect(immediateHeight, closeTo(finalHeight, 0.1));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('vertical scrolling reverses after division selection', (
+    tester,
+  ) async {
+    await _pumpDivisionTransitionScreen(tester);
+    await _openTab(tester, 'Đang diễn ra');
+    expect(find.byType(LiveTab), findsOneWidget);
+
+    final targetDivision = find.text('Division 1');
+    expect(targetDivision.hitTestable(), findsOneWidget);
+    await tester.tap(targetDivision);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final outerScrollable = find
+        .descendant(
+          of: find.byType(NestedScrollView),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    final position = tester.state<ScrollableState>(outerScrollable).position;
+    expect(position.axisDirection, AxisDirection.down);
+    final beforeScroll = position.pixels;
+
+    await tester.drag(find.byType(NestedScrollView), const Offset(0, -180));
+    await tester.pump(const Duration(milliseconds: 250));
+    final scrolledDown = position.pixels;
+    expect(scrolledDown, greaterThan(beforeScroll));
+
+    await tester.drag(find.byType(NestedScrollView), const Offset(0, 180));
+    await tester.pump(const Duration(milliseconds: 250));
+    final scrolledUp = position.pixels;
+    expect(scrolledUp, lessThan(scrolledDown));
+    expect(tester.takeException(), isNull);
+  });
+}
 
 void main() {
   testWidgets('compact tournament tabs render their existing fixture data', (
@@ -163,98 +392,37 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    Future<void> openTab(String label) async {
-      final tab = find.widgetWithText(Tab, label);
-      final tabBar = find.byType(TabBar).first;
-      for (var attempt = 0; attempt < 8; attempt++) {
-        final viewport = tester.getRect(tabBar);
-        final tabRect = tester.getRect(tab);
-        if (tabRect.left >= viewport.left && tabRect.right <= viewport.right) {
-          break;
-        }
-        await tester.drag(
-          tabBar,
-          Offset(tabRect.left < viewport.left ? 300 : -300, 0),
-        );
-        await tester.pumpAndSettle();
-      }
-      await tester.tap(tab);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      await tester.pump();
-      expect(tester.takeException(), isNull, reason: 'tab: $label');
-    }
-
-    await openTab('Đang diễn ra');
+    await _openTab(tester, 'Đang diễn ra');
     expect(find.text('Player Gamma'), findsOneWidget);
     expect(find.text('Player Delta'), findsOneWidget);
 
-    await openTab('Kết quả');
+    await _openTab(tester, 'Kết quả');
     expect(find.text('Champion Alpha'), findsWidgets);
 
-    await openTab('Danh sách đội');
+    await _openTab(tester, 'Danh sách đội');
     expect(find.text('Player Alpha / Player Beta'), findsOneWidget);
 
-    await openTab('Lịch thi đấu');
-    final unplacedPanel = find.byKey(
-      const ValueKey('schedule-unplaced-matches'),
+    await _openTab(tester, 'Lịch thi đấu');
+    final unplacedCell = find.byKey(
+      const ValueKey('schedule-unplaced-section'),
     );
-    final unplacedHeader = find.byKey(
-      const ValueKey('schedule-unplaced-header'),
-    );
-    expect(find.text('Player Epsilon'), findsNothing);
-    expect(find.text('Player Zeta'), findsNothing);
-    expect(unplacedHeader.hitTestable(), findsOneWidget);
-    await tester.tap(unplacedHeader);
-    await tester.pump(const Duration(milliseconds: 300));
-    final unplacedList = find.descendant(
-      of: unplacedPanel,
-      matching: find.byKey(const ValueKey('schedule-unplaced-list')),
-    );
-    expect(unplacedList, findsOneWidget);
-    final headerRect = tester.getRect(unplacedHeader);
-    final listRect = tester.getRect(unplacedList);
-    expect(listRect.top, greaterThanOrEqualTo(headerRect.bottom));
-
-    final unplacedScrollable = find.descendant(
-      of: unplacedList,
-      matching: find.byType(Scrollable),
-    );
-    expect(unplacedScrollable, findsOneWidget);
-    final unplacedPosition = tester
-        .state<ScrollableState>(unplacedScrollable)
-        .position;
-    expect(unplacedPosition.maxScrollExtent, greaterThan(0));
-
-    final epsilon = find.text('Player Epsilon');
-    final epsilonCard = find.widgetWithText(LiveMatchCardV2, 'Player Epsilon');
-    for (
-      var attempt = 0;
-      attempt < 8 && epsilonCard.hitTestable().evaluate().isEmpty;
-      attempt++
-    ) {
-      final currentListRect = tester.getRect(unplacedList);
-      await tester.dragFrom(
-        Offset(currentListRect.center.dx, currentListRect.top + 16),
-        const Offset(0, -80),
-      );
-      await tester.pump(const Duration(milliseconds: 200));
-    }
-    expect(unplacedPosition.pixels, greaterThan(0));
-    expect(epsilon, findsOneWidget);
-    expect(find.text('Player Zeta'), findsOneWidget);
-    final zetaCard = find.widgetWithText(LiveMatchCardV2, 'Player Zeta');
-    expect(epsilonCard, findsOneWidget);
-    expect(epsilonCard.hitTestable(), findsOneWidget);
-    expect(zetaCard.hitTestable(), findsOneWidget);
-    await tester.tap(zetaCard);
-    await tester.pumpAndSettle();
     expect(
-      find.text('Opened match: completed-match in $_tournamentId'),
+      find.descendant(
+        of: unplacedCell,
+        matching: find.textContaining('Player Epsilon'),
+      ),
       findsOneWidget,
     );
-    expect(tester.takeException(), isNull, reason: 'unplaced matches');
+    expect(
+      find.descendant(
+        of: unplacedCell,
+        matching: find.textContaining('Player Zeta'),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));
   });
+  _registerDivisionTransitionTests();
 }
