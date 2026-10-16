@@ -1768,7 +1768,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                               borderRadius: BorderRadius.circular(3),
                             ),
                             child: const Text(
-                              '1080p 60fps',
+                              // Live streams are capped at 30 fps.
+                              '1080p 30fps',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 7,
