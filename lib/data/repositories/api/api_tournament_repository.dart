@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
@@ -1289,6 +1290,12 @@ class ApiTournamentRepository implements ITournamentRepository {
         courtAddress: json['courtAddress']?.toString(),
       ),
       courtAddress: json['courtAddress']?.toString() ?? '',
+      courtId: json['courtId']?.toString(),
+      courtName: json['courtName']?.toString(),
+      scheduledTime: DateParser.parseDateOptional(
+        json['scheduledTime'] ?? json['scheduledAt'] ?? json['scheduled_at'],
+      ),
+      durationMinutes: MatchModel.durationMinutesFromJson(json),
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),

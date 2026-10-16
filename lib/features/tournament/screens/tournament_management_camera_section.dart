@@ -6,13 +6,16 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_live_status_action.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_catalog_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-String _matchLabel(MatchModel match) => '${match.team1Name} – ${match.team2Name}';
+String _matchLabel(MatchModel match) =>
+    '${match.team1Name} – ${match.team2Name}';
 
 /// Matches that can be moved onto a court: real fixtures that have not
 /// finished. BYE and completed rows have nothing left to schedule.
@@ -151,10 +154,7 @@ class _TournamentManagementCameraSectionState
           .refresh();
       if (!mounted) return;
       _showMessage(
-        l10n.tournamentManagementCameraAssigned(
-          _matchLabel(match),
-          court.name,
-        ),
+        l10n.tournamentManagementCameraAssigned(_matchLabel(match), court.name),
       );
     } on Object catch (error) {
       if (!mounted) return;
@@ -354,7 +354,9 @@ class _SelectionBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const ExcludeSemantics(child: Icon(Icons.touch_app_rounded, size: 18)),
+          const ExcludeSemantics(
+            child: Icon(Icons.touch_app_rounded, size: 18),
+          ),
           const SizedBox(width: AppTheme.spacingSM),
           Expanded(
             child: Column(
@@ -523,6 +525,15 @@ class _MatchPoolRow extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            tooltip: l10n.tournamentManagementRecordingCatalog,
+            onPressed: () => showMatchRecordingCatalogSheet(
+              context,
+              matchId: match.id,
+              matchLabel: label,
+            ),
+            icon: const Icon(Icons.video_library_outlined),
+          ),
           if (isBusy)
             const SizedBox.square(
               dimension: kMinTouchTarget,
@@ -617,6 +628,7 @@ class _CourtDropCard extends StatelessWidget {
   final String tournamentId;
   final TournamentCourtRef court;
   final TournamentCameraModel? camera;
+
   /// Every match that can be dropped here, not just the ones already on this
   /// court — the dragged match comes from the pool.
   final List<MatchModel> assignable;
@@ -637,6 +649,7 @@ class _CourtDropCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final courtTitle = court.name.isEmpty ? court.id : court.name;
+    final courtCamera = camera;
     final hasSelection = selectedMatch != null && !readOnly;
 
     final card = Container(
@@ -696,6 +709,10 @@ class _CourtDropCard extends StatelessWidget {
             courtName: courtTitle,
             readOnly: readOnly,
           ),
+          if (courtCamera != null) ...[
+            const SizedBox(height: AppTheme.spacingSM),
+            CameraLiveStatusAction(cameraId: courtCamera.id),
+          ],
           const SizedBox(height: AppTheme.spacingSM),
           Divider(height: 1, color: colors.border),
           const SizedBox(height: AppTheme.spacingSM),

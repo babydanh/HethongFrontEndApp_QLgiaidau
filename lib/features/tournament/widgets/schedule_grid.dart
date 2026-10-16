@@ -1,8 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/core/config/app_spacing.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 typedef _ScheduledMatchLane = ({MatchModel match, int lane});
+
+typedef _CardStyle = ({
+  BoxDecoration decoration,
+  Color headerBg,
+  Color winnerBg,
+  Color accent,
+  Color fg,
+});
+
+/// Vùng ô được chọn bằng nhấn giữ rồi kéo trên lưới: chỉ số cột sân và hàng giờ,
+/// đã chuẩn hoá (first <= last).
+typedef ScheduleRange = ({
+  int firstCourt,
+  int lastCourt,
+  int firstSlot,
+  int lastSlot,
+});
 
 /// Lịch thi đấu dạng lưới: cột giờ khoá sát trái, mỗi nhóm sân có thể có nhiều lane.
 ///
@@ -19,10 +39,35 @@ class ScheduleGrid extends StatefulWidget {
   /// đang xem — nếu derive từ trận của ngày đó thì sân không có trận sẽ biến mất.
   final List<String> courts;
   final List<MatchModel> matches;
+  final Map<String, String> divisionNameById;
+  final double slotHeight;
+  final bool emphasizeTimeLabels;
   final int startHour;
   final int endHour;
   final String? selectedMatchId;
   final ValueChanged<String> onTapMatch;
+
+  /// Phút mỗi set BTC cấu hình; dùng khi trận chưa có `durationMinutes`.
+  final int minutesPerSet;
+
+  /// Ngày đang xem. Dùng để tính giờ khi thả trận vào lưới.
+  final DateTime? day;
+
+  /// Có giá trị thì lưới mở chế độ xếp lịch: mỗi ô 15 phút của mỗi sân nhận
+  /// thẻ trận được kéo thả. Null (mặc định) giữ nguyên lưới chỉ đọc.
+  final void Function(String matchId, String court, DateTime scheduledAt)?
+  onDropMatch;
+
+  /// Có giá trị thì nhấn giữ rồi kéo trên lưới để chọn một vùng ô.
+  final void Function(ScheduleRange range)? onRangeSelected;
+
+  /// Kéo tay nắm ở cột giờ để đổi chiều cao hàng: lưới báo chiều cao mới, host
+  /// giữ state (lưới không tự đổi). Null thì không hiện tay nắm.
+  final ValueChanged<double>? onSlotHeightChanged;
+
+  /// Giới hạn chiều cao một ô 15 phút khi kéo giãn.
+  static const double minSlotHeight = 96;
+  static const double maxSlotHeight = 288;
 
   const ScheduleGrid({
     super.key,
@@ -32,6 +77,14 @@ class ScheduleGrid extends StatefulWidget {
     required this.endHour,
     this.selectedMatchId,
     required this.onTapMatch,
+    this.divisionNameById = const {},
+    this.slotHeight = 144,
+    this.emphasizeTimeLabels = false,
+    this.minutesPerSet = 15,
+    this.day,
+    this.onDropMatch,
+    this.onRangeSelected,
+    this.onSlotHeightChanged,
   });
 
   @override
@@ -39,12 +92,17 @@ class ScheduleGrid extends StatefulWidget {
 }
 
 class _ScheduleGridState extends State<ScheduleGrid> {
-  /// Chiều cao ô 30 phút — gọn để điện thoại thấy được nhiều giờ.
-  static const double _slotHeight = 44;
+  /// Shared-grid default is 144dp; the public schedule opts into 120dp.
+  /// `BASE_PIXELS_PER_MINUTE` remains the web grid's separate layout scale.
+  double get _slotHeight => widget.slotHeight;
   static const double _timeColumnWidth = 56;
-  static const double _courtLaneWidth = 168;
-  static const double _minimumCardHeight = 56;
-  static const int _minimumCardDurationMinutes = 40;
+  static const double _minCourtLaneWidth = 120;
+  static const double _minimumCardHeight = 44;
+  static const double _minimumCompactDivisionCardHeight = 60;
+  static const double _minimumFullCardHeight = 76;
+
+  /// Thẻ dưới 8 phút chỉ hiện một dòng; từ 8 phút trở lên hiện đủ hai đội.
+  static const int _compactBelowMinutes = 8;
 
   // Header và thân dùng hai controller riêng: một ScrollController chỉ gắn
   // được một ScrollPosition, dùng chung sẽ assert ngay lần swipe ngang đầu.
@@ -52,6 +110,64 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   // không có vòng lặp phản hồi, và header bị chặn cuộn để không tranh gesture.
   final ScrollController _bodyCtrl = ScrollController();
   final ScrollController _headerCtrl = ScrollController();
+
+  // ── Chọn vùng ô (nhấn giữ rồi kéo) ──
+  List<_CourtLayout> _bodyLayouts = const [];
+  double _bodyLaneWidth = 0;
+  (int court, int slot)? _rangeAnchor;
+  (int court, int slot)? _rangeFocus;
+
+  void _beginRange(Offset local) {
+    _rangeAnchor = _cellAt(local);
+    _rangeFocus = _rangeAnchor;
+  }
+
+  void _extendRange(Offset local) {
+    if (_rangeAnchor == null) return;
+    _rangeFocus = _cellAt(local);
+  }
+
+  /// Kéo tay nắm ở cột giờ: báo chiều cao hàng mới cho host (lưới không tự đổi).
+  void _resizeSlots(double deltaY) {
+    final next = (widget.slotHeight + deltaY).clamp(
+      ScheduleGrid.minSlotHeight,
+      ScheduleGrid.maxSlotHeight,
+    );
+    if (next == widget.slotHeight) return;
+    widget.onSlotHeightChanged?.call(next);
+  }
+
+  void _commitRange() {
+    final anchor = _rangeAnchor;
+    final focus = _rangeFocus;
+    _rangeAnchor = null;
+    _rangeFocus = null;
+    if (anchor == null || focus == null) return;
+    widget.onRangeSelected?.call((
+      firstCourt: anchor.$1 < focus.$1 ? anchor.$1 : focus.$1,
+      lastCourt: anchor.$1 > focus.$1 ? anchor.$1 : focus.$1,
+      firstSlot: anchor.$2 < focus.$2 ? anchor.$2 : focus.$2,
+      lastSlot: anchor.$2 > focus.$2 ? anchor.$2 : focus.$2,
+    ));
+  }
+
+  /// Ô nằm dưới điểm [local] (toạ độ trong thân lưới, gồm cả cột giờ).
+  (int court, int slot) _cellAt(Offset local) {
+    final scroll = _bodyCtrl.hasClients ? _bodyCtrl.offset : 0.0;
+    final x = local.dx - _timeColumnWidth + scroll;
+    var cursor = 0.0;
+    var court = _bodyLayouts.isEmpty ? 0 : _bodyLayouts.length - 1;
+    for (var i = 0; i < _bodyLayouts.length; i++) {
+      final width = _bodyLayouts[i].laneCount * _bodyLaneWidth;
+      if (x < cursor + width) {
+        court = i;
+        break;
+      }
+      cursor += width;
+    }
+    final slot = (local.dy ~/ _slotHeight).clamp(0, _slotCount - 1);
+    return (court, slot);
+  }
 
   @override
   void initState() {
@@ -73,16 +189,16 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     super.dispose();
   }
 
-  /// Số ô 30 phút trong khung giờ vận hành.
-  int get _slotCount => (widget.endHour - widget.startHour) * 2;
+  /// Số ô 15 phút trong khung giờ vận hành.
+  int get _slotCount => (widget.endHour - widget.startHour) * 4;
 
-  double get _pixelsPerMinute => _slotHeight / 30;
+  double get _pixelsPerMinute => _slotHeight / 15;
 
-  /// Nhãn từng ô 30 phút: 00:00, 00:30, 01:00…
+  /// Nhãn từng ô 15 phút: 00:00, 00:15, 00:30…
   List<String> get _slotLabels => [
     for (var i = 0; i < _slotCount; i++)
       () {
-        final total = widget.startHour * 60 + i * 30;
+        final total = widget.startHour * 60 + i * 15;
         final h = (total ~/ 60).toString().padLeft(2, '0');
         final m = (total % 60).toString().padLeft(2, '0');
         return '$h:$m';
@@ -101,98 +217,139 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     final courtLayouts = [
       for (final court in widget.courts) _buildCourtLayout(court),
     ];
+    final totalLanes = courtLayouts.fold<int>(
+      0,
+      (sum, layout) => sum + layout.laneCount,
+    );
 
-    return Column(
-      children: [
-        // Header tên sân — ghim trên, cuộn ngang dùng chung controller.
-        SizedBox(
-          height: 38,
-          child: Row(
-            children: [
-              Container(
-                width: _timeColumnWidth,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.bgCard,
-                  border: Border(bottom: BorderSide(color: colors.border)),
-                ),
-                child: Icon(
-                  Icons.schedule_rounded,
-                  size: 15,
-                  color: colors.textMuted,
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _headerCtrl,
-                  scrollDirection: Axis.horizontal,
-                  // Header không nhận cử chỉ cuộn: nó chỉ đi theo thân, tránh
-                  // hai vùng cùng tranh một cú swipe ngang.
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: Row(
-                    children: [
-                      for (var index = 0; index < widget.courts.length; index++)
-                        SizedBox(
-                          width:
-                              courtLayouts[index].laneCount * _courtLaneWidth,
-                          child: _courtHeader(widget.courts[index], colors),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        // Thân lưới — cột giờ khoá trái, khối sân cuộn ngang.
-        Expanded(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _timeColumn(colors),
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _bodyCtrl,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (
-                          var index = 0;
-                          index < widget.courts.length;
-                          index++
-                        )
-                          SizedBox(
-                            width:
-                                courtLayouts[index].laneCount * _courtLaneWidth,
-                            child: _courtColumn(courtLayouts[index], colors),
-                          ),
-                      ],
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        final laneWidth = _laneWidthFor(
+          constraints.maxWidth - _timeColumnWidth,
+          totalLanes,
+        );
+        _bodyLayouts = courtLayouts;
+        _bodyLaneWidth = laneWidth;
+        return Column(
+          children: [
+            // Header tên sân — ghim trên, cuộn ngang dùng chung controller.
+            SizedBox(
+              height: 38,
+              child: Row(
+                children: [
+                  Container(
+                    width: _timeColumnWidth,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colors.bgCard,
+                      border: Border(bottom: BorderSide(color: colors.border)),
+                    ),
+                    child: Listener(
+                      key: const ValueKey('schedule-scale-handle'),
+                      behavior: HitTestBehavior.opaque,
+                      onPointerMove: widget.onSlotHeightChanged == null
+                          ? null
+                          : (event) => _resizeSlots(event.delta.dy),
+                      child: Icon(
+                        widget.onSlotHeightChanged == null
+                            ? Icons.schedule_rounded
+                            : Icons.unfold_more_rounded,
+                        size: 15,
+                        color: colors.textMuted,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: _headerCtrl,
+                      scrollDirection: Axis.horizontal,
+                      // Header không nhận cử chỉ cuộn: nó chỉ đi theo thân, tránh
+                      // hai vùng cùng tranh một cú swipe ngang.
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: Row(
+                        children: [
+                          for (
+                            var index = 0;
+                            index < widget.courts.length;
+                            index++
+                          )
+                            SizedBox(
+                              width: courtLayouts[index].laneCount * laneWidth,
+                              child: _courtHeader(widget.courts[index]),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-      ],
+            const Divider(height: 1),
+            // Thân lưới — cột giờ khoá trái, khối sân cuộn ngang.
+            SizedBox(
+              height: _slotCount * _slotHeight,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onLongPressStart: widget.onRangeSelected == null
+                    ? null
+                    : (details) => _beginRange(details.localPosition),
+                onLongPressMoveUpdate: widget.onRangeSelected == null
+                    ? null
+                    : (details) => _extendRange(details.localPosition),
+                onLongPressEnd: widget.onRangeSelected == null
+                    ? null
+                    : (_) => _commitRange(),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _timeColumn(colors),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: _bodyCtrl,
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (
+                              var index = 0;
+                              index < widget.courts.length;
+                              index++
+                            )
+                              SizedBox(
+                                width:
+                                    courtLayouts[index].laneCount * laneWidth,
+                                child: _courtColumn(
+                                  widget.courts[index],
+                                  courtLayouts[index],
+                                  colors,
+                                  laneWidth,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _courtHeader(String court, AppColorsExtension colors) {
+  Widget _courtHeader(String court) {
     return Container(
       height: 38,
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 6),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
+      decoration: const BoxDecoration(
+        color: AppTheme.primary,
         border: Border(
-          bottom: BorderSide(color: colors.border),
-          left: BorderSide(color: colors.border),
+          bottom: BorderSide(color: AppTheme.primaryDark),
+          left: BorderSide(color: AppTheme.primaryDark),
         ),
       ),
       child: Text(
@@ -200,10 +357,10 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11.5,
           fontWeight: FontWeight.w700,
-          color: colors.textPrimary,
+          color: Colors.white,
         ),
       ),
     );
@@ -222,7 +379,10 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             Container(
               height: _slotHeight,
               alignment: Alignment.topRight,
-              padding: const EdgeInsets.only(right: 6, top: 1),
+              padding: EdgeInsets.only(
+                right: widget.emphasizeTimeLabels ? 0 : 6,
+                top: 1,
+              ),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
@@ -235,12 +395,16 @@ class _ScheduleGridState extends State<ScheduleGrid> {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: widget.emphasizeTimeLabels ? 12 : 10.5,
                   fontWeight: label.endsWith(':00')
                       ? FontWeight.w700
+                      : widget.emphasizeTimeLabels
+                      ? FontWeight.w600
                       : FontWeight.w500,
                   color: label.endsWith(':00')
                       ? colors.textPrimary
+                      : widget.emphasizeTimeLabels
+                      ? colors.textSecondary
                       : colors.textMuted,
                 ),
               ),
@@ -272,10 +436,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       final minutesFromOpen =
           (start.hour - widget.startHour) * 60 + start.minute;
       final startMinute = minutesFromOpen < 0 ? 0 : minutesFromOpen;
-      final matchDuration = match.timeLimitMinutes ?? 45;
-      final duration = matchDuration < _minimumCardDurationMinutes
-          ? _minimumCardDurationMinutes
-          : matchDuration;
+      final duration = _layoutDurationOf(match);
       var lane = 0;
       while (lane < laneEnds.length && laneEnds[lane] > startMinute) {
         lane++;
@@ -295,7 +456,28 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  Widget _courtColumn(_CourtLayout layout, AppColorsExtension colors) {
+  /// Thời lượng trận: `durationMinutes` đã lưu, thiếu thì minutesPerSet × số set.
+  /// Dùng chung với màn vận hành (xem `utils/schedule_duration.dart`).
+  int _durationOf(MatchModel match) =>
+      scheduledDurationMinutes(match, minutesPerSet: widget.minutesPerSet);
+
+  /// Số cột điểm = số set đã có trong scoreHistory. Trận chưa có set thì không có cột.
+  int _scoreColumnsOf(MatchModel match) => match.scoreHistory.length;
+
+  /// Bề rộng một lane: chia đều phần bề rộng còn lại cho mọi lane đang hiện,
+  /// không hẹp hơn `_minCourtLaneWidth`. Dưới mức đó lưới cuộn ngang, không cắt card.
+  double _laneWidthFor(double availableWidth, int totalLanes) {
+    final fit = availableWidth / totalLanes;
+    return fit < _minCourtLaneWidth ? _minCourtLaneWidth : fit;
+  }
+
+  Widget _courtColumn(
+    String court,
+    _CourtLayout layout,
+    AppColorsExtension colors,
+    double laneWidth,
+  ) {
+    final dropEnabled = widget.onDropMatch != null;
     return Container(
       height: _slotHeight * _slotCount,
       decoration: BoxDecoration(
@@ -303,7 +485,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
       child: Stack(
         children: [
-          // Lưới nền 30 phút.
+          // Lưới nền 15 phút.
           Column(
             children: [
               for (final label in _slotLabels)
@@ -321,14 +503,55 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                 ),
             ],
           ),
+          // Ô nhận thả nằm DƯỚI thẻ trận để bấm mở trận vẫn hoạt động.
+          if (dropEnabled)
+            Positioned.fill(
+              child: Column(
+                children: [
+                  for (var index = 0; index < _slotCount; index++)
+                    DragTarget<String>(
+                      key: ValueKey('schedule-slot-$court-$index'),
+                      onWillAcceptWithDetails: (details) =>
+                          details.data.trim().isNotEmpty,
+                      onAcceptWithDetails: (details) => widget.onDropMatch!(
+                        details.data,
+                        court,
+                        _slotStart(index),
+                      ),
+                      builder: (context, candidates, rejected) => Container(
+                        height: _slotHeight,
+                        color: candidates.isEmpty
+                            ? null
+                            : AppTheme.primary.withValues(alpha: 0.12),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           for (final placement in layout.placements)
-            _matchCard(placement.match, placement.lane, colors),
+            _matchCard(placement.match, placement.lane, colors, laneWidth),
         ],
       ),
     );
   }
 
-  Widget _matchCard(MatchModel match, int lane, AppColorsExtension colors) {
+  /// Giờ bắt đầu của ô 15 phút thứ [index] trong ngày đang xem.
+  DateTime _slotStart(int index) {
+    final day = widget.day ?? DateTime.now();
+    return DateTime(
+      day.year,
+      day.month,
+      day.day,
+      widget.startHour,
+    ).add(Duration(minutes: index * 15));
+  }
+
+  Widget _matchCard(
+    MatchModel match,
+    int lane,
+    AppColorsExtension colors,
+    double laneWidth,
+  ) {
     final start = match.scheduledTime;
     if (start == null) return const SizedBox.shrink();
 
@@ -337,102 +560,350 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       0.0,
       double.infinity,
     );
-    final duration = match.timeLimitMinutes ?? 45;
+    final duration = _durationOf(match);
+    final divisionName = _divisionNameFor(match);
     final calculatedHeight = duration * _pixelsPerMinute - 3;
-    final height = calculatedHeight < _minimumCardHeight
-        ? _minimumCardHeight
+    final minimumHeight = _minimumHeightFor(duration, divisionName);
+    final height = calculatedHeight < minimumHeight
+        ? minimumHeight
         : calculatedHeight;
-
-    // Dùng getter của domain model, không so chuỗi thô: backend gửi 'LIVE' /
-    // 'COMPLETED' (hoa), so sánh thẳng sẽ tô sai màu và lệch với chip lọc
-    // ngay phía trên — chip dùng match.isLive.
-    final live = match.isLive;
-    final done = match.isCompleted;
-    final selected = match.id == widget.selectedMatchId;
-
-    final (Color bg, Color border, Color fg) = selected
-        ? (
-            AppTheme.primary.withValues(alpha: 0.16),
-            AppTheme.primary,
-            AppTheme.primary,
-          )
-        : live
-        ? (
-            const Color(0xFFDCFCE7),
-            const Color(0xFF4ADE80),
-            const Color(0xFF166534),
-          )
-        : done
-        ? (colors.bgCard, colors.border, colors.textMuted)
-        : (
-            AppTheme.primary.withValues(alpha: 0.07),
-            AppTheme.primary.withValues(alpha: 0.35),
-            colors.textPrimary,
-          );
+    final style = _cardStyle(match, colors);
 
     return Positioned(
       key: ValueKey('schedule-match-${match.id}'),
       top: top + 1.5,
-      left: lane * _courtLaneWidth + 3,
-      width: _courtLaneWidth - 6,
+      left: lane * laneWidth + 3,
+      width: laneWidth - 6,
       height: height,
       child: GestureDetector(
         onTap: () => widget.onTapMatch(match.id),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: border),
-          ),
+          clipBehavior: Clip.antiAlias,
+          decoration: style.decoration,
+          child: duration < _compactBelowMinutes
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 3,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (divisionName != null)
+                        Text(
+                          divisionName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: style.fg,
+                          ),
+                        ),
+                      Expanded(child: _compactContent(match, style)),
+                    ],
+                  ),
+                )
+              : _fullContent(match, start, style, divisionName),
+        ),
+      ),
+    );
+  }
+
+  String? _divisionNameFor(MatchModel match) {
+    final divisionId = match.divisionId;
+    if (divisionId == null) return null;
+    final name = widget.divisionNameById[divisionId]?.trim();
+    return name == null || name.isEmpty ? null : name;
+  }
+
+  double _minimumHeightFor(int duration, String? divisionName) {
+    if (divisionName == null) return _minimumCardHeight;
+    return duration < _compactBelowMinutes
+        ? _minimumCompactDivisionCardHeight
+        : _minimumFullCardHeight;
+  }
+
+  int _layoutDurationOf(MatchModel match) {
+    final duration = _durationOf(match);
+    final divisionName = _divisionNameFor(match);
+    if (divisionName == null) return duration;
+
+    final calculatedHeight = duration * _pixelsPerMinute - 3;
+    final minimumHeight = _minimumHeightFor(duration, divisionName);
+    final renderedHeight = calculatedHeight < minimumHeight
+        ? minimumHeight
+        : calculatedHeight;
+    final renderedMinutes = (renderedHeight / _pixelsPerMinute).ceil();
+    return renderedMinutes > duration ? renderedMinutes : duration;
+  }
+
+  /// Thân/header/footer trung tính, không mã hoá trạng thái bằng màu.
+  /// Chỉ viền chọn là phản hồi tương tác; LIVE được biểu thị bằng badge.
+  _CardStyle _cardStyle(MatchModel match, AppColorsExtension colors) {
+    final selected = match.id == widget.selectedMatchId;
+    return (
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(
+          color: selected ? colors.warning : colors.border,
+          width: selected ? 2.0 : 1.0,
+        ),
+      ),
+      headerBg: colors.bgSurface,
+      winnerBg: colors.bgSurface,
+      accent: Colors.transparent,
+      fg: colors.textPrimary,
+    );
+  }
+
+  /// Thẻ một dòng (dưới _compactBelowMinutes phút); giờ đã có ở cột giờ.
+  Widget _compactContent(MatchModel match, _CardStyle style) {
+    return Row(
+      children: [
+        _teamName(match, match.team1Id, match.team1Name, style),
+        _compactCenter(match, style),
+        _teamName(match, match.team2Id, match.team2Name, style),
+      ],
+    );
+  }
+
+  Widget _compactCenter(MatchModel match, _CardStyle style) {
+    if (match.isLive) return _liveBadge();
+    final label = match.isCompleted
+        ? '${match.score1} - ${match.score2}'
+        : 'vs';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: style.fg.withValues(alpha: 0.75),
+        ),
+      ),
+    );
+  }
+
+  Widget _fullContent(
+    MatchModel match,
+    DateTime start,
+    _CardStyle style,
+    String? divisionName,
+  ) {
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _fullHeader(match, start, style, divisionName),
+        // Hai đội căn giữa giữa header và footer, như justify-between của web.
+        Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                '${start.hour.toString().padLeft(2, '0')}:'
-                '${start.minute.toString().padLeft(2, '0')}',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: fg.withValues(alpha: 0.75),
-                ),
-              ),
-              Flexible(
-                child: Text(
-                  match.team1Name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: fg,
-                  ),
-                ),
-              ),
-              Flexible(
-                child: Text(
-                  match.team2Name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: fg,
-                  ),
-                ),
-              ),
-              if (done)
-                Text(
-                  '${match.score1} - ${match.score2}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textSecondary,
-                  ),
-                ),
+              _competitorRow(match, match.team1Id, match.team1Name, 0, style),
+              Divider(height: 1, thickness: 1, color: colors.borderLight),
+              _competitorRow(match, match.team2Id, match.team2Name, 1, style),
             ],
           ),
+        ),
+        _fullFooter(match, style),
+      ],
+    );
+  }
+
+  /// Header thẻ: giờ bên trái, LIVE bên phải; style trung tính không theo status.
+  Widget _fullHeader(
+    MatchModel match,
+    DateTime start,
+    _CardStyle style,
+    String? divisionName,
+  ) {
+    final time =
+        '${start.hour.toString().padLeft(2, '0')}:'
+        '${start.minute.toString().padLeft(2, '0')}';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
+      decoration: BoxDecoration(
+        color: style.headerBg,
+        border: Border(
+          left: BorderSide(color: style.accent, width: 3),
+          bottom: BorderSide(color: context.colors.border),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              time,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: style.fg.withValues(alpha: 0.75),
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          if (divisionName != null)
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Text(
+                  divisionName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: style.fg,
+                  ),
+                ),
+              ),
+            ),
+          if (match.isLive) _liveBadge(),
+        ],
+      ),
+    );
+  }
+
+  /// Footer thẻ: "Vòng R • Trận N" trên nền xám nhạt như web. Trận đã có tỷ số
+  /// nhưng không có dữ liệu set thì hiện tổng điểm bên phải, để không mất kết quả.
+  Widget _fullFooter(MatchModel match, _CardStyle style) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final showTotal =
+        match.scoreHistory.isEmpty && (match.isLive || match.isCompleted);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        border: Border(top: BorderSide(color: colors.border)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.organizer_matchTitle(match.round, match.matchNumber),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: colors.textMuted,
+              ),
+            ),
+          ),
+          if (showTotal)
+            Text(
+              '${match.score1} - ${match.score2}',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: style.fg,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Hàng đội: tên bên trái, một ô điểm cho mỗi set đã có; trận chưa đấu không có ô nào.
+  /// Đội thắng được tô nền và accent như `row.won` của web.
+  Widget _competitorRow(
+    MatchModel match,
+    String teamId,
+    String name,
+    int side,
+    _CardStyle style,
+  ) {
+    final won = _isWinner(match, teamId);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
+      decoration: BoxDecoration(
+        color: won ? style.winnerBg : null,
+        border: Border(
+          left: BorderSide(
+            color: won ? style.accent : Colors.transparent,
+            width: 3,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          _teamName(match, teamId, name, style),
+          for (var index = 0; index < _scoreColumnsOf(match); index++)
+            SizedBox(
+              width: 16,
+              child: Text(
+                _setScoreLabel(match, index, side),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: style.fg,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Đội thắng khi trận đã kết thúc có winnerId; trận chưa xong không tô đậm ai.
+  bool _isWinner(MatchModel match, String teamId) =>
+      match.isCompleted &&
+      match.winnerId.isNotEmpty &&
+      match.winnerId == teamId;
+
+  /// Điểm một set của một bên, đọc từ scoreHistory (cùng contract web).
+  /// Chỉ gọi với index < scoreHistory.length (xem _scoreColumnsOf).
+  String _setScoreLabel(MatchModel match, int index, int side) {
+    final set = match.scoreHistory[index];
+    return '${side == 0 ? set.score1 : set.score2}';
+  }
+
+  /// Tô đậm đội thắng khi trận đã có người thắng; không đổi màu chữ theo trạng thái.
+  Widget _teamName(
+    MatchModel match,
+    String teamId,
+    String name,
+    _CardStyle style,
+  ) {
+    final isWinner = _isWinner(match, teamId);
+    return Flexible(
+      child: Text(
+        name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: isWinner ? FontWeight.w800 : FontWeight.w700,
+          color: style.fg,
+        ),
+      ),
+    );
+  }
+
+  Widget _liveBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        gradient: context.liveGradient,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Text(
+        'LIVE',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
         ),
       ),
     );
@@ -444,4 +915,120 @@ class _CourtLayout {
 
   final List<_ScheduledMatchLane> placements;
   final int laneCount;
+}
+
+/// Ô "Chưa xếp" trong khung lưới: trận thiếu giờ hoặc chưa xác định được sân.
+/// Không lọc theo ngày vì trận chưa xếp không có ngày để lọc.
+class ScheduleUnplacedSection extends StatelessWidget {
+  const ScheduleUnplacedSection({
+    super.key,
+    required this.matches,
+    required this.onTapMatch,
+  });
+
+  final List<MatchModel> matches;
+  final ValueChanged<String> onTapMatch;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      key: const ValueKey('schedule-unplaced-section'),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.matchesUnplacedSection(matches.length),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              for (final match in matches)
+                _UnplacedMatchChip(
+                  match: match,
+                  reason: match.scheduledTime == null
+                      ? l10n.organizer_noTime
+                      : l10n.matchTableUnassignedCourt,
+                  onTap: () => onTapMatch(match.id),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UnplacedMatchChip extends StatelessWidget {
+  const _UnplacedMatchChip({
+    required this.match,
+    required this.reason,
+    required this.onTap,
+  });
+
+  final MatchModel match;
+  final String reason;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final title = '${match.team1Name} vs ${match.team2Name}';
+    final maxChipWidth = MediaQuery.sizeOf(context).width * 0.6;
+    return Semantics(
+      button: true,
+      excludeSemantics: true,
+      label: '$title, $reason',
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: 44, maxWidth: maxChipWidth),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                Text(
+                  reason,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.5, color: colors.textMuted),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

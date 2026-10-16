@@ -12,10 +12,14 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_bottom_sheet.dart';
-import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -126,12 +130,49 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     }
   }
 
+  String? _selectedDivisionId;
+
+  List<TournamentDivision> get _divisions =>
+      ref.read(tournamentProvider(widget.tournamentId)).value?.divisions ??
+      const [];
+
+  bool get _hasRequestedDivision {
+    final requested = widget.divisionId;
+    return requested != null && requested.isNotEmpty;
+  }
+
+  /// Giải đang xem: divisionId từ caller, rồi giải người dùng chọn, rồi giải đầu tiên.
+  String? get _activeDivisionId {
+    if (_hasRequestedDivision) return widget.divisionId;
+    if (_selectedDivisionId != null) return _selectedDivisionId;
+    final divisions = _divisions;
+    return divisions.isEmpty ? null : divisions.first.id;
+  }
+
+  Widget _buildDivisionSelector(List<TournamentDivision> divisions) {
+    final activeId = _activeDivisionId;
+    final selectedName =
+        divisions.where((d) => d.id == activeId).firstOrNull?.name ?? '';
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: DivisionFilterSegment(
+        divisions: divisions.map((d) => d.name).toList(),
+        selectedDivision: selectedName,
+        onDivisionChanged: (name) {
+          final picked = divisions.where((d) => d.name == name).firstOrNull;
+          if (picked == null) return;
+          setState(() => _selectedDivisionId = picked.id);
+        },
+      ),
+    );
+  }
+
   void _handleDoubleTapMatch(MatchModel match) {
     if (!widget.canEditBracket) return;
+    final divisionId = _activeDivisionId;
     final queryParameters = <String, String>{
       'focusMatchId': match.id,
-      if (widget.divisionId != null && widget.divisionId!.isNotEmpty)
-        'divisionId': widget.divisionId!,
+      if (divisionId != null && divisionId.isNotEmpty) 'divisionId': divisionId,
     };
     context.push(
       Uri(
@@ -172,7 +213,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           .read(tournamentRepositoryProvider)
           .updateBracketSlots(
             widget.tournamentId,
-            divisionId: widget.divisionId,
+            divisionId: _activeDivisionId,
             operations: [
               {
                 'operation': 'UNASSIGN',
@@ -185,7 +226,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       ref.invalidate(bracketMatchesProvider(widget.tournamentId));
       final params = (
         tournamentId: widget.tournamentId,
-        divisionId: widget.divisionId,
+        divisionId: _activeDivisionId,
       );
       ref.invalidate(bracketMatchesWithDivisionProvider(params));
       if (mounted) setState(() {});
@@ -232,161 +273,201 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final matchesAsync = ref.watch(
-      bracketMatchesWithDivisionProvider((
-        tournamentId: widget.tournamentId,
-        divisionId: widget.divisionId,
-      )),
-    );
     final tournamentAsync = ref.watch(tournamentProvider(widget.tournamentId));
     final tournament = tournamentAsync.value;
     final auth = ref.watch(authProvider);
 
-    final bodyContent = matchesAsync.when(
-      data: (matches) {
-        if (matches.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 16),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.account_tree_outlined,
-                    size: 64,
-                    color: context.colors.textMuted.withValues(alpha: 0.4),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.bracketView_noMatches,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: context.colors.textSecondary,
+    final waitingForDivisions =
+        !_hasRequestedDivision &&
+        tournament == null &&
+        tournamentAsync.isLoading;
+    final matchContent = waitingForDivisions
+        ? const _BracketShimmerLoading()
+        : ref
+              .watch(
+                bracketMatchesWithDivisionProvider((
+                  tournamentId: widget.tournamentId,
+                  divisionId: _activeDivisionId,
+                )),
+              )
+              .when(
+                data: (matches) {
+                  if (matches.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 60,
+                        horizontal: 16,
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.account_tree_outlined,
+                              size: 64,
+                              color: context.colors.textMuted.withValues(
+                                alpha: 0.4,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n.bracketView_noMatches,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: context.colors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.bracketView_drawHint,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: context.colors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  final divisionBracketType = tournamentAsync.value?.divisions
+                      .where((d) => d.id == _activeDivisionId)
+                      .firstOrNull
+                      ?.bracketType;
+
+                  final rawType =
+                      (widget.bracketType ??
+                              divisionBracketType ??
+                              tournamentAsync.value?.bracketType ??
+                              '')
+                          .trim()
+                          .toLowerCase();
+
+                  final hasDoubleElimMatches = matches.any(
+                    isDoubleEliminationMatch,
+                  );
+                  final hasGroupMatches = matches.any(isGroupStageMatch);
+                  final hasKnockoutMatches = matches.any(isKnockoutMatch);
+
+                  final String effectiveBracketType;
+                  if (hasDoubleElimMatches ||
+                      rawType == 'double_elimination' ||
+                      rawType == 'doubleelimination') {
+                    effectiveBracketType =
+                        AppConstants.bracketDoubleElimination;
+                  } else if (rawType == 'single_elimination' ||
+                      rawType == 'singleelimination' ||
+                      rawType == 'knockout') {
+                    effectiveBracketType =
+                        AppConstants.bracketSingleElimination;
+                  } else if (rawType == 'round_robin' ||
+                      rawType == 'roundrobin') {
+                    effectiveBracketType = AppConstants.bracketRoundRobin;
+                  } else if (rawType == 'group_stage_knockout' ||
+                      rawType == 'groupstageknockout') {
+                    effectiveBracketType =
+                        AppConstants.bracketGroupStageKnockout;
+                  } else if (hasGroupMatches && hasKnockoutMatches) {
+                    effectiveBracketType =
+                        AppConstants.bracketGroupStageKnockout;
+                  } else if (hasGroupMatches) {
+                    effectiveBracketType = AppConstants.bracketRoundRobin;
+                  } else {
+                    effectiveBracketType =
+                        AppConstants.bracketSingleElimination;
+                  }
+
+                  final isRoundRobin =
+                      effectiveBracketType == AppConstants.bracketRoundRobin;
+                  final isGroupStageKnockout =
+                      effectiveBracketType ==
+                      AppConstants.bracketGroupStageKnockout;
+                  final hasGroupStage =
+                      isRoundRobin || (isGroupStageKnockout && hasGroupMatches);
+
+                  final effectiveIsLite =
+                      widget.isLite || tournament?.isLite == true;
+                  final canActAsReferee =
+                      effectiveIsLite ||
+                      auth.role == UserRole.admin ||
+                      widget.isReferee;
+                  final canScoreMatch =
+                      auth.role == UserRole.admin ||
+                      widget.canEditBracket ||
+                      widget.isReferee;
+                  final isReadOnlyMode =
+                      !effectiveIsLite && auth.role == UserRole.viewer;
+
+                  if (hasGroupStage) {
+                    return Column(
+                      mainAxisSize: widget.isEmbedded
+                          ? MainAxisSize.min
+                          : MainAxisSize.max,
+                      children: [
+                        _buildGroupStageTabBar(l10n),
+                        const SizedBox(height: 8),
+                        if (widget.isEmbedded)
+                          _buildGroupTabContent(
+                            matches,
+                            effectiveBracketType,
+                            auth,
+                            canActAsReferee: canActAsReferee,
+                            canScoreMatch: canScoreMatch,
+                            isReadOnly: isReadOnlyMode,
+                          )
+                        else
+                          Expanded(
+                            child: _buildGroupTabContent(
+                              matches,
+                              effectiveBracketType,
+                              auth,
+                              canActAsReferee: canActAsReferee,
+                              canScoreMatch: canScoreMatch,
+                              isReadOnly: isReadOnlyMode,
+                            ),
+                          ),
+                      ],
+                    );
+                  } else {
+                    return _buildKnockoutMatchTable(
+                      matches,
+                      effectiveBracketType,
+                      isReadOnlyMode,
+                      canActAsReferee,
+                      canScoreMatch,
+                    );
+                  }
+                },
+                loading: () => const _BracketShimmerLoading(),
+                error: (e, st) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      e.toString().contains('429')
+                          ? l10n.bracketView_rateLimited
+                          : l10n.bracketView_loadError,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: context.colors.textSecondary),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.bracketView_drawHint,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.colors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final divisionBracketType = tournamentAsync.value?.divisions
-            .where((d) => d.id == widget.divisionId)
-            .firstOrNull
-            ?.bracketType;
-
-        final rawType =
-            (widget.bracketType ??
-                    divisionBracketType ??
-                    tournamentAsync.value?.bracketType ??
-                    '')
-                .trim()
-                .toLowerCase();
-
-        final hasDoubleElimMatches = matches.any(isDoubleEliminationMatch);
-        final hasGroupMatches = matches.any(isGroupStageMatch);
-        final hasKnockoutMatches = matches.any(isKnockoutMatch);
-
-        final String effectiveBracketType;
-        if (hasDoubleElimMatches ||
-            rawType == 'double_elimination' ||
-            rawType == 'doubleelimination') {
-          effectiveBracketType = AppConstants.bracketDoubleElimination;
-        } else if (rawType == 'single_elimination' ||
-            rawType == 'singleelimination' ||
-            rawType == 'knockout') {
-          effectiveBracketType = AppConstants.bracketSingleElimination;
-        } else if (rawType == 'round_robin' || rawType == 'roundrobin') {
-          effectiveBracketType = AppConstants.bracketRoundRobin;
-        } else if (rawType == 'group_stage_knockout' ||
-            rawType == 'groupstageknockout') {
-          effectiveBracketType = AppConstants.bracketGroupStageKnockout;
-        } else if (hasGroupMatches && hasKnockoutMatches) {
-          effectiveBracketType = AppConstants.bracketGroupStageKnockout;
-        } else if (hasGroupMatches) {
-          effectiveBracketType = AppConstants.bracketRoundRobin;
-        } else {
-          effectiveBracketType = AppConstants.bracketSingleElimination;
-        }
-
-        final isRoundRobin =
-            effectiveBracketType == AppConstants.bracketRoundRobin;
-        final isGroupStageKnockout =
-            effectiveBracketType == AppConstants.bracketGroupStageKnockout;
-        final hasGroupStage =
-            isRoundRobin || (isGroupStageKnockout && hasGroupMatches);
-
-        final effectiveIsLite = widget.isLite || tournament?.isLite == true;
-        final canActAsReferee =
-            effectiveIsLite || auth.role == UserRole.admin || widget.isReferee;
-        final canScoreMatch =
-            auth.role == UserRole.admin ||
-            widget.canEditBracket ||
-            widget.isReferee;
-        final isReadOnlyMode = !effectiveIsLite && auth.role == UserRole.viewer;
-
-        if (hasGroupStage) {
-          return Column(
+                ),
+              );
+    final divisions = _divisions;
+    final bodyContent = !_hasRequestedDivision && divisions.length > 1
+        ? Column(
             mainAxisSize: widget.isEmbedded
                 ? MainAxisSize.min
                 : MainAxisSize.max,
             children: [
-              _buildGroupStageTabBar(l10n),
-              const SizedBox(height: 8),
+              _buildDivisionSelector(divisions),
               if (widget.isEmbedded)
-                _buildGroupTabContent(
-                  matches,
-                  effectiveBracketType,
-                  auth,
-                  canActAsReferee: canActAsReferee,
-                  canScoreMatch: canScoreMatch,
-                  isReadOnly: isReadOnlyMode,
-                )
+                matchContent
               else
-                Expanded(
-                  child: _buildGroupTabContent(
-                    matches,
-                    effectiveBracketType,
-                    auth,
-                    canActAsReferee: canActAsReferee,
-                    canScoreMatch: canScoreMatch,
-                    isReadOnly: isReadOnlyMode,
-                  ),
-                ),
+                Expanded(child: matchContent),
             ],
-          );
-        } else {
-          return _buildKnockoutMatchTable(
-            matches,
-            effectiveBracketType,
-            isReadOnlyMode,
-            canActAsReferee,
-            canScoreMatch,
-          );
-        }
-      },
-      loading: () => const _BracketShimmerLoading(),
-      error: (e, st) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            e.toString().contains('429')
-                ? l10n.bracketView_rateLimited
-                : l10n.bracketView_loadError,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.colors.textSecondary),
-          ),
-        ),
-      ),
-    );
+          )
+        : matchContent;
 
     if (widget.isEmbedded) {
       return bodyContent;
@@ -505,7 +586,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           child: CrossTableView(
             matches: matches,
             tournamentId: widget.tournamentId,
-            divisionId: widget.divisionId,
+            divisionId: _activeDivisionId,
             configuredLegs: widget.configuredLegs,
             onDoubleTapMatch: widget.canEditBracket
                 ? _handleDoubleTapMatch
@@ -516,7 +597,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         return StandingsView(
           matches: matches,
           tournamentId: widget.tournamentId,
-          divisionId: widget.divisionId,
+          divisionId: _activeDivisionId,
         );
       case 2:
         return _buildKnockoutMatchTable(
@@ -630,17 +711,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             .toList()
           ..sort();
 
-    // Filter logic
-    final filteredMatches =
+    // Filter logic: search is applied after this, to group rows only.
+    final nonSearchMatches =
         stageScopedMatches.where((m) {
-          // Search query filter
-          if (_searchQuery.isNotEmpty) {
-            final t1 = m.team1Name.toLowerCase();
-            final t2 = m.team2Name.toLowerCase();
-            if (!t1.contains(_searchQuery) && !t2.contains(_searchQuery)) {
-              return false;
-            }
-          }
           // Branch filter
           if (_selectedBranch.isNotEmpty && _selectedBranch != 'all') {
             if (_selectedBranch == 'winners' &&
@@ -697,6 +770,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           }
           return a.id.compareTo(b.id);
         });
+    final filteredMatches = nonSearchMatches.where((m) {
+      if (_searchQuery.isEmpty) return true;
+      final t1 = m.team1Name.toLowerCase();
+      final t2 = m.team2Name.toLowerCase();
+      return t1.contains(_searchQuery) || t2.contains(_searchQuery);
+    }).toList();
 
     String sectionKey(MatchModel match) {
       if (!isGroupStageMatch(match)) return 'KNOCKOUT';
@@ -710,6 +789,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           : (match.groupName ?? '').trim();
       return '$groupName • ${l10n.crossTableLegIndicator(match.leg ?? 1, availableLegs.length)}';
     }
+
+    final groupMatches = filteredMatches.where(isGroupStageMatch).toList();
+    // Search narrows only the group rows; the knockout tree must stay whole.
+    final bracketMatches = nonSearchMatches
+        .where((m) => !isGroupStageMatch(m))
+        .toList();
 
     return ListView(
       controller: widget.isEmbedded ? null : widget.scrollController,
@@ -788,7 +873,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     MaterialPageRoute(
                       builder: (context) => BracketDiagramScreen(
                         tournamentId: widget.tournamentId,
-                        divisionId: widget.divisionId,
+                        divisionId: _activeDivisionId,
                         bracketType: bracketType,
                         initialMatches: matches,
                         isReferee: isReferee,
@@ -806,7 +891,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   ref.invalidate(matchesProvider(widget.tournamentId));
                   final params = (
                     tournamentId: widget.tournamentId,
-                    divisionId: widget.divisionId,
+                    divisionId: _activeDivisionId,
                   );
                   ref.invalidate(bracketMatchesWithDivisionProvider(params));
                   ref.invalidate(
@@ -1045,7 +1130,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           ),
 
         // ── MATCHES LIST ──
-        if (filteredMatches.isEmpty)
+        if (filteredMatches.isEmpty && bracketMatches.isEmpty)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 40),
             alignment: Alignment.center,
@@ -1069,10 +1154,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               ],
             ),
           ),
-        for (var index = 0; index < filteredMatches.length; index++) ...[
+        for (var index = 0; index < groupMatches.length; index++) ...[
           if (index == 0 ||
-              sectionKey(filteredMatches[index]) !=
-                  sectionKey(filteredMatches[index - 1]))
+              sectionKey(groupMatches[index]) !=
+                  sectionKey(groupMatches[index - 1]))
             Padding(
               padding: const EdgeInsets.only(top: 6, bottom: 8),
               child: Row(
@@ -1081,7 +1166,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
-                      sectionLabel(filteredMatches[index]),
+                      sectionLabel(groupMatches[index]),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -1094,7 +1179,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               ),
             ),
           MatchTableRow(
-            match: filteredMatches[index],
+            match: groupMatches[index],
             isReadOnly: isReadOnly,
             totalRounds: effectiveTotalRounds,
             tournamentId: widget.tournamentId,
@@ -1103,6 +1188,31 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             onUnassignSlot: widget.canEditBracket ? _unassignBracketSlot : null,
           ),
         ],
+        if (bracketMatches.isNotEmpty)
+          SizedBox(
+            height: 420,
+            child: isDoubleElimination
+                ? DoubleElimDiagram(
+                    matches: bracketMatches,
+                    tournamentId: widget.tournamentId,
+                    isReferee: isReferee,
+                    isReadOnly: isReadOnly,
+                    canScoreMatch: canScoreMatch,
+                    onDoubleTapMatch: widget.canEditBracket
+                        ? _handleDoubleTapMatch
+                        : null,
+                  )
+                : SingleElimDiagram(
+                    matches: bracketMatches,
+                    tournamentId: widget.tournamentId,
+                    isReferee: isReferee,
+                    isReadOnly: isReadOnly,
+                    canScoreMatch: canScoreMatch,
+                    onDoubleTapMatch: widget.canEditBracket
+                        ? _handleDoubleTapMatch
+                        : null,
+                  ),
+          ),
       ],
     );
   }

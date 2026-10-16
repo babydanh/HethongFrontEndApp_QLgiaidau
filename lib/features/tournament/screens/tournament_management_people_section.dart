@@ -13,19 +13,44 @@ class TournamentManagementPeopleSection extends StatelessWidget {
     super.key,
     required this.tournament,
     required this.showRegistration,
+    this.divisionId,
+    this.embedded = false,
+    this.pairFormat = false,
   });
   final Tournament tournament;
   final bool showRegistration;
 
+  /// Chỉ hiện người tham gia của nội dung này. Null: toàn giải (hành vi cũ).
+  final String? divisionId;
+
+  /// Nhúng trong một vùng đã cuộn sẵn: dùng Column thay vì ListView riêng.
+  final bool embedded;
+
+  /// Nội dung đôi: đội mở được để xem từng thành viên (như web).
+  final bool pairFormat;
+
   @override
   Widget build(BuildContext context) => showRegistration
-      ? _RegistrationPeople(tournament: tournament)
+      ? _RegistrationPeople(
+          tournament: tournament,
+          divisionId: divisionId,
+          embedded: embedded,
+          pairFormat: pairFormat,
+        )
       : _TournamentPermissions(tournamentId: tournament.id);
 }
 
 class _RegistrationPeople extends ConsumerStatefulWidget {
-  const _RegistrationPeople({required this.tournament});
+  const _RegistrationPeople({
+    required this.tournament,
+    this.divisionId,
+    this.embedded = false,
+    this.pairFormat = false,
+  });
   final Tournament tournament;
+  final String? divisionId;
+  final bool embedded;
+  final bool pairFormat;
 
   @override
   ConsumerState<_RegistrationPeople> createState() =>
@@ -67,10 +92,52 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             error: snapshot.error,
             onRetry: _reload,
           );
-        final participants = snapshot.data ?? const <OrganizerOpsParticipant>[];
+        final all = snapshot.data ?? const <OrganizerOpsParticipant>[];
+        final divisionId = widget.divisionId;
+        final participants = divisionId == null
+            ? all
+            : all
+                  .where((item) => item.divisionId == divisionId)
+                  .toList(growable: false);
         final pending = participants
             .where((item) => _isPending(item.teamStatus))
             .toList(growable: false);
+        final body = <Widget>[
+          if (_mutationError != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              l10n.tournamentManagementActionError,
+              style: TextStyle(color: context.colors.error),
+            ),
+          ],
+          if (participants.isEmpty)
+            TournamentManagementEmpty(
+              title: l10n.tournamentManagementApplicationsEmpty,
+              subtitle: l10n.tournamentManagementApplicationsEmptyDescription,
+              icon: Icons.how_to_reg_outlined,
+            )
+          else ...[
+            if (!widget.embedded) const SizedBox(height: 12),
+            for (final participant in participants) ...[
+              _ParticipantCard(
+                participant: participant,
+                pairFormat: widget.pairFormat,
+                isBusy: _busyParticipantId == participant.id,
+                onApprove: () => _setParticipantStatus(participant, 'COMPLETE'),
+                onReject: () => _setParticipantStatus(participant, 'REJECTED'),
+              ),
+              Divider(height: 1, color: context.colors.border),
+            ],
+          ],
+        ];
+        if (widget.embedded) {
+          // Đã nằm trong row mở rộng: số đếm hiện ở tiêu đề row, không cần
+          // thẻ bọc hay ListView cuộn riêng.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: body,
+          );
+        }
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -95,34 +162,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
                       ),
                     ],
                   ),
-                  if (_mutationError != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.tournamentManagementActionError,
-                      style: TextStyle(color: context.colors.error),
-                    ),
-                  ],
-                  if (participants.isEmpty)
-                    TournamentManagementEmpty(
-                      title: l10n.tournamentManagementApplicationsEmpty,
-                      subtitle:
-                          l10n.tournamentManagementApplicationsEmptyDescription,
-                      icon: Icons.how_to_reg_outlined,
-                    )
-                  else ...[
-                    const SizedBox(height: 12),
-                    for (final participant in participants) ...[
-                      _ParticipantCard(
-                        participant: participant,
-                        isBusy: _busyParticipantId == participant.id,
-                        onApprove: () =>
-                            _setParticipantStatus(participant, 'COMPLETE'),
-                        onReject: () =>
-                            _setParticipantStatus(participant, 'REJECTED'),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ],
+                  ...body,
                 ],
               ),
             ),
@@ -619,84 +659,141 @@ class _CountChip extends StatelessWidget {
   );
 }
 
-class _ParticipantCard extends StatelessWidget {
+class _ParticipantCard extends StatefulWidget {
   const _ParticipantCard({
     required this.participant,
     required this.isBusy,
     required this.onApprove,
     required this.onReject,
+    this.pairFormat = false,
   });
   final OrganizerOpsParticipant participant;
   final bool isBusy;
   final VoidCallback onApprove;
   final VoidCallback onReject;
 
+  /// Nội dung đôi / đôi nam nữ: đội luôn mở được kể cả khi mới có 1 người.
+  final bool pairFormat;
+
+  @override
+  State<_ParticipantCard> createState() => _ParticipantCardState();
+}
+
+class _ParticipantCardState extends State<_ParticipantCard> {
+  static const _duration = Duration(milliseconds: 200);
+  bool _expanded = false;
+
+  // Như web (`isExpandableFormat || members.length > 1`).
+  bool get _expandable =>
+      widget.pairFormat || widget.participant.members.length > 1;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final participant = widget.participant;
     final status = participant.teamStatus.toUpperCase();
     final pending = const {'PENDING', 'PENDING_APPROVAL'}.contains(status);
-    final localizedStatus = switch (status) {
+    final (statusLabel, statusColor) = switch (status) {
       'PENDING' ||
-      'PENDING_APPROVAL' => l10n.tournamentManagementParticipantPending,
-      'PENDING_PARTNER' => l10n.tournamentManagementParticipantPendingPartner,
-      'COMPLETE' => l10n.tournamentManagementParticipantApproved,
-      'REJECTED' => l10n.tournamentManagementParticipantRejected,
-      'KICKED' => l10n.tournamentManagementParticipantRemoved,
-      _ => l10n.tournamentManagementStatusOther,
-    };
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.border),
+      'PENDING_APPROVAL' => (
+        l10n.tournamentManagementParticipantPending,
+        colors.warning,
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  participant.teamName,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Chip(
-                label: Text(localizedStatus),
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              l10n.tournamentManagementParticipantCount(
-                participant.members.length,
-              ),
-              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+      'PENDING_PARTNER' => (
+        l10n.tournamentManagementParticipantPendingPartner,
+        colors.warning,
+      ),
+      'COMPLETE' => (
+        l10n.tournamentManagementParticipantApproved,
+        colors.success,
+      ),
+      'REJECTED' => (
+        l10n.tournamentManagementParticipantRejected,
+        colors.error,
+      ),
+      'KICKED' => (
+        l10n.tournamentManagementParticipantRemoved,
+        colors.textMuted,
+      ),
+      _ => (l10n.tournamentManagementStatusOther, colors.textSecondary),
+    };
+    final lead = participant.members.isEmpty ? null : participant.members.first;
+    final header = Row(
+      children: [
+        if (lead != null)
+          UserAvatarTap(
+            userId: lead.userId,
+            name: lead.fullName,
+            imageUrl: lead.avatarUrl,
+            size: 34,
+          )
+        else
+          const SizedBox(width: 34, height: 44),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            participant.teamName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          if (pending) ...[
-            const SizedBox(height: 8),
-            Row(
+        ),
+        const SizedBox(width: 8),
+        Text(
+          statusLabel,
+          style: TextStyle(
+            color: statusColor,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        if (_expandable)
+          AnimatedRotation(
+            turns: _expanded ? 0.5 : 0,
+            duration: _duration,
+            curve: Curves.easeOutCubic,
+            child: Icon(Icons.expand_more_rounded, color: colors.textMuted),
+          ),
+      ],
+    );
+    return Column(
+      key: ValueKey('athlete-team-row-${participant.id}'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          button: _expandable,
+          expanded: _expandable ? _expanded : null,
+          label: participant.teamName,
+          child: InkWell(
+            onTap: _expandable
+                ? () => setState(() => _expanded = !_expanded)
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: header,
+            ),
+          ),
+        ),
+        if (pending)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: isBusy ? null : onReject,
+                    onPressed: widget.isBusy ? null : widget.onReject,
                     child: Text(l10n.tournamentManagementReject),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton(
-                    onPressed: isBusy ? null : onApprove,
-                    child: isBusy
+                    onPressed: widget.isBusy ? null : widget.onApprove,
+                    child: widget.isBusy
                         ? const SizedBox.square(
                             dimension: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
@@ -706,8 +803,79 @@ class _ParticipantCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        AnimatedSize(
+          duration: _duration,
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: _expandable && _expanded
+              ? _TeamDetail(
+                  key: ValueKey('athlete-team-detail-${participant.id}'),
+                  members: participant.members,
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
+}
+
+/// Danh sách thành viên của một đội, hiện khi mở dòng đội (giống panel
+/// "Thành viên" của web): avatar + tên + vai trò, nền nhạt, không viền.
+class _TeamDetail extends StatelessWidget {
+  const _TeamDetail({super.key, required this.members});
+  final List<OrganizerOpsMember> members;
+
+  String? _role(AppLocalizations l10n, String? role) => switch (role) {
+    'CAPTAIN' => l10n.tournamentTeamCaptain,
+    null || '' => null,
+    _ => l10n.memberRole,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return ColoredBox(
+      color: colors.bgElevated,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Column(
+          children: [
+            for (final member in members)
+              Row(
+                children: [
+                  UserAvatarTap(
+                    userId: member.userId,
+                    name: member.fullName,
+                    imageUrl: member.avatarUrl,
+                    size: 40,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      member.fullName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  if (_role(l10n, member.role) case final role?)
+                    Text(
+                      role,
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                ],
+              ),
           ],
-        ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/data/models/camera_live_status_model.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 
 /// Organizer-side camera routing for a tournament's courts.
@@ -23,5 +24,11 @@ abstract class ICourtCameraRepository {
 
   /// Pins [cameraId] to a match, overriding the camera the court would
   /// otherwise hand that match when its court changes.
-  Future<void> assignCamera({required String matchId, required String cameraId});
+  Future<void> assignCamera({
+    required String matchId,
+    required String cameraId,
+  });
+
+  /// Reads the backend-owned live signal on explicit user action.
+  Future<CameraLiveStatusModel> getCameraLiveStatus(String cameraId);
 }

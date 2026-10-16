@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/data/models/penalty_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -709,11 +710,14 @@ class ApiMatchRepository implements IMatchRepository {
         courtName: json['courtName']?.toString(),
         tournamentVenueName: _readTournamentVenueName(json),
       ),
+      courtId: json['courtId']?.toString(),
+      courtName: json['courtName']?.toString(),
 
       courtAddress: json['courtAddress']?.toString() ?? '',
       scheduledTime: DateParser.parseDateOptional(
-        json['scheduledTime'] ?? json['scheduled_at'],
+        json['scheduledTime'] ?? json['scheduledAt'] ?? json['scheduled_at'],
       ),
+      durationMinutes: MatchModel.durationMinutesFromJson(json),
       startedAt: DateParser.parseDateOptional(
         json['startedAt'] ?? json['started_at'],
       ),
@@ -784,6 +788,8 @@ class ApiMatchRepository implements IMatchRepository {
     StreamSubscription? scoreSub;
     StreamSubscription? statusSub;
     StreamSubscription? tournamentUpdateSub;
+    StreamSubscription? visibilitySub;
+    StreamSubscription? overlaySub;
     Timer? reconciliationTimer;
     MatchModel? latestMatch;
 
@@ -845,6 +851,33 @@ class ApiMatchRepository implements IMatchRepository {
             controller.add(mergedMatch);
           }
         });
+        visibilitySub = _socketService.onScoreboardVisibility.listen((data) {
+          final current = latestMatch;
+          final visible = data['scoreboardVisible'];
+          if (data['id'] == matchId &&
+              current != null &&
+              visible is bool &&
+              !controller.isClosed) {
+            latestMatch = current.copyWith(scoreboardVisible: visible);
+            controller.add(latestMatch);
+          }
+        });
+        overlaySub = _socketService.onOverlayVisibility.listen((data) {
+          final current = latestMatch;
+          final h2hVisible = data['h2hOverlayVisible'];
+          final bracketVisible = data['bracketOverlayVisible'];
+          if ((data['matchId'] ?? data['id']) == matchId &&
+              current != null &&
+              h2hVisible is bool &&
+              bracketVisible is bool &&
+              !controller.isClosed) {
+            latestMatch = current.copyWith(
+              h2hOverlayVisible: h2hVisible,
+              bracketOverlayVisible: bracketVisible,
+            );
+            controller.add(latestMatch);
+          }
+        });
 
         // Socket is the fast path; reconcile periodically so a dropped event or
         // a proxy that temporarily falls back to polling cannot leave stale score.
@@ -866,6 +899,8 @@ class ApiMatchRepository implements IMatchRepository {
         scoreSub?.cancel();
         statusSub?.cancel();
         tournamentUpdateSub?.cancel();
+        visibilitySub?.cancel();
+        overlaySub?.cancel();
         reconciliationTimer?.cancel();
         _socketService.leave(matchId);
         _socketService.leaveTournament(tournamentId);
@@ -920,6 +955,15 @@ class ApiMatchRepository implements IMatchRepository {
       // trả 409 → điểm bị drop + màn "kẹt"/desync mãi. (fix #33)
       revision: incoming.revision ?? previous.revision,
       divisionId: incoming.divisionId ?? previous.divisionId,
+      scoreboardVisible: payload.containsKey('scoreboardVisible')
+          ? incoming.scoreboardVisible
+          : previous.scoreboardVisible,
+      h2hOverlayVisible: payload.containsKey('h2hOverlayVisible')
+          ? incoming.h2hOverlayVisible
+          : previous.h2hOverlayVisible,
+      bracketOverlayVisible: payload.containsKey('bracketOverlayVisible')
+          ? incoming.bracketOverlayVisible
+          : previous.bracketOverlayVisible,
     );
   }
 
@@ -1319,6 +1363,45 @@ class ApiMatchRepository implements IMatchRepository {
     if (winnerId != null) payload['winnerId'] = winnerId;
 
     await _dioClient.dio.patch('/matches/$matchId/operation', data: payload);
+  }
+
+  @override
+  Future<void> setScoreboardVisibility(
+    String matchId, {
+    required bool visible,
+    required bool isClubMatch,
+  }) async {
+    final path = isClubMatch
+        ? '/club-match-sessions/matches/$matchId/scoreboard-visibility'
+        : '/matches/$matchId/scoreboard-visibility';
+    await _dioClient.dio.patch(path, data: {'visible': visible});
+  }
+
+  @override
+  Future<({bool h2hOverlayVisible, bool bracketOverlayVisible})>
+  setOverlayVisibility(
+    String matchId, {
+    required LiveOverlayKind kind,
+    required bool visible,
+    required bool isClubMatch,
+  }) async {
+    final path = isClubMatch
+        ? '/club-match-sessions/matches/$matchId/overlay-visibility'
+        : '/matches/$matchId/overlay-visibility';
+    final response = await _dioClient.dio.patch(
+      path,
+      data: {'kind': kind.wireValue, 'visible': visible},
+    );
+    // TransformInterceptor bọc response: trạng thái nằm trong `data`.
+    final envelope = response.data;
+    final payload = envelope is Map ? envelope['data'] : null;
+    if (payload is! Map) {
+      throw const FormatException('overlay-visibility response has no data');
+    }
+    return (
+      h2hOverlayVisible: payload['h2hOverlayVisible'] == true,
+      bracketOverlayVisible: payload['bracketOverlayVisible'] == true,
+    );
   }
 
   @override
