@@ -438,6 +438,7 @@
   "selectFeature": "Chọn một chức năng bên trái",
   "playersPerTeam": "Người/Đội",
   "managementTitle": "QUẢN LÝ",
+  "tournamentManagementSettingsTooltip": "Cài đặt giải đấu",
   "manageTokens": "Quản lý Mã truy cập (Token)",
   "manageTokensSubtitle": "Xem QR Code, Refresh Token, Số người online",
   "manageTeams": "Quản lý đội / VĐV",

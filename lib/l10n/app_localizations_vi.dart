@@ -1229,6 +1229,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get managementTitle => 'QUẢN LÝ';
 
   @override
+  String get tournamentManagementSettingsTooltip => 'Cài đặt giải đấu';
+
+  @override
   String get manageTokens => 'Quản lý Mã truy cập (Token)';
 
   @override

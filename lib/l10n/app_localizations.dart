@@ -2426,6 +2426,12 @@ abstract class AppLocalizations {
   /// **'QUẢN LÝ'**
   String get managementTitle;
 
+  /// No description provided for @tournamentManagementSettingsTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt giải đấu'**
+  String get tournamentManagementSettingsTooltip;
+
   /// No description provided for @manageTokens.
   ///
   /// In vi, this message translates to:

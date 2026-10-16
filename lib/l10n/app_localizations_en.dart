@@ -1234,6 +1234,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get managementTitle => 'MANAGEMENT';
 
   @override
+  String get tournamentManagementSettingsTooltip => 'Tournament settings';
+
+  @override
   String get manageTokens => 'Manage Access Tokens';
 
   @override

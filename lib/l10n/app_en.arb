@@ -442,6 +442,7 @@
   "selectFeature": "Select a feature from the left",
   "playersPerTeam": "Players/Team",
   "managementTitle": "MANAGEMENT",
+  "tournamentManagementSettingsTooltip": "Tournament settings",
   "manageTokens": "Manage Access Tokens",
   "manageTokensSubtitle": "View QR Code, Refresh Token, Online users",
   "manageTeams": "Manage Teams / Players",
