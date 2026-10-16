@@ -346,6 +346,12 @@
   "userProfileClubMemberRole": "Thành viên CLB",
   "userProfileEloStarting": "Điểm ELO khởi điểm",
   "userProfileClubTagsTitle": "DANH HIỆU CLB",
+  "userProfileViewProfileOf": "Xem hồ sơ {name}",
+  "@userProfileViewProfileOf": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "userProfileEditTag": "Sửa nhãn",
   "userProfileAssignTag": "+ Gán nhãn",
   "userProfileNoClubTags": "Chưa có danh hiệu trong CLB",

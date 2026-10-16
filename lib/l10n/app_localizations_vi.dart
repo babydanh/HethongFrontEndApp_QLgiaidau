@@ -981,6 +981,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get userProfileClubTagsTitle => 'DANH HIỆU CLB';
 
   @override
+  String userProfileViewProfileOf(Object name) {
+    return 'Xem hồ sơ $name';
+  }
+
+  @override
   String get userProfileEditTag => 'Sửa nhãn';
 
   @override

@@ -2145,7 +2145,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
 
               // Video controls overlay (Bottom bar)
-              Positioned(
+              if (canControl) Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
@@ -2166,11 +2166,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 16,
-                      ),
                       if (canControl) ...[
                         const SizedBox(width: 6),
                         _liveControlIcon(
@@ -2200,37 +2195,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                             ),
                           ),
                         ),
-                      ] else const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white54, width: 0.5),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: const Text(
-                          '1080p 60fps',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 7,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.volume_up_rounded,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.fullscreen_rounded,
-                        color: Colors.white,
-                        size: 16,
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -2280,26 +2245,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       : const SizedBox.shrink(
                           key: ValueKey('live-overlay-bracket-hidden'),
                         ),
-                ),
-              ),
-              // Big central Play Button (simulating ready state)
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      width: 1.2,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Colors.white,
-                    size: 26,
-                  ),
                 ),
               ),
             ],
