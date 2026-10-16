@@ -31,6 +31,7 @@ import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
+import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -1357,6 +1358,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
     });
 
+    final registrationStatusById = _featuredRegistrationStatusById();
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1378,7 +1381,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               child: Align(
                 alignment: Alignment.topCenter,
                 child: FeaturedTournamentBannerCard(
-                  tournament: items[i],
+                  tournament: HomeFeaturedTournament(
+                    id: items[i].id,
+                    name: items[i].name,
+                    bannerUrl: items[i].bannerUrl,
+                    sport: items[i].sport,
+                    status: items[i].status,
+                    registrationStatus: registrationStatusById[items[i].id],
+                  ),
                   onTap: () => context.push("/intro/${items[i].id}"),
                 ),
               ),
@@ -1387,6 +1397,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
       ],
     );
+  }
+
+  /// Trạng thái đăng ký (OPEN/CLOSED) do server tính, lấy từ projection Khám
+  /// phá theo id giải. Giải không có trong projection thì không có badge.
+  Map<String, String?> _featuredRegistrationStatusById() {
+    final statusById = <String, String?>{};
+    for (final matchStatus in const ['ONGOING', 'COMPLETED']) {
+      final projection = ref.watch(
+        homeProjectionProvider((sport: _exploreSport, matchStatus: matchStatus)),
+      );
+      if (projection case AsyncData(:final value)) {
+        for (final featured in value.featuredTournaments) {
+          statusById[featured.id] = featured.registrationStatus;
+        }
+      }
+    }
+    return statusById;
   }
 
   double _bannerSlotHeight(BuildContext context) {
