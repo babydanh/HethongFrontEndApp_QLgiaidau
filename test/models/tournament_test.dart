@@ -122,6 +122,26 @@ void main() {
       // StatusHelper.normalizeTournamentStatus maps 'ONGOING' to something
       expect(t.status, isNotEmpty);
     });
+    test('retains the source status for exact registration policy checks', () {
+      final tournament = Tournament.fromJson({
+        'name': 'Registration status',
+        'status': 'REGISTRATION_OPEN',
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      }, 'registration-status');
+
+      expect(tournament.status, 'registration');
+      expect(tournament.rawStatus, 'REGISTRATION_OPEN');
+      expect(
+        tournament.copyWith(name: 'Copied').rawStatus,
+        'REGISTRATION_OPEN',
+      );
+      expect(
+        tournament.copyWith(status: 'in_progress').rawStatus,
+        'in_progress',
+      );
+      expect(tournament.toJson().containsKey('rawStatus'), isFalse);
+    });
 
     test('should handle tournamentConfig JSONB', () {
       final json = {

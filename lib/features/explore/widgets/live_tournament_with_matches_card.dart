@@ -76,28 +76,30 @@ class _LiveTournamentWithMatchesCardState
     try {
       final repo = ref.read(matchRepositoryProvider);
       final requestCursor = _pageCursors[pageIndex];
-      final result = await repo.getTournamentMatchesPaged(
-        tournamentId: widget.tournament.id,
-        status: widget.filterStatus == 'all' ? null : widget.filterStatus,
-        cursor: requestCursor,
-        limit: 4,
-        trigger: 'home_tournament_card',
+      final page = await fetchCursorPageWhere<MatchModel>(
+        startCursor: requestCursor,
+        accept: isRenderablePublicMatch,
+        fetchPage: (cursor) async {
+          final result = await repo.getTournamentMatchesPaged(
+            tournamentId: widget.tournament.id,
+            status: widget.filterStatus == 'all' ? null : widget.filterStatus,
+            cursor: cursor,
+            limit: 4,
+            trigger: 'home_tournament_card',
+          );
+          return (items: result.matches, nextCursor: result.nextCursor);
+        },
       );
-      final visiblePageMatches = result.matches
-          .where(isRenderablePublicMatch)
-          .toList(growable: false);
-      final nextCursor = result.nextCursor?.trim();
 
       if (mounted) {
         setState(() {
           _isLoading = false;
           _hasLoadError = false;
 
-          _pageMatches[pageIndex] = visiblePageMatches;
+          _pageMatches[pageIndex] = page.items;
           _currentPageIndex = pageIndex;
-          if (nextCursor != null &&
-              nextCursor.isNotEmpty &&
-              nextCursor != requestCursor) {
+          final nextCursor = page.nextCursor;
+          if (nextCursor != null) {
             _pageCursors[pageIndex + 1] = nextCursor;
           } else {
             _pageCursors.remove(pageIndex + 1);
@@ -147,7 +149,7 @@ class _LiveTournamentWithMatchesCardState
         ),
       );
     }
-    if (currentMatches.isEmpty && !_isLoading && !hasNextCursor) {
+    if (currentMatches.isEmpty && !_isLoading) {
       return const SizedBox.shrink();
     }
 
@@ -217,11 +219,6 @@ class _LiveTournamentWithMatchesCardState
                 ),
               ),
             )
-          else if (currentMatches.isEmpty && hasNextCursor)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Text('Không có trận phù hợp trên trang này.'),
-            )
           else if (widget.filterStatus == 'live')
             SizedBox(
               height: 144,
@@ -264,11 +261,8 @@ class _LiveTournamentWithMatchesCardState
             ),
 
           // ── Cursor Pagination Navigation Bar ──
-          if ((currentMatches.isNotEmpty || hasNextCursor) &&
-              (_currentPageIndex > 0 ||
-                  _pageMatches.containsKey(_currentPageIndex + 1) ||
-                  _pageCursors[_currentPageIndex + 1]?.trim().isNotEmpty ==
-                      true))
+          if (currentMatches.isNotEmpty &&
+              (_currentPageIndex > 0 || hasNextCursor))
             _buildCursorPaginationBar(context, l10n),
 
           Container(height: 8, color: isDark ? colors.bgDark : Colors.white),

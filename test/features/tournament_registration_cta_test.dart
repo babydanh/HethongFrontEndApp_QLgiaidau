@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_register_bar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -105,12 +106,22 @@ void main() {
       final context = tester.element(find.byType(TournamentIntroScreen));
       final registerLabel = AppLocalizations.of(context)!.register;
       expect(find.byType(FloatingActionButton), findsNothing);
-      expect(find.byType(TextButton), findsOneWidget);
+      expect(find.byType(TournamentRegisterBar), findsOneWidget);
       expect(find.text(registerLabel), findsOneWidget);
-      final registerButton = tester.widget<TextButton>(find.byType(TextButton));
+      // Nút đăng ký có nền màu và nằm trong thanh cố định trên thanh điều hướng.
       expect(
-        registerButton.style?.backgroundColor?.resolve(<WidgetState>{}),
-        Colors.transparent,
+        find.descendant(
+          of: find.byType(TournamentRegisterBar),
+          matching: find.byType(FilledButton),
+        ),
+        findsOneWidget,
+      );
+      final barRect = tester.getRect(find.byType(TournamentRegisterBar));
+      final navRect = tester.getRect(find.byType(FloatingBottomNav));
+      expect(
+        barRect.bottom,
+        lessThanOrEqualTo(navRect.top + 0.5),
+        reason: 'thanh đăng ký phải nằm trên thanh điều hướng, không đè lên',
       );
       expect(find.byType(FloatingBottomNav), findsOneWidget);
 
@@ -144,7 +155,7 @@ void main() {
 
     final context = tester.element(find.byType(TournamentIntroScreen));
     final registerLabel = AppLocalizations.of(context)!.register;
-    expect(find.byType(TextButton), findsNothing);
+    expect(find.byType(TournamentRegisterBar), findsNothing);
     expect(find.text(registerLabel), findsNothing);
     expect(find.byType(FloatingBottomNav), findsOneWidget);
   });
@@ -248,7 +259,7 @@ void main() {
     final context = tester.element(find.byType(TournamentIntroScreen));
     final registerLabel = AppLocalizations.of(context)!.register;
     expect(find.byType(FloatingActionButton), findsNothing);
-    expect(find.byType(TextButton), findsOneWidget);
+    expect(find.byType(TournamentRegisterBar), findsOneWidget);
     expect(find.text(registerLabel), findsOneWidget);
     expect(find.byType(FloatingBottomNav), findsOneWidget);
   });

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
@@ -94,6 +95,20 @@ abstract class IMatchRepository {
   });
   Future<void> deleteAll(String tournamentId);
   Future<List<MatchModel>> getMatches({String? status, bool? publicOnly});
+
+  Future<void> setScoreboardVisibility(
+    String matchId, {
+    required bool visible,
+    required bool isClubMatch,
+  });
+
+  Future<({bool h2hOverlayVisible, bool bracketOverlayVisible})>
+  setOverlayVisibility(
+    String matchId, {
+    required LiveOverlayKind kind,
+    required bool visible,
+    required bool isClubMatch,
+  });
 
   Future<
     ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})

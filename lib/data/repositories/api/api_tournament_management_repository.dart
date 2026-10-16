@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
+import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
+import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 
 class ApiTournamentManagementRepository
@@ -214,6 +219,207 @@ class ApiTournamentManagementRepository
   @override
   Future<List<Map<String, dynamic>>> getMyPayouts() async =>
       _payoutList(await _dio.get('/payments/payouts'));
+
+  @override
+  Future<List<AddAthleteCandidate>> listAddAthleteCandidates(
+    String id, {
+    required AddAthleteSource source,
+    String? query,
+    String? participantId,
+  }) async {
+    final response = _map(
+      await _dio.get(
+        '/tournaments/$id/add-athletes/candidates',
+        queryParameters: {
+          'source': source.apiValue,
+          if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
+          'limit': 25,
+          if (participantId != null) 'participantId': participantId,
+        },
+        options: Options(extra: const <String, Object?>{'noCache': true}),
+      ),
+    );
+    final items = response['items'];
+    if (items is! List) {
+      throw const FormatException('Expected candidate items in API response.');
+    }
+    return items
+        .map(
+          (item) => AddAthleteCandidate.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<String> addAthleteCandidate(
+    String id, {
+    required AddAthleteSource source,
+    required String userId,
+    String? tournamentDivisionId,
+    String? participantId,
+    FootballRosterRole? role,
+  }) async {
+    final response = _map(
+      await _dio.post(
+        '/tournaments/$id/add-athletes/candidates',
+        data: {
+          'source': source.apiValue,
+          'userId': userId,
+          if (tournamentDivisionId != null)
+            'tournamentDivisionId': tournamentDivisionId,
+          if (participantId != null) 'participantId': participantId,
+          if (role != null) 'role': role.apiValue,
+        },
+      ),
+    );
+    return _requireParticipantId(response);
+  }
+
+  @override
+  Future<String> addAthleteDirect(
+    String id, {
+    required String name,
+    String? email,
+    String? tournamentDivisionId,
+  }) async {
+    final response = _map(
+      await _dio.post(
+        '/tournaments/$id/add-athletes/direct',
+        data: {
+          'name': name,
+          if (email != null) 'email': email,
+          if (tournamentDivisionId != null)
+            'tournamentDivisionId': tournamentDivisionId,
+        },
+      ),
+    );
+    return _requireParticipantId(response);
+  }
+
+  @override
+  Future<List<AddAthleteSearchCandidate>> searchAddAthleteCandidates(
+    String id, {
+    String? name,
+    String? email,
+    String? participantId,
+  }) async {
+    final response = _map(
+      await _dio.post(
+        '/tournaments/$id/add-athletes/search',
+        data: {
+          if (name != null) 'name': name,
+          if (email != null) 'email': email,
+          if (participantId != null) 'participantId': participantId,
+        },
+      ),
+    );
+    final items = response['items'];
+    if (items is! List) {
+      throw const FormatException('Expected search items in API response.');
+    }
+    return items
+        .map(
+          (item) => AddAthleteSearchCandidate.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<AddedAthletePair>> addAthletePairs(
+    String id, {
+    required AddAthleteSource source,
+    required String tournamentDivisionId,
+    required List<String> userIds,
+  }) async {
+    final response = _map(
+      await _dio.post(
+        '/tournaments/$id/add-athletes/pairs',
+        data: {
+          'source': source.apiValue,
+          'tournamentDivisionId': tournamentDivisionId,
+          'userIds': userIds,
+        },
+      ),
+    );
+    final pairs = response['pairs'];
+    if (pairs is! List) {
+      throw const FormatException('Expected pairs in API response.');
+    }
+    return pairs
+        .map(
+          (item) => AddedAthletePair.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  @override
+  Future<RosterImportBatchPreview> previewRosterImportBatch(
+    String id,
+    RosterImportBatchRequest request,
+  ) async {
+    final response = _map(
+      await _dio.post(
+        '/tournaments/$id/roster-import-batches/preview',
+        data: request.toJson(),
+      ),
+    );
+    return RosterImportBatchPreview.fromJson(response);
+  }
+
+  @override
+  Future<RosterImportBatchResult> importRosterBatch(
+    String id,
+    RosterImportBatchRequest request,
+  ) async {
+    final body = request.toJson();
+    final response = _map(
+      await _dio.post(
+        '/tournaments/$id/roster-import-batches',
+        data: body,
+        options: Options(
+          headers: {'Idempotency-Key': _rosterImportIdempotencyKey(id, body)},
+        ),
+      ),
+    );
+    return RosterImportBatchResult.fromJson(response);
+  }
+
+  /// `roster:<tournamentId>:<sha256(JSON chuẩn hóa)>`: cùng nội dung thì cùng key,
+  /// nên gửi lại sau lỗi mạng không tạo lần import thứ hai.
+  String _rosterImportIdempotencyKey(String id, Map<String, dynamic> body) {
+    final digest = sha256.convert(utf8.encode(_canonicalJson(body)));
+    return 'roster:$id:$digest';
+  }
+
+  String _canonicalJson(Object? value) {
+    if (value is Map) {
+      final keys = value.keys.map((key) => key.toString()).toList()..sort();
+      final entries = keys.map(
+        (key) => '${jsonEncode(key)}:${_canonicalJson(value[key])}',
+      );
+      return '{${entries.join(',')}}';
+    }
+    if (value is List) {
+      return '[${value.map(_canonicalJson).join(',')}]';
+    }
+    return jsonEncode(value);
+  }
+
+  String _requireParticipantId(Map<String, dynamic> response) {
+    final participantId = response['participantId']?.toString();
+    if (participantId == null || participantId.isEmpty) {
+      throw const FormatException(
+        'Expected participant id in add-athlete response.',
+      );
+    }
+    return participantId;
+  }
 
   @override
   Future<void> updateParticipantStatus(

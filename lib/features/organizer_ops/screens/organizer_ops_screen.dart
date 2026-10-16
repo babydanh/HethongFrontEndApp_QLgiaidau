@@ -5,6 +5,10 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/schedule_fullscreen_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_schedule_court_grid.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/add_athlete_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -14,19 +18,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+/// Tab views a host can embed. Indexes match the standalone tab order.
+enum OrganizerOpsView { overview, matches, bracket, roster, activity, camera }
+
+/// Khung nhìn danh sách trận trong tab vận hành: lưới sân × giờ hoặc danh sách.
+enum OrganizerOpsMatchesView { grid, list }
+
 class OrganizerOpsScreen extends ConsumerStatefulWidget {
   const OrganizerOpsScreen({
     super.key,
     required this.tournamentId,
     this.initialDivisionId,
+    this.view,
+    this.onDivisionChanged,
     this.initialFocusMatchId,
     this.isEmbedded = false,
+    this.overlapHandles = const [],
+    this.initialMatchesView = OrganizerOpsMatchesView.list,
   });
 
   final String tournamentId;
   final String? initialDivisionId;
+  final OrganizerOpsView? view;
+  final ValueChanged<String?>? onDivisionChanged;
   final String? initialFocusMatchId;
   final bool isEmbedded;
+  final List<SliverOverlapAbsorberHandle> overlapHandles;
+
+  /// Hub quản lý truyền `grid` để vào tab là thấy lưới sân ngay.
+  final OrganizerOpsMatchesView initialMatchesView;
 
   @override
   ConsumerState<OrganizerOpsScreen> createState() => _OrganizerOpsScreenState();
@@ -39,6 +59,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   int _selectedTab = 1;
   String _opsMatchFilter = 'ongoing';
   String? _focusedMatchId;
+  late OrganizerOpsMatchesView _matchesView;
 
   @override
   void initState() {
@@ -46,6 +67,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     _selectedDivisionId = widget.initialDivisionId;
     _focusedMatchId = widget.initialFocusMatchId;
     if (_focusedMatchId != null) _opsMatchFilter = 'all';
+    _selectedTab = widget.view?.index ?? OrganizerOpsView.matches.index;
+    _matchesView = widget.initialMatchesView;
+    // Lưới phải thấy cả trận chưa đấu để xếp lịch, nên mặc định "tất cả" khi
+    // vào bằng lưới; người dùng vẫn đổi bộ lọc được như thường.
+    if (_matchesView == OrganizerOpsMatchesView.grid) _opsMatchFilter = 'all';
   }
 
   @override
@@ -151,16 +177,23 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   tournamentDivisionsProvider(widget.tournamentId),
                 );
               },
-              child: ListView(
+              child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                children: [
-                  _OpsReadOnlyNotice(
-                    icon: Icons.category_outlined,
-                    title: l10n.opsDivision,
-                    message: l10n.opsEmptyDivision,
+                slivers: [
+                  ...widget.overlapHandles.map(
+                    (handle) => SliverOverlapInjector(handle: handle),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    sliver: SliverToBoxAdapter(
+                      child: _OpsReadOnlyNotice(
+                        icon: Icons.category_outlined,
+                        title: l10n.opsDivision,
+                        message: l10n.opsEmptyDivision,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -168,6 +201,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           }
 
           final selectedDivisionId = _resolveDivisionId(divisions);
+          final selectedDivision = divisions.firstWhere(
+            (division) => division.id == selectedDivisionId,
+          );
           final matchesAsync = ref.watch(
             matchesWithDivisionProvider((
               tournamentId: widget.tournamentId,
@@ -203,34 +239,46 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 parent: BouncingScrollPhysics(),
               ),
               slivers: [
-                SliverToBoxAdapter(
-                  child: _OpsContextHeader(
-                    tournament: tournament,
-                    division: divisions.firstWhere(
-                      (item) => item.id == selectedDivisionId,
-                      orElse: () => divisions.first,
+                ...widget.overlapHandles.map(
+                  (handle) => SliverOverlapInjector(handle: handle),
+                ),
+                if (widget.view == null)
+                  SliverToBoxAdapter(
+                    child: _OpsContextHeader(
+                      tournament: tournament,
+                      division: divisions.firstWhere(
+                        (item) => item.id == selectedDivisionId,
+                        orElse: () => divisions.first,
+                      ),
+                      colors: colors,
                     ),
-                    colors: colors,
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: _OpsDivisionSelector(
-                    divisions: divisions,
-                    selectedDivisionId: selectedDivisionId,
-                    onChanged: (value) => setState(() {
-                      _selectedDivisionId = value;
-                      _rosterFilter = 'ALL';
-                      _selectedTab = 1;
-                      _opsMatchFilter = 'ongoing';
-                    }),
+                if (widget.view == null ||
+                    !(_selectedTab == 1 &&
+                        _matchesView == OrganizerOpsMatchesView.grid))
+                  SliverToBoxAdapter(
+                    child: _OpsDivisionSelector(
+                      divisions: divisions,
+                      selectedDivisionId: selectedDivisionId,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedDivisionId = value;
+                          _rosterFilter = 'ALL';
+                          if (widget.view == null) _selectedTab = 1;
+                          _opsMatchFilter = 'ongoing';
+                        });
+                        widget.onDivisionChanged?.call(value);
+                      },
+                    ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: _OpsTabBar(
-                    selectedIndex: _selectedTab,
-                    onChanged: (value) => setState(() => _selectedTab = value),
+                if (widget.view == null)
+                  SliverToBoxAdapter(
+                    child: _OpsTabBar(
+                      selectedIndex: _selectedTab,
+                      onChanged: (value) =>
+                          setState(() => _selectedTab = value),
+                    ),
                   ),
-                ),
                 if (_selectedTab == 0)
                   SliverToBoxAdapter(
                     child: _OpsOverview(
@@ -245,6 +293,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     context,
                     matchesAsync,
                     readOnly: isReadOnly,
+                    divisionId: selectedDivisionId,
+                    divisionOptions: [
+                      for (final division in divisions)
+                        (id: division.id, name: division.name),
+                    ],
                     selectedFilter: _opsMatchFilter,
                     focusedMatchId: _focusedMatchId,
                     onFilterChanged: (value) =>
@@ -268,6 +321,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   _buildRosterSliver(
                     context,
                     opsReadAsync,
+                    tournament: tournament,
+                    division: selectedDivision,
                     readOnly: isReadOnly,
                   )
                 else if (_selectedTab == 4)
@@ -332,6 +387,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   Widget _buildRosterSliver(
     BuildContext context,
     AsyncValue<OrganizerOpsReadModel> opsAsync, {
+    required Tournament tournament,
+    required _OpsDivision division,
     required bool readOnly,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -349,20 +406,51 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         ),
       ),
       data: (readModel) {
+        final allParticipants = readModel.participants;
+        if (allParticipants.isEmpty) {
+          if (readOnly) {
+            return SliverToBoxAdapter(
+              child: _OpsReadOnlyNotice(
+                icon: Icons.people_alt_outlined,
+                title: l10n.opsRoster,
+                message: l10n.opsNoParticipants,
+              ),
+            );
+          }
+          return SliverList.list(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: _OpsReadOnlyNotice(
+                  icon: Icons.people_alt_outlined,
+                  title: l10n.opsRoster,
+                  message: l10n.opsNoParticipants,
+                ),
+              ),
+              _buildAddAthleteAction(
+                context,
+                tournament,
+                division,
+                allParticipants,
+              ),
+            ],
+          );
+        }
+
         final participants = switch (_rosterFilter) {
           'PAID' =>
-            readModel.participants
+            allParticipants
                 .where((participant) => participant.isPaid)
                 .toList(growable: false),
           'UNPAID' =>
-            readModel.participants
+            allParticipants
                 .where((participant) => !participant.isPaid)
                 .toList(growable: false),
           'KICKED' =>
-            readModel.participants
+            allParticipants
                 .where((participant) => participant.isKicked)
                 .toList(growable: false),
-          _ => readModel.participants,
+          _ => allParticipants,
         };
         final query = _rosterQuery.trim().toLowerCase();
         final visibleParticipants = query.isEmpty
@@ -377,19 +465,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                         ),
                   )
                   .toList(growable: false);
-        if (readModel.participants.isEmpty) {
-          return SliverToBoxAdapter(
-            child: _OpsReadOnlyNotice(
-              icon: Icons.people_alt_outlined,
-              title: l10n.opsRoster,
-              message: l10n.opsNoParticipants,
-            ),
-          );
-        }
+        final actionOffset = readOnly ? 0 : 1;
+        final itemCount =
+            2 +
+            actionOffset +
+            (visibleParticipants.isEmpty ? 1 : visibleParticipants.length);
         return SliverList.builder(
-          itemCount: visibleParticipants.isEmpty
-              ? 3
-              : visibleParticipants.length + 2,
+          itemCount: itemCount,
           itemBuilder: (context, index) {
             if (index == 0) {
               return Padding(
@@ -409,6 +491,14 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 onChanged: (filter) => setState(() => _rosterFilter = filter),
               );
             }
+            if (!readOnly && index == 2) {
+              return _buildAddAthleteAction(
+                context,
+                tournament,
+                division,
+                allParticipants,
+              );
+            }
             if (visibleParticipants.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
@@ -419,7 +509,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 ),
               );
             }
-            final participant = visibleParticipants[index - 2];
+            final participant = visibleParticipants[index - 2 - actionOffset];
             return _OpsParticipantCard(
               participant: participant,
               onKick: readOnly || participant.isKicked
@@ -430,6 +520,72 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         );
       },
     );
+  }
+
+  Widget _buildAddAthleteAction(
+    BuildContext context,
+    Tournament tournament,
+    _OpsDivision division,
+    List<OrganizerOpsParticipant> participants,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          key: const ValueKey('organizer-ops-add-athlete'),
+          onPressed: () => _showAddAthleteSheet(
+            context,
+            tournament: tournament,
+            division: division,
+            participants: participants,
+          ),
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: Text(l10n.opsAddAthlete),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAddAthleteSheet(
+    BuildContext context, {
+    required Tournament tournament,
+    required _OpsDivision division,
+    required List<OrganizerOpsParticipant> participants,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (_) => AddAthleteSheet(
+        tournament: tournament,
+        divisionId: division.id,
+        divisionName: division.name,
+        divisionMatchType: division.matchType,
+        divisionEntryFee: division.entryFee,
+        effectiveEntryFee: division.effectiveEntryFee,
+        participants: participants,
+        onRefresh: () => _refreshRosterAfterAdd(division.id),
+      ),
+    );
+  }
+
+  Future<void> _refreshRosterAfterAdd(String divisionId) async {
+    if (!mounted) return;
+    final divisionsProvider = tournamentDivisionsProvider(widget.tournamentId);
+    final rosterProvider = organizerOpsReadModelProvider((
+      tournamentId: widget.tournamentId,
+      divisionId: divisionId,
+    ));
+    ref.invalidate(tournamentProvider(widget.tournamentId));
+    ref.invalidate(divisionsProvider);
+    ref.invalidate(rosterProvider);
+    await Future.wait([
+      ref.read(divisionsProvider.future),
+      ref.read(rosterProvider.future),
+    ]);
   }
 
   bool _isOpsTerminalMatch(MatchModel match) {
@@ -526,44 +682,281 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: colors.bgSurface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: colors.border),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              for (final view in OrganizerOpsMatchesView.values)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: _matchesViewButton(view, colors),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: filters.map((filter) {
+              final selected = selectedFilter == filter.value;
+              return ChoiceChip(
+                label: Text(filter.label),
+                selected: selected,
+                onSelected: (_) => onChanged(filter.value),
+                labelStyle: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: selected ? Colors.white : colors.textSecondary,
+                ),
+                selectedColor: AppTheme.primary,
+                backgroundColor: Colors.transparent,
+                side: BorderSide(
+                  color: selected ? AppTheme.primary : colors.border,
+                ),
+                visualDensity: VisualDensity.compact,
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _matchesViewButton(
+    OrganizerOpsMatchesView view,
+    AppColorsExtension colors,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final selected = _matchesView == view;
+    final isGrid = view == OrganizerOpsMatchesView.grid;
+    return Tooltip(
+      message: isGrid ? l10n.tournamentManagementSchedule : l10n.opsMatches,
+      child: IconButton(
+        key: ValueKey('ops-matches-view-${view.name}'),
+        onPressed: () => setState(() => _matchesView = view),
+        iconSize: 18,
+        visualDensity: VisualDensity.compact,
+        style: IconButton.styleFrom(
+          backgroundColor: selected ? AppTheme.primary : colors.bgCard,
+          side: BorderSide(
+            color: selected ? AppTheme.primary : colors.border,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
-        child: Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: filters.map((filter) {
-            final selected = selectedFilter == filter.value;
-            return ChoiceChip(
-              label: Text(filter.label),
-              selected: selected,
-              onSelected: (_) => onChanged(filter.value),
-              labelStyle: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: selected ? Colors.white : colors.textSecondary,
-              ),
-              selectedColor: AppTheme.primary,
-              backgroundColor: colors.bgCard,
-              side: BorderSide(
-                color: selected ? AppTheme.primary : colors.border,
-              ),
-              visualDensity: VisualDensity.compact,
-            );
-          }).toList(),
+        icon: Icon(
+          isGrid ? Icons.grid_view_rounded : Icons.view_list_rounded,
+          color: selected ? Colors.white : colors.textSecondary,
         ),
       ),
     );
+  }
+
+  /// Thả một trận vào ô (sân + giờ): chặn nếu chồng lấn cùng sân, nếu không thì
+  /// ghi lịch rồi tải lại danh sách trận.
+  Future<void> _scheduleMatchDrop({
+    required BuildContext context,
+    required List<MatchModel> visible,
+    required String matchId,
+    required String courtId,
+    required String courtName,
+    required DateTime scheduledAt,
+    required String? divisionId,
+    required int minutesPerSet,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+
+    MatchModel? target;
+    for (final match in visible) {
+      if (match.id == matchId) {
+        target = match;
+        break;
+      }
+    }
+    if (target == null) return;
+
+    if (_clashesWith(
+      visible: visible,
+      skipMatchId: matchId,
+      courtName: courtName,
+      scheduledAt: scheduledAt,
+      minutes: scheduledDurationMinutes(target, minutesPerSet: minutesPerSet),
+      minutesPerSet: minutesPerSet,
+    )) {
+      _showScheduleMessage(messenger, l10n.tournamentManagementActionError);
+      return;
+    }
+
+    final ok = await _writeSchedule(matchId, courtId, courtName, scheduledAt);
+    if (!mounted) return;
+    if (!ok) {
+      _showScheduleMessage(messenger, l10n.tournamentManagementActionError);
+      return;
+    }
+    ref.invalidate(
+      matchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: divisionId,
+      )),
+    );
+  }
+
+  /// Ghi lịch một trận; trả về false nếu máy chủ lỗi (không ném ra ngoài).
+  Future<bool> _writeSchedule(
+    String matchId,
+    String courtId,
+    String courtName,
+    DateTime scheduledAt,
+  ) async {
+    try {
+      await ref
+          .read(matchRepositoryProvider)
+          .updateSchedule(
+            widget.tournamentId,
+            matchId,
+            courtId: courtId.isEmpty ? null : courtId,
+            courtName: courtName,
+            scheduledAt: scheduledAt,
+          );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Có trận nào trên cùng sân chồng lấn khoảng [scheduledAt, +minutes) không.
+  /// Chỉ xét trận cùng ngày (giờ trên lưới là giờ trong ngày).
+  bool _clashesWith({
+    required List<MatchModel> visible,
+    required String? skipMatchId,
+    required String courtName,
+    required DateTime scheduledAt,
+    required int minutes,
+    required int minutesPerSet,
+  }) {
+    final start = scheduledAt.hour * 60 + scheduledAt.minute;
+    final end = start + minutes;
+    for (final other in visible) {
+      if (other.id == skipMatchId) continue;
+      if (_courtNameOf(other) != courtName) continue;
+      final at = other.scheduledTime;
+      if (at == null) continue;
+      if (!_sameLocalDay(at.toLocal(), scheduledAt)) continue;
+      final otherStart = at.toLocal().hour * 60 + at.toLocal().minute;
+      final otherEnd =
+          otherStart +
+          scheduledDurationMinutes(other, minutesPerSet: minutesPerSet);
+      if (start < otherEnd && otherStart < end) return true;
+    }
+    return false;
+  }
+
+  static bool _sameLocalDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  /// Xếp cả lô trận vào vùng ô đã chọn: kiểm hết trước, chỉ ghi khi không trận
+  /// nào chồng lấn.
+  Future<void> _bulkSchedule({
+    required BuildContext context,
+    required List<MatchModel> visible,
+    required List<({String courtId, String courtName, DateTime at})> cells,
+    required List<MatchModel> waiting,
+    required String? divisionId,
+    required int minutesPerSet,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+
+    final count = cells.length < waiting.length ? cells.length : waiting.length;
+    if (count == 0) return;
+
+    // Preflight: gom các khoảng đang bận **cùng ngày** rồi kiểm từng trận; lệch
+    // thì chưa ghi gì.
+    final day = cells.first.at;
+    final busy = <({String court, int start, int end})>[
+      for (final match in visible)
+        if (match.scheduledTime != null &&
+            _sameLocalDay(match.scheduledTime!.toLocal(), day))
+          (
+            court: _courtNameOf(match),
+            start:
+                match.scheduledTime!.toLocal().hour * 60 +
+                match.scheduledTime!.toLocal().minute,
+            end:
+                match.scheduledTime!.toLocal().hour * 60 +
+                match.scheduledTime!.toLocal().minute +
+                scheduledDurationMinutes(match, minutesPerSet: minutesPerSet),
+          ),
+    ];
+    for (var i = 0; i < count; i++) {
+      final start = cells[i].at.hour * 60 + cells[i].at.minute;
+      final end =
+          start +
+          scheduledDurationMinutes(waiting[i], minutesPerSet: minutesPerSet);
+      if (busy.any(
+        (b) =>
+            b.court == cells[i].courtName && start < b.end && b.start < end,
+      )) {
+        _showScheduleMessage(messenger, l10n.tournamentManagementActionError);
+        return;
+      }
+      busy.add((court: cells[i].courtName, start: start, end: end));
+    }
+
+    for (var i = 0; i < count; i++) {
+      final ok = await _writeSchedule(
+        waiting[i].id,
+        cells[i].courtId,
+        cells[i].courtName,
+        cells[i].at,
+      );
+      if (!mounted) return;
+      if (!ok) {
+        // Đã ghi được i trận trước đó; nói rõ phần đã ghi rồi tải lại để thấy
+        // đúng thực tế (không có API ghi hàng loạt nên không nguyên tử).
+        _showScheduleMessage(
+          messenger,
+          '${l10n.tournamentManagementActionError} ($i/$count)',
+        );
+        ref.invalidate(
+          matchesWithDivisionProvider((
+            tournamentId: widget.tournamentId,
+            divisionId: divisionId,
+          )),
+        );
+        return;
+      }
+    }
+    if (!mounted) return;
+    ref.invalidate(
+      matchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: divisionId,
+      )),
+    );
+  }
+
+  static String _courtNameOf(MatchModel match) {
+    final name = match.courtName?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    return match.court.trim();
+  }
+
+  void _showScheduleMessage(ScaffoldMessengerState messenger, String message) {
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildMatchesSliver(
     BuildContext context,
     AsyncValue<List<MatchModel>> matchesAsync, {
     required bool readOnly,
+    required String? divisionId,
+    required List<ScheduleDivision> divisionOptions,
     required String selectedFilter,
     required String? focusedMatchId,
     required ValueChanged<String> onFilterChanged,
@@ -590,6 +983,114 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         }
 
         final sections = _buildOpsMatchSections(matches, selectedFilter);
+        if (_matchesView == OrganizerOpsMatchesView.grid) {
+          final visible = [for (final section in sections) ...section.matches];
+          final scheduleSettings =
+              ref
+                  .read(tournamentProvider(widget.tournamentId))
+                  .value
+                  ?.scheduleSettings ??
+              const <String, dynamic>{};
+          final minutesPerSet =
+              (scheduleSettings['minutesPerSet'] as num?)?.toInt() ?? 15;
+          // Ba thao tác dùng chung cho lưới trong tab và lưới toàn màn hình, để
+          // hai chỗ không lệch hành vi.
+          void selectDivision(String value) {
+            setState(() {
+              _selectedDivisionId = value;
+              _opsMatchFilter = 'all';
+            });
+            widget.onDivisionChanged?.call(value);
+          }
+
+          void openMatch(String matchId) {
+            MatchModel? target;
+            for (final match in visible) {
+              if (match.id == matchId) {
+                target = match;
+                break;
+              }
+            }
+            if (target != null) _showMatchActions(context, target);
+          }
+
+          void dropMatch(
+            String matchId,
+            String courtId,
+            String courtName,
+            DateTime scheduledAt,
+          ) => _scheduleMatchDrop(
+            context: context,
+            visible: visible,
+            matchId: matchId,
+            courtId: courtId,
+            courtName: courtName,
+            scheduledAt: scheduledAt,
+            divisionId: divisionId,
+            minutesPerSet: minutesPerSet,
+          );
+
+          void bulkSchedule(
+            List<({String courtId, String courtName, DateTime at})> cells,
+            List<MatchModel> waiting,
+          ) => _bulkSchedule(
+            context: context,
+            visible: visible,
+            cells: cells,
+            waiting: waiting,
+            divisionId: divisionId,
+            minutesPerSet: minutesPerSet,
+          );
+
+          return SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildOpsMatchFilterBar(
+                  context,
+                  l10n,
+                  selectedFilter,
+                  onFilterChanged,
+                ),
+                if (visible.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: _OpsReadOnlyNotice(
+                      icon: Icons.filter_alt_off_outlined,
+                      title: l10n.opsMatches,
+                      message: l10n.opsFilteredNoMatches,
+                    ),
+                  )
+                else
+                  TournamentScheduleCourtGrid(
+                    tournamentId: widget.tournamentId,
+                    matches: visible,
+                    scheduleSettings: scheduleSettings,
+                    selectedMatchId: focusedMatchId,
+                    onTapMatch: readOnly ? null : openMatch,
+                    onScheduleDrop: readOnly ? null : dropMatch,
+                    divisions: divisionOptions,
+                    selectedDivisionId: divisionId,
+                    onDivisionSelected: selectDivision,
+                    onOpenFullscreen: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ScheduleFullscreenScreen(
+                          tournamentId: widget.tournamentId,
+                          divisionId: divisionId,
+                          scheduleSettings: scheduleSettings,
+                          divisions: divisionOptions,
+                          onDivisionSelected: selectDivision,
+                          onScheduleDrop: readOnly ? null : dropMatch,
+                    onBulkSchedule: readOnly ? null : bulkSchedule,
+                          onTapMatch: readOnly ? null : openMatch,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }
         final hasMatches = sections.any(
           (section) => section.matches.isNotEmpty,
         );
@@ -2419,17 +2920,28 @@ class _OpsDivision {
     required this.id,
     required this.name,
     required this.matchType,
+    this.entryFee,
+    this.effectiveEntryFee,
   });
 
   final String id;
   final String name;
   final String matchType;
+  final double? entryFee;
+  final double? effectiveEntryFee;
 
   factory _OpsDivision.fromJson(Map<String, dynamic> json) {
     return _OpsDivision(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? 'Division',
       matchType: json['matchType']?.toString() ?? 'SINGLES',
+      entryFee: _toDouble(json['entryFee']),
+      effectiveEntryFee: _toDouble(json['effectiveEntryFee']),
     );
+  }
+
+  static double? _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '');
   }
 }

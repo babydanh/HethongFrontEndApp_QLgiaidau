@@ -22,7 +22,8 @@ void main() {
         'status': 'completed',
         'winnerId': 'team-1',
         'court': 'San 1',
-        'scheduledTime': '2026-07-15T08:00:00Z',
+        'scheduledAt': '2026-07-15T08:00:00Z',
+        'matchConfig': {'durationMinutes': 15},
         'refereeName': 'Trong tai A',
         'maxScore': 21,
         'winByTwo': true,
@@ -47,6 +48,8 @@ void main() {
       expect(match.court, 'San 1');
       expect(match.bracketPosition.bracket, 'winners');
       expect(match.loserNextMatchId, 'loser-match-1');
+      expect(match.scheduledTime?.toUtc(), DateTime.utc(2026, 7, 15, 8));
+      expect(match.durationMinutes, 15);
     });
 
     test('should parse Minimal JSON with defaults', () {
