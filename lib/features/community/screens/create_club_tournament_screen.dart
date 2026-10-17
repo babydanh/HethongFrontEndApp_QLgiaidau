@@ -12,6 +12,16 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
+/// Định dạng gửi `POST /tournaments/lite`. Bóng đá luôn là đơn (đội đấu đội,
+/// backend ép SINGLES); còn lại giữ đúng lựa chọn của BTC, kể cả hỗn hợp.
+String resolveClubFormat({
+  required String sport,
+  required String selectedFormat,
+}) {
+  if (sport == 'football') return AppConstants.formatSingles;
+  return selectedFormat;
+}
+
 /// Tạo giải đấu Lite trong câu lạc bộ
 /// Gọi POST /tournaments/lite — đơn giản, không cần categoryId UUID
 class CreateClubTournamentScreen extends ConsumerStatefulWidget {
@@ -141,11 +151,10 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
           ? _mapClubSport(club!.sports.first)
           : null;
       final resolvedSport = clubSport ?? _mapSportSlug();
-      final resolvedFormat = resolvedSport == 'football'
-          ? AppConstants.formatDoubles
-          : (_selectedFormat == AppConstants.formatMixedDoubles
-                ? AppConstants.formatDoubles
-                : _selectedFormat);
+      final resolvedFormat = resolveClubFormat(
+        sport: resolvedSport,
+        selectedFormat: _selectedFormat,
+      );
       final recurringTimeString = _formatTime(_recurringTime);
 
       final body = <String, dynamic>{
