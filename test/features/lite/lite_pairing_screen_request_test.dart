@@ -26,12 +26,17 @@ Map<String, dynamic> _pending(
   'tournamentDivisionId': ?divisionId,
 };
 
-Map<String, dynamic> _complete(String id, String name) => {
+Map<String, dynamic> _complete(
+  String id,
+  String name, {
+  String? divisionId,
+}) => {
   'id': id,
   'teamStatus': 'COMPLETE',
   'teamName': name,
   'customResponses': {'importedFrom': 'ORGANIZER_DIRECT', 'player1Name': name},
   'rosters': <Object>[],
+  'tournamentDivisionId': ?divisionId,
 };
 
 FakeApiAdapter _adapter({
@@ -222,6 +227,34 @@ void main() {
       );
     },
   );
+
+  testWidgets('TC-APP-PAIRDIV-01 multi-division: "Đã ghép" only lists pairs of the chosen division', (
+    tester,
+  ) async {
+    final adapter = _adapter(
+      divisions: [
+        {'id': 'd1', 'name': 'Đôi nam', 'matchType': 'DOUBLES'},
+        {'id': 'd2', 'name': 'Đôi nữ', 'matchType': 'DOUBLES'},
+      ],
+      participants: [
+        _complete('c1', 'Cặp Nam', divisionId: 'd1'),
+        _complete('c2', 'Cặp Nữ', divisionId: 'd2'),
+        _pending('p3', 'Cường', divisionId: 'd2'),
+      ],
+    );
+    await pumpScreen(tester, adapter);
+
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, l10n.registerSelectDivision),
+    );
+    await settle(tester);
+    await pickDivisionInDialog(tester, 'Đôi nữ');
+    await confirmInDialog(tester, l10n.lite_confirmButton);
+
+    expect(find.textContaining('Cặp Nữ'), findsWidgets);
+    expect(find.textContaining('Cặp Nam'), findsNothing);
+    expect(find.text('${l10n.lite_paired} (1)'), findsOneWidget);
+  });
 
   testWidgets(
     'bracket sends divisionId, reports auto-paired and leftover names, never calls pairs/generate',

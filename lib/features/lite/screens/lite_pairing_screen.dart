@@ -425,7 +425,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     final pending = visibleParticipants.where((p) => p.isPending).toList();
     final allPaired = [
       ..._pairedParticipants,
-      ..._participants.where((p) => p.isComplete),
+      ...visibleParticipants.where((p) => p.isComplete),
     ];
     final isDoubles =
         !_isFootball &&
@@ -614,8 +614,10 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
           ],
 
           // ─── Bracket generation ───
+          // Giải nhiều nội dung chưa chọn: nút vẫn hiện để mở hộp chọn nội dung.
           if (allPaired.isNotEmpty ||
-              (_participants.isNotEmpty && !isDoubles)) ...[
+              (_participants.isNotEmpty &&
+                  (!isDoubles || _needsDivisionChoice))) ...[
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
