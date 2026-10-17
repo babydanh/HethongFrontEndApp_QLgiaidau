@@ -8,6 +8,8 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
+import 'package:app_quanly_giaidau/core/utils/api_error_message.dart';
+import 'package:app_quanly_giaidau/core/utils/pair_generation_summary.dart';
 
 /// Compact organizer screen for Lite tournament pairing.
 /// Supports manual pair, RANDOM/ELO_BALANCED generate, and unpair.
@@ -29,20 +31,6 @@ String? liteSingleDivisionId(Map<String, dynamic> payload) {
   if (division is! Map) return null;
   final id = division['id']?.toString();
   return (id == null || id.isEmpty) ? null : id;
-}
-
-/// Đổi id người lẻ thành tên; id không tra được thì giữ `#id` để không mất người.
-List<String> unpairedDisplayNames(
-  List<String> ids,
-  Map<String, String> namesById,
-) {
-  return [
-    for (final id in ids)
-      if ((namesById[id] ?? '').trim().isNotEmpty)
-        namesById[id]!.trim()
-      else
-        '#$id',
-  ];
 }
 
 class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
@@ -116,8 +104,9 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
           _divisionId = liteSingleDivisionId(payloadMap);
         });
       }
-    } catch (_) {
+    } catch (e) {
       // Non-critical: pairing screen still works with default title
+      _log.warning('Không tải được thông tin giải: $e');
     }
   }
 
@@ -226,34 +215,37 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       final dio = ref.read(dioClientProvider).dio;
       final res = await dio.post(
         '/tournaments/lite/${widget.tournamentId}/pairs/generate',
-        data: {'strategy': strategy},
+        data: {
+          'strategy': strategy,
+          'divisionId': ?_divisionId,
+        },
       );
-      final data = res.data is Map ? (res.data as Map)['data'] as Map? : null;
-      final unpairedIds =
-          (data?['unpairedParticipantIds'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [];
-      final unpairedNames = unpairedDisplayNames(
-        unpairedIds,
-        {for (final p in _participants) p.id: p.displayName},
-      );
+      final pairLabels = pairGeneratedLabels(res.data);
+      final unpairedNames = pairUnpairedNames(res.data, {
+        for (final p in _participants) p.id: p.displayName,
+      });
 
       if (mounted) {
-        final msg = unpairedNames.isEmpty
-            ? l10n.lite_autoPairSuccess
-            : '${l10n.lite_autoPairSuccessOdd(unpairedNames.length)}: ${unpairedNames.join(', ')}';
+        final parts = <String>[
+          pairLabels.isEmpty
+              ? l10n.lite_autoPairSuccess
+              : '${l10n.lite_autoPairSuccess}: ${pairLabels.join('; ')}',
+          if (unpairedNames.isNotEmpty)
+            '${l10n.lite_autoPairSuccessOdd(unpairedNames.length)}: ${unpairedNames.join(', ')}',
+        ];
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
+        ).showSnackBar(SnackBar(content: Text(parts.join('\n'))));
         _fetchParticipants();
       }
     } catch (e) {
       if (mounted) {
+        // Backend từ chối (ví dụ giải nhiều nội dung) thì hiện nguyên văn message.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${l10n.lite_pairGenerateError}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+              backendErrorMessage(e) ??
+                  '${l10n.lite_pairGenerateError}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
             ),
           ),
         );
@@ -644,7 +636,8 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${l10n.lite_createBracketNotAvailable}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+              backendErrorMessage(e) ??
+                  '${l10n.lite_createBracketNotAvailable}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
             ),
           ),
         );

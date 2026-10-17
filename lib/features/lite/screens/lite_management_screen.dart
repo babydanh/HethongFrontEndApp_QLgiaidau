@@ -13,6 +13,9 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
+import 'package:app_quanly_giaidau/core/utils/api_error_message.dart';
+import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
+import 'package:app_quanly_giaidau/core/utils/pair_generation_summary.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
@@ -2902,10 +2905,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     child: OutlinedButton(
                       onPressed: state.generating
                           ? null
-                          : () => notifier.generatePairs(
-                              widget.tournamentId,
-                              'RANDOM',
-                            ),
+                          : () => _generatePairs(colors, notifier, 'RANDOM'),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
@@ -2936,8 +2936,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                     child: OutlinedButton(
                       onPressed: state.generating
                           ? null
-                          : () => notifier.generatePairs(
-                              widget.tournamentId,
+                          : () => _generatePairs(
+                              colors,
+                              notifier,
                               'ELO_BALANCED',
                             ),
                       style: OutlinedButton.styleFrom(
@@ -3264,6 +3265,49 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     }
   }
 
+  Future<void> _generatePairs(
+    AppColorsExtension colors,
+    LiteManagementNotifier notifier,
+    String strategy,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final raw = await notifier.generatePairs(widget.tournamentId, strategy);
+      if (!mounted) return;
+      final namesById = {
+        for (final p in ref.read(liteManagementProvider).participants)
+          p.id: p.displayName,
+      };
+      final pairLabels = pairGeneratedLabels(raw);
+      final unpairedNames = pairUnpairedNames(raw, namesById);
+      final parts = <String>[
+        pairLabels.isEmpty
+            ? l10n.lite_autoPairSuccess
+            : '${l10n.lite_autoPairSuccess}: ${pairLabels.join('; ')}',
+        if (unpairedNames.isNotEmpty)
+          '${l10n.lite_autoPairSuccessOdd(unpairedNames.length)}: ${unpairedNames.join(', ')}',
+      ];
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(parts.join('\n')),
+          backgroundColor: colors.success,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              backendErrorMessage(e) ??
+                  '${l10n.lite_pairGenerateError}${e.toString().replaceAll('Exception: ', '').replaceAll('DioException: ', '')}',
+            ),
+            backgroundColor: colors.error,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _createBracket(
     AppColorsExtension colors,
     LiteManagementNotifier notifier,
@@ -3297,19 +3341,27 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     }
 
     try {
+      Object? raw;
       if (replacingExisting) {
         await notifier.resetBracket(widget.tournamentId);
       } else {
-        await notifier.createBracket(widget.tournamentId);
+        raw = await notifier.createBracket(widget.tournamentId);
       }
       if (mounted) {
+        final autoPaired = bracketAutoPairedLabels(raw);
+        final unpairedNames = bracketUnpairedNames(raw);
+        final parts = <String>[
+          replacingExisting
+              ? l10n.lite_recreatedBracket
+              : l10n.lite_bracketCreated,
+          if (autoPaired.isNotEmpty)
+            '${l10n.lite_autoPairSuccess}: ${autoPaired.join('; ')}',
+          if (unpairedNames.isNotEmpty)
+            '${l10n.lite_autoPairSuccessOdd(unpairedNames.length)}: ${unpairedNames.join(', ')}',
+        ];
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              replacingExisting
-                  ? l10n.lite_recreatedBracket
-                  : l10n.lite_bracketCreated,
-            ),
+            content: Text(parts.join('\n')),
             backgroundColor: colors.success,
           ),
         );
@@ -3320,10 +3372,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             ? l10n.lite_sessionExpired
             : e is DioException && e.response?.statusCode == 403
             ? l10n.lite_unauthorized
-            : e
-                  .toString()
-                  .replaceAll('Exception: ', '')
-                  .replaceAll('DioException: ', '');
+            : backendErrorMessage(e) ??
+                  e
+                      .toString()
+                      .replaceAll('Exception: ', '')
+                      .replaceAll('DioException: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${l10n.errorPrefix}: $message'),

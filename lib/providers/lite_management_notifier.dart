@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 
@@ -989,12 +990,27 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-  Future<void> generatePairs(String tournamentId, String strategy) async {
+  /// Trả body response (`paired`, `unpairedNames`, ...) để màn hiện kết quả.
+  /// [divisionId] trống thì dùng nội dung duy nhất đang hoạt động; giải nhiều
+  /// nội dung thì không gửi, để Backend trả 400 thay vì đoán nội dung.
+  Future<Object?> generatePairs(
+    String tournamentId,
+    String strategy, {
+    String? divisionId,
+  }) async {
+    final division =
+        divisionId ??
+        soleActiveTournamentDivisionId(
+          state.tournament?.divisions ?? const <TournamentDivision>[],
+        );
     state = state.copyWith(generating: true, generatingStrategy: strategy);
     try {
       final res = await _dio.post(
         '/tournaments/lite/$tournamentId/pairs/generate',
-        data: {'strategy': strategy},
+        data: {
+          'strategy': strategy,
+          'divisionId': ?division,
+        },
       );
       final data = res.data is Map ? (res.data as Map)['data'] as Map? : null;
       final unpairedIds =
@@ -1007,6 +1023,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         'Sinh cặp $strategy: ${unpairedIds.isEmpty ? 'toàn bộ' : '${unpairedIds.length} người lẻ'}',
       );
       await _fetchParticipants(tournamentId);
+      return res.data;
     } on DioException catch (e) {
       _log.error('Lỗi sinh cặp $strategy', e);
       rethrow;
@@ -1104,7 +1121,10 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-  Future<void> createBracket(String tournamentId) async {
+  /// Backend tự ghép ngẫu nhiên trong đúng nội dung khi tạo sơ đồ, nên App
+  /// KHÔNG ghép trước. Trả body response (`autoPaired`, `unpairedNames`) để
+  /// màn hiện kết quả; lỗi Backend được ném ra, không nuốt.
+  Future<Object?> createBracket(String tournamentId) async {
     if (state.bracketEligibleCount < 2) {
       throw StateError(_l10n.lite_bracketMinimumParticipants(2));
     }
@@ -1112,26 +1132,10 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     final bType =
         state.tournament?.bracketType.toUpperCase() ?? 'SINGLE_ELIMINATION';
     try {
-      // If tournament is Doubles format and has 2+ unpaired participants,
-      // automatically auto-pair them (RANDOM) before creating bracket (matching Web behavior).
-      if (state.isDoubles && state.pendingParticipants.length >= 2) {
-        try {
-          await _dio.post(
-            '/tournaments/lite/$tournamentId/pairs/generate',
-            data: {'strategy': 'RANDOM'},
-          );
-          await _fetchParticipants(tournamentId);
-        } catch (pairErr) {
-          _log.warning(
-            'Tự động ghép cặp trước khi tạo bracket bỏ qua lỗi: $pairErr',
-          );
-        }
-      }
-
       // Lite must stay on its guarded endpoint. Falling back to the normal
       // bracket endpoint after a 400/404 could bypass the Lite lifecycle
       // guard and recreate a bracket while the tournament is live.
-      await _dio.post(
+      final res = await _dio.post(
         '/tournaments/lite/$tournamentId/bracket',
         data: {
           if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
@@ -1145,6 +1149,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       state = state.copyWith(creatingBracket: false, hasBracket: true);
       await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
       await _fetchParticipants(tournamentId);
+      return res.data;
     } on DioException catch (e) {
       _log.error('Lỗi tạo bracket', e);
       state = state.copyWith(creatingBracket: false);

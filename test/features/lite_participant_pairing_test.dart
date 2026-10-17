@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dart';
+import 'package:app_quanly_giaidau/core/utils/pair_generation_summary.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:flutter_test/flutter_test.dart';
 
