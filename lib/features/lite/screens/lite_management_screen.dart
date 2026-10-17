@@ -488,10 +488,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       // has created a Lite bracket. A Lite tournament normally has
                       // one division; pass its identity so edit-mode PATCH requests
                       // target the same division that was loaded for the diagram.
-                      final liteDivision =
-                          state.tournament?.divisions.isNotEmpty == true
-                          ? state.tournament!.divisions.first
-                          : null;
+                      final liteDivision = state.displayDivision;
                       final divisions = state.tournament?.divisions ?? const [];
                       final hasSingleDivision = divisions.length == 1;
                       final bracketType =
@@ -3117,6 +3114,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     AppColorsExtension colors,
     LiteManagementNotifier notifier,
   ) async {
+    if (!await _ensureDivisionChosen(notifier) || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final ctrl = TextEditingController(text: '8');
     final count = await showDialog<int>(
@@ -3182,6 +3180,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     AppColorsExtension colors,
     LiteManagementNotifier notifier,
   ) async {
+    if (!await _ensureDivisionChosen(notifier) || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -3270,6 +3269,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     LiteManagementNotifier notifier,
     String strategy,
   ) async {
+    if (!await _ensureDivisionChosen(notifier) || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     try {
       final raw = await notifier.generatePairs(widget.tournamentId, strategy);
@@ -3308,6 +3308,57 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     }
   }
 
+  /// Giải có nhiều nội dung mà màn chưa chọn nội dung thì hỏi BTC trước khi
+  /// tạo sơ đồ, ghép cặp, reset hoặc thêm/xoá VĐV ảo. Trả false nếu BTC huỷ.
+  Future<bool> _ensureDivisionChosen(LiteManagementNotifier notifier) async {
+    final current = ref.read(liteManagementProvider);
+    if (current.activeDivisions.length < 2 ||
+        current.selectedDivision != null) {
+      return true;
+    }
+    final picked = await _showDivisionPicker(current.activeDivisions);
+    if (picked == null || !mounted) return false;
+    await notifier.selectDivision(widget.tournamentId, picked);
+    return true;
+  }
+
+  Future<String?> _showDivisionPicker(List<TournamentDivision> divisions) {
+    final l10n = AppLocalizations.of(context)!;
+    String? selectedId;
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.registerSelectDivision),
+          content: DropdownButtonFormField<String>(
+            initialValue: selectedId,
+            isExpanded: true,
+            items: [
+              for (final division in divisions)
+                DropdownMenuItem(
+                  value: division.id,
+                  child: Text(division.name),
+                ),
+            ],
+            onChanged: (value) => setDialogState(() => selectedId = value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: selectedId == null
+                  ? null
+                  : () => Navigator.pop(dialogContext, selectedId),
+              child: Text(l10n.lite_confirmButton),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _createBracket(
     AppColorsExtension colors,
     LiteManagementNotifier notifier,
@@ -3315,6 +3366,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     if (_isBracketLockedForRecreation(ref.read(liteManagementProvider))) {
       return;
     }
+    if (!await _ensureDivisionChosen(notifier) || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final replacingExisting = ref.read(liteManagementProvider).hasBracket;
 

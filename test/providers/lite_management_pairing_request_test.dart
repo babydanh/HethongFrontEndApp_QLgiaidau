@@ -196,4 +196,125 @@ void main() {
       expect(adapter.postsTo('$_liteBase/pairs/generate'), isEmpty);
     });
   });
+
+  group('ghi sơ đồ, reset và VĐV ảo theo nội dung', () {
+    final fourPending = [
+      _pending('p1', 'An'),
+      _pending('p2', 'Bình'),
+      _pending('p3', 'Cường'),
+      _pending('p4', 'Dũng'),
+    ];
+    const emptyBracketReply = FakeReply(200, {
+      'status': 'OK',
+      'data': {'autoPaired': [], 'unpairedNames': []},
+    });
+    const okReply = FakeReply(200, {'status': 'OK', 'data': {}});
+
+    test(
+      'nhiều nội dung chưa chọn: createBracket ném lỗi, không gửi divisionId',
+      () async {
+        final adapter = _adapter(
+          divisions: _twoDivisions,
+          participants: fourPending,
+        );
+        final notifier = await _loadedNotifier(adapter);
+
+        await expectLater(
+          notifier.createBracket(_tournamentId),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(adapter.postsTo('$_liteBase/bracket'), isEmpty);
+        expect(notifier.state.creatingBracket, isFalse);
+      },
+    );
+
+    test(
+      'nhiều nội dung chưa chọn: resetBracket, seedMock, clearMock ném lỗi và không gửi request',
+      () async {
+        final adapter = _adapter(
+          divisions: _twoDivisions,
+          participants: fourPending,
+        );
+        final notifier = await _loadedNotifier(adapter);
+
+        await expectLater(
+          notifier.resetBracket(_tournamentId),
+          throwsA(isA<StateError>()),
+        );
+        await expectLater(
+          notifier.seedMock(_tournamentId, 2),
+          throwsA(isA<StateError>()),
+        );
+        await expectLater(
+          notifier.clearMock(_tournamentId),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(adapter.postsTo('$_liteBase/bracket/reset'), isEmpty);
+        expect(
+          adapter.requests.where((r) => r.path.endsWith('mock-participants')),
+          isEmpty,
+        );
+        expect(notifier.state.creatingBracket, isFalse);
+        expect(notifier.state.mockLoading, isFalse);
+      },
+    );
+
+    test(
+      'selectDivision: createBracket, reset và seedMock gửi đúng nội dung đã chọn',
+      () async {
+        final adapter = _adapter(
+          divisions: _twoDivisions,
+          participants: fourPending,
+          routes: {
+            'POST $_liteBase/bracket': emptyBracketReply,
+            'POST $_liteBase/bracket/reset': okReply,
+            'POST /tournaments/$_tournamentId/mock-participants': okReply,
+          },
+        );
+        final notifier = await _loadedNotifier(adapter);
+
+        await notifier.selectDivision(_tournamentId, 'd2');
+        expect(notifier.state.selectedDivisionId, 'd2');
+        expect(notifier.state.displayDivision?.id, 'd2');
+
+        await notifier.createBracket(_tournamentId);
+        await notifier.resetBracket(_tournamentId);
+        await notifier.seedMock(_tournamentId, 2);
+
+        expect(
+          adapter.postsTo('$_liteBase/bracket').single.body?['divisionId'],
+          'd2',
+        );
+        expect(
+          adapter.postsTo('$_liteBase/bracket/reset').single.body?['divisionId'],
+          'd2',
+        );
+        expect(
+          adapter
+              .postsTo('/tournaments/$_tournamentId/mock-participants')
+              .single
+              .body?['divisionId'],
+          'd2',
+        );
+      },
+    );
+
+    test('một nội dung: reset gửi divisionId duy nhất không cần chọn', () async {
+      final adapter = _adapter(
+        divisions: _oneDivision,
+        participants: fourPending,
+        routes: {'POST $_liteBase/bracket/reset': okReply},
+      );
+      final notifier = await _loadedNotifier(adapter);
+
+      await notifier.resetBracket(_tournamentId);
+
+      expect(
+        adapter.postsTo('$_liteBase/bracket/reset').single.body?['divisionId'],
+        'd1',
+      );
+    });
+  });
 }

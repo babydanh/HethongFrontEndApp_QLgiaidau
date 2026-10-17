@@ -159,6 +159,7 @@ class LiteManagementState {
   final String? ward;
   final String? description;
   final String detailsSaveStatus; // 'idle', 'saving', 'saved'
+  final String? selectedDivisionId;
 
   const LiteManagementState({
     this.loading = true,
@@ -188,6 +189,7 @@ class LiteManagementState {
     this.ward,
     this.description,
     this.detailsSaveStatus = 'idle',
+    this.selectedDivisionId,
   });
 
   LiteManagementState copyWith({
@@ -221,6 +223,7 @@ class LiteManagementState {
     String? ward,
     String? description,
     String? detailsSaveStatus,
+    String? selectedDivisionId,
   }) {
     return LiteManagementState(
       loading: loading ?? this.loading,
@@ -254,6 +257,7 @@ class LiteManagementState {
       ward: ward ?? this.ward,
       description: description ?? this.description,
       detailsSaveStatus: detailsSaveStatus ?? this.detailsSaveStatus,
+      selectedDivisionId: selectedDivisionId ?? this.selectedDivisionId,
     );
   }
 
@@ -299,6 +303,36 @@ class LiteManagementState {
         tournamentCategory.contains('bóng đá') ||
         tournamentCategory.contains('football') ||
         participants.any((participant) => participant.footballTeamId != null);
+  }
+
+  /// Nội dung Lite dùng được: không huỷ và có id lưu được trên server.
+  List<TournamentDivision> get activeDivisions {
+    final divisions = tournament?.divisions ?? const <TournamentDivision>[];
+    return divisions
+        .where(
+          (division) =>
+              division.status?.trim().toUpperCase() != 'CANCELLED' &&
+              persistedTournamentDivisionId(division.id) != null,
+        )
+        .toList(growable: false);
+  }
+
+  /// Nội dung đang chọn trên màn; null nếu chưa chọn hoặc không còn dùng được.
+  TournamentDivision? get selectedDivision {
+    final id = selectedDivisionId;
+    if (id == null) return null;
+    for (final division in activeDivisions) {
+      if (division.id == id) return division;
+    }
+    return null;
+  }
+
+  /// Nội dung để hiển thị: nội dung đang chọn, chưa chọn thì nội dung đầu tiên.
+  TournamentDivision? get displayDivision {
+    final selected = selectedDivision;
+    if (selected != null) return selected;
+    final divisions = tournament?.divisions ?? const <TournamentDivision>[];
+    return divisions.isNotEmpty ? divisions.first : null;
   }
 }
 
@@ -377,7 +411,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
       ]).timeout(const Duration(seconds: 15));
-      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchBracket(tournamentId, divisionId: _readDivisionId);
       await _fetchMatches(tournamentId);
       _loadInFlight = false;
     } on TimeoutException {
@@ -554,11 +588,24 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
-  String? get _liteDivisionId {
+  /// Nội dung để ĐỌC và hiển thị sơ đồ/trận. Không dùng để GHI.
+  String? get _readDivisionId {
+    final id = state.displayDivision?.id.trim() ?? '';
+    return id.isEmpty ? null : id;
+  }
+
+  /// Nội dung để GHI sơ đồ, reset và VĐV ảo. Giải nhiều nội dung mà chưa chọn
+  /// thì ném lỗi, không bao giờ tự lấy nội dung đầu tiên (gộp sai nội dung).
+  /// Giải không có nội dung nào thì trả null và để Backend xử lý như cũ.
+  String? _writeDivisionId() {
     final divisions =
         state.tournament?.divisions ?? const <TournamentDivision>[];
-    final divisionId = divisions.isNotEmpty ? divisions.first.id.trim() : '';
-    return divisionId.isEmpty ? null : divisionId;
+    if (divisions.isEmpty) return null;
+    final selected = state.selectedDivision;
+    if (selected != null) return selected.id;
+    final sole = soleActiveTournamentDivisionId(divisions);
+    if (sole != null) return sole;
+    throw StateError(_l10n.registerSelectDivision);
   }
 
   Future<void> _fetchBracket(String tournamentId, {String? divisionId}) async {
@@ -590,7 +637,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     try {
       final matches = await ref
           .read(tournamentRepositoryProvider)
-          .getBracketMatches(tournamentId, divisionId: _liteDivisionId);
+          .getBracketMatches(tournamentId, divisionId: _readDivisionId);
       state = state.copyWith(matches: matches, clearMatchesError: true);
     } catch (e, stack) {
       _log.error('Lỗi tải danh sách trận Lite', e, stack);
@@ -614,7 +661,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         _fetchTournament(tournamentId),
         _fetchParticipants(tournamentId),
       ]).timeout(const Duration(seconds: 15));
-      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchBracket(tournamentId, divisionId: _readDivisionId);
       await _fetchMatches(tournamentId);
       _loadInFlight = false;
     } on TimeoutException {
@@ -766,7 +813,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
     state = state.copyWith(detailsSaveStatus: 'saving');
     try {
-      final divisionId = _liteDivisionId;
+      final divisionId = _readDivisionId;
       await _dio.patch(
         '/tournaments/$tournamentId',
         data: {'maxParticipants': maxParticipants},
@@ -991,8 +1038,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   /// Trả body response (`paired`, `unpairedNames`, ...) để màn hiện kết quả.
-  /// [divisionId] trống thì dùng nội dung duy nhất đang hoạt động; giải nhiều
-  /// nội dung thì không gửi, để Backend trả 400 thay vì đoán nội dung.
+  /// [divisionId] trống thì dùng nội dung đang chọn, rồi nội dung duy nhất đang
+  /// hoạt động; giải nhiều nội dung mà chưa chọn thì không gửi, để Backend trả
+  /// 400 thay vì đoán nội dung.
   Future<Object?> generatePairs(
     String tournamentId,
     String strategy, {
@@ -1000,6 +1048,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }) async {
     final division =
         divisionId ??
+        state.selectedDivision?.id ??
         soleActiveTournamentDivisionId(
           state.tournament?.divisions ?? const <TournamentDivision>[],
         );
@@ -1121,6 +1170,14 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     }
   }
 
+  /// Chọn nội dung đang thao tác trên màn quản lý rồi tải lại sơ đồ và trận của
+  /// nội dung đó. Các thao tác ghi sau này dùng đúng nội dung này.
+  Future<void> selectDivision(String tournamentId, String divisionId) async {
+    state = state.copyWith(selectedDivisionId: divisionId);
+    await _fetchBracket(tournamentId, divisionId: divisionId);
+    await _fetchMatches(tournamentId);
+  }
+
   /// Backend tự ghép ngẫu nhiên trong đúng nội dung khi tạo sơ đồ, nên App
   /// KHÔNG ghép trước. Trả body response (`autoPaired`, `unpairedNames`) để
   /// màn hiện kết quả; lỗi Backend được ném ra, không nuốt.
@@ -1128,6 +1185,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     if (state.bracketEligibleCount < 2) {
       throw StateError(_l10n.lite_bracketMinimumParticipants(2));
     }
+    final divisionId = _writeDivisionId();
     state = state.copyWith(creatingBracket: true);
     final bType =
         state.tournament?.bracketType.toUpperCase() ?? 'SINGLE_ELIMINATION';
@@ -1138,7 +1196,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       final res = await _dio.post(
         '/tournaments/lite/$tournamentId/bracket',
         data: {
-          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
+          'divisionId': ?divisionId,
           'seedingType': 'RANDOM',
           'bracketType': bType.contains('DOUBLE')
               ? 'DOUBLE_ELIMINATION'
@@ -1147,7 +1205,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
       );
       _log.success('Tạo bracket thành công');
       state = state.copyWith(creatingBracket: false, hasBracket: true);
-      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchBracket(tournamentId, divisionId: divisionId);
       await _fetchParticipants(tournamentId);
       return res.data;
     } on DioException catch (e) {
@@ -1158,14 +1216,15 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   Future<void> resetBracket(String tournamentId) async {
+    final divisionId = _writeDivisionId();
     state = state.copyWith(creatingBracket: true);
     try {
       await _dio.post(
         '/tournaments/lite/$tournamentId/bracket/reset',
-        data: {if (_liteDivisionId != null) 'divisionId': _liteDivisionId},
+        data: {'divisionId': ?divisionId},
       );
       state = state.copyWith(hasBracket: true);
-      await _fetchBracket(tournamentId, divisionId: _liteDivisionId);
+      await _fetchBracket(tournamentId, divisionId: divisionId);
       await _fetchMatches(tournamentId);
       await _fetchParticipants(tournamentId);
       _log.success('Đã reset bracket Lite');
@@ -1178,6 +1237,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   Future<void> seedMock(String tournamentId, int count) async {
+    final divisionId = _writeDivisionId();
     state = state.copyWith(mockLoading: true);
     try {
       final names = List.generate(count, (i) => 'VĐV ảo ${i + 1}');
@@ -1185,7 +1245,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         '/tournaments/$tournamentId/mock-participants',
         data: {
           'names': names,
-          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
+          'divisionId': ?divisionId,
         },
       );
       _log.success('Đã tạo $count VĐV ảo');
@@ -1199,12 +1259,13 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   Future<void> clearMock(String tournamentId) async {
+    final divisionId = _writeDivisionId();
     state = state.copyWith(mockLoading: true);
     try {
       await _dio.delete(
         '/tournaments/$tournamentId/mock-participants',
         queryParameters: {
-          if (_liteDivisionId != null) 'divisionId': _liteDivisionId,
+          'divisionId': ?divisionId,
         },
       );
       _log.success('Đã xóa toàn bộ VĐV ảo');
