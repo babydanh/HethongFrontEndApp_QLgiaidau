@@ -36,3 +36,16 @@ String? soleActiveTournamentDivisionId(
       .toSet();
   return activeIds.length == 1 ? activeIds.single : null;
 }
+
+/// Nội dung dùng được cho thao tác Lite: không huỷ và có id lưu được trên server.
+List<TournamentDivision> usableTournamentDivisions(
+  Iterable<TournamentDivision> divisions,
+) {
+  return divisions
+      .where(
+        (division) =>
+            division.status?.trim().toUpperCase() != 'CANCELLED' &&
+            persistedTournamentDivisionId(division.id) != null,
+      )
+      .toList(growable: false);
+}

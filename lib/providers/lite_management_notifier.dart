@@ -20,6 +20,7 @@ class LiteParticipant {
   final String id;
   final String status;
   final String teamName;
+  final String? tournamentDivisionId;
   final String? teamInviteToken;
   final String? footballTeamId;
   final String? footballTeamLogoUrl;
@@ -30,6 +31,7 @@ class LiteParticipant {
     required this.id,
     required this.status,
     this.teamName = '',
+    this.tournamentDivisionId,
     this.footballTeamId,
     this.footballTeamLogoUrl,
     this.teamInviteToken,
@@ -52,6 +54,7 @@ class LiteParticipant {
       id: json['id']?.toString() ?? '',
       status: (json['teamStatus']?.toString() ?? '').toUpperCase(),
       teamName: json['teamName']?.toString() ?? '',
+      tournamentDivisionId: json['tournamentDivisionId']?.toString(),
       footballTeamId: json['footballTeamId']?.toString(),
       teamInviteToken: json['teamInviteToken']?.toString(),
       footballTeamLogoUrl: json['footballTeamLogoUrl']?.toString(),
@@ -306,16 +309,8 @@ class LiteManagementState {
   }
 
   /// Nội dung Lite dùng được: không huỷ và có id lưu được trên server.
-  List<TournamentDivision> get activeDivisions {
-    final divisions = tournament?.divisions ?? const <TournamentDivision>[];
-    return divisions
-        .where(
-          (division) =>
-              division.status?.trim().toUpperCase() != 'CANCELLED' &&
-              persistedTournamentDivisionId(division.id) != null,
-        )
-        .toList(growable: false);
-  }
+  List<TournamentDivision> get activeDivisions =>
+      usableTournamentDivisions(tournament?.divisions ?? const []);
 
   /// Nội dung đang chọn trên màn; null nếu chưa chọn hoặc không còn dùng được.
   TournamentDivision? get selectedDivision {

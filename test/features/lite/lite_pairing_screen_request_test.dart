@@ -13,12 +13,17 @@ const _liteBase = '/tournaments/lite/t1';
 const _genPath = '$_liteBase/pairs/generate';
 const _bracketPath = '$_liteBase/bracket';
 
-Map<String, dynamic> _pending(String id, String name) => {
+Map<String, dynamic> _pending(
+  String id,
+  String name, {
+  String? divisionId,
+}) => {
   'id': id,
   'teamStatus': 'PENDING_PARTNER',
   'teamName': name,
   'customResponses': {'importedFrom': 'ORGANIZER_DIRECT', 'player1Name': name},
   'rosters': <Object>[],
+  'tournamentDivisionId': ?divisionId,
 };
 
 Map<String, dynamic> _complete(String id, String name) => {
@@ -104,6 +109,18 @@ void main() {
     await settle(tester);
   }
 
+  Future<void> pickDivisionInDialog(WidgetTester tester, String name) async {
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(DropdownButtonFormField<String>),
+      ),
+    );
+    await settle(tester);
+    await tester.tap(find.text(name).last);
+    await settle(tester);
+  }
+
   testWidgets('RANDOM sends divisionId of a single-division tournament', (
     tester,
   ) async {
@@ -144,31 +161,65 @@ void main() {
   });
 
   testWidgets(
-    'RANDOM on multi-division tournament shows backend 400 message verbatim',
+    'multi-division: RANDOM waits for a division choice, then sends that divisionId',
     (tester) async {
-      const backendMessage = 'Vui lòng chọn nội dung để ghép đôi.';
       final adapter = _adapter(
         divisions: [
-          {'id': 'd1', 'matchType': 'DOUBLES'},
-          {'id': 'd2', 'matchType': 'DOUBLES'},
+          {'id': 'd1', 'name': 'Đôi nam', 'matchType': 'DOUBLES'},
+          {'id': 'd2', 'name': 'Đôi nữ', 'matchType': 'DOUBLES'},
         ],
-        participants: [_pending('p1', 'An'), _pending('p2', 'Bình')],
+        participants: [
+          _pending('p1', 'An', divisionId: 'd1'),
+          _pending('p2', 'Bình', divisionId: 'd1'),
+          _pending('p3', 'Cường', divisionId: 'd2'),
+          _pending('p4', 'Dũng', divisionId: 'd2'),
+        ],
         routes: {
-          'POST $_genPath': const FakeReply(400, {
-            'status': 'ERROR',
-            'message': backendMessage,
+          'POST $_genPath': const FakeReply(200, {
+            'status': 'OK',
+            'data': {
+              'paired': [
+                {
+                  'participantId': 'p3',
+                  'memberNames': ['Cường', 'Dũng'],
+                },
+              ],
+              'unpairedParticipantIds': <String>[],
+              'unpairedNames': <String>[],
+            },
           }),
         },
       );
       await pumpScreen(tester, adapter);
+
+      // Chưa chọn nội dung: không có nút ghép ngẫu nhiên, danh sách chờ trống.
+      expect(
+        find.widgetWithText(OutlinedButton, l10n.lite_random),
+        findsNothing,
+      );
+      expect(find.text('An'), findsNothing);
+
+      await tester.tap(
+        find.widgetWithText(OutlinedButton, l10n.registerSelectDivision),
+      );
+      await settle(tester);
+      await pickDivisionInDialog(tester, 'Đôi nữ');
+      await confirmInDialog(tester, l10n.lite_confirmButton);
+
+      // Đã chọn Đôi nữ: chỉ VĐV của Đôi nữ nằm trong danh sách chờ.
+      expect(find.text('An'), findsNothing);
+      expect(find.text('Cường'), findsOneWidget);
 
       await tester.tap(find.widgetWithText(OutlinedButton, l10n.lite_random));
       await settle(tester);
       await confirmInDialog(tester, l10n.lite_confirmButton);
 
       final posts = adapter.postsTo(_genPath).toList();
-      expect(posts.single.body, {'strategy': 'RANDOM'});
-      expect(find.text(backendMessage), findsOneWidget);
+      expect(posts.single.body, {'strategy': 'RANDOM', 'divisionId': 'd2'});
+      expect(
+        find.text('${l10n.lite_autoPairSuccess}: Cường & Dũng'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -228,8 +279,8 @@ void main() {
     const backendMessage = 'Vui lòng chọn nội dung để tạo sơ đồ.';
     final adapter = _adapter(
       divisions: [
-        {'id': 'd1', 'matchType': 'DOUBLES'},
-        {'id': 'd2', 'matchType': 'DOUBLES'},
+        {'id': 'd1', 'name': 'Đôi nam', 'matchType': 'DOUBLES'},
+        {'id': 'd2', 'name': 'Đôi nữ', 'matchType': 'DOUBLES'},
       ],
       participants: [_complete('p1', 'Đội A'), _pending('p2', 'Bình')],
       routes: {
@@ -243,9 +294,48 @@ void main() {
 
     await tester.tap(find.text(l10n.lite_createBracket));
     await settle(tester);
+    await pickDivisionInDialog(tester, 'Đôi nữ');
+    await confirmInDialog(tester, l10n.lite_confirmButton);
     await confirmInDialog(tester, l10n.lite_createBracket);
+    expect(adapter.postsTo(_bracketPath).single.body, {'divisionId': 'd2'});
 
     expect(find.text(backendMessage), findsOneWidget);
     expect(adapter.postsTo(_genPath), isEmpty);
   });
+
+  testWidgets(
+    'multi-division bracket: cancelling the division picker sends nothing',
+    (tester) async {
+      final adapter = _adapter(
+        divisions: [
+          {'id': 'd1', 'name': 'Đôi nam', 'matchType': 'DOUBLES'},
+          {'id': 'd2', 'name': 'Đôi nữ', 'matchType': 'DOUBLES'},
+        ],
+        participants: [
+          _complete('p1', 'Đội A'),
+          _pending('p2', 'Bình', divisionId: 'd2'),
+        ],
+        routes: {
+          'POST $_bracketPath': const FakeReply(200, {
+            'status': 'OK',
+            'data': {'autoPaired': <Object>[], 'unpairedNames': <String>[]},
+          }),
+        },
+      );
+      await pumpScreen(tester, adapter);
+
+      await tester.tap(find.text(l10n.lite_createBracket));
+      await settle(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text(l10n.commonCancel),
+        ),
+      );
+      await settle(tester);
+
+      expect(adapter.postsTo(_bracketPath), isEmpty);
+      expect(adapter.postsTo(_genPath), isEmpty);
+    },
+  );
 }

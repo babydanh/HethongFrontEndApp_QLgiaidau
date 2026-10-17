@@ -25,6 +25,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
+import 'package:app_quanly_giaidau/features/lite/widgets/lite_division_picker.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
@@ -3316,47 +3317,13 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         current.selectedDivision != null) {
       return true;
     }
-    final picked = await _showDivisionPicker(current.activeDivisions);
+    final picked = await showLiteDivisionPicker(
+      context,
+      current.activeDivisions,
+    );
     if (picked == null || !mounted) return false;
     await notifier.selectDivision(widget.tournamentId, picked);
     return true;
-  }
-
-  Future<String?> _showDivisionPicker(List<TournamentDivision> divisions) {
-    final l10n = AppLocalizations.of(context)!;
-    String? selectedId;
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(l10n.registerSelectDivision),
-          content: DropdownButtonFormField<String>(
-            initialValue: selectedId,
-            isExpanded: true,
-            items: [
-              for (final division in divisions)
-                DropdownMenuItem(
-                  value: division.id,
-                  child: Text(division.name),
-                ),
-            ],
-            onChanged: (value) => setDialogState(() => selectedId = value),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: selectedId == null
-                  ? null
-                  : () => Navigator.pop(dialogContext, selectedId),
-              child: Text(l10n.lite_confirmButton),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _createBracket(

@@ -1,4 +1,3 @@
-import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dart';
 import 'package:app_quanly_giaidau/core/utils/pair_generation_summary.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -69,25 +68,15 @@ void main() {
       expect(unpairedDisplayNames([], {}), isEmpty);
     });
 
-    test('liteSingleDivisionId picks only a sole division', () {
-      expect(
-        liteSingleDivisionId({
-          'divisions': [
-            {'id': 'd1'},
-          ],
-        }),
-        'd1',
-      );
-      expect(
-        liteSingleDivisionId({
-          'divisions': [
-            {'id': 'd1'},
-            {'id': 'd2'},
-          ],
-        }),
-        isNull,
-      );
-      expect(liteSingleDivisionId(<String, dynamic>{}), isNull);
+    test('participant keeps the division id the backend row carries', () {
+      final participant = _participant({
+        'id': 'p5',
+        'teamStatus': 'PENDING_PARTNER',
+        'tournamentDivisionId': 'd2',
+        'customResponses': {'importedFrom': 'ORGANIZER_DIRECT'},
+        'rosters': <Object>[],
+      });
+      expect(participant.tournamentDivisionId, 'd2');
     });
   });
 }

@@ -35,7 +35,7 @@ Backend chỉ ghép được participant `PENDING_PARTNER` (`isDoublesParticipan
 - **THEN** khách không nằm trong danh sách chờ ghép và không được tính là đã ghép
 
 ### Requirement: Ghép ngẫu nhiên báo tên người lẻ
-Ghép ngẫu nhiên trên màn quản lý MUST gửi `divisionId` của nội dung đang chọn hoặc nội dung duy nhất, và MUST hỏi BTC chọn nội dung khi giải có nhiều nội dung chưa chọn. Màn ghép cặp MUST NOT gửi `divisionId` khi giải có nhiều nội dung và MUST hiện nguyên văn `message` 400 của Backend. Sau khi ghép, App MUST hiện cặp và tên người lẻ từ response.
+Ghép ngẫu nhiên trên màn quản lý MUST gửi `divisionId` của nội dung đang chọn hoặc nội dung duy nhất, và MUST hỏi BTC chọn nội dung khi giải có nhiều nội dung chưa chọn. Màn ghép cặp MUST gửi `divisionId` của nội dung đang chọn theo cùng quy tắc; ghép tay MUST NOT gửi `divisionId`. Sau khi ghép, App MUST hiện cặp và tên người lẻ từ response.
 
 #### Scenario: Số chẵn, ghép hết
 - **WHEN** `unpairedParticipantIds` rỗng
@@ -54,8 +54,12 @@ Ghép ngẫu nhiên trên màn quản lý MUST gửi `divisionId` của nội du
 - **THEN** body gửi `{strategy, divisionId}` với `divisionId` là id của nội dung đó
 
 #### Scenario: Giải nhiều nội dung không đoán nội dung
-- **WHEN** giải có nhiều nội dung và BTC bấm ghép ngẫu nhiên trên màn ghép cặp
-- **THEN** body không có `divisionId` và snackbar hiện đúng "Vui lòng chọn nội dung để ghép đôi."
+- **WHEN** giải có nhiều nội dung chưa chọn và BTC bấm ghép ngẫu nhiên trên màn ghép cặp
+- **THEN** màn hỏi BTC chọn nội dung và chưa gọi API nào
+
+#### Scenario: Giải nhiều nội dung đã chọn gửi divisionId
+- **WHEN** giải có nhiều nội dung, BTC đã chọn một nội dung và bấm ghép ngẫu nhiên trên màn ghép cặp
+- **THEN** body gửi `{strategy, divisionId}` với `divisionId` là id nội dung đã chọn
 
 #### Scenario: Lỗi không có message từ Backend
 - **WHEN** yêu cầu ghép thất bại vì mạng hoặc phản hồi không có `message`
@@ -66,7 +70,7 @@ Ghép ngẫu nhiên trên màn quản lý MUST gửi `divisionId` của nội du
 - **THEN** App không báo lỗi và không làm hỏng màn ghép cặp
 
 ### Requirement: Tạo sơ đồ Lite gửi nội dung và báo người không ghép được
-App MUST gọi `POST /tournaments/lite/:id/bracket` với `divisionId` của nội dung đang chọn hoặc nội dung duy nhất. Màn quản lý MUST hỏi BTC chọn trước khi giải có nhiều nội dung chưa chọn. Màn ghép cặp MUST NOT gửi `divisionId` khi giải có nhiều nội dung. App MUST NOT gọi `pairs/generate` trước khi tạo sơ đồ. Lỗi 400 của Backend MUST được hiện nguyên văn và MUST NOT bị nuốt.
+App MUST gọi `POST /tournaments/lite/:id/bracket` với `divisionId` của nội dung đang chọn hoặc nội dung duy nhất. Màn ghép cặp MUST hỏi BTC chọn trước khi giải có nhiều nội dung chưa chọn, và MUST gửi `divisionId` của nội dung đã chọn. App MUST NOT gọi `pairs/generate` trước khi tạo sơ đồ. Lỗi 400 của Backend MUST được hiện nguyên văn và MUST NOT bị nuốt.
 
 #### Scenario: Thành công có người không ghép được
 - **WHEN** phản hồi có `unpairedNames: ["Nguyễn A"]`
@@ -81,8 +85,8 @@ App MUST gọi `POST /tournaments/lite/:id/bracket` với `divisionId` của n�
 - **THEN** snackbar hiện thông điệp lỗi của backend, không hiện thông báo thành công
 
 #### Scenario: Giải nhiều nội dung chưa chọn nội dung
-- **WHEN** giải có nhiều nội dung, màn ghép cặp không gửi `divisionId` và Backend trả 400 "Vui lòng chọn nội dung để tạo sơ đồ."
-- **THEN** snackbar hiện đúng thông điệp đó và không báo thành công
+- **WHEN** giải có nhiều nội dung và BTC bấm tạo sơ đồ khi chưa chọn nội dung
+- **THEN** màn hỏi BTC chọn nội dung và chưa gọi API nào; sau khi chọn, body gửi `divisionId` của nội dung đã chọn
 
 #### Scenario: Tạo sơ đồ không ghép trước
 - **WHEN** BTC bấm tạo sơ đồ khi còn người chờ ghép
@@ -118,3 +122,22 @@ Màn quản lý Lite MUST hỏi BTC chọn nội dung khi giải có từ hai n�
 #### Scenario: Notifier nhận thao tác ghi khi chưa chọn
 - **WHEN** notifier nhận thao tác ghi khi giải có nhiều nội dung và chưa chọn nội dung
 - **THEN** ném lỗi trước khi gửi request, không gửi `divisionId` và không để cờ đang xử lý bị kẹt
+
+### Requirement: Màn ghép cặp chọn nội dung bằng bộ chọn dùng chung
+Màn ghép cặp Lite MUST dùng hộp chọn nội dung chung với màn quản lý khi giải có từ hai nội dung dùng được. Khi đã chọn nội dung, danh sách chờ ghép và danh sách đơn MUST chỉ hiện VĐV của nội dung đó. Giải một nội dung MUST NOT hiện bộ chọn.
+
+#### Scenario: Giải nhiều nội dung chưa chọn
+- **WHEN** BTC mở màn ghép cặp của giải có nhiều nội dung
+- **THEN** danh sách chờ trống, màn hiện nút chọn nội dung và không có nút ghép ngẫu nhiên
+
+#### Scenario: Chọn nội dung lọc danh sách chờ
+- **WHEN** BTC chọn một nội dung
+- **THEN** chỉ VĐV thuộc nội dung đó nằm trong danh sách chờ và danh sách đơn
+
+#### Scenario: BTC huỷ hộp chọn
+- **WHEN** BTC huỷ hộp chọn khi bấm ghép ngẫu nhiên hoặc tạo sơ đồ
+- **THEN** thao tác dừng và không gọi API nào
+
+#### Scenario: Giải một nội dung
+- **WHEN** giải có đúng một nội dung dùng được
+- **THEN** không hiện bộ chọn và danh sách không lọc theo nội dung

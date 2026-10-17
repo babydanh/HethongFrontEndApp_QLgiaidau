@@ -10,6 +10,9 @@ import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
 import 'package:app_quanly_giaidau/core/utils/api_error_message.dart';
 import 'package:app_quanly_giaidau/core/utils/pair_generation_summary.dart';
+import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/lite/widgets/lite_division_picker.dart';
 
 /// Compact organizer screen for Lite tournament pairing.
 /// Supports manual pair, RANDOM/ELO_BALANCED generate, and unpair.
@@ -22,23 +25,12 @@ class LitePairingScreen extends ConsumerStatefulWidget {
   ConsumerState<LitePairingScreen> createState() => _LitePairingScreenState();
 }
 
-/// Chọn `divisionId` khi giải chỉ có đúng một nội dung; nhiều nội dung thì
-/// để backend trả lỗi "Vui lòng chọn nội dung để tạo sơ đồ." (không đoán).
-String? liteSingleDivisionId(Map<String, dynamic> payload) {
-  final divisions = payload['divisions'];
-  if (divisions is! List || divisions.length != 1) return null;
-  final division = divisions.first;
-  if (division is! Map) return null;
-  final id = division['id']?.toString();
-  return (id == null || id.isEmpty) ? null : id;
-}
-
 class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   static const _log = AppLogger('LitePairing');
 
   bool _loading = true;
   String? _error;
-  String? _matchType;
+  String? _tournamentMatchType;
   bool _isFootball = false;
   String? _tournamentName;
   List<LiteParticipant> _participants = [];
@@ -47,7 +39,8 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   bool _pairing = false;
   bool _generating = false;
   String? _generatingStrategy;
-  String? _divisionId;
+  List<TournamentDivision> _divisions = const [];
+  String? _selectedDivisionId;
 
   @override
   void initState() {
@@ -65,27 +58,50 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         category.contains('bóng đá');
   }
 
-  String _canonicalMatchType(Map<String, dynamic> payload) {
-    final divisions = payload['divisions'];
-    if (divisions is List && divisions.isNotEmpty && divisions.first is Map) {
-      final division = Map<String, dynamic>.from(divisions.first as Map);
-      final divisionMatchType = division['matchType']
-          ?.toString()
-          .trim()
-          .toUpperCase();
-      final divisionGender = division['genderRestriction']
-          ?.toString()
-          .trim()
-          .toUpperCase();
-      if (divisionMatchType == 'MIXED_DOUBLES' ||
-          (divisionMatchType == 'DOUBLES' && divisionGender == 'MIXED')) {
-        return 'MIXED_DOUBLES';
-      }
-      if (divisionMatchType != null && divisionMatchType.isNotEmpty) {
-        return divisionMatchType;
-      }
+  /// Nội dung đang chọn trên màn; null nếu chưa chọn.
+  TournamentDivision? get _selectedDivision {
+    final id = _selectedDivisionId;
+    if (id == null) return null;
+    for (final division in _divisions) {
+      if (division.id == id) return division;
     }
-    return payload['matchType']?.toString().trim().toUpperCase() ?? 'SINGLES';
+    return null;
+  }
+
+  /// Giải có từ hai nội dung trở lên mà BTC chưa chọn: phải hỏi trước khi ghi.
+  bool get _needsDivisionChoice =>
+      _divisions.length >= 2 && _selectedDivision == null;
+
+  /// Nội dung backend sẽ ghi: nội dung đang chọn, hoặc nội dung duy nhất.
+  String? get _writeDivisionId =>
+      _selectedDivision?.id ?? soleActiveTournamentDivisionId(_divisions);
+
+  /// Loại thi đấu theo nội dung đang chọn (hoặc nội dung duy nhất).
+  /// Giải nhiều nội dung chưa chọn thì null: không suy đoán từ nội dung đầu.
+  String? get _effectiveMatchType {
+    if (_isFootball) return 'SINGLES';
+    final division =
+        _selectedDivision ?? (_divisions.length == 1 ? _divisions.single : null);
+    if (division != null) return _divisionMatchType(division);
+    return _divisions.isEmpty ? _tournamentMatchType : null;
+  }
+
+  String _divisionMatchType(TournamentDivision division) {
+    final matchType = division.matchType.trim().toUpperCase();
+    final gender = division.genderRestriction?.trim().toUpperCase();
+    if (matchType == 'MIXED_DOUBLES' ||
+        (matchType == 'DOUBLES' && gender == 'MIXED')) {
+      return 'MIXED_DOUBLES';
+    }
+    if (matchType.isNotEmpty) return matchType;
+    return _tournamentMatchType ?? 'SINGLES';
+  }
+
+  /// Giải nhiều nội dung: danh sách chỉ hiện VĐV của nội dung đang chọn.
+  bool _inSelectedDivision(LiteParticipant participant) {
+    if (_divisions.length < 2) return true;
+    final selected = _selectedDivisionId;
+    return selected != null && participant.tournamentDivisionId == selected;
   }
 
   Future<void> _fetchTournament() async {
@@ -99,15 +115,49 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         final isFootball = _isFootballPayload(payloadMap);
         setState(() {
           _isFootball = isFootball;
-          _matchType = isFootball ? 'SINGLES' : _canonicalMatchType(payloadMap);
+          _tournamentMatchType = payloadMap['matchType']
+              ?.toString()
+              .trim()
+              .toUpperCase();
           _tournamentName = payloadMap['name']?.toString();
-          _divisionId = liteSingleDivisionId(payloadMap);
+          _divisions = _parseDivisions(payloadMap);
         });
       }
     } catch (e) {
       // Non-critical: pairing screen still works with default title
       _log.warning('Không tải được thông tin giải: $e');
     }
+  }
+
+  /// Chỉ giữ nội dung dùng được (không huỷ, có id lưu được) để hiện bộ chọn.
+  List<TournamentDivision> _parseDivisions(Map<String, dynamic> payload) {
+    final raw = payload['divisions'];
+    if (raw is! List) return const [];
+    return usableTournamentDivisions([
+      for (final item in raw)
+        if (item is Map)
+          TournamentDivision.fromJson(Map<String, dynamic>.from(item)),
+    ]);
+  }
+
+  void _selectDivision(String divisionId) {
+    setState(() {
+      _selectedDivisionId = divisionId;
+      _selectedIds.clear();
+    });
+  }
+
+  Future<void> _pickDivision() async {
+    final picked = await showLiteDivisionPicker(context, _divisions);
+    if (picked == null || !mounted) return;
+    _selectDivision(picked);
+  }
+
+  /// Giải nhiều nội dung chưa chọn thì hỏi BTC trước khi ghi. Trả false nếu BTC huỷ.
+  Future<bool> _ensureDivisionChosen() async {
+    if (!_needsDivisionChoice) return true;
+    await _pickDivision();
+    return _selectedDivision != null;
   }
 
   Future<void> _fetchParticipants() async {
@@ -183,6 +233,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   }
 
   Future<void> _generatePairs(String strategy) async {
+    if (!await _ensureDivisionChosen() || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -217,7 +268,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
         '/tournaments/lite/${widget.tournamentId}/pairs/generate',
         data: {
           'strategy': strategy,
-          'divisionId': ?_divisionId,
+          'divisionId': ?_writeDivisionId,
         },
       );
       final pairLabels = pairGeneratedLabels(res.data);
@@ -240,7 +291,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       }
     } catch (e) {
       if (mounted) {
-        // Backend từ chối (ví dụ giải nhiều nội dung) thì hiện nguyên văn message.
+        // Backend từ chối (ví dụ chưa đủ cặp) thì hiện nguyên văn message.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -368,20 +419,28 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       );
     }
 
-    final pending = _participants.where((p) => p.isPending).toList();
+    final visibleParticipants = _participants
+        .where(_inSelectedDivision)
+        .toList();
+    final pending = visibleParticipants.where((p) => p.isPending).toList();
     final allPaired = [
       ..._pairedParticipants,
       ..._participants.where((p) => p.isComplete),
     ];
     final isDoubles =
         !_isFootball &&
-        (_matchType == 'DOUBLES' || _matchType == 'MIXED_DOUBLES');
+        (_effectiveMatchType == 'DOUBLES' ||
+            _effectiveMatchType == 'MIXED_DOUBLES');
 
     return RefreshIndicator(
       onRefresh: _fetchParticipants,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          if (_divisions.length >= 2) ...[
+            SizedBox(width: double.infinity, child: _divisionSelector(l10n)),
+            const SizedBox(height: 12),
+          ],
           if (isDoubles) ...[
             // ─── Pending Section ───
             _sectionHeader(
@@ -546,10 +605,12 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
             ],
           ] else ...[
             // ─── Singles: just participant list, no pairing ───
-            if (_participants.isEmpty)
+            if (_needsDivisionChoice)
+              _emptyCard(colors, l10n.registerSelectDivision)
+            else if (visibleParticipants.isEmpty)
               _emptyCard(colors, l10n.noParticipants)
             else
-              ..._participants.map((p) => _singlesTile(p, colors)),
+              ...visibleParticipants.map((p) => _singlesTile(p, colors)),
           ],
 
           // ─── Bracket generation ───
@@ -588,7 +649,34 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     );
   }
 
+  Widget _divisionSelector(AppLocalizations l10n) {
+    final selected = _selectedDivision;
+    return OutlinedButton(
+      onPressed: _pickDivision,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(44),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.category_outlined, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              selected?.name ?? l10n.registerSelectDivision,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _generateBracket() async {
+    if (!await _ensureDivisionChosen() || !mounted) return;
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -616,7 +704,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       // The generic endpoint is for advanced tournaments and rejects Lite data.
       final res = await dio.post(
         '/tournaments/lite/${widget.tournamentId}/bracket',
-        data: {if (_divisionId != null) 'divisionId': _divisionId},
+        data: {'divisionId': ?_writeDivisionId},
       );
       if (mounted) {
         final unpairedNames = bracketUnpairedNames(res.data);
