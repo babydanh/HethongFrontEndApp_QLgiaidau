@@ -23,6 +23,7 @@ class LiteParticipant {
   final String? footballTeamId;
   final String? footballTeamLogoUrl;
   final List<LiteMember> members;
+  final Map<String, dynamic> customResponses;
 
   const LiteParticipant({
     required this.id,
@@ -32,6 +33,7 @@ class LiteParticipant {
     this.footballTeamLogoUrl,
     this.teamInviteToken,
     this.members = const [],
+    this.customResponses = const {},
   });
 
   factory LiteParticipant.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class LiteParticipant {
             )
             .toList() ??
         [];
+    final responses = json['customResponses'];
     return LiteParticipant(
       id: json['id']?.toString() ?? '',
       status: (json['teamStatus']?.toString() ?? '').toUpperCase(),
@@ -52,20 +55,49 @@ class LiteParticipant {
       teamInviteToken: json['teamInviteToken']?.toString(),
       footballTeamLogoUrl: json['footballTeamLogoUrl']?.toString(),
       members: membersList,
+      customResponses: responses is Map
+          ? Map<String, dynamic>.from(responses)
+          : const {},
     );
+  }
+
+  /// Nguồn BTC tự nhập (thêm trực tiếp, Excel, email, form). Đồng bộ với
+  /// `ORGANIZER_ENTRY_SOURCES` của backend.
+  static const _organizerEntrySources = {
+    'ORGANIZER_DIRECT',
+    'MANUAL_EMAIL',
+    'EXCEL',
+    'AI_EXCEL',
+    'GOOGLE_FORM',
+  };
+
+  /// Số VĐV theo `countParticipantMembers` của backend: entry BTC nhập luôn
+  /// có VĐV 1 (không cần roster), và đủ 2 người khi có tên VĐV 2.
+  int get memberCount {
+    if (!_organizerEntrySources.contains(customResponses['importedFrom'])) {
+      return members.length;
+    }
+    final namesAthlete2 =
+        _hasText(customResponses['player2Name']) ||
+        _hasText(customResponses['player2Email']);
+    final minimum = namesAthlete2 ? 2 : 1;
+    return members.length > minimum ? members.length : minimum;
   }
 
   bool get isPending =>
       status == 'PENDING_PARTNER' &&
       (teamInviteToken == null || teamInviteToken!.isEmpty) &&
-      members.length == 1;
+      memberCount == 1;
   bool get isComplete =>
       status == 'COMPLETE' ||
-      (status == 'PENDING_APPROVAL' && members.length >= 2);
+      (status == 'PENDING_APPROVAL' && memberCount >= 2);
 
   String get displayName => teamName.isNotEmpty
       ? teamName
       : members.map((m) => m.fullName).join(' & ');
+
+  static bool _hasText(Object? value) =>
+      value is String && value.trim().isNotEmpty;
 }
 
 class LiteMember {

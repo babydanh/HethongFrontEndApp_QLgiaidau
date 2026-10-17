@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
+import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
 
 /// Compact organizer screen for Lite tournament pairing.
 /// Supports manual pair, RANDOM/ELO_BALANCED generate, and unpair.
@@ -17,6 +18,31 @@ class LitePairingScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<LitePairingScreen> createState() => _LitePairingScreenState();
+}
+
+/// Chọn `divisionId` khi giải chỉ có đúng một nội dung; nhiều nội dung thì
+/// để backend trả lỗi "Vui lòng chọn nội dung để tạo sơ đồ." (không đoán).
+String? liteSingleDivisionId(Map<String, dynamic> payload) {
+  final divisions = payload['divisions'];
+  if (divisions is! List || divisions.length != 1) return null;
+  final division = divisions.first;
+  if (division is! Map) return null;
+  final id = division['id']?.toString();
+  return (id == null || id.isEmpty) ? null : id;
+}
+
+/// Đổi id người lẻ thành tên; id không tra được thì giữ `#id` để không mất người.
+List<String> unpairedDisplayNames(
+  List<String> ids,
+  Map<String, String> namesById,
+) {
+  return [
+    for (final id in ids)
+      if ((namesById[id] ?? '').trim().isNotEmpty)
+        namesById[id]!.trim()
+      else
+        '#$id',
+  ];
 }
 
 class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
@@ -33,6 +59,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
   bool _pairing = false;
   bool _generating = false;
   String? _generatingStrategy;
+  String? _divisionId;
 
   @override
   void initState() {
@@ -86,6 +113,7 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
           _isFootball = isFootball;
           _matchType = isFootball ? 'SINGLES' : _canonicalMatchType(payloadMap);
           _tournamentName = payloadMap['name']?.toString();
+          _divisionId = liteSingleDivisionId(payloadMap);
         });
       }
     } catch (_) {
@@ -206,11 +234,15 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
               ?.map((e) => e.toString())
               .toList() ??
           [];
+      final unpairedNames = unpairedDisplayNames(
+        unpairedIds,
+        {for (final p in _participants) p.id: p.displayName},
+      );
 
       if (mounted) {
-        final msg = unpairedIds.isEmpty
+        final msg = unpairedNames.isEmpty
             ? l10n.lite_autoPairSuccess
-            : l10n.lite_autoPairSuccessOdd(unpairedIds.length);
+            : '${l10n.lite_autoPairSuccessOdd(unpairedNames.length)}: ${unpairedNames.join(', ')}';
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(msg)));
@@ -590,11 +622,22 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
       final dio = ref.read(dioClientProvider).dio;
       // Lite has a protected endpoint with its own participant/bracket gate.
       // The generic endpoint is for advanced tournaments and rejects Lite data.
-      await dio.post('/tournaments/lite/${widget.tournamentId}/bracket');
+      final res = await dio.post(
+        '/tournaments/lite/${widget.tournamentId}/bracket',
+        data: {if (_divisionId != null) 'divisionId': _divisionId},
+      );
       if (mounted) {
+        final unpairedNames = bracketUnpairedNames(res.data);
+        final parts = <String>[
+          l10n.lite_bracketCreated,
+          if (bracketAutoPairedLabels(res.data).isNotEmpty)
+            '${l10n.lite_autoPairSuccess}: ${bracketAutoPairedLabels(res.data).join('; ')}',
+          if (unpairedNames.isNotEmpty)
+            '${l10n.lite_autoPairSuccessOdd(unpairedNames.length)}: ${unpairedNames.join(', ')}',
+        ];
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.lite_bracketCreated)));
+        ).showSnackBar(SnackBar(content: Text(parts.join('\n'))));
       }
     } catch (e) {
       if (mounted) {
