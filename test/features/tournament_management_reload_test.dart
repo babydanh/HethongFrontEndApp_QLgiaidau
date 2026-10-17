@@ -59,6 +59,13 @@ class _IdleLiteManagementNotifier extends LiteManagementNotifier {
 }
 
 class _TournamentWatchRepository implements ITournamentRepository {
+  @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) => throw UnimplementedError();
   _TournamentWatchRepository(this.updates);
 
   final Stream<Tournament?> updates;

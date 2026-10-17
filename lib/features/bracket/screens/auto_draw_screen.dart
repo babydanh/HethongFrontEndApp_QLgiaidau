@@ -8,6 +8,11 @@ import 'package:app_quanly_giaidau/core/services/draw_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:dio/dio.dart';
+import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AutoDrawScreen extends ConsumerStatefulWidget {
@@ -92,32 +97,66 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
     }
   }
 
-  Future<void> _saveMatches(List<MatchModel> matches) async {
+  Future<void> _saveBracket(Tournament tournament) async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isDrawing = true);
     try {
-      await ref
-          .read(publishTournamentDrawUseCaseProvider)
-          .call(widget.tournamentId, matches);
-
+      final repo = ref.read(tournamentRepositoryProvider);
+      // Server sinh sơ đồ chính thức từ VĐV đã duyệt, không lưu bản xem trước.
+      // Nhiều nội dung mà thiếu divisionId thì backend trả lỗi tiếng Việt.
+      final divisions = tournament.divisions;
+      final result = await repo.generateBracket(
+        widget.tournamentId,
+        divisionId: divisions.length == 1 ? divisions.first.id : null,
+        seedingType: 'RANDOM',
+        allowReset: false,
+      );
+      await repo.update(widget.tournamentId, {
+        'status': AppConstants.statusInProgress,
+      });
+      ref.invalidate(tournamentProvider(widget.tournamentId));
+      ref.invalidate(bracketMatchesProvider(widget.tournamentId));
+      ref.invalidate(liteBracketMatchesProvider(widget.tournamentId));
+      ref.invalidate(matchesProvider(widget.tournamentId));
       if (mounted) {
         setState(() {
           _isDrawing = false;
           _hasSaved = true;
+          _previewMatches = [];
         });
+        final unpaired = bracketUnpairedNames(result);
+        final autoPaired = bracketAutoPairedLabels(result);
+        final parts = <String>[
+          l10n.autoDraw_saved,
+          if (autoPaired.isNotEmpty)
+            '${l10n.lite_autoPairSuccess}: ${autoPaired.join('; ')}',
+          if (unpaired.isNotEmpty)
+            '${l10n.lite_autoPairSuccessOdd(unpaired.length)}: ${unpaired.join(', ')}',
+        ];
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.autoDraw_saved)));
+        ).showSnackBar(SnackBar(content: Text(parts.join('\n'))));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isDrawing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.autoDraw_error(e.toString))),
+          SnackBar(content: Text(l10n.autoDraw_error(_errorText(e)))),
         );
       }
     }
+  }
+
+  /// Ưu tiên thông báo lỗi từ backend (ví dụ "Vui lòng chọn nội dung...").
+  String _errorText(Object error) {
+    if (error is DioException) {
+      final body = error.response?.data;
+      final message = body is Map ? body['message'] : null;
+      if (message is String && message.trim().isNotEmpty) return message;
+      return friendlyDioErrorMessage(error);
+    }
+    return error.toString();
   }
 
   Future<void> _clearDraw() async {
@@ -530,7 +569,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                     _hasSaved ||
                                     _unrevealedTeamIds.isNotEmpty)
                                 ? null
-                                : () => _saveMatches(_previewMatches),
+                                : () => _saveBracket(tournament),
                             child: Text(l10n.autoDraw_saveStart),
                           ),
                         ),

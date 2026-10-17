@@ -10,6 +10,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _ParticipantsRepository implements ITournamentRepository {
+  @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) => throw UnimplementedError();
   _ParticipantsRepository(this.participants);
 
   final List<OrganizerOpsParticipant> participants;

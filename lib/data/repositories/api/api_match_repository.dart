@@ -90,14 +90,6 @@ class ApiMatchRepository implements IMatchRepository {
     throw UnimplementedError(_l10n.matchCreateUnsupported);
   }
 
-  @override
-  Future<void> createBatch(
-    String tournamentId,
-    List<MatchModel> matches,
-  ) async {
-    throw UnimplementedError(_l10n.matchBatchCreateUnsupported);
-  }
-
   final Map<String, List<MatchModel>> _matchesCache = {};
   final Map<String, MatchModel> _seededMatches = {};
   final Map<String, Future<List<MatchModel>>> _inflightTournamentMatches = {};

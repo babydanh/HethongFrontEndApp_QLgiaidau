@@ -1033,6 +1033,28 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) async {
+    _log.info('Generating bracket for tournament $tournamentId');
+    final response = await _dioClient.dio.post(
+      '/tournaments/$tournamentId/generate-bracket',
+      data: {
+        if (divisionId != null && divisionId.isNotEmpty)
+          'divisionId': divisionId,
+        'seedingType': seedingType,
+        'allowReset': allowReset,
+      },
+    );
+    final raw = response.data;
+    final body = raw is Map && raw['data'] is Map ? raw['data'] : raw;
+    return body is Map ? Map<String, dynamic>.from(body) : <String, dynamic>{};
+  }
+
+  @override
   Stream<List<MatchModel>> watchBracketMatches(
     String tournamentId, {
     String? divisionId,

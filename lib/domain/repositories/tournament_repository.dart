@@ -125,6 +125,15 @@ abstract class ITournamentRepository {
     String tournamentId, {
     String? divisionId,
   });
+
+  /// Server sinh sơ đồ chính thức; bản xem trước phía client có thể khác.
+  /// Response có thể kèm `autoPaired`/`unpairedNames` (thiếu thì coi là rỗng).
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  });
 }
 
 class TournamentAccessDeniedException implements Exception {

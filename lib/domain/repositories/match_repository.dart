@@ -7,7 +7,6 @@ import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);
-  Future<void> createBatch(String tournamentId, List<MatchModel> matches);
   Stream<List<MatchModel>> watchByTournament(
     String tournamentId, {
     String? divisionId,

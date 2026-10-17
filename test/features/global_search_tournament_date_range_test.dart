@@ -92,6 +92,13 @@ void main() {
 }
 
 class _RecordingTournamentRepository implements ITournamentRepository {
+  @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) => throw UnimplementedError();
   DateTime? lastEndDate;
 
   @override

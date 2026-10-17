@@ -13,6 +13,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _SettingsRepository implements ITournamentRepository {
+  @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) => throw UnimplementedError();
   _SettingsRepository(this.tournament, {this.updateError});
 
   final Tournament tournament;

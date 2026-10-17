@@ -8,7 +8,6 @@ import 'package:app_quanly_giaidau/domain/usecases/auth/save_invite_token_use_ca
 import 'package:app_quanly_giaidau/domain/usecases/auth/validate_invite_token_use_case.dart';
 import 'package:app_quanly_giaidau/domain/usecases/tournament/delete_tournament_use_case.dart';
 import 'package:app_quanly_giaidau/domain/usecases/tournament/finalize_tournament_use_case.dart';
-import 'package:app_quanly_giaidau/domain/usecases/tournament/publish_tournament_draw_use_case.dart';
 import 'package:app_quanly_giaidau/domain/usecases/tournament/reset_tournament_draw_use_case.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -64,14 +63,6 @@ final deleteTournamentUseCaseProvider =
 final finalizeTournamentUseCaseProvider =
     Provider<FinalizeTournamentUseCase>((ref) {
   return FinalizeTournamentUseCase(ref.watch(tournamentRepositoryProvider));
-});
-
-final publishTournamentDrawUseCaseProvider =
-    Provider<PublishTournamentDrawUseCase>((ref) {
-  return PublishTournamentDrawUseCase(
-    ref.watch(matchRepositoryProvider),
-    ref.watch(tournamentRepositoryProvider),
-  );
 });
 
 final resetTournamentDrawUseCaseProvider =

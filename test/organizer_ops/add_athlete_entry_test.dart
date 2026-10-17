@@ -36,6 +36,13 @@ Tournament _tournament(
 }, _tournamentId);
 
 class _TournamentRepository implements ITournamentRepository {
+  @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) => throw UnimplementedError();
   _TournamentRepository(this.tournament, this.participants);
 
   final Tournament tournament;

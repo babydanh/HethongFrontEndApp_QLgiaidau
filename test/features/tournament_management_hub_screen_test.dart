@@ -133,6 +133,13 @@ class _EmptyRegionRepository implements IRegionRepository {
 
 class _EmptyTournamentRepository implements ITournamentRepository {
   @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) => throw UnimplementedError();
+  @override
   Future<List<OrganizerOpsParticipant>> getOrganizerParticipants(
     String tournamentId, {
     String? divisionId,
@@ -143,6 +150,13 @@ class _EmptyTournamentRepository implements ITournamentRepository {
 }
 
 class _DivisionParticipantsRepository implements ITournamentRepository {
+  @override
+  Future<Map<String, dynamic>> generateBracket(
+    String tournamentId, {
+    String? divisionId,
+    required String seedingType,
+    bool allowReset = false,
+  }) => throw UnimplementedError();
   _DivisionParticipantsRepository(this.participants);
 
   final List<OrganizerOpsParticipant> participants;
