@@ -2,7 +2,6 @@ import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/api_error_message.dart';
 import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -98,33 +97,163 @@ void main() {
     });
 
     test(
-      'omits divisionId for multi-division tournaments and rethrows backend 400',
+      'nhiều nội dung chưa chọn: ném lỗi trước khi gửi, không gửi request nào',
       () async {
         final adapter = _adapter(
           divisions: _twoDivisions,
           participants: [_pending('p1', 'An'), _pending('p2', 'Bình')],
-          routes: {
-            'POST $_liteBase/pairs/generate': const FakeReply(400, {
-              'status': 'ERROR',
-              'message': 'Vui lòng chọn nội dung để ghép đôi.',
-            }),
-          },
         );
         final notifier = await _loadedNotifier(adapter);
+        final before = adapter.requests.length;
 
-        final error = await notifier
-            .generatePairs(_tournamentId, 'RANDOM')
-            .then<Object?>((_) => null, onError: (Object e) => e);
-
-        expect(error, isA<DioException>());
-        expect(
-          backendErrorMessage(error),
-          'Vui lòng chọn nội dung để ghép đôi.',
+        await expectLater(
+          notifier.generatePairs(_tournamentId, 'RANDOM'),
+          throwsA(isA<StateError>()),
         );
-        final posts = adapter.postsTo('$_liteBase/pairs/generate').toList();
-        expect(posts.single.body, {'strategy': 'RANDOM'});
+
+        expect(adapter.requests.skip(before), isEmpty);
       },
     );
+
+    test('đã chọn d2: gửi divisionId của d2', () async {
+      final adapter = _adapter(
+        divisions: _twoDivisions,
+        participants: [_pending('p1', 'An'), _pending('p2', 'Bình')],
+        routes: {
+          'POST $_liteBase/pairs/generate': const FakeReply(200, {
+            'status': 'OK',
+            'data': {
+              'paired': <Object>[],
+              'unpairedParticipantIds': <String>[],
+              'unpairedNames': <String>[],
+            },
+          }),
+        },
+      );
+      final notifier = await _loadedNotifier(adapter);
+      await notifier.selectDivision(_tournamentId, 'd2');
+
+      await notifier.generatePairs(_tournamentId, 'RANDOM');
+
+      final posts = adapter.postsTo('$_liteBase/pairs/generate').toList();
+      expect(posts.single.body, {'strategy': 'RANDOM', 'divisionId': 'd2'});
+    });
+  });
+
+  group('updateMatchType', () {
+    test('nhiều nội dung chưa chọn: ném lỗi, không PATCH cấu hình nội dung nào', () async {
+      final adapter = _adapter(
+        divisions: [
+          {'id': 'd1', 'matchType': 'DOUBLES'},
+          {'id': 'd2', 'matchType': 'SINGLES'},
+        ],
+        participants: const [],
+      );
+      final notifier = await _loadedNotifier(adapter);
+      final before = adapter.requests.length;
+
+      await expectLater(
+        notifier.updateMatchType(_tournamentId, 'MIXED_DOUBLES'),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(adapter.requests.skip(before), isEmpty);
+    });
+
+    test('đã chọn d2: chỉ PATCH cấu hình d2', () async {
+      final adapter = _adapter(
+        divisions: [
+          {'id': 'd1', 'matchType': 'DOUBLES'},
+          {'id': 'd2', 'matchType': 'SINGLES'},
+        ],
+        participants: const [],
+        routes: {
+          'PATCH /tournaments/$_tournamentId/divisions/d2/config':
+              const FakeReply(200, {'status': 'OK', 'data': {}}),
+        },
+      );
+      final notifier = await _loadedNotifier(adapter);
+      await notifier.selectDivision(_tournamentId, 'd2');
+
+      final ok = await notifier.updateMatchType(_tournamentId, 'DOUBLES');
+
+      expect(ok, isTrue);
+      final patches = adapter.requests
+          .where((r) => r.method == 'PATCH')
+          .toList();
+      expect(patches.map((r) => r.path), ['/tournaments/t1/divisions/d2/config']);
+      expect(patches.single.body?['matchType'], 'DOUBLES');
+    });
+
+    test('một nội dung: PATCH nội dung duy nhất như trước', () async {
+      final adapter = _adapter(
+        divisions: _oneDivision,
+        participants: const [],
+        routes: {
+          'PATCH /tournaments/$_tournamentId/divisions/d1/config':
+              const FakeReply(200, {'status': 'OK', 'data': {}}),
+        },
+      );
+      final notifier = await _loadedNotifier(adapter);
+
+      final ok = await notifier.updateMatchType(_tournamentId, 'SINGLES');
+
+      expect(ok, isTrue);
+      final patches = adapter.requests
+          .where((r) => r.method == 'PATCH')
+          .toList();
+      expect(patches.map((r) => r.path), ['/tournaments/t1/divisions/d1/config']);
+    });
+  });
+
+  group('updateMaxParticipants', () {
+    test('nhiều nội dung chưa chọn: ném lỗi, không PATCH gì', () async {
+      final adapter = _adapter(
+        divisions: _twoDivisions,
+        participants: const [],
+      );
+      final notifier = await _loadedNotifier(adapter);
+      final before = adapter.requests.length;
+
+      await expectLater(
+        notifier.updateMaxParticipants(_tournamentId, 16),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(adapter.requests.skip(before), isEmpty);
+    });
+
+    test('đã chọn d2: sức chứa vào cấu hình d2, không đụng d1', () async {
+      final adapter = _adapter(
+        divisions: _twoDivisions,
+        participants: const [],
+        routes: {
+          'PATCH /tournaments/$_tournamentId': const FakeReply(200, {
+            'status': 'OK',
+            'data': {},
+          }),
+          'PATCH /tournaments/$_tournamentId/divisions/d2/config':
+              const FakeReply(200, {'status': 'OK', 'data': {}}),
+        },
+      );
+      final notifier = await _loadedNotifier(adapter);
+      await notifier.selectDivision(_tournamentId, 'd2');
+
+      final ok = await notifier.updateMaxParticipants(_tournamentId, 16);
+
+      expect(ok, isTrue);
+      final patches = adapter.requests
+          .where((r) => r.method == 'PATCH')
+          .toList();
+      expect(
+        patches.map((r) => r.path),
+        unorderedEquals(['/tournaments/t1', '/tournaments/t1/divisions/d2/config']),
+      );
+      expect(
+        patches.firstWhere((r) => r.path.endsWith('/d2/config')).body,
+        {'maxParticipants': 16},
+      );
+    });
   });
 
   group('createBracket', () {

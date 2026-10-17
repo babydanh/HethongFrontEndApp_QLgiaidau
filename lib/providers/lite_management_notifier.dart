@@ -589,19 +589,21 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
     return id.isEmpty ? null : id;
   }
 
-  /// Nội dung để GHI sơ đồ, reset và VĐV ảo. Giải nhiều nội dung mà chưa chọn
-  /// thì ném lỗi, không bao giờ tự lấy nội dung đầu tiên (gộp sai nội dung).
-  /// Giải không có nội dung nào thì trả null và để Backend xử lý như cũ.
-  String? _writeDivisionId() {
+  /// Nội dung để GHI sơ đồ, reset, VĐV ảo, thể thức và sức chứa. Giải nhiều
+  /// nội dung mà chưa chọn thì ném lỗi, không bao giờ tự lấy nội dung đầu tiên
+  /// (gộp sai nội dung). Giải không có nội dung nào thì trả null.
+  TournamentDivision? _writeDivision() {
     final divisions =
         state.tournament?.divisions ?? const <TournamentDivision>[];
     if (divisions.isEmpty) return null;
     final selected = state.selectedDivision;
-    if (selected != null) return selected.id;
-    final sole = soleActiveTournamentDivisionId(divisions);
-    if (sole != null) return sole;
+    if (selected != null) return selected;
+    final soleId = soleActiveTournamentDivisionId(divisions);
+    if (soleId != null) return divisions.firstWhere((d) => d.id == soleId);
     throw StateError(_l10n.registerSelectDivision);
   }
+
+  String? _writeDivisionId() => _writeDivision()?.id;
 
   Future<void> _fetchBracket(String tournamentId, {String? divisionId}) async {
     try {
@@ -670,9 +672,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
 
   Future<bool> updateMatchType(String tournamentId, String matchType) async {
     final tournament = state.tournament;
-    final division = tournament?.divisions.isNotEmpty == true
-        ? tournament!.divisions.first
-        : null;
+    final division = _writeDivision();
     final normalized = matchType.trim().toUpperCase();
     final isFootball = state.isFootball;
     final lifecycleLocked =
@@ -806,9 +806,9 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         }.contains(tournament.status.toUpperCase())) {
       return false;
     }
+    final divisionId = _writeDivisionId();
     state = state.copyWith(detailsSaveStatus: 'saving');
     try {
-      final divisionId = _readDivisionId;
       await _dio.patch(
         '/tournaments/$tournamentId',
         data: {'maxParticipants': maxParticipants},
@@ -1033,20 +1033,14 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
   }
 
   /// Trả body response (`paired`, `unpairedNames`, ...) để màn hiện kết quả.
-  /// [divisionId] trống thì dùng nội dung đang chọn, rồi nội dung duy nhất đang
-  /// hoạt động; giải nhiều nội dung mà chưa chọn thì không gửi, để Backend trả
-  /// 400 thay vì đoán nội dung.
+  /// [divisionId] trống thì dùng nội dung ghi (đang chọn hoặc nội dung duy nhất).
+  /// Giải nhiều nội dung mà chưa chọn thì ném lỗi trước khi gửi, không đoán.
   Future<Object?> generatePairs(
     String tournamentId,
     String strategy, {
     String? divisionId,
   }) async {
-    final division =
-        divisionId ??
-        state.selectedDivision?.id ??
-        soleActiveTournamentDivisionId(
-          state.tournament?.divisions ?? const <TournamentDivision>[],
-        );
+    final division = divisionId ?? _writeDivisionId();
     state = state.copyWith(generating: true, generatingStrategy: strategy);
     try {
       final res = await _dio.post(

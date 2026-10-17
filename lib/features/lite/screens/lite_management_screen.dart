@@ -1607,9 +1607,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
   ) {
     final l10n = AppLocalizations.of(context)!;
     final tournament = state.tournament;
-    final division = tournament?.divisions.isNotEmpty == true
-        ? tournament!.divisions.first
-        : null;
+    final division = state.displayDivision;
     final rawMatchType = (division?.matchType ?? state.matchType ?? 'SINGLES')
         .trim()
         .toUpperCase();
@@ -1710,7 +1708,11 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
                       _maxPartDebounce?.cancel();
                       _maxPartDebounce = Timer(
                         const Duration(milliseconds: 900),
-                        () {
+                        () async {
+                          if (!await _ensureDivisionChosen(notifier) ||
+                              !mounted) {
+                            return;
+                          }
                           notifier.updateMaxParticipants(
                             widget.tournamentId,
                             n,
@@ -1797,6 +1799,9 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
             child: FilledButton.icon(
               onPressed: canSave
                   ? () async {
+                      if (!await _ensureDivisionChosen(notifier) || !mounted) {
+                        return;
+                      }
                       final confirmed = await showDialog<bool>(
                         context: context,
                         builder: (dialogContext) => AlertDialog(
