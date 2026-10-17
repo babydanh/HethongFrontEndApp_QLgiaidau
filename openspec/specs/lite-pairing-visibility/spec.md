@@ -35,7 +35,7 @@ Backend chỉ ghép được participant `PENDING_PARTNER` (`isDoublesParticipan
 - **THEN** khách không nằm trong danh sách chờ ghép và không được tính là đã ghép
 
 ### Requirement: Ghép ngẫu nhiên báo tên người lẻ
-App MUST gửi `divisionId` khi giải có đúng một nội dung và MUST hiện nguyên văn `message` 400 của Backend khi giải nhiều nội dung mà màn không có nội dung đang chọn. Sau khi ghép, App MUST hiện cặp và tên người lẻ từ response.
+Ghép ngẫu nhiên trên màn quản lý MUST gửi `divisionId` của nội dung đang chọn hoặc nội dung duy nhất, và MUST hỏi BTC chọn nội dung khi giải có nhiều nội dung chưa chọn. Màn ghép cặp MUST NOT gửi `divisionId` khi giải có nhiều nội dung và MUST hiện nguyên văn `message` 400 của Backend. Sau khi ghép, App MUST hiện cặp và tên người lẻ từ response.
 
 #### Scenario: Số chẵn, ghép hết
 - **WHEN** `unpairedParticipantIds` rỗng
@@ -54,7 +54,7 @@ App MUST gửi `divisionId` khi giải có đúng một nội dung và MUST hi�
 - **THEN** body gửi `{strategy, divisionId}` với `divisionId` là id của nội dung đó
 
 #### Scenario: Giải nhiều nội dung không đoán nội dung
-- **WHEN** giải có nhiều nội dung và màn không có nội dung đang chọn
+- **WHEN** giải có nhiều nội dung và BTC bấm ghép ngẫu nhiên trên màn ghép cặp
 - **THEN** body không có `divisionId` và snackbar hiện đúng "Vui lòng chọn nội dung để ghép đôi."
 
 #### Scenario: Lỗi không có message từ Backend
@@ -66,7 +66,7 @@ App MUST gửi `divisionId` khi giải có đúng một nội dung và MUST hi�
 - **THEN** App không báo lỗi và không làm hỏng màn ghép cặp
 
 ### Requirement: Tạo sơ đồ Lite gửi nội dung và báo người không ghép được
-App MUST gọi `POST /tournaments/lite/:id/bracket` với `{divisionId}` khi giải có đúng một nội dung; khi có nhiều nội dung App MUST NOT gửi `divisionId`. App MUST NOT gọi `pairs/generate` trước khi tạo sơ đồ. Lỗi 400 của Backend MUST được hiện nguyên văn và MUST NOT bị nuốt.
+App MUST gọi `POST /tournaments/lite/:id/bracket` với `divisionId` của nội dung đang chọn hoặc nội dung duy nhất. Màn quản lý MUST hỏi BTC chọn trước khi giải có nhiều nội dung chưa chọn. Màn ghép cặp MUST NOT gửi `divisionId` khi giải có nhiều nội dung. App MUST NOT gọi `pairs/generate` trước khi tạo sơ đồ. Lỗi 400 của Backend MUST được hiện nguyên văn và MUST NOT bị nuốt.
 
 #### Scenario: Thành công có người không ghép được
 - **WHEN** phản hồi có `unpairedNames: ["Nguyễn A"]`
@@ -81,9 +81,40 @@ App MUST gọi `POST /tournaments/lite/:id/bracket` với `{divisionId}` khi gi�
 - **THEN** snackbar hiện thông điệp lỗi của backend, không hiện thông báo thành công
 
 #### Scenario: Giải nhiều nội dung chưa chọn nội dung
-- **WHEN** giải có nhiều nội dung và Backend trả 400 "Vui lòng chọn nội dung để tạo sơ đồ."
+- **WHEN** giải có nhiều nội dung, màn ghép cặp không gửi `divisionId` và Backend trả 400 "Vui lòng chọn nội dung để tạo sơ đồ."
 - **THEN** snackbar hiện đúng thông điệp đó và không báo thành công
 
 #### Scenario: Tạo sơ đồ không ghép trước
 - **WHEN** BTC bấm tạo sơ đồ khi còn người chờ ghép
 - **THEN** App chỉ gọi `POST /tournaments/lite/:id/bracket`, không gọi `pairs/generate`
+
+### Requirement: Màn quản lý ghi sơ đồ và VĐV ảo theo nội dung đang chọn
+Màn quản lý Lite MUST hỏi BTC chọn nội dung khi giải có từ hai nội dung dùng được và chưa có nội dung đang chọn, trước khi tạo sơ đồ, ghép ngẫu nhiên, reset, thêm hoặc xoá VĐV ảo. App MUST NOT lấy nội dung đầu tiên làm nội dung ghi.
+
+#### Scenario: Giải nhiều nội dung chưa chọn
+- **WHEN** BTC bấm tạo sơ đồ, reset, ghép ngẫu nhiên, thêm hoặc xoá VĐV ảo khi chưa chọn nội dung
+- **THEN** màn hiện hộp chọn nội dung và chưa gọi API nào
+
+#### Scenario: BTC chọn nội dung
+- **WHEN** BTC chọn một nội dung và xác nhận
+- **THEN** màn tải lại sơ đồ và trận của nội dung đó, và thao tác tiếp tục với nội dung đó
+
+#### Scenario: BTC huỷ chọn
+- **WHEN** BTC huỷ hộp chọn nội dung
+- **THEN** thao tác dừng, không gọi API và không hiện thông báo lỗi
+
+#### Scenario: Đã chọn nội dung trước đó
+- **WHEN** màn đã có nội dung đang chọn
+- **THEN** không hỏi lại và thao tác ghi dùng nội dung đó
+
+#### Scenario: Giải một nội dung
+- **WHEN** giải có đúng một nội dung dùng được
+- **THEN** không hỏi và dùng nội dung đó như trước
+
+#### Scenario: Chưa chọn thì hiển thị nội dung đầu tiên
+- **WHEN** giải có nhiều nội dung và màn chưa có nội dung đang chọn
+- **THEN** sơ đồ và trận hiển thị nội dung đầu tiên, chỉ để đọc, không dùng để ghi
+
+#### Scenario: Notifier nhận thao tác ghi khi chưa chọn
+- **WHEN** notifier nhận thao tác ghi khi giải có nhiều nội dung và chưa chọn nội dung
+- **THEN** ném lỗi trước khi gửi request, không gửi `divisionId` và không để cờ đang xử lý bị kẹt

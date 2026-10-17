@@ -17,4 +17,4 @@
 
 - [x] 4.1 `flutter analyze --no-pub` các file đã sửa: 0 error
 - [x] 4.2 `flutter test --no-pub test/providers/lite_management_pairing_request_test.dart`: 8/8 PASS
-- [ ] 4.3 `openspec validate --all --strict` (chạy khi gộp)
+- [x] 4.3 `openspec validate --all --strict`: 7 passed (trước khi gộp)
