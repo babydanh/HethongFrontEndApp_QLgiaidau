@@ -65,6 +65,7 @@ void main() {
     test('unpairedDisplayNames turns ids into names and keeps unknown ids visible', () {
       expect(unpairedDisplayNames(['a', 'b'], {'a': 'An'}), ['An', '#b']);
       expect(unpairedDisplayNames(['a'], {'a': '  '}), ['#a']);
+      expect(unpairedDisplayNames([], {}), isEmpty);
     });
 
     test('liteSingleDivisionId picks only a sole division', () {

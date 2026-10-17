@@ -6,6 +6,22 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
 class StatusHelper {
+  /// Mã trạng thái nội bộ. Giá trị lạ trùng đúng một mã này không được trả nguyên văn,
+  /// nếu không sẽ bị đọc nhầm thành trạng thái đó (ví dụ "REGISTRATION" thành đang mở đăng ký).
+  static const _internalStatusCodes = {
+    AppConstants.statusDraft,
+    AppConstants.statusUpcoming,
+    AppConstants.statusRegistration,
+    AppConstants.statusRegistrationClosed,
+    AppConstants.statusDrawing,
+    AppConstants.statusInProgress,
+    AppConstants.statusCompleted,
+    AppConstants.statusCancelled,
+  };
+
+  static String _unknownStatus(String lower) =>
+      _internalStatusCodes.contains(lower) ? 'raw_$lower' : lower;
+
   static String normalizeTournamentStatus(String? rawStatus) {
     final status = (rawStatus ?? '').trim().toUpperCase();
     return switch (status) {
@@ -22,7 +38,7 @@ class StatusHelper {
       'COMPLETED' ||
       'FINISHED' => AppConstants.statusCompleted,
       'CANCELLED' => AppConstants.statusCancelled,
-      _ => status.isEmpty ? AppConstants.statusUpcoming : status.toLowerCase(),
+      _ => status.isEmpty ? AppConstants.statusUpcoming : _unknownStatus(status.toLowerCase()),
     };
   }
 

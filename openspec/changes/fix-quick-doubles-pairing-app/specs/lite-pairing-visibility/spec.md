@@ -1,29 +1,33 @@
 ## ADDED Requirements
 
 ### Requirement: Khách do BTC thêm hiện trong danh sách ghép cặp
-Màn ghép cặp Lite MUST đưa vào danh sách chờ ghép mỗi participant có `teamStatus` = `PENDING_PARTNER`, không có `teamInviteToken`, và `memberCount` = 1. `memberCount` MUST được tính như `countParticipantMembers` của backend: nếu `customResponses.importedFrom` thuộc nhóm nhập của BTC (`ORGANIZER_DIRECT` và `IMPORT_SOURCES`), `memberCount` = max(số dòng `rosters`, 2 nếu có `player2Name` hoặc `player2Email`, ngược lại 1); còn lại `memberCount` = số dòng `rosters`.
-
-Backend chỉ ghép được participant `PENDING_PARTNER` (`isDoublesParticipantPairable`). Khách BTC thêm MUST được ghi `PENDING_PARTNER` ở phía Backend; App không tự đổi trạng thái.
+Màn ghép cặp Lite MUST đưa vào danh sách chờ ghép mỗi participant có `teamStatus` = `PENDING_PARTNER`, không có `teamInviteToken` và có `memberCount` = 1.
 
 #### Scenario: Khách BTC thêm trực tiếp
 - **WHEN** participant có `PENDING_PARTNER`, `rosters` rỗng và `customResponses.importedFrom` = `ORGANIZER_DIRECT`
 - **THEN** participant nằm trong danh sách chờ ghép với một thành viên
 
-#### Scenario: Khách có tên VĐV thứ hai
-- **WHEN** `importedFrom` = `EXCEL`, `player2Name` có giá trị và `rosters` rỗng
-- **THEN** `memberCount` = 2 và participant không nằm trong danh sách chờ đơn
-
 #### Scenario: VĐV tự đăng ký chưa có đồng đội
 - **WHEN** `PENDING_PARTNER`, không có `importedFrom`, `rosters` có một dòng
 - **THEN** participant nằm trong danh sách chờ như trước
 
-#### Scenario: Khách chưa chuyển sang chờ ghép
-- **WHEN** khách có `PENDING_APPROVAL` và `memberCount` = 1
-- **THEN** khách không nằm trong danh sách chờ ghép và không được tính là đã ghép
-
 #### Scenario: Danh sách rỗng
 - **WHEN** không có participant nào thoả điều kiện
 - **THEN** màn hiện trạng thái rỗng và không hiện nút ghép ngẫu nhiên
+
+### Requirement: memberCount khớp backend
+`memberCount` MUST được tính như `countParticipantMembers` của backend. Với nguồn BTC (`ORGANIZER_DIRECT` và `IMPORT_SOURCES`), `memberCount` = max(số dòng `rosters`, 2 nếu có `player2Name` hoặc `player2Email`, ngược lại 1). Với nguồn khác, `memberCount` = số dòng `rosters`.
+
+#### Scenario: Khách có tên VĐV thứ hai
+- **WHEN** `importedFrom` = `EXCEL`, `player2Name` có giá trị và `rosters` rỗng
+- **THEN** `memberCount` = 2 và participant không nằm trong danh sách chờ đơn
+
+### Requirement: Khách chờ phê duyệt không được ghép
+Backend chỉ ghép được participant `PENDING_PARTNER` (`isDoublesParticipantPairable`). App MUST NOT tự đổi trạng thái khách; khách `PENDING_APPROVAL` không nằm trong danh sách chờ ghép.
+
+#### Scenario: Khách chưa chuyển sang chờ ghép
+- **WHEN** khách có `PENDING_APPROVAL` và `memberCount` = 1
+- **THEN** khách không nằm trong danh sách chờ ghép và không được tính là đã ghép
 
 ### Requirement: Ghép ngẫu nhiên báo tên người lẻ
 Sau khi ghép ngẫu nhiên thành công, App MUST hiện tên (`displayName`) của mọi participant có id trong `unpairedParticipantIds`, không chỉ số lượng. Tên lấy từ danh sách participant đã tải; id không tìm thấy MUST hiện dạng rút gọn `#<id>` thay vì bỏ qua. App MUST hiện danh sách đã ghép (`paired`) nếu backend trả, và MUST NOT lỗi khi trường thiếu.
