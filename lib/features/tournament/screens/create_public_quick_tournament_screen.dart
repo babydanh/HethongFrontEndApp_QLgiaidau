@@ -174,8 +174,8 @@ class _CreatePublicQuickTournamentScreenState
   String _sport = AppConstants.sportPickleball;
   List<_QuickTournamentContentDraft> _contentDrafts = const [
     _QuickTournamentContentDraft(
-      id: 'MALE_DOUBLES',
-      formatKey: 'MALE_DOUBLES',
+      id: 'OPEN_DOUBLES',
+      formatKey: 'OPEN_DOUBLES',
       name: '',
     ),
   ];
@@ -385,15 +385,13 @@ class _CreatePublicQuickTournamentScreenState
     }
   }
 
-  /// Nội dung thi đấu mặc định phải thuộc môn đang chọn: bóng đá chỉ nhận
-  /// `FOOTBALL_*`, các môn vợt chỉ nhận nhóm `SINGLES`/`DOUBLES`
-  /// (`_openContentDraftDialog` lọc danh sách theo môn). Trước đây mọi môn đều
-  /// nhận `MALE_DOUBLES`, nên đổi sang bóng đá xong bản nháp vẫn mang nội dung
-  /// không hợp lệ cho môn.
+  /// Nội dung mặc định phải thuộc môn đang chọn: bóng đá chỉ nhận
+  /// `FOOTBALL_*`, môn vợt mặc định "Đôi linh hoạt" (`OPEN_DOUBLES`, không
+  /// giới tính). `_openContentDraftDialog` lọc danh sách theo môn.
   void _resetContentDraftsForSport(String sport) {
     final defaultFormat = sport == AppConstants.sportFootball
         ? 'FOOTBALL_MALE'
-        : 'MALE_DOUBLES';
+        : 'OPEN_DOUBLES';
     _contentDrafts = [
       _QuickTournamentContentDraft(
         id: defaultFormat,
@@ -1558,7 +1556,7 @@ class _CreatePublicQuickTournamentScreenState
   List<String> get _defaultFormatKeys =>
       _sport == AppConstants.sportFootball
       ? const ['FOOTBALL_MALE', 'FOOTBALL_FEMALE', 'FOOTBALL_MIXED']
-      : const ['MALE_DOUBLES', 'FEMALE_DOUBLES', 'MIXED_DOUBLES'];
+      : const ['OPEN_DOUBLES', 'MIXED_DOUBLES'];
 
   _QuickTournamentContentDraft? _draftFor(String formatKey) {
     for (final draft in _contentDrafts) {

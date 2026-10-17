@@ -53,31 +53,36 @@ void main() {
       }
     });
 
-    test('keeps the restricted racket formats on their previous contract', () {
+    test('never locks the whole tournament to one gender', () {
       expect(quickTournamentApiFormatFields('MALE_SINGLES'), {
         'format': 'singles',
-        'genderRestriction': 'MALE',
       });
       expect(quickTournamentApiFormatFields('FEMALE_SINGLES'), {
         'format': 'singles',
-        'genderRestriction': 'FEMALE',
       });
       expect(quickTournamentApiFormatFields('MALE_DOUBLES'), {
         'format': 'doubles',
-        'genderRestriction': 'MALE',
       });
       expect(quickTournamentApiFormatFields('FEMALE_DOUBLES'), {
         'format': 'doubles',
-        'genderRestriction': 'FEMALE',
       });
+    });
+
+    test('sends mixed doubles as mixed_doubles with MIXED tournament gender', () {
       expect(quickTournamentApiFormatFields('MIXED_DOUBLES'), {
-        'format': 'doubles',
+        'format': 'mixed_doubles',
         'genderRestriction': 'MIXED',
       });
+    });
 
+    test('keeps gender restriction on the division for restricted racket formats', () {
       expect(quickTournamentDivisionFormatFields('MALE_SINGLES'), {
         'matchType': 'SINGLES',
         'genderRestriction': 'MALE',
+      });
+      expect(quickTournamentDivisionFormatFields('FEMALE_DOUBLES'), {
+        'matchType': 'DOUBLES',
+        'genderRestriction': 'FEMALE',
       });
       expect(quickTournamentDivisionFormatFields('MIXED_DOUBLES'), {
         'matchType': 'MIXED_DOUBLES',
@@ -85,18 +90,27 @@ void main() {
       });
     });
 
-    test('keeps the football formats on their previous contract', () {
+    test('maps football formats to singles at tournament level', () {
+      expect(quickTournamentApiFormatFields('FOOTBALL_MALE'), {
+        'format': 'singles',
+      });
+      expect(quickTournamentApiFormatFields('FOOTBALL_FEMALE'), {
+        'format': 'singles',
+      });
+      expect(quickTournamentApiFormatFields('FOOTBALL_MIXED'), {
+        'format': 'singles',
+        'genderRestriction': 'MIXED',
+      });
+    });
+
+    test('keeps football division gender while the division is singles', () {
       for (final entry in {
         'FOOTBALL_MALE': 'MALE',
         'FOOTBALL_FEMALE': 'FEMALE',
         'FOOTBALL_MIXED': 'MIXED',
       }.entries) {
-        expect(quickTournamentApiFormatFields(entry.key), {
-          'format': 'doubles',
-          'genderRestriction': entry.value,
-        });
         expect(quickTournamentDivisionFormatFields(entry.key), {
-          'matchType': 'DOUBLES',
+          'matchType': 'SINGLES',
           'genderRestriction': entry.value,
         });
       }
