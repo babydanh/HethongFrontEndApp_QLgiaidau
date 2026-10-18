@@ -1,7 +1,6 @@
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -245,7 +244,11 @@ void main() {
       await tester.tap(find.text('Đăng ký ngay').first);
       await tester.pump();
       final submit = anyTextOf(['Gửi yêu cầu tham gia', 'Xác nhận đăng ký']);
-      await pumpUntilFound(tester, submit, what: 'nút gửi đăng ký nội dung đôi');
+      await pumpUntilFound(
+        tester,
+        submit,
+        what: 'nút gửi đăng ký nội dung đôi',
+      );
       await tester.tap(submit.first);
       await tester.pump();
 
@@ -304,9 +307,7 @@ void main() {
         divisionId: divisionId,
       );
       expect(mine['registered'], isTrue, reason: 'VĐV phải có đơn đăng ký đôi');
-      final participant = Map<String, dynamic>.from(
-        mine['participant'] as Map,
-      );
+      final participant = Map<String, dynamic>.from(mine['participant'] as Map);
       expect(
         participant['teamStatus'],
         'PENDING_PARTNER',
