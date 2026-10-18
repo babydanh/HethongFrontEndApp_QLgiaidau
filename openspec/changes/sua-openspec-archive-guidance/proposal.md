@@ -6,6 +6,7 @@ Trong `openspec/config.yaml`, 2 mục của `operations.archive.guidance` (dòng
 ## What Changes
 
 - Đặt 2 mục đó trong nháy kép. Nội dung chữ giữ nguyên từng ký tự.
+- Repo App còn cùng lỗi ở `rules.specs` dòng 24 (`(hiện: app_vi.arb ...)`): doctor báo "Rules for 'specs' must be an array of strings, ignoring this artifact's rules", nên cả 2 luật viết spec bị bỏ qua. Đặt dòng đó trong nháy kép.
 
 ## Out of scope
 
