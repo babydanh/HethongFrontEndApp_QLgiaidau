@@ -88,21 +88,42 @@ Ghi lại các lỗi của app (không phải lỗi test) do `integration_test` 
 - **Nguyên nhân (đọc code)**: nút gửi là `registerSubmitFree(label)` = "{label} (Miễn phí)" hoặc `registerSubmitFee(label, fee)` = "{label} • {fee}" (`tournament_register_screen.dart:2275-2292`, `app_vi.arb:852-853`). `Text.data` không bằng nhãn gốc nên `anyTextOf` không khớp. Các test trước đây chưa từng tới bước này trên CI.
 - **Sửa**: `anyTextStartingWith` ở `integration_test/support/app_driver.dart` và dùng ở `tournament_player_flow_test.dart:84` và `:246` (commit `d7b5dc01`). Không đổi app. **Kết quả** run `39116901048`: vẫn không thấy nút gửi, xem F11.
 
-## F11. Ca đơn và ca đôi vẫn không thấy nút gửi đăng ký sau khi đã bấm "Đăng ký" (chưa rõ nguyên nhân; chờ chẩn đoán)
+## F11. Ca đơn và ca đôi không thấy nút gửi đăng ký vì hồ sơ VĐV thiếu họ tên và SĐT (lỗi test, đã sửa ở `a1753c5d`)
 
 - **Tái hiện**: run `39116901048` (ref `d7b5dc01`), log dòng 3662 (đơn: "Hết 30s mà chưa thấy: nút gửi đăng ký") và dòng 3787 (đôi). Hai ca đã qua CTA "Đăng ký" (F7).
 - **Quan sát log**: sau khi bấm "Đăng ký", app gọi `GET /tournaments/:id/my-registration` (dòng ~3650) rồi không có request nào của form đăng ký. Test không thấy nút gửi nào trong 30 giây.
 - **Các nhánh có thể làm nút gửi không hiện** (đọc code, chưa xác nhận): nhãn `registerRegClosed` khi `isRegistrationClosed` hoặc `_isDivisionRegistrationExpired` (`tournament_register_screen.dart:2276-2278`); nhãn `registerDivisionFull` khi `_isSelectedDivisionFull` (`:2279-2280`, `isFull` ở `tournament_registration.dart:81`); spinner khi `_checkingRegistration` (`:897`). Nhánh đăng nhập `_buildLoginPrompt` (`:896`) loại trừ vì log có `GET /users/profile` 200 trước đó.
 - **Chẩn đoán đã thêm**: `pumpUntilCondition` (`integration_test/support/app_driver.dart`, commit `95b2fc2c`) ghi thêm danh sách chữ đang hiện khi hết giờ. Trạng thái: chờ run `39118510032`.
 - **Kết quả chẩn đoán** (run `39118510032`, log dòng 3701–3705 và 3826–3830): màn đăng ký hiện banner "Hồ sơ chưa hoàn thiện — Bạn cần cập nhật đầy đủ Họ tên, Số điện thoại…". Hồ sơ của VĐV test `user8@gmail.com` đang thiếu dữ liệu. Khi thiếu họ tên hoặc SĐT, `_register` mở dialog và không gửi (`tournament_register_screen.dart:601-624`). Countdown "06 Ngày 23 Giờ" là mốc dự phòng +7 ngày, nghĩa là giải không có hạn đăng ký. Danh sách chữ đang hiện bị cắt ở 40 phần tử, nên chưa kết luận được nút gửi bị ẩn hay chỉ nằm ngoài danh sách. Nhãn gửi đúng là `Gửi yêu cầu tham gia` hoặc `Xác nhận đăng ký` (`app_vi.arb:780-781`), khớp tiền tố test đang tìm.
-- **Hướng sửa (chưa làm)**: test điền họ tên và SĐT cho `user8` qua `PATCH /users/profile` (`UpdateUserDto`: `fullName`, `phoneNumber` theo regex VN; `users.service.ts:91-142` không kiểm trùng SĐT) trước khi đăng nhập. [INFERENCE] banner là nguyên nhân chính, chưa xác nhận bằng run.
+- **Đã sửa** (`a1753c5d`, chỉ đổi test): test điền họ tên và SĐT cho `user8` qua `PATCH /users/profile` trước khi đăng nhập (`completePlayerProfile`, `preparePlayerProfile`). **Kết quả**: ca đôi pass ở run `39123946327`, `39125477525` và `39126812760`; ca đơn đã vào màn "Gửi yêu cầu thành công!" ở run `39125477525`. Banner hồ sơ là nguyên nhân đã được xác nhận bằng run.
 
-## F12. Ca BTC chờ nút thêm VĐV ở sai màn (lỗi test, đã sửa ở `95b2fc2c`)
+## F12. Ca BTC chờ nút thêm VĐV ở sai màn và sai tab (lỗi test, đã sửa ở `95b2fc2c` và `a1753c5d`)
 
 - **Tái hiện**: run `39116901048`: `POST /tournaments/lite` 201 (dòng 3830–3831), sau đó hết 60 giây ở "trang quản lý giải nhanh vừa tạo (nút thêm VĐV)" (dòng 3864).
 - **Nguyên nhân (đọc code)**: sau khi tạo, app `pushReplacement('/lite-manage/<id>')` (`create_public_quick_tournament_screen.dart:675`). Route này dùng `TournamentManagementDispatcher` với `showLiteWorkspace = false` (`app_router.dart:1001-1010`), nên mở hub (`TournamentManagementHubScreen`), không mở `LiteManagementScreen`. Nút có key `organizer-ops-add-athlete` chỉ có ở `OrganizerOpsScreen` (`organizer_ops_screen.dart:544`, route `/organizer/tournaments/:id/ops`).
-- **Sửa (lỗi test)**: test chờ KPI hub `tournament-overview-athletes-edit` (`tournament_management_header.dart:137`), rồi mở `/organizer/tournaments/<id>/ops` bằng router, như các bước sau của test. Không đổi app, không nới assertion. Trạng thái: chờ run `39118510032`.
-- **Kết quả chẩn đoán** (run `39118510032`, log dòng 3942–3945): màn điều hành đã mở (thấy "Không gian vận hành" và các tab "Tổng quan | Trận đấu | Bracket | Danh sách tham gia | Hoạt động"). Nút thêm VĐV nằm trong tab "Danh sách tham gia" (`_selectedTab == 3`, `organizer_ops_screen.dart:327-334`, `_buildRosterSliver`), còn màn mở ở tab Trận đấu (`:77`). Test chưa bấm sang tab này. Hướng sửa (chưa làm): bấm tab "Danh sách tham gia" bằng `tapCentered` trước khi chờ `organizer-ops-add-athlete`.
+- **Sửa (lỗi test)**: test chờ KPI hub `tournament-overview-athletes-edit` (`tournament_management_header.dart:137`), rồi mở `/organizer/tournaments/<id>/ops` bằng router, như các bước sau của test. Không đổi app, không nới assertion. Trạng thái: đã sửa; xem kết quả bên dưới.
+- **Đã sửa** (`a1753c5d`): bấm ChoiceChip "Danh sách tham gia" bằng `tapCentered` trước khi tìm `organizer-ops-add-athlete`. Chẩn đoán (run `39118510032`, log dòng 3942–3945): màn điều hành đã mở (thấy "Không gian vận hành" và các tab "Tổng quan | Trận đấu | Bracket | Danh sách tham gia | Hoạt động"). Nút thêm VĐV nằm trong tab "Danh sách tham gia" (`_selectedTab == 3`, `organizer_ops_screen.dart:327-334`, `_buildRosterSliver`), còn màn mở ở tab Trận đấu (`:77`). **Kết quả**: ca BTC qua bước thêm VĐV ở run `39126812760` (log dòng 352, `+2 -1`).
+
+## F13. Ca đơn chờ sai chuỗi sau khi gửi đơn đăng ký (lỗi test, đã sửa ở `46bb88c2`)
+
+- **Tái hiện**: run `39125477525`, log dòng 98–120: "Hết 30s mà chưa thấy: trạng thái sau khi gửi đăng ký". Chữ đang hiện gồm "Chờ BTC duyệt", "Đăng ký đang chờ duyệt", "Đơn đăng ký đang chờ Ban Tổ Chức xét duyệt"; không có chuỗi nào trong điều kiện chờ của test.
+- **Nguyên nhân (đọc code)**: điều kiện chờ ở `tournament_player_flow_test.dart` (sau khi gửi đơn, trước khi BTC duyệt) chỉ có "Đang chờ Ban tổ chức duyệt", "Bạn đã đăng ký giải đấu này", "Đã đăng ký, chưa thanh toán" (`app_vi.arb:844-848`). Màn sau gửi đơn hiển thị `registerDetailsPendingApproval` = "Chờ BTC duyệt" (`app_vi.arb:3285`, dùng ở `tournament_register_screen.dart:1217`). Ghi nhận, chưa sửa (ngoài phạm vi): "Đơn đăng ký đang chờ Ban Tổ Chức xét duyệt" là chuỗi cứng ở `tournament_register_screen.dart:1061` và `:1345`.
+- **Sửa (lỗi test)**: thêm "Chờ BTC duyệt" vào điều kiện chờ đó. Điều kiện vẫn yêu cầu trạng thái thật của app, không nới.
+- **Kết quả**: run `39126812760` qua điều kiện chờ sau khi gửi đơn, bước 4 (trạng thái đã đăng ký sau khi BTC duyệt) và bước 5 (tạo nhánh bằng API), rồi dừng ở bước 6 (F15).
+
+## F14. Ca BTC tạo nhánh 400 vì giải có hai nội dung (lỗi test, đã sửa ở `66ee37cd`)
+
+- **Tái hiện**: run `39125477525`: `POST /tournaments/lite` 201, `POST /tournaments/:id/add-athletes/direct` 201, `POST /tournaments/:id/generate-bracket` 400 (`[DioClient] ... status=400`). Test lỗi ở `organizer_flow_test.dart:219` ("Sau Lưu & Bắt đầu giải phải có trận trên Backend").
+- **Nguyên nhân (đọc code)**: form tạo giải nhanh tick sẵn nội dung "Đôi linh hoạt" (`OPEN_DOUBLES`, `create_public_quick_tournament_screen.dart:175-180`). Test thêm nội dung đơn nhưng không bỏ tick, nên giải có hai nội dung. App chỉ gửi `divisionId` khi có đúng một nội dung (`auto_draw_screen.dart:107-113`). Backend từ chối khi có nhiều nội dung mà thiếu `divisionId`: "Vui lòng chọn nội dung để tạo sơ đồ." (`tournament-bracket.service.ts:432-438`). Lỗi nằm ở test; app và backend đúng. [INFERENCE mạnh: thông điệp 400 khớp với nhánh này; log không ghi nội dung body.]
+- **Sửa (lỗi test)**: bỏ tick "Đôi linh hoạt" trước khi thêm nội dung đơn, và khẳng định giải còn đúng một nội dung (`hasLength(1)`).
+- **Kết quả**: run `39126812760`, ca BTC pass (log dòng 352, `+2 -1`).
+
+## F15. Tab bảng đấu trên trang chi tiết là "Bảng đấu", không phải "Bảng thi đấu" (lỗi test, đã sửa ở `e90dccad`)
+
+- **Tái hiện**: run `39126812760` (ca đơn): "Hết 30s mà chưa thấy: tab Bảng thi đấu trên trang chi tiết. Chữ đang hiện: Tổng quan | Giới thiệu | Danh sách đội | Bảng đấu | Lịch thi đấu | ★ ELO ...".
+- **Nguyên nhân (đọc code)**: tab hiển thị là chuỗi cứng "Bảng đấu" (`tournament_intro_screen.dart:752`). Test dùng "Bảng thi đấu" (`app_vi.arb:437`, `tabBracket`), không khớp nhãn đang hiển thị. Ghi nhận, chưa sửa: nhãn tab là chuỗi cứng, không qua l10n. Tab "Kết quả" chỉ hiện khi có trận hoàn thành (`tournament_intro_screen.dart:696-697`), nên bước 8 của test giữ nguyên.
+- **Sửa (lỗi test)**: đổi nhãn thành "Bảng đấu" và bấm tab bằng `tapCentered`.
+- **Kết quả**: chờ run `39127908361`.
 
 ## Lỗi Backend phát hiện (chỉ ghi lại, không sửa Backend)
 
