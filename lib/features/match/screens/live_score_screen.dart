@@ -2251,7 +2251,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  /// Huy hiệu Ping · Trễ · FPS chỉ cho admin và chủ giải của giải. Không dùng
+  /// Huy hiệu Ping chỉ cho admin và chủ giải của giải. Không dùng
   /// `auth.canScore`: trọng tài có quyền chấm điểm nhưng không xem thông số luồng.
   bool _canSeeStreamStats(String tournamentId) {
     final profile = ref.watch(userProfileProvider).asData?.value;

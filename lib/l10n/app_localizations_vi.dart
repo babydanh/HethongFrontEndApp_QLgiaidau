@@ -12570,8 +12570,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String liveStreamStatsBadge(String ping, String latency, String fps) {
-    return 'Ping $ping · Trễ $latency · FPS $fps';
+  String liveStreamStatsBadge(String ping) {
+    return 'Ping $ping';
   }
 
   @override

@@ -75,7 +75,6 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
     return LiveVideoPlayer(
       url: _url!,
       label: label,
-      matchId: widget.matchId,
       showStreamStats: widget.showStreamStats,
     );
   }

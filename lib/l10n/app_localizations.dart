@@ -22837,8 +22837,8 @@ abstract class AppLocalizations {
   /// No description provided for @liveStreamStatsBadge.
   ///
   /// In vi, this message translates to:
-  /// **'Ping {ping} · Trễ {latency} · FPS {fps}'**
-  String liveStreamStatsBadge(String ping, String latency, String fps);
+  /// **'Ping {ping}'**
+  String liveStreamStatsBadge(String ping);
 
   /// No description provided for @recordingPlayDay.
   ///

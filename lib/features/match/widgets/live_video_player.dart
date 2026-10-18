@@ -15,22 +15,15 @@ class LiveVideoPlayer extends StatefulWidget {
     super.key,
     required this.url,
     this.label,
-    this.matchId,
     this.showStreamStats = false,
-  }) : assert(
-         !showStreamStats || matchId != null,
-         'matchId bắt buộc khi bật thông số luồng',
-       );
+  });
 
   final String url;
 
   /// Tên sân/camera, hiện ở góc phải. Rỗng thì không hiện.
   final String? label;
 
-  /// Mã trận, dùng để lấy FPS nguồn khi bật [showStreamStats].
-  final String? matchId;
-
-  /// Hiện huy hiệu Ping · Trễ · FPS góc trên trái (màn live quyết định cờ này).
+  /// Hiện huy hiệu Ping góc trên trái (màn live quyết định cờ này).
   final bool showStreamStats;
 
   @override
@@ -239,15 +232,11 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                       ),
                     ),
 
-                  if (widget.showStreamStats && widget.matchId != null)
+                  if (widget.showStreamStats)
                     Positioned(
                       top: 8,
                       left: 8,
-                      child: LiveStreamStatsBadge(
-                        matchId: widget.matchId!,
-                        url: widget.url,
-                        controller: controller,
-                      ),
+                      child: LiveStreamStatsBadge(url: widget.url),
                     ),
 
                   // Thanh điều khiển gọn: chỉ phát/dừng và tắt/bật tiếng.

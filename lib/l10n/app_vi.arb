@@ -5176,16 +5176,10 @@
       }
     }
   },
-  "liveStreamStatsBadge": "Ping {ping} · Trễ {latency} · FPS {fps}",
+  "liveStreamStatsBadge": "Ping {ping}",
   "@liveStreamStatsBadge": {
     "placeholders": {
       "ping": {
-        "type": "String"
-      },
-      "latency": {
-        "type": "String"
-      },
-      "fps": {
         "type": "String"
       }
     }

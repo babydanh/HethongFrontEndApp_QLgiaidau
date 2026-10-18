@@ -145,7 +145,7 @@ Future<void> _pumpLiveScore(
   // Không dùng pumpAndSettle: _livePulseCtrl lặp vô hạn.
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
-  // Request FPS của huy hiệu bị từ chối qua Timer của Dio: pump thêm để Timer đó chạy hết.
+  // Request playback bị từ chối: pump thêm để Future của Dio chạy hết.
   await tester.pump(const Duration(seconds: 1));
 }
 
@@ -193,9 +193,7 @@ void main() {
     _expectNoPlayIconInVideoFrame();
   });
 
-  testWidgets('chủ giải thấy huy hiệu Ping/Trễ/FPS trên khung video', (
-    tester,
-  ) async {
+  testWidgets('chủ giải thấy huy hiệu Ping trên khung video', (tester) async {
     await _pumpLiveScore(
       tester,
       playback: (ref, matchId) => _flvPlayback(),
