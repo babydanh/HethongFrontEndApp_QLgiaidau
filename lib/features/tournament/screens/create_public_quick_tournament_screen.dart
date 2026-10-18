@@ -628,8 +628,9 @@ class _CreatePublicQuickTournamentScreenState
         if (_locationAddressController.text.trim().isNotEmpty)
           'locationAddress': _locationAddressController.text.trim(),
         'startDate': startDateTime.toUtc().toIso8601String(),
-        'startTime':
-            '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}',
+        // Không gửi `startTime`: `startDate` đã là mốc UTC đầy đủ. Backend
+        // ghép `startTime` với phần ngày UTC của `startDate` và coi là giờ
+        // UTC+7 (`tournament-lite.service.ts:588-610`), làm lệch giờ bắt đầu.
         'endDate': endDateTime.toUtc().toIso8601String(),
         'durationMinutes': endDateTime.difference(startDateTime).inMinutes,
         'durationHours': endDateTime.difference(startDateTime).inMinutes / 60.0,

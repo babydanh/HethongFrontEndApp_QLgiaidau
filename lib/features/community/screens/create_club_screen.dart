@@ -167,7 +167,6 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
               'durationHours': durationHours.toDouble(),
               'startDate': nextOccurrence.toUtc().toIso8601String(),
               'endDate': calculatedEndDate.toUtc().toIso8601String(),
-              'startTime': startTime,
               'isRecurring': true,
               'recurringFrequency': 'WEEKLY',
               'recurringDayOfWeek': allDays.first,

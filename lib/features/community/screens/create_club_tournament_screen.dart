@@ -191,8 +191,8 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'durationHours': ((_durationHours * 60) + _durationMinutes) / 60.0,
         if (_startDate != null) ...{
           'startDate': _startDate!.toUtc().toIso8601String(),
-          'startTime':
-              '${_startDate!.hour.toString().padLeft(2, '0')}:${_startDate!.minute.toString().padLeft(2, '0')}',
+          // Không gửi `startTime` cùng `startDate` UTC: backend ghép hai giá trị
+          // này theo UTC+7 (`tournament-lite.service.ts:588-610`), làm lệch giờ.
           'endDate': _startDate!
               .add(Duration(minutes: (_durationHours * 60) + _durationMinutes))
               .toUtc()
