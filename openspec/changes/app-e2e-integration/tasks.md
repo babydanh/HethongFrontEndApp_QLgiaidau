@@ -2,9 +2,9 @@
 
 ## 1. Xác minh trước khi viết
 
-- [ ] 1.1 Build debug không có `google-services.json` có lỗi không (đọc `android/app/build.gradle.kts`, chạy thử trên cloud ở task 3.1). Xong khi: biết cần hay không cần file giả trong CI.
-- [ ] 1.2 Màn đăng nhập (`login_register_screen.dart`) có bước OTP hay xác thực email không. Màn chấm điểm trực tiếp cho vai nào. App có màn BTC duyệt, ghép, tạo nhánh không. Xong khi: có `file:dòng` cho từng ý.
-- [ ] 1.3 Lập bảng chữ hiển thị (key trong `app_vi.arb`) và `Key` dùng để tìm widget cho 7 luồng. Xong khi: mỗi bước có một cách tìm widget có nguồn.
+- [x] 1.1 Build debug không có `google-services.json` có lỗi không (đọc `android/app/build.gradle.kts`, chạy thử trên cloud ở task 3.1). Xong khi: biết cần hay không cần file giả trong CI. Bằng chứng: plugin áp dụng ở module app (`android/app/build.gradle.kts:7`, khai báo `apply false` tại `android/settings.gradle.kts:24`); bước 10b tạo file giả tại `test-runner.yml:726-731`; theo báo cáo lane, run `39098328267` lỗi thiếu google-services khi chưa có file giả (chưa đọc lại log trong lượt này). Kết luận: CI cần file giả.
+- [x] 1.2 Màn đăng nhập (`login_register_screen.dart`) có bước OTP hay xác thực email không. Màn chấm điểm trực tiếp cho vai nào. App có màn BTC duyệt, ghép, tạo nhánh không. Xong khi: có `file:dòng` cho từng ý. Bằng chứng: phụ lục mục A trong `design.md`.
+- [x] 1.3 Lập bảng chữ hiển thị (key trong `app_vi.arb`) và `Key` dùng để tìm widget cho 7 luồng. Xong khi: mỗi bước có một cách tìm widget có nguồn. Bằng chứng: phụ lục mục B trong `design.md`.
 
 ## 2. Hạ tầng trong repo App
 
@@ -13,7 +13,7 @@
 
 ## 3. Workflow cloud (repo agent-orchestrator) và script máy
 
-- [ ] 3.1 Job `test-app-e2e` (target `app-e2e`):
+- [x] 3.1 Job `test-app-e2e` (target `app-e2e`):
   - checkout Backend + App;
   - Postgres + Redis + Backend như `test-fullstack`, tạo tài khoản test;
   - Flutter 3.47.x;
@@ -23,6 +23,7 @@
   - upload artifact `app-e2e-report`.
 
   Xong khi: chạy một test khói (mở app, thấy màn đăng nhập) và có kết quả.
+  Bằng chứng: run `39109977504` (ref `8b166f5b`) đã chạy job; smoke_test PASS trước khi auth chạy.
 - [ ] 3.2 `cloud-test-runner.py run --target app-e2e --app-ref <nhánh> [--backend-ref] [--specs integration_test/a_test.dart ...] [--seed data]`. Cập nhật skill `cloud-test-runner`. Xong khi: lệnh dispatch được và in tóm tắt.
 
 ## 4. Kịch bản

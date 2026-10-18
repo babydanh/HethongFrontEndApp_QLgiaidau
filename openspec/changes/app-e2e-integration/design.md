@@ -48,3 +48,29 @@
 - [Máy ảo chậm hoặc lúc chạy lúc không] → tắt animation, mỗi bước chờ có giới hạn thời gian rõ ràng, có cache AVD. Chạy tay, không đưa vào cổng gộp.
 - [Tìm widget theo chữ thì vỡ khi đổi câu chữ] → dùng chuỗi lấy từ `app_vi.arb`. Nếu đổi chữ thì test đỏ kèm tên key.
 - [Thời gian 20–30 phút] → chỉ chạy khi cần hoặc theo lịch đêm, không chạy mỗi lần gộp.
+
+## Phụ lục: ánh xạ finder cho 7 luồng (task 1.2, 1.3)
+
+Nguồn: đọc `lib/` và `integration_test/` tại `8b166f5b`. `arb` = `lib/l10n/app_vi.arb`.
+
+### A. Hành vi và màn hình (task 1.2)
+
+- OTP/xác minh email ở màn đăng nhập: không có. Màn gọi trực tiếp đăng nhập/đăng ký rồi chuyển `/login-loading` (`lib/features/auth/screens/login_register_screen.dart:62-77`). API xác minh có tồn tại nhưng không nằm trong luồng màn hình (`lib/data/repositories/api/api_auth_repository.dart:135-156`).
+- Chấm điểm trực tiếp: `canScore` cho `admin`, `referee`, `organizer` (`lib/providers/auth_provider.dart:13-16, 41-49`); `viewer` không. Ngoại lệ: trận Super Lite cho người đã đăng nhập (`lib/features/match/screens/live_score_screen.dart:639-642`).
+- BTC duyệt đơn: không có màn trong luồng đã đọc; test duyệt bằng API (`integration_test/tournament_player_flow_test.dart:128-131`). Kết luận chỉ trong phạm vi các màn đã đọc.
+- Ghép đôi: chỉ có ở đăng ký của VĐV (`integration_test/tournament_player_flow_test.dart:258-300`); không xác định được màn BTC ghép đôi.
+- Tạo nhánh: có màn bốc thăm BTC với `Bốc thăm tự động` và `Lưu & Bắt đầu giải` (`integration_test/organizer_flow_test.dart:168-181`).
+
+### B. Finder theo luồng (task 1.3)
+
+| Bước | Text / Key | Nguồn | Finder trong test |
+|---|---|---|---|
+| 1 Smoke | Địa chỉ Email; Đăng nhập | `emailLabel` (arb:68), `loginButton` (arb:71) | `integration_test/smoke_test.dart:20, 26` |
+| 2 Đăng nhập VĐV | Địa chỉ Email | arb:68 | `integration_test/auth_flow_test.dart:20, 33-35` (`loginWithForm` trong `support/app_driver.dart`) |
+| 3 Đăng nhập BTC | Địa chỉ Email | arb:68 | `integration_test/auth_flow_test.dart:43-47, 55-57` |
+| 4 Đăng ký đơn → duyệt → nhánh/lịch → vô địch | Giải đấu (arb:55); Đăng ký ngay (arb:77); Chờ duyệt (arb:844); Lịch thi đấu (arb:436) | arb | `integration_test/tournament_player_flow_test.dart:57-96, 109-173`; duyệt và bốc thăm qua API `:128-135` |
+| 5 Đăng ký đôi, mời đồng đội | Tiếp theo (arb:876); Tên đội (arb:861); Mời sau (arb:865); Nhập email hoặc SĐT đồng đội (arb:875); Sao chép link mời (arb:881); mô tả mời (arb:879) | arb | `integration_test/tournament_player_flow_test.dart:219-308` |
+| 6 BTC tạo giải, thêm VĐV, bốc thăm | Thời gian bắt đầu *, Thêm nội dung, Tạo giải nhanh (literal, chưa đối chiếu được key arb); Bốc thăm tự động, Lưu & Bắt đầu giải (literal); Key `organizer-ops-add-athlete`, `add-athlete-sheet`, `add-athlete-direct-name`, `add-athlete-direct-email`, `add-athlete-direct-submit` | literal/Key | `integration_test/organizer_flow_test.dart:42-181` |
+| 7 VĐV nhập điểm | Ngoài phạm vi: không có flow nhập điểm cho VĐV (xem mục A) | — | — |
+
+Giới hạn: các literal chưa đối chiếu được với key arb được ghi rõ; không khẳng định là hardcoded trong widget.
