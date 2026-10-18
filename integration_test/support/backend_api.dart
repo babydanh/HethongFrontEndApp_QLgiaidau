@@ -184,6 +184,13 @@ class BackendApi {
     return _asList(path, body);
   }
 
+  /// Các nội dung thi đấu của giải (endpoint công khai, không cần token).
+  Future<List<Map<String, dynamic>>> listDivisions(String tournamentId) async {
+    final path = '/tournaments/$tournamentId/divisions';
+    final body = await _send('GET', path);
+    return _asList(path, body);
+  }
+
   /// BTC duyệt một đơn đăng ký đang PENDING_APPROVAL (Backend chỉ nhận COMPLETE hoặc REJECTED).
   Future<void> approveParticipant({
     required String token,
