@@ -175,7 +175,7 @@ void main() {
         find.text('Kết quả'),
         what: 'tab Kết quả sau khi giải có kết quả',
       );
-      await tester.tap(find.text('Kết quả').first);
+      await tapCentered(tester, find.text('Kết quả').first);
       await pumpUntilFound(
         tester,
         find.text(championName),
