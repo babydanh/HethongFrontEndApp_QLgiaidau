@@ -42,10 +42,18 @@ Nhãn:
 - Gọi API: repository `lib/data/repositories/api/` nhận `DioClient` và gọi `_dioClient.dio.get/patch...` trực tiếp (ví dụ `ApiTournamentRepository`). `DioClient` đổi `localhost`/`127.0.0.1` thành `10.0.2.2` trên Android.
 - i18n: `l10n.yaml` (`arb-dir: lib/l10n`, template `app_vi.arb`, class `AppLocalizations`). Thêm chuỗi = thêm key vào cả `app_vi.arb` và `app_en.arb`, rồi `flutter gen-l10n`; file sinh đã nằm trong git.
 - Kiểm i18n (đã kiểm: file tồn tại; CHƯA chạy): `scripts/check_equal_arb_values.py` liệt kê key có giá trị EN = VI (dấu hiệu chưa dịch); `scripts/audit_l10n_literals.py` tìm chuỗi hardcode trong code.
-- Test: `flutter_test`, `mocktail`; `integration_test` có trong `dev_dependencies` nhưng repo KHÔNG có thư mục integration test.
+- Test: `flutter_test`, `mocktail`; E2E `integration_test` (4 kịch bản chạy trên CI) xem mục "E2E App (integration_test)" bên dưới.
 - Không có tài liệu kiến trúc trong repo. Muốn biết tầng nào làm gì, đọc `lib/core`, `lib/domain`, `lib/data`, `lib/features`, `lib/providers`.
 - Nạp ngữ cảnh (đã kiểm): omp nạp file ngữ cảnh theo độ sâu thư mục; ở cùng độ sâu, provider ưu tiên cao hơn thắng. `.github/copilot-instructions.md` (provider `github`) thắng `AGENTS.md` gốc (provider `agents-md`), nên khi có cả hai thì `AGENTS.md` bị bỏ qua (đã kiểm: thư mục thử và worktree App). Repo này đặt `.omp/config.yml` với `disabledExtensions: [context-file:project:copilot-instructions.md]`: chỉ file đó bị loại trước khi chọn, `AGENTS.md` giành lại vị trí; provider `github` vẫn đóng góp phần khác. Hệ quả: copilot-instructions không còn tự nạp; đọc nó khi làm animation.
 - Tham chiếu cũ cần biết: `D:/Duancanhan/Project_QuanLyGiaiDau/AGENTS.md` (cấp dự án) mục 10 nhắc một file `api_service.dart` trong `lib/data/`; file này KHÔNG tồn tại trong repo (kiểm bằng `git ls-files`).
+
+## E2E App (integration_test)
+
+- Vị trí: `integration_test/` gồm `smoke_test.dart`, `auth_flow_test.dart`, `tournament_player_flow_test.dart`, `organizer_flow_test.dart`. Helper dùng chung ở `integration_test/support/` (`app_driver.dart`, `backend_api.dart`).
+- Chạy trên Android emulator API 34 (x86_64) với Backend, Postgres và Redis thật. Job CI: `test-app-e2e` trong `.github/workflows/test-runner.yml` của repo `agent-orchestrator`, dispatch qua skill `cloud-test-runner` với target `app-e2e`. Lệnh dispatch: `--app-ref <nhánh> --specs integration_test/<file>.dart` (`--specs` bắt buộc).
+- Chạy local (cần emulator và Backend đang chạy sẵn): `flutter test integration_test/smoke_test.dart -d emulator-5554`. URL Backend đổi bằng `--dart-define=E2E_API_BASE_URL=...` (mặc định `http://10.0.2.2:3000/api/v1`).
+- Cleartext HTTP chỉ bật ở bản debug, tới `10.0.2.2` và `localhost` (`android/app/src/debug/res/xml/network_security_config.xml`). Bản release không có ngoại lệ này; job CI kiểm bằng `aapt` ở bước 13b.
+- Tài khoản seed chỉ dùng cho CI (`backend_api.dart`). Kết quả từng lượt và lỗi app đã biết: `openspec/changes/app-e2e-integration/tasks.md` và `findings.md`.
 
 ## Lệnh (đã chạy thật, 2026-10-15, worktree `agent-standard` từ `origin/main` `1274c57`)
 
