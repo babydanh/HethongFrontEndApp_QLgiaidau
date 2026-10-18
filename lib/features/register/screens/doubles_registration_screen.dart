@@ -532,8 +532,7 @@ class _DoublesRegistrationFlowState
             invite: widget.inviteCode,
           )),
         )
-        .asData
-        ?.value;
+        .value;
     final profileGender = ref
         .read(userProfileProvider)
         .asData
@@ -1096,44 +1095,49 @@ class _DoublesRegistrationFlowState
                 border: Border.all(color: colors.border),
               ),
               constraints: const BoxConstraints(maxHeight: 200),
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: _searchResults.length,
-                separatorBuilder: (_, index) =>
-                    Divider(color: colors.border, height: 1),
-                itemBuilder: (_, i) {
-                  final u = _searchResults[i];
-                  final sel = _selectedPartner?.id == u.id;
-                  return ListTile(
-                    dense: true,
-                    leading: UserAvatarTap(
-                      userId: u.id,
-                      name: u.fullName,
-                      imageUrl: u.avatarUrl,
-                      size: 32,
-                      // Pinned to the artwork: the tile is dense and its
-                      // title/subtitle must not shift right.
-                      minTouchTarget: 32,
-                    ),
-                    title: Text(
-                      u.fullName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
+              child: Material(
+                // ListTile vẽ ink lên Material gần nhất. Container có nền và viền nằm giữa
+                // sẽ làm Flutter (debug) ném assertion, nên bọc Material trong suốt bên trong.
+                type: MaterialType.transparency,
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: _searchResults.length,
+                  separatorBuilder: (_, index) =>
+                      Divider(color: colors.border, height: 1),
+                  itemBuilder: (_, i) {
+                    final u = _searchResults[i];
+                    final sel = _selectedPartner?.id == u.id;
+                    return ListTile(
+                      dense: true,
+                      leading: UserAvatarTap(
+                        userId: u.id,
+                        name: u.fullName,
+                        imageUrl: u.avatarUrl,
+                        size: 32,
+                        // Pinned to the artwork: the tile is dense and its
+                        // title/subtitle must not shift right.
+                        minTouchTarget: 32,
                       ),
-                    ),
-                    subtitle: Text(
-                      u.email ?? '',
-                      style: TextStyle(fontSize: 11, color: colors.textMuted),
-                    ),
-                    trailing: sel
-                        ? Icon(Icons.check_circle, color: AppTheme.primary)
-                        : null,
-                    onTap: () =>
-                        setState(() => _selectedPartner = sel ? null : u),
-                  );
-                },
+                      title: Text(
+                        u.fullName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        u.email ?? '',
+                        style: TextStyle(fontSize: 11, color: colors.textMuted),
+                      ),
+                      trailing: sel
+                          ? Icon(Icons.check_circle, color: AppTheme.primary)
+                          : null,
+                      onTap: () =>
+                          setState(() => _selectedPartner = sel ? null : u),
+                    );
+                  },
+                ),
               ),
             ),
           ],

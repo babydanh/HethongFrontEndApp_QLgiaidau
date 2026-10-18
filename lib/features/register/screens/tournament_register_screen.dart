@@ -556,10 +556,17 @@ class _TournamentRegisterScreenState
     if (!_formKey.currentState!.validate()) return;
     final userAsync = ref.read(userProfileProvider);
     final user = userAsync.asData?.value;
+    // Đọc đúng giải mà form đang hiển thị (cùng provider, cùng key với build).
+    // tournamentProvider là provider khác: khi nó chưa có dữ liệu hoặc đang tải lại
+    // (asData trả null), cổng đồng ý xếp hạng bị bỏ qua và server trả 400.
     final tournament = ref
-        .read(tournamentProvider(widget.tournamentId))
-        .asData
-        ?.value;
+        .read(
+          registerTournamentProvider((
+            id: widget.tournamentId,
+            invite: _localInviteCode ?? widget.inviteCode,
+          )),
+        )
+        .value;
     final divisions = ref.read(_divisionsProvider(widget.tournamentId)).value;
     final divisionId = divisions == null
         ? _selectedDiv
