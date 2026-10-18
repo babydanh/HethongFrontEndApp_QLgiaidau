@@ -77,14 +77,12 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Tạo giải đấu'));
       await tester.pump();
 
-      final opsAddButton = find.byKey(
-        const ValueKey('organizer-ops-add-athlete'),
-      );
+      // Sau khi tạo, app mở trang quản lý giải (hub, /lite-manage/:id); chờ KPI "Vận động viên" trên hub.
       await pumpUntilFound(
         tester,
-        opsAddButton,
+        find.byKey(const ValueKey('tournament-overview-athletes-edit')),
         timeout: const Duration(seconds: 60),
-        what: 'trang quản lý giải nhanh vừa tạo (nút thêm VĐV)',
+        what: 'trang quản lý giải vừa tạo (hub, KPI Vận động viên)',
       );
       final location = container
           .read(routerProvider)
@@ -101,6 +99,19 @@ void main() {
         reason: 'Không đọc được id giải từ đường dẫn: $location',
       );
       final id = tournamentId!;
+
+      // Nút thêm VĐV ('organizer-ops-add-athlete') chỉ có ở màn điều hành, không có trên hub.
+      // Mở màn điều hành bằng router như các bước sau của test.
+      final opsAddButton = find.byKey(
+        const ValueKey('organizer-ops-add-athlete'),
+      );
+      container.read(routerProvider).go('/organizer/tournaments/$id/ops');
+      await pumpUntilFound(
+        tester,
+        opsAddButton,
+        timeout: const Duration(seconds: 60),
+        what: 'màn điều hành giải (nút thêm VĐV)',
+      );
 
       // ADMIN duyệt giải và import 3 VĐV (API). Thông tin này là dữ liệu nền.
       await api.approveTournamentAsAdmin(id);

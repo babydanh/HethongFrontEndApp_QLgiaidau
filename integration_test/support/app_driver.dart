@@ -52,11 +52,26 @@ Future<void> pumpUntilCondition(
   final deadline = DateTime.now().add(timeout);
   while (!condition()) {
     if (DateTime.now().isAfter(deadline)) {
-      fail('Hết ${timeout.inSeconds}s mà chưa thấy: $what');
+      fail(
+        'Hết ${timeout.inSeconds}s mà chưa thấy: $what. '
+        'Chữ đang hiện: ${_visibleTexts(tester)}',
+      );
     }
     await tester.pump(const Duration(milliseconds: 250));
   }
   await tester.pump();
+}
+
+/// Chữ đang hiện trên màn (rút gọn), để lỗi chờ hết giờ cho biết màn đang ở trạng thái nào.
+String _visibleTexts(WidgetTester tester) {
+  final texts = tester
+      .widgetList<Text>(find.byType(Text))
+      .map((w) => w.data ?? '')
+      .where((t) => t.isNotEmpty)
+      .toSet()
+      .take(40)
+      .map((t) => t.length > 40 ? '${t.substring(0, 40)}…' : t);
+  return texts.join(' | ');
 }
 
 Future<void> pumpUntilFound(
