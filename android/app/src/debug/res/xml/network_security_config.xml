@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Chỉ dùng cho build debug (E2E trên emulator Android). Cùng tên với file trong
+  src/main nên build debug ghi đè file main; build release KHÔNG dùng file này
+  vì src/debug không được gộp vào variant release.
+  10.0.2.2 là địa chỉ máy host nhìn từ emulator; localhost giữ để dev local.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">giaidau.vnvar.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
