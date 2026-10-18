@@ -75,13 +75,36 @@ class BackendApi {
     return token;
   }
 
+  /// Đăng ký tài khoản mới qua `POST /auth/mobile/register` (công khai, không cần xác thực email).
+  /// Dùng làm đồng đội trong ca đăng ký đôi; dữ liệu do test tạo. Trả user id.
+  Future<String> registerAccount({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
+    const path = '/auth/mobile/register';
+    final body = await _send(
+      'POST',
+      path,
+      data: {'email': email, 'password': password, 'fullName': fullName},
+    );
+    final map = _asMap(path, body);
+    final id = map['id'];
+    if (id is! String || id.isEmpty) {
+      throw _error('POST', path, 201, 'thiếu id: ${_snippet(map)}');
+    }
+    return id;
+  }
+
   /// Tạo giải nhanh PUBLIC (Backend đưa vào PENDING_APPROVAL, chờ ADMIN duyệt).
   /// [matchType]: SINGLES | DOUBLES | MIXED_DOUBLES. Nhánh loại trực tiếp.
+  /// [doublesPairingMode]: ORGANIZER (mặc định) hoặc SELF; chỉ gửi khi không phải SINGLES.
   Future<CreatedTournament> createLiteTournament({
     required String token,
     required String name,
     required String matchType,
     required int maxParticipants,
+    String doublesPairingMode = 'ORGANIZER',
   }) async {
     const path = '/tournaments/lite';
     final format = switch (matchType) {
@@ -102,7 +125,7 @@ class BackendApi {
         'bracketType': 'single_elimination',
         'maxTeams': maxParticipants,
         'visibility': 'PUBLIC',
-        if (matchType != 'SINGLES') 'doublesPairingMode': 'ORGANIZER',
+        if (matchType != 'SINGLES') 'doublesPairingMode': doublesPairingMode,
         'divisions': [
           {
             'name': 'Nội dung chính',
@@ -182,6 +205,23 @@ class BackendApi {
       query: {'divisionId': divisionId},
     );
     return _asList(path, body);
+  }
+
+  /// Đơn của chính người gọi (`GET /tournaments/:id/my-registration`): trả `partnerUserId`,
+  /// `teamStatus`, `teamInviteToken`. Đồng đội chưa chấp nhận chưa có roster nên không thấy đơn này.
+  Future<Map<String, dynamic>> myRegistration({
+    required String token,
+    required String tournamentId,
+    required String divisionId,
+  }) async {
+    final path = '/tournaments/$tournamentId/my-registration';
+    final body = await _send(
+      'GET',
+      path,
+      token: token,
+      query: {'divisionId': divisionId},
+    );
+    return _asMap(path, body);
   }
 
   /// Các nội dung thi đấu của giải (endpoint công khai, không cần token).
