@@ -89,6 +89,7 @@ void main() {
         'Xác nhận đăng ký',
       ]);
       await pumpUntilFound(tester, submit, what: 'nút gửi đăng ký');
+      await tickRankingConsent(tester);
       await tapCentered(tester, submit);
       await tester.pump();
       await pumpUntilFound(
@@ -261,6 +262,7 @@ void main() {
         submit,
         what: 'nút gửi đăng ký nội dung đôi',
       );
+      await tickRankingConsent(tester);
       await tapCentered(tester, submit);
       await tester.pump();
 
@@ -275,7 +277,7 @@ void main() {
         teamName,
       );
       await tester.pump();
-      await tester.tap(find.text('Mời sau').first);
+      await tapCentered(tester, find.text('Mời sau'));
       await tester.pump();
       final partnerField = find.widgetWithText(
         TextField,
@@ -294,9 +296,9 @@ void main() {
         find.text(partnerName),
         what: 'kết quả tìm đồng đội theo email vừa tạo',
       );
-      await tester.tap(find.text(partnerName).first);
+      await tapCentered(tester, find.text(partnerName));
       await tester.pump();
-      await tester.tap(find.text('Tiếp theo').first);
+      await tapCentered(tester, find.text('Tiếp theo'));
       await tester.pump();
 
       // 4. Bước 2 "Mời đồng đội": app hiện link mời và nút sao chép (sau khi POST /register thành công).
@@ -348,5 +350,21 @@ Future<void> preparePlayerProfile(BackendApi api) async {
     token: token,
     phoneNumber: kPlayerPhone,
     gender: 'MALE',
+  );
+}
+
+/// Tick ô đồng ý xếp hạng. Giải có xếp hạng bắt buộc đồng ý; backend trả 400 nếu thiếu.
+Future<void> tickRankingConsent(WidgetTester tester) async {
+  final tile = find.widgetWithText(
+    CheckboxListTile,
+    'Đồng ý hiển thị kết quả và điểm ELO trên bảng xếp hạng',
+  );
+  await pumpUntilFound(tester, tile, what: 'ô đồng ý xếp hạng (giải có xếp hạng)');
+  await tapCentered(tester, tile);
+  await tester.pump();
+  expect(
+    tester.widget<CheckboxListTile>(tile).value,
+    isTrue,
+    reason: 'Ô đồng ý xếp hạng phải được tick trước khi gửi đăng ký',
   );
 }
