@@ -200,14 +200,10 @@ void main() {
         find.text('Lưu & Bắt đầu giải'),
         what: 'nút Lưu & Bắt đầu giải sau khi bốc thăm',
       );
-      // SnackBar nổi trên đáy (ví dụ thông báo từ bước thêm khách) có thể che nút;
-      // chờ nó tự ẩn rồi mới chạm, như người dùng.
-      await pumpUntilCondition(
-        tester,
-        () => find.byType(SnackBar).evaluate().isEmpty,
-        timeout: const Duration(seconds: 15),
-        what: 'SnackBar cũ đã ẩn khỏi đáy màn bốc thăm',
-      );
+      // Thông báo nổi (SnackBar) từ bước trước có thể che nút ở đáy màn. Xóa hàng đợi
+      // để nút nhận chạm như người dùng bấm sau khi thông báo ẩn. Kết quả lưu được kiểm trên Backend.
+      ScaffoldMessenger.of(tester.element(find.byType(Scaffold).first)).clearSnackBars();
+      await tester.pump(const Duration(milliseconds: 500));
       await tapCentered(tester, find.text('Lưu & Bắt đầu giải'));
       await tester.pump();
 
