@@ -122,5 +122,11 @@ ios/Flutter/ephemeral/
 
 # Integration Tests & Reports
 test_reports/
+# Bộ integration_test cũ chỉ có trên máy (trước khi có job app-e2e), chưa chạy trên cloud: không theo dõi.
+# Test được theo dõi: smoke/auth_flow/organizer_flow/tournament_player_flow + support/.
+integration_test/README.md
+integration_test/flow_*_test.dart
+integration_test/helpers/
+integration_test/tournament_management_hub_smoke_test.dart
 .codex-runtime*
 .worktrees/
