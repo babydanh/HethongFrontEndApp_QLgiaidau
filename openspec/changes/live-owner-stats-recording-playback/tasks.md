@@ -15,6 +15,6 @@
 
 ## 3. Kiểm tra
 
-- [x] 3.1 Test: formatter huy hiệu; repository stream-info; repository playlist; bộ điều phối; widget huy hiệu (chủ giải thấy, người xem không); widget trình phát bản ghi. Đã viết: 7 file test mới, 2 file test cũ có sửa (`live_score_video_panel_test.dart`, `tournament_management_camera_catalog_test.dart`). CHƯA chạy được, xem 3.2.
-- [ ] 3.2 `flutter analyze --no-pub` các thư mục đã sửa; `flutter test --no-pub` các test mới và 3 test cũ. Đã chạy `flutter analyze --no-pub` trên 23 file đã sửa: No issues found (exit 0). CHƯA chạy `flutter test`: worktree thiếu `.env` (asset khai báo trong pubspec), không tạo `.env` theo quy tắc.
+- [x] 3.1 Test: formatter huy hiệu; repository stream-info; repository playlist; bộ điều phối; widget huy hiệu (chủ giải thấy, người xem không); widget trình phát bản ghi. Đã viết: 7 file test mới, 2 file test cũ có sửa (`live_score_video_panel_test.dart`, `tournament_management_camera_catalog_test.dart`). Đã chạy đạt, xem 3.2.
+- [x] 3.2 `flutter analyze --no-pub` các thư mục đã sửa; `flutter test --no-pub` các test mới và 3 test cũ. Kết quả thật: `flutter test --no-pub` (11 file, gồm test mới và test cũ liên quan) → All tests passed, 54/54, exit 0; `flutter analyze --no-pub` 12 file đã sửa lượt này → No issues found, exit 0; 23 file ở lượt trước → No issues found. Ghi chú: ở 390 px, tiêu đề app bar tràn 4 px có sẵn ở HEAD (`live_score_screen.dart`, chưa sửa), test panel dùng 412×915.
 - [x] 3.3 `openspec validate live-owner-stats-recording-playback --strict`: valid (exit 0).

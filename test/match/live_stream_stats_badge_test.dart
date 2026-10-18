@@ -68,6 +68,8 @@ Future<void> _pump(
   );
   await tester.pump();
   await tester.pump();
+  // Request FPS bị từ chối qua Timer của Dio: pump thêm để Timer đó chạy hết.
+  await tester.pump(const Duration(seconds: 1));
 }
 
 void main() {

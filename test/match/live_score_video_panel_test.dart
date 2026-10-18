@@ -101,6 +101,12 @@ Future<void> _pumpLiveScore(
   UserProfile? profile,
   Tournament? tournament,
 }) async {
+  // Kích thước Android thường gặp. Ở 390 px, tiêu đề app bar của màn có sẵn tràn
+  // 4 px (Row tiêu đề, live_score_screen.dart), không liên quan huy hiệu; chưa sửa.
+  tester.view.physicalSize = const Size(412, 915);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -139,6 +145,8 @@ Future<void> _pumpLiveScore(
   // Không dùng pumpAndSettle: _livePulseCtrl lặp vô hạn.
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
+  // Request FPS của huy hiệu bị từ chối qua Timer của Dio: pump thêm để Timer đó chạy hết.
+  await tester.pump(const Duration(seconds: 1));
 }
 
 /// Khung video là Stack gần nhất chứa LiveVideoBox. Đếm icon chỉ trong Stack

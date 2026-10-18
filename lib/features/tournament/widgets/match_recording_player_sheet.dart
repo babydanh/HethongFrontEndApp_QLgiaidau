@@ -234,7 +234,9 @@ class _MatchRecordingPlayerSheetState
       await controller.initialize();
       await controller.setLooping(false);
     } on Object {
-      await controller.dispose();
+      // dispose() của video_player chờ initialize xong; khi create() đã lỗi thì
+      // future đó không bao giờ hoàn thành, nên không await để còn đánh dấu lỗi.
+      unawaited(controller.dispose());
       if (mounted && identical(plan, _plan)) {
         plan.markFailed(index);
         setState(() {});
