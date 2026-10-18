@@ -23,17 +23,18 @@
   - upload artifact `app-e2e-report`.
 
   Xong khi: chạy một test khói (mở app, thấy màn đăng nhập) và có kết quả.
-  Bằng chứng: run `39109977504` (ref `8b166f5b`) đã chạy job; smoke_test PASS trước khi auth chạy.
+  Bằng chứng: run `39109977504` (ref `8b166f5b`) đã chạy job; smoke_test PASS trước khi auth chạy. Xác nhận lại trên head app `606a9506`: run `39129778085` job `success`, bước 1–15 đều `success` (gồm 13a, 13b, 13c). Bước 13a lưu cache NDK không lưu được, xem `docs/README.md`.
 - [x] 3.2 `cloud-test-runner.py run --target app-e2e --app-ref <nhánh> [--backend-ref] [--specs integration_test/a_test.dart ...] [--seed data]`. Cập nhật skill `cloud-test-runner`. Xong khi: lệnh dispatch được và in tóm tắt. Bằng chứng: dispatch và tóm tắt in được ở run `39113409722` (bị hủy tay) và `39113523342` (tóm tắt `== Job: ... E2E Flutter App`, `3 passed, 3 failed`, exit 1). Skill: `~/.omp` commit `4799714` (lệnh hủy run `gh run cancel`, cảnh báo run hủy tay bị phân loại HẠ TẦNG).
 
 ## 4. Kịch bản
 
 - [x] 4.1 `integration_test/auth_flow_test.dart`: đăng nhập VĐV và BTC bằng form. Xong khi: xanh trên cloud. Bằng chứng: run `39111478956` (ref `46c2d691`), auth_flow_test kết thúc `+3` không lỗi (VĐV viewer và BTC organizer đều PASS, log dòng 3577). Lần trước run `39109977504` cũng PASS hai ca này.
-- [ ] 4.2 `integration_test/tournament_player_flow_test.dart`: danh sách → chi tiết → đăng ký đơn → được duyệt; đăng ký đôi + mời đồng đội; xem nhánh và lịch; nhập tỉ số một trận; nhà vô địch. Xong khi: chạy trên cloud, mỗi ca đỏ có nguyên nhân rõ (lỗi test thì sửa, tối đa 3 vòng; lỗi app thì ghi lại).
+- [x] 4.2 `integration_test/tournament_player_flow_test.dart`: danh sách → chi tiết → đăng ký đơn → được duyệt; đăng ký đôi + mời đồng đội; xem nhánh và lịch; nhập tỉ số một trận; nhà vô địch. Xong khi: chạy trên cloud, mỗi ca đỏ có nguyên nhân rõ (lỗi test thì sửa, tối đa 3 vòng; lỗi app thì ghi lại).
   - Mục "nhập tỉ số một trận": app KHÔNG có màn chấm cho VĐV. Màn chấm mở khi `auth.canScore` (ADMIN, REFEREE, ORGANIZER: `lib/providers/auth_provider.dart:16,56`) hoặc khi giải là Super Lite và đã đăng nhập (`lib/features/match/screens/live_score_screen.dart:639-642`). Ca VĐV chấm trận qua API (`tournament_player_flow_test.dart:155`). Chấm trong app hiện không có kịch bản E2E nào (task 4.3 không có bước chấm). Không thêm tính năng.
-- [ ] 4.3 `integration_test/organizer_flow_test.dart`: BTC tạo giải nhanh trên app, mở trang quản lý; thêm duyệt, ghép, tạo nhánh nếu task 1.2 thấy app có. Xong khi: như 4.2.
+  - Bằng chứng: run `39129778085` (head app `606a9506`, orchestrator `932f3a6`): `+6: All tests passed!`, không có bộ đếm lỗi `-N` trong log. Cùng head, chỉ file player: run `39128960821` `+2: All tests passed!`. Ca đỏ đã gặp và nguyên nhân: F11–F15 trong `findings.md`. Lỗi app đã sửa ở các change `fix-register-consent-listtile`, `fix-doubles-partner-listtile`, `fix-register-consent-gate-source`, `fix-register-success-nested-scaffold`.
+- [x] 4.3 `integration_test/organizer_flow_test.dart`: BTC tạo giải nhanh trên app, mở trang quản lý; thêm duyệt, ghép, tạo nhánh nếu task 1.2 thấy app có. Xong khi: như 4.2. Bằng chứng: run `39129778085` (head app `606a9506`): log có dòng `+5` rồi `+6` cho "BTC tạo giải nhanh…" trong `organizer_flow_test.dart` không kèm lỗi; không có bộ đếm lỗi `-N` nào; `+6: All tests passed!`.
 
 ## 5. Kiểm cuối
 
-- [ ] 5.1 `docs/README.md`: thêm lệnh chạy E2E App và kết quả thật. Xong khi: có lệnh và run id.
+- [x] 5.1 `docs/README.md`: thêm lệnh chạy E2E App và kết quả thật. Xong khi: có lệnh và run id. Bằng chứng: mục `## E2E App (integration_test)` trong `docs/README.md` có lệnh và run `39129778085` (`--target app-e2e`, đầy đủ) và `39129778378` (`--target app`, cùng head app `606a9506`).
 - [x] 5.2 `flutter analyze --no-pub integration_test` sạch và `flutter test --no-pub` các test widget liên quan không đỏ thêm (chạy trên cloud target `app`). Xong khi: có run id. Bằng chứng: run `39111514104` (target `app`, ref `46c2d691`): job "Test Flutter App (Dart Analyze & Widget)" success; step `13c` "Phân tích tĩnh integration_test" của run `39111478956` success.

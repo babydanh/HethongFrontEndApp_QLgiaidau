@@ -118,12 +118,12 @@ Ghi lại các lỗi của app (không phải lỗi test) do `integration_test` 
 - **Sửa (lỗi test)**: bỏ tick "Đôi linh hoạt" trước khi thêm nội dung đơn, và khẳng định giải còn đúng một nội dung (`hasLength(1)`).
 - **Kết quả**: run `39126812760`, ca BTC pass (log dòng 352, `+2 -1`).
 
-## F15. Tab bảng đấu trên trang chi tiết là "Bảng đấu", không phải "Bảng thi đấu" (lỗi test, đã sửa ở `e90dccad`)
+## F15. Tab bảng đấu trên trang chi tiết là "Bảng đấu", không phải "Bảng thi đấu" (lỗi test, đã sửa ở `e90dccad` và `606a9506`)
 
 - **Tái hiện**: run `39126812760` (ca đơn): "Hết 30s mà chưa thấy: tab Bảng thi đấu trên trang chi tiết. Chữ đang hiện: Tổng quan | Giới thiệu | Danh sách đội | Bảng đấu | Lịch thi đấu | ★ ELO ...".
 - **Nguyên nhân (đọc code)**: tab hiển thị là chuỗi cứng "Bảng đấu" (`tournament_intro_screen.dart:752`). Test dùng "Bảng thi đấu" (`app_vi.arb:437`, `tabBracket`), không khớp nhãn đang hiển thị. Ghi nhận, chưa sửa: nhãn tab là chuỗi cứng, không qua l10n. Tab "Kết quả" chỉ hiện khi có trận hoàn thành (`tournament_intro_screen.dart:696-697`), nên bước 8 của test giữ nguyên.
 - **Sửa (lỗi test)**: đổi nhãn thành "Bảng đấu" và bấm tab bằng `tapCentered`.
-- **Kết quả**: chờ run `39127908361`.
+- **Kết quả**: run `39127908361` (ca đơn) qua được bước 6 nhưng lỗi ở bước 8: tab "Kết quả" nằm ngoài màn hình vì `TabBar` cuộn ngang, nên `tap()` không chạm được và nhà vô địch không hiện. Không phải lỗi app. Sửa ở test bằng `tapCentered` (`606a9506`). Sau sửa: run `39128960821` (chỉ file player) `+2: All tests passed!`; run `39129778085` (đầy đủ) `+6: All tests passed!`.
 
 ## Lỗi Backend phát hiện (chỉ ghi lại, không sửa Backend)
 

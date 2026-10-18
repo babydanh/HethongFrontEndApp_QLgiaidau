@@ -54,6 +54,11 @@ Nhãn:
 - Chạy local (cần emulator và Backend đang chạy sẵn): `flutter test integration_test/smoke_test.dart -d emulator-5554`. URL Backend đổi bằng `--dart-define=E2E_API_BASE_URL=...` (mặc định `http://10.0.2.2:3000/api/v1`).
 - Cleartext HTTP chỉ bật ở bản debug, tới `10.0.2.2` và `localhost` (`android/app/src/debug/res/xml/network_security_config.xml`). Bản release không có ngoại lệ này; job CI kiểm ở bước 13b bằng manifest release đã gộp và `android/app/src/main/res/xml/network_security_config.xml`.
 - Tài khoản seed chỉ dùng cho CI (`backend_api.dart`). Kết quả từng lượt và lỗi app đã biết: `openspec/changes/app-e2e-integration/tasks.md` và `findings.md`.
+- Kết quả thật, head app `606a9506`, orchestrator `932f3a6`:
+  - `--target app-e2e` đầy đủ, run `39129778085`: job `success` 16,9 phút; `+6: All tests passed!`; bước 13a, 13b (manifest release) và 13c (phân tích tĩnh `integration_test`) đều `success`.
+  - `--target app` cùng head, run `39129778378`: job `success` 4,6 phút; `flutter analyze` không có lỗi (110 cảnh báo và 106 thông tin, không chặn vì cờ `--no-fatal-*`); `flutter test`: `1138 tests passed, 2 skipped`.
+  - Bước 13 (emulator và test) của run `39129778085`: boot emulator 105 s, `flutter test` 529 s, trong đó Gradle `assembleDebug` cộng dồn 403 s.
+  - Cache NDK/CMake (bước 10d và 13a) chưa được hưởng ở lần nào. Entry `Linux-android-ndk-cmake-c1d57…` có trên `main` (tạo 11:27:34Z, sau bước 13a của run `39122493011`), nhưng run `39128960821` và `39129778085` đều báo restore `not found` và save `Unable to reserve cache`. Bước 13a tốn 35–60 s mỗi run mà không lưu được. Nguyên nhân chưa xác định.
 
 ## Lệnh (đã chạy thật, 2026-10-15, worktree `agent-standard` từ `origin/main` `1274c57`)
 
