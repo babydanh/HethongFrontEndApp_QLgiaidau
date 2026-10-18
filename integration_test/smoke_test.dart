@@ -20,6 +20,10 @@ void main() {
       find.text('Địa chỉ Email'),
       what: 'nhãn Địa chỉ Email trên màn đăng nhập',
     );
-    expect(find.widgetWithText(TextButton, 'Đăng nhập'), findsOneWidget);
+    await pumpUntilFound(
+      tester,
+      find.widgetWithText(TextButton, 'Đăng nhập'),
+      what: 'nút Đăng nhập (TextButton) trên màn đăng nhập',
+    );
   });
 }
