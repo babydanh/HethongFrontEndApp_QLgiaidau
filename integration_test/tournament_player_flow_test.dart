@@ -215,7 +215,7 @@ void main() {
         what: 'VĐV $kPlayerEmail đã đăng nhập',
       );
 
-      // 1. Danh sách → chi tiết → Đăng ký ngay (cùng đường với ca đăng ký đơn ở trên).
+      // 1. Danh sách → chi tiết → Đăng ký (cùng đường với ca đăng ký đơn ở trên).
       final navTournaments = find.descendant(
         of: find.byType(FloatingBottomNav),
         matching: find.text('Giải đấu'),
@@ -236,12 +236,12 @@ void main() {
       await tapCentered(tester, find.text(tournamentName));
       await pumpUntilFound(
         tester,
-        find.text('Đăng ký ngay'),
-        what: 'nút Đăng ký ngay trên trang chi tiết giải đôi',
+        find.widgetWithText(FilledButton, 'Đăng ký'),
+        what: 'nút Đăng ký trên thanh đăng ký trang chi tiết giải đôi',
       );
 
       // 2. Màn đăng ký chung chuyển sang luồng đôi (app_router /register/:id/doubles).
-      await tester.tap(find.text('Đăng ký ngay').first);
+      await tester.tap(find.widgetWithText(FilledButton, 'Đăng ký').first);
       await tester.pump();
       final submit = anyTextOf(['Gửi yêu cầu tham gia', 'Xác nhận đăng ký']);
       await pumpUntilFound(
