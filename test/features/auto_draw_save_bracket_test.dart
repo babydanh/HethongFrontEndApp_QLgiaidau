@@ -55,11 +55,6 @@ void main() {
   });
 
   Future<void> pumpRouter(WidgetTester tester, GoRouter router) async {
-    // flutter_test mặc định là 800x600 ở dpr 3 (khoảng 267x200 dp): nút lưu nằm ngoài vùng, tap không trúng.
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -92,7 +87,8 @@ void main() {
     expect(find.text(l10n.autoDraw_saveStart), findsOneWidget);
 
     await tester.tap(find.text(l10n.autoDraw_saveStart));
-    await tester.pump(const Duration(seconds: 1));
+    // Sau lưu có thể pop màn: Hero của snackbar đang bay làm hiện hai bản Text. Chờ hết hoạt ảnh để còn một bản.
+    await tester.pumpAndSettle();
   }
 
   void expectSavedWithoutStatus(WidgetTester tester, AppLocalizations l10n) {
@@ -138,7 +134,7 @@ void main() {
       );
       await pumpRouter(tester, router);
       await tester.tap(find.text('mở bốc thăm'));
-      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
 
       final l10n = AppLocalizations.of(
         tester.element(find.byType(AutoDrawScreen)),
