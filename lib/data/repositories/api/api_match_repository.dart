@@ -148,6 +148,7 @@ class ApiMatchRepository implements IMatchRepository {
 
   Future<List<MatchModel>> _getMatchPages(
     Map<String, dynamic> baseQuery, {
+    String path = '/matches',
     bool requireComplete = false,
   }) async {
     const pageSize = 100;
@@ -158,7 +159,7 @@ class ApiMatchRepository implements IMatchRepository {
       final query = <String, dynamic>{...baseQuery, 'limit': pageSize};
       if (cursor != null) query['cursor'] = cursor;
       final response = await _dioClient.dio.get(
-        '/matches',
+        path,
         queryParameters: query,
       );
       if (response.statusCode != 200) {
@@ -221,7 +222,40 @@ class ApiMatchRepository implements IMatchRepository {
     String tournamentId, {
     String? divisionId,
   }) {
-    final cacheKey = '$tournamentId-${divisionId ?? 'all'}';
+    return _watchTournamentMatches(
+      tournamentId,
+      cacheKey: '$tournamentId-${divisionId ?? 'all'}',
+      load: (forceRefresh) => _fetchAllByTournament(
+        tournamentId,
+        divisionId: divisionId,
+        forceRefresh: forceRefresh,
+        usePublicSnapshot: true,
+      ),
+    );
+  }
+
+  @override
+  Stream<List<MatchModel>> watchManagedByTournament(
+    String tournamentId, {
+    String? divisionId,
+  }) {
+    return _watchTournamentMatches(
+      tournamentId,
+      cacheKey: 'manage:$tournamentId-${divisionId ?? 'all'}',
+      load: (_) => _fetchManagedByTournament(
+        tournamentId,
+        divisionId: divisionId,
+      ),
+    );
+  }
+
+  /// Stream trận dùng chung cho nguồn công khai và nguồn quản lý: socket, tải
+  /// lại định kỳ, cache theo [cacheKey]; lỗi thì giữ dữ liệu đã lưu.
+  Stream<List<MatchModel>> _watchTournamentMatches(
+    String tournamentId, {
+    required String cacheKey,
+    required Future<List<MatchModel>> Function(bool forceRefresh) load,
+  }) {
     late StreamController<List<MatchModel>> controller;
     StreamSubscription? socketSub;
     StreamSubscription? scoreSub;
@@ -233,12 +267,7 @@ class ApiMatchRepository implements IMatchRepository {
       if (refreshing) return;
       refreshing = true;
       try {
-        final updated = await _fetchAllByTournament(
-          tournamentId,
-          divisionId: divisionId,
-          forceRefresh: forceRefresh,
-          usePublicSnapshot: true,
-        );
+        final updated = await load(forceRefresh);
         _matchesCache[cacheKey] = updated;
         if (!controller.isClosed) controller.add(updated);
       } catch (error, stack) {
@@ -1365,6 +1394,18 @@ class ApiMatchRepository implements IMatchRepository {
     final matches = await _getMatchPages(queryParameters);
     _matchesCache['$tournamentId-${divisionId ?? 'all'}'] = matches;
     return matches;
+  }
+
+  Future<List<MatchModel>> _fetchManagedByTournament(
+    String tournamentId, {
+    String? divisionId,
+  }) {
+    final queryParameters = <String, dynamic>{'activeStageOnly': true};
+    if (divisionId != null) queryParameters['divisionId'] = divisionId;
+    return _getMatchPages(
+      queryParameters,
+      path: '/tournaments/$tournamentId/manage/matches',
+    );
   }
 
   @override

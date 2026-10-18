@@ -198,6 +198,20 @@ final matchesWithDivisionProvider =
           );
     });
 
+/// Trận cho màn quản lý của BTC, lấy từ route quản lý (không dùng nguồn công khai).
+final managedMatchesWithDivisionProvider =
+    StreamProvider.family<
+      List<MatchModel>,
+      ({String tournamentId, String? divisionId})
+    >((ref, params) {
+      return ref
+          .watch(matchRepositoryProvider)
+          .watchManagedByTournament(
+            params.tournamentId,
+            divisionId: params.divisionId,
+          );
+    });
+
 final liveMatchesProvider = StreamProvider.family<List<MatchModel>, String>((
   ref,
   tournamentId,

@@ -44,6 +44,7 @@ class MatchController {
     if (divisionId == null || divisionId.isEmpty) return;
     final params = (tournamentId: tournamentId, divisionId: divisionId);
     ref.invalidate(matchesWithDivisionProvider(params));
+    ref.invalidate(managedMatchesWithDivisionProvider(params));
     ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
     ref.invalidate(bracketMatchesWithDivisionProvider(params));
   }

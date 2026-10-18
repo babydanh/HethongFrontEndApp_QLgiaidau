@@ -210,7 +210,7 @@ Widget _app(
           },
         ],
       ),
-      matchesWithDivisionProvider((
+      managedMatchesWithDivisionProvider((
         tournamentId: _tournamentId,
         divisionId: _divisionId,
       )).overrideWith((ref) => Stream.value(const [])),

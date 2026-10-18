@@ -144,7 +144,7 @@ class _TournamentManagementCameraSectionState
       // Which camera a match ends up on is the server's call, so both lists
       // are re-read instead of patched locally.
       ref.invalidate(
-        matchesWithDivisionProvider((
+        managedMatchesWithDivisionProvider((
           tournamentId: widget.tournamentId,
           divisionId: widget.divisionId,
         )),
@@ -218,7 +218,7 @@ class _TournamentManagementCameraSectionState
           snapshot.data ?? const <Map<String, dynamic>>[],
         );
         final matchesAsync = ref.watch(
-          matchesWithDivisionProvider((
+          managedMatchesWithDivisionProvider((
             tournamentId: widget.tournamentId,
             divisionId: widget.divisionId,
           )),

@@ -973,6 +973,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
       ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
     } else {
       ref.invalidate(matchesWithDivisionProvider(params));
+      ref.invalidate(managedMatchesWithDivisionProvider(params));
     }
   }
 

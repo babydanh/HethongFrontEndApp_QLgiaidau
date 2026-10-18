@@ -152,14 +152,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               return NotFoundView(onGoHome: () => context.go('/home'));
             }
 
-            // ─── ACCESS GATE: Giải nội bộ CLB / Giải siêu lite / Private ───
+            // ─── ACCESS GATE: chỉ giải PRIVATE mới chặn người ngoài ───
             final isCreator = tournament.creatorId == currentUserId;
-            final isClubRestricted =
-                tournament.isClubTournament ||
-                tournament.isClubLite ||
-                (tournament.communityId != null &&
-                    tournament.communityId!.isNotEmpty) ||
-                tournament.visibility == 'PRIVATE';
+            final isClubRestricted = tournament.visibility == 'PRIVATE';
 
             if (isClubRestricted &&
                 activeInvite == null &&
@@ -499,13 +494,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final activeInvite = _customInviteCode ?? widget.inviteCode;
     final hasInvite = activeInvite != null && activeInvite.trim().isNotEmpty;
 
-    // ─── ACCESS GATE: Giải nội bộ CLB / Giải siêu lite / Private ───
-    final isClubRestricted =
-        tournament.isClubTournament ||
-        tournament.isClubLite ||
-        (tournament.communityId != null &&
-            tournament.communityId!.isNotEmpty) ||
-        tournament.visibility == 'PRIVATE';
+    // ─── ACCESS GATE: chỉ giải PRIVATE mới chặn người ngoài ───
+    final isClubRestricted = tournament.visibility == 'PRIVATE';
 
     if (isClubRestricted && !isCreator && !isAdmin && !hasInvite) {
       final membership =

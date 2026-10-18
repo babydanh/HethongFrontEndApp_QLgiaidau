@@ -898,6 +898,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     liteBracketMatchesWithDivisionProvider(params),
                   );
                   ref.invalidate(matchesWithDivisionProvider(params));
+                  ref.invalidate(managedMatchesWithDivisionProvider(params));
                   if (mounted) setState(() {});
                 },
                 icon: const Icon(Icons.account_tree_rounded, size: 14),

@@ -1,11 +1,11 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_schedule_court_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -15,18 +15,24 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _tournamentId = 't-1';
 const _divisionId = 'd-1';
+const _secondDivisionId = 'd-2';
 
 class _VenuesRepository implements TournamentManagementRepository {
+  const _VenuesRepository({this.withCourts = true});
+
+  final bool withCourts;
+
   @override
   Future<List<Map<String, dynamic>>> getVenues(String id) async => [
-    {
-      'id': 'venue-1',
-      'name': 'Nhà thi đấu',
-      'courts': [
-        {'id': 'court-1', 'name': 'Sân 1'},
-        {'id': 'court-2', 'name': 'Sân 2'},
-      ],
-    },
+    if (withCourts)
+      {
+        'id': 'venue-1',
+        'name': 'Nhà thi đấu',
+        'courts': [
+          {'id': 'court-1', 'name': 'Sân 1'},
+          {'id': 'court-2', 'name': 'Sân 2'},
+        ],
+      },
   ];
 
   @override
@@ -58,9 +64,25 @@ MatchModel _match() => MatchModel.fromJson({
   'scheduledAt': DateTime(2026, 10, 24, 7, 30).toIso8601String(),
 }, 'm-1');
 
+MatchModel _scheduledMatch() => MatchModel.fromJson({
+  'id': 'm-2',
+  'tournamentId': _tournamentId,
+  'divisionId': _divisionId,
+  'round': 1,
+  'matchNumber': 2,
+  'status': 'SCHEDULED',
+  'team1Name': 'Đội A',
+  'team2Name': 'Đội B',
+  'courtName': 'Sân 1',
+  'scheduledAt': DateTime(2026, 10, 24, 8, 0).toIso8601String(),
+}, 'm-2');
+
 Future<void> _pump(
   WidgetTester tester, {
   required OrganizerOpsMatchesView matchesView,
+  List<MatchModel>? matches,
+  List<String> divisionIds = const [_divisionId],
+  bool withCourts = true,
 }) async {
   tester.view.physicalSize = const Size(720, 1200);
   tester.view.devicePixelRatio = 1;
@@ -68,6 +90,7 @@ Future<void> _pump(
   addTearDown(tester.view.resetDevicePixelRatio);
 
   final tournament = _tournament();
+  final shownMatches = matches ?? [_match()];
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -76,25 +99,32 @@ Future<void> _pump(
         ).overrideWith((ref) => Stream<Tournament?>.value(tournament)),
         tournamentDivisionsProvider(_tournamentId).overrideWith(
           (ref) async => [
-            {'id': _divisionId, 'name': 'Open', 'matchType': 'DOUBLES'},
+            for (final id in divisionIds)
+              {
+                'id': id,
+                'name': id == _divisionId ? 'Open' : 'Youth',
+                'matchType': 'DOUBLES',
+              },
           ],
         ),
-        matchesWithDivisionProvider((
-          tournamentId: _tournamentId,
-          divisionId: _divisionId,
-        )).overrideWith((ref) => Stream.value([_match()])),
-        tournamentManagementRepositoryProvider.overrideWithValue(
-          _VenuesRepository(),
-        ),
-        organizerOpsReadModelProvider((
-          tournamentId: _tournamentId,
-          divisionId: _divisionId,
-        )).overrideWith(
-          (ref) async => const OrganizerOpsReadModel(
-            participants: [],
-            referees: [],
-            auditEntries: [],
+        for (final id in divisionIds) ...[
+          managedMatchesWithDivisionProvider((
+            tournamentId: _tournamentId,
+            divisionId: id,
+          )).overrideWith((ref) => Stream.value(shownMatches)),
+          organizerOpsReadModelProvider((
+            tournamentId: _tournamentId,
+            divisionId: id,
+          )).overrideWith(
+            (ref) async => const OrganizerOpsReadModel(
+              participants: [],
+              referees: [],
+              auditEntries: [],
+            ),
           ),
+        ],
+        tournamentManagementRepositoryProvider.overrideWithValue(
+          _VenuesRepository(withCourts: withCourts),
         ),
       ],
       child: MaterialApp(
@@ -142,5 +172,78 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('ops-matches-view-grid')));
     await tester.pumpAndSettle();
     expect(find.byType(ScheduleGrid), findsOneWidget);
+  });
+
+  testWidgets('grid keeps the court grid and division picker with no matches', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      matchesView: OrganizerOpsMatchesView.grid,
+      matches: const [],
+      divisionIds: const [_divisionId, _secondDivisionId],
+    );
+
+    expect(find.byType(TournamentScheduleCourtGrid), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('schedule-division-dropdown')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('list keeps the empty notice when there are no matches', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      matchesView: OrganizerOpsMatchesView.list,
+      matches: const [],
+    );
+
+    expect(find.byType(TournamentScheduleCourtGrid), findsNothing);
+    expect(find.byIcon(Icons.sports_score_outlined), findsOneWidget);
+  });
+
+  testWidgets('no courts: division picker sits above the notice and changes division', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      matchesView: OrganizerOpsMatchesView.grid,
+      matches: const [],
+      divisionIds: const [_divisionId, _secondDivisionId],
+      withCourts: false,
+    );
+
+    expect(find.byIcon(Icons.stadium_outlined), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('schedule-division-dropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Youth').last);
+    await tester.pumpAndSettle();
+
+    final dropdown = tester.widget<DropdownButton<String>>(
+      find.byKey(const ValueKey('schedule-division-dropdown')),
+    );
+    expect(dropdown.value, _secondDivisionId);
+  });
+
+  testWidgets('grid shows unplayed matches and list keeps the all filter', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      matchesView: OrganizerOpsMatchesView.list,
+      matches: [_scheduledMatch()],
+    );
+    expect(find.textContaining('Đội A'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('ops-matches-view-grid')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Đội A'), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('ops-matches-view-list')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Đội A'), findsWidgets);
   });
 }

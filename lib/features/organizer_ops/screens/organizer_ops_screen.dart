@@ -147,7 +147,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
             if (_selectedDivisionId != null) {
               ref.invalidate(
-                matchesWithDivisionProvider((
+                managedMatchesWithDivisionProvider((
                   tournamentId: widget.tournamentId,
                   divisionId: _selectedDivisionId,
                 )),
@@ -212,7 +212,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             (division) => division.id == selectedDivisionId,
           );
           final matchesAsync = ref.watch(
-            matchesWithDivisionProvider((
+            managedMatchesWithDivisionProvider((
               tournamentId: widget.tournamentId,
               divisionId: selectedDivisionId,
             )),
@@ -229,7 +229,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               ref.invalidate(tournamentProvider(widget.tournamentId));
               ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
               ref.invalidate(
-                matchesWithDivisionProvider((
+                managedMatchesWithDivisionProvider((
                   tournamentId: widget.tournamentId,
                   divisionId: selectedDivisionId,
                 )),
@@ -310,7 +310,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                     onFilterChanged: (value) =>
                         setState(() => _opsMatchFilter = value),
                     onRetry: () => ref.invalidate(
-                      matchesWithDivisionProvider((
+                      managedMatchesWithDivisionProvider((
                         tournamentId: widget.tournamentId,
                         divisionId: selectedDivisionId,
                       )),
@@ -741,7 +741,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       message: isGrid ? l10n.tournamentManagementSchedule : l10n.opsMatches,
       child: IconButton(
         key: ValueKey('ops-matches-view-${view.name}'),
-        onPressed: () => setState(() => _matchesView = view),
+        onPressed: () => setState(() {
+          if (view == OrganizerOpsMatchesView.grid &&
+              _matchesView != OrganizerOpsMatchesView.grid) {
+            _opsMatchFilter = 'all';
+          }
+          _matchesView = view;
+        }),
         iconSize: 18,
         visualDensity: VisualDensity.compact,
         style: IconButton.styleFrom(
@@ -815,7 +821,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       _showScheduleMessage(messenger, l10n.scheduleQuickServerMoved(1));
     }
     ref.invalidate(
-      matchesWithDivisionProvider((
+      managedMatchesWithDivisionProvider((
         tournamentId: widget.tournamentId,
         divisionId: divisionId,
       )),
@@ -921,7 +927,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           '${l10n.tournamentManagementActionError} ($i/$count)',
         );
         ref.invalidate(
-          matchesWithDivisionProvider((
+          managedMatchesWithDivisionProvider((
             tournamentId: widget.tournamentId,
             divisionId: divisionId,
           )),
@@ -941,7 +947,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       _showScheduleMessage(messenger, l10n.scheduleQuickServerMoved(moved));
     }
     ref.invalidate(
-      matchesWithDivisionProvider((
+      managedMatchesWithDivisionProvider((
         tournamentId: widget.tournamentId,
         divisionId: divisionId,
       )),
@@ -1061,7 +1067,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       write: _writeSlot,
     );
     if (!mounted) return;
-    ref.invalidate(matchesWithDivisionProvider);
+    ref.invalidate(managedMatchesWithDivisionProvider);
     final outcome = switch (report.result) {
       ScheduleSwapResult.swapped => l10n.scheduleQuickSwapDone,
       ScheduleSwapResult.aborted => l10n.scheduleQuickSwapAborted,
@@ -1121,7 +1127,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             );
       } catch (_) {
         if (!mounted) return;
-        ref.invalidate(matchesWithDivisionProvider);
+        ref.invalidate(managedMatchesWithDivisionProvider);
         _showScheduleMessage(
           messenger,
           l10n.scheduleQuickBulkFailed(done, editable.length),
@@ -1131,7 +1137,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       done++;
     }
     if (!mounted) return;
-    ref.invalidate(matchesWithDivisionProvider);
+    ref.invalidate(managedMatchesWithDivisionProvider);
     _showScheduleMessage(messenger, l10n.scheduleQuickBulkDone(done));
   }
 
@@ -1181,7 +1187,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       final saved = await _writeSlot(match.id, slot);
       if (!mounted) return;
       if (saved == null) {
-        ref.invalidate(matchesWithDivisionProvider);
+        ref.invalidate(managedMatchesWithDivisionProvider);
         _showScheduleMessage(
           messenger,
           l10n.scheduleQuickBulkFailed(done, editable.length),
@@ -1198,7 +1204,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       }
     }
     if (!mounted) return;
-    ref.invalidate(matchesWithDivisionProvider);
+    ref.invalidate(managedMatchesWithDivisionProvider);
     final summary = l10n.scheduleQuickBulkDone(done);
     _showScheduleMessage(
       messenger,
@@ -1581,7 +1587,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final waiting = <MatchModel>[];
     for (final divisionId in divisionIds) {
       final matches = await ref.read(
-        matchesWithDivisionProvider((
+        managedMatchesWithDivisionProvider((
           tournamentId: widget.tournamentId,
           divisionId: divisionId,
         )).future,
@@ -1663,7 +1669,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       _draftSkipped = 0;
       _draftProgress = null;
     });
-    ref.invalidate(matchesWithDivisionProvider);
+    ref.invalidate(managedMatchesWithDivisionProvider);
     if (failed) {
       _showScheduleMessage(
         messenger,
@@ -1833,7 +1839,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         ),
       ),
       data: (matches) {
-        if (matches.isEmpty) {
+        if (matches.isEmpty &&
+            _matchesView != OrganizerOpsMatchesView.grid) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
               icon: Icons.sports_score_outlined,
@@ -1980,53 +1987,43 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   selectedFilter,
                   onFilterChanged,
                 ),
-                if (visible.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: _OpsReadOnlyNotice(
-                      icon: Icons.filter_alt_off_outlined,
-                      title: l10n.opsMatches,
-                      message: l10n.opsFilteredNoMatches,
-                    ),
-                  )
-                else
-                  TournamentScheduleCourtGrid(
-                    tournamentId: widget.tournamentId,
-                    matches: visible,
-                    scheduleSettings: scheduleSettings,
-                    selectedMatchId: focusedMatchId,
-                    onTapMatch: readOnly ? null : openMatch,
-                    onScheduleDrop: readOnly ? null : dropMatch,
-                    onTapEmptyCell: readOnly ? null : emptyCellTap,
-                    onScheduleSwap: readOnly ? null : swapMatches,
-                    onAutoSchedule: readOnly ? null : openAutoSchedule,
-                    draftMatches: _draftMatches,
-                    draftSkippedCount: _draftSkipped,
-                    draftProgress: _draftProgress,
-                    onApplyDraft: readOnly ? null : applyDraft,
-                    onCancelDraft: readOnly ? null : cancelDraft,
-                    divisions: divisionOptions,
-                    selectedDivisionId: divisionId,
-                    onDivisionSelected: selectDivision,
-                    onOpenFullscreen: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => ScheduleFullscreenScreen(
-                          tournamentId: widget.tournamentId,
-                          divisionId: divisionId,
-                          scheduleSettings: scheduleSettings,
-                          divisions: divisionOptions,
-                          onDivisionSelected: selectDivision,
-                          onScheduleDrop: readOnly ? null : dropMatch,
-                          onBulkSchedule: readOnly ? null : bulkSchedule,
-                          onTapEmptyCell: readOnly ? null : emptyCellTap,
-                          onScheduleSwap: readOnly ? null : swapMatches,
-                          onBulkDuration: readOnly ? null : bulkDuration,
-                          onBulkMoveCourt: readOnly ? null : bulkMoveCourt,
-                          onTapMatch: readOnly ? null : openMatch,
-                        ),
+                TournamentScheduleCourtGrid(
+                  tournamentId: widget.tournamentId,
+                  matches: visible,
+                  scheduleSettings: scheduleSettings,
+                  selectedMatchId: focusedMatchId,
+                  onTapMatch: readOnly ? null : openMatch,
+                  onScheduleDrop: readOnly ? null : dropMatch,
+                  onTapEmptyCell: readOnly ? null : emptyCellTap,
+                  onScheduleSwap: readOnly ? null : swapMatches,
+                  onAutoSchedule: readOnly ? null : openAutoSchedule,
+                  draftMatches: _draftMatches,
+                  draftSkippedCount: _draftSkipped,
+                  draftProgress: _draftProgress,
+                  onApplyDraft: readOnly ? null : applyDraft,
+                  onCancelDraft: readOnly ? null : cancelDraft,
+                  divisions: divisionOptions,
+                  selectedDivisionId: divisionId,
+                  onDivisionSelected: selectDivision,
+                  onOpenFullscreen: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => ScheduleFullscreenScreen(
+                        tournamentId: widget.tournamentId,
+                        divisionId: divisionId,
+                        scheduleSettings: scheduleSettings,
+                        divisions: divisionOptions,
+                        onDivisionSelected: selectDivision,
+                        onScheduleDrop: readOnly ? null : dropMatch,
+                        onBulkSchedule: readOnly ? null : bulkSchedule,
+                        onTapEmptyCell: readOnly ? null : emptyCellTap,
+                        onScheduleSwap: readOnly ? null : swapMatches,
+                        onBulkDuration: readOnly ? null : bulkDuration,
+                        onBulkMoveCourt: readOnly ? null : bulkMoveCourt,
+                        onTapMatch: readOnly ? null : openMatch,
                       ),
                     ),
                   ),
+                ),
               ],
             ),
           );
@@ -2354,7 +2351,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
 
     if (confirmed == true && context.mounted) {
       ref.invalidate(
-        matchesWithDivisionProvider((
+        managedMatchesWithDivisionProvider((
           tournamentId: widget.tournamentId,
           divisionId: _selectedDivisionId,
         )),
@@ -2498,7 +2495,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                                 SnackBar(content: Text(l10n.opsSaved)),
                               );
                               ref.invalidate(
-                                matchesWithDivisionProvider((
+                                managedMatchesWithDivisionProvider((
                                   tournamentId: widget.tournamentId,
                                   divisionId: _selectedDivisionId,
                                 )),
@@ -2635,7 +2632,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               if (!sheetContext.mounted) return;
               Navigator.pop(sheetContext);
               ref.invalidate(
-                matchesWithDivisionProvider((
+                managedMatchesWithDivisionProvider((
                   tournamentId: widget.tournamentId,
                   divisionId: divisionId,
                 )),

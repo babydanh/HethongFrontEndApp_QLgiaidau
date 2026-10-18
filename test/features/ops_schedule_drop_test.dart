@@ -54,6 +54,12 @@ class _MatchRepository implements IMatchRepository {
   SchedulePlanPreview? plan;
 
   @override
+  Stream<List<MatchModel>> watchManagedByTournament(
+    String tournamentId, {
+    String? divisionId,
+  }) => Stream.value(const []);
+
+  @override
   Future<MatchScheduleSnapshot> updateSchedule(
     String tournamentId,
     String matchId, {
@@ -174,7 +180,7 @@ Future<_MatchRepository> _pump(
             {'id': _divisionId, 'name': 'Open', 'matchType': 'DOUBLES'},
           ],
         ),
-        matchesWithDivisionProvider((
+        managedMatchesWithDivisionProvider((
           tournamentId: _tournamentId,
           divisionId: _divisionId,
         )).overrideWith(

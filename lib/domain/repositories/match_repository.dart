@@ -11,6 +11,12 @@ abstract class IMatchRepository {
     String tournamentId, {
     String? divisionId,
   });
+  /// Trận cho màn quản lý của BTC, lấy từ route quản lý có đăng nhập
+  /// (`GET /tournaments/:id/manage/matches`), không dùng nguồn công khai.
+  Stream<List<MatchModel>> watchManagedByTournament(
+    String tournamentId, {
+    String? divisionId,
+  });
   Stream<List<MatchModel>> watchLive(String tournamentId);
   Stream<MatchModel?> watchMatch(String tournamentId, String matchId);
 
