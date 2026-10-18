@@ -145,16 +145,16 @@ void main() {
       container.read(routerProvider).go('/intro/$tournamentId');
       await pumpUntilFound(
         tester,
-        find.text('Bảng thi đấu'),
-        what: 'tab Bảng thi đấu trên trang chi tiết',
+        find.text('Bảng đấu'),
+        what: 'tab Bảng đấu trên trang chi tiết',
       );
-      await tester.tap(find.text('Bảng thi đấu').first);
+      await tapCentered(tester, find.text('Bảng đấu').first);
       await pumpUntilFound(
         tester,
         find.textContaining('$tag VDV'),
         what: 'tên VĐV trong bảng thi đấu',
       );
-      await tester.tap(find.text('Lịch thi đấu').first);
+      await tapCentered(tester, find.text('Lịch thi đấu').first);
       await pumpUntilFound(
         tester,
         find.textContaining('$tag VDV'),
