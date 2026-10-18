@@ -1,7 +1,7 @@
 # live-owner-stream-stats Specification
 
 ## Purpose
-Huy hiệu thông số luồng (Ping, Trễ, FPS) trên video live của App, chỉ cho chủ giải và admin.
+Huy hiệu Ping (ms) trên video live của App, chỉ cho chủ giải và admin; Ping chỉ đo với link HLS (.m3u8).
 
 ## Requirements
 
