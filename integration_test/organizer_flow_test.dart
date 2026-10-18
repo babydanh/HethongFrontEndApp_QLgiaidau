@@ -67,12 +67,14 @@ void main() {
       await tester.tap(find.text('OK').first);
       await tester.pump(const Duration(seconds: 1));
 
-      await tester.scrollUntilVisible(
-        find.widgetWithText(FilledButton, 'Tạo giải nhanh'),
-        300,
-        scrollable: find.byType(Scrollable).first,
+      // Nút gửi nằm ở thanh dưới (bottomNavigationBar, create_public_quick_tournament_screen.dart:1037-1070),
+      // nhãn thật là 'Tạo giải đấu' (không phải l10n quickCreateSubmit), luôn hiển thị nên không cần cuộn.
+      await pumpUntilFound(
+        tester,
+        find.widgetWithText(FilledButton, 'Tạo giải đấu'),
+        what: 'nút Tạo giải đấu ở thanh dưới',
       );
-      await tester.tap(find.widgetWithText(FilledButton, 'Tạo giải nhanh'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Tạo giải đấu'));
       await tester.pump();
 
       final opsAddButton = find.byKey(
