@@ -81,7 +81,10 @@ void main() {
       // 2. Đăng ký đơn trên app
       await tester.tap(find.widgetWithText(FilledButton, 'Đăng ký').first);
       await tester.pump();
-      final submit = anyTextOf(['Gửi yêu cầu tham gia', 'Xác nhận đăng ký']);
+      final submit = anyTextStartingWith([
+        'Gửi yêu cầu tham gia',
+        'Xác nhận đăng ký',
+      ]);
       await pumpUntilFound(tester, submit, what: 'nút gửi đăng ký');
       await tester.tap(submit.first);
       await tester.pump();
@@ -243,7 +246,10 @@ void main() {
       // 2. Màn đăng ký chung chuyển sang luồng đôi (app_router /register/:id/doubles).
       await tester.tap(find.widgetWithText(FilledButton, 'Đăng ký').first);
       await tester.pump();
-      final submit = anyTextOf(['Gửi yêu cầu tham gia', 'Xác nhận đăng ký']);
+      final submit = anyTextStartingWith([
+        'Gửi yêu cầu tham gia',
+        'Xác nhận đăng ký',
+      ]);
       await pumpUntilFound(
         tester,
         submit,

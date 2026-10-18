@@ -77,6 +77,15 @@ Finder anyTextOf(List<String> texts) => find.byWidgetPredicate(
   description: 'Text là một trong ${texts.join(' | ')}',
 );
 
+/// Tìm Text bắt đầu bằng một trong các tiền tố [prefixes]. Nút gửi đăng ký ghép
+/// nhãn với phí hoặc "(Miễn phí)" nên không khớp chính xác như [anyTextOf].
+Finder anyTextStartingWith(List<String> prefixes) => find.byWidgetPredicate(
+  (widget) =>
+      widget is Text &&
+      prefixes.any((prefix) => (widget.data ?? '').startsWith(prefix)),
+  description: 'Text bắt đầu bằng một trong ${prefixes.join(' | ')}',
+);
+
 /// Cuộn danh sách dọc cho tới khi thấy [text]. Lỗi nếu không thấy sau [maxScrolls] lần.
 Future<void> scrollToText(
   WidgetTester tester,
