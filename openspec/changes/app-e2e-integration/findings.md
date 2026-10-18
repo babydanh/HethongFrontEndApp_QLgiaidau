@@ -12,4 +12,4 @@ Ghi lại các lỗi của app (không phải lỗi test) do `integration_test` 
 - **Phạm vi ảnh hưởng**:
   - Màn tạo giải nhanh (`create_public_quick_tournament_screen.dart:328-330`) kiểm `userProfile.role`, không kiểm `AuthState.role`. Luồng tạo giải không bị chặn bởi lỗi này.
   - Ảnh hưởng tới `AuthState.role` (`isOrganizer`, `canScore` tại `auth_provider.dart:51-56`) chưa được kiểm trên app. [INFERENCE] các chỗ dùng `AuthState` cho quyền BTC sẽ thấy `viewer`.
-- **Trạng thái**: giữ đỏ. Task 4.1 (phần BTC) chưa tick. Sửa đề xuất: thêm nhánh `ORGANIZER` trong `_mapSessionRole`, thực hiện ở change app riêng (không thuộc change này).
+- **Trạng thái**: đã sửa ở change `fix-organizer-role-mapping`, commit `dcb750f7` (nhánh `app-e2e-integration-20261017`). `AuthNotifier.mapSessionRole` (`lib/providers/auth_provider.dart:366-376`) ưu tiên ADMIN > REFEREE > ORGANIZER. Chờ cloud xác nhận `integration_test/auth_flow_test.dart:52` xanh (task 1.3 của change đó). Task 4.1 (phần BTC) chỉ tick khi có run id.
