@@ -6,15 +6,16 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/token_manager.dart';
+import 'package:app_quanly_giaidau/core/services/socket_room_ref_counter.dart';
 
 /// Service quản lý kết nối WebSocket (socket.io) tới namespace `/live` phục vụ live scores.
 class MatchSocketService {
   static const _log = AppLogger('MatchSocketService');
   io.Socket? _socket;
-  final _joinedMatchIds = <String>{};
-  final _joinedTournamentIds = <String>{};
-  final _joinedClubSessionIds = <String>{};
-  final _joinedClubCommunityIds = <String>{};
+  final _matchRooms = SocketRoomRefCounter();
+  final _tournamentRooms = SocketRoomRefCounter();
+  final _clubSessionRooms = SocketRoomRefCounter();
+  final _clubCommunityRooms = SocketRoomRefCounter();
   final TokenManager? _tokenManager;
   Future<void>? _connectionInFlight;
   int _connectionGeneration = 0;
@@ -99,7 +100,7 @@ class MatchSocketService {
 
   Future<void> connect(String? matchId, {bool joinMatch = true}) async {
     if (joinMatch && matchId != null) {
-      _joinedMatchIds.add(matchId);
+      _matchRooms.retain(matchId);
     }
     final connectionInFlight = _connectionInFlight;
     if (connectionInFlight != null) {
@@ -111,7 +112,11 @@ class MatchSocketService {
         _joinTrackedRooms();
       } else {
         _log.info('Socket exists but disconnected. Reconnecting...');
-        _socket!.connect();
+        try {
+          _socket!.connect();
+        } catch (e, stack) {
+          _log.error('Lỗi kết nối lại match socket', e, stack);
+        }
       }
       return;
     }
@@ -257,52 +262,52 @@ class MatchSocketService {
   void join(String matchId) {
     final normalizedMatchId = matchId.trim();
     if (normalizedMatchId.isEmpty) return;
-    _joinedMatchIds.add(normalizedMatchId);
+    _matchRooms.retain(normalizedMatchId);
     if (_socket?.connected == true) {
       _socket!.emit('joinMatch', normalizedMatchId);
     }
   }
 
   void leave(String matchId) {
-    _joinedMatchIds.remove(matchId);
-    if (_socket?.connected == true) {
+    if (_matchRooms.release(matchId) && _socket?.connected == true) {
       _log.info('Leaving match $matchId');
       _socket!.emit('leaveMatch', matchId);
     }
+    _releaseIdleConnection();
   }
 
   void joinTournament(String tournamentId) {
-    _joinedTournamentIds.add(tournamentId);
+    _tournamentRooms.retain(tournamentId);
     if (_socket?.connected == true) {
       _socket!.emit('joinTournament', tournamentId);
     }
   }
 
   void leaveTournament(String tournamentId) {
-    _joinedTournamentIds.remove(tournamentId);
-    if (_socket?.connected == true) {
+    if (_tournamentRooms.release(tournamentId) && _socket?.connected == true) {
       _socket!.emit('leaveTournament', tournamentId);
     }
+    _releaseIdleConnection();
   }
 
   void joinClubMatchSession(String sessionId) {
-    _joinedClubSessionIds.add(sessionId);
+    _clubSessionRooms.retain(sessionId);
     if (_socket?.connected == true) {
       _socket!.emit('joinClubMatchSession', sessionId);
     }
   }
 
   void leaveClubMatchSession(String sessionId) {
-    _joinedClubSessionIds.remove(sessionId);
-    if (_socket?.connected == true) {
+    if (_clubSessionRooms.release(sessionId) && _socket?.connected == true) {
       _socket!.emit('leaveClubMatchSession', sessionId);
     }
+    _releaseIdleConnection();
   }
 
   void joinClubCommunity(String communityId) {
     final normalizedCommunityId = communityId.trim();
     if (normalizedCommunityId.isEmpty) return;
-    _joinedClubCommunityIds.add(normalizedCommunityId);
+    _clubCommunityRooms.retain(normalizedCommunityId);
     if (_socket?.connected == true) {
       _socket!.emit('joinClubCommunity', normalizedCommunityId);
     }
@@ -311,10 +316,11 @@ class MatchSocketService {
   void leaveClubCommunity(String communityId) {
     final normalizedCommunityId = communityId.trim();
     if (normalizedCommunityId.isEmpty) return;
-    _joinedClubCommunityIds.remove(normalizedCommunityId);
-    if (_socket?.connected == true) {
+    if (_clubCommunityRooms.release(normalizedCommunityId) &&
+        _socket?.connected == true) {
       _socket!.emit('leaveClubCommunity', normalizedCommunityId);
     }
+    _releaseIdleConnection();
   }
 
   void disconnect() {
@@ -323,28 +329,44 @@ class MatchSocketService {
     if (_socket != null) {
       _log.info('Disconnecting match socket');
       _socket!.disconnect();
-      _socket!.close();
       _socket = null;
     }
-    _joinedMatchIds.clear();
-    _joinedTournamentIds.clear();
-    _joinedClubSessionIds.clear();
-    _joinedClubCommunityIds.clear();
+    _matchRooms.clear();
+    _tournamentRooms.clear();
+    _clubSessionRooms.clear();
+    _clubCommunityRooms.clear();
+  }
+
+  /// Ngắt socket khi không còn phòng nào được giữ.
+  ///
+  /// Backend ngắt client không ở phòng nào sau 30 giây (`live-score.gateway.ts`,
+  /// `client.disconnect(true)`). Lần ngắt đó đóng cả kết nối engine.io dùng chung,
+  /// nên socket_io_client ném `WebSocketConnectionClosed` mà app không bắt được.
+  /// Không còn phòng thì không có lý do giữ socket.
+  void _releaseIdleConnection() {
+    if (_connectionInFlight != null || _socket == null) return;
+    if (!_matchRooms.isEmpty ||
+        !_tournamentRooms.isEmpty ||
+        !_clubSessionRooms.isEmpty ||
+        !_clubCommunityRooms.isEmpty) {
+      return;
+    }
+    disconnect();
   }
 
   void _joinTrackedRooms() {
     final socket = _socket;
     if (socket?.connected != true) return;
-    for (final matchId in _joinedMatchIds) {
+    for (final matchId in _matchRooms.ids) {
       socket!.emit('joinMatch', matchId);
     }
-    for (final tournamentId in _joinedTournamentIds) {
+    for (final tournamentId in _tournamentRooms.ids) {
       socket!.emit('joinTournament', tournamentId);
     }
-    for (final sessionId in _joinedClubSessionIds) {
+    for (final sessionId in _clubSessionRooms.ids) {
       socket!.emit('joinClubMatchSession', sessionId);
     }
-    for (final communityId in _joinedClubCommunityIds) {
+    for (final communityId in _clubCommunityRooms.ids) {
       socket!.emit('joinClubCommunity', communityId);
     }
   }

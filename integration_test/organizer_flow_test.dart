@@ -48,15 +48,6 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, tournamentName);
       await tester.pump();
 
-      await scrollToText(tester, 'Thời gian bắt đầu *');
-      await tester.tap(find.text('Thời gian bắt đầu *'));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn ngày (OK)');
-      await tester.tap(find.text('OK').first);
-      await tester.pump(const Duration(seconds: 1));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn giờ (OK)');
-      await tester.tap(find.text('OK').first);
-      await tester.pump(const Duration(seconds: 1));
-
       await scrollToText(tester, 'Thêm nội dung');
       await tester.tap(find.text('Thêm nội dung').first);
       await pumpUntilCondition(
@@ -65,6 +56,15 @@ void main() {
         what: 'bottom sheet thêm nội dung',
       );
       await tester.tap(find.text('Thêm nội dung').last);
+      await tester.pump(const Duration(seconds: 1));
+
+      await scrollToText(tester, 'Thời gian bắt đầu *');
+      await tester.tap(find.text('Thời gian bắt đầu *'));
+      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn ngày (OK)');
+      await tester.tap(find.text('OK').first);
+      await tester.pump(const Duration(seconds: 1));
+      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn giờ (OK)');
+      await tester.tap(find.text('OK').first);
       await tester.pump(const Duration(seconds: 1));
 
       await tester.scrollUntilVisible(

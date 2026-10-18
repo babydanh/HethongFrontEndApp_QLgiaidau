@@ -74,12 +74,12 @@ void main() {
       await tapCentered(tester, find.text(tournamentName));
       await pumpUntilFound(
         tester,
-        find.text('Đăng ký ngay'),
-        what: 'nút Đăng ký ngay trên trang chi tiết giải (đăng ký đang mở)',
+        find.widgetWithText(FilledButton, 'Đăng ký'),
+        what: 'nút Đăng ký trên thanh đăng ký trang chi tiết giải (đăng ký đang mở)',
       );
 
       // 2. Đăng ký đơn trên app
-      await tester.tap(find.text('Đăng ký ngay').first);
+      await tester.tap(find.widgetWithText(FilledButton, 'Đăng ký').first);
       await tester.pump();
       final submit = anyTextOf(['Gửi yêu cầu tham gia', 'Xác nhận đăng ký']);
       await pumpUntilFound(tester, submit, what: 'nút gửi đăng ký');
