@@ -8,15 +8,18 @@ import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_stream_stats_badge.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -61,12 +64,15 @@ MatchModel _liveMatch() => MatchModel(
 
 _MockMatchSocketService _silentSocket() {
   final socket = _MockMatchSocketService();
-  when(() => socket.connect(any(), joinMatch: any(named: 'joinMatch')))
-      .thenAnswer((_) async {});
-  when(() => socket.onCommentNew)
-      .thenAnswer((_) => Stream<Map<String, dynamic>>.empty());
-  when(() => socket.onCheerUpdate)
-      .thenAnswer((_) => Stream<Map<String, dynamic>>.empty());
+  when(
+    () => socket.connect(any(), joinMatch: any(named: 'joinMatch')),
+  ).thenAnswer((_) async {});
+  when(
+    () => socket.onCommentNew,
+  ).thenAnswer((_) => Stream<Map<String, dynamic>>.empty());
+  when(
+    () => socket.onCheerUpdate,
+  ).thenAnswer((_) => Stream<Map<String, dynamic>>.empty());
   return socket;
 }
 
@@ -92,6 +98,8 @@ DioClient _offlineDioClient() {
 Future<void> _pumpLiveScore(
   WidgetTester tester, {
   FutureOr<MatchPlaybackModel?> Function(Ref ref, String matchId)? playback,
+  UserProfile? profile,
+  Tournament? tournament,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -105,9 +113,12 @@ Future<void> _pumpLiveScore(
         scorePanelNotifierProvider.overrideWith2(_StaticScorePanelNotifier.new),
         dioClientProvider.overrideWithValue(_offlineDioClient()),
         if (playback != null) matchPlaybackProvider.overrideWith(playback),
+        if (profile != null)
+          userProfileProvider.overrideWith((ref) async => profile),
+        liveStreamPingProbeProvider.overrideWithValue((dio, url) async => null),
         viewerCountProvider.overrideWith((ref, matchId) => Stream.value(0)),
         tournamentProvider.overrideWith(
-          (ref, id) => Stream<Tournament?>.value(null),
+          (ref, id) => Stream<Tournament?>.value(tournament),
         ),
         authProvider.overrideWith(_UnauthenticatedNotifier.new),
         matchSocketServiceProvider.overrideWithValue(_silentSocket()),
@@ -173,4 +184,68 @@ void main() {
     expect(find.text(_noSignalLabel), findsOneWidget);
     _expectNoPlayIconInVideoFrame();
   });
+
+  testWidgets('chủ giải thấy huy hiệu Ping/Trễ/FPS trên khung video', (
+    tester,
+  ) async {
+    await _pumpLiveScore(
+      tester,
+      playback: (ref, matchId) => _flvPlayback(),
+      profile: const UserProfile(id: _ownerId, fullName: 'Chủ giải'),
+      tournament: _tournament(creatorId: _ownerId),
+    );
+
+    expect(find.byKey(const ValueKey('live-stream-stats')), findsOneWidget);
+  });
+
+  testWidgets('trọng tài không phải chủ giải không thấy huy hiệu', (
+    tester,
+  ) async {
+    await _pumpLiveScore(
+      tester,
+      playback: (ref, matchId) => _flvPlayback(),
+      profile: const UserProfile(
+        id: 'referee-1',
+        role: 'REFEREE',
+        roles: ['REFEREE'],
+      ),
+      tournament: _tournament(creatorId: _ownerId),
+    );
+
+    expect(find.byType(LiveVideoBox), findsOneWidget);
+    expect(find.byKey(const ValueKey('live-stream-stats')), findsNothing);
+  });
+
+  testWidgets('admin thấy huy hiệu dù không phải chủ giải', (tester) async {
+    await _pumpLiveScore(
+      tester,
+      playback: (ref, matchId) => _flvPlayback(),
+      profile: const UserProfile(
+        id: 'admin-1',
+        role: 'ADMIN',
+        roles: ['ADMIN'],
+      ),
+      tournament: _tournament(creatorId: _ownerId),
+    );
+
+    expect(find.byKey(const ValueKey('live-stream-stats')), findsOneWidget);
+  });
 }
+
+const _ownerId = 'owner-live-video';
+
+MatchPlaybackModel _flvPlayback() =>
+    MatchPlaybackModel.fromJson(<String, Object?>{
+      'matchId': _matchId,
+      'streamStatus': 'LIVE',
+      'playbackUrl': 'https://media.example.test/live/stream.flv',
+      'cameraName': 'Sân 1',
+    });
+
+Tournament _tournament({required String creatorId}) =>
+    Tournament.fromJson(<String, dynamic>{
+      'name': 'Giải thử live',
+      'sport': 'pickleball',
+      'format': 'doubles',
+      'creatorId': creatorId,
+    }, _tournamentId);

@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
@@ -2250,6 +2251,22 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
+  /// Huy hiệu Ping · Trễ · FPS chỉ cho admin và chủ giải của giải. Không dùng
+  /// `auth.canScore`: trọng tài có quyền chấm điểm nhưng không xem thông số luồng.
+  bool _canSeeStreamStats(String tournamentId) {
+    final profile = ref.watch(userProfileProvider).asData?.value;
+    if (profile == null || profile.id.isEmpty) return false;
+    if (profile.hasRole('ADMIN')) return true;
+    if (tournamentId.isEmpty) return false;
+    final creatorId = ref
+        .watch(tournamentProvider(tournamentId))
+        .value
+        ?.creatorId;
+    return creatorId != null &&
+        creatorId.isNotEmpty &&
+        creatorId == profile.id;
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  VIEWER STATE — Người xem
   // ═══════════════════════════════════════════════════════════
@@ -2289,7 +2306,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             children: [
               // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
               // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
-              LiveVideoBox(matchId: widget.matchId),
+              LiveVideoBox(
+                matchId: widget.matchId,
+                showStreamStats: _canSeeStreamStats(effectiveId),
+              ),
 
               // Bảng điểm đè khung hình, đúng bố cục web: HAI HÀNG CHỒNG ở
               // góc trên trái, mỗi hàng là [tên viết tắt | điểm nền trắng].

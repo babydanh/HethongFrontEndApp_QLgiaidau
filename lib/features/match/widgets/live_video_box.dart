@@ -27,9 +27,16 @@ final matchPlaybackProvider = FutureProvider.family<MatchPlaybackModel?, String>
 /// Không dựng URL từ stream key — luôn đọc từ `playback` của backend để khi
 /// sân đổi giao thức phát (FLV sang HLS) thì app không phải sửa.
 class LiveVideoBox extends ConsumerStatefulWidget {
-  const LiveVideoBox({super.key, required this.matchId});
+  const LiveVideoBox({
+    super.key,
+    required this.matchId,
+    this.showStreamStats = false,
+  });
 
   final String matchId;
+
+  /// Bật huy hiệu thông số luồng (chỉ owner/admin, do màn live quyết định).
+  final bool showStreamStats;
 
   @override
   ConsumerState<LiveVideoBox> createState() => _LiveVideoBoxState();
@@ -65,7 +72,12 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
     if (_url == null) {
       return const _NoSignalBox();
     }
-    return LiveVideoPlayer(url: _url!, label: label);
+    return LiveVideoPlayer(
+      url: _url!,
+      label: label,
+      matchId: widget.matchId,
+      showStreamStats: widget.showStreamStats,
+    );
   }
 }
 

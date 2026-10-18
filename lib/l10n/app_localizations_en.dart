@@ -12608,6 +12608,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String liveStreamStatsBadge(String ping, String latency, String fps) {
+    return 'Ping $ping · Buffer $latency · FPS $fps';
+  }
+
+  @override
+  String get recordingPlayDay => 'Play this day';
+
+  @override
+  String get recordingPlayerTitle => 'Recording playback';
+
+  @override
+  String get recordingPlayerLoading => 'Loading segments…';
+
+  @override
+  String get recordingPlayerLoadError => 'Could not load the segment list.';
+
+  @override
+  String get recordingPlayerOpening => 'Opening segment…';
+
+  @override
+  String get recordingPlayerEmpty => 'This day has no playback segments.';
+
+  @override
+  String get recordingPlayerAllFailed => 'No recording could be played';
+
+  @override
+  String get recordingPlayerPickSegment => 'Pick a segment to play.';
+
+  @override
+  String get recordingPlayerSegments => 'Segments';
+
+  @override
+  String get recordingPlayerSegmentFailed =>
+      'This segment could not be played and was skipped.';
+
+  @override
+  String get recordingPlayerPlay => 'Play';
+
+  @override
+  String get recordingPlayerPause => 'Pause';
+
+  @override
   String get opsSpecialOperation => 'Special operation';
 
   @override

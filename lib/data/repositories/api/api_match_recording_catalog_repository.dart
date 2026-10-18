@@ -60,4 +60,17 @@ class ApiMatchRecordingCatalogRepository
     );
     return MatchRecordingFileModel.listFromJson(_data(response));
   }
+
+  @override
+  Future<MatchRecordingPlaylist> getPlaylist(
+    String matchId, {
+    required String period,
+  }) async {
+    final response = await _dio.get(
+      '/livestream/matches/$matchId/recordings/playlist',
+      queryParameters: <String, Object?>{'period': period},
+      options: Options(extra: const <String, Object?>{'noCache': true}),
+    );
+    return MatchRecordingPlaylist.fromJson(_data(response), period: period);
+  }
 }

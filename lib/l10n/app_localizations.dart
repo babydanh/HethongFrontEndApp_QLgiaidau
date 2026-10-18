@@ -22834,6 +22834,84 @@ abstract class AppLocalizations {
   /// **'{size} byte'**
   String tournamentManagementRecordingFileSize(int size);
 
+  /// No description provided for @liveStreamStatsBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ping {ping} · Trễ {latency} · FPS {fps}'**
+  String liveStreamStatsBadge(String ping, String latency, String fps);
+
+  /// No description provided for @recordingPlayDay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát lại ngày này'**
+  String get recordingPlayDay;
+
+  /// No description provided for @recordingPlayerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát lại bản ghi'**
+  String get recordingPlayerTitle;
+
+  /// No description provided for @recordingPlayerLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách đoạn…'**
+  String get recordingPlayerLoading;
+
+  /// No description provided for @recordingPlayerLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách đoạn.'**
+  String get recordingPlayerLoadError;
+
+  /// No description provided for @recordingPlayerOpening.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở đoạn…'**
+  String get recordingPlayerOpening;
+
+  /// No description provided for @recordingPlayerEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày này không có đoạn phát lại.'**
+  String get recordingPlayerEmpty;
+
+  /// No description provided for @recordingPlayerAllFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không phát được bản ghi nào'**
+  String get recordingPlayerAllFailed;
+
+  /// No description provided for @recordingPlayerPickSegment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn một đoạn để phát.'**
+  String get recordingPlayerPickSegment;
+
+  /// No description provided for @recordingPlayerSegments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các đoạn'**
+  String get recordingPlayerSegments;
+
+  /// No description provided for @recordingPlayerSegmentFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đoạn này không phát được, đã bỏ qua.'**
+  String get recordingPlayerSegmentFailed;
+
+  /// No description provided for @recordingPlayerPlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát'**
+  String get recordingPlayerPlay;
+
+  /// No description provided for @recordingPlayerPause.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm dừng'**
+  String get recordingPlayerPause;
+
   /// No description provided for @opsSpecialOperation.
   ///
   /// In vi, this message translates to:

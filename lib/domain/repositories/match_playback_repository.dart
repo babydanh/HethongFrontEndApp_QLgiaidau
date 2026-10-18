@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_stream_info_model.dart';
 
 /// Nguồn phát trực tiếp của một trận.
 ///
@@ -10,4 +11,8 @@ abstract class IMatchPlaybackRepository {
   /// chưa gắn camera hoặc sân chưa khai URL — đó là trạng thái bình thường
   /// khi xem live, không phải lỗi.
   Future<MatchPlaybackModel> getMatchPlayback(String matchId);
+
+  /// Thông số luồng do máy media báo (FPS nguồn). Người gọi coi lỗi hoặc
+  /// `available: false` là chưa có số liệu; App không tự đoán FPS từ player.
+  Future<MatchStreamInfoModel> getMatchStreamInfo(String matchId);
 }

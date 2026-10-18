@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_recording_catalog_model.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/match_recording_player_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/match_recording_catalog_provider.dart';
 import 'package:dio/dio.dart';
@@ -342,6 +343,24 @@ class _MatchRecordingCatalogSheetState
                       );
                     },
                   ),
+                if (_selectedDay != null &&
+                    _files.isNotEmpty &&
+                    !_loadingFiles &&
+                    !_filesError) ...[
+                  const SizedBox(height: AppTheme.spacingSM),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton.icon(
+                      onPressed: () => showMatchRecordingPlayerSheet(
+                        context,
+                        matchId: widget.matchId,
+                        period: _selectedDay!,
+                      ),
+                      icon: const Icon(Icons.play_circle_outline),
+                      label: Text(l10n.recordingPlayDay),
+                    ),
+                  ),
+                ],
               ],
             ],
           ),

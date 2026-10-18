@@ -117,3 +117,72 @@ bool _isSafeRecordingFileName(String value) {
   }
   return true;
 }
+
+/// Kết quả `GET /livestream/matches/{matchId}/recordings/playlist?period=`.
+///
+/// [segments] đã lọc: chỉ giữ đoạn có URL https tuyệt đối và tên tệp thuần,
+/// giữ đúng thứ tự server trả về.
+class MatchRecordingPlaylist {
+  MatchRecordingPlaylist({
+    required this.period,
+    required List<MatchRecordingSegment> segments,
+  }) : segments = List<MatchRecordingSegment>.unmodifiable(segments);
+
+  final String period;
+  final List<MatchRecordingSegment> segments;
+
+  factory MatchRecordingPlaylist.fromJson(
+    Object? value, {
+    required String period,
+  }) {
+    if (value is! Map<String, Object?>) {
+      throw const FormatException('Invalid recording-playlist response.');
+    }
+    final rows = value['segments'];
+    if (rows is! List<dynamic>) {
+      throw const FormatException('Invalid recording-playlist segments.');
+    }
+
+    final segments = <MatchRecordingSegment>[];
+    for (final row in rows) {
+      if (row is! Map<String, Object?>) continue;
+      final segment = MatchRecordingSegment.tryFromJson(row);
+      if (segment != null) segments.add(segment);
+    }
+    return MatchRecordingPlaylist(period: period, segments: segments);
+  }
+}
+
+/// Một đoạn MP4 trong danh sách phát lại. [startAt] null khi server không có giờ.
+class MatchRecordingSegment {
+  const MatchRecordingSegment({
+    required this.name,
+    required this.startAt,
+    required this.url,
+  });
+
+  final String name;
+  final DateTime? startAt;
+  final Uri url;
+
+  /// Trả null nếu đoạn không an toàn: URL không phải https tuyệt đối, hoặc tên
+  /// tệp có `/`, `\`, `..` hay ký tự điều khiển.
+  static MatchRecordingSegment? tryFromJson(Map<String, Object?> json) {
+    final name = json['name'];
+    if (name is! String || !_isSafeRecordingFileName(name)) return null;
+
+    final rawUrl = json['url'];
+    if (rawUrl is! String) return null;
+    final url = Uri.tryParse(rawUrl.trim());
+    if (url == null ||
+        !url.isAbsolute ||
+        url.scheme != 'https' ||
+        url.host.isEmpty) {
+      return null;
+    }
+
+    final rawStart = json['startAt'];
+    final startAt = rawStart is String ? DateTime.tryParse(rawStart) : null;
+    return MatchRecordingSegment(name: name, startAt: startAt, url: url);
+  }
+}

@@ -5176,6 +5176,32 @@
       }
     }
   },
+  "liveStreamStatsBadge": "Ping {ping} · Trễ {latency} · FPS {fps}",
+  "@liveStreamStatsBadge": {
+    "placeholders": {
+      "ping": {
+        "type": "String"
+      },
+      "latency": {
+        "type": "String"
+      },
+      "fps": {
+        "type": "String"
+      }
+    }
+  },
+  "recordingPlayDay": "Phát lại ngày này",
+  "recordingPlayerTitle": "Phát lại bản ghi",
+  "recordingPlayerLoading": "Đang tải danh sách đoạn…",
+  "recordingPlayerLoadError": "Không tải được danh sách đoạn.",
+  "recordingPlayerOpening": "Đang mở đoạn…",
+  "recordingPlayerEmpty": "Ngày này không có đoạn phát lại.",
+  "recordingPlayerAllFailed": "Không phát được bản ghi nào",
+  "recordingPlayerPickSegment": "Chọn một đoạn để phát.",
+  "recordingPlayerSegments": "Các đoạn",
+  "recordingPlayerSegmentFailed": "Đoạn này không phát được, đã bỏ qua.",
+  "recordingPlayerPlay": "Phát",
+  "recordingPlayerPause": "Tạm dừng",
   "opsSpecialOperation": "Xử lý đặc biệt",
   "opsWalkover": "Bỏ cuộc",
   "opsNoShow": "Không có mặt",

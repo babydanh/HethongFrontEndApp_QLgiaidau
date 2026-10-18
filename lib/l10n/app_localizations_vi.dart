@@ -12570,6 +12570,48 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String liveStreamStatsBadge(String ping, String latency, String fps) {
+    return 'Ping $ping · Trễ $latency · FPS $fps';
+  }
+
+  @override
+  String get recordingPlayDay => 'Phát lại ngày này';
+
+  @override
+  String get recordingPlayerTitle => 'Phát lại bản ghi';
+
+  @override
+  String get recordingPlayerLoading => 'Đang tải danh sách đoạn…';
+
+  @override
+  String get recordingPlayerLoadError => 'Không tải được danh sách đoạn.';
+
+  @override
+  String get recordingPlayerOpening => 'Đang mở đoạn…';
+
+  @override
+  String get recordingPlayerEmpty => 'Ngày này không có đoạn phát lại.';
+
+  @override
+  String get recordingPlayerAllFailed => 'Không phát được bản ghi nào';
+
+  @override
+  String get recordingPlayerPickSegment => 'Chọn một đoạn để phát.';
+
+  @override
+  String get recordingPlayerSegments => 'Các đoạn';
+
+  @override
+  String get recordingPlayerSegmentFailed =>
+      'Đoạn này không phát được, đã bỏ qua.';
+
+  @override
+  String get recordingPlayerPlay => 'Phát';
+
+  @override
+  String get recordingPlayerPause => 'Tạm dừng';
+
+  @override
   String get opsSpecialOperation => 'Xử lý đặc biệt';
 
   @override

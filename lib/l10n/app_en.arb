@@ -5975,6 +5975,32 @@
       }
     }
   },
+  "liveStreamStatsBadge": "Ping {ping} · Buffer {latency} · FPS {fps}",
+  "@liveStreamStatsBadge": {
+    "placeholders": {
+      "ping": {
+        "type": "String"
+      },
+      "latency": {
+        "type": "String"
+      },
+      "fps": {
+        "type": "String"
+      }
+    }
+  },
+  "recordingPlayDay": "Play this day",
+  "recordingPlayerTitle": "Recording playback",
+  "recordingPlayerLoading": "Loading segments…",
+  "recordingPlayerLoadError": "Could not load the segment list.",
+  "recordingPlayerOpening": "Opening segment…",
+  "recordingPlayerEmpty": "This day has no playback segments.",
+  "recordingPlayerAllFailed": "No recording could be played",
+  "recordingPlayerPickSegment": "Pick a segment to play.",
+  "recordingPlayerSegments": "Segments",
+  "recordingPlayerSegmentFailed": "This segment could not be played and was skipped.",
+  "recordingPlayerPlay": "Play",
+  "recordingPlayerPause": "Pause",
   "tournamentManagementTabAthletes": "Athletes",
   "tournamentManagementTabBracket": "Bracket",
   "tournamentManagementTabSettings": "Settings",

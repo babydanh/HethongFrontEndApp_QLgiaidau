@@ -9,4 +9,10 @@ abstract class IMatchRecordingCatalogRepository {
     String matchId, {
     required String period,
   });
+
+  /// Đoạn phát lại nối tiếp của một ngày (đã lọc an toàn, giữ thứ tự server).
+  Future<MatchRecordingPlaylist> getPlaylist(
+    String matchId, {
+    required String period,
+  });
 }

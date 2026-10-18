@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_stream_info_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_playback_repository.dart';
 import 'package:dio/dio.dart';
 
@@ -28,6 +29,22 @@ class ApiMatchPlaybackRepository implements IMatchPlaybackRepository {
       );
     }
     throw const FormatException('Phan hoi playback khong hop le');
+  }
+
+  @override
+  Future<MatchStreamInfoModel> getMatchStreamInfo(String matchId) async {
+    final response = await _dioClient.dio.get<Object?>(
+      '/livestream/matches/$matchId/stream-info',
+      options: Options(extra: <String, Object?>{'noCache': true}),
+    );
+    await _ensureSuccess(response);
+    final payload = response.data;
+    if (payload is Map && payload['data'] is Map) {
+      return MatchStreamInfoModel.fromJson(
+        Map<String, Object?>.from(payload['data'] as Map),
+      );
+    }
+    throw const FormatException('Phản hồi stream-info không hợp lệ');
   }
 
   Future<void> _ensureSuccess(Response<Object?> response) async {

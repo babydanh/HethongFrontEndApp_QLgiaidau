@@ -99,6 +99,15 @@ class _FakeCatalogRepository implements IMatchRecordingCatalogRepository {
     calls.add('files:$period');
     return loadFiles(period);
   }
+
+  @override
+  Future<MatchRecordingPlaylist> getPlaylist(
+    String matchId, {
+    required String period,
+  }) async {
+    calls.add('playlist:$period');
+    return MatchRecordingPlaylist(period: period, segments: const []);
+  }
 }
 
 Future<void> _pumpStatusAction(
