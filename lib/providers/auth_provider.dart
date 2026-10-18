@@ -225,7 +225,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final session = await ref
           .read(loginWithEmailUseCaseProvider)
           .call(email: email, password: password);
-      final role = _mapSessionRole(session);
+      final role = mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -252,7 +252,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final session = await ref
           .read(loginWithGoogleUseCaseProvider)
           .call(idToken: idToken);
-      final role = _mapSessionRole(session);
+      final role = mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -283,7 +283,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final session = await ref
           .read(authRepositoryProvider)
           .loginWithApple(idToken: idToken, nonce: nonce, fullName: fullName);
-      final role = _mapSessionRole(session);
+      final role = mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -310,7 +310,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final session = await ref
           .read(authRepositoryProvider)
           .loginWithFacebook(accessToken);
-      final role = _mapSessionRole(session);
+      final role = mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -345,7 +345,7 @@ class AuthNotifier extends Notifier<AuthState> {
       final session = await ref
           .read(registerWithEmailUseCaseProvider)
           .call(email: email, password: password, fullName: fullName);
-      final role = _mapSessionRole(session);
+      final role = mapSessionRole(session);
       await _saveJwtSession(session, role);
       state = AuthState(
         status: AuthStatus.authenticated,
@@ -363,14 +363,15 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  UserRole _mapSessionRole(AuthSession session) {
-    if (session.roles.contains('ADMIN') || session.roles.contains('admin')) {
-      return UserRole.admin;
-    }
-    if (session.roles.contains('REFEREE') ||
-        session.roles.contains('referee')) {
-      return UserRole.referee;
-    }
+  /// Vai trò của phiên JWT. Backend trả `roles` là tên trong bảng `roles`
+  /// (`ADMIN`, `REFEREE`, `ORGANIZER`, `MODERATOR`, `PLAYER`; enum tại
+  /// HethongBackendApi_QuanlyGiaiDau/src/common/constants/enums.ts). Khi có nhiều role, lấy quyền
+  /// cao nhất mà app hỗ trợ; role không có trong app (MODERATOR, PLAYER) là viewer.
+  static UserRole mapSessionRole(AuthSession session) {
+    final roles = session.roles.map(parseRole).toSet();
+    if (roles.contains(UserRole.admin)) return UserRole.admin;
+    if (roles.contains(UserRole.referee)) return UserRole.referee;
+    if (roles.contains(UserRole.organizer)) return UserRole.organizer;
     return UserRole.viewer;
   }
 

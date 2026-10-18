@@ -109,6 +109,9 @@ Future<void> loginWithForm(
     findsNWidgets(2),
     reason: 'Màn đăng nhập phải có đúng 2 ô: email, mật khẩu',
   );
+  // Form đăng nhập hiện bằng animation (login_register_screen.dart:592: fadeIn trễ 250ms, thời lượng 400ms)
+  // và sau route transition. Bấm khi còn đang chuyển thì hit test trượt, nên chờ hết trước khi nhập.
+  await tester.pump(const Duration(milliseconds: 1500));
   await tester.enterText(fields.at(0), email);
   await tester.enterText(fields.at(1), password);
   await tester.pump();

@@ -79,4 +79,44 @@ void main() {
       expect(AuthState(status: AuthStatus.authenticated, role: UserRole.viewer).isAdmin, false);
     });
   });
+
+  group('AuthNotifier.mapSessionRole (F1: ORGANIZER không rơi về viewer)', () {
+    UserRole mapRoles(List<String> roles) => AuthNotifier.mapSessionRole(
+      AuthSession(accessToken: 'a', refreshToken: 'r', roles: roles),
+    );
+
+    test('ORGANIZER trả về organizer', () {
+      expect(mapRoles(['ORGANIZER']), UserRole.organizer);
+    });
+
+    test('tên role viết thường vẫn nhận diện', () {
+      expect(mapRoles(['organizer']), UserRole.organizer);
+    });
+
+    test('ADMIN và REFEREE giữ nguyên', () {
+      expect(mapRoles(['ADMIN']), UserRole.admin);
+      expect(mapRoles(['REFEREE']), UserRole.referee);
+    });
+
+    test('PLAYER, MODERATOR và danh sách rỗng là viewer', () {
+      expect(mapRoles(['PLAYER']), UserRole.viewer);
+      expect(mapRoles(['MODERATOR']), UserRole.viewer);
+      expect(mapRoles([]), UserRole.viewer);
+    });
+
+    test('nhiều role lấy quyền cao nhất: ADMIN > REFEREE > ORGANIZER', () {
+      expect(mapRoles(['PLAYER', 'ORGANIZER']), UserRole.organizer);
+      expect(mapRoles(['ORGANIZER', 'REFEREE']), UserRole.referee);
+      expect(mapRoles(['ORGANIZER', 'ADMIN']), UserRole.admin);
+    });
+
+    test('BTC có isOrganizer và canScore', () {
+      final state = AuthState(
+        status: AuthStatus.authenticated,
+        role: mapRoles(['ORGANIZER']),
+      );
+      expect(state.isOrganizer, isTrue);
+      expect(state.canScore, isTrue);
+    });
+  });
 }
