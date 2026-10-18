@@ -97,6 +97,19 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
     }
   }
 
+  /// Thoát màn: pop nếu còn route phía trước; không thì về trang quản lý.
+  /// go_router ném lỗi khi pop lúc không có gì để pop, nên không gọi pop trần.
+  void _leaveScreen() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(
+        widget.managementRouteBase ??
+            '/admin/tournament/${widget.tournamentId}',
+      );
+    }
+  }
+
   Future<void> _saveBracket(Tournament tournament) async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isDrawing = true);
@@ -111,9 +124,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
         seedingType: 'RANDOM',
         allowReset: false,
       );
-      await repo.update(widget.tournamentId, {
-        'status': AppConstants.statusInProgress,
-      });
+      // Không gửi status giải: tạo nhánh không đổi trạng thái giải, và backend chỉ cho ADMIN đổi status.
       ref.invalidate(tournamentProvider(widget.tournamentId));
       ref.invalidate(bracketMatchesProvider(widget.tournamentId));
       ref.invalidate(liteBracketMatchesProvider(widget.tournamentId));
@@ -136,7 +147,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(parts.join('\n'))));
-        context.pop();
+        _leaveScreen();
       }
     } catch (e) {
       if (mounted) {
@@ -203,16 +214,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
             ? const SizedBox.shrink()
             : IconButton(
                 icon: const Icon(Icons.arrow_back_ios_rounded),
-                onPressed: () {
-                  if (context.canPop()) {
-                    context.pop();
-                  } else {
-                    context.go(
-                      widget.managementRouteBase ??
-                          '/admin/tournament/${widget.tournamentId}',
-                    );
-                  }
-                },
+                onPressed: _leaveScreen,
               ),
         title: Text(l10n.autoDraw_title),
       ),
