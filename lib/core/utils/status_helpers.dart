@@ -23,7 +23,12 @@ class StatusHelper {
       _internalStatusCodes.contains(lower) ? 'raw_$lower' : lower;
 
   static String normalizeTournamentStatus(String? rawStatus) {
-    final status = (rawStatus ?? '').trim().toUpperCase();
+    final trimmed = (rawStatus ?? '').trim();
+    // Entity lưu mã nội bộ đã chuẩn hoá (Tournament.fromJson), nên khi đọc lại
+    // phải trả nguyên. Mã thô của backend luôn viết HOA, nên so khớp chữ thường
+    // chính xác không biến "REGISTRATION" thành đang mở đăng ký.
+    if (_internalStatusCodes.contains(trimmed)) return trimmed;
+    final status = trimmed.toUpperCase();
     return switch (status) {
       'DRAFT' => AppConstants.statusDraft,
       'UPCOMING' => AppConstants.statusUpcoming,

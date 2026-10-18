@@ -57,5 +57,26 @@ void main() {
         'my_open_thing',
       );
     });
+
+    test('re-reading a normalized internal code keeps its meaning', () {
+      for (final code in [
+        AppConstants.statusDraft,
+        AppConstants.statusUpcoming,
+        AppConstants.statusRegistration,
+        AppConstants.statusRegistrationClosed,
+        AppConstants.statusDrawing,
+        AppConstants.statusInProgress,
+        AppConstants.statusCompleted,
+        AppConstants.statusCancelled,
+      ]) {
+        expect(StatusHelper.normalizeTournamentStatus(code), code, reason: code);
+      }
+      expect(
+        StatusHelper.isTournamentRegistration(
+          StatusHelper.normalizeTournamentStatus('REGISTRATION_OPEN'),
+        ),
+        isTrue,
+      );
+    });
   });
 }
