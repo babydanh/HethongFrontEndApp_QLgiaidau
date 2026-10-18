@@ -42,12 +42,13 @@ void main() {
       container.read(routerProvider).go('/tournaments/create');
       await pumpUntilFound(
         tester,
-        find.text('Thời gian bắt đầu *'),
-        what: 'form Tạo giải nhanh (mục Thời gian bắt đầu)',
+        find.byType(TextFormField),
+        what: 'form Tạo giải nhanh (ô tên giải)',
       );
       await tester.enterText(find.byType(TextFormField).first, tournamentName);
       await tester.pump();
 
+      await scrollToText(tester, 'Thời gian bắt đầu *');
       await tester.tap(find.text('Thời gian bắt đầu *'));
       await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn ngày (OK)');
       await tester.tap(find.text('OK').first);
@@ -56,6 +57,7 @@ void main() {
       await tester.tap(find.text('OK').first);
       await tester.pump(const Duration(seconds: 1));
 
+      await scrollToText(tester, 'Thêm nội dung');
       await tester.tap(find.text('Thêm nội dung').first);
       await pumpUntilCondition(
         tester,
@@ -65,6 +67,11 @@ void main() {
       await tester.tap(find.text('Thêm nội dung').last);
       await tester.pump(const Duration(seconds: 1));
 
+      await tester.scrollUntilVisible(
+        find.widgetWithText(FilledButton, 'Tạo giải nhanh'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.widgetWithText(FilledButton, 'Tạo giải nhanh'));
       await tester.pump();
 
