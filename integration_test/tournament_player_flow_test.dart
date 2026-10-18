@@ -89,7 +89,7 @@ void main() {
         'Xác nhận đăng ký',
       ]);
       await pumpUntilFound(tester, submit, what: 'nút gửi đăng ký');
-      await tester.tap(submit.first);
+      await tapCentered(tester, submit);
       await tester.pump();
       await pumpUntilFound(
         tester,
@@ -261,7 +261,7 @@ void main() {
         submit,
         what: 'nút gửi đăng ký nội dung đôi',
       );
-      await tester.tap(submit.first);
+      await tapCentered(tester, submit);
       await tester.pump();
 
       // 3. Bước 1 "Đăng ký đôi": đặt tên đội, bỏ "Mời sau" để hiện ô tìm đồng đội.

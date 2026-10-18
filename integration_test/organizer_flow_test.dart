@@ -200,7 +200,7 @@ void main() {
         find.text('Lưu & Bắt đầu giải'),
         what: 'nút Lưu & Bắt đầu giải sau khi bốc thăm',
       );
-      await tester.tap(find.text('Lưu & Bắt đầu giải').first);
+      await tapCentered(tester, find.text('Lưu & Bắt đầu giải'));
       await tester.pump();
 
       var matches = <Map<String, dynamic>>[];
