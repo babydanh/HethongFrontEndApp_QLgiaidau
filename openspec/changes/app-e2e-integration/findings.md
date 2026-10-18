@@ -125,10 +125,25 @@ Ghi lại các lỗi của app (không phải lỗi test) do `integration_test` 
 - **Sửa (lỗi test)**: đổi nhãn thành "Bảng đấu" và bấm tab bằng `tapCentered`.
 - **Kết quả**: run `39127908361` (ca đơn) qua được bước 6 nhưng lỗi ở bước 8: tab "Kết quả" nằm ngoài màn hình vì `TabBar` cuộn ngang, nên `tap()` không chạm được và nhà vô địch không hiện. Không phải lỗi app. Sửa ở test bằng `tapCentered` (`606a9506`). Sau sửa: run `39128960821` (chỉ file player) `+2: All tests passed!`; run `39129778085` (đầy đủ) `+6: All tests passed!`.
 
+## F16. Lưu nhánh bốc thăm báo "Lỗi:" dù nhánh đã tạo (lỗi app, sửa trong change `fix-auto-draw-start-status`)
+
+- **Tái hiện**: run `39129778085` (ca BTC, log `e2e-39129778085/job.log`): `13:16:56.948 POST /tournaments/:id/generate-bracket status=201`, rồi `13:16:57.018 start PATCH /tournaments/:id request_bytes=24` và `13:16:57.037 error PATCH /tournaments/:id status=400 type=badResponse`. Nhánh đã có trên Backend, nhưng `_saveBracket` rơi vào `catch` và báo lỗi.
+- **Nguyên nhân (đọc code)**: `auto_draw_screen.dart` gửi `{'status': 'in_progress'}` (chữ thường). DTO `update-tournament.dto.ts:12-17` chỉ nhận chữ hoa (`IN_PROGRESS`), nên 400. Đổi sang chữ hoa vẫn không đủ: `tournament-lifecycle.service.ts:669-673` từ chối `status` với mọi vai trò không phải ADMIN (403), và `generateBracket` (`tournament-bracket.service.ts:362`) không tự đổi trạng thái. Xem B3.
+- **Lỗi tầng kế tiếp**: khi bỏ PATCH, `context.pop()` vẫn ném `GoError('There is nothing to pop')` nếu màn được mở bằng `go()` (go_router 17.3.0, `delegate.dart:104-105`). Lỗi nằm trong `try`, nên hiện "Lỗi:" dù nhánh đã lưu. Organizer test mở màn bằng `go()`, nên đi đúng đường này.
+- **Sửa (đúng gốc)**: bỏ hẳn PATCH status trong `_saveBracket` (không đổi giá trị, vì vẫn 403). Thoát màn qua `_leaveScreen()` dùng chung với nút back: `canPop()` thì pop, không thì `go(managementRouteBase)`.
+- **Kiểm chứng**: widget test `test/features/auto_draw_save_bracket_test.dart` (hai ca: mở bằng push và bằng go). Kiểm `generateBracket` đúng một lần, `update`/`updateStatus` không được gọi, có snackbar thành công, không có "Lỗi:". Organizer test thêm khẳng định "Bốc thăm và lưu thành công" và không có "Lỗi: " sau bước lưu. Hạn chế: test Dart không đọc được log HTTP, nên không khẳng định trực tiếp "không có PATCH" trên log; khẳng định đó dựa vào `verifyNever` và snackbar.
+- **Kết quả**: chờ run cloud, xem `tasks.md` của `fix-auto-draw-start-status`.
+
+## F17. Đặt lại bốc thăm gửi `status: 'registration'` (chữ thường, không hợp lệ với Backend) (chưa sửa, cần quyết định)
+
+- **Phát hiện**: `lib/domain/usecases/tournament/reset_tournament_draw_use_case.dart:15-22` gọi `deleteAll` trận trước, rồi `update` với `status: 'registration'` (`AppConstants.statusRegistration`). Cùng nhóm với F16: giá trị chữ thường ngoài enum DTO (400), và organizer không được đổi status (403). Vì xóa trận chạy trước, lỗi xảy ra sau khi trận đã bị xóa.
+- **Chưa sửa**: cần quyết định nghiệp vụ: trạng thái giải sau khi đặt lại bốc thăm phải là gì, và có cần thao tác Backend mới không. Bỏ `status` khỏi payload là đổi nghiệp vụ, không làm trong change này.
+
 ## Lỗi Backend phát hiện (chỉ ghi lại, không sửa Backend)
 
 - **B1** `src/modules/tournaments/services/tournament-lite.service.ts:588-610`: khi có `startTime`, backend ghép phần ngày UTC của `startDate` với giờ rồi coi là UTC+7 (cứng). Sai với mọi client không ở UTC+7 hoặc khi gửi mốc ISO kèm `startTime` (F9). Đề xuất: khi `startDate` là mốc ISO có múi giờ thì dùng mốc đó, không ghép giờ.
 - **B2** Log khởi động backend trên CI (run `39115189414`, dòng ~2659–2667): `[WARN] Ghi chú làm sạch dữ liệu cũ` với `DELETE FROM "wards" WHERE "district_code" IS NOT NULL` lỗi `column "district_code" does not exist`. Các dòng `ALTER TABLE ... DROP CONSTRAINT` báo "does not exist" (dòng ~4460–4493). Cảnh báo không chặn app, nhưng cho thấy migration/seed lệch schema trên DB CI. Chưa xác định nguyên nhân gốc (không sửa Backend).
+- **B3** `src/modules/tournaments/services/tournament-lifecycle.service.ts:669-673`, `dto/update-tournament.dto.ts:12-17`, `services/tournament-bracket.service.ts:362`: không có đường API hợp lệ để BTC (ORGANIZER) đưa giải sang `IN_PROGRESS` sau khi tạo nhánh. `PATCH /tournaments/:id` với `status` trả 403 cho non-ADMIN (`Trạng thái giải chỉ được thay đổi qua các thao tác nghiệp vụ hoặc bởi Quản trị viên`), và `generate-bracket` không ghi `status`. Đề xuất: Backend đặt `IN_PROGRESS` ngay trong thao tác tạo nhánh thành công, hoặc mở một thao tác nghiệp vụ "bắt đầu giải". App đã bỏ PATCH (F16); không sửa Backend.
 
 ## Quan sát (chưa sửa)
 
