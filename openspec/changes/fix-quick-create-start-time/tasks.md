@@ -14,6 +14,6 @@
 
 ## 3. Kiểm trên cloud
 
-- [ ] 3.1 Run `app-e2e` trên head chứa sửa: ca BTC qua bước "nút thêm VĐV" (không còn `status=400` cho `POST /tournaments/lite`). Xong khi: có run id và log.
-- [ ] 3.2 Run `app` (analyze + toàn bộ widget test) trên cùng head. Xong khi: có run id, job success.
-- [ ] 3.3 `npx openspec validate fix-quick-create-start-time --strict` exit 0. Xong khi: có exit code.
+- [x] 3.1 Run `app-e2e` trên head chứa sửa (run `39134290417`, head `d77ac38b`, chứa `d7d7c4f8`): ca BTC qua bước "nút thêm VĐV". Bằng chứng: log có `POST /tournaments/lite status=201` (dòng 7883), không có `status=400`; `+6: All tests passed!` (dòng 7969). Xong khi: có run id và log.
+- [x] 3.2 Run `app` (analyze + toàn bộ widget test) trên cùng head `d77ac38b`: run `39134286473`, job "Test Flutter App" success, `1132 tests passed, 2 skipped`. Xong khi: có run id, job success.
+- [x] 3.3 `npx openspec validate fix-quick-create-start-time --strict` exit 0. Xong khi: có exit code. Bằng chứng: exit code 0.

@@ -56,7 +56,8 @@ Nhãn:
 - Tài khoản seed chỉ dùng cho CI (`backend_api.dart`). Kết quả từng lượt và lỗi app đã biết: `openspec/changes/app-e2e-integration/tasks.md` và `findings.md`.
 - Kết quả thật, head app `606a9506`, orchestrator `932f3a6`:
   - `--target app-e2e` đầy đủ, run `39129778085`: job `success` 16,9 phút; `+6: All tests passed!`; bước 13a, 13b (manifest release) và 13c (phân tích tĩnh `integration_test`) đều `success`.
-  - `--target app` cùng head, run `39129778378`: job `success` 4,6 phút; `flutter analyze` không có lỗi (110 cảnh báo và 106 thông tin, không chặn vì cờ `--no-fatal-*`); `flutter test`: `1138 tests passed, 2 skipped`.
+  - `--target app-e2e`, head `d77ac38b`, run `39134290417`: job `success` 17,1 phút; `+6: All tests passed!`; log không có `PATCH /tournaments`, `status=400` hay `EXCEPTION CAUGHT`.
+  - `--target app` nhánh feature `app-e2e-integration-20261017`, head `d77ac38b`, run `39134286473`: job `success`, `1132 tests passed, 2 skipped`, hai ca `auto_draw_save_bracket_test` pass. Run `39133359232` (head `c45893a1`) đỏ hai ca này vì lỗi bơm frame của test, đã sửa ở `d77ac38b`. Run `39129778378` và `39132420590` chạy nhánh `main` (`--app-ref` không có tác dụng với target `app`, `test-runner.yml:554`), không dùng làm bằng chứng cho nhánh feature.
   - Bước 13 (emulator và test) của run `39129778085`: boot emulator 105 s, `flutter test` 529 s, trong đó Gradle `assembleDebug` cộng dồn 403 s.
   - Cache NDK/CMake (bước 10d và 13a) chưa được hưởng ở lần nào. Entry `Linux-android-ndk-cmake-c1d57…` có trên `main` (tạo 11:27:34Z, sau bước 13a của run `39122493011`), nhưng run `39128960821` và `39129778085` đều báo restore `not found` và save `Unable to reserve cache`. Bước 13a tốn 35–60 s mỗi run mà không lưu được. Nguyên nhân chưa xác định.
 

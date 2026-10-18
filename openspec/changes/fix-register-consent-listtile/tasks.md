@@ -11,6 +11,6 @@
 
 ## 3. Kiểm trên cloud
 
-- [ ] 3.1 Run `app-e2e` trên head chứa sửa: log không còn assertion `ListTile background color`, và ca VĐV đơn và đôi qua bước gửi đăng ký. Xong khi: có run id và log.
-- [ ] 3.2 Run `app` trên cùng head: job analyze và widget success. Xong khi: có run id.
-- [ ] 3.3 `npx openspec validate fix-register-consent-listtile --strict` exit 0. Xong khi: có exit code.
+- [x] 3.1 Run `app-e2e` trên head chứa sửa (run `39134290417`, head `d77ac38b`, chứa `6bf32e7e`): log không còn assertion `ListTile background color`, và ca VĐV đơn và đôi qua bước gửi đăng ký. Bằng chứng: không có dòng `ListTile background` trong log; hai `POST /tournaments/:id/register status=201` (dòng 7701, 7858); `+6: All tests passed!` (dòng 7969). Xong khi: có run id và log.
+- [x] 3.2 Run `app` trên cùng head `d77ac38b`: job analyze và widget success (run `39134286473`). Xong khi: có run id.
+- [x] 3.3 `npx openspec validate fix-register-consent-listtile --strict` exit 0. Xong khi: có exit code. Bằng chứng: exit code 0.

@@ -11,6 +11,6 @@
 
 ## 3. Kiểm trên cloud
 
-- [ ] 3.1 Run `app-e2e` trên head chứa sửa: ca đơn và ca đôi trong `tournament_player_flow_test.dart` thấy nút "Đăng ký" trên thanh đăng ký. Xong khi: có run id và log cho thấy hai ca đó qua bước tìm nút.
-- [ ] 3.2 Run `app` (analyze + toàn bộ widget test) trên cùng head: các test fixture dùng `'status': 'registration'` vẫn xanh. Xong khi: có run id, job "Test Flutter App" success.
-- [ ] 3.3 `npx openspec validate fix-registration-status-normalize --strict` exit 0. Xong khi: có exit code.
+- [x] 3.1 Run `app-e2e` trên head chứa sửa (run `39134290417`, head `d77ac38b`, chứa `f2aa0362`): ca đơn và ca đôi thấy nút "Đăng ký" trên thanh đăng ký. Bằng chứng: hai ca đều tới `POST /tournaments/:id/register status=201` (dòng 7701 và 7858), tức đã tìm và bấm được nút; `+6: All tests passed!` (dòng 7969). Xong khi: có run id và log cho thấy hai ca đó qua bước tìm nút.
+- [x] 3.2 Run `app` (analyze + toàn bộ widget test) trên cùng head `d77ac38b`: run `39134286473`, job "Test Flutter App" success, `1132 tests passed, 2 skipped`; các test fixture dùng `'status': 'registration'` vẫn xanh. Xong khi: có run id, job "Test Flutter App" success.
+- [x] 3.3 `npx openspec validate fix-registration-status-normalize --strict` exit 0. Xong khi: có exit code. Bằng chứng: exit code 0.

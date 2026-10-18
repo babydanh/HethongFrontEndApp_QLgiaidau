@@ -17,6 +17,6 @@
 
 ## 3. Kiểm trên cloud
 
-- [ ] 3.1 Run `app-e2e` đầy đủ trên head chứa sửa: `POST /tournaments/:id/generate-bracket` 201, không còn `PATCH /tournaments/:id status=400`, có snackbar thành công, ca BTC qua bước 4. Xong khi: có run id và dòng log.
-- [ ] 3.2 Run `app` (analyze và toàn bộ widget test, gồm `auto_draw_save_bracket_test`) trên cùng head, job success. Xong khi: có run id.
-- [ ] 3.3 `npx openspec validate fix-auto-draw-start-status --strict` exit 0. Xong khi: có exit code.
+- [x] 3.1 Run `app-e2e` đầy đủ trên head chứa sửa (run `39134290417`, head `d77ac38b`, chứa `3c054ebb`): `POST /tournaments/:id/generate-bracket status=201` (dòng 7951); không có dòng `PATCH /tournaments` nào trong log; `organizer_flow_test` qua bước lưu với khẳng định thông báo thành công và không có "Lỗi: " (`+6: All tests passed!`, dòng 7969). Xong khi: có run id và dòng log.
+- [x] 3.2 Run `app` (analyze và toàn bộ widget test, gồm `auto_draw_save_bracket_test`) trên cùng head `d77ac38b`: run `39134286473`, job success, `1132 tests passed, 2 skipped`; hai ca `auto_draw_save_bracket_test` đều báo pass (dòng 1293, 1296 của log). Xong khi: có run id.
+- [x] 3.3 `npx openspec validate fix-auto-draw-start-status --strict` exit 0. Xong khi: có exit code. Bằng chứng: exit code 0.

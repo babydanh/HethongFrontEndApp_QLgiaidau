@@ -13,6 +13,6 @@
 
 ## 3. Kiểm trên cloud
 
-- [ ] 3.1 Run `app-e2e` có ca đơn: sau khi gửi đăng ký thành công, không còn lỗi `infinite size` trong `flutter-test.log`; ca đi tới bước xem nhánh/duyệt. Xong khi: có run id và log.
-- [ ] 3.2 Run `app` trên cùng head. Xong khi: có run id.
-- [ ] 3.3 `npx openspec validate fix-register-success-nested-scaffold --strict` exit 0. Xong khi: có exit code.
+- [x] 3.1 Run `app-e2e` có ca đơn (run `39134290417`, head `d77ac38b`, chứa `1477bdbe`): sau khi gửi đăng ký thành công, không còn lỗi `infinite size` trong log; ca đi tiếp, có `GET /tournaments/:id/my-registration` 200 (dòng 7860). Bằng chứng: không có dòng `infinite size`; `POST /tournaments/:id/register status=201` (dòng 7701, 7858); `+6: All tests passed!` (dòng 7969). Xong khi: có run id và log.
+- [x] 3.2 Run `app` trên cùng head `d77ac38b`: run `39134286473`, job success, `1132 tests passed, 2 skipped`. Xong khi: có run id.
+- [x] 3.3 `npx openspec validate fix-register-success-nested-scaffold --strict` exit 0. Xong khi: có exit code. Bằng chứng: exit code 0.

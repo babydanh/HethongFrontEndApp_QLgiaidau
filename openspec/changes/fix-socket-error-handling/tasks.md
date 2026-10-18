@@ -12,5 +12,5 @@
 
 ## 3. Kiểm trên cloud
 
-- [ ] 3.1 Run `app-e2e` đầy đủ trên head chứa sửa: ca `tournament_player_flow_test.dart` không còn `WebSocketConnectionClosed`. Xong khi: có run id và kết quả ca đó trong log.
-- [ ] 3.2 `npx openspec validate fix-socket-error-handling --strict` exit 0. Xong khi: có exit code.
+- [x] 3.1 Run `app-e2e` đầy đủ trên head chứa sửa (run `39132420517`, head `747dffaa`, `d6cf6356` là tổ tiên): ca `tournament_player_flow_test.dart` không còn `WebSocketConnectionClosed`. Bằng chứng: không có `WebSocketConnectionClosed` trong log; `tournament_player_flow_test.dart` chạy tới `+5` rồi `+6: All tests passed!` (dòng 7846, 7954). Xong khi: có run id và kết quả ca đó trong log.
+- [x] 3.2 `npx openspec validate fix-socket-error-handling --strict` exit 0. Xong khi: có exit code. Bằng chứng: exit code 0.

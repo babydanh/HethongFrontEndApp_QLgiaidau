@@ -14,6 +14,6 @@
 
 ## 3. Kiểm trên cloud
 
-- [ ] 3.1 Run `app-e2e` trên head chứa sửa: ca đơn và đôi có tick đồng ý thì gửi được đăng ký; không còn `POST /register` 400 do thiếu đồng ý. Xong khi: có run id và log.
-- [ ] 3.2 Run `app` trên cùng head. Xong khi: có run id.
-- [ ] 3.3 `npx openspec validate fix-register-consent-gate-source --strict` exit 0. Xong khi: có exit code.
+- [x] 3.1 Run `app-e2e` trên head chứa sửa (run `39134290417`, head `d77ac38b`, chứa `e23d0387`): ca đơn và đôi có tick đồng ý thì gửi được đăng ký; không còn `POST /register` 400 do thiếu đồng ý. Bằng chứng: hai `POST /tournaments/:id/register status=201` (dòng 7701 với request_bytes=99, dòng 7858 với request_bytes=203), không có dòng register 400; `+6: All tests passed!` (dòng 7969). Xong khi: có run id và log.
+- [x] 3.2 Run `app` trên cùng head `d77ac38b`: run `39134286473`, job success, `1132 tests passed, 2 skipped`. Xong khi: có run id.
+- [x] 3.3 `npx openspec validate fix-register-consent-gate-source --strict` exit 0. Xong khi: có exit code. Bằng chứng: exit code 0.
