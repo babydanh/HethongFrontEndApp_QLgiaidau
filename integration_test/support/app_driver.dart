@@ -83,12 +83,36 @@ Future<void> scrollToText(
   String text, {
   int maxScrolls = 60,
 }) async {
+  final verticalScrollable = find.byWidgetPredicate(
+    (widget) =>
+        widget is Scrollable &&
+        (widget.axisDirection == AxisDirection.down ||
+            widget.axisDirection == AxisDirection.up),
+    description: 'Scrollable dọc',
+  );
+  expect(
+    verticalScrollable,
+    findsWidgets,
+    reason:
+        'Không có Scrollable dọc nào đang hiển thị để cuộn tới "$text" '
+        '(Scrollable kể cả offstage: '
+        '${find.byType(Scrollable, skipOffstage: false).evaluate().length})',
+  );
   await tester.scrollUntilVisible(
     find.text(text),
     300,
-    scrollable: find.byType(Scrollable).first,
+    scrollable: verticalScrollable.first,
     maxScrolls: maxScrolls,
   );
+  await tester.pump();
+}
+
+/// Chạm [finder] sau khi đưa nó về giữa viewport, tránh lớp header/kính đè lên mép trên.
+Future<void> tapCentered(WidgetTester tester, Finder finder) async {
+  final target = finder.first;
+  await Scrollable.ensureVisible(tester.element(target), alignment: 0.5);
+  await tester.pump();
+  await tester.tap(target);
   await tester.pump();
 }
 

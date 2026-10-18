@@ -71,7 +71,7 @@ void main() {
         what: 'tab Giải đấu trên trang chủ (sau khi bấm nhãn nav)',
       );
       await scrollToText(tester, tournamentName);
-      await tester.tap(find.text(tournamentName).first);
+      await tapCentered(tester, find.text(tournamentName));
       await pumpUntilFound(
         tester,
         find.text('Đăng ký ngay'),
@@ -233,7 +233,7 @@ void main() {
         what: 'tab Giải đấu trên trang chủ (sau khi bấm nhãn nav)',
       );
       await scrollToText(tester, tournamentName);
-      await tester.tap(find.text(tournamentName).first);
+      await tapCentered(tester, find.text(tournamentName));
       await pumpUntilFound(
         tester,
         find.text('Đăng ký ngay'),
