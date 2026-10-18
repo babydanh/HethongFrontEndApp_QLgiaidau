@@ -62,6 +62,27 @@ Future<void> pumpUntilFound(
   what: what,
 );
 
+/// Tìm Text có một trong các chuỗi [texts] (khi app có thể hiện một trong vài nhãn).
+Finder anyTextOf(List<String> texts) => find.byWidgetPredicate(
+  (widget) => widget is Text && texts.contains(widget.data),
+  description: 'Text là một trong ${texts.join(' | ')}',
+);
+
+/// Cuộn danh sách dọc cho tới khi thấy [text]. Lỗi nếu không thấy sau [maxScrolls] lần.
+Future<void> scrollToText(
+  WidgetTester tester,
+  String text, {
+  int maxScrolls = 60,
+}) async {
+  await tester.scrollUntilVisible(
+    find.text(text),
+    300,
+    scrollable: find.byType(Scrollable).first,
+    maxScrolls: maxScrolls,
+  );
+  await tester.pump();
+}
+
 /// Đăng nhập bằng form màn /login (đúng luồng người dùng bấm).
 Future<void> loginWithForm(
   WidgetTester tester, {
