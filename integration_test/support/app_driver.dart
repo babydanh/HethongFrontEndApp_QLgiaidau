@@ -1,0 +1,102 @@
+import 'package:app_quanly_giaidau/app.dart';
+import 'package:app_quanly_giaidau/core/router/app_router.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+
+/// Khởi tạo giống main.dart (không Sentry, không Firebase). Gọi trong setUpAll.
+Future<void> initializeAppForTests() async {
+  await LiquidGlassWidgets.initialize(
+    warmUpMode: GlassWarmUpMode.never,
+    enablePerformanceMonitor: false,
+  );
+  await dotenv.load(fileName: '.env');
+}
+
+/// Dựng TournamentApp như main.dart và trả về container để điều hướng và đọc state.
+Future<ProviderContainer> pumpApp(WidgetTester tester) async {
+  final container = ProviderContainer();
+  await tester.pumpWidget(
+    LiquidGlassWidgets.wrap(
+      brightnessResolver: Theme.maybeBrightnessOf,
+      child: UncontrolledProviderScope(
+        container: container,
+        child: const TournamentApp(),
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+  return container;
+}
+
+/// Pump theo khung thời gian thật, không dùng pumpAndSettle (app có animation vô hạn).
+Future<void> pumpUntilCondition(
+  WidgetTester tester,
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 30),
+  required String what,
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      fail('Hết ${timeout.inSeconds}s mà chưa thấy: $what');
+    }
+    await tester.pump(const Duration(milliseconds: 250));
+  }
+  await tester.pump();
+}
+
+Future<void> pumpUntilFound(
+  WidgetTester tester,
+  Finder finder, {
+  Duration timeout = const Duration(seconds: 30),
+  required String what,
+}) => pumpUntilCondition(
+  tester,
+  () => finder.evaluate().isNotEmpty,
+  timeout: timeout,
+  what: what,
+);
+
+/// Đăng nhập bằng form màn /login (đúng luồng người dùng bấm).
+Future<void> loginWithForm(
+  WidgetTester tester, {
+  required String email,
+  required String password,
+}) async {
+  await pumpUntilFound(
+    tester,
+    find.text('Địa chỉ Email'),
+    what: 'màn đăng nhập (nhãn Địa chỉ Email)',
+  );
+  final fields = find.byType(TextFormField);
+  expect(
+    fields,
+    findsNWidgets(2),
+    reason: 'Màn đăng nhập phải có đúng 2 ô: email, mật khẩu',
+  );
+  await tester.enterText(fields.at(0), email);
+  await tester.enterText(fields.at(1), password);
+  await tester.pump();
+  await tester.tap(find.widgetWithText(TextButton, 'Đăng nhập'));
+  await tester.pump();
+}
+
+/// Đăng xuất nếu còn phiên đăng nhập từ ca trước (state lưu trên thiết bị).
+Future<void> ensureSignedOut(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  if (container.read(authProvider).isAuthenticated) {
+    await container.read(authProvider.notifier).signOut();
+    await pumpUntilCondition(
+      tester,
+      () => !container.read(authProvider).isAuthenticated,
+      what: 'đã đăng xuất',
+    );
+  }
+}
