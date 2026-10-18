@@ -8,7 +8,7 @@
 
 ## 2. Hạ tầng trong repo App
 
-- [ ] 2.1 `android/app/src/debug/res/xml/network_security_config.xml` chỉ cho cleartext tới `10.0.2.2` và `localhost`; `android/app/src/debug/AndroidManifest.xml` trỏ tới file này. Xong khi: build release không chứa ngoại lệ này (kiểm bằng `aapt dump xmltree` trên APK release, hoặc đọc manifest đã gộp).
+- [x] 2.1 `android/app/src/debug/res/xml/network_security_config.xml` chỉ cho cleartext tới `10.0.2.2` và `localhost`; `android/app/src/debug/AndroidManifest.xml` trỏ tới file này. Xong khi: build release không chứa ngoại lệ này (kiểm bằng `aapt dump xmltree` trên APK release, hoặc đọc manifest đã gộp). Bằng chứng: step `13b` của run `39111478956` (ref `46c2d691`) success, kiểm manifest và resource release đã gộp (`android/app/src/main/AndroidManifest.xml:12` trỏ tới config main không có `10.0.2.2`/`localhost`).
 - [ ] 2.2 `integration_test/support/backend_api.dart`: đăng nhập, tạo giải, ADMIN duyệt, nhập danh sách, duyệt đơn, tạo nhánh, chấm điểm. Mỗi lỗi in mã HTTP và 300 ký tự body. Xong khi: `dart analyze integration_test` sạch.
 
 ## 3. Workflow cloud (repo agent-orchestrator) và script máy
@@ -28,11 +28,11 @@
 
 ## 4. Kịch bản
 
-- [ ] 4.1 `integration_test/auth_flow_test.dart`: đăng nhập VĐV và BTC bằng form. Xong khi: xanh trên cloud.
+- [x] 4.1 `integration_test/auth_flow_test.dart`: đăng nhập VĐV và BTC bằng form. Xong khi: xanh trên cloud. Bằng chứng: run `39111478956` (ref `46c2d691`), auth_flow_test kết thúc `+3` không lỗi (VĐV viewer và BTC organizer đều PASS, log dòng 3577). Lần trước run `39109977504` cũng PASS hai ca này.
 - [ ] 4.2 `integration_test/tournament_player_flow_test.dart`: danh sách → chi tiết → đăng ký đơn → được duyệt; đăng ký đôi + mời đồng đội; xem nhánh và lịch; nhập tỉ số một trận; nhà vô địch. Xong khi: chạy trên cloud, mỗi ca đỏ có nguyên nhân rõ (lỗi test thì sửa, tối đa 3 vòng; lỗi app thì ghi lại).
 - [ ] 4.3 `integration_test/organizer_flow_test.dart`: BTC tạo giải nhanh trên app, mở trang quản lý; thêm duyệt, ghép, tạo nhánh nếu task 1.2 thấy app có. Xong khi: như 4.2.
 
 ## 5. Kiểm cuối
 
 - [ ] 5.1 `docs/README.md`: thêm lệnh chạy E2E App và kết quả thật. Xong khi: có lệnh và run id.
-- [ ] 5.2 `flutter analyze --no-pub integration_test` sạch và `flutter test --no-pub` các test widget liên quan không đỏ thêm (chạy trên cloud target `app`). Xong khi: có run id.
+- [x] 5.2 `flutter analyze --no-pub integration_test` sạch và `flutter test --no-pub` các test widget liên quan không đỏ thêm (chạy trên cloud target `app`). Xong khi: có run id. Bằng chứng: run `39111514104` (target `app`, ref `46c2d691`): job "Test Flutter App (Dart Analyze & Widget)" success; step `13c` "Phân tích tĩnh integration_test" của run `39111478956` success.
