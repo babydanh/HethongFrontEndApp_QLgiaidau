@@ -623,10 +623,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         children: [
                           Builder(
                             builder: (context) {
-                              final roleUpper = (profile.role ?? '')
-                                  .toUpperCase();
-                              final isAdmin = roleUpper == 'ADMIN';
-                              final isOrganizer = roleUpper == 'ORGANIZER';
+                              final isAdmin = profile.hasRole('ADMIN');
+                              final isOrganizer = profile.hasRole('ORGANIZER');
                               final roleTitle = isAdmin
                                   ? 'Quản trị viên'
                                   : (isOrganizer

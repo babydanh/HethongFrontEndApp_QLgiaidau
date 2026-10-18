@@ -325,8 +325,8 @@ class _CreatePublicQuickTournamentScreenState
 
     try {
       final userProfile = await ref.read(userProfileProvider.future);
-      final role = (userProfile.role ?? '').toUpperCase();
-      final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+      final isOrganizerOrAdmin =
+          userProfile.hasRole('ORGANIZER') || userProfile.hasRole('ADMIN');
       if (!isOrganizerOrAdmin && mounted) {
         showOrganizerRequiredDialog(
           context,
@@ -340,8 +340,8 @@ class _CreatePublicQuickTournamentScreenState
     } catch (_) {
       final cached = ref.read(userProfileProvider).asData?.value;
       if (cached != null) {
-        final role = (cached.role ?? '').toUpperCase();
-        final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+        final isOrganizerOrAdmin =
+            cached.hasRole('ORGANIZER') || cached.hasRole('ADMIN');
         if (!isOrganizerOrAdmin && mounted) {
           showOrganizerRequiredDialog(
             context,
@@ -491,8 +491,9 @@ class _CreatePublicQuickTournamentScreenState
     if (!_formKey.currentState!.validate()) return;
 
     final cached = ref.read(userProfileProvider).asData?.value;
-    final role = (cached?.role ?? '').toUpperCase();
-    final isOrganizerOrAdmin = role == 'ORGANIZER' || role == 'ADMIN';
+    final isOrganizerOrAdmin =
+        (cached?.hasRole('ORGANIZER') ?? false) ||
+        (cached?.hasRole('ADMIN') ?? false);
     if (!isOrganizerOrAdmin) {
       showOrganizerRequiredDialog(
         context,
@@ -1512,43 +1513,44 @@ class _CreatePublicQuickTournamentScreenState
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
+    return Material(
+      color: colors.bgSurface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
+        side: BorderSide(color: colors.border),
       ),
-      child: Column(
-        children: [
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.tournamentCreateEntryFeeToggle),
-            value: _entryFeeEnabled,
-            onChanged: (value) => setState(() => _entryFeeEnabled = value),
-          ),
-          if (_entryFeeEnabled)
-            TextFormField(
-              controller: _entryFeeController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementEntryFee,
-                prefixText: '₫ ',
-              ),
-              validator: (value) {
-                if (!_entryFeeEnabled) return null;
-                final amount = int.tryParse(value?.trim() ?? '');
-                if (amount == null || amount < 0) {
-                  return l10n.tournamentCreateIntegerNonNegative;
-                }
-                return null;
-              },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          children: [
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.tournamentCreateEntryFeeToggle),
+              value: _entryFeeEnabled,
+              onChanged: (value) => setState(() => _entryFeeEnabled = value),
             ),
-        ],
+            if (_entryFeeEnabled)
+              TextFormField(
+                controller: _entryFeeController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: l10n.tournamentManagementEntryFee,
+                  prefixText: '₫ ',
+                ),
+                validator: (value) {
+                  if (!_entryFeeEnabled) return null;
+                  final amount = int.tryParse(value?.trim() ?? '');
+                  if (amount == null || amount < 0) {
+                    return l10n.tournamentCreateIntegerNonNegative;
+                  }
+                  return null;
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
-
 
   /// Các nội dung luôn hiện sẵn trong danh sách, giống web: tất cả đều ở
   /// trạng thái đã tick và nằm sẵn trong thẻ "Nội dung thi đấu". Đơn và nội
@@ -1993,12 +1995,13 @@ class _CreatePublicQuickTournamentScreenState
   /// Trần ELO toàn giải, công tắc ghép đôi BTC và luật bóng đá đã bỏ khỏi màn
   /// này. Giới hạn ELO riêng vẫn đặt được cho từng nội dung trong dialog.
   Widget _buildAdvancedExtras(AppColorsExtension colors) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
+    return Material(
+      color: colors.bgSurface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
+        side: BorderSide(color: colors.border),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -2530,12 +2533,13 @@ class _CreatePublicQuickTournamentScreenState
 
                           // Khối tuỳ chọn bổ sung, thu gọn mặc định — web cũng
                           // vậy (QuickTournamentCreate.tsx:1875).
-                          Container(
-                            decoration: BoxDecoration(
-                              color: colors.bgSurface,
+                          Material(
+                            color: colors.bgSurface,
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: colors.border),
+                              side: BorderSide(color: colors.border),
                             ),
+                            clipBehavior: Clip.antiAlias,
                             child: Theme(
                               data: Theme.of(sheetContext).copyWith(
                                 dividerColor: Colors.transparent,
