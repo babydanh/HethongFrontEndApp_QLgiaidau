@@ -95,6 +95,8 @@ void main() {
       await pumpUntilFound(
         tester,
         anyTextOf([
+          // Màn sau gửi đơn hiện "Trạng thái hồ sơ: Chờ BTC duyệt" (registerDetailsPendingApproval).
+          'Chờ BTC duyệt',
           'Đang chờ Ban tổ chức duyệt',
           'Bạn đã đăng ký giải đấu này',
           'Đã đăng ký, chưa thanh toán',
