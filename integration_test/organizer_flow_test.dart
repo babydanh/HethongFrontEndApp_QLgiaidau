@@ -232,6 +232,18 @@ void main() {
         reason: 'Sau Lưu & Bắt đầu giải phải có trận trên Backend',
       );
 
+      // Lưu xong phải báo thành công và không báo lỗi. Trước đây PATCH status làm lưu báo "Lỗi:" dù nhánh đã tạo.
+      await pumpUntilFound(
+        tester,
+        find.textContaining('Bốc thăm và lưu thành công'),
+        what: 'thông báo lưu nhánh thành công sau Lưu & Bắt đầu giải',
+      );
+      expect(
+        find.textContaining('Lỗi: '),
+        findsNothing,
+        reason: 'Lưu & Bắt đầu giải không được báo lỗi',
+      );
+
       // 4. Nhánh hiện trên app: tên VĐV import có trên màn nhánh.
       container.read(routerProvider).go('/tournament/$id/bracket');
       await pumpUntilFound(
