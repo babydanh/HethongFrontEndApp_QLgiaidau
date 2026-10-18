@@ -1269,9 +1269,9 @@ class _TournamentRegisterScreenState
     );
   }
 
-  Widget _buildSuccess(Tournament? t) => Scaffold(
-    backgroundColor: context.colors.bgDark,
-    body: Center(
+  // Nhánh này nằm trong SingleChildScrollView của Scaffold ngoài (build). Không bọc
+  // Scaffold thứ hai: Scaffold lồng nhận chiều cao vô hạn và ném lỗi layout (run 39123946327).
+  Widget _buildSuccess(Tournament? t) => Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -1414,8 +1414,7 @@ class _TournamentRegisterScreenState
           ],
         ),
       ),
-    ),
-  );
+    );
 
   Widget _buildHeader(Tournament t) {
     final colors = context.colors;
