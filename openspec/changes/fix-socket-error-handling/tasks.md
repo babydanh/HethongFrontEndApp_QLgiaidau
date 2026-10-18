@@ -8,7 +8,7 @@
 
 - [x] 2.1 Đếm tham chiếu phòng: `lib/core/services/socket_room_ref_counter.dart`. Xong khi: unit test xanh. Bằng chứng: `flutter test --no-pub --no-test-assets test/core/services/socket_room_ref_counter_test.dart` → `All tests passed!` (7/7). Máy không có `.env` nên dùng `--no-test-assets`; test không đọc asset.
 - [x] 2.2 `lib/core/services/match_socket_service.dart`: ref-count cho trận/giải/phiên CLB/cộng đồng, `_releaseIdleConnection`, bỏ `close()` thừa, bọc reconnect. Xong khi: `dart analyze` sạch trên 3 file. Bằng chứng: `dart analyze lib/core/services/socket_room_ref_counter.dart lib/core/services/match_socket_service.dart test/core/services/socket_room_ref_counter_test.dart` → `No issues found!`.
-- [ ] 2.3 Ghi F4 (lỗi socket) và F5 (lỗi nhãn test đăng ký) vào `openspec/changes/app-e2e-integration/findings.md` kèm hash commit. Xong khi: có hash.
+- [x] 2.3 Ghi F4 (lỗi socket) và F5 (lỗi nhãn test đăng ký) vào `openspec/changes/app-e2e-integration/findings.md` kèm hash commit. Xong khi: có hash. Bằng chứng: `findings.md` mục F4 ghi hash `d6cf6356`, mục F5 ghi hash `06ac57ca`.
 
 ## 3. Kiểm trên cloud
 

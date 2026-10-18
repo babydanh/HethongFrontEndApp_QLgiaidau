@@ -9,7 +9,7 @@
 ## 2. Hạ tầng trong repo App
 
 - [x] 2.1 `android/app/src/debug/res/xml/network_security_config.xml` chỉ cho cleartext tới `10.0.2.2` và `localhost`; `android/app/src/debug/AndroidManifest.xml` trỏ tới file này. Xong khi: build release không chứa ngoại lệ này (kiểm bằng `aapt dump xmltree` trên APK release, hoặc đọc manifest đã gộp). Bằng chứng: step `13b` của run `39111478956` (ref `46c2d691`) success, kiểm manifest và resource release đã gộp (`android/app/src/main/AndroidManifest.xml:12` trỏ tới config main không có `10.0.2.2`/`localhost`).
-- [ ] 2.2 `integration_test/support/backend_api.dart`: đăng nhập, tạo giải, ADMIN duyệt, nhập danh sách, duyệt đơn, tạo nhánh, chấm điểm. Mỗi lỗi in mã HTTP và 300 ký tự body. Xong khi: `dart analyze integration_test` sạch.
+- [x] 2.2 `integration_test/support/backend_api.dart`: đăng nhập, tạo giải, ADMIN duyệt, nhập danh sách, duyệt đơn, tạo nhánh, chấm điểm. Mỗi lỗi in mã HTTP và 300 ký tự body. Xong khi: `dart analyze integration_test` sạch. Bằng chứng: `dart analyze integration_test` → `No issues found!` (EXIT=0, trên `d6cf6356`); sau đó `06ac57ca` chỉ đổi `tournament_player_flow_test.dart`, `dart analyze` file đó cũng sạch. Mã HTTP và body: `BackendApiException` (`backend_api.dart:20-36`), in khi ngoài 2xx (`:396-398`), cắt 300 ký tự (`:443`).
 
 ## 3. Workflow cloud (repo agent-orchestrator) và script máy
 
@@ -24,12 +24,13 @@
 
   Xong khi: chạy một test khói (mở app, thấy màn đăng nhập) và có kết quả.
   Bằng chứng: run `39109977504` (ref `8b166f5b`) đã chạy job; smoke_test PASS trước khi auth chạy.
-- [ ] 3.2 `cloud-test-runner.py run --target app-e2e --app-ref <nhánh> [--backend-ref] [--specs integration_test/a_test.dart ...] [--seed data]`. Cập nhật skill `cloud-test-runner`. Xong khi: lệnh dispatch được và in tóm tắt.
+- [x] 3.2 `cloud-test-runner.py run --target app-e2e --app-ref <nhánh> [--backend-ref] [--specs integration_test/a_test.dart ...] [--seed data]`. Cập nhật skill `cloud-test-runner`. Xong khi: lệnh dispatch được và in tóm tắt. Bằng chứng: dispatch và tóm tắt in được ở run `39113409722` (bị hủy tay) và `39113523342` (tóm tắt `== Job: ... E2E Flutter App`, `3 passed, 3 failed`, exit 1). Skill: `~/.omp` commit `4799714` (lệnh hủy run `gh run cancel`, cảnh báo run hủy tay bị phân loại HẠ TẦNG).
 
 ## 4. Kịch bản
 
 - [x] 4.1 `integration_test/auth_flow_test.dart`: đăng nhập VĐV và BTC bằng form. Xong khi: xanh trên cloud. Bằng chứng: run `39111478956` (ref `46c2d691`), auth_flow_test kết thúc `+3` không lỗi (VĐV viewer và BTC organizer đều PASS, log dòng 3577). Lần trước run `39109977504` cũng PASS hai ca này.
 - [ ] 4.2 `integration_test/tournament_player_flow_test.dart`: danh sách → chi tiết → đăng ký đơn → được duyệt; đăng ký đôi + mời đồng đội; xem nhánh và lịch; nhập tỉ số một trận; nhà vô địch. Xong khi: chạy trên cloud, mỗi ca đỏ có nguyên nhân rõ (lỗi test thì sửa, tối đa 3 vòng; lỗi app thì ghi lại).
+  - Mục "nhập tỉ số một trận": app KHÔNG có màn chấm cho VĐV. Màn chấm mở khi `auth.canScore` (ADMIN, REFEREE, ORGANIZER: `lib/providers/auth_provider.dart:16,56`) hoặc khi giải là Super Lite và đã đăng nhập (`lib/features/match/screens/live_score_screen.dart:639-642`). Ca VĐV chấm trận qua API (`tournament_player_flow_test.dart:155`). Chấm trong app hiện không có kịch bản E2E nào (task 4.3 không có bước chấm). Không thêm tính năng.
 - [ ] 4.3 `integration_test/organizer_flow_test.dart`: BTC tạo giải nhanh trên app, mở trang quản lý; thêm duyệt, ghép, tạo nhánh nếu task 1.2 thấy app có. Xong khi: như 4.2.
 
 ## 5. Kiểm cuối
