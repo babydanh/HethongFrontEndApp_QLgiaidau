@@ -42,6 +42,9 @@ void main() {
         singles: true,
       );
 
+      // Hồ sơ VĐV seed thiếu SĐT và giới tính: điền qua API trước khi đăng nhập trên app.
+      await preparePlayerProfile(api);
+
       final container = await pumpApp(tester);
       await ensureSignedOut(tester, container);
       container.read(routerProvider).go('/login');
@@ -208,6 +211,9 @@ void main() {
         fullName: partnerName,
       );
 
+      // Hồ sơ VĐV seed thiếu SĐT và giới tính: điền qua API trước khi đăng nhập trên app.
+      await preparePlayerProfile(api);
+
       final container = await pumpApp(tester);
       await ensureSignedOut(tester, container);
       container.read(routerProvider).go('/login');
@@ -331,5 +337,16 @@ void main() {
         reason: 'Đơn đôi chờ đồng đội phải có mã mời',
       );
     },
+  );
+}
+
+/// Điền SĐT và giới tính cho VĐV seed qua API trước khi đăng nhập trên app.
+/// Thiếu SĐT thì app chặn đăng ký; thiếu giới tính thì banner "Hồ sơ chưa hoàn thiện" ẩn form gửi đăng ký.
+Future<void> preparePlayerProfile(BackendApi api) async {
+  final token = await api.login(kPlayerEmail, kE2ePassword);
+  await api.completePlayerProfile(
+    token: token,
+    phoneNumber: kPlayerPhone,
+    gender: 'MALE',
   );
 }

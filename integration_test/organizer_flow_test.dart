@@ -106,11 +106,21 @@ void main() {
         const ValueKey('organizer-ops-add-athlete'),
       );
       container.read(routerProvider).go('/organizer/tournaments/$id/ops');
+      // Màn điều hành mở ở tab Trận đấu (_selectedTab = 1). Nút thêm VĐV chỉ được dựng ở tab
+      // "Danh sách tham gia" (organizer_ops_screen.dart: _selectedTab == 3), nên phải bấm tab trước.
+      final rosterTab = find.widgetWithText(ChoiceChip, 'Danh sách tham gia');
+      await pumpUntilFound(
+        tester,
+        rosterTab,
+        timeout: const Duration(seconds: 60),
+        what: 'nhãn tab Danh sách tham gia trên màn điều hành',
+      );
+      await tapCentered(tester, rosterTab);
       await pumpUntilFound(
         tester,
         opsAddButton,
         timeout: const Duration(seconds: 60),
-        what: 'màn điều hành giải (nút thêm VĐV)',
+        what: 'nút thêm VĐV (tab Danh sách tham gia)',
       );
 
       // ADMIN duyệt giải và import 3 VĐV (API). Thông tin này là dữ liệu nền.

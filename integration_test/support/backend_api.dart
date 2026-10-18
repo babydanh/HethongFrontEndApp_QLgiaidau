@@ -17,6 +17,9 @@ const String kE2ePassword = '123456';
 const String kAdminEmail = 'vndcsport@gmail.com';
 const String kAdminPassword = 'Admin@123';
 
+/// SĐT đúng định dạng của UpdateUserDto (0 + đầu 3/5/7/8/9 + 8 chữ số). Tài khoản seed chưa có SĐT.
+const String kPlayerPhone = '0912345678';
+
 /// Lỗi gọi Backend: có mã HTTP và tối đa 300 ký tự đầu của body.
 class BackendApiException implements Exception {
   BackendApiException({
@@ -94,6 +97,22 @@ class BackendApi {
       throw _error('POST', path, 201, 'thiếu id: ${_snippet(map)}');
     }
     return id;
+  }
+
+  /// Điền SĐT và giới tính của chính người gọi qua `PATCH /users/profile` (UpdateUserDto).
+  /// Tài khoản seed đăng ký qua API chỉ có họ tên; thiếu SĐT thì app chặn đăng ký,
+  /// thiếu giới tính thì banner "Hồ sơ chưa hoàn thiện" ẩn form gửi đăng ký.
+  Future<void> completePlayerProfile({
+    required String token,
+    required String phoneNumber,
+    required String gender,
+  }) async {
+    await _send(
+      'PATCH',
+      '/users/profile',
+      token: token,
+      data: {'phoneNumber': phoneNumber, 'gender': gender},
+    );
   }
 
   /// Tạo giải nhanh PUBLIC (Backend đưa vào PENDING_APPROVAL, chờ ADMIN duyệt).
