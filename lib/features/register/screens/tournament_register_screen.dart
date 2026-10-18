@@ -2144,22 +2144,27 @@ class _TournamentRegisterScreenState
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: context.colors.border),
                     ),
-                    child: CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: _rankingConsent,
-                      onChanged: (value) =>
-                          setState(() => _rankingConsent = value ?? false),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      title: Text(
-                        l10n.registerRankingConsentTitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                    child: Material(
+                      // ListTile vẽ ink lên Material gần nhất. Container có nền nằm giữa sẽ làm
+                      // Flutter (debug) ném assertion, nên bọc Material trong suốt ngay quanh tile.
+                      type: MaterialType.transparency,
+                      child: CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _rankingConsent,
+                        onChanged: (value) =>
+                            setState(() => _rankingConsent = value ?? false),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(
+                          l10n.registerRankingConsentTitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      subtitle: Text(
-                        l10n.registerRankingConsentDescription,
-                        style: TextStyle(fontSize: 12),
+                        subtitle: Text(
+                          l10n.registerRankingConsentDescription,
+                          style: TextStyle(fontSize: 12),
+                        ),
                       ),
                     ),
                   ),
