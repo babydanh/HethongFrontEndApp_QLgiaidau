@@ -17,6 +17,8 @@ Future<void> initializeAppForTests() async {
 }
 
 /// Dựng TournamentApp như main.dart và trả về container để điều hướng và đọc state.
+/// Chờ SplashScreen chuyển trang xong trước khi trả về: splash gọi go('/home') sau khoảng 1,5 giây
+/// và sẽ ghi đè điều hướng của test (ví dụ go('/login')) nếu test điều hướng sớm.
 Future<ProviderContainer> pumpApp(WidgetTester tester) async {
   final container = ProviderContainer();
   await tester.pumpWidget(
@@ -30,6 +32,13 @@ Future<ProviderContainer> pumpApp(WidgetTester tester) async {
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
+  final router = container.read(routerProvider);
+  await pumpUntilCondition(
+    tester,
+    () => router.routerDelegate.currentConfiguration.uri.path != '/',
+    timeout: const Duration(seconds: 60),
+    what: 'SplashScreen chuyển khỏi đường dẫn "/"',
+  );
   return container;
 }
 
