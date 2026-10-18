@@ -1,7 +1,7 @@
 ## Why
 
 `openspec doctor` (OpenSpec 1.14.2) báo: "Guidance for operation 'archive' must be an array of strings, ignoring this operation's guidance".
-Trong `openspec/config.yaml`, 2 mục của `operations.archive.guidance` (dòng 36 và 37) chứa `: ` mà không đặt trong nháy, nên YAML đọc thành map thay vì chuỗi. OpenSpec bỏ qua CẢ khối hướng dẫn archive, nên agent chạy `/opsx-archive` không nhận được luật rebase trước khi archive, giữ cả hai phía khi spec chung đã đổi, và cấm `--skip-specs`.
+Trong `openspec/config.yaml`, 2 mục của `operations.archive.guidance` (dòng 36 và 37) chứa `: ` mà không đặt trong nháy, nên YAML đọc thành map thay vì chuỗi. OpenSpec bỏ qua CẢ khối hướng dẫn archive, nên lệnh `/opsx-archive` không nạp được các luật đó từ `config.yaml`. Bản sao của chúng trong `AGENTS.md` và skill `git-worktree-lanes` vẫn còn, nhưng chỉ có tác dụng khi agent đọc tới.
 
 ## What Changes
 
