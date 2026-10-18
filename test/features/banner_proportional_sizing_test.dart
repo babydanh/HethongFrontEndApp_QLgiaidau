@@ -282,8 +282,15 @@ void main() {
           .fontSize!;
 
       expect(portraitFont, greaterThan(landscapeFont));
-      expect(portraitFont / portraitBox.height, closeTo(0.092, 1e-6));
-      expect(landscapeFont / landscapeBox.height, closeTo(0.092, 1e-6));
+      // Card nổi bật cố ý thu nhỏ chữ tên giải còn 85% tỉ lệ chuẩn.
+      expect(
+        portraitFont / portraitBox.height,
+        closeTo(AppResponsive.bannerTitleRatio * 0.85, 1e-6),
+      );
+      expect(
+        landscapeFont / landscapeBox.height,
+        closeTo(AppResponsive.bannerTitleRatio * 0.85, 1e-6),
+      );
     });
 
     testWidgets('chữ trên banner scale theo banner giữa 14" và 16"', (
@@ -305,8 +312,14 @@ void main() {
 
       expect(font16, greaterThan(font14));
       // Tỉ lệ chữ/banner phải BẰNG NHAU, không phải chỉ "cùng chiều hướng".
-      expect(font14 / box14.height, closeTo(0.092, 1e-6));
-      expect(font16 / box16.height, closeTo(0.092, 1e-6));
+      expect(
+        font14 / box14.height,
+        closeTo(AppResponsive.bannerTitleRatio * 0.85, 1e-6),
+      );
+      expect(
+        font16 / box16.height,
+        closeTo(AppResponsive.bannerTitleRatio * 0.85, 1e-6),
+      );
       expect(font14 / box14.height, equals(font16 / box16.height));
     });
 
