@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [main]
+    paths-ignore: ['openspec/**', '.omp/**', 'docs/**', 'changes/**', '.lavish/**', '**/*.md']
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Kiểm tra nhẹ (pub get, analyze, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.4'
+          cache: true
+
+      - name: Install packages (theo pubspec.lock)
+        run: flutter pub get --enforce-lockfile
+
+      # `.env` is gitignored; tests load their own config via dotenv.loadFromString,
+      # but the `.env` asset declared in pubspec.yaml must exist for the test build.
+      # The template holds placeholders only, no release secret.
+      - name: Prepare test environment file
+        run: cp .env.example .env
+
+      # main đang có ~109 warning lint sẵn (không do CI này): chỉ chặn error.
+      # Bỏ --no-fatal-warnings khi đã dọn hết warning.
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Test
+        run: flutter test
