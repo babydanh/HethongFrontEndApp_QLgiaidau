@@ -800,6 +800,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                         isTeamSport: isTeamSport,
                         shrinkWrap: true,
                         showDivisionHeading: false,
+                        isDoublesDivision: division.isDoubles,
                       ),
                     ),
                   )
@@ -809,6 +810,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     selectedDivision: _selectedDivision,
                     selectedDivisionId: _selectedDivisionId,
                     isTeamSport: isTeamSport,
+                    isDoublesDivision:
+                        tournament.divisions.firstOrNull?.isDoubles ?? false,
                   )),
     );
 

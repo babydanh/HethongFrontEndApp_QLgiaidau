@@ -20980,12 +20980,6 @@ abstract class AppLocalizations {
   /// **'Đội {id}'**
   String teamFallbackName(Object id);
 
-  /// No description provided for @teamMemberFallback.
-  ///
-  /// In vi, this message translates to:
-  /// **'VĐV'**
-  String get teamMemberFallback;
-
   /// No description provided for @tournamentRegistrationResponseInvalid.
   ///
   /// In vi, this message translates to:

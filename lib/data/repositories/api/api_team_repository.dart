@@ -283,6 +283,16 @@ class ApiTeamRepository implements ITeamRepository {
               )
               .where((member) => member.fullName.isNotEmpty)
               .toList();
+          // VĐV chưa có tài khoản (Backend `guestNames`, chỉ có tên): thêm sau
+          // roster, không userId nên chip không mở hồ sơ ai khác.
+          final guestNames = (json['guestNames'] as List<dynamic>? ?? const [])
+              .map((name) => name.toString().trim())
+              .where((name) => name.isNotEmpty)
+              .toList();
+          members.addAll(guestNames);
+          memberInfos.addAll(
+            guestNames.map((name) => MatchMemberInfo(fullName: name)),
+          );
 
           final userMap = json['user'] as Map<String, dynamic>? ??
               json['registeredByUser'] as Map<String, dynamic>?;
@@ -339,15 +349,8 @@ class ApiTeamRepository implements ITeamRepository {
             group: groupName,
             divisionId: divId,
             photoUrl: singleAvatar ?? json['photoUrl']?.toString() ?? '',
-            members: members.isNotEmpty
-                ? members
-                : [
-                    teamName.isNotEmpty
-                        ? teamName
-                        : lookupAppLocalizations(
-                            PlatformDispatcher.instance.locale,
-                          ).teamMemberFallback,
-                  ],
+            // Chỉ roster thật; đội chưa có roster để trống, UI tự xử lý.
+            members: members,
             memberInfos: memberInfos,
             contactEmail: json['contactPhone']?.toString() ?? '',
             qrCode: json['qrCode']?.toString() ?? id,

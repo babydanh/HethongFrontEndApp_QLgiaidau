@@ -11549,9 +11549,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get teamMemberFallback => 'Athlete';
-
-  @override
   String get tournamentRegistrationResponseInvalid =>
       'Invalid registration response.';
 

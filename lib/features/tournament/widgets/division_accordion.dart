@@ -123,7 +123,7 @@ class DivisionAccordion extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Flexible(
+                  Expanded(
                     child: Text(
                       division.name,
                       maxLines: 1,
@@ -140,27 +140,36 @@ class DivisionAccordion extends StatelessWidget {
                     ),
                   ),
                   if (badge != null) ...[const SizedBox(width: 6), badge],
-                  const Spacer(),
                   if (isFull) ...[
+                    const SizedBox(width: 6),
                     Icon(
                       Icons.check_circle_rounded,
                       size: 13,
                       color: colors.textMuted,
                     ),
-                    const SizedBox(width: 7),
                   ],
-                  Icon(
-                    Icons.people_alt_outlined,
-                    size: 13,
-                    color: colors.textMuted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    countLabel,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textSecondary,
+                  // Cột số bề rộng cố định, căn phải: mọi hàng thẳng một
+                  // cột dù tên dài hay ngắn.
+                  SizedBox(
+                    width: 64,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Icon(
+                          Icons.people_alt_outlined,
+                          size: 13,
+                          color: colors.textMuted,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          countLabel,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   if (contentBuilder != null) ...[

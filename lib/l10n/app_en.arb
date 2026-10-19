@@ -4745,7 +4745,6 @@
       "id": {}
     }
   },
-  "teamMemberFallback": "Athlete",
   "tournamentRegistrationResponseInvalid": "Invalid registration response.",
   "tournamentInviteCodeInvalid": "Invalid tournament invite code.",
   "footballRosterResponseInvalid": "Invalid football roster response.",

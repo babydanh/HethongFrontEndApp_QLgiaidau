@@ -4764,7 +4764,6 @@
       "id": {}
     }
   },
-  "teamMemberFallback": "VĐV",
   "tournamentRegistrationResponseInvalid": "Phản hồi đăng ký không hợp lệ.",
   "tournamentInviteCodeInvalid": "Mã tham gia giải không hợp lệ.",
   "footballRosterResponseInvalid": "Phản hồi roster bóng đá không hợp lệ.",

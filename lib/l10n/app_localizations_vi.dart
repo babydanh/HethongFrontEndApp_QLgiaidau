@@ -11515,9 +11515,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get teamMemberFallback => 'VĐV';
-
-  @override
   String get tournamentRegistrationResponseInvalid =>
       'Phản hồi đăng ký không hợp lệ.';
 
