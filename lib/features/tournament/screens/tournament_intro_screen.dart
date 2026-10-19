@@ -589,6 +589,13 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       _selectedDivision = tournament.divisions.first.name;
       _selectedDivisionId = tournament.divisions.first.id;
     }
+    String? selectedMatchType;
+    for (final division in tournament.divisions) {
+      if (division.id == _selectedDivisionId) {
+        selectedMatchType = division.matchType;
+        break;
+      }
+    }
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     // The flat public-only endpoint intentionally excludes Lite tournaments.
     // Lite detail must use the bracket projection, which is also the source
@@ -720,6 +727,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       tournamentId: widget.tournamentId,
                       selectedDivisionId: _selectedDivisionId,
                       selectedDivision: _selectedDivision,
+                      matchType: selectedMatchType,
                     ),
                   ),
                 ],
@@ -729,6 +737,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 tournamentId: widget.tournamentId,
                 selectedDivisionId: _selectedDivisionId,
                 selectedDivision: _selectedDivision,
+                matchType: selectedMatchType,
               ),
       );
     }
