@@ -17186,6 +17186,84 @@ abstract class AppLocalizations {
   /// **'Vòng bảng'**
   String get bracketView_groupStage;
 
+  /// No description provided for @groupAssignmentTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phân bảng vòng bảng'**
+  String get groupAssignmentTitle;
+
+  /// No description provided for @groupAssignmentGroupLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng {name}'**
+  String groupAssignmentGroupLabel(String name);
+
+  /// No description provided for @groupAssignmentManage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý phân bảng'**
+  String get groupAssignmentManage;
+
+  /// No description provided for @groupAssignmentUnassigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp'**
+  String get groupAssignmentUnassigned;
+
+  /// No description provided for @groupAssignmentGroupCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số bảng'**
+  String get groupAssignmentGroupCount;
+
+  /// No description provided for @groupAssignmentMoveToGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyển đội'**
+  String get groupAssignmentMoveToGroup;
+
+  /// No description provided for @groupAssignmentMoveToUnassigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyển về Chưa xếp'**
+  String get groupAssignmentMoveToUnassigned;
+
+  /// No description provided for @groupAssignmentLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể chỉnh sửa vì trận vòng bảng đã bắt đầu hoặc đã có kết quả.'**
+  String get groupAssignmentLocked;
+
+  /// No description provided for @groupAssignmentSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu phân bảng'**
+  String get groupAssignmentSave;
+
+  /// No description provided for @groupAssignmentSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu cấu hình vòng bảng.'**
+  String get groupAssignmentSaved;
+
+  /// No description provided for @groupAssignmentSaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu phân bảng: {error}'**
+  String groupAssignmentSaveError(String error);
+
+  /// No description provided for @groupAssignmentRegenerateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu cấu hình phân bảng nhưng không thể tạo lại sơ đồ: {error}'**
+  String groupAssignmentRegenerateError(String error);
+
+  /// No description provided for @groupAssignmentNoParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có đội hợp lệ trong nội dung này.'**
+  String get groupAssignmentNoParticipants;
+
   /// No description provided for @bracketView_knockoutStage.
   ///
   /// In vi, this message translates to:

@@ -781,42 +781,48 @@ void main() {
       expect(participant['sourceSheetName'], 'Mau_Dang_Ky');
     });
 
-    test('commit sends customResponses.notes only for rows with notes', () async {
-      backend.onPost(commitPath, {'importedCount': 2, 'replayed': false});
+    test(
+      'commit sends customResponses.notes only for rows with notes',
+      () async {
+        backend.onPost(commitPath, {'importedCount': 2, 'replayed': false});
 
-      await repository.importRosterBatch(
-        tournamentId,
-        RosterImportBatchRequest(
-          groups: [
-            RosterImportBatchGroup(
-              divisionId: 'division-1',
-              participants: [
-                RosterImportBatchItem(
-                  clientRowIndex: 0,
-                  player1Name: 'Nguyen Van A',
-                  teamName: 'Nguyen Van A',
-                  sourceRowIndex: 2,
-                  customResponses: {'notes': 'Đăng ký muộn'},
-                ),
-                RosterImportBatchItem(
-                  clientRowIndex: 1,
-                  player1Name: 'Tran Thi B',
-                  teamName: 'Tran Thi B',
-                  sourceRowIndex: 3,
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
+        await repository.importRosterBatch(
+          tournamentId,
+          RosterImportBatchRequest(
+            groups: [
+              RosterImportBatchGroup(
+                divisionId: 'division-1',
+                participants: [
+                  RosterImportBatchItem(
+                    clientRowIndex: 0,
+                    player1Name: 'Nguyen Van A',
+                    teamName: 'Nguyen Van A',
+                    sourceRowIndex: 2,
+                    customResponses: {'notes': 'Đăng ký muộn'},
+                  ),
+                  RosterImportBatchItem(
+                    clientRowIndex: 1,
+                    player1Name: 'Tran Thi B',
+                    teamName: 'Tran Thi B',
+                    sourceRowIndex: 3,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
 
-      final groups = (backend.only.data as Map)['groups'] as List;
-      final participants = (groups.single as Map)['participants'] as List;
-      expect((participants[0] as Map)['customResponses'], {
-        'notes': 'Đăng ký muộn',
-      });
-      expect((participants[1] as Map).containsKey('customResponses'), isFalse);
-    });
+        final groups = (backend.only.data as Map)['groups'] as List;
+        final participants = (groups.single as Map)['participants'] as List;
+        expect((participants[0] as Map)['customResponses'], {
+          'notes': 'Đăng ký muộn',
+        });
+        expect(
+          (participants[1] as Map).containsKey('customResponses'),
+          isFalse,
+        );
+      },
+    );
 
     test('retrying the same payload reuses the Idempotency-Key', () async {
       backend.onPost(commitPath, {'importedCount': 1, 'replayed': false});
@@ -1005,23 +1011,46 @@ void main() {
       expect(backend.only.data, {'name': 'A'});
     });
 
-    test('config update patches the tournament-scoped config route', () async {
-      backend.onPatch(
-        '/tournaments/$tournamentId/divisions/division-1/config',
-        {'id': 'division-1'},
-      );
+    test(
+      'config update PATCH forwards the division round configuration',
+      () async {
+        final payload = {
+          'isConfigOverride': true,
+          'roundConfig': {
+            'format': 'GROUP_KNOCKOUT',
+            'groupsConfig': {
+              'numGroups': 2,
+              'teamsPerGroup': 2,
+              'groups': [
+                {
+                  'name': 'A',
+                  'participantIds': ['team-1'],
+                },
+                {'name': 'B', 'participantIds': []},
+              ],
+            },
+            'advancementConfig': {'teamsAdvancing': 1},
+          },
+        };
+        backend.onPatch(
+          '/tournaments/$tournamentId/divisions/division-1/config',
+          {'id': 'division-1'},
+        );
 
-      await repository.updateDivisionConfig(tournamentId, 'division-1', {
-        'status': 'ONGOING',
-      });
+        await repository.updateDivisionConfig(
+          tournamentId,
+          'division-1',
+          payload,
+        );
 
-      expect(backend.only.method, 'PATCH');
-      expect(
-        backend.only.path,
-        '/tournaments/$tournamentId/divisions/division-1/config',
-      );
-      expect(backend.only.data, {'status': 'ONGOING'});
-    });
+        expect(backend.only.method, 'PATCH');
+        expect(
+          backend.only.path,
+          '/tournaments/$tournamentId/divisions/division-1/config',
+        );
+        expect(backend.only.data, payload);
+      },
+    );
 
     test('division deletion deletes the division-only route', () async {
       backend.onDelete(

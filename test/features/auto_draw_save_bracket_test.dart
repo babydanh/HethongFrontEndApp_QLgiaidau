@@ -1,4 +1,3 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
@@ -18,16 +17,18 @@ const _managementRoute = '/quan-ly-test';
 
 class _MockTournamentRepository extends Mock implements ITournamentRepository {}
 
-Tournament _tournament() => Tournament.fromJson({
-  'name': 'Giải lưu nhánh',
-  'sport': 'badminton',
-  'format': 'SINGLES',
-  'bracketType': 'single_elimination',
-  'status': 'upcoming',
-  'maxTeams': 4,
-  'createdAt': '2026-01-01T00:00:00.000Z',
-  'updatedAt': '2026-01-01T00:00:00.000Z',
-}, _tournamentId);
+Tournament _tournament({List<Map<String, dynamic>> divisions = const []}) =>
+    Tournament.fromJson({
+      'name': 'Giải lưu nhánh',
+      'sport': 'badminton',
+      'format': 'SINGLES',
+      'bracketType': 'single_elimination',
+      'status': 'upcoming',
+      'maxTeams': 4,
+      'createdAt': '2026-01-01T00:00:00.000Z',
+      'updatedAt': '2026-01-01T00:00:00.000Z',
+      'divisions': divisions,
+    }, _tournamentId);
 
 List<Team> _teams() => [
   for (var i = 1; i <= 4; i++)
@@ -41,9 +42,11 @@ void main() {
   });
 
   late _MockTournamentRepository repo;
+  late Tournament tournament;
 
   setUp(() {
     repo = _MockTournamentRepository();
+    tournament = _tournament();
     when(
       () => repo.generateBracket(
         any(),
@@ -64,13 +67,13 @@ void main() {
           ).overrideWith((ref) => Stream.value(_teams())),
           tournamentProvider(
             _tournamentId,
-          ).overrideWith((ref) => Stream.value(_tournament())),
+          ).overrideWith((ref) => Stream.value(tournament)),
           matchesProvider(
             _tournamentId,
           ).overrideWith((ref) => Stream.value(<MatchModel>[])),
         ],
         child: MaterialApp.router(
-          theme: AppTheme.lightTheme,
+          theme: ThemeData(splashFactory: NoSplash.splashFactory),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('vi'),
@@ -91,11 +94,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  void expectSavedWithoutStatus(WidgetTester tester, AppLocalizations l10n) {
+  void expectSavedWithoutStatus(
+    WidgetTester tester,
+    AppLocalizations l10n, {
+    required String? divisionId,
+  }) {
     verify(
       () => repo.generateBracket(
         _tournamentId,
-        divisionId: null,
+        divisionId: divisionId,
         seedingType: 'RANDOM',
         allowReset: false,
       ),
@@ -106,6 +113,128 @@ void main() {
     expect(find.textContaining(l10n.autoDraw_error('')), findsNothing);
     expect(tester.takeException(), isNull);
   }
+
+  testWidgets(
+    'multi-division draw requires a division and sends no request before selection',
+    (tester) async {
+      tournament = _tournament(
+        divisions: [
+          {'id': 'division-1', 'name': 'Nội dung 1'},
+          {'id': 'division-2', 'name': 'Nội dung 2'},
+        ],
+      );
+      final router = GoRouter(
+        initialLocation: '/draw',
+        routes: [
+          GoRoute(
+            path: '/draw',
+            builder: (context, state) =>
+                const AutoDrawScreen(tournamentId: _tournamentId),
+          ),
+        ],
+      );
+      await pumpRouter(tester, router);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(AutoDrawScreen)),
+      )!;
+      await tester.tap(find.text(l10n.autoDraw_auto));
+      await tester.pump(const Duration(seconds: 1));
+      await tester.tap(find.text(l10n.autoDraw_saveStart));
+      await tester.pump();
+
+      verifyNever(
+        () => repo.generateBracket(
+          any(),
+          divisionId: any(named: 'divisionId'),
+          seedingType: any(named: 'seedingType'),
+          allowReset: any(named: 'allowReset'),
+        ),
+      );
+      expect(find.text(l10n.registerSelectDivision), findsWidgets);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('selected division is sent when saving a multi-division draw', (
+    tester,
+  ) async {
+    tournament = _tournament(
+      divisions: [
+        {'id': 'division-1', 'name': 'Nội dung 1'},
+        {'id': 'division-2', 'name': 'Nội dung 2'},
+      ],
+    );
+    final router = GoRouter(
+      initialLocation: '/draw',
+      routes: [
+        GoRoute(
+          path: '/draw',
+          builder: (context, state) => const AutoDrawScreen(
+            tournamentId: _tournamentId,
+            initialDivisionId: 'division-1',
+          ),
+        ),
+      ],
+    );
+    await pumpRouter(tester, router);
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(AutoDrawScreen)),
+    )!;
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nội dung 2').last);
+    await tester.pumpAndSettle();
+    await drawAndSave(tester, l10n);
+
+    verify(
+      () => repo.generateBracket(
+        _tournamentId,
+        divisionId: 'division-2',
+        seedingType: 'RANDOM',
+        allowReset: false,
+      ),
+    ).called(1);
+    verifyNever(() => repo.update(any(), any()));
+    verifyNever(() => repo.updateStatus(any(), any()));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('single division is sent automatically when saving', (
+    tester,
+  ) async {
+    tournament = _tournament(
+      divisions: [
+        {'id': 'division-only', 'name': 'Nội dung duy nhất'},
+      ],
+    );
+    final router = GoRouter(
+      initialLocation: '/draw',
+      routes: [
+        GoRoute(
+          path: '/draw',
+          builder: (context, state) =>
+              const AutoDrawScreen(tournamentId: _tournamentId),
+        ),
+      ],
+    );
+    await pumpRouter(tester, router);
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(AutoDrawScreen)),
+    )!;
+    await drawAndSave(tester, l10n);
+
+    verify(
+      () => repo.generateBracket(
+        _tournamentId,
+        divisionId: 'division-only',
+        seedingType: 'RANDOM',
+        allowReset: false,
+      ),
+    ).called(1);
+    verifyNever(() => repo.update(any(), any()));
+    verifyNever(() => repo.updateStatus(any(), any()));
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'mở bằng push: lưu nhánh không gửi status, không báo lỗi và quay lại màn trước',
@@ -142,7 +271,7 @@ void main() {
       await drawAndSave(tester, l10n);
 
       expect(find.text('mở bốc thăm'), findsOneWidget);
-      expectSavedWithoutStatus(tester, l10n);
+      expectSavedWithoutStatus(tester, l10n, divisionId: null);
     },
   );
 
@@ -175,7 +304,7 @@ void main() {
       await drawAndSave(tester, l10n);
 
       expect(find.text('trang quản lý test'), findsOneWidget);
-      expectSavedWithoutStatus(tester, l10n);
+      expectSavedWithoutStatus(tester, l10n, divisionId: null);
     },
   );
 }

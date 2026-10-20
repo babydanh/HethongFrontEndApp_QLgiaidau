@@ -292,6 +292,24 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               )
               .when(
                 data: (matches) {
+                  final divisionBracketType = tournament?.divisions
+                      .where((division) => division.id == _activeDivisionId)
+                      .firstOrNull
+                      ?.bracketType;
+                  final rawType =
+                      (widget.bracketType ??
+                              divisionBracketType ??
+                              tournament?.bracketType ??
+                              '')
+                          .trim()
+                          .toLowerCase();
+                  final canManageGroupAssignment =
+                      widget.canEditBracket || auth.role == UserRole.admin;
+                  final hasConfiguredGroupStage =
+                      rawType == 'round_robin' ||
+                      rawType == 'roundrobin' ||
+                      rawType == 'group_stage_knockout' ||
+                      rawType == 'groupstageknockout';
                   if (matches.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -325,24 +343,18 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                                 color: context.colors.textMuted,
                               ),
                             ),
+                            if (canManageGroupAssignment &&
+                                hasConfiguredGroupStage &&
+                                _activeDivisionId != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: _buildManageGroupStageButton(l10n),
+                              ),
                           ],
                         ),
                       ),
                     );
                   }
-
-                  final divisionBracketType = tournamentAsync.value?.divisions
-                      .where((d) => d.id == _activeDivisionId)
-                      .firstOrNull
-                      ?.bracketType;
-
-                  final rawType =
-                      (widget.bracketType ??
-                              divisionBracketType ??
-                              tournamentAsync.value?.bracketType ??
-                              '')
-                          .trim()
-                          .toLowerCase();
 
                   final hasDoubleElimMatches = matches.any(
                     isDoubleEliminationMatch,
@@ -407,6 +419,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       children: [
                         _buildGroupStageTabBar(l10n),
                         const SizedBox(height: 8),
+                        if (canManageGroupAssignment &&
+                            _activeDivisionId != null)
+                          _buildManageGroupStageButton(l10n),
                         if (widget.isEmbedded)
                           _buildGroupTabContent(
                             matches,
@@ -530,6 +545,33 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           _buildGroupTabItem(2, l10n.bracketView_schedule),
         ],
       ),
+    );
+  }
+
+  Widget _buildManageGroupStageButton(AppLocalizations l10n) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: TextButton.icon(
+          key: const Key('group-stage-assignment-entry'),
+          onPressed: _openGroupStageAssignment,
+          icon: const Icon(Icons.groups_2_outlined),
+          label: Text(l10n.groupAssignmentManage),
+        ),
+      ),
+    );
+  }
+
+  void _openGroupStageAssignment() {
+    final divisionId = _activeDivisionId;
+    if (divisionId == null || divisionId.isEmpty) return;
+
+    final routeBase = ref.read(authProvider).role == UserRole.admin
+        ? '/admin/tournament/${widget.tournamentId}'
+        : '/organizer/tournaments/${widget.tournamentId}/manage';
+    context.push(
+      '$routeBase/group-stage-assignment/${Uri.encodeComponent(divisionId)}',
     );
   }
 

@@ -3541,6 +3541,40 @@
   "bracketView_losers": "Losers bracket",
   "bracketView_stageTitle": "STAGE:",
   "bracketView_groupStage": "Group stage",
+  "groupAssignmentTitle": "Group stage assignment",
+  "groupAssignmentGroupLabel": "Group {name}",
+  "@groupAssignmentGroupLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAssignmentManage": "Manage groups",
+  "groupAssignmentUnassigned": "Unassigned teams",
+  "groupAssignmentGroupCount": "Number of groups",
+  "groupAssignmentMoveToGroup": "Move team",
+  "groupAssignmentMoveToUnassigned": "Move to unassigned",
+  "groupAssignmentLocked": "Assignments are locked because a group-stage match has started or has a result.",
+  "groupAssignmentSave": "Save assignments",
+  "groupAssignmentSaved": "Group-stage configuration saved.",
+  "groupAssignmentSaveError": "Could not save group assignments: {error}",
+  "@groupAssignmentSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAssignmentRegenerateError": "Group assignments were saved, but the bracket could not be regenerated: {error}",
+  "@groupAssignmentRegenerateError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAssignmentNoParticipants": "No eligible teams are available for this division.",
   "bracketView_knockoutStage": "Knockout stage",
   "bracketView_groupTitle": "GROUP:",
   "bracketView_roundTitle": "ROUND:",

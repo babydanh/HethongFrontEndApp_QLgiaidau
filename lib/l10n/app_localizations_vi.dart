@@ -9313,6 +9313,53 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bracketView_groupStage => 'Vòng bảng';
 
   @override
+  String get groupAssignmentTitle => 'Phân bảng vòng bảng';
+
+  @override
+  String groupAssignmentGroupLabel(String name) {
+    return 'Bảng $name';
+  }
+
+  @override
+  String get groupAssignmentManage => 'Quản lý phân bảng';
+
+  @override
+  String get groupAssignmentUnassigned => 'Chưa xếp';
+
+  @override
+  String get groupAssignmentGroupCount => 'Số bảng';
+
+  @override
+  String get groupAssignmentMoveToGroup => 'Chuyển đội';
+
+  @override
+  String get groupAssignmentMoveToUnassigned => 'Chuyển về Chưa xếp';
+
+  @override
+  String get groupAssignmentLocked =>
+      'Không thể chỉnh sửa vì trận vòng bảng đã bắt đầu hoặc đã có kết quả.';
+
+  @override
+  String get groupAssignmentSave => 'Lưu phân bảng';
+
+  @override
+  String get groupAssignmentSaved => 'Đã lưu cấu hình vòng bảng.';
+
+  @override
+  String groupAssignmentSaveError(String error) {
+    return 'Không thể lưu phân bảng: $error';
+  }
+
+  @override
+  String groupAssignmentRegenerateError(String error) {
+    return 'Đã lưu cấu hình phân bảng nhưng không thể tạo lại sơ đồ: $error';
+  }
+
+  @override
+  String get groupAssignmentNoParticipants =>
+      'Chưa có đội hợp lệ trong nội dung này.';
+
+  @override
   String get bracketView_knockoutStage => 'Vòng Knockout';
 
   @override

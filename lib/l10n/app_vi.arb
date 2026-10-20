@@ -3559,6 +3559,40 @@
   "bracketView_losers": "Nhánh thua",
   "bracketView_stageTitle": "GIAI ĐOẠN:",
   "bracketView_groupStage": "Vòng bảng",
+  "groupAssignmentTitle": "Phân bảng vòng bảng",
+  "groupAssignmentGroupLabel": "Bảng {name}",
+  "@groupAssignmentGroupLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAssignmentManage": "Quản lý phân bảng",
+  "groupAssignmentUnassigned": "Chưa xếp",
+  "groupAssignmentGroupCount": "Số bảng",
+  "groupAssignmentMoveToGroup": "Chuyển đội",
+  "groupAssignmentMoveToUnassigned": "Chuyển về Chưa xếp",
+  "groupAssignmentLocked": "Không thể chỉnh sửa vì trận vòng bảng đã bắt đầu hoặc đã có kết quả.",
+  "groupAssignmentSave": "Lưu phân bảng",
+  "groupAssignmentSaved": "Đã lưu cấu hình vòng bảng.",
+  "groupAssignmentSaveError": "Không thể lưu phân bảng: {error}",
+  "@groupAssignmentSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAssignmentRegenerateError": "Đã lưu cấu hình phân bảng nhưng không thể tạo lại sơ đồ: {error}",
+  "@groupAssignmentRegenerateError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAssignmentNoParticipants": "Chưa có đội hợp lệ trong nội dung này.",
   "bracketView_knockoutStage": "Vòng Knockout",
   "bracketView_groupTitle": "BẢNG ĐẤU:",
   "bracketView_roundTitle": "VÒNG ĐẤU:",

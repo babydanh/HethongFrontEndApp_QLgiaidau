@@ -26,7 +26,7 @@ omp chỉ tự nạp file này (gốc repo) và `AGENTS.md` toàn cục. `D:/Dua
 ## Ranh giới
 
 - `.env` là secret, gitignored: KHÔNG đọc, KHÔNG in, KHÔNG copy từ repo chính. Worktree mới không có `.env`; cần chạy app hoặc test cần file này thì hỏi người dùng.
-- Agent KHÔNG push. Push `main` = deploy production.
+- Agent chỉ được gộp và push `main` qua `merge-lane.py --push` sau khi các cổng kiểm tra đạt; không push `main` trực tiếp. Deploy iOS/App Store chỉ chạy bằng tay qua `workflow_dispatch` của `.github/workflows/deploy-ios.yml`; push `main` không tự deploy iOS.
 - Repo này chưa có workflow test trên GitHub Actions (chỉ `.github/workflows/deploy-ios.yml`).
 
 ## Kế hoạch và thay đổi

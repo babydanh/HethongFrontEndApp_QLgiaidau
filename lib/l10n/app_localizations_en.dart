@@ -9337,6 +9337,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketView_groupStage => 'Group stage';
 
   @override
+  String get groupAssignmentTitle => 'Group stage assignment';
+
+  @override
+  String groupAssignmentGroupLabel(String name) {
+    return 'Group $name';
+  }
+
+  @override
+  String get groupAssignmentManage => 'Manage groups';
+
+  @override
+  String get groupAssignmentUnassigned => 'Unassigned teams';
+
+  @override
+  String get groupAssignmentGroupCount => 'Number of groups';
+
+  @override
+  String get groupAssignmentMoveToGroup => 'Move team';
+
+  @override
+  String get groupAssignmentMoveToUnassigned => 'Move to unassigned';
+
+  @override
+  String get groupAssignmentLocked =>
+      'Assignments are locked because a group-stage match has started or has a result.';
+
+  @override
+  String get groupAssignmentSave => 'Save assignments';
+
+  @override
+  String get groupAssignmentSaved => 'Group-stage configuration saved.';
+
+  @override
+  String groupAssignmentSaveError(String error) {
+    return 'Could not save group assignments: $error';
+  }
+
+  @override
+  String groupAssignmentRegenerateError(String error) {
+    return 'Group assignments were saved, but the bracket could not be regenerated: $error';
+  }
+
+  @override
+  String get groupAssignmentNoParticipants =>
+      'No eligible teams are available for this division.';
+
+  @override
   String get bracketView_knockoutStage => 'Knockout stage';
 
   @override

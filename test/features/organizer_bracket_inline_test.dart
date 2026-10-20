@@ -1,4 +1,3 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
@@ -108,7 +107,7 @@ Future<void> _pumpOrganizer(
         authProvider.overrideWith(_GuestAuthNotifier.new),
       ],
       child: MaterialApp(
-        theme: AppTheme.lightTheme,
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('vi'),
@@ -303,5 +302,17 @@ void main() {
 
     expect(find.byType(MatchTableRow), findsNothing);
     expect(find.text(l10n.bracketView_noMatchingMatches), findsOneWidget);
+  });
+  testWidgets('hiện lối quản lý phân bảng trước khi tạo sơ đồ', (tester) async {
+    await _pumpOrganizer(
+      tester,
+      bracketType: 'group_stage_knockout',
+      matches: [],
+    );
+
+    expect(
+      find.byKey(const Key('group-stage-assignment-entry')),
+      findsOneWidget,
+    );
   });
 }

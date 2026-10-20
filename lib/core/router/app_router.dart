@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/features/teams/screens/add_team_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/group_stage_assignment_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
@@ -320,6 +321,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                 },
               ),
               GoRoute(
+                path: 'group-stage-assignment/:divisionId',
+                builder: (context, state) => GroupStageAssignmentScreen(
+                  tournamentId: state.pathParameters['id']!,
+                  divisionId: state.pathParameters['divisionId']!,
+                ),
+              ),
+              GoRoute(
                 path: 'tokens',
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
@@ -341,7 +349,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'draw',
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
-                  return AutoDrawScreen(tournamentId: id);
+                  return AutoDrawScreen(
+                    tournamentId: id,
+                    initialDivisionId: state.uri.queryParameters['divisionId'],
+                  );
                 },
               ),
             ],
@@ -464,6 +475,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               final id = state.pathParameters['id']!;
               return AutoDrawScreen(
                 tournamentId: id,
+                initialDivisionId: state.uri.queryParameters['divisionId'],
                 managementRouteBase: '/organizer/tournaments/$id/manage',
               );
             },
@@ -478,6 +490,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                 canEditBracket: true,
               );
             },
+          ),
+          GoRoute(
+            path: 'group-stage-assignment/:divisionId',
+            builder: (context, state) => GroupStageAssignmentScreen(
+              tournamentId: state.pathParameters['id']!,
+              divisionId: state.pathParameters['divisionId']!,
+            ),
           ),
         ],
       ),

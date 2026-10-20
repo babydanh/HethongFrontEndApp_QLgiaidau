@@ -10,7 +10,6 @@ import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
-import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -19,12 +18,13 @@ class AutoDrawScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final bool isEmbedded;
   final String? managementRouteBase;
-
+  final String? initialDivisionId;
   const AutoDrawScreen({
     super.key,
     required this.tournamentId,
     this.isEmbedded = false,
     this.managementRouteBase,
+    this.initialDivisionId,
   });
 
   @override
@@ -35,6 +35,7 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
   bool _isDrawing = false;
   List<MatchModel> _previewMatches = [];
   bool _hasSaved = false;
+  String? _selectedDivisionId;
 
   bool _isManualDrawMode = false;
   Set<String> _revealedTeamIds = {};
@@ -112,15 +113,36 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
 
   Future<void> _saveBracket(Tournament tournament) async {
     final l10n = AppLocalizations.of(context)!;
+    final divisions = tournament.divisions;
+    String? selectedDivisionId;
+    if (divisions.length == 1) {
+      selectedDivisionId = divisions.first.id;
+    } else if (divisions.any(
+      (division) => division.id == _selectedDivisionId,
+    )) {
+      selectedDivisionId = _selectedDivisionId;
+    } else if (divisions.any(
+      (division) => division.id == widget.initialDivisionId,
+    )) {
+      selectedDivisionId = widget.initialDivisionId;
+    } else {
+      selectedDivisionId = null;
+    }
+    if (divisions.length > 1 && selectedDivisionId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.registerSelectDivision)));
+      return;
+    }
     setState(() => _isDrawing = true);
+
     try {
       final repo = ref.read(tournamentRepositoryProvider);
       // Server sinh sơ đồ chính thức từ VĐV đã duyệt, không lưu bản xem trước.
-      // Nhiều nội dung mà thiếu divisionId thì backend trả lỗi tiếng Việt.
-      final divisions = tournament.divisions;
+      // Chỉ truyền division đã chọn; giải không có division vẫn dùng null.
       final result = await repo.generateBracket(
         widget.tournamentId,
-        divisionId: divisions.length == 1 ? divisions.first.id : null,
+        divisionId: divisions.isEmpty ? null : selectedDivisionId,
         seedingType: 'RANDOM',
         allowReset: false,
       );
@@ -289,6 +311,46 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                 color: context.colors.textSecondary,
                               ),
                             ),
+                            if (tournament.divisions.length > 1) ...[
+                              const SizedBox(height: 16),
+                              DropdownButtonFormField<String>(
+                                initialValue:
+                                    tournament.divisions.any(
+                                      (division) =>
+                                          division.id == _selectedDivisionId,
+                                    )
+                                    ? _selectedDivisionId
+                                    : tournament.divisions.any(
+                                        (division) =>
+                                            division.id ==
+                                            widget.initialDivisionId,
+                                      )
+                                    ? widget.initialDivisionId
+                                    : null,
+                                decoration: InputDecoration(
+                                  labelText: l10n.registerSelectDivision,
+                                  border: const OutlineInputBorder(),
+                                ),
+                                hint: Text(l10n.registerSelectDivision),
+                                items: tournament.divisions
+                                    .map(
+                                      (division) => DropdownMenuItem(
+                                        value: division.id,
+                                        child: Text(
+                                          division.name.trim().isEmpty
+                                              ? l10n.registerDefaultDivision
+                                              : division.name,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (divisionId) {
+                                  setState(
+                                    () => _selectedDivisionId = divisionId,
+                                  );
+                                },
+                              ),
+                            ],
                             const SizedBox(height: 20),
                             if (hasStartedMatches)
                               Container(

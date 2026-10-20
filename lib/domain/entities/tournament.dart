@@ -718,6 +718,7 @@ class TournamentDivision {
   final String? status;
   final int? maxParticipants;
   final int participantCount;
+  final Map<String, dynamic>? roundConfig;
 
   const TournamentDivision({
     required this.id,
@@ -729,6 +730,7 @@ class TournamentDivision {
     this.status,
     this.maxParticipants,
     this.participantCount = 0,
+    this.roundConfig,
   });
 
   factory TournamentDivision.fromJson(Map<String, dynamic> json) {
@@ -744,6 +746,17 @@ class TournamentDivision {
         : json['config'] is Map
         ? Map<String, dynamic>.from(json['config'] as Map)
         : const <String, dynamic>{};
+    final rawRoundConfig = json['roundConfig'] is Map
+        ? json['roundConfig']
+        : divisionConfig['roundConfig'] is Map
+        ? divisionConfig['roundConfig']
+        : (divisionConfig.containsKey('groupsConfig') ||
+                  divisionConfig.containsKey('advancementConfig')
+              ? divisionConfig
+              : null);
+    final roundConfig = rawRoundConfig is Map
+        ? Map<String, dynamic>.from(rawRoundConfig)
+        : null;
     final groupsConfig = divisionConfig['groupsConfig'] is Map
         ? Map<String, dynamic>.from(divisionConfig['groupsConfig'] as Map)
         : const <String, dynamic>{};
@@ -778,6 +791,7 @@ class TournamentDivision {
           ? int.tryParse(json['maxParticipants'].toString())
           : null,
       participantCount: parsedCount,
+      roundConfig: roundConfig,
     );
   }
 
@@ -791,6 +805,7 @@ class TournamentDivision {
     String? status,
     int? maxParticipants,
     int? participantCount,
+    Map<String, dynamic>? roundConfig,
   }) {
     return TournamentDivision(
       id: id ?? this.id,
@@ -802,6 +817,7 @@ class TournamentDivision {
       status: status ?? this.status,
       maxParticipants: maxParticipants ?? this.maxParticipants,
       participantCount: participantCount ?? this.participantCount,
+      roundConfig: roundConfig ?? this.roundConfig,
     );
   }
 
