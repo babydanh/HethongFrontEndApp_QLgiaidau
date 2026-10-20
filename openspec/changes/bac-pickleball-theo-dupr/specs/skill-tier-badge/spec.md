@@ -8,16 +8,16 @@ App hiển thị badge bậc trình độ, tiến độ lên bậc và chú gi�
 
 ### Requirement: Badge theo nguồn DUPR không suy từ ELO
 
-Khi một rank có `tierSource = 'DUPR'`, App MUST chỉ dùng `tierName` của API để chọn badge. Khi `tierName` là `null` hoặc rỗng, App MUST NOT hiện badge bậc ở bảng xếp hạng, hồ sơ, bottom sheet hồ sơ và badge trên avatar, và MUST NOT suy bậc từ `eloPoints`.
+Khi một rank có `tierSource = 'DUPR'`, App MUST hiện badge theo `tierName` của API khi `tierAvailable = true`. Khi `tierAvailable = false`, App MUST NOT hiện badge bậc ở bảng xếp hạng, hồ sơ, bottom sheet hồ sơ và badge trên avatar, và MUST NOT suy bậc từ `eloPoints`.
 
 #### Scenario: Có DUPR liên kết
 
-- **WHEN** bảng xếp hạng pickleball có dòng `tierSource: 'DUPR'`, `tierName: 'High Tier C'`, `eloPoints: 1100`
+- **WHEN** bảng xếp hạng pickleball có dòng `tierSource: 'DUPR'`, `tierAvailable: true`, `tierName: 'High Tier C'`, `eloPoints: 1100`
 - **THEN** dòng đó hiện badge `HTC`, không phải bậc suy từ ELO 1100
 
 #### Scenario: Chưa liên kết DUPR
 
-- **WHEN** hồ sơ có rank pickleball `tierSource: 'DUPR'`, `tierName: null`
+- **WHEN** hồ sơ có rank pickleball `tierSource: 'DUPR'`, `tierAvailable: false`
 - **THEN** không có badge bậc cho rank đó, và badge trên avatar cũng không hiện bậc pickleball
 
 ### Requirement: Nguồn ELO giữ nguyên
@@ -26,7 +26,7 @@ Khi `tierSource = 'ELO'` hoặc JSON không có `tierSource`, App MUST hiển th
 
 #### Scenario: Rank cầu lông
 
-- **WHEN** rank có `tierSource: 'ELO'`, `tierName: 'Low Tier B'`
+- **WHEN** rank có `tierSource: 'ELO'`, `tierAvailable: true`, `tierName: 'Low Tier B'`
 - **THEN** hiện badge `LTB` như hiện nay
 
 #### Scenario: JSON cũ không có tierSource
