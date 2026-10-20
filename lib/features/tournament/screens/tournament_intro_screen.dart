@@ -871,6 +871,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             for (final division in tournament.divisions)
               division.id: division.name,
           },
+          divisionMetadataById: {
+            for (final division in tournament.divisions) division.id: division,
+          },
         ),
       ),
     );

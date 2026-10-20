@@ -433,6 +433,8 @@
   "tabTeams": "Teams",
   "tabSchedule": "Schedule",
   "tabBracket": "Bracket",
+  "publicBracketTabStandings": "Standings",
+  "publicBracketTabPlayoff": "Playoff",
   "tabGallery": "Gallery",
   "tabSponsors": "Sponsors",
   "sponsorsTitle": "Official sponsors",

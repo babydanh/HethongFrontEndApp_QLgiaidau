@@ -1210,6 +1210,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tabBracket => 'Bảng thi đấu';
 
   @override
+  String get publicBracketTabStandings => 'Bảng';
+
+  @override
+  String get publicBracketTabPlayoff => 'Playoff';
+
+  @override
   String get tabGallery => 'Thư viện';
 
   @override

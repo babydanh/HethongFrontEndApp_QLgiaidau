@@ -2378,6 +2378,18 @@ abstract class AppLocalizations {
   /// **'Bảng thi đấu'**
   String get tabBracket;
 
+  /// No description provided for @publicBracketTabStandings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng'**
+  String get publicBracketTabStandings;
+
+  /// No description provided for @publicBracketTabPlayoff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Playoff'**
+  String get publicBracketTabPlayoff;
+
   /// No description provided for @tabGallery.
   ///
   /// In vi, this message translates to:

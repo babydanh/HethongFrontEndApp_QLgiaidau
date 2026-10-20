@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_team_label.dart';
@@ -41,6 +42,7 @@ class ScheduleGrid extends StatefulWidget {
   final List<String> courts;
   final List<MatchModel> matches;
   final Map<String, String> divisionNameById;
+  final Map<String, TournamentDivision> divisionMetadataById;
   final double slotHeight;
   final bool emphasizeTimeLabels;
   final int startHour;
@@ -96,6 +98,7 @@ class ScheduleGrid extends StatefulWidget {
     this.selectedMatchId,
     required this.onTapMatch,
     this.divisionNameById = const {},
+    this.divisionMetadataById = const {},
     this.slotHeight = 144,
     this.emphasizeTimeLabels = false,
     this.minutesPerSet = 15,
@@ -631,10 +634,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         decoration: style.decoration,
         child: duration < _compactBelowMinutes
             ? Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 5,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -759,12 +759,19 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return name == null || name.isEmpty ? null : name;
   }
 
-  /// Mỗi hạng mục một màu cố định theo thứ tự hạng mục của giải (Đôi Nam, Đôi Nữ…
-  /// khác màu). Chỉ dùng token theme; không dùng màu lỗi để khỏi lẫn với LIVE.
+  /// Hạng mục đôi nam/nữ lấy màu từ metadata; các loại khác dùng bảng dự phòng.
   Color? _divisionColorFor(MatchModel match) {
     final divisionId = _divisionIdFor(match);
     if (divisionId == null) return null;
     final colors = context.colors;
+    final metadata = widget.divisionMetadataById[divisionId];
+    final matchType = metadata?.matchType.trim().toUpperCase();
+    final gender = metadata?.genderRestriction?.trim().toUpperCase();
+    if (matchType == 'DOUBLES' && gender == 'MALE') return colors.info;
+    if (matchType == 'DOUBLES' && gender == 'FEMALE') {
+      return const Color(0xFFDB2777);
+    }
+
     final palette = [
       AppTheme.primary,
       colors.warning,
@@ -1040,13 +1047,13 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
       child: Row(
         children: [
-          _teamName(match, teamId, name, style),
+          _teamName(match, teamId, name, style, maxLines: 2),
           for (var index = 0; index < _scoreColumnsOf(match); index++)
             SizedBox(
               width: 16,
               child: Text(
                 _setScoreLabel(match, index, side),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -1078,13 +1085,14 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     MatchModel match,
     String teamId,
     String name,
-    _CardStyle style,
-  ) {
+    _CardStyle style, {
+    int maxLines = 1,
+  }) {
     final isWinner = _isWinner(match, teamId);
-    return Flexible(
+    return Expanded(
       child: Text(
         name,
-        maxLines: 1,
+        maxLines: maxLines,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontSize: 11,

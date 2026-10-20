@@ -1214,6 +1214,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabBracket => 'Bracket';
 
   @override
+  String get publicBracketTabStandings => 'Standings';
+
+  @override
+  String get publicBracketTabPlayoff => 'Playoff';
+
+  @override
   String get tabGallery => 'Gallery';
 
   @override
