@@ -13527,7 +13527,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementDivisionsDescription =>
-      'Tạo và cấu hình nội dung, sau đó xếp hạt giống cho người tham gia.';
+      'Tạo và cấu hình nội dung thi đấu.';
 
   @override
   String get tournamentManagementDivisionsEmpty => 'Chưa có nội dung thi đấu';

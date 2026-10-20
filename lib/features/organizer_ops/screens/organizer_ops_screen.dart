@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -472,6 +473,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                         ),
                   )
                   .toList(growable: false);
+        final showSeed = AppConstants.supportsSeeding(division.bracketType);
         final actionOffset = readOnly ? 0 : 1;
         final itemCount =
             2 +
@@ -519,6 +521,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             final participant = visibleParticipants[index - 2 - actionOffset];
             return _OpsParticipantCard(
               participant: participant,
+              showSeed: showSeed,
               onKick: readOnly || participant.isKicked
                   ? null
                   : () => _showKickParticipantSheet(context, participant),
@@ -3681,10 +3684,15 @@ class _OpsActivityCard extends StatelessWidget {
 }
 
 class _OpsParticipantCard extends StatelessWidget {
-  const _OpsParticipantCard({required this.participant, this.onKick});
+  const _OpsParticipantCard({
+    required this.participant,
+    this.onKick,
+    this.showSeed = false,
+  });
 
   final OrganizerOpsParticipant participant;
   final VoidCallback? onKick;
+  final bool showSeed;
 
   @override
   Widget build(BuildContext context) {
@@ -3754,7 +3762,7 @@ class _OpsParticipantCard extends StatelessWidget {
                       ? l10n.payments_statusSuccess
                       : l10n.payments_statusPending,
                 ),
-                if (participant.seed != null)
+                if (showSeed && participant.seed != null)
                   _OpsMeta(
                     icon: Icons.numbers_rounded,
                     text: 'Seed ${participant.seed}',
@@ -4017,6 +4025,7 @@ class _OpsDivision {
     required this.id,
     required this.name,
     required this.matchType,
+    this.bracketType,
     this.entryFee,
     this.effectiveEntryFee,
   });
@@ -4024,6 +4033,7 @@ class _OpsDivision {
   final String id;
   final String name;
   final String matchType;
+  final String? bracketType;
   final double? entryFee;
   final double? effectiveEntryFee;
 
@@ -4032,6 +4042,8 @@ class _OpsDivision {
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? 'Division',
       matchType: json['matchType']?.toString() ?? 'SINGLES',
+      bracketType:
+          json['bracketType']?.toString() ?? json['bracket_type']?.toString(),
       entryFee: _toDouble(json['entryFee']),
       effectiveEntryFee: _toDouble(json['effectiveEntryFee']),
     );

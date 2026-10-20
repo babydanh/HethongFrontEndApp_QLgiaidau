@@ -7,8 +7,13 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamSheet extends StatelessWidget {
   final Team team;
+  final bool showSeed;
 
-  const TournamentTeamSheet({super.key, required this.team});
+  const TournamentTeamSheet({
+    super.key,
+    required this.team,
+    this.showSeed = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +65,7 @@ class TournamentTeamSheet extends StatelessWidget {
                   ],
                 ),
               ),
-              if (team.seed > 0)
+              if (showSeed && team.seed > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

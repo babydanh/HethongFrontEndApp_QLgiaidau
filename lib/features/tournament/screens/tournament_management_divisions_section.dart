@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
@@ -61,6 +62,14 @@ class _TournamentManagementDivisionsSectionState
             onRetry: _reload,
           );
         final divisions = snapshot.data ?? const <Map<String, dynamic>>[];
+        // Hạt giống chỉ áp dụng cho nội dung vòng bảng + loại trực tiếp.
+        final seedDivisions = divisions
+            .where(
+              (division) => AppConstants.supportsSeeding(
+                division['bracketType']?.toString(),
+              ),
+            )
+            .toList();
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -108,11 +117,11 @@ class _TournamentManagementDivisionsSectionState
                 ],
               ),
             ),
-            if (divisions.isNotEmpty) ...[
+            if (seedDivisions.isNotEmpty) ...[
               const SizedBox(height: 16),
               _TournamentSeedsSection(
                 tournamentId: widget.tournament.id,
-                divisions: divisions,
+                divisions: seedDivisions,
               ),
             ],
           ],

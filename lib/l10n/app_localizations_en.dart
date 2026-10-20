@@ -8999,7 +8999,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get autoDraw_title => 'Draw & Seed Groups';
+  String get autoDraw_title => 'Draw & Group Assignment';
 
   @override
   String get autoDraw_tournamentError => 'Tournament error';
@@ -12854,7 +12854,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lite_recreateBracketNotice =>
-      '💡 When re-pairing or re-seeding, you can tap Recreate Bracket to update the tree diagram.';
+      '💡 When re-pairing or re-drawing, you can tap Recreate Bracket to update the tree diagram.';
 
   @override
   String get organizer_reqTitle => 'Organizer Permission Required';
@@ -13573,7 +13573,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementDivisionsDescription =>
-      'Create and configure divisions, then assign participant seeds.';
+      'Create and configure divisions.';
 
   @override
   String get tournamentManagementDivisionsEmpty => 'No divisions yet';

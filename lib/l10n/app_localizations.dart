@@ -24613,7 +24613,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementDivisionsDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Tạo và cấu hình nội dung, sau đó xếp hạt giống cho người tham gia.'**
+  /// **'Tạo và cấu hình nội dung thi đấu.'**
   String get tournamentManagementDivisionsDescription;
 
   /// No description provided for @tournamentManagementDivisionsEmpty.

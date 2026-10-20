@@ -5515,7 +5515,7 @@
   "tournamentManagementDivisionConfiguration": "Cấu hình thể thức",
   "tournamentManagementDivisionName": "Tên nội dung",
   "tournamentManagementDivisions": "Nội dung thi đấu",
-  "tournamentManagementDivisionsDescription": "Tạo và cấu hình nội dung, sau đó xếp hạt giống cho người tham gia.",
+  "tournamentManagementDivisionsDescription": "Tạo và cấu hình nội dung thi đấu.",
   "tournamentManagementDivisionsEmpty": "Chưa có nội dung thi đấu",
   "tournamentManagementDivisionsEmptyDescription": "Thêm nội dung để cấu hình thể thức thi đấu.",
   "tournamentManagementDrawDescription": "Tạo và quản lý bốc thăm giải đấu.",

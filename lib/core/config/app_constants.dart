@@ -119,6 +119,10 @@ class AppConstants {
   static const String bracketRoundRobin = 'round_robin';
   static const String bracketGroupStageKnockout = 'group_stage_knockout';
 
+  /// Hạt giống chỉ dùng cho vòng bảng + loại trực tiếp; thể thức khác xếp ngẫu nhiên, không hiện seed.
+  static bool supportsSeeding(String? bracketType) =>
+      bracketType?.trim().toLowerCase() == bracketGroupStageKnockout;
+
   static const Map<String, String> bracketTypeNames = {
     bracketSingleElimination: 'Đấu loại trực tiếp',
     bracketDoubleElimination: 'Đấu loại kép',

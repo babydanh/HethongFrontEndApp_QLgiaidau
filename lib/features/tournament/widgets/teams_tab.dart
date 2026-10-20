@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -14,6 +16,7 @@ class TeamsTab extends StatefulWidget {
   final ScrollController? scrollController;
   final bool shrinkWrap;
   final bool showDivisionHeading;
+  final List<TournamentDivision> divisions;
 
   const TeamsTab({
     super.key,
@@ -24,6 +27,7 @@ class TeamsTab extends StatefulWidget {
     this.scrollController,
     this.shrinkWrap = false,
     this.showDivisionHeading = true,
+    this.divisions = const [],
   });
 
   @override
@@ -41,6 +45,13 @@ class _TeamsTabState extends State<TeamsTab> {
     _searchController.dispose();
     super.dispose();
   }
+
+  /// Seed chỉ hiện với đội thuộc nội dung vòng bảng + loại trực tiếp.
+  bool _showsSeedFor(Team team) => widget.divisions.any(
+    (division) =>
+        division.id == team.divisionId &&
+        AppConstants.supportsSeeding(division.bracketType),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -265,6 +276,7 @@ class _TeamsTabState extends State<TeamsTab> {
                         TournamentTeamCard(
                           team: team,
                           isTeamSport: widget.isTeamSport,
+                          showSeed: _showsSeedFor(team),
                           onMemberTap: (userId, memberName) {
                             final targetId =
                                 (userId != null && userId.isNotEmpty)

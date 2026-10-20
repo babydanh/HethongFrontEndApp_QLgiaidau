@@ -8,12 +8,14 @@ class TournamentTeamCard extends StatefulWidget {
   final Team team;
   final bool isTeamSport;
   final Function(String? userId, String memberName)? onMemberTap;
+  final bool showSeed;
 
   const TournamentTeamCard({
     super.key,
     required this.team,
     this.isTeamSport = false,
     this.onMemberTap,
+    this.showSeed = false,
   });
 
   @override
@@ -81,7 +83,9 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
 
     final memberInfos = team.memberInfos;
 
-    final seedLabel = team.seed > 0 ? '${l10n.seedLabel} #${team.seed}' : null;
+    final seedLabel = widget.showSeed && team.seed > 0
+        ? '${l10n.seedLabel} #${team.seed}'
+        : null;
 
     if (!isDoubles) {
       // ── SINGLES (ĐƠN) LAYOUT: DIRECT PROFILE TAP, NO EXPANSION ──

@@ -807,6 +807,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                         teams: teamsAsync.value ?? const [],
                         selectedDivision: division.name,
                         selectedDivisionId: division.id,
+                        divisions: tournament.divisions,
                         isTeamSport: isTeamSport,
                         shrinkWrap: true,
                         showDivisionHeading: false,
@@ -818,6 +819,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     teams: teamsAsync.value ?? const [],
                     selectedDivision: _selectedDivision,
                     selectedDivisionId: _selectedDivisionId,
+                    divisions: tournament.divisions,
                     isTeamSport: isTeamSport,
                   )),
     );
