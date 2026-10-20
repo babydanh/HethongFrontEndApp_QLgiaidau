@@ -32,6 +32,7 @@ class RosterImportBatchItem {
   final String? player2Name;
   final String? player2Email;
   final String? player2Phone;
+  /// Tên đội từ file; rỗng khi file không có. Không bao giờ ghép tên VĐV.
   final String teamName;
   final num? elo;
   final bool? isPaid;

@@ -185,7 +185,7 @@ void main() {
       isViewer: true,
     );
 
-    expect(find.text('T. ALPHA'), findsOneWidget);
+    expect(find.text('Team Alpha'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

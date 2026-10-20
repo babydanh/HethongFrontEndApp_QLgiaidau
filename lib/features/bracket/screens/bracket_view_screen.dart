@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -814,9 +816,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         });
     final filteredMatches = nonSearchMatches.where((m) {
       if (_searchQuery.isEmpty) return true;
-      final t1 = m.team1Name.toLowerCase();
-      final t2 = m.team2Name.toLowerCase();
-      return t1.contains(_searchQuery) || t2.contains(_searchQuery);
+      final sides = [
+        participantLabel(
+          teamName: matchSideTeamName(m, 1),
+          players: matchSidePlayers(m, 1),
+        ),
+        participantLabel(
+          teamName: matchSideTeamName(m, 2),
+          players: matchSidePlayers(m, 2),
+        ),
+      ].join(' ').toLowerCase();
+      return sides.contains(_searchQuery);
     }).toList();
 
     String sectionKey(MatchModel match) {

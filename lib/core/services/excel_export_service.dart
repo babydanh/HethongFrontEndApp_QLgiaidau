@@ -8,10 +8,13 @@ import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 
 class ExcelExportService {
   static Future<void> exportMatchProtocol(MatchModel match) async {
     final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final team1Label = matchSideLabel(match, 1);
+    final team2Label = matchSideLabel(match, 2);
     var excel = Excel.createExcel();
 
     // Sheet 1: Tổng quan trận đấu
@@ -60,18 +63,18 @@ class ExcelExportService {
       TextCellValue(l10n.excelTeam2),
     ]);
     overviewSheet.appendRow([
-      TextCellValue(match.team1Name),
+      TextCellValue(team1Label),
       TextCellValue('${match.score1} - ${match.score2}'),
-      TextCellValue(match.team2Name),
+      TextCellValue(team2Label),
     ]);
     overviewSheet.appendRow([TextCellValue('')]);
     overviewSheet.appendRow([
       TextCellValue(l10n.excelWinner),
       TextCellValue(
         match.winnerId == match.team1Id
-            ? match.team1Name
+            ? team1Label
             : (match.winnerId == match.team2Id
-                  ? match.team2Name
+                  ? team2Label
                   : l10n.excelUndetermined),
       ),
     ]);
@@ -87,9 +90,7 @@ class ExcelExportService {
     ]);
 
     for (var event in match.events) {
-      final teamName = event.teamId == match.team1Id
-          ? match.team1Name
-          : match.team2Name;
+      final teamName = event.teamId == match.team1Id ? team1Label : team2Label;
       final timeStr = DateFormatterUtils.formatTimeWithSeconds(event.timestamp);
       String eventTypeStr = l10n.excelOtherEvent;
       switch (event.type) {
@@ -129,7 +130,8 @@ class ExcelExportService {
     if (fileBytes == null) return;
 
     final fileName =
-        '${l10n.excelMatchProtocolFilePrefix}_${match.team1Name}_vs_${match.team2Name}_${DateFormatterUtils.formatFileTime(DateTime.now())}.xlsx'
+        '${l10n.excelMatchProtocolFilePrefix}_${team1Label}_vs_${team2Label}_${DateFormatterUtils.formatFileTime(DateTime.now())}.xlsx'
+            .replaceAll('/', '-')
             .replaceAll(' ', '_');
 
     if (kIsWeb) {
@@ -189,17 +191,19 @@ class ExcelExportService {
     ]);
 
     for (var match in matches) {
+      final team1Label = matchSideLabel(match, 1);
+      final team2Label = matchSideLabel(match, 2);
       final winnerName = match.winnerId == match.team1Id
-          ? match.team1Name
-          : (match.winnerId == match.team2Id ? match.team2Name : '');
+          ? team1Label
+          : (match.winnerId == match.team2Id ? team2Label : '');
 
       overviewSheet.appendRow([
         IntCellValue(match.round),
         IntCellValue(match.matchNumber),
-        TextCellValue(match.team1Name),
+        TextCellValue(team1Label),
         IntCellValue(match.score1),
         IntCellValue(match.score2),
-        TextCellValue(match.team2Name),
+        TextCellValue(team2Label),
         TextCellValue(winnerName),
         TextCellValue(
           StatusHelper.getStatusDisplayName(match.status, l10n: l10n),
@@ -286,7 +290,9 @@ class ExcelExportService {
           : match.court.trim();
       if (matchCourt != court) continue;
       if (start.hour * 60 + start.minute != minute) continue;
-      return '${match.team1Name} - ${match.team2Name}';
+      final first = matchSideLabel(match, 1);
+      final second = matchSideLabel(match, 2);
+      return '${first.isEmpty ? '?' : first} - ${second.isEmpty ? '?' : second}';
     }
     return '';
   }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 class MatchCardCompact extends StatelessWidget {
   final MatchModel match;
@@ -47,8 +49,11 @@ class MatchCardCompact extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              match.team1Name,
+            child: ParticipantLabel(
+              teamName: matchSideTeamName(match, 1),
+              players: matchSidePlayers(match, 1),
+              teamOnly: isFootballMatch(match),
+              compact: true,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: isCompleted && match.winnerId == match.team1Id
@@ -58,8 +63,6 @@ class MatchCardCompact extends StatelessWidget {
                     ? context.colors.success
                     : context.colors.textSecondary,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           Text(
@@ -71,9 +74,13 @@ class MatchCardCompact extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              match.team2Name,
+            child: ParticipantLabel(
+              teamName: matchSideTeamName(match, 2),
+              players: matchSidePlayers(match, 2),
+              teamOnly: isFootballMatch(match),
+              compact: true,
               textAlign: TextAlign.right,
+              crossAxisAlignment: CrossAxisAlignment.end,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: isCompleted && match.winnerId == match.team2Id
@@ -83,8 +90,6 @@ class MatchCardCompact extends StatelessWidget {
                     ? context.colors.success
                     : context.colors.textSecondary,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

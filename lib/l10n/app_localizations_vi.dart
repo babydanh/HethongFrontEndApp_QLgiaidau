@@ -11557,14 +11557,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get teamLogoInvalid => 'Ảnh logo không hợp lệ.';
 
   @override
-  String teamFallbackName(Object id) {
-    return 'Đội $id';
-  }
-
-  @override
-  String get teamMemberFallback => 'VĐV';
-
-  @override
   String get tournamentRegistrationResponseInvalid =>
       'Phản hồi đăng ký không hợp lệ.';
 

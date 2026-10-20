@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 /// Sport-tech match card — dùng cho cả 3 trạng thái: live / scheduled / completed
 class LiveMatchCardV2 extends StatefulWidget {
@@ -112,9 +114,10 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                       Expanded(
                         child: _buildTeamSide(
                           context,
-                          teamName: widget.match.team1Name,
+                          teamName: matchSideTeamName(widget.match, 1),
                           teamLogoUrl: widget.match.team1LogoUrl,
                           members: widget.match.team1MemberInfos,
+                          players: matchSidePlayers(widget.match, 1),
                           score: cardScore.score1,
                           currentGamePoint: currentTennisGamePoints?.team1,
                           eloDelta: t1EloDelta,
@@ -135,9 +138,10 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                       Expanded(
                         child: _buildTeamSide(
                           context,
-                          teamName: widget.match.team2Name,
+                          teamName: matchSideTeamName(widget.match, 2),
                           teamLogoUrl: widget.match.team2LogoUrl,
                           members: widget.match.team2MemberInfos,
+                          players: matchSidePlayers(widget.match, 2),
                           score: cardScore.score2,
                           currentGamePoint: currentTennisGamePoints?.team2,
                           eloDelta: t2EloDelta,
@@ -514,9 +518,10 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
 
   Widget _buildTeamSide(
     BuildContext context, {
-    required String teamName,
+    required String? teamName,
     required String? teamLogoUrl,
     required List<MatchMemberInfo> members,
+    required List<ParticipantPlayer> players,
     required int score,
     String? currentGamePoint,
     String? eloDelta,
@@ -525,15 +530,11 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     required CrossAxisAlignment alignment,
   }) {
     final colors = context.colors;
-    final memberLabel = members.length == 2
-        ? members
-              .map((member) => _lastNameWord(member.fullName))
-              .where((name) => name.isNotEmpty)
-              .join(' / ')
-        : '';
-    final displayLabel = members.length == 2 && memberLabel.isNotEmpty
-        ? memberLabel
-        : teamName;
+    final display = resolveParticipantDisplay(
+      teamName: teamName,
+      players: players,
+      teamOnly: isFootballMatch(widget.match),
+    );
 
     final scoreColor = widget.isLive
         ? (isLeading ? const Color(0xFFDC2626) : colors.textPrimary)
@@ -580,7 +581,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       children: [
         _buildMemberAvatars(
           context,
-          teamName: teamName,
+          teamName: teamName ?? '',
           teamLogoUrl: teamLogoUrl,
           members: members,
           isWinner: isWinner,
@@ -595,25 +596,12 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
             if (alignment == CrossAxisAlignment.end && eloBadge != null)
               eloBadge,
             Flexible(
-              child: Text(
-                displayLabel,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isWinner || isLeading
-                      ? FontWeight.w800
-                      : FontWeight.w600,
-                  color: isWinner
-                      ? colors.success
-                      : (isLeading
-                            ? const Color(0xFFDC2626)
-                            : colors.textPrimary),
-                  height: 1.25,
-                ),
-                textAlign: alignment == CrossAxisAlignment.start
-                    ? TextAlign.left
-                    : TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: _participantNameLines(
+                context,
+                display: display,
+                alignment: alignment,
+                isWinner: isWinner,
+                isLeading: isLeading,
               ),
             ),
             if (alignment == CrossAxisAlignment.start && eloBadge != null)
@@ -864,8 +852,61 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     );
   }
 
-  String _lastNameWord(String fullName) {
-    final words = fullName.trim().split(' ');
-    return words.isNotEmpty ? words.last : fullName;
+  /// Tên bên đội trên thẻ (chỗ hẹp): TEAM → tên đội một dòng; PLAYERS → mỗi
+  /// VĐV một dòng viết tắt, tên đầy đủ qua Tooltip. Avatar đã có ở hàng trên.
+  Widget _participantNameLines(
+    BuildContext context, {
+    required ParticipantDisplay display,
+    required CrossAxisAlignment alignment,
+    required bool isWinner,
+    required bool isLeading,
+  }) {
+    final colors = context.colors;
+    final textAlign = alignment == CrossAxisAlignment.start
+        ? TextAlign.left
+        : TextAlign.right;
+    final style = TextStyle(
+      fontSize: display.isTeam ? 15 : 13,
+      fontWeight: isWinner || isLeading ? FontWeight.w800 : FontWeight.w600,
+      color: isWinner
+          ? colors.success
+          : (isLeading ? const Color(0xFFDC2626) : colors.textPrimary),
+      height: 1.25,
+    );
+    if (display.isTeam) {
+      return Text(
+        display.teamName!,
+        style: style,
+        textAlign: textAlign,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    if (display.players.isEmpty) {
+      return Text(
+        AppLocalizations.of(context)!.matchNotDetermined,
+        style: style,
+        textAlign: textAlign,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: alignment,
+      children: [
+        for (final player in display.players)
+          Tooltip(
+            message: player.fullName,
+            child: Text(
+              abbreviateName(player.fullName),
+              style: style,
+              textAlign: textAlign,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+    );
   }
 }

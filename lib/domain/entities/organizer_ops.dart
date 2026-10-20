@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+
 class OrganizerOpsMember {
   const OrganizerOpsMember({
     required this.userId,
@@ -30,10 +32,11 @@ class OrganizerOpsMember {
 class OrganizerOpsParticipant {
   const OrganizerOpsParticipant({
     required this.id,
-    required this.teamName,
+    this.teamName = '',
     required this.teamStatus,
     required this.isPaid,
     required this.members,
+    this.players = const [],
     this.registeredByUserId,
     this.footballTeamId,
     this.divisionId,
@@ -47,6 +50,7 @@ class OrganizerOpsParticipant {
   final String teamStatus;
   final bool isPaid;
   final List<OrganizerOpsMember> members;
+  final List<ParticipantPlayer> players;
   final String? registeredByUserId;
   final String? divisionId;
   final String? footballTeamId;
@@ -72,13 +76,14 @@ class OrganizerOpsParticipant {
 
     return OrganizerOpsParticipant(
       id: json['id']?.toString() ?? '',
-      teamName:
-          (json['teamName'] ?? json['team_name'] ?? json['name'])?.toString() ??
-          'Chưa đặt tên',
+      teamName: _teamNameOf(
+        json['teamName'] ?? json['team_name'] ?? json['name'],
+      ),
       teamStatus:
           (json['teamStatus'] ?? json['team_status'])?.toString() ?? 'PENDING',
       isPaid: json['isPaid'] == true || json['is_paid'] == true,
       members: members,
+      players: toParticipantPlayers(json),
       registeredByUserId:
           (json['registeredBy'] is Map
                   ? json['registeredBy']['id']
@@ -97,6 +102,10 @@ class OrganizerOpsParticipant {
       registeredAt: rawDate is String ? DateTime.tryParse(rawDate) : null,
     );
   }
+
+  /// Tên đội đã chuẩn hoá; '' khi chưa có tên (không dựng tên giả, VĐV hiển thị qua ParticipantLabel).
+  static String _teamNameOf(Object? value) =>
+      normalizeParticipantText(value?.toString());
 
   bool get isKicked => teamStatus.toUpperCase() == 'KICKED';
   bool get isDisciplined =>

@@ -428,7 +428,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          ranking.fullName,
+                          ranking.displayName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

@@ -107,7 +107,7 @@ class RankingRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      ranking.fullName,
+                      ranking.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -189,7 +189,7 @@ class RankingRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    ranking.fullName,
+                    ranking.displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -217,7 +217,9 @@ class RankingRow extends StatelessWidget {
   }
 
   Widget _buildAvatarWidget(BuildContext context, dynamic colors) {
-    final nameParts = ranking.fullName.split('/');
+    final nameParts = ranking.players.length > 1
+        ? [for (final p in ranking.players) p.fullName]
+        : [ranking.fullName];
     final normalizedFormatLabel = formatLabel?.toLowerCase() ?? '';
     final isDoublesFormat =
         (normalizedFormatLabel.contains('đôi') ||

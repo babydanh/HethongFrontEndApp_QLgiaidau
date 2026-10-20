@@ -21052,18 +21052,6 @@ abstract class AppLocalizations {
   /// **'Ảnh logo không hợp lệ.'**
   String get teamLogoInvalid;
 
-  /// No description provided for @teamFallbackName.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đội {id}'**
-  String teamFallbackName(Object id);
-
-  /// No description provided for @teamMemberFallback.
-  ///
-  /// In vi, this message translates to:
-  /// **'VĐV'**
-  String get teamMemberFallback;
-
   /// No description provided for @tournamentRegistrationResponseInvalid.
   ///
   /// In vi, this message translates to:

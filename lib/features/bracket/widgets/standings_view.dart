@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -44,7 +45,7 @@ class StandingsView extends ConsumerWidget {
           return kind == 'FOOTBALL' || sport == 'football' || sport == 'soccer';
         });
 
-    // Map tên đội với groupName từ matches thuộc Vòng Bảng
+    // Map id đội với groupName từ matches thuộc Vòng Bảng (định danh theo ID, không theo tên).
     final teamGroupMap = <String, String>{};
     final groupStageMatches = matches.where((m) {
       final stage = (m.stageName ?? '').toUpperCase();
@@ -58,11 +59,11 @@ class StandingsView extends ConsumerWidget {
 
     for (final m in groupStageMatches) {
       if (m.groupName != null && m.groupName!.isNotEmpty) {
-        if (m.team1Name.isNotEmpty && m.team1Name != 'TBD') {
-          teamGroupMap[m.team1Name] = m.groupName!;
+        if (m.team1Id.isNotEmpty && m.team1Id != 'BYE') {
+          teamGroupMap[m.team1Id] = m.groupName!;
         }
-        if (m.team2Name.isNotEmpty && m.team2Name != 'TBD') {
-          teamGroupMap[m.team2Name] = m.groupName!;
+        if (m.team2Id.isNotEmpty && m.team2Id != 'BYE') {
+          teamGroupMap[m.team2Id] = m.groupName!;
         }
       }
     }
@@ -77,7 +78,7 @@ class StandingsView extends ConsumerWidget {
         final groupedStandings = <String, List<dynamic>>{};
         for (final st in standings) {
           final groupName =
-              (st.group.isNotEmpty ? st.group : teamGroupMap[st.teamName]) ??
+              (st.group.isNotEmpty ? st.group : teamGroupMap[st.id]) ??
               l10n.crossTableDefaultGroup;
           groupedStandings.putIfAbsent(groupName, () => []).add(st);
         }
@@ -331,8 +332,9 @@ class StandingsView extends ConsumerWidget {
                                       : Text('${index + 1}'),
                                 ),
                                 DataCell(
-                                  Text(
-                                    st.teamName,
+                                  ParticipantLabel(
+                                    teamName: st.teamName,
+                                    players: st.players,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),

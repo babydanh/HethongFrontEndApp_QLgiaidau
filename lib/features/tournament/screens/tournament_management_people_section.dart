@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
@@ -186,7 +187,10 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
         context,
         title: l10n.tournamentManagementRejectRegistration,
         message: l10n.tournamentManagementRejectRegistrationConfirm(
-          participant.teamName,
+          participantLabel(
+            teamName: participant.teamName,
+            players: participant.players,
+          ),
         ),
         confirmLabel: l10n.tournamentManagementReject,
         destructive: true,
@@ -719,6 +723,14 @@ class _ParticipantCardState extends State<_ParticipantCard> {
       _ => (l10n.tournamentManagementStatusOther, colors.textSecondary),
     };
     final lead = participant.members.isEmpty ? null : participant.members.first;
+    final nameDisplay = resolveParticipantDisplay(
+      teamName: participant.teamName,
+      players: participant.players,
+    );
+    final nameStyle = TextStyle(
+      color: colors.textPrimary,
+      fontWeight: FontWeight.w700,
+    );
     final header = Row(
       children: [
         if (lead != null)
@@ -732,15 +744,23 @@ class _ParticipantCardState extends State<_ParticipantCard> {
           const SizedBox(width: 34, height: 44),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            participant.teamName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          child: nameDisplay.isTeam
+              ? ParticipantLabel(
+                  teamName: participant.teamName,
+                  players: participant.players,
+                  style: nameStyle,
+                )
+              : Text(
+                  participant.players.isEmpty
+                      ? l10n.matchNotDetermined
+                      : participantLabel(
+                          teamName: null,
+                          players: participant.players,
+                        ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: nameStyle,
+                ),
         ),
         const SizedBox(width: 8),
         Text(
@@ -767,7 +787,10 @@ class _ParticipantCardState extends State<_ParticipantCard> {
         Semantics(
           button: _expandable,
           expanded: _expandable ? _expanded : null,
-          label: participant.teamName,
+          label: participantLabel(
+            teamName: participant.teamName,
+            players: participant.players,
+          ),
           child: InkWell(
             onTap: _expandable
                 ? () => setState(() => _expanded = !_expanded)

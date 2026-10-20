@@ -180,7 +180,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
 
                   // Name
                   Text(
-                    ranking.fullName,
+                    ranking.displayName,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,

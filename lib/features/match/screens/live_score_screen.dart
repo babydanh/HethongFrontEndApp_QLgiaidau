@@ -21,7 +21,8 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/penalty_input_dialog.dart';
-import 'package:app_quanly_giaidau/features/match/utils/overlay_team_name.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/features/match/utils/live_bracket_scope.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
@@ -362,7 +363,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   //  FOUL / PENALTY
   // ═══════════════════════════════════════════════════════════
 
-  void _showFoulSheet(bool isTeam1, MatchModel match) {
+  void _showFoulSheet(MatchModel match) {
     final effectiveId = _effectiveTournamentId(match);
     final tournamentAsync = effectiveId.isNotEmpty
         ? ref.read(tournamentProvider(effectiveId))
@@ -374,10 +375,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       context: context,
       builder: (_) => PenaltyInputDialog(
         sportType: sport,
-        team1Name: match.team1Name,
-        team2Name: match.team2Name,
-        onSubmit: (teamName, option, reason) {
-          final isT1 = teamName == match.team1Name;
+        team1Label: matchSideLabel(match, 1),
+        team2Label: matchSideLabel(match, 2),
+        onSubmit: (teamSide, option, reason) {
+          final isT1 = teamSide == 1;
           ref
               .read(
                 matchControllerProvider((
@@ -402,7 +403,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   Future<void> _submitPenalty(
     MatchModel match,
-    String teamName,
+    int teamSide,
     PenaltyOption option,
     String reason,
   ) async {
@@ -411,7 +412,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ? ref.read(tournamentProvider(effectiveId))
         : null;
     final sport = match.sportKey ?? tournamentAsync?.value?.sport ?? 'other';
-    final isTeam1 = teamName == match.team1Name;
+    final isTeam1 = teamSide == 1;
     final l10n = AppLocalizations.of(context)!;
     await ref
         .read(
@@ -424,7 +425,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n.livePenaltyRecordedFor(option.name, teamName)),
+        content: Text(
+          l10n.livePenaltyRecordedFor(
+            option.name,
+            matchSideLabel(match, teamSide),
+          ),
+        ),
         backgroundColor: context.colors.success,
         behavior: SnackBarBehavior.floating,
       ),
@@ -463,12 +469,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
               title: Text(
-                match.team1Name,
+                matchSideLabel(match, 1),
                 style: TextStyle(color: context.colors.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(ctx);
-                _showFoulSheet(true, match);
+                _showFoulSheet(match);
               },
             ),
             const SizedBox(height: 4),
@@ -481,12 +487,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
               title: Text(
-                match.team2Name,
+                matchSideLabel(match, 2),
                 style: TextStyle(color: context.colors.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(ctx);
-                _showFoulSheet(false, match);
+                _showFoulSheet(match);
               },
             ),
           ],
@@ -526,7 +532,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Navigator.pop(ctx);
               await _forceWinMatch(match.team1Id, match.team2Id);
             },
-            child: Text(match.team1Name),
+            child: Text(matchSideLabel(match, 1)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
@@ -534,7 +540,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Navigator.pop(ctx);
               await _forceWinMatch(match.team2Id, match.team1Id);
             },
-            child: Text(match.team2Name),
+            child: Text(matchSideLabel(match, 2)),
           ),
         ],
       ),
@@ -722,8 +728,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           match: match,
                           onRecordPenalty: () =>
                               _showFoulSelectionDialog(match),
-                          onSubmitPenalty: (teamName, option, reason) =>
-                              _submitPenalty(match, teamName, option, reason),
+                          onSubmitPenalty: (teamSide, option, reason) =>
+                              _submitPenalty(match, teamSide, option, reason),
                           onForceWin: () => _showForceWinDialog(match),
                         );
                       },
@@ -886,7 +892,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
+                '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} '
+                '${matchSideLabel(match, 2)}',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -968,8 +975,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         status: 'ONGOING',
                         startedAt: DateTime.now(),
                       ),
-                      onSubmitPenalty: (teamName, option, reason) =>
-                          _submitPenalty(match, teamName, option, reason),
+                      onSubmitPenalty: (teamSide, option, reason) =>
+                          _submitPenalty(match, teamSide, option, reason),
                       onRecordPenalty: () => _showFoulSelectionDialog(match),
                     );
                   },
@@ -1082,7 +1089,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
+                  '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} '
+                  '${matchSideLabel(match, 2)}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -1409,7 +1417,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               // Team 1
               Expanded(
                 child: _buildReadOnlyScoreCard(
-                  teamName: match.team1Name,
+                  match: match,
+                  side: 1,
                   score: currentScore.score1,
                   setsWon: match.sets.length,
                 ),
@@ -1477,7 +1486,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               // Team 2
               Expanded(
                 child: _buildReadOnlyScoreCard(
-                  teamName: match.team2Name,
+                  match: match,
+                  side: 2,
                   score: currentScore.score2,
                   setsWon: match.sets.length,
                 ),
@@ -1629,7 +1639,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   Widget _buildReadOnlyScoreCard({
-    required String teamName,
+    required MatchModel match,
+    required int side,
     required int score,
     required int setsWon,
   }) {
@@ -1640,16 +1651,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            teamName,
+          ParticipantLabel(
+            teamName: matchSideTeamName(match, side),
+            players: matchSidePlayers(match, side),
+            teamOnly: isFootballMatch(match),
+            compact: true,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: context.colors.textPrimary,
             ),
             textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            crossAxisAlignment: CrossAxisAlignment.center,
           ),
           const SizedBox(height: 8),
           AnimatedSwitcher(
@@ -1833,7 +1846,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               children: [
                 Expanded(
                   child: _h2hTeam(
-                    name: match.team1Name,
+                    match: match,
+                    side: 1,
                     avatarUrl: match.team1MemberInfos.isNotEmpty
                         ? match.team1MemberInfos.first.avatarUrl
                         : null,
@@ -1843,7 +1857,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 _h2hVersusBadge(),
                 Expanded(
                   child: _h2hTeam(
-                    name: match.team2Name,
+                    match: match,
+                    side: 2,
                     avatarUrl: match.team2MemberInfos.isNotEmpty
                         ? match.team2MemberInfos.first.avatarUrl
                         : null,
@@ -1900,28 +1915,30 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  /// Một bên trong H2H: avatar tròn + chip ELO + tên. Bên phải [mirrored] để
-  /// soi gương như bản web (avatar nằm ngoài, chữ căn phải).
+  /// Một bên trong H2H: chip ELO + tên. Avatar đơn chỉ khi hiển thị TEAM
+  /// (PLAYERS đã có avatar từng VĐV trong [ParticipantLabel]). Bên phải
+  /// [mirrored] để soi gương như bản web (avatar nằm ngoài, chữ căn phải).
   Widget _h2hTeam({
-    required String name,
+    required MatchModel match,
+    required int side,
     String? avatarUrl,
     int? elo,
     bool mirrored = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final trimmed = name.trim();
-    final initial = trimmed.isNotEmpty ? trimmed[0].toUpperCase() : '?';
+    final display = resolveParticipantDisplay(
+      teamName: matchSideTeamName(match, side),
+      players: matchSidePlayers(match, side),
+      teamOnly: isFootballMatch(match),
+    );
     final colors = context.colors;
     final fallback = Container(
       color: mirrored ? colors.bgDark : colors.bgElevated,
       alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: TextStyle(
-          color: mirrored ? colors.error : AppTheme.secondary,
-          fontWeight: FontWeight.w900,
-          fontSize: 15,
-        ),
+      child: Icon(
+        Icons.groups_rounded,
+        size: 20,
+        color: mirrored ? colors.error : AppTheme.secondary,
       ),
     );
     final avatar = Container(
@@ -1967,23 +1984,30 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             ),
           ),
           const SizedBox(height: 3),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: mirrored ? TextAlign.right : TextAlign.left,
+          ParticipantLabel(
+            teamName: matchSideTeamName(match, side),
+            players: matchSidePlayers(match, side),
+            teamOnly: isFootballMatch(match),
+            compact: true,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 11.5,
               fontWeight: FontWeight.w900,
             ),
+            textAlign: mirrored ? TextAlign.right : TextAlign.left,
+            crossAxisAlignment: mirrored
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
           ),
         ],
       ),
     );
+    final showsAvatar = display.mode == ParticipantDisplayMode.team;
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: mirrored
+      children: !showsAvatar
+          ? [info]
+          : mirrored
           ? [info, const SizedBox(width: 8), avatar]
           : [avatar, const SizedBox(width: 8), info],
     );
@@ -2175,12 +2199,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _bracketTeamLine(
-            m.team1Name,
+            m,
+            1,
             won: m.winnerId.isNotEmpty && m.winnerId == m.team1Id,
             l10n: l10n,
           ),
           _bracketTeamLine(
-            m.team2Name,
+            m,
+            2,
             won: m.winnerId.isNotEmpty && m.winnerId == m.team2Id,
             l10n: l10n,
           ),
@@ -2224,17 +2250,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   Widget _bracketTeamLine(
-    String name, {
+    MatchModel match,
+    int side, {
     required bool won,
     required AppLocalizations l10n,
   }) {
     return Row(
       children: [
         Expanded(
-          child: Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          child: ParticipantLabel(
+            teamName: matchSideTeamName(match, side),
+            players: matchSidePlayers(match, side),
+            teamOnly: isFootballMatch(match),
+            compact: true,
             style: const TextStyle(color: Colors.white, fontSize: 9),
           ),
         ),
@@ -2643,17 +2671,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   Widget _buildTeamAvatarWidget(
-    String teamName,
     List<String> displayList,
     List<MatchMemberInfo> memberInfos,
     Color color,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final bool isDoubles =
-        displayList.length >= 2 ||
-        teamName.contains('&') ||
-        teamName.contains(' - ') ||
-        teamName.toLowerCase().contains('đôi');
+    final bool isDoubles = displayList.length >= 2;
 
     // Only a slot the server resolved to a real account can lead somewhere: a
     // team name, a still-"TBD" athlete or a mock member keeps its plain
@@ -2741,14 +2764,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     // Singles
     final name1 = displayList.isNotEmpty
         ? displayList[0].trim()
-        : teamName.trim();
+        : '';
     return slot(
       index: 0,
       name: name1,
       size: 52,
       fontSize: 18,
       alpha: 0.15,
-      fallbackInitial: 'V',
     );
   }
 
@@ -2756,7 +2778,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// Bảng điểm hai hàng chồng ở góc trên trái, giống hệt web
   /// (`LiveScoreboardOverlay.tsx`): mỗi hàng là [tên viết tắt | ô điểm nền
   /// trắng]. Không thu nhỏ so với web để hai bên nhìn giống nhau.
-  Widget _liveScoreOverlay(dynamic match, dynamic score) {
+  Widget _liveScoreOverlay(MatchModel match, dynamic score) {
     final finished = match.isCompleted == true;
     // Positioned chỉ có left/top nên con nhận ràng buộc rộng vô hạn, còn
     // Column stretch cần rộng hữu hạn: IntrinsicWidth chốt theo hàng rộng
@@ -2772,14 +2794,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             children: [
               IntrinsicHeight(
                 child: _liveScoreRow(
-                  name: match.team1Name as String,
+                  match: match,
+                  side: 1,
                   score: score.score1 as int,
                   finished: finished,
                 ),
               ),
               IntrinsicHeight(
                 child: _liveScoreRow(
-                  name: match.team2Name as String,
+                  match: match,
+                  side: 2,
                   score: score.score2 as int,
                   finished: finished,
                 ),
@@ -2792,7 +2816,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
   Widget _liveScoreRow({
-    required String name,
+    required MatchModel match,
+    required int side,
     required int score,
     required bool finished,
   }) {
@@ -2806,10 +2831,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                shortTeamName(name),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: ParticipantLabel(
+                teamName: matchSideTeamName(match, side),
+                players: matchSidePlayers(match, side),
+                teamOnly: isFootballMatch(match),
+                compact: true,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -2872,8 +2898,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final l10n = AppLocalizations.of(context)!;
     final penalties = match.penalties.take(6).toList();
     String teamLabel(Penalty penalty) {
-      if (penalty.teamId == '1') return match.team1Name;
-      if (penalty.teamId == '2') return match.team2Name;
+      if (penalty.teamId == '1') return matchSideLabel(match, 1);
+      if (penalty.teamId == '2') return matchSideLabel(match, 2);
       return l10n.liveMatchFallback;
     }
 
@@ -3031,34 +3057,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       finishedSetCount: finishedSets.length,
     );
 
-    // Split names if double matches format
-    final t1Names = match.team1Name.split(RegExp(r'[-–\n]'));
-    final t2Names = match.team2Name.split(RegExp(r'[-–\n]'));
-
-    final t1List =
-        (match.team1Members != null && match.team1Members!.isNotEmpty)
-        ? match.team1Members!
-        : t1Names;
-    final t2List =
-        (match.team2Members != null && match.team2Members!.isNotEmpty)
-        ? match.team2Members!
-        : t2Names;
-
-    final t1Cleaned = t1List
-        .where(
-          (name) =>
-              name.trim().isNotEmpty && name.trim().toLowerCase() != 'tbd',
-        )
-        .toList();
-    final t2Cleaned = t2List
-        .where(
-          (name) =>
-              name.trim().isNotEmpty && name.trim().toLowerCase() != 'tbd',
-        )
-        .toList();
-
-    final t1DisplayList = t1Cleaned.isNotEmpty ? t1Cleaned : [match.team1Name];
-    final t2DisplayList = t2Cleaned.isNotEmpty ? t2Cleaned : [match.team2Name];
+    final t1DisplayList = [
+      for (final p in matchSidePlayers(match, 1)) p.fullName,
+    ];
+    final t2DisplayList = [
+      for (final p in matchSidePlayers(match, 2)) p.fullName,
+    ];
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -3191,22 +3195,23 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       child: Column(
                         children: [
                           _buildTeamAvatarWidget(
-                            match.team1Name,
                             t1DisplayList,
                             match.team1MemberInfos,
                             const Color(0xFF2979FF),
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            match.team1Name,
+                          ParticipantLabel(
+                            teamName: matchSideTeamName(match, 1),
+                            players: matchSidePlayers(match, 1),
+                            teamOnly: isFootballMatch(match),
+                            compact: true,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: colors.textPrimary,
                             ),
                             textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                           ),
                           const SizedBox(height: 6),
                           // Player Info / ELO từ API thật; fallback trung thực nếu chưa có.
@@ -3329,22 +3334,23 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       child: Column(
                         children: [
                           _buildTeamAvatarWidget(
-                            match.team2Name,
                             t2DisplayList,
                             match.team2MemberInfos,
                             const Color(0xFFEF4444),
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            match.team2Name,
+                          ParticipantLabel(
+                            teamName: matchSideTeamName(match, 2),
+                            players: matchSidePlayers(match, 2),
+                            teamOnly: isFootballMatch(match),
+                            compact: true,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: colors.textPrimary,
                             ),
                             textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                           ),
                           const SizedBox(height: 6),
                           // Player Info / ELO từ API thật; fallback trung thực nếu chưa có.

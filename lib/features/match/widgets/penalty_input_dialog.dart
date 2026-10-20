@@ -6,15 +6,17 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class PenaltyInputDialog extends StatefulWidget {
   final String sportType;
-  final String team1Name;
-  final String team2Name;
-  final Function(String teamName, PenaltyOption option, String reason) onSubmit;
+  final String team1Label;
+  final String team2Label;
+
+  /// Trả side (1 | 2) của bên bị phạt, không trả nhãn hiển thị.
+  final Function(int teamSide, PenaltyOption option, String reason) onSubmit;
 
   const PenaltyInputDialog({
     super.key,
     required this.sportType,
-    required this.team1Name,
-    required this.team2Name,
+    required this.team1Label,
+    required this.team2Label,
     required this.onSubmit,
   });
 
@@ -27,7 +29,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
   late List<PenaltyOption> _options;
 
   PenaltyOption? _selectedOption;
-  String? _selectedTeam;
+  int? _selectedSide;
   final _reasonController = TextEditingController();
 
   @override
@@ -57,7 +59,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
     final l10n = AppLocalizations.of(context)!;
     final canSubmit =
         _selectedOption != null &&
-        _selectedTeam != null &&
+        _selectedSide != null &&
         _reasonController.text.trim().isNotEmpty;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
@@ -127,9 +129,9 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(child: _buildTeamChoice(widget.team1Name)),
+                  Expanded(child: _buildTeamChoice(1, widget.team1Label)),
                   const SizedBox(width: 8),
-                  Expanded(child: _buildTeamChoice(widget.team2Name)),
+                  Expanded(child: _buildTeamChoice(2, widget.team2Label)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -188,7 +190,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
           onPressed: canSubmit
               ? () {
                   widget.onSubmit(
-                    _selectedTeam!,
+                    _selectedSide!,
                     _selectedOption!,
                     _reasonController.text.trim(),
                   );
@@ -204,10 +206,10 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
     );
   }
 
-  Widget _buildTeamChoice(String teamName) {
-    final isSelected = _selectedTeam == teamName;
+  Widget _buildTeamChoice(int side, String label) {
+    final isSelected = _selectedSide == side;
     return GestureDetector(
-      onTap: () => setState(() => _selectedTeam = teamName),
+      onTap: () => setState(() => _selectedSide = side),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
@@ -222,7 +224,7 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
         ),
         alignment: Alignment.center,
         child: Text(
-          teamName,
+          label,
           style: TextStyle(
             color: isSelected ? AppTheme.primary : context.colors.textSecondary,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

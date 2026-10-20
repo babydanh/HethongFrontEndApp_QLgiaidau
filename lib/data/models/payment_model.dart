@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 class PaymentModel {
   final String id;
@@ -14,6 +15,7 @@ class PaymentModel {
   final DateTime? completedAt;
   final String? tournamentName;
   final String? teamName;
+  final List<ParticipantPlayer> players;
   final String? divisionId;
 
   const PaymentModel({
@@ -28,6 +30,7 @@ class PaymentModel {
     this.completedAt,
     this.tournamentName,
     this.teamName,
+    this.players = const [],
     this.divisionId,
   });
 
@@ -40,6 +43,12 @@ class PaymentModel {
 
     final rawAmount = pMap['amount'] ?? json['amount'];
     final parsedAmount = double.tryParse(rawAmount?.toString() ?? '0') ?? 0;
+
+    final participant = json['participant'] is Map
+        ? Map<String, dynamic>.from(json['participant'] as Map)
+        : pMap['participant'] is Map
+        ? Map<String, dynamic>.from(pMap['participant'] as Map)
+        : null;
 
     return PaymentModel(
       id: (pMap['id'] ?? json['id'])?.toString() ?? '',
@@ -76,11 +85,8 @@ class PaymentModel {
           : (pMap['tournament'] is Map
                 ? (pMap['tournament'] as Map)['name']?.toString()
                 : json['tournamentName']?.toString()),
-      teamName: json['participant'] is Map
-          ? (json['participant'] as Map)['teamName']?.toString()
-          : (pMap['participant'] is Map
-                ? (pMap['participant'] as Map)['teamName']?.toString()
-                : json['teamName']?.toString()),
+      teamName: _teamNameOf(participant?['teamName'] ?? json['teamName']),
+      players: toParticipantPlayers(participant ?? json),
       divisionId:
           (pMap['divisionId'] ??
                   pMap['tournamentDivisionId'] ??
@@ -88,6 +94,12 @@ class PaymentModel {
                   json['tournamentDivisionId'])
               ?.toString(),
     );
+  }
+
+  /// Tên đội đã chuẩn hoá; null khi chưa có tên (không dựng tên giả).
+  static String? _teamNameOf(Object? value) {
+    final text = normalizeParticipantText(value?.toString());
+    return text.isEmpty ? null : text;
   }
 
   bool get isCompleted =>

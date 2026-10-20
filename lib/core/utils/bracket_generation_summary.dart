@@ -13,13 +13,13 @@ List<String> bracketUnpairedNames(Object? raw) {
   return value is List ? value.map((e) => e.toString()).toList() : const [];
 }
 
-/// Mỗi cặp server tự ghép thành một nhãn "A & B".
+/// Mỗi cặp server tự ghép thành một nhãn "A / B".
 List<String> bracketAutoPairedLabels(Object? raw) {
   final value = _bodyOf(raw)?['autoPaired'];
   if (value is! List) return const [];
   return [
     for (final item in value)
       if (item is Map && item['memberNames'] is List)
-        (item['memberNames'] as List).map((e) => e.toString()).join(' & '),
+        (item['memberNames'] as List).map((e) => e.toString()).join(' / '),
   ];
 }

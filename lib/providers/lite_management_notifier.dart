@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -96,9 +97,10 @@ class LiteParticipant {
       status == 'COMPLETE' ||
       (status == 'PENDING_APPROVAL' && memberCount >= 2);
 
-  String get displayName => teamName.isNotEmpty
-      ? teamName
-      : members.map((m) => m.fullName).join(' & ');
+  String get displayName => participantLabel(
+    teamName: teamName,
+    players: participantPlayersFromNames(members.map((m) => m.fullName)),
+  );
 
   static bool _hasText(Object? value) =>
       value is String && value.trim().isNotEmpty;

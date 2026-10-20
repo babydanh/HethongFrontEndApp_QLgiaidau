@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -1807,10 +1809,17 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     return null;
   }
 
+  /// Nhãn một bên trận (chỉ hiển thị): tên đội hoặc VĐV, không dựng từ tên người.
+  static String _sideText(MatchModel match, int side) => participantLabel(
+    teamName: matchSideTeamName(match, side),
+    players: matchSidePlayers(match, side),
+    teamOnly: isFootballMatch(match),
+  );
+
   /// Nhãn trận theo hai đội, dùng cho khung chọn và hộp xác nhận.
   static String _pairLabel(MatchModel match) {
-    final first = match.team1Name.trim();
-    final second = match.team2Name.trim();
+    final first = _sideText(match, 1).trim();
+    final second = _sideText(match, 2).trim();
     if (first.isEmpty && second.isEmpty) return match.id;
     return '${first.isEmpty ? '?' : first} – ${second.isEmpty ? '?' : second}';
   }
@@ -2134,8 +2143,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  participant.teamName,
+                ParticipantLabel(
+                  teamName: participant.teamName,
+                  players: participant.players,
                   style: TextStyle(color: context.colors.textSecondary),
                 ),
                 const SizedBox(height: 14),
@@ -2389,8 +2399,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     };
     final winnerItems = <String, String>{
       '': l10n.opsSelectWinner,
-      if (match.team1Id.isNotEmpty) match.team1Id: match.team1Name,
-      if (match.team2Id.isNotEmpty) match.team2Id: match.team2Name,
+      if (match.team1Id.isNotEmpty) match.team1Id: _sideText(match, 1),
+      if (match.team2Id.isNotEmpty) match.team2Id: _sideText(match, 2),
     };
 
     await showModalBottomSheet<void>(
@@ -3485,10 +3495,11 @@ class _OpsMatchCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      match.team1Name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: ParticipantLabel(
+                      teamName: matchSideTeamName(match, 1),
+                      players: matchSidePlayers(match, 1),
+                      teamOnly: isFootballMatch(match),
+                      compact: true,
                       style: TextStyle(
                         color: colors.textPrimary,
                         fontSize: 14,
@@ -3505,11 +3516,13 @@ class _OpsMatchCard extends StatelessWidget {
                     ),
                   ),
                   Expanded(
-                    child: Text(
-                      match.team2Name,
+                    child: ParticipantLabel(
+                      teamName: matchSideTeamName(match, 2),
+                      players: matchSidePlayers(match, 2),
+                      teamOnly: isFootballMatch(match),
+                      compact: true,
                       textAlign: TextAlign.end,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       style: TextStyle(
                         color: colors.textPrimary,
                         fontSize: 14,
@@ -3723,10 +3736,9 @@ class _OpsParticipantCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    participant.teamName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: ParticipantLabel(
+                    teamName: participant.teamName,
+                    players: participant.players,
                     style: TextStyle(
                       color: colors.textPrimary,
                       fontSize: 14,

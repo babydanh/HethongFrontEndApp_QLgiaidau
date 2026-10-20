@@ -8,6 +8,8 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 /// Unified bracket match card used in both single-elim and double-elim diagrams.
 /// Replaces the former _BracketMatchCard (single_elim_diagram) and _DeBracketMatchCard (double_elim_diagram).
@@ -82,7 +84,8 @@ class BracketMatchCard extends StatelessWidget {
 
   Widget _buildSlotRow({
     required BuildContext context,
-    required String name,
+    required String? teamName,
+    required List<ParticipantPlayer> players,
     required String? logoUrl,
     required int score,
     required List<int>? sets,
@@ -108,7 +111,9 @@ class BracketMatchCard extends StatelessWidget {
         dragData.hasParticipant &&
         match.isScheduled;
     final row = TeamRow(
-      name: name,
+      teamName: teamName,
+      players: players,
+      teamOnly: isFootballMatch(match),
       logoUrl: logoUrl,
       score: score,
       sets: sets,
@@ -189,7 +194,12 @@ class BracketMatchCard extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        name,
+                        participantLabel(
+                          teamName: teamName,
+                          players: players,
+                          teamOnly: isFootballMatch(match),
+                          abbreviated: true,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -291,7 +301,10 @@ class BracketMatchCard extends StatelessWidget {
             Expanded(
               child: _buildSlotRow(
                 context: context,
-                name: isBye1 ? l10n.bracketBye : match.team1Name,
+                teamName: isBye1
+                    ? l10n.bracketBye
+                    : matchSideTeamName(match, 1),
+                players: isBye1 ? const [] : matchSidePlayers(match, 1),
                 logoUrl: isBye1 ? null : match.team1LogoUrl,
                 score: match.score1,
                 sets: match.sets.isNotEmpty
@@ -315,7 +328,10 @@ class BracketMatchCard extends StatelessWidget {
             Expanded(
               child: _buildSlotRow(
                 context: context,
-                name: isBye2 ? l10n.bracketBye : match.team2Name,
+                teamName: isBye2
+                    ? l10n.bracketBye
+                    : matchSideTeamName(match, 2),
+                players: isBye2 ? const [] : matchSidePlayers(match, 2),
                 logoUrl: isBye2 ? null : match.team2LogoUrl,
                 score: match.score2,
                 sets: match.sets.isNotEmpty

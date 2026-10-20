@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 
 SportRuleKind _resolveMatchSportKind(MatchModel match) {
   final sportRules = match.sportRules;
@@ -35,7 +36,7 @@ void showOfficialScoreModal(
   required String matchId,
   required MatchModel match,
   VoidCallback? onRecordPenalty,
-  Future<void> Function(String teamName, PenaltyOption option, String reason)?
+  Future<void> Function(int teamSide, PenaltyOption option, String reason)?
   onSubmitPenalty,
   VoidCallback? onForceWin,
 }) {
@@ -59,7 +60,7 @@ class OfficialScorePage extends ConsumerStatefulWidget {
   final MatchModel match;
   final VoidCallback? onRecordPenalty;
   final Future<void> Function(
-    String teamName,
+    int teamSide,
     PenaltyOption option,
     String reason,
   )?
@@ -81,7 +82,7 @@ class OfficialScorePage extends ConsumerStatefulWidget {
 }
 
 class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
-  String? _selectedPenaltyTeam;
+  int? _selectedPenaltySide;
   PenaltyOption? _selectedPenalty;
   bool _penaltySelectionError = false;
   final _penaltyReasonController = TextEditingController();
@@ -808,7 +809,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
   ) {
     final options = strategy.getOptions();
     final selectedPenalty = _selectedPenalty ?? options.first;
-    final teams = [widget.match.team1Name, widget.match.team2Name];
+    const sides = [1, 2];
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
       child: Column(
@@ -991,14 +992,14 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
           ),
           const SizedBox(height: 8),
           Row(
-            children: teams.map((team) {
-              final selected = _selectedPenaltyTeam == team;
+            children: sides.map((side) {
+              final selected = _selectedPenaltySide == side;
               return Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(right: team == teams.last ? 0 : 8),
+                  padding: EdgeInsets.only(right: side == sides.last ? 0 : 8),
                   child: OutlinedButton(
                     onPressed: () => setState(() {
-                      _selectedPenaltyTeam = team;
+                      _selectedPenaltySide = side;
                       _penaltySelectionError = false;
                     }),
                     style: OutlinedButton.styleFrom(
@@ -1012,7 +1013,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
-                      team,
+                      matchSideLabel(widget.match, side),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1046,7 +1047,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () async {
-              if (_selectedPenaltyTeam == null) {
+              if (_selectedPenaltySide == null) {
                 setState(() => _penaltySelectionError = true);
                 return;
               }
@@ -1057,7 +1058,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                   content: Text(
                     l10n.officialScore_penaltyConfirmContent(
                       _penaltyLabel(selectedPenalty, kind, l10n),
-                      _selectedPenaltyTeam!,
+                      matchSideLabel(widget.match, _selectedPenaltySide!),
                     ),
                   ),
                   actions: [
@@ -1077,7 +1078,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
               final reason = _penaltyReasonController.text.trim();
               if (widget.onSubmitPenalty != null) {
                 await widget.onSubmitPenalty!.call(
-                  _selectedPenaltyTeam!,
+                  _selectedPenaltySide!,
                   option,
                   reason,
                 );
@@ -1086,7 +1087,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
               }
               if (context.mounted) {
                 setState(() {
-                  _selectedPenaltyTeam = null;
+                  _selectedPenaltySide = null;
                   _penaltySelectionError = false;
                   _penaltyReasonController.clear();
                 });

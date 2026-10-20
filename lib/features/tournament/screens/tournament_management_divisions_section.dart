@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
@@ -900,10 +901,9 @@ class _SeedRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              participant.teamName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: ParticipantLabel(
+              teamName: participant.teamName,
+              players: participant.players,
               style: TextStyle(color: colors.textPrimary),
             ),
           ),

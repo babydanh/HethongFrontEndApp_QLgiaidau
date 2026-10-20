@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 class MatchCardLive extends StatelessWidget {
   final MatchModel match;
@@ -65,15 +67,18 @@ class MatchCardLive extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text(
-                        match.team1Name,
+                      ParticipantLabel(
+                        teamName: matchSideTeamName(match, 1),
+                        players: matchSidePlayers(match, 1),
+                        teamOnly: isFootballMatch(match),
+                        compact: true,
                         textAlign: TextAlign.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: context.colors.textPrimary,
                         ),
-                        maxLines: 2,
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -115,15 +120,18 @@ class MatchCardLive extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      Text(
-                        match.team2Name,
+                      ParticipantLabel(
+                        teamName: matchSideTeamName(match, 2),
+                        players: matchSidePlayers(match, 2),
+                        teamOnly: isFootballMatch(match),
+                        compact: true,
                         textAlign: TextAlign.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: context.colors.textPrimary,
                         ),
-                        maxLines: 2,
                       ),
                       const SizedBox(height: 12),
                       Text(

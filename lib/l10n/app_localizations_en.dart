@@ -11591,14 +11591,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get teamLogoInvalid => 'Invalid team logo.';
 
   @override
-  String teamFallbackName(Object id) {
-    return 'Team $id';
-  }
-
-  @override
-  String get teamMemberFallback => 'Athlete';
-
-  @override
   String get tournamentRegistrationResponseInvalid =>
       'Invalid registration response.';
 

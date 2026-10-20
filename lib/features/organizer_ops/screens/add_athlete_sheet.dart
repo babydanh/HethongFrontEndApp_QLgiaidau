@@ -1130,7 +1130,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     final l10n = AppLocalizations.of(context)!;
     final name = _directNameController.text.trim();
     final email = _directEmailController.text.trim();
-    if (name.isEmpty && email.isEmpty) {
+    if (name.isEmpty) {
       setState(() => _directError = l10n.opsAddAthleteNameRequired);
       return;
     }
@@ -1147,7 +1147,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           .read(tournamentManagementRepositoryProvider)
           .addAthleteDirect(
             widget.tournament.id,
-            name: name.isEmpty ? email.split('@').first : name,
+            name: name,
             email: email.isEmpty ? null : email,
             tournamentDivisionId: widget.divisionId,
           );

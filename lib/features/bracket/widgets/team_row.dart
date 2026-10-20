@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 /// Unified TeamRow widget used in bracket diagram match cards.
 /// Replaces the former _TeamRow (single_elim_diagram) and _DeTeamRow (double_elim_diagram).
 class TeamRow extends StatelessWidget {
-  final String name;
+  final String? teamName;
+  final List<ParticipantPlayer> players;
+  final bool teamOnly;
   final String? logoUrl;
   final int score;
   final List<int>? sets;
@@ -21,7 +24,9 @@ class TeamRow extends StatelessWidget {
 
   const TeamRow({
     super.key,
-    required this.name,
+    required this.teamName,
+    required this.players,
+    required this.teamOnly,
     this.logoUrl,
     required this.score,
     required this.isWinner,
@@ -65,7 +70,7 @@ class TeamRow extends StatelessWidget {
       height: rowHeight + 8,
       color: rowBgColor,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           children: [
             // Winner indicator bar
@@ -101,8 +106,11 @@ class TeamRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Flexible(
-                    child: Text(
-                      name,
+                    child: ParticipantLabel(
+                      teamName: teamName,
+                      players: players,
+                      teamOnly: teamOnly,
+                      compact: true,
                       style:
                           nameStyle ??
                           TextStyle(
@@ -113,8 +121,6 @@ class TeamRow extends StatelessWidget {
                                 : (isBye ? colors.textMuted : colors.textSecondary),
                             fontStyle: isBye ? FontStyle.italic : FontStyle.normal,
                           ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (eloDelta != null) ...[

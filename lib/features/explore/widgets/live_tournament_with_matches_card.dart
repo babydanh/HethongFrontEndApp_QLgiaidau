@@ -14,6 +14,8 @@ import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/cursor_pagination.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
@@ -398,10 +400,12 @@ class _LiveTournamentWithMatchesCardState
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final isT1Tbd =
-        match.team1Name.trim().toUpperCase() == 'TBD' ||
+        (matchSideTeamName(match, 1) == null &&
+            matchSidePlayers(match, 1).isEmpty) ||
         match.team1Name.trim().toUpperCase() == 'BYE';
     final isT2Tbd =
-        match.team2Name.trim().toUpperCase() == 'TBD' ||
+        (matchSideTeamName(match, 2) == null &&
+            matchSidePlayers(match, 2).isEmpty) ||
         match.team2Name.trim().toUpperCase() == 'BYE';
     final isByeMatch = match.isBye || isT1Tbd || isT2Tbd;
     final cardScore = match.isLive
@@ -427,24 +431,6 @@ class _LiveTournamentWithMatchesCardState
           )
         : (l10n.exploreCourtNotAssigned);
 
-    List<String> getInitials(String name) {
-      final parts = name
-          .split('-')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      if (parts.length >= 2) {
-        return [_getSingleInitials(parts[0]), _getSingleInitials(parts[1])];
-      }
-      final words = name.trim().split(' ');
-      if (words.length >= 2) {
-        return ['${words[0][0]}${words[1][0]}'.toUpperCase(), ''];
-      }
-      return [name.isNotEmpty ? name[0].toUpperCase() : '?', ''];
-    }
-
-    final t1Initials = getInitials(match.team1Name);
-    final t2Initials = getInitials(match.team2Name);
     final cheerCount = _cheerCounts[match.id] ?? 0;
     final isCheered = cheerCount > 0;
 
@@ -505,20 +491,15 @@ class _LiveTournamentWithMatchesCardState
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  _DoubleAvatarWidget(
-                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
-                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                    isTeamOne: true,
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: Row(
                       children: [
                         Flexible(
-                          child: Text(
-                            match.team1Name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: ParticipantLabel(
+                            teamName: matchSideTeamName(match, 1),
+                            players: matchSidePlayers(match, 1),
+                            teamOnly: isFootballMatch(match),
+                            compact: true,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -574,20 +555,15 @@ class _LiveTournamentWithMatchesCardState
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  _DoubleAvatarWidget(
-                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
-                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                    isTeamOne: false,
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: Row(
                       children: [
                         Flexible(
-                          child: Text(
-                            match.team2Name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: ParticipantLabel(
+                            teamName: matchSideTeamName(match, 2),
+                            players: matchSidePlayers(match, 2),
+                            teamOnly: isFootballMatch(match),
+                            compact: true,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -731,7 +707,7 @@ class _LiveTournamentWithMatchesCardState
                     AppShareModal.show(
                       context: context,
                       title:
-                          '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
+                          '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} ${matchSideLabel(match, 2)}',
                       subtitle: l10n.exploreShareSubtitle(
                         widget.tournament.name,
                         match.court.isNotEmpty
@@ -766,28 +742,6 @@ class _LiveTournamentWithMatchesCardState
   Widget _buildHorizontalLiveCard(BuildContext context, MatchModel match) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-
-    List<String> getInitials(String name) {
-      final parts = name
-          .split('-')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      if (parts.length >= 2) {
-        return [_getSingleInitials(parts[0]), _getSingleInitials(parts[1])];
-      }
-      final words = name.trim().split(' ');
-      if (words.length >= 3) {
-        return ['${words[0][0]}${words[1][0]}${words[2][0]}'.toUpperCase(), ''];
-      }
-      if (words.length >= 2) {
-        return ['${words[0][0]}${words[1][0]}'.toUpperCase(), ''];
-      }
-      return [name.isNotEmpty ? name[0].toUpperCase() : '?', ''];
-    }
-
-    final t1Initials = getInitials(match.team1Name);
-    final t2Initials = getInitials(match.team2Name);
 
     final roundText = MatchRoundLabel.formatRound(
       match: match,
@@ -899,25 +853,18 @@ class _LiveTournamentWithMatchesCardState
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildLargeAvatar(
-                            context,
-                            initials: t1Initials[0],
-                            initials2: t1Initials.length > 1
-                                ? t1Initials[1]
-                                : '',
-                            avatarColor: const Color(0xFF0284C7),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            match.team1Name,
+                          ParticipantLabel(
+                            teamName: matchSideTeamName(match, 1),
+                            players: matchSidePlayers(match, 1),
+                            teamOnly: isFootballMatch(match),
+                            compact: true,
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                               color: colors.textPrimary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                           ),
                         ],
                       ),
@@ -942,25 +889,18 @@ class _LiveTournamentWithMatchesCardState
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildLargeAvatar(
-                            context,
-                            initials: t2Initials[0],
-                            initials2: t2Initials.length > 1
-                                ? t2Initials[1]
-                                : '',
-                            avatarColor: const Color(0xFF16A34A),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            match.team2Name,
+                          ParticipantLabel(
+                            teamName: matchSideTeamName(match, 2),
+                            players: matchSidePlayers(match, 2),
+                            teamOnly: isFootballMatch(match),
+                            compact: true,
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
                               color: colors.textPrimary,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                           ),
                         ],
                       ),
@@ -1003,103 +943,6 @@ class _LiveTournamentWithMatchesCardState
     );
   }
 
-  Widget _buildLargeAvatar(
-    BuildContext context, {
-    required String initials,
-    String initials2 = '',
-    Color avatarColor = AppTheme.primary,
-  }) {
-    final colors = context.colors;
-    if (initials2.isNotEmpty && initials2 != '?') {
-      return SizedBox(
-        width: 54,
-        height: 36,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Partner Avatar (placed first in background at left: 18)
-            Positioned(
-              left: 18,
-              top: 0,
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: avatarColor.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: avatarColor.withValues(alpha: 0.35),
-                    width: 1.2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    initials2,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      color: avatarColor,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Primary / Captain Avatar (placed second in FOREGROUND - ĐÈ LÊN 1 CHÚT)
-            Positioned(
-              left: 0,
-              top: 0,
-              child: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: colors.bgCard,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: avatarColor, width: 1.8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 3,
-                      offset: const Offset(1, 1),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    initials,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: avatarColor,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        color: avatarColor.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(color: avatarColor, width: 1.5),
-      ),
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
-            color: avatarColor,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildHorizontalScheduleRow(
     BuildContext context,
     MatchModel match, [
@@ -1107,24 +950,6 @@ class _LiveTournamentWithMatchesCardState
   ]) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    List<String> getInitials(String name) {
-      final parts = name
-          .split('-')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      if (parts.length >= 2) {
-        return [_getSingleInitials(parts[0]), _getSingleInitials(parts[1])];
-      }
-      final words = name.trim().split(' ');
-      if (words.length >= 2) {
-        return ['${words[0][0]}${words[1][0]}'.toUpperCase(), ''];
-      }
-      return [name.isNotEmpty ? name[0].toUpperCase() : '?', ''];
-    }
-
-    final t1Initials = getInitials(match.team1Name);
-    final t2Initials = getInitials(match.team2Name);
 
     final roundText = MatchRoundLabel.formatRound(
       match: match,
@@ -1187,17 +1012,12 @@ class _LiveTournamentWithMatchesCardState
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  _DoubleAvatarWidget(
-                    initial1: t1Initials.isNotEmpty ? t1Initials[0] : 'T1',
-                    initial2: t1Initials.length > 1 ? t1Initials[1] : '',
-                    isTeamOne: true,
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      match.team1Name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: ParticipantLabel(
+                      teamName: matchSideTeamName(match, 1),
+                      players: matchSidePlayers(match, 1),
+                      teamOnly: isFootballMatch(match),
+                      compact: true,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -1216,17 +1036,12 @@ class _LiveTournamentWithMatchesCardState
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  _DoubleAvatarWidget(
-                    initial1: t2Initials.isNotEmpty ? t2Initials[0] : 'T2',
-                    initial2: t2Initials.length > 1 ? t2Initials[1] : '',
-                    isTeamOne: false,
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      match.team2Name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: ParticipantLabel(
+                      teamName: matchSideTeamName(match, 2),
+                      players: matchSidePlayers(match, 2),
+                      teamOnly: isFootballMatch(match),
+                      compact: true,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -1240,75 +1055,6 @@ class _LiveTournamentWithMatchesCardState
           ],
         ),
       ),
-    );
-  }
-
-  String _getSingleInitials(String s) {
-    final parts = s.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'
-          .toUpperCase();
-    }
-    return s.isNotEmpty ? s[0].toUpperCase() : '?';
-  }
-}
-
-class _DoubleAvatarWidget extends StatelessWidget {
-  final String initial1;
-  final String initial2;
-  final bool? isTeamOne;
-
-  const _DoubleAvatarWidget({
-    required this.initial1,
-    required this.initial2,
-    this.isTeamOne,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final teamOne = isTeamOne ?? true;
-    final Color circleBg = teamOne
-        ? (isDark
-              ? const Color(0xFF0369A1).withValues(alpha: 0.3)
-              : const Color(0xFFBAE6FD))
-        : (isDark
-              ? const Color(0xFF15803D).withValues(alpha: 0.3)
-              : const Color(0xFFBBF7D0));
-
-    final Color textColor = teamOne
-        ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1))
-        : (isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D));
-
-    Widget buildCircle(String text) {
-      return Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(color: circleBg, shape: BoxShape.circle),
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (initial2.isEmpty || initial2 == '?') {
-      return buildCircle(initial1);
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        buildCircle(initial1),
-        const SizedBox(width: 4),
-        buildCircle(initial2),
-      ],
     );
   }
 }

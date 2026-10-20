@@ -4,6 +4,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 /// Lets an authorized tournament operator choose between the public live view
 /// and the referee scoring desk. Viewers never see this dialog.
@@ -48,8 +50,6 @@ class MatchScoreEntryChooser extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final team1 = match.team1Name.trim().isEmpty ? l10n.liveUnknownValue : match.team1Name;
-    final team2 = match.team2Name.trim().isEmpty ? l10n.liveUnknownValue : match.team2Name;
 
     return AlertDialog(
       backgroundColor: colors.bgCard,
@@ -76,12 +76,28 @@ class MatchScoreEntryChooser extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(child: Text(team1, maxLines: 2, overflow: TextOverflow.ellipsis)),
+                Expanded(
+                  child: ParticipantLabel(
+                    teamName: matchSideTeamName(match, 1),
+                    players: matchSidePlayers(match, 1),
+                    teamOnly: isFootballMatch(match),
+                    compact: true,
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Text('VS', style: TextStyle(fontWeight: FontWeight.w800, color: colors.textMuted)),
                 ),
-                Expanded(child: Text(team2, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end)),
+                Expanded(
+                  child: ParticipantLabel(
+                    teamName: matchSideTeamName(match, 2),
+                    players: matchSidePlayers(match, 2),
+                    teamOnly: isFootballMatch(match),
+                    compact: true,
+                    textAlign: TextAlign.end,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                  ),
+                ),
               ],
             ),
           ),

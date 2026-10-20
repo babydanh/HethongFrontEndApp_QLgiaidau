@@ -22,7 +22,8 @@ List<String> unpairedDisplayNames(
   ];
 }
 
-/// Mỗi cặp server ghép thành một nhãn "A & B".
+/// Mỗi cặp server ghép thành một nhãn "A / B". Nhãn chỉ để hiển thị: không gửi
+/// API và không lưu vào `teamName`.
 List<String> pairGeneratedLabels(Object? raw) {
   final value = _pairBodyOf(raw)?['paired'];
   if (value is! List) return const [];
@@ -32,7 +33,7 @@ List<String> pairGeneratedLabels(Object? raw) {
         (item['memberNames'] as List)
             .map((e) => e.toString().trim())
             .where((name) => name.isNotEmpty)
-            .join(' & '),
+            .join(' / '),
   ].where((label) => label.isNotEmpty).toList();
 }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
@@ -572,6 +573,10 @@ void main() {
           team1Name: 'Nguyễn Văn An',
           team2Name: 'QA Bổ sung 15 - QA Bổ sung 16',
           scheduledTime: DateTime(2026, 8, 12, 8),
+        ).copyWith(
+          team1Players: const [
+            ParticipantPlayer(slot: 1, fullName: 'Nguyễn Văn An'),
+          ],
         ),
       ],
     );
@@ -582,13 +587,16 @@ void main() {
       find.descendant(of: card, matching: find.text('Đơn Nam')),
       findsOneWidget,
     );
-    // Tên rút gọn như lịch web.
+    // VĐV đơn viết tắt như lịch web; đội có tên giữ nguyên, không tách.
     expect(
-      find.descendant(of: card, matching: find.text('Văn An')),
+      find.descendant(of: card, matching: find.text('N. V. An')),
       findsOneWidget,
     );
     expect(
-      find.descendant(of: card, matching: find.text('sung 15 / sung 16')),
+      find.descendant(
+        of: card,
+        matching: find.text('QA Bổ sung 15 - QA Bổ sung 16'),
+      ),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);

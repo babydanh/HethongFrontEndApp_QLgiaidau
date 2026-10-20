@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'dart:async';
 
 import 'dart:ui';
@@ -1182,16 +1183,19 @@ class ApiTournamentRepository implements ITournamentRepository {
   }) {
     final p1 = json['participant1'] as Map<String, dynamic>?;
     final p2 = json['participant2'] as Map<String, dynamic>?;
+    final team1Players = p1 == null
+        ? const <ParticipantPlayer>[]
+        : toParticipantPlayers(p1);
+    final team2Players = p2 == null
+        ? const <ParticipantPlayer>[]
+        : toParticipantPlayers(p2);
+    // Không có tên đội nhưng có VĐV → '' để ParticipantLabel hiển thị VĐV; không có gì → 'TBD'.
     final team1Name =
-        p1?['teamName']?.toString() ??
-        json['team1Name']?.toString() ??
-        json['participant1Name']?.toString() ??
-        '';
+        MatchModel.participantTeamName(p1, json['team1Name']) ??
+        (team1Players.isEmpty ? 'TBD' : '');
     final team2Name =
-        p2?['teamName']?.toString() ??
-        json['team2Name']?.toString() ??
-        json['participant2Name']?.toString() ??
-        '';
+        MatchModel.participantTeamName(p2, json['team2Name']) ??
+        (team2Players.isEmpty ? 'TBD' : '');
     String? participantLogo(Map<String, dynamic>? participant) {
       final value = participant?['logoUrl'] ?? participant?['logo_url'];
       return value?.toString().trim().isNotEmpty == true
@@ -1280,14 +1284,14 @@ class ApiTournamentRepository implements ITournamentRepository {
       matchNumber: matchOrder,
       team1Id:
           p1?['id']?.toString() ?? json['participant1Id']?.toString() ?? '',
-      team1Name: team1Name.isNotEmpty ? team1Name : 'TBD',
+      team1Name: team1Name,
       team1LogoUrl:
           participantLogo(p1) ??
           json['team1LogoUrl']?.toString() ??
           json['team1Logo']?.toString(),
       team2Id:
           p2?['id']?.toString() ?? json['participant2Id']?.toString() ?? '',
-      team2Name: team2Name.isNotEmpty ? team2Name : 'TBD',
+      team2Name: team2Name,
       team2LogoUrl:
           participantLogo(p2) ??
           json['team2LogoUrl']?.toString() ??
@@ -1337,6 +1341,8 @@ class ApiTournamentRepository implements ITournamentRepository {
           : null,
       team1Members: team1Members,
       team2Members: team2Members,
+      team1Players: team1Players,
+      team2Players: team2Players,
       groupName: resolvedGroupName,
       stageName: resolvedStageName,
       stageType: resolvedStageType,

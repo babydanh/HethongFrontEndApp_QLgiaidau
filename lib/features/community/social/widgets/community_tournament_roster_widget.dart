@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -342,7 +343,10 @@ class _CommunityTournamentRosterWidgetState
           _RosterSlotItem(
             participant: p,
             member: null,
-            displayName: p.teamName,
+            displayName: participantLabel(
+              teamName: p.teamName,
+              players: p.players,
+            ),
             avatarUrl: null,
             userId: '',
             partnerName: null,
@@ -359,7 +363,9 @@ class _CommunityTournamentRosterWidgetState
             _RosterSlotItem(
               participant: p,
               member: m,
-              displayName: m.fullName.isNotEmpty ? m.fullName : p.teamName,
+              displayName: m.fullName.isNotEmpty
+                  ? m.fullName
+                  : participantLabel(teamName: p.teamName, players: p.players),
               avatarUrl: m.avatarUrl,
               userId: m.userId,
               partnerName: partner,

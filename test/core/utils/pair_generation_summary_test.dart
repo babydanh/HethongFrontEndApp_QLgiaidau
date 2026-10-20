@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('pairGeneratedLabels', () {
-    test('joins each pair member names with " & " from envelope body', () {
+    test('joins each pair member names with " / " from envelope body', () {
       final raw = {
         'status': 'OK',
         'data': {
@@ -13,7 +13,7 @@ void main() {
           ],
         },
       };
-      expect(pairGeneratedLabels(raw), ['An & Bình', 'Cường & Dũng']);
+      expect(pairGeneratedLabels(raw), ['An / Bình', 'Cường / Dũng']);
     });
 
     test('reads flat body and skips missing or blank members', () {

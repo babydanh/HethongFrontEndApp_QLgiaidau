@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+
 class Standing {
   final String id;
   final String teamName;
@@ -10,6 +12,7 @@ class Standing {
   final int pointsAgainst;
   final int pointDifference;
   final int totalPoints;
+  final List<ParticipantPlayer> players;
 
   const Standing({
     required this.id,
@@ -23,12 +26,19 @@ class Standing {
     this.pointsAgainst = 0,
     this.pointDifference = 0,
     this.totalPoints = 0,
+    this.players = const [],
   });
 
   factory Standing.fromJson(Map<String, dynamic> json, String id) {
+    final participant = json['participant'] is Map
+        ? Map<String, dynamic>.from(json['participant'] as Map)
+        : json;
     return Standing(
       id: id,
-      teamName: json['teamName'] ?? '',
+      teamName: normalizeParticipantText(
+        (participant['teamName'] ?? json['teamName'])?.toString(),
+      ),
+      players: toParticipantPlayers(participant),
       group: json['group'] ?? '',
       played: json['played'] ?? 0,
       won: json['won'] ?? 0,
@@ -68,6 +78,7 @@ class Standing {
     int? pointsAgainst,
     int? pointDifference,
     int? totalPoints,
+    List<ParticipantPlayer>? players,
   }) {
     return Standing(
       id: id ?? this.id,
@@ -81,6 +92,7 @@ class Standing {
       pointsAgainst: pointsAgainst ?? this.pointsAgainst,
       pointDifference: pointDifference ?? this.pointDifference,
       totalPoints: totalPoints ?? this.totalPoints,
+      players: players ?? this.players,
     );
   }
 

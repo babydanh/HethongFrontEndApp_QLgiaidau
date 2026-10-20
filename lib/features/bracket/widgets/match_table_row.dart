@@ -9,6 +9,8 @@ import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dar
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 /// Clean, specs-driven schedule match card.
 /// Features:
@@ -34,16 +36,10 @@ class MatchTableRow extends StatelessWidget {
     this.onUnassignSlot,
   });
 
-  bool _canUnassignParticipant(String participantId, String teamName) {
+  bool _canUnassignParticipant(String participantId) {
     if (!match.isScheduled || onUnassignSlot == null) return false;
     final id = participantId.trim().toUpperCase();
-    final name = teamName.trim().toUpperCase();
-    return id.isNotEmpty &&
-        id != 'BYE' &&
-        id != 'TBD' &&
-        name != 'BYE' &&
-        name != 'CHỜ XÁC ĐỊNH' &&
-        name != 'CHO XAC DINH';
+    return id.isNotEmpty && id != 'BYE' && id != 'TBD';
   }
 
   Widget _buildUnassignButton(BuildContext context, String slot) {
@@ -82,40 +78,12 @@ class MatchTableRow extends StatelessWidget {
     return l10n.matchTableRound(round);
   }
 
-  String _getSingleInitials(String s) {
-    final parts = s.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'
-          .toUpperCase();
-    }
-    return s.isNotEmpty ? s[0].toUpperCase() : '?';
-  }
-
-  List<String> _getInitials(String name) {
-    final parts = name
-        .split('-')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    if (parts.length >= 2) {
-      return [_getSingleInitials(parts[0]), _getSingleInitials(parts[1])];
-    }
-    final words = name.trim().split(' ');
-    if (words.length >= 2) {
-      return [words[0][0].toUpperCase(), words[1][0].toUpperCase()];
-    }
-    return [name.isNotEmpty ? name[0].toUpperCase() : '?', '?'];
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final isLive = match.isLive;
     final isCompleted = match.isCompleted;
-
-    final t1Initials = _getInitials(match.team1Name);
-    final t2Initials = _getInitials(match.team2Name);
 
     // Round / Group / Match location label
     final branch = match.bracketPosition.bracket.toLowerCase();
@@ -215,17 +183,12 @@ class MatchTableRow extends StatelessWidget {
                           // Team 1
                           Row(
                             children: [
-                              _DoubleAvatarWidget(
-                                initial1: t1Initials[0],
-                                initial2: t1Initials[1],
-                                color: const Color(0xFF0284C7),
-                              ),
-                              const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  match.team1Name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                child: ParticipantLabel(
+                                  teamName: matchSideTeamName(match, 1),
+                                  players: matchSidePlayers(match, 1),
+                                  teamOnly: isFootballMatch(match),
+                                  compact: true,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight:
@@ -331,10 +294,7 @@ class MatchTableRow extends StatelessWidget {
                                         ),
                                       ],
                               ),
-                              if (_canUnassignParticipant(
-                                match.team1Id,
-                                match.team1Name,
-                              ))
+                              if (_canUnassignParticipant(match.team1Id))
                                 _buildUnassignButton(context, 'participant1'),
                             ],
                           ),
@@ -343,17 +303,12 @@ class MatchTableRow extends StatelessWidget {
                           // Team 2
                           Row(
                             children: [
-                              _DoubleAvatarWidget(
-                                initial1: t2Initials[0],
-                                initial2: t2Initials[1],
-                                color: AppTheme.primary,
-                              ),
-                              const SizedBox(width: 8),
                               Expanded(
-                                child: Text(
-                                  match.team2Name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                child: ParticipantLabel(
+                                  teamName: matchSideTeamName(match, 2),
+                                  players: matchSidePlayers(match, 2),
+                                  teamOnly: isFootballMatch(match),
+                                  compact: true,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight:
@@ -459,10 +414,7 @@ class MatchTableRow extends StatelessWidget {
                                         ),
                                       ],
                               ),
-                              if (_canUnassignParticipant(
-                                match.team2Id,
-                                match.team2Name,
-                              ))
+                              if (_canUnassignParticipant(match.team2Id))
                                 _buildUnassignButton(context, 'participant2'),
                             ],
                           ),
@@ -658,72 +610,6 @@ class MatchTableRow extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DoubleAvatarWidget extends StatelessWidget {
-  final String initial1;
-  final String initial2;
-  final Color color;
-
-  const _DoubleAvatarWidget({
-    required this.initial1,
-    required this.initial2,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return SizedBox(
-      width: 44,
-      height: 26,
-      child: Stack(
-        children: [
-          Container(
-            width: 26,
-            height: 26,
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              shape: BoxShape.circle,
-              border: Border.all(color: color, width: 1.5),
-            ),
-            child: Center(
-              child: Text(
-                initial1,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            child: Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                shape: BoxShape.circle,
-                border: Border.all(color: color, width: 1.5),
-              ),
-              child: Center(
-                child: Text(
-                  initial2,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

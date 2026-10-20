@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'dart:ui';
 
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class Team {
@@ -10,6 +11,9 @@ class Team {
   final String name;
   final List<String> members;
   final List<MatchMemberInfo> memberInfos;
+
+  /// VĐV theo quy chuẩn participant (`players[]`); rỗng khi chưa có VĐV.
+  final List<ParticipantPlayer> players;
   final int seed;
   final String group;
   final String divisionId;
@@ -28,6 +32,7 @@ class Team {
     required this.name,
     this.members = const [],
     this.memberInfos = const [],
+    this.players = const [],
     this.seed = 0,
     this.group = '',
     this.divisionId = '',
@@ -73,10 +78,9 @@ class Team {
         json['user']?['avatarUrl']?.toString() ??
         json['captain']?['avatarUrl']?.toString() ??
         json['photoUrl']?.toString();
-    final singleName = json['name']?.toString() ??
-        json['teamName']?.toString() ??
-        json['user']?['fullName']?.toString() ??
-        '';
+    final singleName = normalizeParticipantText(
+      json['user']?['fullName']?.toString(),
+    );
 
     if (rawMembers is List) {
       for (final m in rawMembers) {
@@ -104,7 +108,7 @@ class Team {
       }
     }
 
-    if (parsedMemberInfos.isEmpty && (singleUserId != null || singleName.isNotEmpty)) {
+    if (parsedMemberInfos.isEmpty && singleName.isNotEmpty) {
       parsedMemberInfos.add(
         MatchMemberInfo(
           userId: singleUserId,
@@ -115,12 +119,18 @@ class Team {
       );
     }
 
+    final parsedPlayers = toParticipantPlayers(json);
+    final players = parsedPlayers.isNotEmpty
+        ? parsedPlayers
+        : participantPlayersFromMemberInfos(parsedMemberInfos);
+
     return Team(
       id: id,
       userId: singleUserId,
-      name: json['name'] ?? '',
+      name: normalizeParticipantText(json['name']?.toString()),
       members: parsedMembers,
       memberInfos: parsedMemberInfos,
+      players: players,
       seed: json['seed'] ?? 0,
       group: json['group'] ?? '',
       divisionId: json['divisionId']?.toString() ?? json['tournamentDivisionId']?.toString() ?? '',
@@ -158,6 +168,7 @@ class Team {
     String? id,
     String? name,
     List<String>? members,
+    List<ParticipantPlayer>? players,
     int? seed,
     String? group,
     String? photoUrl,
@@ -170,6 +181,7 @@ class Team {
       id: id ?? this.id,
       name: name ?? this.name,
       members: members ?? this.members,
+      players: players ?? this.players,
       seed: seed ?? this.seed,
       group: group ?? this.group,
       photoUrl: photoUrl ?? this.photoUrl,

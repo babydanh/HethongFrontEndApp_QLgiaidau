@@ -862,8 +862,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     final medalColors = _medalColors(rank);
     final avatarSize = isCenter ? 40.0 : 32.0;
     final winRate = player.winRate;
-    final displayName = player.fullName.isNotEmpty
-        ? player.fullName
+    final displayName = player.displayName.isNotEmpty
+        ? player.displayName
         : l10n.clubRankingTeamFallback;
 
     return Container(
@@ -996,8 +996,8 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     final winRate = player.matchesPlayed > 0
         ? (player.matchesWon / player.matchesPlayed) * 100
         : 0.0;
-    final displayName = player.fullName.isNotEmpty
-        ? player.fullName
+    final displayName = player.displayName.isNotEmpty
+        ? player.displayName
         : l10n.clubRankingTeamFallback;
 
     return Container(
@@ -1025,11 +1025,7 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
 
           // Đôi hiển thị đủ avatar của cả hai người trong cùng một hạng.
           if (player.partnerName != null) ...[
-            _buildMiniAvatar(
-              displayName.split(' / ').first,
-              player.avatarUrl,
-              player,
-            ),
+            _buildMiniAvatar(player.fullName, player.avatarUrl, player),
             const SizedBox(width: 2),
             _buildMiniAvatar(
               player.partnerName!,

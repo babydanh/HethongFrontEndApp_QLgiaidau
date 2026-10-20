@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -127,22 +129,23 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
       final grp = (m.groupName != null && m.groupName!.isNotEmpty)
           ? m.groupName!
           : l10n.crossTableDefaultGroup;
-      if (m.team1Name.isNotEmpty &&
-          m.team1Name != 'TBD' &&
-          m.team1Name != 'BYE') {
-        final key = m.team1Id.isNotEmpty ? m.team1Id : m.team1Name;
+      for (final side in const [1, 2]) {
+        final teamId = side == 1 ? m.team1Id : m.team2Id;
+        final name = matchSideTeamName(m, side);
+        final players = matchSidePlayers(m, side);
+        if (teamId.isEmpty ||
+            name == 'BYE' ||
+            (name == null && players.isEmpty)) {
+          continue;
+        }
         standingsMap.putIfAbsent(
-          key,
-          () => Standing(id: key, teamName: m.team1Name, group: grp),
-        );
-      }
-      if (m.team2Name.isNotEmpty &&
-          m.team2Name != 'TBD' &&
-          m.team2Name != 'BYE') {
-        final key = m.team2Id.isNotEmpty ? m.team2Id : m.team2Name;
-        standingsMap.putIfAbsent(
-          key,
-          () => Standing(id: key, teamName: m.team2Name, group: grp),
+          teamId,
+          () => Standing(
+            id: teamId,
+            teamName: name ?? '',
+            group: grp,
+            players: players,
+          ),
         );
       }
     }
@@ -403,15 +406,38 @@ class _GroupCrossTable extends StatelessWidget {
   Widget _buildGrid(BuildContext context, Map<String, _ScoreCell> scoreCells) {
     const cellWidth = 92.0;
     const rowLabelWidth = 150.0;
+    final teamOnly = matches.any(isFootballMatch);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _buildHeaderCell(context, 'Đội', rowLabelWidth, alignLeft: true),
+            _buildHeaderCell(
+              context,
+              Text(
+                'Đội',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: context.colors.textPrimary,
+                ),
+              ),
+              rowLabelWidth,
+              alignLeft: true,
+            ),
             ...standings.map(
-              (team) => _buildHeaderCell(context, team.teamName, cellWidth),
+              (team) => _buildHeaderCell(
+                context,
+                _teamLabel(
+                  context,
+                  team,
+                  teamOnly,
+                  weight: FontWeight.w800,
+                  centered: true,
+                ),
+                cellWidth,
+              ),
             ),
           ],
         ),
@@ -424,7 +450,7 @@ class _GroupCrossTable extends StatelessWidget {
             children: [
               _buildTeamCell(
                 context,
-                rowTeam.teamName,
+                _teamLabel(context, rowTeam, teamOnly, weight: FontWeight.w700),
                 rowLabelWidth,
                 isLastRow,
               ),
@@ -462,7 +488,7 @@ class _GroupCrossTable extends StatelessWidget {
 
   Widget _buildHeaderCell(
     BuildContext context,
-    String label,
+    Widget child,
     double width, {
     bool alignLeft = false,
   }) {
@@ -478,23 +504,38 @@ class _GroupCrossTable extends StatelessWidget {
         ),
       ),
       alignment: alignLeft ? Alignment.centerLeft : Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: context.colors.textPrimary,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        textAlign: alignLeft ? TextAlign.left : TextAlign.center,
+      child: child,
+    );
+  }
+
+  /// Nhãn đội trong bảng chéo (ô hẹp): tên đội một dòng, hoặc VĐV viết tắt mỗi dòng.
+  Widget _teamLabel(
+    BuildContext context,
+    Standing team,
+    bool teamOnly, {
+    required FontWeight weight,
+    bool centered = false,
+  }) {
+    return ParticipantLabel(
+      teamName: team.teamName,
+      players: team.players,
+      teamOnly: teamOnly,
+      compact: true,
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: weight,
+        color: context.colors.textPrimary,
       ),
+      textAlign: centered ? TextAlign.center : TextAlign.start,
+      crossAxisAlignment: centered
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
     );
   }
 
   Widget _buildTeamCell(
     BuildContext context,
-    String label,
+    Widget child,
     double width,
     bool isLastRow,
   ) {
@@ -512,16 +553,7 @@ class _GroupCrossTable extends StatelessWidget {
         ),
       ),
       alignment: Alignment.centerLeft,
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: context.colors.textPrimary,
-        ),
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
+      child: child,
     );
   }
 

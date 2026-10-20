@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
@@ -82,6 +83,10 @@ Team _fixtureDoublesTeam() => Team(
   id: 'team-doubles',
   name: 'Alpha / Beta',
   members: const ['Alpha', 'Beta'],
+  players: [
+    ParticipantPlayer(slot: 1, fullName: 'Alpha', isGuest: true),
+    ParticipantPlayer(slot: 2, fullName: 'Beta', isGuest: true),
+  ],
   divisionId: 'division-alpha',
   createdAt: DateTime(2026, 1, 1),
 );

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -330,8 +331,6 @@ class ResultsTab extends ConsumerWidget {
     final participant = award?['participant'] is Map
         ? Map<String, dynamic>.from(award!['participant'] as Map)
         : null;
-    final teamName = participant?['teamName']?.toString() ?? 'Chưa xác định';
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -375,11 +374,8 @@ class ResultsTab extends ConsumerWidget {
             // Đội 1
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Text(
-                teamName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+              child: _podiumLabel(
+                participant,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -393,14 +389,10 @@ class ResultsTab extends ConsumerWidget {
               const SizedBox(height: 2),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: Text(
-                  (extra['participant'] is Map
-                          ? (extra['participant'] as Map)['teamName']
-                          : null) ??
-                      '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
+                child: _podiumLabel(
+                  extra['participant'] is Map
+                      ? Map<String, dynamic>.from(extra['participant'] as Map)
+                      : null,
                   style: TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w700,
@@ -413,11 +405,8 @@ class ResultsTab extends ConsumerWidget {
           ] else ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Text(
-                teamName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+              child: _podiumLabel(
+                participant,
                 style: TextStyle(
                   fontSize: isGold ? 11.5 : 10.5,
                   fontWeight: FontWeight.w800,
@@ -486,6 +475,21 @@ class ResultsTab extends ConsumerWidget {
     );
   }
 
+  Widget _podiumLabel(
+    Map<String, dynamic>? participant, {
+    required TextStyle style,
+  }) {
+    return ParticipantLabel(
+      teamName: participant?['teamName']?.toString(),
+      players: participant == null
+          ? const <ParticipantPlayer>[]
+          : toParticipantPlayers(participant),
+      textAlign: TextAlign.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      style: style,
+    );
+  }
+
   Widget _buildTiePodiumAvatars(
     Map<String, dynamic> p1,
     Map<String, dynamic> p2Award,
@@ -513,15 +517,9 @@ class ResultsTab extends ConsumerWidget {
     double radius,
     Color ringColor,
   ) {
-    final rawMembers = participant['members'];
-    final members = rawMembers is List
-        ? rawMembers
-              .whereType<Map>()
-              .map((m) => Map<String, dynamic>.from(m))
-              .toList()
-        : <Map<String, dynamic>>[];
+    final players = toParticipantPlayers(participant);
 
-    if (members.length >= 2) {
+    if (players.length >= 2) {
       return SizedBox(
         width: radius * 2 + 10,
         height: radius * 2,
@@ -529,22 +527,21 @@ class ResultsTab extends ConsumerWidget {
           children: [
             Positioned(
               left: 10,
-              child: _buildSingleAvatar(members[1], radius - 2, ringColor),
+              child: _buildSingleAvatar(players[1], radius - 2, ringColor),
             ),
             Positioned(
               left: 0,
-              child: _buildSingleAvatar(members[0], radius, ringColor),
+              child: _buildSingleAvatar(players[0], radius, ringColor),
             ),
           ],
         ),
       );
     }
 
-    if (members.isNotEmpty) {
-      return _buildSingleAvatar(members[0], radius, ringColor);
+    if (players.isNotEmpty) {
+      return _buildSingleAvatar(players[0], radius, ringColor);
     }
 
-    final name = participant['teamName']?.toString() ?? '?';
     return Container(
       width: radius * 2,
       height: radius * 2,
@@ -555,7 +552,7 @@ class ResultsTab extends ConsumerWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        '?',
         style: TextStyle(
           fontSize: radius * 0.8,
           fontWeight: FontWeight.w800,
@@ -566,12 +563,12 @@ class ResultsTab extends ConsumerWidget {
   }
 
   Widget _buildSingleAvatar(
-    Map<String, dynamic> member,
+    ParticipantPlayer player,
     double radius,
     Color ringColor,
   ) {
-    final avatarUrl = member['avatarUrl']?.toString();
-    final name = member['fullName']?.toString() ?? 'V';
+    final avatarUrl = player.avatarUrl;
+    final name = player.fullName;
 
     return Container(
       width: radius * 2,
@@ -619,8 +616,6 @@ class ResultsTab extends ConsumerWidget {
     final participant = award['participant'] is Map
         ? Map<String, dynamic>.from(award['participant'] as Map)
         : const <String, dynamic>{};
-    final teamName = participant['teamName']?.toString() ?? 'Chưa xác định';
-
     final isGold = rank == 1;
     final isSilver = rank == 2;
     final isBronze = rank == 3 || rank == 4;
@@ -683,15 +678,14 @@ class ResultsTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  teamName,
+                ParticipantLabel(
+                  teamName: participant['teamName']?.toString(),
+                  players: toParticipantPlayers(participant),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: colors.textPrimary,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 3),
                 Row(

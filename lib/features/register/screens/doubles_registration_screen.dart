@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
@@ -798,6 +799,21 @@ class _DoublesRegistrationFlowState
     );
   }
 
+  /// Tên đội cho tiêu đề chia sẻ: dùng tên đội khi có. Khi chưa có, dùng nhãn
+  /// của hai VĐV (đã đăng ký và đối tác đã chọn); không tự ghép tên đội.
+  String _shareTeamName() {
+    final teamName = _teamNameCtrl.text.trim();
+    if (teamName.isNotEmpty) return teamName;
+    final partnerName = _selectedPartner?.fullName;
+    return participantLabel(
+      teamName: null,
+      players: participantPlayersFromNames({
+        for (final m in _registeredMembers) m.fullName,
+        ?partnerName,
+      }),
+    );
+  }
+
   Widget _buildStepIndicator(AppColorsExtension colors) {
     return Row(
       children: [1, 2, 3].map((i) {
@@ -1351,7 +1367,7 @@ class _DoublesRegistrationFlowState
                   onPressed: () {
                     AppShareModal.show(
                       context: context,
-                      title: l10n.doublesRegInviteTeamTitle(_teamNameCtrl.text),
+                      title: l10n.doublesRegInviteTeamTitle(_shareTeamName()),
                       subtitle: l10n.doublesRegTournamentSubtitle(t.name),
                       webUrl: inviteLink ?? _teamInviteToken!,
                       imageUrl: t.logoUrl,
@@ -1631,7 +1647,7 @@ class _DoublesRegistrationFlowState
               onPressed: () {
                 AppShareModal.show(
                   context: context,
-                  title: l10n.doublesRegJoinTeamShareTitle(_teamNameCtrl.text),
+                  title: l10n.doublesRegJoinTeamShareTitle(_shareTeamName()),
                   subtitle: l10n.doublesRegPartnerSubtitle(
                     t.name,
                     _partnerContact!,
@@ -1671,14 +1687,15 @@ class _DoublesRegistrationFlowState
                     : colors.success,
               ),
               const SizedBox(height: 16),
-              Text(
-                l10n.doublesRegYourTeam(_teamNameCtrl.text),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
+              if (_teamNameCtrl.text.trim().isNotEmpty)
+                Text(
+                  l10n.doublesRegYourTeam(_teamNameCtrl.text),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
                 ),
-              ),
               const SizedBox(height: 8),
               if (_registeredMembers.isNotEmpty) ...[
                 const SizedBox(height: 12),

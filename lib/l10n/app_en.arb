@@ -4773,13 +4773,6 @@
   "communityMediaInvalid": "Invalid uploaded image.",
   "teamCreateResponseInvalid": "Invalid team creation response.",
   "teamLogoInvalid": "Invalid team logo.",
-  "teamFallbackName": "Team {id}",
-  "@teamFallbackName": {
-    "placeholders": {
-      "id": {}
-    }
-  },
-  "teamMemberFallback": "Athlete",
   "tournamentRegistrationResponseInvalid": "Invalid registration response.",
   "tournamentInviteCodeInvalid": "Invalid tournament invite code.",
   "footballRosterResponseInvalid": "Invalid football roster response.",

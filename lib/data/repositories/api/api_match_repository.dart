@@ -498,35 +498,6 @@ class ApiMatchRepository implements IMatchRepository {
   }
 
   MatchModel _parseMatch(Map<String, dynamic> json) {
-    String participantName(dynamic participant) {
-      if (participant is! Map) return '';
-      final value =
-          participant['teamName'] ??
-          participant['name'] ??
-          participant['displayName'];
-      return value?.toString().trim() ?? '';
-    }
-
-    final p1Name = participantName(json['participant1']);
-    final p2Name = participantName(json['participant2']);
-    final team1Name = p1Name.isNotEmpty
-        ? p1Name
-        : (json['team1Name'] ??
-                      json['participant1Name'] ??
-                      (json['team1'] is Map
-                          ? (json['team1'] as Map)['name']
-                          : null))
-                  ?.toString() ??
-              'TBD';
-    final team2Name = p2Name.isNotEmpty
-        ? p2Name
-        : (json['team2Name'] ??
-                      json['participant2Name'] ??
-                      (json['team2'] is Map
-                          ? (json['team2'] as Map)['name']
-                          : null))
-                  ?.toString() ??
-              'TBD';
     final team1MemberInfos = _parseMemberInfos(
       json['participant1'],
       json['team1MemberInfos'] ?? json['team1Members'],
@@ -537,6 +508,27 @@ class ApiMatchRepository implements IMatchRepository {
     );
     final team1Members = _memberNames(team1MemberInfos);
     final team2Members = _memberNames(team2MemberInfos);
+    final team1Players = MatchModel.participantPlayersOf(
+      json['participant1'],
+      team1MemberInfos,
+    );
+    final team2Players = MatchModel.participantPlayersOf(
+      json['participant2'],
+      team2MemberInfos,
+    );
+    // Không có tên đội nhưng có VĐV → '' để ParticipantLabel hiển thị VĐV; không có gì → 'TBD'.
+    final team1Name =
+        MatchModel.participantTeamName(
+          json['participant1'],
+          json['team1Name'],
+        ) ??
+        (team1Players.isEmpty ? 'TBD' : '');
+    final team2Name =
+        MatchModel.participantTeamName(
+          json['participant2'],
+          json['team2Name'],
+        ) ??
+        (team2Players.isEmpty ? 'TBD' : '');
 
     int parseNum(dynamic val) {
       if (val is num) return val.toInt();
@@ -748,6 +740,8 @@ class ApiMatchRepository implements IMatchRepository {
       team2Members: team2Members,
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
+      team1Players: team1Players,
+      team2Players: team2Players,
       groupName: groupName,
       stageName: stageName,
       stageType: stageType,
@@ -927,6 +921,12 @@ class ApiMatchRepository implements IMatchRepository {
       team2Name: incoming.team2Name == 'TBD'
           ? previous.team2Name
           : incoming.team2Name,
+      team1Players: incoming.team1Players.isEmpty
+          ? previous.team1Players
+          : incoming.team1Players,
+      team2Players: incoming.team2Players.isEmpty
+          ? previous.team2Players
+          : incoming.team2Players,
       tournamentName: incoming.tournamentName ?? previous.tournamentName,
       sportKey: incoming.sportKey ?? previous.sportKey,
       sportRules: incoming.sportRules ?? previous.sportRules,

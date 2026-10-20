@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 
@@ -194,6 +195,10 @@ class MatchModel {
   final List<String>? team2Members;
   final List<MatchMemberInfo> team1MemberInfos;
   final List<MatchMemberInfo> team2MemberInfos;
+
+  /// Người chơi của từng bên theo quy chuẩn participant (players[]); rỗng khi không có VĐV.
+  final List<ParticipantPlayer> team1Players;
+  final List<ParticipantPlayer> team2Players;
   final bool team1IsMock;
   final bool team2IsMock;
 
@@ -274,6 +279,8 @@ class MatchModel {
     this.team2Members = const [],
     this.team1MemberInfos = const [],
     this.team2MemberInfos = const [],
+    this.team1Players = const [],
+    this.team2Players = const [],
     this.team1IsMock = false,
     this.team2IsMock = false,
     this.team1EloPoints,
@@ -298,6 +305,31 @@ class MatchModel {
       return (config['durationMinutes'] as num).toInt();
     }
     return null;
+  }
+
+  /// Tên đội của một bên: `teamName` của participant, rồi tên legacy. Null khi không có tên.
+  static String? participantTeamName(dynamic participant, dynamic legacyName) {
+    if (participant is Map) {
+      final named = normalizeParticipantText(
+        participant['teamName']?.toString(),
+      );
+      if (named.isNotEmpty) return named;
+    }
+    final legacy = normalizeParticipantText(legacyName?.toString());
+    return legacy.isEmpty ? null : legacy;
+  }
+
+  /// VĐV của một bên theo `players[]` của participant; thiếu thì dựng từ member infos.
+  static List<ParticipantPlayer> participantPlayersOf(
+    dynamic participant,
+    List<MatchMemberInfo> memberInfos,
+  ) {
+    final players = participant is Map
+        ? toParticipantPlayers(participant)
+        : const <ParticipantPlayer>[];
+    return players.isNotEmpty
+        ? players
+        : participantPlayersFromMemberInfos(memberInfos);
   }
 
   factory MatchModel.fromJson(Map<String, dynamic> json, String id) {
@@ -339,6 +371,27 @@ class MatchModel {
       json['team2MemberInfos'] ?? json['team2Members'],
       json['participant2'],
     );
+    final team1Players = MatchModel.participantPlayersOf(
+      json['participant1'],
+      team1MemberInfos,
+    );
+    final team2Players = MatchModel.participantPlayersOf(
+      json['participant2'],
+      team2MemberInfos,
+    );
+    // Không có tên đội nhưng có VĐV → '' để ParticipantLabel hiển thị VĐV; không có gì → 'TBD'.
+    final team1Name =
+        MatchModel.participantTeamName(
+          json['participant1'],
+          json['team1Name'],
+        ) ??
+        (team1Players.isEmpty ? 'TBD' : '');
+    final team2Name =
+        MatchModel.participantTeamName(
+          json['participant2'],
+          json['team2Name'],
+        ) ??
+        (team2Players.isEmpty ? 'TBD' : '');
     int? participantElo(dynamic participant) {
       if (participant is! Map) return null;
       final value = participant['eloPoints'];
@@ -530,8 +583,8 @@ class MatchModel {
               ? json['participant2']['id']?.toString()
               : null) ??
           '',
-      team1Name: json['team1Name'] ?? 'TBD',
-      team2Name: json['team2Name'] ?? 'TBD',
+      team1Name: team1Name,
+      team2Name: team2Name,
       // The API's authoritative match aggregate is p1SetsWon/p2SetsWon.
       // Some list/bracket responses do not include the legacy score1/score2
       // aliases, so do not let completed cards fall back to 0-0.
@@ -613,6 +666,8 @@ class MatchModel {
       team2Members: team2MemberInfos.map((m) => m.fullName).toList(),
       team1MemberInfos: team1MemberInfos,
       team2MemberInfos: team2MemberInfos,
+      team1Players: team1Players,
+      team2Players: team2Players,
       team1IsMock:
           json['participant1'] is Map &&
           ((json['participant1'] as Map)['isMock'] == true ||
@@ -779,6 +834,8 @@ class MatchModel {
     List<String>? team2Members,
     List<MatchMemberInfo>? team1MemberInfos,
     List<MatchMemberInfo>? team2MemberInfos,
+    List<ParticipantPlayer>? team1Players,
+    List<ParticipantPlayer>? team2Players,
     bool? team1IsMock,
     bool? team2IsMock,
     int? team1EloPoints,
@@ -842,6 +899,8 @@ class MatchModel {
       team2Members: team2Members ?? this.team2Members,
       team1MemberInfos: team1MemberInfos ?? this.team1MemberInfos,
       team2MemberInfos: team2MemberInfos ?? this.team2MemberInfos,
+      team1Players: team1Players ?? this.team1Players,
+      team2Players: team2Players ?? this.team2Players,
       team1IsMock: team1IsMock ?? this.team1IsMock,
       team2IsMock: team2IsMock ?? this.team2IsMock,
       team1EloPoints: team1EloPoints ?? this.team1EloPoints,

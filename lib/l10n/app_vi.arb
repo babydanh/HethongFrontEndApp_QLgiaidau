@@ -4792,13 +4792,6 @@
   "communityMediaInvalid": "Ảnh tải lên không hợp lệ",
   "teamCreateResponseInvalid": "Phản hồi tạo đội không hợp lệ.",
   "teamLogoInvalid": "Ảnh logo không hợp lệ.",
-  "teamFallbackName": "Đội {id}",
-  "@teamFallbackName": {
-    "placeholders": {
-      "id": {}
-    }
-  },
-  "teamMemberFallback": "VĐV",
   "tournamentRegistrationResponseInvalid": "Phản hồi đăng ký không hợp lệ.",
   "tournamentInviteCodeInvalid": "Mã tham gia giải không hợp lệ.",
   "footballRosterResponseInvalid": "Phản hồi roster bóng đá không hợp lệ.",

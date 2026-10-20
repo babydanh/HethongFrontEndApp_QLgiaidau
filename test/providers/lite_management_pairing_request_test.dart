@@ -291,7 +291,7 @@ void main() {
         final bracketPosts = adapter.postsTo('$_liteBase/bracket').toList();
         expect(bracketPosts, hasLength(1));
         expect(bracketPosts.single.body?['divisionId'], 'd1');
-        expect(bracketAutoPairedLabels(raw), ['An & Bình']);
+        expect(bracketAutoPairedLabels(raw), ['An / Bình']);
         expect(bracketUnpairedNames(raw), ['Cường']);
       },
     );

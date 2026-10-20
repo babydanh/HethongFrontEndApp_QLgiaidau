@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'dart:ui';
 
@@ -263,7 +264,9 @@ class ApiTeamRepository implements ITeamRepository {
         final List<dynamic> list = response.data['data'] ?? response.data ?? [];
         return list.map((json) {
           final String id = json['id']?.toString() ?? '';
-          final String teamName = json['teamName']?.toString() ?? '';
+          final String teamName = normalizeParticipantText(
+            json['teamName']?.toString(),
+          );
           final List<dynamic> rosters =
               (json['members'] as List<dynamic>?) ??
               (json['rosters'] as List<dynamic>?) ??
@@ -301,18 +304,25 @@ class ApiTeamRepository implements ITeamRepository {
                 '',
           );
 
-          if (memberInfos.isEmpty && (singleUserId != null || teamName.isNotEmpty)) {
+          final registrantName = normalizeParticipantText(
+            userMap?['fullName']?.toString(),
+          );
+          if (memberInfos.isEmpty &&
+              singleUserId != null &&
+              registrantName.isNotEmpty) {
             memberInfos.add(
               MatchMemberInfo(
                 userId: singleUserId,
-                fullName: teamName.isNotEmpty
-                    ? teamName
-                    : (userMap?['fullName']?.toString() ?? ''),
+                fullName: registrantName,
                 avatarUrl: singleAvatar,
                 eloPoints: singleElo,
               ),
             );
           }
+          final parsedPlayers = toParticipantPlayers(json);
+          final players = parsedPlayers.isNotEmpty
+              ? parsedPlayers
+              : participantPlayersFromMemberInfos(memberInfos);
 
           final divisionMap =
               json['division'] as Map<String, dynamic>? ??
@@ -331,24 +341,13 @@ class ApiTeamRepository implements ITeamRepository {
           return Team(
             id: id,
             userId: singleUserId,
-            name: teamName.isNotEmpty
-                ? teamName
-                : lookupAppLocalizations(
-                    PlatformDispatcher.instance.locale,
-                  ).teamFallbackName(id),
+            name: teamName,
             group: groupName,
             divisionId: divId,
             photoUrl: singleAvatar ?? json['photoUrl']?.toString() ?? '',
-            members: members.isNotEmpty
-                ? members
-                : [
-                    teamName.isNotEmpty
-                        ? teamName
-                        : lookupAppLocalizations(
-                            PlatformDispatcher.instance.locale,
-                          ).teamMemberFallback,
-                  ],
+            members: members,
             memberInfos: memberInfos,
+            players: players,
             contactEmail: json['contactPhone']?.toString() ?? '',
             qrCode: json['qrCode']?.toString() ?? id,
             approvalStatus:

@@ -16,7 +16,7 @@ void main() {
         },
       };
       expect(bracketUnpairedNames(envelope), ['An']);
-      expect(bracketAutoPairedLabels(envelope), ['Bình & Cường']);
+      expect(bracketAutoPairedLabels(envelope), ['Bình / Cường']);
 
       final flat = {'unpairedNames': ['Dũng']};
       expect(bracketUnpairedNames(flat), ['Dũng']);

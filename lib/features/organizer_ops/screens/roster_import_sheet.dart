@@ -467,10 +467,8 @@ class _RosterImportSheetState extends ConsumerState<RosterImportSheet> {
     final name2 = parsed.player2Name;
     final candidates = _candidates[row.index];
     final notes = parsed.notes;
-    final ownTeam = parsed.teamName?.trim() ?? '';
-    final teamName = ownTeam.isNotEmpty
-        ? ownTeam
-        : (name2 == null ? name1 : '$name1 / $name2');
+    // Không có tên đội thì gửi rỗng; tuyệt đối không ghép tên VĐV.
+    final teamName = parsed.teamName?.trim() ?? '';
     return RosterImportBatchItem(
       clientRowIndex: row.index,
       source: 'EXCEL',

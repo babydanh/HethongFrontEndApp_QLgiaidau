@@ -860,7 +860,9 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
     final athletes = _athletes
         .where(
           (player) =>
-              query.isEmpty || player.fullName.toLowerCase().contains(query),
+              query.isEmpty ||
+                  player.fullName.toLowerCase().contains(query) ||
+                  (player.partnerName ?? '').toLowerCase().contains(query),
         )
         .toList();
     return athletes;
@@ -1947,7 +1949,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
   Widget _athleteCard(PlayerRanking player, AppColorsExtension colors) {
     return _resultRow(
       colors: colors,
-      title: player.fullName,
+      title: player.displayName,
       details: [
         if (player.categoryName?.isNotEmpty == true) player.categoryName!,
         if (player.eloPoints > 0) 'ELO ${player.eloPoints}',

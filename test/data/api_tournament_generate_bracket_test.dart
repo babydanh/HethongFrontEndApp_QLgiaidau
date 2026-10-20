@@ -101,7 +101,7 @@ void main() {
           'allowReset': false,
         });
         expect(bracketUnpairedNames(result), ['An']);
-        expect(bracketAutoPairedLabels(result), ['Bình & Cường']);
+        expect(bracketAutoPairedLabels(result), ['Bình / Cường']);
       },
     );
 

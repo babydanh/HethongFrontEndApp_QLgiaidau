@@ -3,7 +3,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
-import 'package:app_quanly_giaidau/features/tournament/utils/schedule_team_label.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 typedef _ScheduledMatchLane = ({MatchModel match, int lane});
@@ -51,9 +52,6 @@ class ScheduleGrid extends StatefulWidget {
   /// Tên vòng chuẩn theo sơ đồ (vd. "Vòng 1/8", "Tứ kết") làm footer thẻ.
   /// Null thì footer giữ "Vòng R • Trận N" theo số vòng thô (lưới BTC).
   final String Function(MatchModel match)? roundLabelOf;
-
-  /// Rút gọn tên đội như lịch web (lịch công khai). Lưới BTC giữ tên đầy đủ.
-  final bool shortTeamNames;
 
   /// Phút mỗi set BTC cấu hình; dùng khi trận chưa có `durationMinutes`.
   final int minutesPerSet;
@@ -103,7 +101,6 @@ class ScheduleGrid extends StatefulWidget {
     this.onDropMatch,
     this.onRangeSelected,
     this.roundLabelOf,
-    this.shortTeamNames = false,
     this.onTapEmptyCell,
     this.onDropOnMatch,
     this.draftMatchIds = const {},
@@ -123,6 +120,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   static const double _minimumCardHeight = 44;
   static const double _minimumCompactDivisionCardHeight = 60;
   static const double _minimumFullCardHeight = 76;
+
+  /// Header, footer và viền của thẻ đầy đủ; cộng hai khối đội ra chiều cao tối thiểu.
+  static const double _fullCardChromeHeight = 43;
 
   /// Thẻ dưới 8 phút chỉ hiện một dòng; từ 8 phút trở lên hiện đủ hai đội.
   static const int _compactBelowMinutes = 8;
@@ -615,7 +615,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     final duration = _durationOf(match);
     final divisionName = _divisionNameFor(match);
     final calculatedHeight = duration * _pixelsPerMinute - 3;
-    final minimumHeight = _minimumHeightFor(duration, divisionName);
+    final minimumHeight = _minimumHeightFor(match, duration, divisionName);
     final height = calculatedHeight < minimumHeight
         ? minimumHeight
         : calculatedHeight;
@@ -726,7 +726,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Text(
-            '${_shortName(match, 0)} - ${_shortName(match, 1)}',
+            '${_sideText(match, 1)} - ${_sideText(match, 2)}',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -797,21 +797,42 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Tên trên thẻ. Lịch công khai ([ScheduleGrid.shortTeamNames]) rút gọn như
-  /// lịch web (mỗi VĐV 2 từ cuối, cặp nối " / "); lưới BTC giữ tên đầy đủ.
-  String _shortName(MatchModel match, int side) {
-    final name = side == 0 ? match.team1Name : match.team2Name;
-    if (!widget.shortTeamNames) return name;
-    final members =
-        (side == 0 ? match.team1Members : match.team2Members) ?? const [];
-    return scheduleShortTeamName(name, members: members);
+  /// Tên đội dạng chuỗi (tiêu đề kéo thả); VĐV rút gọn như thẻ.
+  String _sideText(MatchModel match, int side) => participantLabel(
+    teamName: matchSideTeamName(match, side),
+    players: matchSidePlayers(match, side),
+    teamOnly: isFootballMatch(match),
+    abbreviated: true,
+  );
+
+  /// Chiều cao tối thiểu của thẻ: trận ngắn chỉ một dòng; thẻ đủ hai đội phải
+  /// chứa mọi VĐV (mỗi VĐV một dòng), không tràn.
+  double _minimumHeightFor(
+    MatchModel match,
+    int duration,
+    String? divisionName,
+  ) {
+    if (duration < _compactBelowMinutes) {
+      return divisionName == null
+          ? _minimumCardHeight
+          : _minimumCompactDivisionCardHeight;
+    }
+    final contentHeight =
+        _fullCardChromeHeight +
+        _competitorBlockHeight(matchSidePlayers(match, 1).length) +
+        _competitorBlockHeight(matchSidePlayers(match, 2).length) +
+        1;
+    return contentHeight > _minimumFullCardHeight
+        ? contentHeight
+        : _minimumFullCardHeight;
   }
 
-  double _minimumHeightFor(int duration, String? divisionName) {
-    if (divisionName == null) return _minimumCardHeight;
-    return duration < _compactBelowMinutes
-        ? _minimumCompactDivisionCardHeight
-        : _minimumFullCardHeight;
+  /// Chiều cao một hàng đội: mỗi VĐV một dòng có avatar; không có VĐV thì một dòng chữ.
+  double _competitorBlockHeight(int players) {
+    if (players == 0) return 16;
+    const avatar = 14.0;
+    const gap = 4.0;
+    return players * avatar + (players - 1) * gap;
   }
 
   int _layoutDurationOf(MatchModel match) {
@@ -820,7 +841,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     if (divisionName == null) return duration;
 
     final calculatedHeight = duration * _pixelsPerMinute - 3;
-    final minimumHeight = _minimumHeightFor(duration, divisionName);
+    final minimumHeight = _minimumHeightFor(match, duration, divisionName);
     final renderedHeight = calculatedHeight < minimumHeight
         ? minimumHeight
         : calculatedHeight;
@@ -852,9 +873,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   Widget _compactContent(MatchModel match, _CardStyle style) {
     return Row(
       children: [
-        _teamName(match, match.team1Id, _shortName(match, 0), style),
+        _teamName(match, 1, style),
         _compactCenter(match, style),
-        _teamName(match, match.team2Id, _shortName(match, 1), style),
+        _teamName(match, 2, style),
       ],
     );
   }
@@ -899,21 +920,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _competitorRow(
-                match,
-                match.team1Id,
-                _shortName(match, 0),
-                0,
-                style,
-              ),
+              _competitorRow(match, 0, style),
               Divider(height: 1, thickness: 1, color: colors.borderLight),
-              _competitorRow(
-                match,
-                match.team2Id,
-                _shortName(match, 1),
-                1,
-                style,
-              ),
+              _competitorRow(match, 1, style),
             ],
           ),
         ),
@@ -1019,13 +1028,8 @@ class _ScheduleGridState extends State<ScheduleGrid> {
 
   /// Hàng đội: tên bên trái, một ô điểm cho mỗi set đã có; trận chưa đấu không có ô nào.
   /// Đội thắng được tô nền và accent như `row.won` của web.
-  Widget _competitorRow(
-    MatchModel match,
-    String teamId,
-    String name,
-    int side,
-    _CardStyle style,
-  ) {
+  Widget _competitorRow(MatchModel match, int side, _CardStyle style) {
+    final teamId = side == 0 ? match.team1Id : match.team2Id;
     final won = _isWinner(match, teamId);
     return Container(
       padding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
@@ -1040,7 +1044,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
       child: Row(
         children: [
-          _teamName(match, teamId, name, style),
+          _teamName(match, side + 1, style),
           for (var index = 0; index < _scoreColumnsOf(match); index++)
             SizedBox(
               width: 16,
@@ -1074,18 +1078,17 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   }
 
   /// Tô đậm đội thắng khi trận đã có người thắng; không đổi màu chữ theo trạng thái.
-  Widget _teamName(
-    MatchModel match,
-    String teamId,
-    String name,
-    _CardStyle style,
-  ) {
-    final isWinner = _isWinner(match, teamId);
+  Widget _teamName(MatchModel match, int side, _CardStyle style) {
+    final isWinner = _isWinner(
+      match,
+      side == 1 ? match.team1Id : match.team2Id,
+    );
     return Flexible(
-      child: Text(
-        name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+      child: ParticipantLabel(
+        teamName: matchSideTeamName(match, side),
+        players: matchSidePlayers(match, side),
+        teamOnly: isFootballMatch(match),
+        compact: true,
         style: TextStyle(
           fontSize: 11,
           fontWeight: isWinner ? FontWeight.w800 : FontWeight.w700,

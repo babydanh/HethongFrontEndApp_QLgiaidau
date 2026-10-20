@@ -9,6 +9,8 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 class MatchCardDetail extends StatelessWidget {
   final MatchModel match;
@@ -153,7 +155,8 @@ class MatchCardDetail extends StatelessWidget {
               ),
               _buildTeamRow(
                 context,
-                match.team1Name,
+                match,
+                1,
                 cardScore.score1,
                 isWinner: isCompleted && match.winnerId == match.team1Id,
               ),
@@ -165,7 +168,8 @@ class MatchCardDetail extends StatelessWidget {
               ),
               _buildTeamRow(
                 context,
-                match.team2Name,
+                match,
+                2,
                 cardScore.score2,
                 isWinner: isCompleted && match.winnerId == match.team2Id,
               ),
@@ -339,7 +343,8 @@ class MatchCardDetail extends StatelessWidget {
 
   Widget _buildTeamRow(
     BuildContext context,
-    String name,
+    MatchModel match,
+    int side,
     int score, {
     bool isWinner = false,
   }) {
@@ -352,8 +357,11 @@ class MatchCardDetail extends StatelessWidget {
             const SizedBox(width: 6),
           ],
           Expanded(
-            child: Text(
-              name,
+            child: ParticipantLabel(
+              teamName: matchSideTeamName(match, side),
+              players: matchSidePlayers(match, side),
+              teamOnly: isFootballMatch(match),
+              compact: true,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isWinner ? FontWeight.w700 : FontWeight.w400,
@@ -361,8 +369,6 @@ class MatchCardDetail extends StatelessWidget {
                     ? context.colors.textPrimary
                     : context.colors.textSecondary,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           Container(

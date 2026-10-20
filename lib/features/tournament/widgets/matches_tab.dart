@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -92,8 +94,17 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
         final query = _searchQuery.trim().toLowerCase();
         if (query.isNotEmpty) {
           matches = matches.where((match) {
-            return match.team1Name.toLowerCase().contains(query) ||
-                match.team2Name.toLowerCase().contains(query) ||
+            final sides = [
+              participantLabel(
+                teamName: matchSideTeamName(match, 1),
+                players: matchSidePlayers(match, 1),
+              ),
+              participantLabel(
+                teamName: matchSideTeamName(match, 2),
+                players: matchSidePlayers(match, 2),
+              ),
+            ].join(' ').toLowerCase();
+            return sides.contains(query) ||
                 match.court.toLowerCase().contains(query) ||
                 (match.courtName ?? '').toLowerCase().contains(query) ||
                 (match.refereeName ?? '').toLowerCase().contains(query);
@@ -243,7 +254,6 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                     emphasizeTimeLabels: true,
                     onTapMatch: _openMatchById,
                     roundLabelOf: roundLabelOf,
-                    shortTeamNames: true,
                   ),
                 ),
               ),

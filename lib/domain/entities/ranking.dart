@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+
 class PlayerRanking {
   final String id;
   final String userId;
@@ -23,6 +25,18 @@ class PlayerRanking {
   final int currentStreakCount;
   final String? updatedAt;
 
+  /// Tên đội; `null` khi không có. Không bao giờ dựng từ tên VĐV.
+  final String? teamName;
+
+  /// VĐV của bảng xếp hạng: đơn 1 người, đôi 2 người (user1, user2).
+  final List<ParticipantPlayer> players;
+
+  /// Nhãn một dòng: đơn là tên người; đôi là TEAM/PLAYERS theo quy chuẩn
+  /// (không ghép chuỗi tên).
+  String get displayName => players.length > 1
+      ? participantLabel(teamName: teamName, players: players)
+      : fullName;
+
   const PlayerRanking({
     required this.id,
     required this.userId,
@@ -47,6 +61,8 @@ class PlayerRanking {
     this.currentStreakType,
     this.currentStreakCount = 0,
     this.updatedAt,
+    this.teamName,
+    this.players = const [],
   });
 
   factory PlayerRanking.fromJson(Map<String, dynamic> json) {
@@ -78,6 +94,10 @@ class PlayerRanking {
       json['currentStreakType'] ?? json['current_streak_type'],
     )?.toUpperCase();
 
+    final teamName = normalizeParticipantText(
+      asString(json['teamName'] ?? json['team_name']),
+    );
+
     return PlayerRanking(
       id: asString(json['id']) ?? '',
       userId:
@@ -85,12 +105,12 @@ class PlayerRanking {
           user1?['id']?.toString() ??
           asString(json['userId']) ??
           '',
-      fullName: user1 != null && user2 != null
-          ? '${user1['fullName'] ?? 'VĐV'} / ${user2['fullName'] ?? 'VĐV'}'
-          : user?['fullName']?.toString() ??
-                asString(json['fullName']) ??
-                asString(json['playerName']) ??
-                '',
+      fullName:
+          user?['fullName']?.toString() ??
+          user1?['fullName']?.toString() ??
+          asString(json['fullName']) ??
+          asString(json['playerName']) ??
+          '',
       avatarUrl: asString(
         user1?['avatarUrl'] ?? user?['avatarUrl'] ?? json['avatarUrl'],
       ),
@@ -138,6 +158,17 @@ class PlayerRanking {
         json['currentStreakCount'] ?? json['current_streak_count'],
       ),
       updatedAt: asString(json['updatedAt'] ?? json['updated_at']),
+      teamName: teamName.isEmpty ? null : teamName,
+      players: json['players'] is List
+          ? toParticipantPlayers(json)
+          : [
+              if (user1 != null)
+                ParticipantPlayer.fromJson({'user': user1}, slot: 1),
+              if (user2 != null)
+                ParticipantPlayer.fromJson({'user': user2}, slot: 2),
+              if (user1 == null && user2 == null && user != null)
+                ParticipantPlayer.fromJson({'user': user}, slot: 1),
+            ],
     );
   }
 
@@ -166,6 +197,16 @@ class PlayerRanking {
       if (currentStreakType != null) 'currentStreakType': currentStreakType,
       'currentStreakCount': currentStreakCount,
       if (updatedAt != null) 'updatedAt': updatedAt,
+      if (teamName != null) 'teamName': teamName,
+      'players': [
+        for (final p in players)
+          {
+            'userId': p.userId,
+            'fullName': p.fullName,
+            'avatarUrl': p.avatarUrl,
+            'isGuest': p.isGuest,
+          },
+      ],
     };
   }
 
@@ -193,11 +234,15 @@ class PlayerRanking {
     String? currentStreakType,
     int? currentStreakCount,
     String? updatedAt,
+    String? teamName,
+    List<ParticipantPlayer>? players,
   }) {
     return PlayerRanking(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       fullName: fullName ?? this.fullName,
+      teamName: teamName ?? this.teamName,
+      players: players ?? this.players,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       partnerId: partnerId ?? this.partnerId,
       partnerName: partnerName ?? this.partnerName,

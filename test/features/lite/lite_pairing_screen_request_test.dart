@@ -160,7 +160,7 @@ void main() {
     expect(posts, hasLength(1));
     expect(posts.single.body, {'strategy': 'RANDOM', 'divisionId': 'd1'});
     expect(
-      find.text('${l10n.lite_autoPairSuccess}: An & Bình'),
+      find.text('${l10n.lite_autoPairSuccess}: An / Bình'),
       findsOneWidget,
     );
   });
@@ -222,7 +222,7 @@ void main() {
       final posts = adapter.postsTo(_genPath).toList();
       expect(posts.single.body, {'strategy': 'RANDOM', 'divisionId': 'd2'});
       expect(
-        find.text('${l10n.lite_autoPairSuccess}: Cường & Dũng'),
+        find.text('${l10n.lite_autoPairSuccess}: Cường / Dũng'),
         findsOneWidget,
       );
     },
@@ -297,7 +297,7 @@ void main() {
         find.text(
           [
             l10n.lite_bracketCreated,
-            '${l10n.lite_autoPairSuccess}: Bình & Cường',
+            '${l10n.lite_autoPairSuccess}: Bình / Cường',
             '${l10n.lite_autoPairSuccessOdd(1)}: Dũng',
           ].join('\n'),
         ),

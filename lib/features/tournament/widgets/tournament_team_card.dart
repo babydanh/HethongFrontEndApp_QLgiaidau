@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -33,6 +34,16 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
+  /// Thông tin roster (elo, hạng) của VĐV, khớp theo userId; khách không có userId.
+  MatchMemberInfo? _memberInfoFor(ParticipantPlayer player) {
+    final userId = player.userId;
+    if (userId == null) return null;
+    for (final info in widget.team.memberInfos) {
+      if (info.userId == userId) return info;
+    }
+    return null;
+  }
+
   Future<void> _revealExpandedRow() async {
     if (!mounted || !_isExpanded) return;
     await Scrollable.ensureVisible(
@@ -51,37 +62,10 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     final l10n = AppLocalizations.of(context)!;
     final team = widget.team;
 
-    // Check if Doubles
-    final isDoubles =
-        widget.isTeamSport ||
-        team.members.length > 1 ||
-        team.name.contains(' - ') ||
-        team.name.contains(' / ') ||
-        team.name.contains(' & ');
-
-    // Member names:
-    // If team.members is provided (from API roster or members array), use it.
-    // Otherwise, for Doubles/split names, split by " - ", " / ", " & ".
-    final List<String> memberNames = () {
-      if (team.members.isNotEmpty) {
-        return team.members;
-      }
-      if (team.memberInfos.isNotEmpty) {
-        final infoNames = team.memberInfos
-            .map((m) => m.fullName.trim())
-            .where((n) => n.isNotEmpty)
-            .toList();
-        if (infoNames.isNotEmpty) return infoNames;
-      }
-      final split = team.name
-          .split(RegExp(r' - | / | & '))
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      return split.isNotEmpty ? split : [team.name];
-    }();
-
-    final memberInfos = team.memberInfos;
+    // Đơn/đôi theo số VĐV (players[]); không suy từ tên đội hay isTeamSport.
+    final players = team.players;
+    final isDoubles = players.length > 1;
+    final memberNames = players.map((p) => p.fullName).toList();
 
     final seedLabel = widget.showSeed && team.seed > 0
         ? '${l10n.seedLabel} #${team.seed}'
@@ -89,8 +73,16 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
 
     if (!isDoubles) {
       // ── SINGLES (ĐƠN) LAYOUT: DIRECT PROFILE TAP, NO EXPANSION ──
-      final singleInfo = memberInfos.isNotEmpty ? memberInfos.first : null;
-      final effectiveUserId = singleInfo?.userId ?? team.userId;
+      final singlePlayer = players.isNotEmpty ? players.first : null;
+      final singleDisplay = resolveParticipantDisplay(
+        teamName: team.name,
+        players: players,
+        teamOnly: widget.isTeamSport,
+      );
+      final singleInfo = singlePlayer == null
+          ? null
+          : _memberInfoFor(singlePlayer);
+      final effectiveUserId = singlePlayer?.userId ?? team.userId;
       final eloVal = singleInfo?.eloPoints ?? team.eloPoints ?? 1200;
       final eloStr = '${l10n.eloLabel} $eloVal';
 
@@ -105,7 +97,10 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              widget.onMemberTap?.call(effectiveUserId, team.name);
+              widget.onMemberTap?.call(
+                effectiveUserId,
+                singlePlayer?.fullName ?? '',
+              );
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -119,16 +114,16 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                   CircleAvatar(
                     radius: 18,
                     backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-                    child: singleInfo?.avatarUrl?.isNotEmpty == true
+                    child: singlePlayer?.avatarUrl?.isNotEmpty == true
                         ? ClipOval(
                             child: Image.network(
-                              singleInfo!.avatarUrl!,
+                              singlePlayer!.avatarUrl!,
                               fit: BoxFit.cover,
                               width: 36,
                               height: 36,
                               errorBuilder: (context, error, stackTrace) =>
                                   Text(
-                                    _getInitials(team.name),
+                                    _getInitials(singlePlayer.fullName),
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -138,7 +133,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                             ),
                           )
                         : Text(
-                            _getInitials(team.name),
+                            _getInitials(singlePlayer?.fullName ?? ''),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -153,17 +148,32 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          team.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: colors.textPrimary,
-                            letterSpacing: -0.2,
+                        if (singleDisplay.isTeam)
+                          ParticipantLabel(
+                            teamName: team.name,
+                            players: players,
+                            teamOnly: widget.isTeamSport,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: colors.textPrimary,
+                              letterSpacing: -0.2,
+                            ),
+                          )
+                        else
+                          Text(
+                            singleDisplay.players.isEmpty
+                                ? l10n.matchNotDetermined
+                                : singleDisplay.players.first.fullName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: colors.textPrimary,
+                              letterSpacing: -0.2,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
                         const SizedBox(height: 3),
                         Row(
                           children: [
@@ -270,6 +280,17 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     }
 
     // ── DOUBLES (ĐÔI) LAYOUT: INLINE EXPANSION ACCORDION ──
+    final headerDisplay = resolveParticipantDisplay(
+      teamName: team.name,
+      players: players,
+      teamOnly: widget.isTeamSport,
+    );
+    final headerStyle = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: 13.5,
+      color: colors.textPrimary,
+      letterSpacing: -0.2,
+    );
     return Container(
       margin: EdgeInsets.zero,
       decoration: BoxDecoration(
@@ -306,17 +327,24 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                             Row(
                               children: [
                                 Flexible(
-                                  child: Text(
-                                    team.name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13.5,
-                                      color: colors.textPrimary,
-                                      letterSpacing: -0.2,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  child: headerDisplay.isTeam
+                                      ? ParticipantLabel(
+                                          teamName: team.name,
+                                          players: players,
+                                          teamOnly: widget.isTeamSport,
+                                          style: headerStyle,
+                                        )
+                                      : Text(
+                                          players.isEmpty
+                                              ? l10n.matchNotDetermined
+                                              : participantLabel(
+                                                  teamName: null,
+                                                  players: players,
+                                                ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: headerStyle,
+                                        ),
                                 ),
                                 if (seedLabel != null) ...[
                                   const SizedBox(width: 6),
@@ -447,24 +475,15 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                     padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
                     child: Column(
                       children: List.generate(memberNames.length, (idx) {
-                        final mName = memberNames[idx];
-                        final MatchMemberInfo? mInfo = () {
-                          for (final info in memberInfos) {
-                            if (info.fullName.trim().toLowerCase() ==
-                                mName.trim().toLowerCase()) {
-                              return info;
-                            }
-                          }
-                          return idx < memberInfos.length
-                              ? memberInfos[idx]
-                              : null;
-                        }();
+                        final player = players[idx];
+                        final mName = player.fullName;
+                        final MatchMemberInfo? mInfo = _memberInfoFor(player);
                         final eloVal =
                             mInfo?.eloPoints ?? team.eloPoints ?? 1200;
                         final eloStr = '${l10n.eloLabel} $eloVal';
                         final tierStr = mInfo?.tierName;
                         final isCaptain = idx == 0;
-                        final memberAvatar = mInfo?.avatarUrl;
+                        final memberAvatar = player.avatarUrl ?? mInfo?.avatarUrl;
 
                         return Container(
                           margin: EdgeInsets.zero,
@@ -479,7 +498,7 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                             color: Colors.transparent,
                             child: InkWell(
                               onTap: () {
-                                widget.onMemberTap?.call(mInfo?.userId, mName);
+                                widget.onMemberTap?.call(player.userId, mName);
                               },
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(

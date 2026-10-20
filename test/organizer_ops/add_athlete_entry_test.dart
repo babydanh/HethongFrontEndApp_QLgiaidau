@@ -788,6 +788,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Nhập tên vận động viên.'), findsOneWidget);
     expect(repository.directNames, isEmpty);
+    final emailField = find.byKey(const ValueKey('add-athlete-direct-email'));
+    await tester.ensureVisible(emailField);
+    await tester.enterText(emailField, 'an.nguyen@example.com');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('add-athlete-direct-submit')));
+    await tester.pumpAndSettle();
+    expect(find.text('Nhập tên vận động viên.'), findsOneWidget);
+    expect(repository.directNames, isEmpty);
     await tester.enterText(nameField, List.filled(256, 'A').join());
     await tester.pump();
 

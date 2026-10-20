@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -182,10 +183,9 @@ class LeaderboardView extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
-            child: Text(
-              standing.teamName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: ParticipantLabel(
+              teamName: standing.teamName,
+              players: standing.players,
               style: TextStyle(
                 fontWeight: isTop3 ? FontWeight.bold : FontWeight.w500,
                 color: colors.textPrimary,
