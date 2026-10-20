@@ -27985,6 +27985,42 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Email (nếu có) được lưu làm thông tin liên hệ của giải.'**
   String get opsAddAthleteGuestEmailHint;
+
+  /// No description provided for @matchReplayLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát lại trận'**
+  String get matchReplayLabel;
+
+  /// No description provided for @matchReplayUnableToPlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không phát được bản ghi nào'**
+  String get matchReplayUnableToPlay;
+
+  /// No description provided for @matchReplaySkippedSegment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bỏ qua một đoạn bản ghi bị lỗi.'**
+  String get matchReplaySkippedSegment;
+
+  /// No description provided for @matchReplayPlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát'**
+  String get matchReplayPlay;
+
+  /// No description provided for @matchReplayPause.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm dừng'**
+  String get matchReplayPause;
+
+  /// No description provided for @matchReplayFinished.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã phát hết bản ghi'**
+  String get matchReplayFinished;
 }
 
 class _AppLocalizationsDelegate

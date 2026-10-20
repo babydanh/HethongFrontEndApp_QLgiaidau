@@ -6160,5 +6160,11 @@
   "opsAddAthletePairWaiting": "Waiting",
   "opsAddAthleteAdded": "Added",
   "opsAddAthleteGuestEmail": "Contact email",
-  "opsAddAthleteGuestEmailHint": "Email, if provided, is saved as tournament contact."
+  "opsAddAthleteGuestEmailHint": "Email, if provided, is saved as tournament contact.",
+  "matchReplayLabel": "Match replay",
+  "matchReplayUnableToPlay": "Unable to play any recording segment.",
+  "matchReplaySkippedSegment": "A failed recording segment was skipped.",
+  "matchReplayPlay": "Play",
+  "matchReplayPause": "Pause",
+  "matchReplayFinished": "Replay finished."
 }

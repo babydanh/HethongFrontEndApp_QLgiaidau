@@ -10,4 +10,7 @@ abstract class IMatchPlaybackRepository {
   /// chưa gắn camera hoặc sân chưa khai URL — đó là trạng thái bình thường
   /// khi xem live, không phải lỗi.
   Future<MatchPlaybackModel> getMatchPlayback(String matchId);
+
+  /// Trả về danh sách các đoạn phát lại của trận.
+  Future<MatchReplay> getMatchReplay(String matchId);
 }

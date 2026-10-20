@@ -6173,5 +6173,11 @@
   "opsAddAthletePairWaiting": "Chờ ghép",
   "opsAddAthleteAdded": "Đã thêm",
   "opsAddAthleteGuestEmail": "Email liên hệ",
-  "opsAddAthleteGuestEmailHint": "Email (nếu có) được lưu làm thông tin liên hệ của giải."
+  "opsAddAthleteGuestEmailHint": "Email (nếu có) được lưu làm thông tin liên hệ của giải.",
+  "matchReplayLabel": "Phát lại trận",
+  "matchReplayUnableToPlay": "Không phát được bản ghi nào",
+  "matchReplaySkippedSegment": "Đã bỏ qua một đoạn bản ghi bị lỗi.",
+  "matchReplayPlay": "Phát",
+  "matchReplayPause": "Tạm dừng",
+  "matchReplayFinished": "Đã phát hết bản ghi"
 }

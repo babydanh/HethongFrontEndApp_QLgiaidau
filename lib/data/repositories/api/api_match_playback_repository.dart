@@ -30,6 +30,22 @@ class ApiMatchPlaybackRepository implements IMatchPlaybackRepository {
     throw const FormatException('Phan hoi playback khong hop le');
   }
 
+  @override
+  Future<MatchReplay> getMatchReplay(String matchId) async {
+    final response = await _dioClient.dio.get<Object?>(
+      '/livestream/matches/$matchId/replay',
+      options: Options(extra: <String, Object?>{'noCache': true}),
+    );
+    await _ensureSuccess(response);
+    final payload = response.data;
+    if (payload is Map && payload['data'] is Map) {
+      return MatchReplay.fromJson(
+        Map<String, Object?>.from(payload['data'] as Map),
+      );
+    }
+    throw const FormatException('Phan hoi replay khong hop le');
+  }
+
   Future<void> _ensureSuccess(Response<Object?> response) async {
     final status = response.statusCode ?? 0;
     if (status >= 200 && status < 300) return;

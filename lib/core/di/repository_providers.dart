@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_match_playback_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_home_projection_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_ranking_repository.dart';
@@ -18,6 +19,7 @@ import 'package:app_quanly_giaidau/data/repositories/local/shared_prefs_local_se
 import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/local_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/match_playback_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/ranking_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/region_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/report_repository.dart';
@@ -62,6 +64,12 @@ final matchRepositoryProvider = Provider<IMatchRepository>((ref) {
     ref.watch(dioClientProvider),
     ref.watch(matchSocketServiceProvider),
   );
+});
+
+final matchPlaybackRepositoryProvider = Provider<IMatchPlaybackRepository>((
+  ref,
+) {
+  return ApiMatchPlaybackRepository(ref.watch(dioClientProvider));
 });
 
 final tokenRepositoryProvider = Provider<ITokenRepository>((ref) {

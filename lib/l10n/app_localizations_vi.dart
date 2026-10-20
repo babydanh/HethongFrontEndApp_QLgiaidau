@@ -15441,4 +15441,22 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get opsAddAthleteGuestEmailHint =>
       'Email (nếu có) được lưu làm thông tin liên hệ của giải.';
+
+  @override
+  String get matchReplayLabel => 'Phát lại trận';
+
+  @override
+  String get matchReplayUnableToPlay => 'Không phát được bản ghi nào';
+
+  @override
+  String get matchReplaySkippedSegment => 'Đã bỏ qua một đoạn bản ghi bị lỗi.';
+
+  @override
+  String get matchReplayPlay => 'Phát';
+
+  @override
+  String get matchReplayPause => 'Tạm dừng';
+
+  @override
+  String get matchReplayFinished => 'Đã phát hết bản ghi';
 }

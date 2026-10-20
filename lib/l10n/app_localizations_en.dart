@@ -15490,4 +15490,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get opsAddAthleteGuestEmailHint =>
       'Email, if provided, is saved as tournament contact.';
+
+  @override
+  String get matchReplayLabel => 'Match replay';
+
+  @override
+  String get matchReplayUnableToPlay => 'Unable to play any recording segment.';
+
+  @override
+  String get matchReplaySkippedSegment =>
+      'A failed recording segment was skipped.';
+
+  @override
+  String get matchReplayPlay => 'Play';
+
+  @override
+  String get matchReplayPause => 'Pause';
+
+  @override
+  String get matchReplayFinished => 'Replay finished.';
 }
