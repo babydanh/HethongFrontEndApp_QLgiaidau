@@ -112,7 +112,8 @@ build/
 
 # Tools & Local Cache
 graphify-out/
-.claude/
+.claude/worktrees/
+.claude/settings.local.json
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/Flutter.framework
