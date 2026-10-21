@@ -25084,6 +25084,30 @@ abstract class AppLocalizations {
   /// **'Nội dung này đã đủ suất'**
   String get registerDivisionFull;
 
+  /// No description provided for @registerDivisionLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký nội dung này đã bị khóa'**
+  String get registerDivisionLocked;
+
+  /// No description provided for @registerDivisionDeadlinePassed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hết hạn đăng ký nội dung này'**
+  String get registerDivisionDeadlinePassed;
+
+  /// No description provided for @registerTournamentNotOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu chưa mở đăng ký'**
+  String get registerTournamentNotOpen;
+
+  /// No description provided for @registerDivisionClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này đã đóng đăng ký'**
+  String get registerDivisionClosed;
+
   /// No description provided for @registerTeamSlotCount.
   ///
   /// In vi, this message translates to:

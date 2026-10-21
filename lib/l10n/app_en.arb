@@ -5917,6 +5917,10 @@
   "socialPlaceSaveAreaMessage": "No street address and map pin were found for this input. You can save the administrative area or pin the exact spot on the map.",
   "socialPlaceSaveArea": "Save area",
   "registerDivisionFull": "This division is full",
+  "registerDivisionLocked": "Registration for this division is locked",
+  "registerDivisionDeadlinePassed": "The registration deadline for this division has passed",
+  "registerTournamentNotOpen": "Tournament registration is not open",
+  "registerDivisionClosed": "Registration for this division is closed",
   "registerTeamSlotCount": "{count} team slots",
   "@registerTeamSlotCount": {
     "placeholders": {

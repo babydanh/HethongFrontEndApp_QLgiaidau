@@ -13788,6 +13788,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get registerDivisionFull => 'Nội dung này đã đủ suất';
 
   @override
+  String get registerDivisionLocked => 'Đăng ký nội dung này đã bị khóa';
+
+  @override
+  String get registerDivisionDeadlinePassed =>
+      'Đã hết hạn đăng ký nội dung này';
+
+  @override
+  String get registerTournamentNotOpen => 'Giải đấu chưa mở đăng ký';
+
+  @override
+  String get registerDivisionClosed => 'Nội dung này đã đóng đăng ký';
+
+  @override
   String registerTeamSlotCount(Object count) {
     return '$count suất đội';
   }

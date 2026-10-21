@@ -13833,6 +13833,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerDivisionFull => 'This division is full';
 
   @override
+  String get registerDivisionLocked =>
+      'Registration for this division is locked';
+
+  @override
+  String get registerDivisionDeadlinePassed =>
+      'The registration deadline for this division has passed';
+
+  @override
+  String get registerTournamentNotOpen => 'Tournament registration is not open';
+
+  @override
+  String get registerDivisionClosed =>
+      'Registration for this division is closed';
+
+  @override
   String registerTeamSlotCount(Object count) {
     return '$count team slots';
   }
