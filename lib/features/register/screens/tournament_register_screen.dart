@@ -406,23 +406,6 @@ class _TournamentRegisterScreenState
     return deadline != null && DateTime.now().isAfter(deadline);
   }
 
-  /// Nội dung mà lần đăng ký mới sẽ nhắm tới.
-  ///
-  /// Chỉ dùng lựa chọn hiện tại nếu division còn hoạt động; tự chọn chỉ khi có
-  /// đúng một division hoạt động. Nếu có nhiều, caller phải chọn rõ ràng.
-  TournamentDivisionOption? get _claimDivision {
-    final divisions = ref
-        .read(_divisionsProvider(widget.tournamentId))
-        .asData
-        ?.value;
-    if (divisions == null) return null;
-    final id = resolveRegistrationDivisionId(
-      divisions,
-      preferredDivisionId: _selectedDiv,
-    );
-    if (id == null) return null;
-    return divisions.where((division) => division.id == id).firstOrNull;
-  }
 
   /// Nội dung sắp đăng ký đã đầy suất đội.
   ///
@@ -430,7 +413,88 @@ class _TournamentRegisterScreenState
   /// `_buildExistingRegistration`, không bao giờ tới form nên vẫn xem trạng
   /// thái / thanh toán / rút lui bình thường. Khóa đăng ký thủ công của BTC là
   /// trạng thái riêng (`isRegistrationClosed`), không gộp vào đây.
-  bool get _isSelectedDivisionFull => _claimDivision?.isFull ?? false;
+  bool get _isSelectedDivisionFull {
+    final divisions = ref
+        .read(_divisionsProvider(widget.tournamentId))
+        .asData
+        ?.value;
+    if (divisions == null || divisions.isEmpty) {
+      final tournament = ref
+          .read(
+            registerTournamentProvider((
+              id: widget.tournamentId,
+              invite: _localInviteCode ?? widget.inviteCode,
+            )),
+          )
+          .value;
+      return tournament?.capacity?.isFull ?? false;
+    }
+    final options = registrationDivisionOptions(divisions);
+    final selectedId = _selectedDiv ??
+        (options.length == 1 ? options.single.id : null);
+    if (selectedId == null) return false;
+    return divisions
+            .where((division) => division.id == selectedId)
+            .firstOrNull
+            ?.isFull ??
+        false;
+  }
+  bool get _isSelectedDivisionClosed {
+    final selectedId = _selectedDiv;
+    if (selectedId == null) return false;
+    final divisions = ref
+        .read(_divisionsProvider(widget.tournamentId))
+        .asData
+        ?.value;
+    final division = divisions
+        ?.where((candidate) => candidate.id == selectedId)
+        .firstOrNull;
+    return division != null &&
+        division.status?.trim().toUpperCase() != 'CANCELLED' &&
+        !division.isRegistrationOpen;
+  }
+
+  bool get _allRegistrationDivisionsClosed {
+    final divisions = ref
+        .read(_divisionsProvider(widget.tournamentId))
+        .asData
+        ?.value;
+    if (divisions == null || divisions.isEmpty) return false;
+    return !registrationDivisionOptions(
+      divisions,
+    ).any((division) => division.isRegistrationOpen);
+  }
+
+  bool get _hasOpenServerRegistrationDivision =>
+      ref
+          .read(_divisionsProvider(widget.tournamentId))
+          .asData
+          ?.value
+          .any(
+            (division) =>
+                division.hasRegistrationOpenContract &&
+                division.isRegistrationOpen &&
+                division.status?.trim().toUpperCase() != 'CANCELLED',
+          ) ??
+      false;
+
+  String? get _selectedDivisionClosedLabel {
+    final selectedId = _selectedDiv;
+    if (selectedId == null) return null;
+    final divisions = ref
+        .read(_divisionsProvider(widget.tournamentId))
+        .asData
+        ?.value;
+    final division = divisions
+        ?.where((candidate) => candidate.id == selectedId)
+        .firstOrNull;
+    return division == null || division.isRegistrationOpen
+        ? null
+        : registrationDivisionClosedReasonLabel(
+            AppLocalizations.of(context)!,
+            division,
+          );
+  }
 
   void _onDivisionSelected(
     String id,
@@ -1648,11 +1712,13 @@ class _TournamentRegisterScreenState
 
     final now = DateTime.now();
     final isRegistrationClosed =
+        !_hasOpenServerRegistrationDivision &&
         (t.status == 'REGISTRATION_CLOSED' ||
-        t.status == 'IN_PROGRESS' ||
-        t.status == 'COMPLETED' ||
-        t.status == 'CANCELLED' ||
-        (t.registrationEndDate != null && now.isAfter(t.registrationEndDate!)));
+            t.status == 'IN_PROGRESS' ||
+            t.status == 'COMPLETED' ||
+            t.status == 'CANCELLED' ||
+            (t.registrationEndDate != null &&
+                now.isAfter(t.registrationEndDate!)));
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -1846,8 +1912,9 @@ class _TournamentRegisterScreenState
                 const SizedBox(height: 16),
                 divAsync.when(
                   data: (divs) {
+                    final options = registrationDivisionOptions(divs);
                     final activeDivs = activeRegistrationDivisions(divs);
-                    if (activeDivs.isEmpty) return const SizedBox.shrink();
+                    if (options.isEmpty) return const SizedBox.shrink();
                     if (!_alreadyRegistered &&
                         activeDivs.length == 1 &&
                         activeDivs.first.id != _selectedDiv) {
@@ -1871,7 +1938,7 @@ class _TournamentRegisterScreenState
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...activeDivs.map((d) {
+                        ...options.map((d) {
                           final id = d.id;
                           final name = d.name;
                           final sel = _selectedDiv == id;
@@ -1884,7 +1951,9 @@ class _TournamentRegisterScreenState
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: GestureDetector(
-                              onTap: () => _onDivisionSelected(id, activeDivs),
+                              onTap: d.isRegistrationOpen
+                                  ? () => _onDivisionSelected(id, activeDivs)
+                                  : null,
                               child: Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
@@ -1925,6 +1994,23 @@ class _TournamentRegisterScreenState
                                                   fontSize: 12,
                                                   color:
                                                       context.colors.textMuted,
+                                                ),
+                                              ),
+                                            ),
+                                          if (!d.isRegistrationOpen)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                              ),
+                                              child: Text(
+                                                registrationDivisionClosedReasonLabel(
+                                                  l10n,
+                                                  d,
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: context.colors.warning,
+                                                  fontWeight: FontWeight.w700,
                                                 ),
                                               ),
                                             ),
@@ -2259,6 +2345,8 @@ class _TournamentRegisterScreenState
                     // trạng thái riêng vì khóa thủ công của BTC vẫn độc lập.
                     onPressed:
                         (isRegistrationClosed ||
+                            _allRegistrationDivisionsClosed ||
+                            _isSelectedDivisionClosed ||
                             _isDivisionRegistrationExpired ||
                             _isSelectedDivisionFull ||
                             _submitting)
@@ -2287,6 +2375,11 @@ class _TournamentRegisterScreenState
                             (isRegistrationClosed ||
                                     _isDivisionRegistrationExpired)
                                 ? l10n.registerRegClosed
+                                : _selectedDivisionClosedLabel != null
+                                ? _selectedDivisionClosedLabel!
+                                : _allRegistrationDivisionsClosed &&
+                                      !_isSelectedDivisionFull
+                                ? l10n.registerDivisionClosed
                                 : _isSelectedDivisionFull
                                 ? l10n.registerDivisionFull
                                 : (_selectedDivision?.entryFee != null &&

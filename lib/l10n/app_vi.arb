@@ -5589,6 +5589,10 @@
   "registerTypeOpenSingles": "Đơn linh hoạt",
   "registerTypeOpenDoubles": "Đôi linh hoạt",
   "registerDivisionFull": "Nội dung này đã đủ suất",
+  "registerDivisionLocked": "Đăng ký nội dung này đã bị khóa",
+  "registerDivisionDeadlinePassed": "Đã hết hạn đăng ký nội dung này",
+  "registerTournamentNotOpen": "Giải đấu chưa mở đăng ký",
+  "registerDivisionClosed": "Nội dung này đã đóng đăng ký",
   "registerTeamSlotCount": "{count} suất đội",
   "@registerTeamSlotCount": {
     "placeholders": {

@@ -27,6 +27,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
 class TournamentIntroScreen extends ConsumerStatefulWidget {
@@ -269,6 +270,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         context,
         tournamentAsync.asData?.value,
         activeInvite,
+        divisionsAsync.asData?.value,
       ),
     );
   }
@@ -277,6 +279,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     BuildContext context,
     Tournament? tournament,
     String? activeInvite,
+    List<Map<String, dynamic>>? divisionData,
   ) {
     // Thanh đăng ký nằm NGAY TRÊN thanh điều hướng và chiếm chỗ thật, nên
     // không đè lên nội dung như nút nổi trước đây.
@@ -284,6 +287,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       context,
       tournament,
       activeInvite,
+      divisionData,
     );
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -291,10 +295,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
+
   Widget? _buildRegistrationAction(
     BuildContext context,
     Tournament? tournament,
     String? activeInvite,
+    List<Map<String, dynamic>>? divisionData,
   ) {
     if (tournament == null) return null;
 
@@ -305,13 +311,29 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final isRegistrationExpired =
         tournament.registrationEndDate != null &&
         now.isAfter(tournament.registrationEndDate!);
+
+    final divisions = (divisionData ?? const <Map<String, dynamic>>[])
+        .map(TournamentDivisionOption.fromJson)
+        .toList(growable: false);
+    final hasDivisionRegistrationState = divisions.any(
+      (division) => division.hasRegistrationOpenContract,
+    );
+    if (hasDivisionRegistrationState &&
+        !divisions.any(
+          (division) =>
+              division.status?.trim().toUpperCase() != 'CANCELLED' &&
+              division.isRegistrationOpen,
+        )) {
+      return null;
+    }
     final isRegistrationOpen = StatusHelper.isTournamentRegistration(
       tournament.status,
     );
-    if (!isRegistrationOpen ||
-        tournament.isRegistrationLocked ||
-        isRegistrationNotStarted ||
-        isRegistrationExpired) {
+    if (!hasDivisionRegistrationState &&
+        (!isRegistrationOpen ||
+            tournament.isRegistrationLocked ||
+            isRegistrationNotStarted ||
+            isRegistrationExpired)) {
       return null;
     }
 

@@ -15,6 +15,8 @@ class TournamentDivisionOption {
     this.effectiveRegistrationEndDate,
     this.participantCount,
     this.capacity,
+    this.registrationOpen,
+    this.registrationClosedReason,
   });
 
   final String id;
@@ -29,11 +31,31 @@ class TournamentDivisionOption {
   final int? maxParticipants;
   final String? bracketType;
   final DateTime? registrationEndDate;
-  /// Hạn chót hiệu lực do backend tính sẵn: min(hạn nội dung, hạn giải).
+
+  /// Hạn chót hiệu lực do backend tính sẵn: hạn riêng nội dung, không có thì hạn giải.
   /// null nghĩa là không đặt hạn — server cũng không chặn theo ngày trong
   /// trường hợp đó, nên client không được tự coi là đã hết hạn.
   final DateTime? effectiveRegistrationEndDate;
   final int? participantCount;
+
+  /// Server quyết định nội dung còn nhận VĐV tự đăng ký (khoá, hạn, trạng
+  /// giải). null = server cũ chưa gửi, app tự tính theo hạn như trước.
+  final bool? registrationOpen;
+
+  /// `TOURNAMENT_LOCKED` | `DIVISION_LOCKED` | `DEADLINE_PASSED` |
+  /// `TOURNAMENT_NOT_OPEN`; null khi còn mở hoặc server cũ.
+  final String? registrationClosedReason;
+
+  bool get hasRegistrationOpenContract => registrationOpen != null;
+
+  /// Sức chứa KHÔNG tính ở đây: nội dung đầy vẫn chọn được để vào danh sách
+  /// chờ như trước, việc chặn suất mới do `isFull` lo.
+  bool get isRegistrationOpen {
+    final serverValue = registrationOpen;
+    if (serverValue != null) return serverValue;
+    final deadline = effectiveRegistrationEndDate ?? registrationEndDate;
+    return deadline == null || DateTime.now().isBefore(deadline);
+  }
 
   /// Sức chứa do backend tính sẵn. Nội dung đôi dùng suất đội nên có thể
   /// lẻ (một VĐV chưa ghép = 0.5 đội); app không tự chia lại từ số bản ghi.
@@ -42,12 +64,11 @@ class TournamentDivisionOption {
   /// `matchType` chuẩn hoá về `SINGLES`/`DOUBLES`/`MIXED_DOUBLES`; null nghĩa là
   /// app không nhận ra format này nên không được suy bất cứ điều gì từ nó.
   String? get _normalizedMatchType {
-    final normalized =
-        matchType
-            ?.trim()
-            .toUpperCase()
-            .replaceAll('-', '_')
-            .replaceAll(' ', '_');
+    final normalized = matchType
+        ?.trim()
+        .toUpperCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
     return switch (normalized) {
       'SINGLE' || 'SINGLES' || 'DON' => 'SINGLES',
       'DOUBLE' || 'DOUBLES' || 'DOI' => 'DOUBLES',
@@ -75,8 +96,7 @@ class TournamentDivisionOption {
   }
 
   /// `maxParticipants` vẫn là giới hạn số đội.
-  int? get effectiveMaxTeamSlots =>
-      capacity?.maxTeamSlots ?? maxParticipants;
+  int? get effectiveMaxTeamSlots => capacity?.maxTeamSlots ?? maxParticipants;
 
   bool get isFull => capacity?.isFull ?? _isFullByTeamSlots;
 
@@ -123,6 +143,15 @@ class TournamentDivisionOption {
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       status: json['status']?.toString(),
+      registrationOpen: json['registrationOpen'] is bool
+          ? json['registrationOpen'] as bool
+          : json['registration_open'] is bool
+          ? json['registration_open'] as bool
+          : null,
+      registrationClosedReason:
+          (json['registrationClosedReason'] ??
+                  json['registration_closed_reason'])
+              ?.toString(),
       genderRestriction:
           (json['genderRestriction'] ?? json['gender_restriction'])?.toString(),
       matchType: (json['matchType'] ?? json['match_type'])?.toString(),
