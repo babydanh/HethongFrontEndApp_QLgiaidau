@@ -15176,6 +15176,18 @@ abstract class AppLocalizations {
   /// **'Chia bảng, chọn đội đi tiếp'**
   String get createClubTournament_bracketGroupStageKnockoutDescription;
 
+  /// No description provided for @createClubTournament_bracketSwiss.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thụy Sĩ'**
+  String get createClubTournament_bracketSwiss;
+
+  /// No description provided for @createClubTournament_bracketSwissDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép cặp theo điểm và hạn chế gặp lại đối thủ.'**
+  String get createClubTournament_bracketSwissDescription;
+
   /// No description provided for @createClubTournament_successTitle.
   ///
   /// In vi, this message translates to:
@@ -18845,6 +18857,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Vòng bảng + loại trực tiếp'**
   String get registerBracketGroupStageKnockout;
+
+  /// No description provided for @registerBracketSwiss.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thụy Sĩ'**
+  String get registerBracketSwiss;
 
   /// No description provided for @registerParticipantCount.
   ///
@@ -24454,6 +24472,12 @@ abstract class AppLocalizations {
   /// **'Vòng bảng rồi loại trực tiếp'**
   String get tournamentManagementBracketGroupThenKnockout;
 
+  /// No description provided for @tournamentManagementBracketSwiss.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thụy Sĩ'**
+  String get tournamentManagementBracketSwiss;
+
   /// No description provided for @tournamentManagementBracketRoundRobin.
   ///
   /// In vi, this message translates to:
@@ -28045,6 +28069,426 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã phát hết bản ghi'**
   String get matchReplayFinished;
+
+  /// No description provided for @swissFormatName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thụy Sĩ'**
+  String get swissFormatName;
+
+  /// Nhãn vòng đấu Swiss.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {number}'**
+  String swissRoundLabel(int number);
+
+  /// No description provided for @swissBye.
+  ///
+  /// In vi, this message translates to:
+  /// **'BYE'**
+  String get swissBye;
+
+  /// No description provided for @swissStandingsRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng'**
+  String get swissStandingsRank;
+
+  /// No description provided for @swissStandingsTeam.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội'**
+  String get swissStandingsTeam;
+
+  /// No description provided for @swissStandingsPlayed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận'**
+  String get swissStandingsPlayed;
+
+  /// No description provided for @swissStandingsWon.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng'**
+  String get swissStandingsWon;
+
+  /// No description provided for @swissStandingsDrawn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hòa'**
+  String get swissStandingsDrawn;
+
+  /// No description provided for @swissStandingsLost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua'**
+  String get swissStandingsLost;
+
+  /// No description provided for @swissStandingsPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm'**
+  String get swissStandingsPoints;
+
+  /// No description provided for @swissStandingsBuchholz.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buchholz'**
+  String get swissStandingsBuchholz;
+
+  /// No description provided for @swissStandingsBuchholzCut1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buchholz (bỏ điểm thấp nhất)'**
+  String get swissStandingsBuchholzCut1;
+
+  /// No description provided for @swissStandingsSonnebornBerger.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sonneborn–Berger'**
+  String get swissStandingsSonnebornBerger;
+
+  /// No description provided for @swissStandingsPointDiff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệu số'**
+  String get swissStandingsPointDiff;
+
+  /// No description provided for @swissStandingsWins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số trận thắng'**
+  String get swissStandingsWins;
+
+  /// No description provided for @swissStandingsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bảng xếp hạng'**
+  String get swissStandingsEmpty;
+
+  /// No description provided for @swissConfigTotalRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng số vòng'**
+  String get swissConfigTotalRounds;
+
+  /// No description provided for @swissConfigFirstRound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép cặp vòng 1'**
+  String get swissConfigFirstRound;
+
+  /// No description provided for @swissConfigFirstRoundSeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo hạt giống'**
+  String get swissConfigFirstRoundSeed;
+
+  /// No description provided for @swissConfigFirstRoundRandom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngẫu nhiên'**
+  String get swissConfigFirstRoundRandom;
+
+  /// No description provided for @swissConfigTiebreakTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ tự tiêu chí phụ'**
+  String get swissConfigTiebreakTitle;
+
+  /// No description provided for @swissConfigMoveUp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lên'**
+  String get swissConfigMoveUp;
+
+  /// No description provided for @swissConfigMoveDown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuống'**
+  String get swissConfigMoveDown;
+
+  /// Giới hạn số vòng có thể chọn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa {max} vòng'**
+  String swissConfigRoundsRange(int max);
+
+  /// Số vòng tối thiểu đã được ghép.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể giảm dưới {number} vòng đã ghép'**
+  String swissConfigRoundsMinPlayed(int number);
+
+  /// No description provided for @swissTiebreakBuchholz.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buchholz'**
+  String get swissTiebreakBuchholz;
+
+  /// No description provided for @swissTiebreakBuchholzCut1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buchholz (bỏ điểm thấp nhất)'**
+  String get swissTiebreakBuchholzCut1;
+
+  /// No description provided for @swissTiebreakSonnebornBerger.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sonneborn–Berger'**
+  String get swissTiebreakSonnebornBerger;
+
+  /// No description provided for @swissTiebreakPointDiff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiệu số điểm'**
+  String get swissTiebreakPointDiff;
+
+  /// No description provided for @swissTiebreakWins.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số trận thắng'**
+  String get swissTiebreakWins;
+
+  /// No description provided for @swissTiebreakHeadToHead.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đối đầu trực tiếp'**
+  String get swissTiebreakHeadToHead;
+
+  /// No description provided for @swissTiebreakSeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt giống'**
+  String get swissTiebreakSeed;
+
+  /// Tiêu đề màn ghép cặp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép cặp vòng {number}'**
+  String swissPairingTitle(int number);
+
+  /// Tiến độ ghép cặp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {number}/{total} · {pairs} cặp'**
+  String swissPairingProgress(int number, int total, int pairs);
+
+  /// No description provided for @swissPairingPool.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa ghép'**
+  String get swissPairingPool;
+
+  /// No description provided for @swissPairingSitOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ vòng này'**
+  String get swissPairingSitOut;
+
+  /// No description provided for @swissPairingDropHere.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thả vào đây'**
+  String get swissPairingDropHere;
+
+  /// Số bàn đấu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bàn {number}'**
+  String swissPairingBoard(int number);
+
+  /// No description provided for @swissPairingAutoPair.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép lại'**
+  String get swissPairingAutoPair;
+
+  /// No description provided for @swissPairingUndo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tác'**
+  String get swissPairingUndo;
+
+  /// Nút xác nhận vòng đấu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận vòng {number}'**
+  String swissPairingConfirm(int number);
+
+  /// No description provided for @swissPairingConfirmWithWarnings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận dù có cảnh báo'**
+  String get swissPairingConfirmWithWarnings;
+
+  /// No description provided for @swissPairingSwapWith.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi với…'**
+  String get swissPairingSwapWith;
+
+  /// No description provided for @swissPairingMoveTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyển tới…'**
+  String get swissPairingMoveTo;
+
+  /// No description provided for @swissPairingCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get swissPairingCancel;
+
+  /// Điểm của đội.
+  ///
+  /// In vi, this message translates to:
+  /// **'{points} điểm'**
+  String swissPairingPoints(num points);
+
+  /// No description provided for @swissPairingLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải bản ghép cặp…'**
+  String get swissPairingLoading;
+
+  /// Số đội chưa được xếp vào vị trí.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {count} đội chưa có chỗ'**
+  String swissPairingIncompleteHint(int count);
+
+  /// Thông báo vòng đã được tạo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo vòng {number}.'**
+  String swissPairingCreated(int number);
+
+  /// Thông báo vòng đã được hoàn tác.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hoàn tác vòng {number}.'**
+  String swissPairingUndone(int number);
+
+  /// No description provided for @swissPairingDragHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ để kéo'**
+  String get swissPairingDragHint;
+
+  /// Cảnh báo hai đội đã gặp nhau.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gặp ở vòng {round}'**
+  String swissWarningRematch(int round);
+
+  /// No description provided for @swissWarningSecondBye.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội này đã nhận BYE trước đó'**
+  String get swissWarningSecondBye;
+
+  /// Cảnh báo chênh lệch điểm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chênh {gap} điểm'**
+  String swissWarningScoreGap(num gap);
+
+  /// No description provided for @swissErrorDuplicateParticipant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội xuất hiện nhiều hơn một lần'**
+  String get swissErrorDuplicateParticipant;
+
+  /// No description provided for @swissErrorUnknownParticipant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có đội không thuộc giải đấu'**
+  String get swissErrorUnknownParticipant;
+
+  /// No description provided for @swissErrorMissingParticipant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn đội chưa được xếp'**
+  String get swissErrorMissingParticipant;
+
+  /// No description provided for @swissErrorSelfPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể ghép đội với chính mình'**
+  String get swissErrorSelfPairing;
+
+  /// No description provided for @swissApiErrorRoundIncomplete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng hiện tại chưa kết thúc'**
+  String get swissApiErrorRoundIncomplete;
+
+  /// No description provided for @swissApiErrorAllRoundsDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hoàn tất tất cả các vòng'**
+  String get swissApiErrorAllRoundsDone;
+
+  /// No description provided for @swissApiErrorRoundExists.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng này vừa được tạo. Đã tải lại bản ghép cặp'**
+  String get swissApiErrorRoundExists;
+
+  /// No description provided for @swissApiErrorInvalidPairing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản ghép cặp không hợp lệ'**
+  String get swissApiErrorInvalidPairing;
+
+  /// No description provided for @swissApiErrorWarningsUnconfirmed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần xác nhận các cảnh báo trước khi tạo vòng'**
+  String get swissApiErrorWarningsUnconfirmed;
+
+  /// No description provided for @swissApiErrorRoundStarted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể hoàn tác vì vòng này đã bắt đầu'**
+  String get swissApiErrorRoundStarted;
+
+  /// No description provided for @swissApiErrorUndoRoundOne.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể hoàn tác vòng đầu tiên'**
+  String get swissApiErrorUndoRoundOne;
+
+  /// No description provided for @swissApiErrorNotSwiss.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu này không dùng thể thức Thụy Sĩ'**
+  String get swissApiErrorNotSwiss;
+
+  /// Hành động tạo vòng kế tiếp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép cặp vòng {number}'**
+  String swissActionGenerateNextRound(int number);
+
+  /// Hành động hoàn tác vòng.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tác vòng {number}'**
+  String swissActionUndoRound(int number);
+
+  /// Trạng thái vòng đang diễn ra.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {number} đang đấu'**
+  String swissActionRoundInProgress(int number);
+
+  /// Trạng thái đã hoàn thành mọi vòng.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đủ {total} vòng'**
+  String swissActionAllRoundsDone(int total);
 }
 
 class _AppLocalizationsDelegate
