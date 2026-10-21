@@ -23,7 +23,7 @@ Mọi đường dẫn tính từ gốc repo App. Số dòng là số dòng tại
 
 ## 2. Dữ liệu
 
-- [ ] 2.1 `Standing` có `rank`/Buchholz và provider giữ thứ tự Backend. Tiêu chí: `flutter test --no-pub test/models/standing_test.dart test/providers/standings_provider_test.dart` → exit 0 (thêm ca: dòng có `rank` được giữ nguyên thứ tự và giá trị; endpoint rỗng vẫn rơi về đường tự tính cũ; thiếu các trường Swiss không lỗi)
+- [x] 2.1 `Standing` có `rank`/Buchholz và provider giữ thứ tự Backend. Tiêu chí: `flutter test --no-pub test/models/standing_test.dart test/providers/standings_provider_test.dart` → exit 0 (thêm ca: dòng có `rank` được giữ nguyên thứ tự và giá trị; endpoint rỗng vẫn rơi về đường tự tính cũ; thiếu các trường Swiss không lỗi)
   - Files: sửa `lib/domain/entities/standing.dart:3-40` (thêm `final int? rank; final double buchholz; final double buchholzCut1; final double sonnebornBerger;` mặc định 0/null; `fromJson` đọc `rank`, `buchholz`, `buchholzCut1`, `sonnebornBerger`), `lib/providers/standings_provider.dart:95-152` (`_standingFromApi`) và `:25-64` (có dòng nào mang `rank` thì dùng đúng thứ tự `rank`, KHÔNG chạy `:160-314`; không dòng nào có `rank` thì như cũ); sửa `test/models/standing_test.dart`, `test/providers/standings_provider_test.dart`
   - Giao: `Standing.rank: int?`, `Standing.buchholz/buchholzCut1/sonnebornBerger: double`
   - Nhận: không
