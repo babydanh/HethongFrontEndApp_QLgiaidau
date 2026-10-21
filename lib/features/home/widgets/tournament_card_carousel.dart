@@ -383,6 +383,7 @@ class TournamentCardCarousel extends StatelessWidget {
                                 'double_elimination' => l10n.eliminationDouble,
                                 'round_robin' => l10n.roundRobin,
                                 'group_stage' => l10n.groupStage,
+                                'swiss' => l10n.swissFormatName,
                                 _ => tournament.bracketType,
                               },
                               maxLines: 1,

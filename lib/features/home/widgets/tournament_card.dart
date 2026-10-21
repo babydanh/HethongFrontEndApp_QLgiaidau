@@ -56,6 +56,7 @@ class TournamentCard extends ConsumerWidget {
         l10n.createClubTournament_bracketRoundRobin,
       AppConstants.bracketGroupStageKnockout =>
         l10n.createClubTournament_bracketGroupStageKnockout,
+      AppConstants.bracketSwiss => l10n.swissFormatName,
       _ => '',
     };
 

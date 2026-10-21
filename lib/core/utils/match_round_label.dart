@@ -25,6 +25,7 @@ class MatchRoundLabel {
       bracketType ?? match.tournamentConfig?['bracketType']?.toString(),
     );
 
+    if (stageType == 'SWISS') return false;
     if (stageType == 'ROUND_ROBIN' ||
         stageType == 'GROUP_STAGE' ||
         format == 'ROUND_ROBIN') {
@@ -193,12 +194,17 @@ class MatchRoundLabel {
       return short ? 'CK Tổng 2' : strings.matchRoundGrandFinalReset;
     }
 
-    // 2. Group stage / Round robin
+    // 2. Swiss: plain "Round N", never knockout names.
+    if (_normalize(match.stageType) == 'SWISS') {
+      return strings.swissRoundLabel(match.round);
+    }
+
+    // 3. Group stage / Round robin
     if (isGroupOrRoundRobin(match, bracketType)) {
       return groupOrRoundRobinName(match, l10n: strings, short: short);
     }
 
-    // 3. Knockout rounds resolution
+    // 4. Knockout rounds resolution
     String baseLabel = '';
 
     // Step A: Resolution by counting matches of the same round in allMatches list

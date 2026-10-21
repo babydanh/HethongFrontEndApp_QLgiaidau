@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -913,7 +914,10 @@ class _TournamentBannerState extends State<TournamentBanner> {
                             ),
                             const SizedBox(width: 6),
                             _buildTag(
-                              l10n.roundRobinTag,
+                              widget.tournament.bracketType ==
+                                      AppConstants.bracketSwiss
+                                  ? l10n.swissFormatName
+                                  : l10n.roundRobinTag,
                               colors,
                               icon: Icons.loop_rounded,
                               iconColor: const Color(0xFFD97706),

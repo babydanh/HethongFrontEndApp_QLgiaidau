@@ -61,7 +61,9 @@ class BracketFormatIcons {
     final type = raw.toUpperCase();
 
     String rawSvg;
-    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
+    if (type.contains('SWISS')) {
+      rawSvg = roundRobinSvg;
+    } else if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
       rawSvg = roundRobinSvg;
     } else if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
       rawSvg = groupStageKnockoutSvg;
@@ -95,6 +97,7 @@ class BracketFormatIcons {
         : (fallbackBracketType ?? '');
     final type = raw.toUpperCase();
 
+    if (type.contains('SWISS')) return l10n?.swissFormatName ?? raw;
     if (type.contains('ROUND_ROBIN') ||
         type.contains('ROBIN') ||
         type.contains('VÒNG TRÒN')) {

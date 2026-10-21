@@ -15,6 +15,7 @@ const _bracketTypes = [
   'DOUBLE_ELIMINATION',
   'ROUND_ROBIN',
   'GROUP_STAGE_KNOCKOUT',
+  'SWISS',
 ];
 
 class TournamentManagementDivisionsSection extends ConsumerStatefulWidget {
@@ -952,5 +953,6 @@ String _bracketTypeLabel(AppLocalizations l10n, String value) => switch (value
   'DOUBLE_ELIMINATION' => l10n.tournamentManagementBracketDoubleElimination,
   'ROUND_ROBIN' => l10n.tournamentManagementBracketRoundRobin,
   'GROUP_STAGE_KNOCKOUT' => l10n.tournamentManagementBracketGroupThenKnockout,
+  'SWISS' => l10n.tournamentManagementBracketSwiss,
   _ => l10n.tournamentManagementStatusOther,
 };
