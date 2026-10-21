@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:dio/dio.dart';
@@ -1030,6 +1031,112 @@ class ApiTournamentRepository implements ITournamentRepository {
     } catch (e, stack) {
       _log.error('Error updating bracket slots', e, stack);
       rethrow;
+    }
+  }
+
+  @override
+  Future<SwissPreview> swissPreview(
+    String tournamentId, {
+    required String divisionId,
+    String? stageId,
+  }) async => SwissPreview.fromJson(
+    await _swissPost('/tournaments/$tournamentId/swiss/preview', {
+      'divisionId': divisionId,
+      'stageId': ?stageId,
+    }),
+  );
+
+  @override
+  Future<SwissValidateResult> swissValidate(
+    String tournamentId,
+    SwissRoundDraftRequest draft,
+  ) async => SwissValidateResult.fromJson(
+    await _swissPost('/tournaments/$tournamentId/swiss/validate', draft.toJson()),
+  );
+
+  @override
+  Future<SwissNextRoundResult> swissNextRound(
+    String tournamentId,
+    SwissRoundDraftRequest draft, {
+    bool confirmWarnings = false,
+  }) async => SwissNextRoundResult.fromJson(
+    await _swissPost(
+      '/tournaments/$tournamentId/swiss/next-round',
+      draft.toJson(confirmWarnings: confirmWarnings),
+    ),
+  );
+
+  @override
+  Future<int> swissUndoRound(
+    String tournamentId,
+    int round, {
+    required String divisionId,
+    String? stageId,
+  }) async {
+    final data = await _swissPost(
+      '/tournaments/$tournamentId/swiss/rounds/$round/undo',
+      {'divisionId': divisionId, 'stageId': ?stageId},
+    );
+    final undone = data['roundNumber'];
+    return undone is num ? undone.toInt() : round;
+  }
+
+  @override
+  Future<SwissStageInfo?> getSwissStage(
+    String tournamentId, {
+    String? divisionId,
+  }) async {
+    final response = await _dioClient.dio.get(
+      '/tournaments/$tournamentId/bracket',
+      queryParameters: divisionId != null && divisionId.isNotEmpty
+          ? {'divisionId': divisionId}
+          : null,
+    );
+    final data = response.data is Map ? response.data['data'] : null;
+    final stages = data is Map && data['stages'] is List
+        ? data['stages'] as List
+        : const [];
+    for (final stage in stages) {
+      if (stage is Map && stage['type']?.toString().toUpperCase() == 'SWISS') {
+        return SwissStageInfo.fromJson(Map<String, dynamic>.from(stage));
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<void> updateStageRoundConfig(
+    String tournamentId,
+    String stageId,
+    Map<String, dynamic> roundConfig,
+  ) async {
+    await _dioClient.dio.patch(
+      '/tournaments/$tournamentId/stages/$stageId',
+      data: {'roundConfig': roundConfig},
+    );
+  }
+
+  /// POSTs a Swiss request and returns `response.data['data']`; any
+  /// [DioException] becomes a [SwissApiException] with the server error code.
+  Future<Map<String, dynamic>> _swissPost(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final response = await _dioClient.dio.post(path, data: body);
+      final data = response.data is Map ? response.data['data'] : null;
+      return data is Map ? Map<String, dynamic>.from(data) : const {};
+    } on DioException catch (e) {
+      final raw = e.response?.data;
+      final parsed = SwissApiException.fromJson(
+        raw is Map ? Map<String, dynamic>.from(raw) : const {},
+      );
+      throw SwissApiException(
+        status: e.response?.statusCode,
+        code: parsed.code,
+        warnings: parsed.warnings,
+        message: parsed.message ?? e.message,
+      );
     }
   }
 

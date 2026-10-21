@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -125,6 +126,39 @@ abstract class ITournamentRepository {
     String tournamentId, {
     String? divisionId,
   });
+
+  // Swiss. Failures surface as [SwissApiException] (status null = no response).
+  Future<SwissPreview> swissPreview(
+    String tournamentId, {
+    required String divisionId,
+    String? stageId,
+  });
+  Future<SwissValidateResult> swissValidate(
+    String tournamentId,
+    SwissRoundDraftRequest draft,
+  );
+  Future<SwissNextRoundResult> swissNextRound(
+    String tournamentId,
+    SwissRoundDraftRequest draft, {
+    bool confirmWarnings = false,
+  });
+  Future<int> swissUndoRound(
+    String tournamentId,
+    int round, {
+    required String divisionId,
+    String? stageId,
+  });
+
+  /// First stage with `type == 'SWISS'` of the division, null when none.
+  Future<SwissStageInfo?> getSwissStage(
+    String tournamentId, {
+    String? divisionId,
+  });
+  Future<void> updateStageRoundConfig(
+    String tournamentId,
+    String stageId,
+    Map<String, dynamic> roundConfig,
+  );
 
   /// Server sinh sơ đồ chính thức; bản xem trước phía client có thể khác.
   /// Response có thể kèm `autoPaired`/`unpairedNames` (thiếu thì coi là rỗng).
