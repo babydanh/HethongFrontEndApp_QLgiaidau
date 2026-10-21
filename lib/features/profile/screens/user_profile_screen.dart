@@ -913,7 +913,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     UserPublicRank rank,
     AppColorsExtension colors,
   ) {
-    final palette = TierPalette.fromElo(rank.eloPoints, rank.tierName);
+    final palette = TierPalette.fromRank(
+      rank.eloPoints,
+      rank.tierName,
+      rank.tierSource,
+    );
     final winRate = rank.matchesPlayed > 0
         ? (rank.matchesWon / rank.matchesPlayed * 100).round()
         : 0;

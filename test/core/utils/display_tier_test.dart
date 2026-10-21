@@ -28,6 +28,18 @@ void main() {
       );
     });
 
+    test('never derives a DUPR tier from ELO when the name is empty', () {
+      expect(
+        resolveDisplayTier(
+          elo: 1850,
+          tierName: '',
+          tierSource: 'DUPR',
+          tierAvailable: true,
+        ),
+        isNull,
+      );
+    });
+
     test('keeps ELO fallback when tierName is empty', () {
       final tier = resolveDisplayTier(
         elo: 1450,

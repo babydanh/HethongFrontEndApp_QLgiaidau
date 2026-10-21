@@ -198,7 +198,7 @@ EloTierInfo? resolveDisplayTier({
   bool? tierAvailable,
 }) {
   if (tierSource == 'DUPR') {
-    if (tierAvailable != true) return null;
+    if (tierAvailable != true || (tierName ?? '').trim().isEmpty) return null;
     return resolveEloTier(elo: elo, tierName: tierName);
   }
   return resolveEloTier(elo: elo, tierName: tierName);

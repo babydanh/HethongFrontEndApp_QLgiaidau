@@ -38,7 +38,7 @@ class RankAvatar extends StatelessWidget {
     final ranked =
         tier != null &&
         (elo > 0 || matchesPlayed > 0 || tierName?.isNotEmpty == true);
-    final palette = TierPalette.fromElo(elo, tierName);
+    final palette = TierPalette.fromRank(elo, tierName, tierSource);
     final ringColor = ranked ? palette.ring : TierPalette.unrankedRing;
     final innerSize = size - (ringWidth * 2);
 

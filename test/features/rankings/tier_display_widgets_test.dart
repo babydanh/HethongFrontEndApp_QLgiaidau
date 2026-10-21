@@ -107,6 +107,25 @@ void main() {
     expect(find.byIcon(Icons.sports_tennis_rounded), findsOneWidget);
   });
 
+  testWidgets('badge môn DUPR theo tên bậc API, ELO cao không thành Tier S', (tester) async {
+    const ranking = PlayerRanking(
+      id: 'rank-2',
+      userId: 'user-2',
+      fullName: 'Bao',
+      categoryId: 'pickleball',
+      categoryName: 'Pickleball',
+      eloPoints: 1850,
+      matchesPlayed: 12,
+      tierName: 'High Tier C',
+      tierSource: 'DUPR',
+      tierAvailable: true,
+    );
+    await tester.pumpWidget(_localized(const SportRankBadge(ranking: ranking)));
+
+    expect(find.text('C+'), findsOneWidget);
+    expect(find.text('S'), findsNothing);
+  });
+
   testWidgets('ẩn dòng tiến độ ELO với DUPR và giữ cho ELO', (tester) async {
     await tester.pumpWidget(_localized(EloProgressCard(userName: 'Alex', rankings: [_rank(source: 'DUPR')])));
     expect(find.textContaining('ELO to'), findsNothing);

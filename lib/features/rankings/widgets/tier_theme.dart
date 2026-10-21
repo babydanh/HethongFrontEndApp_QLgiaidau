@@ -148,6 +148,11 @@ class TierPalette {
     return fromElo(tier.minElo, tier.name);
   }
 
+  /// Palette của một rank theo nguồn bậc: nguồn DUPR chỉ theo tên bậc của API,
+  /// không để ELO (>= 1800) đẩy lên Tier S.
+  static TierPalette fromRank(int elo, String? name, String? tierSource) =>
+      fromElo(tierSource == 'DUPR' ? 0 : elo, name);
+
   static TierPalette fromElo(int elo, [String? name]) {
     final nameLower = (name ?? '').toLowerCase();
     if (nameLower.contains('tier s') || nameLower == 's' || elo >= 1800) {
