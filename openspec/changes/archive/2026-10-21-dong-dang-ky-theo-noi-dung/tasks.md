@@ -7,4 +7,4 @@
 
 ## 2. Kiểm
 
-- [ ] 2.1 `flutter test --no-pub` các file liên quan; bộ đầy đủ trên cloud
+- [x] 2.1 `flutter test --no-pub` các file liên quan (25 pass); bộ đầy đủ trên cloud run 39536478151 pass
