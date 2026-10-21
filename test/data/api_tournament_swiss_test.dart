@@ -377,7 +377,7 @@ void main() {
   });
 
   group('updateStageRoundConfig', () {
-    test('PATCHes roundConfig to /stages/:stageId', () async {
+    test('PATCHes roundConfig to /tournaments/stages/:stageId', () async {
       final adapter = _Adapter(body: {'data': {}});
 
       await _repoWith(adapter).updateStageRoundConfig('t-1', 's-1', {
@@ -385,7 +385,7 @@ void main() {
       });
 
       expect(adapter.method, 'PATCH');
-      expect(adapter.uri!.path, endsWith('/tournaments/t-1/stages/s-1'));
+      expect(adapter.uri!.path, endsWith('/tournaments/stages/s-1'));
       expect(adapter.sentBody, {
         'roundConfig': {
           'swiss': {'totalRounds': 5},

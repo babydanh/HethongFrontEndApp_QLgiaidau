@@ -1110,8 +1110,9 @@ class ApiTournamentRepository implements ITournamentRepository {
     String stageId,
     Map<String, dynamic> roundConfig,
   ) async {
+    // Real Backend route has no tournament id; [tournamentId] is API-internal.
     await _dioClient.dio.patch(
-      '/tournaments/$tournamentId/stages/$stageId',
+      '/tournaments/stages/$stageId',
       data: {'roundConfig': roundConfig},
     );
   }
