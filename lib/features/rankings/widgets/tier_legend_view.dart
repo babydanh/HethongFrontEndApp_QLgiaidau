@@ -120,7 +120,7 @@ class TierLegendView extends StatelessWidget {
                             final palette = TierPalette.from(t);
                             final eloRangeText = isDupr
                                 ? t.maxValue == null
-                                      ? 'Từ ${(t.minValue ?? 0).toStringAsFixed(2)}'
+                                      ? l10n.rankingTierDuprFrom((t.minValue ?? 0).toStringAsFixed(2))
                                       : '${(t.minValue ?? 0).toStringAsFixed(2)} – ${(t.maxValue! - 0.01).toStringAsFixed(2)}'
                                 : (t.maxElo > 5000 || t.minElo >= 1800)
                                       ? '${t.minElo}+ ELO'

@@ -6167,5 +6167,11 @@
   "matchReplayPlay": "Play",
   "matchReplayPause": "Pause",
   "matchReplayFinished": "Replay finished.",
-  "rankingTierSourceDupr": "Tiers powered by DUPR"
+  "rankingTierSourceDupr": "Tiers powered by DUPR",
+  "rankingTierDuprFrom": "From {value}",
+  "@rankingTierDuprFrom": {
+    "placeholders": {
+      "value": {}
+    }
+  }
 }

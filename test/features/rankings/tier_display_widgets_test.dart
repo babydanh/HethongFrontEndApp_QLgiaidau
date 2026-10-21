@@ -109,6 +109,7 @@ void main() {
     expect(find.text('Tiers powered by DUPR'), findsOneWidget);
     expect(find.text('High Tier C'), findsOneWidget);
     expect(find.text('3.50 – 3.99'), findsOneWidget);
+    expect(find.text('From 5.50'), findsOneWidget);
     expect(find.text('Tier S'), findsNothing);
   });
 

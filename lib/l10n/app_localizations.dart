@@ -28027,6 +28027,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bậc theo DUPR'**
   String get rankingTierSourceDupr;
+
+  /// No description provided for @rankingTierDuprFrom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ {value}'**
+  String rankingTierDuprFrom(Object value);
 }
 
 class _AppLocalizationsDelegate

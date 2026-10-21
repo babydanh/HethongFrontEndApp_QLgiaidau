@@ -15462,4 +15462,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rankingTierSourceDupr => 'Bậc theo DUPR';
+
+  @override
+  String rankingTierDuprFrom(Object value) {
+    return 'Từ $value';
+  }
 }

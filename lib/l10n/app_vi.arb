@@ -6180,5 +6180,11 @@
   "matchReplayPlay": "Phát",
   "matchReplayPause": "Tạm dừng",
   "matchReplayFinished": "Đã phát hết bản ghi",
-  "rankingTierSourceDupr": "Bậc theo DUPR"
+  "rankingTierSourceDupr": "Bậc theo DUPR",
+  "rankingTierDuprFrom": "Từ {value}",
+  "@rankingTierDuprFrom": {
+    "placeholders": {
+      "value": {}
+    }
+  }
 }
