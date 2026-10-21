@@ -38,7 +38,7 @@ Mọi đường dẫn tính từ gốc repo App. Số dòng là số dòng tại
 
 ## 3. Hiển thị Swiss
 
-- [ ] 3.1 Widget `SwissStandingsView`. Tiêu chí: `flutter test --no-pub test/features/swiss_standings_view_test.dart` → exit 0 (mẫu `_host` với `ProviderScope` + `MaterialApp` vi + `AppTheme.lightTheme` ở `test/features/public_bracket_view_test.dart`; ca: cột theo tiebreak đang bật; thứ tự theo `rank`; rỗng → `swissStandingsEmpty`; màn 320 dp không overflow; không có `Card` nào trong cây)
+- [x] 3.1 Widget `SwissStandingsView`. Tiêu chí: `flutter test --no-pub test/features/swiss_standings_view_test.dart` → exit 0 (mẫu `_host` với `ProviderScope` + `MaterialApp` vi + `AppTheme.lightTheme` ở `test/features/public_bracket_view_test.dart`; ca: cột theo tiebreak đang bật; thứ tự theo `rank`; rỗng → `swissStandingsEmpty`; màn 320 dp không overflow; không có `Card` nào trong cây)
   - Files: tạo `lib/features/bracket/widgets/swiss_standings_view.dart`, `test/features/swiss_standings_view_test.dart`
   - Giao: `SwissStandingsView({Key? key, required List<Standing> standings, required List<SwissTiebreak> tiebreakOrder})`: bảng phẳng (hàng chữ ngăn `Divider`), cuộn ngang khi hẹp (`SingleChildScrollView` ngang), cột theo `tiebreakOrder` (Buchholz, Cut-1, Sonneborn-Berger, Hiệu số, Số thắng; `headToHead`/`seed` không có cột), không `Card`, không icon; tên đội `TextOverflow.ellipsis`
   - Nhận: `Standing` (2.1), khóa `swissStandings*` (1.2)
