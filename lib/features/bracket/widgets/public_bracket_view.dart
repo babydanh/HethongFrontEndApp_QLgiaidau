@@ -3,14 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
+import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
-enum _Kind { single, double, roundRobin }
+enum _Kind { single, double, roundRobin, swiss }
 
 /// Sơ đồ bracket cho trang công khai: CHỈ sơ đồ, không banner/ô tìm/bộ lọc/thẻ
 /// vòng. Chọn đúng loại sơ đồ như `BracketViewScreen`:
@@ -37,6 +42,7 @@ class PublicBracketView extends StatelessWidget {
 
   _Kind _kindOf(List<MatchModel> all) {
     final raw = (bracketType ?? '').trim().toLowerCase();
+    if (raw == 'swiss' || all.any(isSwissMatch)) return _Kind.swiss;
     if (all.any(isDoubleEliminationMatch) ||
         raw == 'double_elimination' ||
         raw == 'doubleelimination') {
@@ -78,6 +84,11 @@ class PublicBracketView extends StatelessWidget {
         : matches;
 
     return switch (kind) {
+      _Kind.swiss => SwissBracketView(
+        tournamentId: tournamentId,
+        divisionId: divisionId,
+        matches: matches,
+      ),
       _Kind.roundRobin => Padding(
         padding: const EdgeInsets.all(12),
         child: CrossTableView(
@@ -97,6 +108,67 @@ class PublicBracketView extends StatelessWidget {
         scrollOnly: true,
       ),
     };
+  }
+}
+
+/// Swiss has no bracket diagram: a compact standings table (top 8) plus the
+/// matches of the current round, read-only.
+class SwissBracketView extends ConsumerWidget {
+  const SwissBracketView({
+    super.key,
+    required this.tournamentId,
+    this.divisionId,
+    required this.matches,
+  });
+
+  static const int _standingsLimit = 8;
+
+  final String tournamentId;
+  final String? divisionId;
+  final List<MatchModel> matches;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final params = (tournamentId: tournamentId, divisionId: divisionId);
+    final standings =
+        ref.watch(standingsWithDivisionProvider(params)).value ?? const [];
+    final config = ref.watch(swissStageProvider(params)).value?.config;
+    final totalRounds =
+        config?.totalRounds ??
+        matches.fold<int>(1, (max, m) => m.round > max ? m.round : max);
+    final current = swissRoundState(matches, totalRounds).currentRound;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwissStandingsView(
+          standings: standings.take(_standingsLimit).toList(),
+          tiebreakOrder: config?.tiebreakOrder ?? SwissConfig.defaultTiebreakOrder,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),
+          child: Text(
+            l10n.swissRoundLabel(current),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+          ),
+        ),
+        for (final match in matches.where((m) => m.round == current))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: MatchTableRow(
+              match: match,
+              isReadOnly: true,
+              totalRounds: totalRounds,
+              tournamentId: tournamentId,
+            ),
+          ),
+      ],
+    );
   }
 }
 

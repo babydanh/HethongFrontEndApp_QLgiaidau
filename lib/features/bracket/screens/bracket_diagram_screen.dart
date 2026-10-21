@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -209,9 +210,12 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     final isDouble = bracketType == AppConstants.bracketDoubleElimination;
     final isGroupStageKnockout =
         bracketType == AppConstants.bracketGroupStageKnockout;
+    final isSwiss = bracketType == AppConstants.bracketSwiss;
 
     final String title;
-    if (isRoundRobin) {
+    if (isSwiss) {
+      title = l10n.swissFormatName;
+    } else if (isRoundRobin) {
       title = l10n.bracketDiagramRoundRobinTitle;
     } else if (isDouble) {
       title = l10n.bracketDiagramDoubleEliminationTitle;
@@ -271,6 +275,14 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           ? _buildEmpty(colors, l10n)
           : (_bracketMatches == null || _bracketMatches!.isEmpty)
           ? _buildEmpty(colors, l10n)
+          : isSwiss
+          ? SingleChildScrollView(
+              child: SwissBracketView(
+                tournamentId: widget.tournamentId,
+                divisionId: widget.divisionId,
+                matches: _bracketMatches!,
+              ),
+            )
           : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
     );
   }
