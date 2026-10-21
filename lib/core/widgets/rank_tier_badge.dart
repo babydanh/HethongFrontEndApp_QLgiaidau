@@ -1,59 +1,39 @@
+import 'package:app_quanly_giaidau/core/utils/elo_tier.dart' as tier_utils;
 import 'package:flutter/material.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 
-String getShortTierCode(String? tierName, int? elo) {
-  final name = (tierName ?? '').trim();
-  final upper = name.toUpperCase();
-
-  if (upper.contains('TIER S') || upper == 'S' || upper.contains('TIERS')) {
-    return 'TS';
-  }
-  if (upper.contains('HIGH TIER A') || upper == 'HTA') return 'HTA';
-  if (upper.contains('LOW TIER A') || upper == 'LTA') return 'LTA';
-  if (upper.contains('HIGH TIER B') || upper == 'HTB') return 'HTB';
-  if (upper.contains('LOW TIER B') || upper == 'LTB') return 'LTB';
-  if (upper.contains('HIGH TIER C') || upper == 'HTC') return 'HTC';
-  if (upper.contains('LOW TIER C') || upper == 'LTC') return 'LTC';
-  if (upper.contains('HIGH TIER D') || upper == 'HTD') return 'HTD';
-  if (upper.contains('LOW TIER D') || upper == 'LTD') return 'LTD';
-
-  if (elo != null) {
-    if (elo >= 1800) return 'TS';
-    if (elo >= 1700) return 'HTA';
-    if (elo >= 1600) return 'LTA';
-    if (elo >= 1500) return 'HTB';
-    if (elo >= 1400) return 'LTB';
-    if (elo >= 1300) return 'HTC';
-    if (elo >= 1200) return 'LTC';
-    if (elo >= 1100) return 'HTD';
-    return 'LTD';
-  }
-
-  return '--';
-}
 
 class RankTierBadge extends StatelessWidget {
   final String? tierName;
   final int? elo;
   final bool showLabel;
   final String? sportName;
-
+  final String? tierSource;
+  final bool? tierAvailable;
   const RankTierBadge({
     super.key,
     this.tierName,
     this.elo,
     this.showLabel = false,
     this.sportName,
+    this.tierSource,
+    this.tierAvailable,
   });
 
   @override
   Widget build(BuildContext context) {
-    final code = getShortTierCode(tierName, elo);
-    final isRanked =
-        code != '--' && (tierName?.trim().isNotEmpty == true || (elo ?? 0) > 0);
+    final info = tier_utils.resolveDisplayTier(
+      tierName: tierName,
+      elo: elo ?? 0,
+      tierSource: tierSource,
+      tierAvailable: tierAvailable,
+    );
+    final code = info?.shortCode ?? '--';
+    final isRanked = info != null;
+    if (info == null) return const SizedBox.shrink();
 
     // Chuẩn web:
     // TS: viền cam đậm #F59E0B / #D97706, nền vàng cam nhạt #FEF3C7, chữ cam đậm #B45309

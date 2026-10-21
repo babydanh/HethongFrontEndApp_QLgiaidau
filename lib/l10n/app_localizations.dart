@@ -28021,6 +28021,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã phát hết bản ghi'**
   String get matchReplayFinished;
+
+  /// No description provided for @rankingTierSourceDupr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bậc theo DUPR'**
+  String get rankingTierSourceDupr;
 }
 
 class _AppLocalizationsDelegate

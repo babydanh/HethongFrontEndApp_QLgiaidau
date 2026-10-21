@@ -19,10 +19,13 @@ class TierLegendView extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     if (tiers.isEmpty) return const SizedBox.shrink();
 
-    // Sắp xếp các tier từ cao nhất (Tier S: 1800+) xuống thấp nhất (Low Tier D: 0-1099) giống hệt Web
+    final isDupr = tiers.any((tier) => tier.tierSource == 'DUPR');
     final sortedTiers = List<EloTier>.from(tiers)
-      ..sort((a, b) => b.minElo.compareTo(a.minElo));
-
+      ..sort(
+        (a, b) => isDupr
+            ? (b.minValue ?? 0).compareTo(a.minValue ?? 0)
+            : b.minElo.compareTo(a.minElo),
+      );
     return SizedBox(
       height: 52,
       child: Row(
@@ -92,6 +95,17 @@ class TierLegendView extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
+                          if (isDupr) ...[
+                            Text(
+                              l10n.rankingTierSourceDupr,
+                              style: TextStyle(
+                                color: colors.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           Text(
                             l10n.rankingTierLevelsTitle,
                             style: TextStyle(
@@ -104,10 +118,13 @@ class TierLegendView extends StatelessWidget {
                           const SizedBox(height: 8),
                           ...sortedTiers.map((t) {
                             final palette = TierPalette.from(t);
-                            final eloRangeText =
-                                (t.maxElo > 5000 || t.minElo >= 1800)
-                                ? '${t.minElo}+ ELO'
-                                : '${t.minElo} - ${t.maxElo} ELO';
+                            final eloRangeText = isDupr
+                                ? t.maxValue == null
+                                      ? 'Từ ${(t.minValue ?? 0).toStringAsFixed(2)}'
+                                      : '${(t.minValue ?? 0).toStringAsFixed(2)} – ${(t.maxValue! - 0.01).toStringAsFixed(2)}'
+                                : (t.maxElo > 5000 || t.minElo >= 1800)
+                                      ? '${t.minElo}+ ELO'
+                                      : '${t.minElo} - ${t.maxElo} ELO';
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 8),
@@ -270,7 +287,11 @@ class TierLegendView extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${tier.minElo}–${tier.maxElo > 5000 ? '${tier.minElo}+' : tier.maxElo}',
+                              isDupr
+                                  ? tier.maxValue == null
+                                        ? 'Từ ${(tier.minValue ?? 0).toStringAsFixed(2)}'
+                                        : '${(tier.minValue ?? 0).toStringAsFixed(2)}–${(tier.maxValue! - 0.01).toStringAsFixed(2)}'
+                                  : '${tier.minElo}–${tier.maxElo > 5000 ? '${tier.minElo}+' : tier.maxElo}',
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,

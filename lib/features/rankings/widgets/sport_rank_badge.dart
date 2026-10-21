@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +17,14 @@ class SportRankBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayTier = resolveDisplayTier(
+      tierName: ranking.tierName,
+      elo: ranking.eloPoints,
+      tierSource: ranking.tierSource,
+      tierAvailable: ranking.tierAvailable,
+    );
+    if (displayTier == null) return const SizedBox.shrink();
     final tier = TierPalette.fromElo(ranking.eloPoints, ranking.tierName);
-    final sport = _sportVisual(ranking.categoryName);
     final label = _tierLabel(ranking.tierName, tier);
     final iconSize = compact ? 14.0 : 16.0;
     final horizontal = compact ? 7.0 : 9.0;

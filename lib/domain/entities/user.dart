@@ -297,6 +297,8 @@ class UserPublicRank {
   final String categoryName;
   final int eloPoints;
   final String? tierName;
+  final String? tierSource;
+  final bool? tierAvailable;
   final int matchesPlayed;
   final int matchesWon;
   final String? matchType;
@@ -315,6 +317,8 @@ class UserPublicRank {
     required this.categoryName,
     this.eloPoints = 0,
     this.tierName,
+    this.tierSource,
+    this.tierAvailable,
     this.matchesPlayed = 0,
     this.matchesWon = 0,
     this.matchType,
@@ -352,7 +356,9 @@ class UserPublicRank {
       categoryId: asString(json['categoryId'] ?? category?['id']) ?? '',
       categoryName: asString(json['categoryName'] ?? category?['name']) ?? '',
       eloPoints: asInt(json['eloPoints'] ?? json['elo_points']),
-      tierName: asString(tier?['name'] ?? json['tierName']),
+      tierName: asString(tier?['name'] ?? json['tierName'] ?? json['tier_name']),
+      tierSource: asString(json['tierSource'] ?? json['tier_source']) ?? 'ELO',
+      tierAvailable: json['tierAvailable'] as bool? ?? json['tier_available'] as bool?,
       matchesPlayed: asInt(json['matchesPlayed'] ?? json['totalMatches']),
       matchesWon: asInt(json['matchesWon'] ?? json['wins']),
       matchType: asString(

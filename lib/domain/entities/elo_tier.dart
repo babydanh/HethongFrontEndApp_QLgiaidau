@@ -9,6 +9,9 @@ class EloTier {
   final String name;
   final int minElo;
   final int maxElo;
+  final double? minValue;
+  final double? maxValue;
+  final String? tierSource;
   final String? iconUrl;
 
   const EloTier({
@@ -17,6 +20,9 @@ class EloTier {
     required this.name,
     required this.minElo,
     required this.maxElo,
+    this.minValue,
+    this.maxValue,
+    this.tierSource,
     this.iconUrl,
   });
 
@@ -27,6 +33,13 @@ class EloTier {
       name: json['name'] as String? ?? '',
       minElo: ((json['minElo'] ?? json['min_elo'] ?? 0) as num).toInt(),
       maxElo: ((json['maxElo'] ?? json['max_elo'] ?? 0) as num).toInt(),
+      minValue: (json['minValue'] ?? json['min_value']) is num
+          ? (json['minValue'] ?? json['min_value'] as num).toDouble()
+          : null,
+      maxValue: (json['maxValue'] ?? json['max_value']) is num
+          ? (json['maxValue'] ?? json['max_value'] as num).toDouble()
+          : null,
+      tierSource: json['tierSource']?.toString() ?? json['tier_source']?.toString(),
       iconUrl: json['iconUrl'] as String? ?? json['icon_url'] as String?,
     );
   }
@@ -37,6 +50,9 @@ class EloTier {
         'name': name,
         'minElo': minElo,
         'maxElo': maxElo,
+        if (tierSource != null) 'tierSource': tierSource,
+        if (minValue != null) 'minValue': minValue,
+        if (maxValue != null) 'maxValue': maxValue,
         if (iconUrl != null) 'iconUrl': iconUrl,
       };
 

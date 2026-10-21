@@ -15509,4 +15509,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get matchReplayFinished => 'Replay finished.';
+
+  @override
+  String get rankingTierSourceDupr => 'Tiers powered by DUPR';
 }

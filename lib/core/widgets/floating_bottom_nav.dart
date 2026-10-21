@@ -212,6 +212,8 @@ class _AvatarBadge extends StatelessWidget {
         name: avatar.name,
         elo: ranking?.eloPoints ?? 0,
         tierName: ranking?.tierName,
+        tierSource: ranking?.tierSource,
+        tierAvailable: ranking?.tierAvailable,
         matchesPlayed: ranking?.matchesPlayed ?? 0,
         size: 26,
         ringWidth: 2,

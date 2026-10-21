@@ -10,6 +10,8 @@ class PlayerRanking {
   final String? partnerAvatarUrl;
   final int eloPoints;
   final String tierName;
+  final String? tierSource;
+  final bool? tierAvailable;
   final int rank;
   final int matchesPlayed;
   final int matchesWon;
@@ -47,6 +49,8 @@ class PlayerRanking {
     this.partnerAvatarUrl,
     this.eloPoints = 0,
     this.tierName = '',
+    this.tierSource,
+    this.tierAvailable,
     this.rank = 0,
     this.matchesPlayed = 0,
     this.matchesWon = 0,
@@ -127,6 +131,8 @@ class PlayerRanking {
       ),
       eloPoints: asInt(json['eloPoints'] ?? json['elo_points']),
       tierName: asString(tier?['name'] ?? json['tierName']) ?? '',
+      tierSource: asString(json['tierSource'] ?? json['tier_source']) ?? 'ELO',
+      tierAvailable: json['tierAvailable'] as bool? ?? json['tier_available'] as bool?,
       rank: asInt(json['rank']),
       matchesPlayed: asInt(json['matchesPlayed'] ?? json['totalMatches']),
       matchesWon: asInt(json['matchesWon'] ?? json['wins']),
@@ -183,6 +189,8 @@ class PlayerRanking {
       if (partnerAvatarUrl != null) 'partnerAvatarUrl': partnerAvatarUrl,
       'eloPoints': eloPoints,
       'tierName': tierName,
+      'tierSource': tierSource,
+      'tierAvailable': tierAvailable,
       'rank': rank,
       'matchesPlayed': matchesPlayed,
       'matchesWon': matchesWon,
@@ -220,6 +228,8 @@ class PlayerRanking {
     String? partnerAvatarUrl,
     int? eloPoints,
     String? tierName,
+    String? tierSource,
+    bool? tierAvailable,
     int? rank,
     int? matchesPlayed,
     int? matchesWon,
@@ -249,6 +259,8 @@ class PlayerRanking {
       partnerAvatarUrl: partnerAvatarUrl ?? this.partnerAvatarUrl,
       eloPoints: eloPoints ?? this.eloPoints,
       tierName: tierName ?? this.tierName,
+      tierSource: tierSource ?? this.tierSource,
+      tierAvailable: tierAvailable ?? this.tierAvailable,
       rank: rank ?? this.rank,
       matchesPlayed: matchesPlayed ?? this.matchesPlayed,
       matchesWon: matchesWon ?? this.matchesWon,
@@ -283,16 +295,26 @@ class PlayerRanking {
 class UserRankResponse {
   final int? eloPoints;
   final String? tierName;
+  final String? tierSource;
+  final bool? tierAvailable;
   final String? categoryId;
 
-  const UserRankResponse({this.eloPoints, this.tierName, this.categoryId});
+  const UserRankResponse({
+    this.eloPoints,
+    this.tierName,
+    this.tierSource,
+    this.tierAvailable,
+    this.categoryId,
+  });
 
   factory UserRankResponse.fromJson(Map<String, dynamic> json) {
     final rawElo = json['eloPoints'];
     return UserRankResponse(
       eloPoints: rawElo is num ? rawElo.toInt() : int.tryParse('$rawElo'),
-      tierName: json['tierName']?.toString(),
-      categoryId: json['categoryId']?.toString(),
+      tierName: json['tierName']?.toString() ?? json['tier_name']?.toString(),
+      tierSource: json['tierSource']?.toString() ?? json['tier_source']?.toString() ?? 'ELO',
+      tierAvailable: json['tierAvailable'] as bool? ?? json['tier_available'] as bool?,
+      categoryId: json['categoryId']?.toString() ?? json['category_id']?.toString(),
     );
   }
 }

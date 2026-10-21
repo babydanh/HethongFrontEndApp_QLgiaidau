@@ -15459,4 +15459,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get matchReplayFinished => 'Đã phát hết bản ghi';
+
+  @override
+  String get rankingTierSourceDupr => 'Bậc theo DUPR';
 }

@@ -291,6 +291,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
               ),
             ],
           ),
+          if (activeRank?.tierSource != 'DUPR') ...[
           const SizedBox(height: 14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,20 +307,20 @@ class _EloProgressCardState extends State<EloProgressCard> {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  hasRank ? progress.label : EloHelpers.getOnboardingCopy(l10n),
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
+                Expanded(
+                  child: Text(
+                    hasRank ? progress.label : EloHelpers.getOnboardingCopy(l10n),
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: colors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -349,6 +350,7 @@ class _EloProgressCardState extends State<EloProgressCard> {
             ],
           ),
           const SizedBox(height: 12),
+          ],
           _ShieldRow(status: shield),
           const SizedBox(height: 16),
           Divider(height: 1, thickness: 1, color: colors.borderLight),
