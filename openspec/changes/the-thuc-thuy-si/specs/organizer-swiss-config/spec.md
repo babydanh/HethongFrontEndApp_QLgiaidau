@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Cấu hình nội dung Thụy Sĩ
-App SHALL cho BTC chọn thể thức Thụy Sĩ cho nội dung và đặt số vòng, thứ tự tiebreak, cách ghép vòng 1, và SHALL gửi đúng hình dạng `roundConfig.swiss` theo hợp đồng (trước khi sinh sơ đồ qua cấu hình nội dung; sau khi sinh qua `PATCH /tournaments/:id/stages/:stageId`).
+App SHALL cho BTC chọn thể thức Thụy Sĩ cho nội dung và đặt số vòng, thứ tự tiebreak, cách ghép vòng 1, và SHALL gửi đúng hình dạng `roundConfig.swiss` theo hợp đồng (trước khi sinh sơ đồ qua cấu hình nội dung; sau khi sinh qua `PATCH /tournaments/stages/:stageId`).
 
 #### Scenario: Chọn Thụy Sĩ
 - **WHEN** BTC chọn `Thụy Sĩ` trong danh sách thể thức của nội dung

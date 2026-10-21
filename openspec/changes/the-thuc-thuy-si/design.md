@@ -80,7 +80,7 @@ Tiền tố API: `/api/v1/tournaments`. Mọi phản hồi bọc `{ statusCode, 
 
 ### 1. Giá trị và cấu hình
 - `division.bracketType` / `tournamentConfig.bracketType` = `'SWISS'` (varchar, không migration). Stage: `stage.type = 'SWISS'`, MỘT stage MỘT group (tên group `Thụy Sĩ`). Mọi trận Swiss gắn `groupId` của group đó (sơ đồ công khai chỉ hiện trận có `groupId`).
-- Cấu hình nằm ở `roundConfig.swiss` của division (trước khi sinh sơ đồ) và của stage (sau khi sinh; `PATCH /tournaments/:id/stages/:stageId`):
+- Cấu hình nằm ở `roundConfig.swiss` của division (trước khi sinh sơ đồ) và của stage (sau khi sinh; `PATCH /tournaments/stages/:stageId`):
   ```ts
   type SwissTiebreak = 'BUCHHOLZ' | 'BUCHHOLZ_CUT1' | 'SONNEBORN_BERGER' | 'POINT_DIFF' | 'WINS' | 'HEAD_TO_HEAD' | 'SEED';
   interface SwissConfig {
@@ -145,7 +145,7 @@ type SwissError = { code: 'DUPLICATE_PARTICIPANT' | 'UNKNOWN_PARTICIPANT' | 'MIS
    - 409 `SWISS_ROUND_INCOMPLETE`, 409 `SWISS_ALL_ROUNDS_DONE`, 409 `SWISS_ROUND_EXISTS` (vòng này vừa được người khác tạo; client tải lại preview).
 4. `POST /:id/swiss/rounds/:round/undo` body `{ divisionId, stageId? }` → 200 `{ roundNumber: number }`. Chỉ vòng **mới nhất** và vòng ≥ 2; xóa mềm mọi trận của vòng đó. Lỗi: 400 `SWISS_UNDO_ROUND_ONE`, 409 `SWISS_ROUND_STARTED` (có trận không-BYE đã bắt đầu/kết thúc, theo `hasStartedMatchInTx`).
 5. Đọc (đã có, mở rộng): `GET /:id/bracket?divisionId=` trả stage `type:'SWISS'` kèm `roundConfig.swiss`; `GET /:id/standings?divisionId=` với stage SWISS trả mỗi dòng thêm `rank: number`, `buchholz: number`, `buchholzCut1: number`, `sonnebornBerger: number` (các trường cũ giữ nguyên: `participantId, teamName, logoUrl, seed, players, played, won, lost, draws, pointsFor, pointsAgainst, totalPoints, groupId`), đã sắp theo `rank` tăng dần. Đủ mọi đội hợp lệ (kể cả chưa có trận) và mọi đội đã có trận.
-6. Cấu hình: `PATCH /:id/stages/:stageId` với `{ roundConfig: { swiss: Partial<SwissConfig> } }` (sai kiểu/giá trị → 400 theo validator hiện có) và đường cấu hình division hiện có.
+6. Cấu hình: `PATCH /stages/:stageId` (đường dẫn đầy đủ `PATCH /api/v1/tournaments/stages/:stageId`, KHÔNG có `:id` giải) với `{ roundConfig: { swiss: Partial<SwissConfig> } }` (sai kiểu/giá trị → 400 theo validator hiện có) và đường cấu hình division hiện có.
 
 ### 4. Realtime
 Sự kiện socket `bracket:update` (namespace `/live`, phòng `tournament:{id}`), payload `{ tournamentId: string; divisionId: string | null; stageId: string | null; action: 'SWISS_ROUND_CREATED' | 'SWISS_ROUND_UNDONE' | 'BRACKET_SLOTS_UPDATED'; roundNumber: number | null; occurredAt: string }`. Web tải lại bracket/standings khi nhận; App đã poll 15–20 giây nên không bắt buộc nghe socket.
