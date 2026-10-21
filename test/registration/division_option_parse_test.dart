@@ -102,30 +102,42 @@ void main() {
       expect(closed.isRegistrationOpen, isFalse);
     });
 
-    test('falls back to deadline and capacity when server state is missing', () {
-      final open = TournamentDivisionOption.fromJson({
-        'id': 'legacy-open',
-        'name': 'Legacy open',
-        'registrationEndDate': DateTime.now()
-            .add(const Duration(days: 1))
-            .toIso8601String(),
-        'matchType': 'SINGLES',
-        'maxParticipants': 2,
-        'participantCount': 1,
-      });
-      final full = TournamentDivisionOption.fromJson({
-        'id': 'legacy-full',
-        'name': 'Legacy full',
-        'matchType': 'SINGLES',
-        'maxParticipants': 1,
-        'participantCount': 1,
-      });
+    test(
+      'falls back to the deadline when server state is missing; full stays selectable',
+      () {
+        final open = TournamentDivisionOption.fromJson({
+          'id': 'legacy-open',
+          'name': 'Legacy open',
+          'registrationEndDate': DateTime.now()
+              .add(const Duration(days: 1))
+              .toIso8601String(),
+          'matchType': 'SINGLES',
+          'maxParticipants': 2,
+          'participantCount': 1,
+        });
+        final expired = TournamentDivisionOption.fromJson({
+          'id': 'legacy-expired',
+          'name': 'Legacy expired',
+          'effectiveRegistrationEndDate': DateTime.now()
+              .subtract(const Duration(minutes: 1))
+              .toIso8601String(),
+        });
+        final full = TournamentDivisionOption.fromJson({
+          'id': 'legacy-full',
+          'name': 'Legacy full',
+          'matchType': 'SINGLES',
+          'maxParticipants': 1,
+          'participantCount': 1,
+        });
 
-      expect(open.registrationOpen, isNull);
-      expect(open.isRegistrationOpen, isTrue);
-      expect(full.isRegistrationOpen, isFalse);
-    });
-
+        expect(open.registrationOpen, isNull);
+        expect(open.isRegistrationOpen, isTrue);
+        expect(expired.isRegistrationOpen, isFalse);
+        // Đầy vẫn mở để vào danh sách chờ như trước; chặn suất mới do isFull.
+        expect(full.isFull, isTrue);
+        expect(full.isRegistrationOpen, isTrue);
+      },
+    );
 
     test('trường rỗng/thiếu vẫn parse an toàn', () {
       final division = TournamentDivisionOption.fromJson({

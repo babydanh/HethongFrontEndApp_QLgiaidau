@@ -3,8 +3,6 @@ class TournamentDivisionOption {
     required this.id,
     required this.name,
     this.status,
-    this.registrationOpen,
-    this.registrationClosedReason,
     this.genderRestriction,
     this.matchType,
     this.categoryId,
@@ -17,12 +15,13 @@ class TournamentDivisionOption {
     this.effectiveRegistrationEndDate,
     this.participantCount,
     this.capacity,
+    this.registrationOpen,
+    this.registrationClosedReason,
   });
+
   final String id;
   final String name;
   final String? status;
-  final bool? registrationOpen;
-  final String? registrationClosedReason;
   final String? genderRestriction; // 'MALE' | 'FEMALE' | 'MIXED'
   final String? matchType; // 'SINGLES' | 'DOUBLES' | 'MIXED_DOUBLES'
   final String? categoryId;
@@ -32,32 +31,44 @@ class TournamentDivisionOption {
   final int? maxParticipants;
   final String? bracketType;
   final DateTime? registrationEndDate;
-  /// Hạn chót hiệu lực do backend cung cấp; null nghĩa là không đặt hạn.
+
+  /// Hạn chót hiệu lực do backend tính sẵn: hạn riêng nội dung, không có thì hạn giải.
+  /// null nghĩa là không đặt hạn — server cũng không chặn theo ngày trong
+  /// trường hợp đó, nên client không được tự coi là đã hết hạn.
   final DateTime? effectiveRegistrationEndDate;
   final int? participantCount;
+
+  /// Server quyết định nội dung còn nhận VĐV tự đăng ký (khoá, hạn, trạng
+  /// giải). null = server cũ chưa gửi, app tự tính theo hạn như trước.
+  final bool? registrationOpen;
+
+  /// `TOURNAMENT_LOCKED` | `DIVISION_LOCKED` | `DEADLINE_PASSED` |
+  /// `TOURNAMENT_NOT_OPEN`; null khi còn mở hoặc server cũ.
+  final String? registrationClosedReason;
+
+  bool get hasRegistrationOpenContract => registrationOpen != null;
+
+  /// Sức chứa KHÔNG tính ở đây: nội dung đầy vẫn chọn được để vào danh sách
+  /// chờ như trước, việc chặn suất mới do `isFull` lo.
+  bool get isRegistrationOpen {
+    final serverValue = registrationOpen;
+    if (serverValue != null) return serverValue;
+    final deadline = effectiveRegistrationEndDate ?? registrationEndDate;
+    return deadline == null || DateTime.now().isBefore(deadline);
+  }
 
   /// Sức chứa do backend tính sẵn. Nội dung đôi dùng suất đội nên có thể
   /// lẻ (một VĐV chưa ghép = 0.5 đội); app không tự chia lại từ số bản ghi.
   final TournamentDivisionCapacity? capacity;
 
-  bool get isRegistrationOpen {
-    final serverValue = registrationOpen;
-    if (serverValue != null) return serverValue;
-    final deadline = effectiveRegistrationEndDate ?? registrationEndDate;
-    return (deadline == null || !DateTime.now().isAfter(deadline)) && !isFull;
-  }
-
-  bool get hasRegistrationOpenContract => registrationOpen != null;
-
   /// `matchType` chuẩn hoá về `SINGLES`/`DOUBLES`/`MIXED_DOUBLES`; null nghĩa là
   /// app không nhận ra format này nên không được suy bất cứ điều gì từ nó.
   String? get _normalizedMatchType {
-    final normalized =
-        matchType
-            ?.trim()
-            .toUpperCase()
-            .replaceAll('-', '_')
-            .replaceAll(' ', '_');
+    final normalized = matchType
+        ?.trim()
+        .toUpperCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
     return switch (normalized) {
       'SINGLE' || 'SINGLES' || 'DON' => 'SINGLES',
       'DOUBLE' || 'DOUBLES' || 'DOI' => 'DOUBLES',
@@ -66,15 +77,25 @@ class TournamentDivisionOption {
     };
   }
 
-  /// Number of occupied team slots from the server projection. Singles can
-  /// safely fall back to counting participant records.
+  /// Số suất đội đã chiếm. null nghĩa là backend chưa gửi projection cho nội
+  /// dung mà app không chắc 1 bản ghi = 1 suất → sức chứa CHƯA BIẾT, không
+  /// phải bằng 0 cũng không phải bằng số hồ sơ.
+  ///
+  /// Chỉ `SINGLES` được đếm dòng: đơn (và môn đội, backend cũng gán
+  /// `matchType: SINGLES` cho giải bóng đá) đúng là mỗi bản ghi một suất. Đôi
+  /// tính theo SUẤT ĐỘI nên 4 hồ sơ có thể chỉ là 2 suất (1 VĐV chưa ghép =
+  /// 0.5 suất); format lạ/mất `matchType` thì app không có quy ước nào để
+  /// quy đổi. Cả hai trường hợp đó sức chứa phải để ngỏ cho tới khi server gửi
+  /// projection — đoán sai rồi báo "đầy" còn tệ hơn là không hiện gì.
   double? get occupiedTeamSlots {
     final projection = capacity?.occupiedTeamSlots;
     if (projection != null) return projection;
     if (_normalizedMatchType != 'SINGLES') return null;
+    // Đơn: một bản ghi = một suất, nên đếm dòng vẫn đúng đơn vị.
     return (participantCount ?? 0).toDouble();
   }
 
+  /// `maxParticipants` vẫn là giới hạn số đội.
   int? get effectiveMaxTeamSlots => capacity?.maxTeamSlots ?? maxParticipants;
 
   bool get isFull => capacity?.isFull ?? _isFullByTeamSlots;
@@ -86,6 +107,9 @@ class TournamentDivisionOption {
     return occupied >= max;
   }
 
+  /// Nhãn sức chứa theo SUẤT ĐỘI, không phải số hồ sơ: `0.5/4`, `2/4`, `4/4`.
+  /// Nội dung không đặt giới hạn đội thì chỉ hiện phần đã chiếm; nội dung thiếu
+  /// projection (đôi, format lạ, mất `matchType`) thì không hiện gì thay vì đoán.
   String? get teamSlotsLabel {
     final occupied = occupiedTeamSlots;
     if (occupied == null) return null;
@@ -94,12 +118,14 @@ class TournamentDivisionOption {
     return maxTeams == null ? text : '$text/$maxTeams';
   }
 
+  /// Giữ một chữ số thập phân cho suất đội lẻ (0.5), bỏ `.0` khi là số nguyên.
   static String _formatTeamSlots(double value) {
     final rounded = (value * 10).round() / 10;
     return rounded == rounded.roundToDouble()
         ? rounded.toInt().toString()
         : rounded.toStringAsFixed(1);
   }
+
   factory TournamentDivisionOption.fromJson(Map<String, dynamic> json) {
     final minElo = json['minElo'] ?? json['min_elo'];
     final maxElo = json['maxElo'] ?? json['max_elo'];
@@ -150,7 +176,6 @@ class TournamentDivisionOption {
     );
   }
 }
-
 
 /// Projection sức chứa do backend tính sẵn cho một nội dung thi đấu.
 class TournamentDivisionCapacity {
