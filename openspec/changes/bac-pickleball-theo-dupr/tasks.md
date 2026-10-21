@@ -12,7 +12,7 @@
 
 ## 3. Kiểm tổng
 
-- [ ] 3.1 Chạy `flutter analyze --no-pub lib/domain/entities lib/core/utils lib/core/widgets lib/features/rankings lib/features/profile` không có lỗi mới, và `flutter test --no-pub` các file test của task 1.1, 2.1, 2.2, 2.3 pass.
+- [x] 3.1 Chạy `flutter analyze --no-pub lib/domain/entities lib/core/utils lib/core/widgets lib/features/rankings lib/features/profile` không có lỗi mới, và `flutter test --no-pub` các file test của task 1.1, 2.1, 2.2, 2.3 pass.
 
 ## Workflow follow-up
 

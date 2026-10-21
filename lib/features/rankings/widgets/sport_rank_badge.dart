@@ -25,6 +25,7 @@ class SportRankBadge extends StatelessWidget {
     );
     if (displayTier == null) return const SizedBox.shrink();
     final tier = TierPalette.fromElo(ranking.eloPoints, ranking.tierName);
+    final sport = _sportVisual(ranking.categoryName);
     final label = _tierLabel(ranking.tierName, tier);
     final iconSize = compact ? 14.0 : 16.0;
     final horizontal = compact ? 7.0 : 9.0;

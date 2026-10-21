@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/sport_rank_badge.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
@@ -91,6 +92,19 @@ void main() {
     );
 
     expect(find.text('LTB'), findsOneWidget);
+  });
+
+  testWidgets('badge môn ẩn khi DUPR chưa có bậc, hiện khi có bậc hoặc nguồn ELO', (tester) async {
+    await tester.pumpWidget(
+      _localized(SportRankBadge(ranking: _rank(source: 'DUPR', available: false))),
+    );
+    expect(find.byIcon(Icons.sports_tennis_rounded), findsNothing);
+
+    await tester.pumpWidget(_localized(SportRankBadge(ranking: _rank(source: 'DUPR'))));
+    expect(find.byIcon(Icons.sports_tennis_rounded), findsOneWidget);
+
+    await tester.pumpWidget(_localized(SportRankBadge(ranking: _rank())));
+    expect(find.byIcon(Icons.sports_tennis_rounded), findsOneWidget);
   });
 
   testWidgets('ẩn dòng tiến độ ELO với DUPR và giữ cho ELO', (tester) async {
