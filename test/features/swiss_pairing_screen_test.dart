@@ -412,4 +412,20 @@ void main() {
     expect(handled, isTrue);
     expect(find.byKey(const Key('swiss-pairing-screen')), findsOneWidget);
   });
+
+  testWidgets('any failed validate (not only network) offers a retry', (
+    tester,
+  ) async {
+    when(
+      () => _repo.swissValidate(any(), any()),
+    ).thenThrow(const SwissApiException(status: 500, code: 'SOMETHING_NEW'));
+    await _pump(tester);
+    await tester.tap(find.byKey(const Key('swiss-chip-a0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('swiss-swap-a1')));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const Key('swiss-revalidate')), findsOneWidget);
+  });
 }

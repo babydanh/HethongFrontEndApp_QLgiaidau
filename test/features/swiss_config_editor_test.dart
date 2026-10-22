@@ -197,6 +197,41 @@ void main() {
     expect(emitted.last.tiebreakOrder, hasLength(3));
   });
 
+  testWidgets('the last enabled criterion cannot be switched off', (
+    tester,
+  ) async {
+    final emitted = <SwissConfig>[];
+    await _pump(
+      tester,
+      _host(
+        emitted,
+        value: const SwissConfig(
+          totalRounds: 4,
+          tiebreakOrder: [SwissTiebreak.buchholz],
+          firstRoundPairing: 'SEED',
+        ),
+      ),
+    );
+
+    final last = tester.widget<Switch>(
+      find.byKey(const Key('swiss-tiebreak-switch-BUCHHOLZ')),
+    );
+    expect(last.onChanged, isNull);
+
+    // With two on, either can still go off, but then the other is locked.
+    await tester.tap(find.byKey(const Key('swiss-tiebreak-switch-WINS')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('swiss-tiebreak-switch-BUCHHOLZ')));
+    await tester.pump();
+    expect(emitted.last.tiebreakOrder, [SwissTiebreak.wins]);
+    expect(
+      tester
+          .widget<Switch>(find.byKey(const Key('swiss-tiebreak-switch-WINS')))
+          .onChanged,
+      isNull,
+    );
+  });
+
   testWidgets('a disabled criterion can be switched back on', (tester) async {
     final emitted = <SwissConfig>[];
     await _pump(tester, _host(emitted));

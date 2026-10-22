@@ -143,6 +143,8 @@ class _SwissConfigEditorState extends State<SwissConfigEditor> {
   }
 
   void _toggle(SwissTiebreak item, bool on) {
+    // The order must never become empty.
+    if (!on && _on.length <= 1) return;
     setState(() => on ? _on.add(item) : _on.remove(item));
     _emit();
   }
@@ -279,7 +281,9 @@ class _SwissConfigEditorState extends State<SwissConfigEditor> {
             Switch(
               key: Key('swiss-tiebreak-switch-$api'),
               value: on,
-              onChanged: widget.enabled ? (v) => _toggle(item, v) : null,
+              onChanged: widget.enabled && !(on && _on.length <= 1)
+                  ? (v) => _toggle(item, v)
+                  : null,
             ),
           ],
         ),

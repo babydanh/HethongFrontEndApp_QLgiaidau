@@ -113,4 +113,52 @@ void main() {
       expect(state.canGenerateNext, isFalse);
     });
   });
+
+  group('swissRoundFilterReset', () {
+    test('giữ nguyên khi vòng đang lọc còn và vòng hiện tại không đổi', () {
+      expect(
+        swissRoundFilterReset(
+          selected: 1,
+          currentRound: 2,
+          rounds: {1, 2},
+          keyChanged: false,
+        ),
+        isNull,
+      );
+      // "Tất cả các vòng" (0) là lựa chọn của người dùng, không bị đè.
+      expect(
+        swissRoundFilterReset(
+          selected: 0,
+          currentRound: 2,
+          rounds: {1, 2},
+          keyChanged: false,
+        ),
+        isNull,
+      );
+    });
+
+    test('theo vòng mới khi vòng hiện tại hoặc nội dung đổi', () {
+      expect(
+        swissRoundFilterReset(
+          selected: 1,
+          currentRound: 2,
+          rounds: {1, 2},
+          keyChanged: true,
+        ),
+        2,
+      );
+    });
+
+    test('vòng đang lọc đã bị hoàn tác thì về vòng hiện tại', () {
+      expect(
+        swissRoundFilterReset(
+          selected: 3,
+          currentRound: 2,
+          rounds: {1, 2},
+          keyChanged: false,
+        ),
+        2,
+      );
+    });
+  });
 }

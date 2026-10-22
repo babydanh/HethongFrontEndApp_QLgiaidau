@@ -16,6 +16,18 @@ class SwissRoundState {
   final bool canUndo;
 }
 
+/// New round filter for the Swiss schedule, or null to keep [selected].
+/// Follows [currentRound] when it (or the division) changed, and when the
+/// selected round no longer exists (e.g. it was undone). 0 = all rounds.
+int? swissRoundFilterReset({
+  required int selected,
+  required int currentRound,
+  required Set<int> rounds,
+  required bool keyChanged,
+}) => keyChanged || (selected != 0 && !rounds.contains(selected))
+    ? currentRound
+    : null;
+
 SwissRoundState swissRoundState(List<MatchModel> matches, int totalRounds) {
   var currentRound = 0;
   for (final match in matches) {

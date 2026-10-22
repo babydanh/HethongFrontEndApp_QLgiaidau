@@ -47,6 +47,8 @@ Hoàn tất task 1.1–1.2; dừng trước 1.3 vì mâu thuẫn đặc tả ở
   12. `SwissStageInfo.hasTotalRounds`/`totalRounds` (null khi Backend không gửi `swiss.totalRounds`); `SwissConfig.fromJson` giữ nguyên (vẫn trả 1 làm giá trị tạm). Thiếu thì ẩn `SwissRoundActions`, `_computeTotalRounds` rơi về cách đoán cũ, trang công khai dùng số vòng lớn nhất.
   Một số test (helper `swissDivisionTeamCount`/`swissConfigOrDefault`, test màn hình mục 6/8/9/11) được viết cùng lúc với mã, không có bước đỏ riêng; các mục 1, 5, 7, 10, 12 đã có bước đỏ trước.
 
+- Review vòng 2 (5 mục P2): (1) bộ lọc vòng của lịch Swiss tính lại khi (nội dung, vòng hiện tại) đổi hoặc vòng đang lọc không còn (hàm thuần `swissRoundFilterReset`, có test; "Tất cả các vòng" = 0 do người dùng chọn thì giữ); (2) `_configureDivision` có cờ `_configuring` chống bấm đúp và khi đã có stage thì khóa loại trận/thể thức/số đội tối đa trong hộp thoại (không có test cấp hộp thoại, private); (3) nút Thử lại validate hiện khi `errorKey != null && !valid && errors.isEmpty`; (4) không tắt được tiêu chí tiebreak bật cuối cùng (Switch bị khóa); (5) `_selectedGroupTab` kẹp về tối đa 1 khi vào view Swiss. Mục 1 và 5 nằm trong `bracket_view_screen.dart`, chỉ kiểm gián tiếp qua hàm thuần. Không đổi: so status trong `swiss_round_state.dart`; ẩn nút khi thiếu totalRounds.
+
 ## Ràng buộc đang có
 - Agent KHÔNG push `main`; không `git add -A`.
 - Worktree không có `.env`: không đọc/in/chép/tạo `.env`; `flutter test` chạy với `--no-test-assets` để không đóng gói asset không cần thiết.

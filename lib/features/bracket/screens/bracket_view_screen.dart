@@ -73,8 +73,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   String _matchFilter = '';
   String _selectedBranch = '';
   String _selectedGroup = '';
-  // Swiss: the schedule opens on the current round once, then follows the user.
-  bool _swissRoundDefaulted = false;
+  // Swiss: (division, current round) the round filter was last defaulted for.
+  (String?, int)? _swissDefaultedFor;
 
   BracketFilterState get _currentFilterState => BracketFilterState(
     matchFilter: _matchFilter,
@@ -676,11 +676,20 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     );
     final stage = ref.watch(swissStageProvider(params)).value;
     final totalRounds = _computeTotalRounds(matches, AppConstants.bracketSwiss);
-    if (!_swissRoundDefaulted) {
-      _swissRoundDefaulted = true;
-      _selectedRound = swissRoundState(matches, totalRounds).currentRound;
-    }
-    // Tab 0 = standings, anything else = schedule (the tab state is shared).
+    // The schedule follows the current round when it changes (a new round, an
+    // undone one, another division); otherwise it keeps the user's choice.
+    final currentRound = swissRoundState(matches, totalRounds).currentRound;
+    final defaultedFor = (_activeDivisionId, currentRound);
+    final reset = swissRoundFilterReset(
+      selected: _selectedRound,
+      currentRound: currentRound,
+      rounds: {for (final m in matches) m.round},
+      keyChanged: _swissDefaultedFor != defaultedFor,
+    );
+    _swissDefaultedFor = defaultedFor;
+    if (reset != null) _selectedRound = reset;
+    // Swiss has two tabs only; the tab state is shared with the group view.
+    if (_selectedGroupTab > 1) _selectedGroupTab = 1;
     final showStandings = _selectedGroupTab == 0;
     final body = showStandings
         ? _buildSwissStandings(params, l10n)

@@ -743,8 +743,8 @@ class _ConfirmBar extends StatelessWidget {
                     swissApiErrorText(l10n, errorKey),
                     style: TextStyle(color: colors.error),
                   ),
-                // A failed validate is not confirmable until it is retried.
-                if (errorKey == swissErrorNetwork && !state.valid)
+                // A validate that failed without a verdict is retried here.
+                if (errorKey != null && !state.valid && state.errors.isEmpty)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(

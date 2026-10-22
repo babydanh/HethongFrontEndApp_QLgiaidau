@@ -38,6 +38,7 @@ class _TournamentManagementDivisionsSectionState
     extends ConsumerState<TournamentManagementDivisionsSection> {
   late Future<List<Map<String, dynamic>>> _divisionsFuture;
   bool _isBusy = false;
+  bool _configuring = false;
   String? _mutationError;
 
   @override
@@ -175,6 +176,17 @@ class _TournamentManagementDivisionsSectionState
   }
 
   Future<void> _configureDivision(Map<String, dynamic> division) async {
+    // Loading the stage takes a moment: ignore taps meanwhile.
+    if (_configuring || _isBusy) return;
+    _configuring = true;
+    try {
+      await _runConfigureDivision(division);
+    } finally {
+      _configuring = false;
+    }
+  }
+
+  Future<void> _runConfigureDivision(Map<String, dynamic> division) async {
     final divisionId = _divisionId(division);
     if (divisionId.isEmpty) return;
     final teamCount = swissDivisionTeamCount(division);
@@ -215,6 +227,8 @@ class _TournamentManagementDivisionsSectionState
         swissInitial: initial,
         teamCount: teamCount,
         minPlayedRounds: minPlayed,
+        // After the bracket exists only the Swiss config can still change.
+        lockContent: stage != null,
       ),
     );
     if (values == null || !mounted) return;
@@ -518,7 +532,9 @@ class _DivisionConfigDialog extends StatefulWidget {
     required this.swissInitial,
     required this.teamCount,
     required this.minPlayedRounds,
+    required this.lockContent,
   });
+  final bool lockContent;
   final Map<String, dynamic> division;
   final SwissConfig swissInitial;
   final int teamCount;
@@ -575,9 +591,11 @@ class _DivisionConfigDialogState extends State<_DivisionConfigDialog> {
                       child: Text(_matchTypeLabel(l10n, value)),
                     ),
                 ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _matchType = value);
-                },
+                onChanged: widget.lockContent
+                    ? null
+                    : (value) {
+                        if (value != null) setState(() => _matchType = value);
+                      },
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
@@ -593,13 +611,16 @@ class _DivisionConfigDialogState extends State<_DivisionConfigDialog> {
                       child: Text(_bracketTypeLabel(l10n, value)),
                     ),
                 ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _bracketType = value);
-                },
+                onChanged: widget.lockContent
+                    ? null
+                    : (value) {
+                        if (value != null) setState(() => _bracketType = value);
+                      },
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _max,
+                enabled: !widget.lockContent,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: l10n.tournamentManagementMaxParticipants,
