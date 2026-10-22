@@ -35,8 +35,9 @@ SwissRoundState swissRoundState(List<MatchModel> matches, int totalRounds) {
   var allScheduled = true;
   for (final match in matches) {
     if (match.round != currentRound || match.isBye) continue;
-    if (match.status != 'COMPLETED') roundComplete = false;
-    if (match.status != 'SCHEDULED') allScheduled = false;
+    // MatchModel.status is lower-case from the API; compare normalized.
+    if (match.normalizedStatus != 'COMPLETED') roundComplete = false;
+    if (match.normalizedStatus != 'SCHEDULED') allScheduled = false;
   }
   final canGenerateNext = currentRound < totalRounds && roundComplete;
   final canUndo = currentRound >= 2 && allScheduled;

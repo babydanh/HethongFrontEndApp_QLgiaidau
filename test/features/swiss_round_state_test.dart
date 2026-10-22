@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 MatchModel _match({
   required String id,
   required int round,
-  String status = 'SCHEDULED',
+  String status = 'scheduled',
   bool isBye = false,
 }) => MatchModel(
   id: id,
@@ -31,8 +31,8 @@ void main() {
 
     test('chỉ xét trận không-BYE của vòng hiện tại để xác định đã xong', () {
       final state = swissRoundState([
-        _match(id: 'old', round: 1, status: 'SCHEDULED'),
-        _match(id: 'current', round: 2, status: 'COMPLETED'),
+        _match(id: 'old', round: 1, status: 'scheduled'),
+        _match(id: 'current', round: 2, status: 'completed'),
         _match(id: 'bye', round: 2, isBye: true),
       ], 5);
 
@@ -45,8 +45,8 @@ void main() {
 
     test('vòng có trận chưa xong không sinh vòng kế và không hoàn tác', () {
       final state = swissRoundState([
-        _match(id: 'done', round: 3, status: 'COMPLETED'),
-        _match(id: 'live', round: 3, status: 'IN_PROGRESS'),
+        _match(id: 'done', round: 3, status: 'completed'),
+        _match(id: 'live', round: 3, status: 'in_progress'),
       ], 5);
 
       expect(state.roundComplete, isFalse);
@@ -57,9 +57,9 @@ void main() {
 
     test('chỉ hoàn tác vòng mới nhất khi mọi trận thường còn SCHEDULED', () {
       final state = swissRoundState([
-        _match(id: 'old', round: 1, status: 'COMPLETED'),
-        _match(id: 'current', round: 4, status: 'SCHEDULED'),
-        _match(id: 'bye', round: 4, isBye: true, status: 'COMPLETED'),
+        _match(id: 'old', round: 1, status: 'completed'),
+        _match(id: 'current', round: 4, status: 'scheduled'),
+        _match(id: 'bye', round: 4, isBye: true, status: 'completed'),
       ], 4);
 
       expect(state.roundComplete, isFalse);
@@ -69,15 +69,48 @@ void main() {
 
     test('không sinh quá tổng số vòng và không hoàn tác vòng một', () {
       final last = swissRoundState([
-        _match(id: 'last', round: 3, status: 'COMPLETED'),
+        _match(id: 'last', round: 3, status: 'completed'),
       ], 3);
       final first = swissRoundState([
-        _match(id: 'first', round: 1, status: 'SCHEDULED'),
+        _match(id: 'first', round: 1, status: 'scheduled'),
       ], 5);
 
       expect(last.canGenerateNext, isFalse);
       expect(last.nextRound, isNull);
       expect(first.canUndo, isFalse);
+    });
+  });
+
+  group('status đến từ JSON thật (MatchModel.fromJson hạ chữ thường)', () {
+    MatchModel fromJson(String id, int round, String status, {bool? isBye}) =>
+        MatchModel.fromJson({
+          'id': id,
+          'round': round,
+          'status': status,
+          if (isBye != null) 'isBye': isBye,
+        }, id);
+
+    test('vòng COMPLETED từ JSON thì được sinh vòng kế', () {
+      final state = swissRoundState([
+        fromJson('a', 2, 'COMPLETED'),
+        fromJson('b', 2, 'COMPLETED'),
+        fromJson('bye', 2, 'COMPLETED', isBye: true),
+      ], 5);
+
+      expect(state.roundComplete, isTrue);
+      expect(state.canGenerateNext, isTrue);
+      expect(state.nextRound, 3);
+    });
+
+    test('vòng SCHEDULED từ JSON thì hoàn tác được', () {
+      final state = swissRoundState([
+        fromJson('old', 1, 'COMPLETED'),
+        fromJson('a', 2, 'SCHEDULED'),
+        fromJson('b', 2, 'SCHEDULED'),
+      ], 5);
+
+      expect(state.canUndo, isTrue);
+      expect(state.canGenerateNext, isFalse);
     });
   });
 }
