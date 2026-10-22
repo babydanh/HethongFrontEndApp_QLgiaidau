@@ -23,6 +23,8 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen.dart'
+    show swissApiErrorText;
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -429,6 +431,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       isReadOnlyMode,
                       canActAsReferee,
                       canScoreMatch,
+                      canManageGroupAssignment,
                     );
                   }
 
@@ -601,6 +604,25 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     );
   }
 
+  void _openSwissPairing(String stageId, int round, int totalRounds) {
+    final divisionId = _activeDivisionId;
+    if (divisionId == null || divisionId.isEmpty) return;
+
+    final routeBase = ref.read(authProvider).role == UserRole.admin
+        ? '/admin/tournament/${widget.tournamentId}'
+        : '/organizer/tournaments/${widget.tournamentId}/manage';
+    context.push(
+      Uri(
+        path: '$routeBase/swiss-pairing/${Uri.encodeComponent(divisionId)}',
+        queryParameters: {
+          'stageId': stageId,
+          'round': '$round',
+          'total': '$totalRounds',
+        },
+      ).toString(),
+    );
+  }
+
   Widget _buildGroupTabItem(int index, String title) {
     final isSelected = _selectedGroupTab == index;
     return Expanded(
@@ -645,12 +667,14 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     bool isReadOnly,
     bool isReferee,
     bool canScoreMatch,
+    bool canManage,
   ) {
     final l10n = AppLocalizations.of(context)!;
     final params = (
       tournamentId: widget.tournamentId,
       divisionId: _activeDivisionId,
     );
+    final stage = ref.watch(swissStageProvider(params)).value;
     final totalRounds = _computeTotalRounds(matches, AppConstants.bracketSwiss);
     if (!_swissRoundDefaulted) {
       _swissRoundDefaulted = true;
@@ -671,6 +695,16 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       mainAxisSize: widget.isEmbedded ? MainAxisSize.min : MainAxisSize.max,
       children: [
         _buildGroupStageTabBar(l10n, swiss: true),
+        // Without the stage config the total is a guess: show no actions.
+        if (canManage && stage != null && _activeDivisionId != null)
+          SwissRoundActions(
+            tournamentId: widget.tournamentId,
+            divisionId: _activeDivisionId!,
+            stageId: stage.stageId,
+            matches: matches,
+            totalRounds: stage.config.totalRounds,
+            onOpenPairing: _openSwissPairing,
+          ),
         if (widget.isEmbedded) body else Expanded(child: body),
       ],
     );
@@ -1572,5 +1606,120 @@ class _BracketShimmerLoading extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// Manager-only strip above the Swiss tabs: open the pairing screen for the
+/// next round, undo the newest round, or a status line when neither applies.
+class SwissRoundActions extends ConsumerWidget {
+  const SwissRoundActions({
+    super.key,
+    required this.tournamentId,
+    required this.divisionId,
+    required this.stageId,
+    required this.matches,
+    required this.totalRounds,
+    required this.onOpenPairing,
+  });
+
+  final String tournamentId;
+  final String divisionId;
+  final String stageId;
+  final List<MatchModel> matches;
+  final int totalRounds;
+
+  /// Called with `(stageId, nextRound, totalRounds)`.
+  final void Function(String stageId, int round, int totalRounds)
+  onOpenPairing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final state = swissRoundState(matches, totalRounds);
+    if (state.currentRound == 0) return const SizedBox.shrink();
+
+    final nextRound = state.nextRound;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (nextRound != null)
+            TextButton(
+              key: const Key('swiss-next-round'),
+              onPressed: () => onOpenPairing(stageId, nextRound, totalRounds),
+              child: Text(l10n.swissActionGenerateNextRound(nextRound)),
+            )
+          else
+            Text(
+              state.roundComplete
+                  ? l10n.swissActionAllRoundsDone(totalRounds)
+                  : l10n.swissActionRoundInProgress(state.currentRound),
+              key: const Key('swiss-round-status'),
+              style: TextStyle(color: context.colors.textSecondary),
+            ),
+          if (state.canUndo)
+            TextButton(
+              key: const Key('swiss-undo-round'),
+              onPressed: () => _undo(context, ref, state.currentRound),
+              child: Text(l10n.swissActionUndoRound(state.currentRound)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _undo(BuildContext context, WidgetRef ref, int round) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        content: Text(l10n.swissActionUndoRound(round)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: Text(l10n.swissPairingCancel),
+          ),
+          TextButton(
+            key: const Key('swiss-undo-round-confirm'),
+            onPressed: () => Navigator.pop(dialog, true),
+            child: Text(l10n.swissActionUndoRound(round)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    String message;
+    try {
+      await ref
+          .read(tournamentRepositoryProvider)
+          .swissUndoRound(
+            tournamentId,
+            round,
+            divisionId: divisionId,
+            stageId: stageId,
+          );
+      ref.invalidate(
+        bracketMatchesWithDivisionProvider((
+          tournamentId: tournamentId,
+          divisionId: divisionId,
+        )),
+      );
+      ref.invalidate(
+        swissStageProvider((tournamentId: tournamentId, divisionId: divisionId)),
+      );
+      message = l10n.swissPairingUndone(round);
+    } on SwissApiException catch (error) {
+      message = swissApiErrorText(
+        l10n,
+        error.code ?? (error.status == null ? 'NETWORK' : 'UNKNOWN'),
+      );
+    } catch (_) {
+      message = l10n.swissApiErrorUnknown;
+    }
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 }

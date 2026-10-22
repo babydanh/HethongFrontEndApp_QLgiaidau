@@ -19,6 +19,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/group_stage_assignment_screen.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
@@ -328,6 +329,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
               ),
               GoRoute(
+                path: 'swiss-pairing/:divisionId',
+                builder: _swissPairingBuilder,
+              ),
+              GoRoute(
                 path: 'tokens',
                 builder: (context, state) {
                   final id = state.pathParameters['id']!;
@@ -497,6 +502,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               tournamentId: state.pathParameters['id']!,
               divisionId: state.pathParameters['divisionId']!,
             ),
+          ),
+          GoRoute(
+            path: 'swiss-pairing/:divisionId',
+            builder: _swissPairingBuilder,
           ),
         ],
       ),
@@ -1265,4 +1274,17 @@ class _ClubChatRouteWrapperState extends ConsumerState<_ClubChatRouteWrapper> {
       communityId: widget.communityId,
     );
   }
+}
+
+/// Shared by the organizer and admin `swiss-pairing/:divisionId` routes.
+/// Query: `stageId`, `round` (round being paired), `total` (total rounds).
+Widget _swissPairingBuilder(BuildContext context, GoRouterState state) {
+  final query = state.uri.queryParameters;
+  return SwissPairingScreen(
+    tournamentId: state.pathParameters['id']!,
+    divisionId: state.pathParameters['divisionId']!,
+    stageId: query['stageId'],
+    roundNumber: int.tryParse(query['round'] ?? '') ?? 1,
+    totalRounds: int.tryParse(query['total'] ?? '') ?? 1,
+  );
 }
