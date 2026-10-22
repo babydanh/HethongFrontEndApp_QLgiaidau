@@ -1,6 +1,6 @@
 {
   "@@locale": "vi",
-  "socialPending": "Chờ duyệt",
+  "scorePanel_tournamentNotStarted": "Giải đấu chưa khai mạc nên chưa thể cập nhật tỉ số.",
   "socialCancelRequestTitle": "Hủy yêu cầu tham gia?",
   "socialKeepRequest": "Vẫn tham gia",
   "socialConfirmCancelRequest": "Xác nhận",

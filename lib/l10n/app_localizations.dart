@@ -98,11 +98,11 @@ abstract class AppLocalizations {
     Locale('vi'),
   ];
 
-  /// No description provided for @socialPending.
+  /// No description provided for @scorePanel_tournamentNotStarted.
   ///
   /// In vi, this message translates to:
-  /// **'Chờ duyệt'**
-  String get socialPending;
+  /// **'Giải đấu chưa khai mạc nên chưa thể cập nhật tỉ số.'**
+  String get scorePanel_tournamentNotStarted;
 
   /// No description provided for @socialCancelRequestTitle.
   ///

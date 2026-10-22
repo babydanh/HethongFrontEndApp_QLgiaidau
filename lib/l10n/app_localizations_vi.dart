@@ -9,7 +9,8 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
-  String get socialPending => 'Chờ duyệt';
+  String get scorePanel_tournamentNotStarted =>
+      'Giải đấu chưa khai mạc nên chưa thể cập nhật tỉ số.';
 
   @override
   String get socialCancelRequestTitle => 'Hủy yêu cầu tham gia?';

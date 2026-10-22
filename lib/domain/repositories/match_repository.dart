@@ -5,6 +5,10 @@ import 'package:app_quanly_giaidau/domain/entities/match_schedule.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
+class TournamentNotStartedException implements Exception {
+  const TournamentNotStartedException();
+}
+
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);
   Stream<List<MatchModel>> watchByTournament(

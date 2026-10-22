@@ -9,7 +9,8 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get socialPending => 'Pending approval';
+  String get scorePanel_tournamentNotStarted =>
+      'Scoring is unavailable until the tournament has started.';
 
   @override
   String get socialCancelRequestTitle => 'Cancel your join request?';

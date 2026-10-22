@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "socialPending": "Pending approval",
+  "scorePanel_tournamentNotStarted": "Scoring is unavailable until the tournament has started.",
   "socialCancelRequestTitle": "Cancel your join request?",
   "socialKeepRequest": "Keep request",
   "socialConfirmCancelRequest": "Confirm",

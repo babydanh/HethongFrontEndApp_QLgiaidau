@@ -1242,6 +1242,11 @@ class ApiMatchRepository implements IMatchRepository {
       }
     } on DioException catch (error) {
       final body = error.response?.data;
+      if (tournamentId.isNotEmpty &&
+          body is Map &&
+          body['code'] == 'TOURNAMENT_NOT_STARTED') {
+        throw const TournamentNotStartedException();
+      }
       final rawMessage = body is Map ? body['message'] : null;
       final message = rawMessage is List
           ? rawMessage
