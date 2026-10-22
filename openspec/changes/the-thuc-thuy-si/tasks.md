@@ -83,6 +83,6 @@ Mọi đường dẫn tính từ gốc repo App. Số dòng là số dòng tại
 
 ## 6. Kiểm cuối
 
-- [ ] 6.1 Kiểm cuối. Tiêu chí: `flutter analyze --no-pub lib/core lib/data lib/domain lib/features/bracket lib/features/tournament lib/features/register lib/features/home lib/providers lib/l10n/app_localizations_extensions.dart` → không lỗi mới so với `main`; `flutter test --no-pub` cho TẤT CẢ file test mới và đã sửa ở task 1–5 → exit 0 (không phụ thuộc `.env`); `flutter gen-l10n` → exit 0 và `git status` không có khác biệt ngoài file đã định; E2E/integration (nếu cần) chạy trên cloud theo skill `cloud-test-runner`, KHÔNG cục bộ
+- [x] 6.1 Kiểm cuối. Tiêu chí: `flutter analyze --no-pub lib/core lib/data lib/domain lib/features/bracket lib/features/tournament lib/features/register lib/features/home lib/providers lib/l10n/app_localizations_extensions.dart` → không lỗi mới so với `main`; `flutter test --no-pub` cho TẤT CẢ file test mới và đã sửa ở task 1–5 → exit 0 (không phụ thuộc `.env`); `flutter gen-l10n` → exit 0 và `git status` không có khác biệt ngoài file đã định; E2E/integration (nếu cần) chạy trên cloud theo skill `cloud-test-runner`, KHÔNG cục bộ
   - Files: không sửa mã
   - Phụ thuộc: sau mọi task
