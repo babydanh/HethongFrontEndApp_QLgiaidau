@@ -218,31 +218,8 @@ class _TournamentManagementDivisionsSectionState
   Future<void> _reopenWithDeadline(Map<String, dynamic> division) async {
     final divisionId = _divisionId(division);
     if (divisionId.isEmpty) return;
-    final l10n = AppLocalizations.of(context)!;
-    final now = DateTime.now();
-    final date = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 730)),
-    );
-    if (date == null || !mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 23, minute: 59),
-    );
-    if (time == null || !mounted) return;
-    final deadline = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-    if (!deadline.isAfter(DateTime.now())) {
-      _showMessage(l10n.tournamentManagementDivisionReopenDeadlineFuture);
-      return;
-    }
+    final deadline = await pickTournamentManagementDeadline(context);
+    if (deadline == null || !mounted) return;
     await _mutate(
       () => ref
           .read(tournamentManagementRepositoryProvider)

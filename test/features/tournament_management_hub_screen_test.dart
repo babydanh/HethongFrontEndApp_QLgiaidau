@@ -41,6 +41,7 @@ Tournament _tournament(
   String? logoUrl,
   String description = '',
   DateTime? startDate,
+  DateTime? registrationEndDate,
   List<Map<String, dynamic>> divisions = const [],
 }) => Tournament.fromJson({
   'name': name,
@@ -58,6 +59,8 @@ Tournament _tournament(
   if (superLite)
     'tournamentConfig': {'mode': 'LITE', 'hideAdvancedSettings': true},
   if (startDate != null) 'startDate': startDate.toIso8601String(),
+  if (registrationEndDate != null)
+    'registrationEndDate': registrationEndDate.toIso8601String(),
   if (divisions.isNotEmpty) 'divisions': divisions,
   'createdAt': '2026-01-01T00:00:00Z',
   'updatedAt': '2026-01-01T00:00:00Z',
@@ -205,7 +208,10 @@ class _LifecycleRepository extends _EmptyTournamentManagementRepository
   }
 
   @override
-  Future<Map<String, dynamic>> reopenRegistration(String id) async {
+  Future<Map<String, dynamic>> reopenRegistration(
+    String id, {
+    DateTime? registrationEndDate,
+  }) async {
     calls.add('reopen-registration');
     return const {};
   }
@@ -1289,6 +1295,37 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(repository.calls, ['close-registration', 'start']);
+    },
+  );
+  testWidgets(
+    'TC-APP-LIFECYCLE-08: reopening after the deadline passed asks for a new deadline first',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      tester.view.devicePixelRatio = 1;
+      final repository = _LifecycleRepository();
+      await tester.pumpWidget(
+        _app(
+          _tournament(
+            'REGISTRATION_CLOSED',
+            registrationEndDate: DateTime.utc(2020, 1, 1),
+          ),
+          managementRepository: repository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      await tester.tap(find.text(l10n.tournamentManagementReopenRegistration));
+      await tester.pumpAndSettle();
+
+      // Server từ chối mở lại khi hạn cũ đã qua: phải chọn hạn mới trước.
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(repository.calls, isEmpty);
     },
   );
 

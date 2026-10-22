@@ -135,7 +135,14 @@ abstract interface class TournamentManagementRepository {
   });
 
   Future<Map<String, dynamic>> publishTournament(String id);
-  Future<Map<String, dynamic>> reopenRegistration(String id);
+
+  /// Hạn cấp giải đã qua thì phải gửi [registrationEndDate] mới (server từ chối
+  /// nếu thiếu); server tự dời ngày giải khi hạn mới vượt ngày bắt đầu.
+  Future<Map<String, dynamic>> reopenRegistration(
+    String id, {
+    DateTime? registrationEndDate,
+  });
+
   /// Đóng đăng ký mọi nội dung (không tạo sơ đồ). Nội dung riêng thì khoá qua
   /// `updateDivisionConfig` với `isRegistrationLocked`.
   Future<Map<String, dynamic>> closeRegistration(String id);

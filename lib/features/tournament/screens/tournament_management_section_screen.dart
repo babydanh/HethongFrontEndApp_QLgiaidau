@@ -885,12 +885,7 @@ class _TournamentLifecycleCardState
       AppConstants.statusUpcoming => _lifecycleButton(
         l10n.tournamentManagementOpenRegistrationNow,
         Icons.lock_open_rounded,
-        () => _runAction(
-          () => ref
-              .read(tournamentManagementRepositoryProvider)
-              .reopenRegistration(id),
-          l10n.tournamentManagementOpenRegistrationConfirm,
-        ),
+        () => _reopen(id, l10n.tournamentManagementOpenRegistrationConfirm),
       ),
       AppConstants.statusRegistration when !hasBracket => _lifecycleButton(
         l10n.tournamentManagementCloseRegistration,
@@ -939,12 +934,7 @@ class _TournamentLifecycleCardState
             TextButton(
               onPressed: _isActing
                   ? null
-                  : () => _runAction(
-                      () => ref
-                          .read(tournamentManagementRepositoryProvider)
-                          .reopenRegistration(id),
-                      l10n.tournamentManagementReopenConfirm,
-                    ),
+                  : () => _reopen(id, l10n.tournamentManagementReopenConfirm),
               child: Text(l10n.tournamentManagementReopenRegistration),
             ),
           if (_isActing) ...[
@@ -962,6 +952,23 @@ class _TournamentLifecycleCardState
           ),
         ],
       ),
+    );
+  }
+
+  /// Mở (lại) đăng ký cả giải. Hạn cấp giải đã qua thì hỏi hạn mới trước,
+  /// vì server từ chối mở lại khi thiếu hạn mới.
+  Future<void> _reopen(String id, String confirmation) async {
+    final currentDeadline = widget.tournament.registrationEndDate;
+    DateTime? newDeadline;
+    if (currentDeadline != null && !currentDeadline.isAfter(DateTime.now())) {
+      newDeadline = await pickTournamentManagementDeadline(context);
+      if (newDeadline == null || !mounted) return;
+    }
+    await _runAction(
+      () => ref
+          .read(tournamentManagementRepositoryProvider)
+          .reopenRegistration(id, registrationEndDate: newDeadline),
+      confirmation,
     );
   }
 

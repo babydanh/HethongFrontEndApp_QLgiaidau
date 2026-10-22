@@ -1155,6 +1155,23 @@ void main() {
         '/tournaments/$tournamentId/regenerate-invite',
       ]);
     });
+
+    test('reopen sends a new deadline only when one is given', () async {
+      backend.onPost('/tournaments/$tournamentId/reopen-registration', {
+        'status': 'REGISTRATION_OPEN',
+      });
+
+      await repository.reopenRegistration(tournamentId);
+      await repository.reopenRegistration(
+        tournamentId,
+        registrationEndDate: DateTime.utc(2027, 3, 5, 11),
+      );
+
+      expect(backend.requests.map((r) => r.data), [
+        <String, dynamic>{},
+        {'registrationEndDate': '2027-03-05T11:00:00.000Z'},
+      ]);
+    });
   });
   group('response envelope', () {
     test('a body without the data envelope fails the read', () async {

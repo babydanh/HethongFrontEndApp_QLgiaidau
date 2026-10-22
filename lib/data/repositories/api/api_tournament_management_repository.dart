@@ -517,8 +517,18 @@ class ApiTournamentManagementRepository
       _map(await _dio.post('/tournaments/$id/publish'));
 
   @override
-  Future<Map<String, dynamic>> reopenRegistration(String id) async =>
-      _map(await _dio.post('/tournaments/$id/reopen-registration'));
+  Future<Map<String, dynamic>> reopenRegistration(
+    String id, {
+    DateTime? registrationEndDate,
+  }) async => _map(
+    await _dio.post(
+      '/tournaments/$id/reopen-registration',
+      data: {
+        if (registrationEndDate != null)
+          'registrationEndDate': registrationEndDate.toUtc().toIso8601String(),
+      },
+    ),
+  );
 
   @override
   Future<Map<String, dynamic>> closeRegistration(String id) async =>

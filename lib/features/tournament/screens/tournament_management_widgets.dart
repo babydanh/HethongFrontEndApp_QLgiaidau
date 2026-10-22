@@ -211,6 +211,42 @@ Future<bool> confirmTournamentManagementAction(
   return result == true;
 }
 
+/// Chọn hạn đăng ký mới (ngày rồi giờ). Trả null khi huỷ hoặc hạn không ở
+/// tương lai (đã báo cho người dùng); server từ chối mở lại khi hạn đã qua.
+Future<DateTime?> pickTournamentManagementDeadline(BuildContext context) async {
+  final now = DateTime.now();
+  final date = await showDatePicker(
+    context: context,
+    initialDate: now,
+    firstDate: now,
+    lastDate: now.add(const Duration(days: 730)),
+  );
+  if (date == null || !context.mounted) return null;
+  final time = await showTimePicker(
+    context: context,
+    initialTime: const TimeOfDay(hour: 23, minute: 59),
+  );
+  if (time == null || !context.mounted) return null;
+  final deadline = DateTime(
+    date.year,
+    date.month,
+    date.day,
+    time.hour,
+    time.minute,
+  );
+  if (deadline.isAfter(DateTime.now())) return deadline;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        AppLocalizations.of(
+          context,
+        )!.tournamentManagementDivisionReopenDeadlineFuture,
+      ),
+    ),
+  );
+  return null;
+}
+
 String tournamentManagementRecordName(Map<String, dynamic> record) =>
     (record['name'] ?? record['displayName'] ?? record['venueName'] ?? '')
         .toString();

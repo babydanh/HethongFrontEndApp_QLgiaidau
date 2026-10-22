@@ -15,6 +15,10 @@ App SHALL hiển thị đúng một nút vòng đời theo việc tiếp theo nh
 - WHEN giải REGISTRATION_OPEN chưa có trận và BTC xác nhận "Chốt đăng ký"
 - THEN App gửi POST `/tournaments/:id/close-registration` và không hiện nút khai mạc
 
+#### Scenario: Mở lại khi hạn giải đã qua
+- WHEN BTC bấm "Mở đăng ký ngay" hoặc "Mở lại đăng ký" mà hạn đăng ký cấp giải đã qua
+- THEN App hỏi hạn mới (phải ở tương lai) rồi mới gửi POST `/tournaments/:id/reopen-registration` kèm `registrationEndDate`; huỷ chọn hạn thì không gửi gì
+
 #### Scenario: Cảnh báo sơ đồ chưa có
 - WHEN khai mạc giải còn nội dung chưa có sơ đồ
 - THEN hộp xác nhận cảnh báo về nội dung đó nhưng vẫn cho phép BTC khai mạc
