@@ -28352,6 +28352,12 @@ abstract class AppLocalizations {
   /// **'Đang tải bản ghép cặp…'**
   String get swissPairingLoading;
 
+  /// No description provided for @swissPairingRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get swissPairingRetry;
+
   /// Số đội chưa được xếp vào vị trí.
   ///
   /// In vi, this message translates to:
@@ -28465,6 +28471,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Giải đấu này không dùng thể thức Thụy Sĩ'**
   String get swissApiErrorNotSwiss;
+
+  /// No description provided for @swissApiErrorNetwork.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kết nối được. Vui lòng thử lại'**
+  String get swissApiErrorNetwork;
+
+  /// No description provided for @swissApiErrorUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có lỗi xảy ra. Vui lòng thử lại'**
+  String get swissApiErrorUnknown;
 
   /// Hành động tạo vòng kế tiếp.
   ///

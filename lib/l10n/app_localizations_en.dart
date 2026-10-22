@@ -15696,6 +15696,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get swissPairingLoading => 'Loading pairings…';
 
   @override
+  String get swissPairingRetry => 'Retry';
+
+  @override
   String swissPairingIncompleteHint(int count) {
     return '$count teams still need a place';
   }
@@ -15767,6 +15770,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get swissApiErrorNotSwiss =>
       'This tournament does not use the Swiss format';
+
+  @override
+  String get swissApiErrorNetwork => 'Could not connect. Please try again';
+
+  @override
+  String get swissApiErrorUnknown => 'Something went wrong. Please try again';
 
   @override
   String swissActionGenerateNextRound(int number) {

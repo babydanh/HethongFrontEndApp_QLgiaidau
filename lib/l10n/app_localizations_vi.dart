@@ -15644,6 +15644,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get swissPairingLoading => 'Đang tải bản ghép cặp…';
 
   @override
+  String get swissPairingRetry => 'Thử lại';
+
+  @override
   String swissPairingIncompleteHint(int count) {
     return 'Còn $count đội chưa có chỗ';
   }
@@ -15714,6 +15717,12 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get swissApiErrorNotSwiss =>
       'Giải đấu này không dùng thể thức Thụy Sĩ';
+
+  @override
+  String get swissApiErrorNetwork => 'Không kết nối được. Vui lòng thử lại';
+
+  @override
+  String get swissApiErrorUnknown => 'Có lỗi xảy ra. Vui lòng thử lại';
 
   @override
   String swissActionGenerateNextRound(int number) {
