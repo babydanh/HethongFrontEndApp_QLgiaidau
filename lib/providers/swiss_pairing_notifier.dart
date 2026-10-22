@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_pairing_draft.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _validateDebounce = Duration(milliseconds: 250);
@@ -122,8 +123,12 @@ class SwissPairingNotifier extends Notifier<SwissPairingState> {
   }
 
   /// Fetches the machine proposal and replaces the draft with it. A failure
-  /// keeps whatever draft is already on screen.
-  Future<void> reload({String? keepErrorKey}) async {
+  /// keeps whatever draft is already on screen, unless [dropOnFailure]: then
+  /// the (stale) draft goes too and [keepErrorKey] stays as the shown reason.
+  Future<void> reload({
+    String? keepErrorKey,
+    bool dropOnFailure = false,
+  }) async {
     final generation = _bump();
     state = state.copyWith(loading: true, clearError: true);
     try {
@@ -146,6 +151,11 @@ class SwissPairingNotifier extends Notifier<SwissPairingState> {
       );
     } catch (error) {
       if (!ref.mounted || generation != _generation) return;
+      if (dropOnFailure) {
+        _history = null;
+        state = SwissPairingState(errorKey: keepErrorKey ?? _keyOf(error));
+        return;
+      }
       state = state.copyWith(loading: false, errorKey: _keyOf(error));
     }
   }
@@ -193,6 +203,7 @@ class SwissPairingNotifier extends Notifier<SwissPairingState> {
           );
       if (!ref.mounted) return true;
       state = state.copyWith(submitting: false);
+      _refreshBracket();
       return true;
     } on SwissApiException catch (error) {
       if (!ref.mounted) return false;
@@ -211,7 +222,8 @@ class SwissPairingNotifier extends Notifier<SwissPairingState> {
     if (error.code == 'SWISS_ROUND_EXISTS') {
       // Someone else created the round: drop the stale draft, show the new one.
       state = state.copyWith(submitting: false);
-      await reload(keepErrorKey: key);
+      _refreshBracket();
+      await reload(keepErrorKey: key, dropOnFailure: true);
       return;
     }
     state = state.copyWith(
@@ -220,8 +232,30 @@ class SwissPairingNotifier extends Notifier<SwissPairingState> {
       warnings: error.code == 'SWISS_WARNINGS_UNCONFIRMED'
           ? error.warnings
           : null,
+      errors: error.code == 'SWISS_INVALID_PAIRING' ? error.errors : null,
       valid: error.code == 'SWISS_INVALID_PAIRING' ? false : null,
     );
+  }
+
+  /// Re-runs `validate` for the current draft right away (no debounce), e.g.
+  /// after it failed on the network.
+  void revalidate() {
+    final draft = state.draft;
+    if (draft == null || state.submitting) return;
+    _debounce?.cancel();
+    final generation = _bump();
+    state = state.copyWith(valid: false, errors: const [], clearError: true);
+    _validate(draft, generation);
+  }
+
+  /// The bracket and the Swiss stage changed on the server: reload both.
+  void _refreshBracket() {
+    final params = (
+      tournamentId: args.tournamentId,
+      divisionId: args.divisionId,
+    );
+    ref.invalidate(bracketMatchesWithDivisionProvider(params));
+    ref.invalidate(swissStageProvider(params));
   }
 
   void _draftChanged(SwissDraft draft) {

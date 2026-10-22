@@ -15772,6 +15772,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This tournament does not use the Swiss format';
 
   @override
+  String get swissApiErrorTournamentClosed =>
+      'The tournament has ended or been cancelled; rounds cannot be changed';
+
+  @override
   String get swissApiErrorNetwork => 'Could not connect. Please try again';
 
   @override

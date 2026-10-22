@@ -15719,6 +15719,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Giải đấu này không dùng thể thức Thụy Sĩ';
 
   @override
+  String get swissApiErrorTournamentClosed =>
+      'Giải đã kết thúc hoặc đã hủy, không thể đổi vòng';
+
+  @override
   String get swissApiErrorNetwork => 'Không kết nối được. Vui lòng thử lại';
 
   @override

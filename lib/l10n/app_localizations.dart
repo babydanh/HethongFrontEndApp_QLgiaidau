@@ -28472,6 +28472,12 @@ abstract class AppLocalizations {
   /// **'Giải đấu này không dùng thể thức Thụy Sĩ'**
   String get swissApiErrorNotSwiss;
 
+  /// No description provided for @swissApiErrorTournamentClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đã kết thúc hoặc đã hủy, không thể đổi vòng'**
+  String get swissApiErrorTournamentClosed;
+
   /// No description provided for @swissApiErrorNetwork.
   ///
   /// In vi, this message translates to:

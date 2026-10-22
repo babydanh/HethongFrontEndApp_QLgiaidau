@@ -6268,6 +6268,7 @@
   "swissApiErrorRoundStarted": "Không thể hoàn tác vì vòng này đã bắt đầu",
   "swissApiErrorUndoRoundOne": "Không thể hoàn tác vòng đầu tiên",
   "swissApiErrorNotSwiss": "Giải đấu này không dùng thể thức Thụy Sĩ",
+  "swissApiErrorTournamentClosed": "Giải đã kết thúc hoặc đã hủy, không thể đổi vòng",
   "swissApiErrorNetwork": "Không kết nối được. Vui lòng thử lại",
   "swissApiErrorUnknown": "Có lỗi xảy ra. Vui lòng thử lại",
   "swissActionGenerateNextRound": "Ghép cặp vòng {number}",

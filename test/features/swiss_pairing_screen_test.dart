@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
@@ -217,7 +219,7 @@ void main() {
     await tester.tap(find.byKey(const Key('swiss-move-pool')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Còn 1 đội chưa có chỗ'), findsOneWidget);
+    expect(find.text('Còn 2 đội chưa có chỗ'), findsOneWidget);
     expect(_slotText('swiss-slot-1-2', 'Thả vào đây'), findsOneWidget);
     expect(
       tester
@@ -303,5 +305,111 @@ void main() {
     expect(find.byKey(const Key('swiss-retry')), findsOneWidget);
     expect(find.byKey(const Key('swiss-pair-row-0')), findsNothing);
     expect(find.byKey(const Key('swiss-confirm')), findsNothing);
+  });
+
+  testWidgets(
+    'a pair left with one side and an empty pool counts as 1 unplaced',
+    (tester) async {
+      await _pump(tester);
+
+      await tester.tap(find.byKey(const Key('swiss-chip-b1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('swiss-move-sitout')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Còn 1 đội chưa có chỗ'), findsOneWidget);
+    },
+  );
+
+  testWidgets('SWISS_TOURNAMENT_CLOSED has its own message', (tester) async {
+    when(
+      () => _repo.swissPreview(
+        any(),
+        divisionId: any(named: 'divisionId'),
+        stageId: any(named: 'stageId'),
+      ),
+    ).thenThrow(
+      const SwissApiException(status: 409, code: 'SWISS_TOURNAMENT_CLOSED'),
+    );
+    await _pump(tester);
+
+    expect(
+      find.text('Giải đã kết thúc hoặc đã hủy, không thể đổi vòng'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('an unknown error code falls back to the generic message', (
+    tester,
+  ) async {
+    when(
+      () => _repo.swissPreview(
+        any(),
+        divisionId: any(named: 'divisionId'),
+        stageId: any(named: 'stageId'),
+      ),
+    ).thenThrow(const SwissApiException(status: 500, code: 'SOMETHING_NEW'));
+    await _pump(tester);
+
+    expect(find.text('Có lỗi xảy ra. Vui lòng thử lại'), findsOneWidget);
+  });
+
+  testWidgets('a validate network failure offers a retry that re-validates', (
+    tester,
+  ) async {
+    var calls = 0;
+    when(() => _repo.swissValidate(any(), any())).thenAnswer((_) async {
+      if (calls++ == 0) throw const SwissApiException();
+      return const SwissValidateResult(valid: true, errors: [], warnings: []);
+    });
+    await _pump(tester);
+    await tester.tap(find.byKey(const Key('swiss-chip-a0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('swiss-swap-a1')));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const Key('swiss-revalidate')), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('swiss-confirm')))
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.byKey(const Key('swiss-revalidate')));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byKey(const Key('swiss-revalidate')), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('swiss-confirm')))
+          .onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('the screen cannot be popped while the round is being created', (
+    tester,
+  ) async {
+    final gate = Completer<SwissNextRoundResult>();
+    when(
+      () => _repo.swissNextRound(
+        any(),
+        any(),
+        confirmWarnings: any(named: 'confirmWarnings'),
+      ),
+    ).thenAnswer((_) => gate.future);
+    await _pump(tester);
+
+    await tester.tap(find.byKey(const Key('swiss-confirm')));
+    await tester.pump();
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    final handled = await navigator.maybePop();
+    await tester.pump();
+
+    expect(handled, isTrue);
+    expect(find.byKey(const Key('swiss-pairing-screen')), findsOneWidget);
   });
 }

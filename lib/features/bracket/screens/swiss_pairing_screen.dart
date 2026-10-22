@@ -3,7 +3,6 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_pairing_draft.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/swiss_pairing_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +17,7 @@ String swissApiErrorText(AppLocalizations l10n, String key) => switch (key) {
   'SWISS_ROUND_STARTED' => l10n.swissApiErrorRoundStarted,
   'SWISS_UNDO_ROUND_ONE' => l10n.swissApiErrorUndoRoundOne,
   'SWISS_NOT_SWISS' => l10n.swissApiErrorNotSwiss,
+  'SWISS_TOURNAMENT_CLOSED' => l10n.swissApiErrorTournamentClosed,
   swissErrorNetwork => l10n.swissApiErrorNetwork,
   _ => l10n.swissApiErrorUnknown,
 };
@@ -72,32 +72,38 @@ class SwissPairingScreen extends ConsumerWidget {
     final round = preview?.roundNumber ?? roundNumber;
     final ready = preview != null && draft != null;
 
-    return Scaffold(
-      key: const Key('swiss-pairing-screen'),
-      appBar: AppBar(title: Text(l10n.swissPairingTitle(round))),
-      body: ready
-          ? _Board(
-              ctx: _Ctx(preview, draft, state, notifier),
-              round: round,
-              totalRounds: preview.totalRounds > 0
-                  ? preview.totalRounds
-                  : totalRounds,
-            )
-          : _Placeholder(state: state, onRetry: notifier.reload),
-      bottomNavigationBar: ready
-          ? _ConfirmBar(
-              state: state,
-              draft: draft,
-              round: round,
-              onConfirm: () => _confirm(context, ref, notifier, state, round),
-            )
-          : null,
+    // Leaving mid-request would orphan the answer (a created round).
+    return PopScope(
+      canPop: !state.submitting,
+      child: Scaffold(
+        key: const Key('swiss-pairing-screen'),
+        appBar: AppBar(title: Text(l10n.swissPairingTitle(round))),
+        body: ready
+            ? _Board(
+                ctx: _Ctx(preview, draft, state, notifier),
+                round: round,
+                totalRounds: preview.totalRounds > 0
+                    ? preview.totalRounds
+                    : totalRounds,
+              )
+            : _Placeholder(state: state, onRetry: notifier.reload),
+        bottomNavigationBar: ready
+            ? _ConfirmBar(
+                state: state,
+                draft: draft,
+                round: round,
+                onConfirm: () => _confirm(context, notifier, state, round),
+                onRetryValidate: notifier.revalidate,
+              )
+            : null,
+      ),
     );
   }
 
+  /// The notifier refreshes the bracket providers itself; this only reports
+  /// the result and leaves the screen (if it is still there).
   Future<void> _confirm(
     BuildContext context,
-    WidgetRef ref,
     SwissPairingNotifier notifier,
     SwissPairingState state,
     int round,
@@ -109,19 +115,10 @@ class SwissPairingScreen extends ConsumerWidget {
       confirmWarnings: state.warnings.isNotEmpty,
     );
     if (!created) return;
-    ref.invalidate(
-      bracketMatchesWithDivisionProvider((
-        tournamentId: tournamentId,
-        divisionId: divisionId,
-      )),
-    );
-    ref.invalidate(
-      swissStageProvider((tournamentId: tournamentId, divisionId: divisionId)),
-    );
     messenger.showSnackBar(
       SnackBar(content: Text(l10n.swissPairingCreated(round))),
     );
-    navigator.maybePop();
+    if (context.mounted) navigator.maybePop();
   }
 }
 
@@ -694,21 +691,22 @@ class _ConfirmBar extends StatelessWidget {
     required this.draft,
     required this.round,
     required this.onConfirm,
+    required this.onRetryValidate,
   });
 
   final SwissPairingState state;
   final SwissDraft draft;
   final int round;
   final VoidCallback onConfirm;
+  final VoidCallback onRetryValidate;
 
+  /// Teams waiting in "Chưa ghép" plus pairs that still lack one side.
   int get _unplaced {
-    if (draft.poolIds.isNotEmpty) return draft.poolIds.length;
-    var vacant = 0;
+    var halfPairs = 0;
     for (final pair in draft.pairs) {
-      final filled = (pair.p1 == null ? 0 : 1) + (pair.p2 == null ? 0 : 1);
-      if (filled == 1) vacant++;
+      if ((pair.p1 == null) != (pair.p2 == null)) halfPairs++;
     }
-    return vacant;
+    return draft.poolIds.length + halfPairs;
   }
 
   @override
@@ -744,6 +742,16 @@ class _ConfirmBar extends StatelessWidget {
                   Text(
                     swissApiErrorText(l10n, errorKey),
                     style: TextStyle(color: colors.error),
+                  ),
+                // A failed validate is not confirmable until it is retried.
+                if (errorKey == swissErrorNetwork && !state.valid)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      key: const Key('swiss-revalidate'),
+                      onPressed: onRetryValidate,
+                      child: Text(l10n.swissPairingRetry),
+                    ),
                   ),
                 const SizedBox(height: AppSpacing.sm),
                 FilledButton(

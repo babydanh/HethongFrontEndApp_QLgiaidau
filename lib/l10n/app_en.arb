@@ -6255,6 +6255,7 @@
   "swissApiErrorRoundStarted": "This round cannot be undone because it has started",
   "swissApiErrorUndoRoundOne": "The first round cannot be undone",
   "swissApiErrorNotSwiss": "This tournament does not use the Swiss format",
+  "swissApiErrorTournamentClosed": "The tournament has ended or been cancelled; rounds cannot be changed",
   "swissApiErrorNetwork": "Could not connect. Please try again",
   "swissApiErrorUnknown": "Something went wrong. Please try again",
   "swissActionGenerateNextRound": "Pair round {number}",

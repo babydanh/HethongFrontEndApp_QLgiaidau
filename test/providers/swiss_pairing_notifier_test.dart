@@ -4,6 +4,8 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_pairing_draft.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/swiss_pairing_notifier.dart';
 // ignore: depend_on_referenced_packages -- transitive via flutter_test; no new package
 import 'package:fake_async/fake_async.dart';
@@ -77,13 +79,31 @@ void main() {
     );
   });
 
+  var bracketBuilds = 0;
+  var stageBuilds = 0;
+
   ProviderContainer makeContainer() {
+    bracketBuilds = 0;
+    stageBuilds = 0;
     final container = ProviderContainer(
-      overrides: [tournamentRepositoryProvider.overrideWithValue(repo)],
+      overrides: [
+        tournamentRepositoryProvider.overrideWithValue(repo),
+        bracketMatchesWithDivisionProvider.overrideWith((ref, arg) {
+          bracketBuilds++;
+          return Stream<List<MatchModel>>.value(const []);
+        }),
+        swissStageProvider.overrideWith((ref, arg) {
+          stageBuilds++;
+          return Stream<SwissStageInfo?>.value(null);
+        }),
+      ],
     );
     addTearDown(container.dispose);
-    // autoDispose provider: keep it alive for the whole test.
+    // autoDispose providers: keep them alive for the whole test.
     container.listen(swissPairingProvider(_args), (_, _) {});
+    final params = (tournamentId: 't1', divisionId: 'd1');
+    container.listen(bracketMatchesWithDivisionProvider(params), (_, _) {});
+    container.listen(swissStageProvider(params), (_, _) {});
     return container;
   }
 
@@ -464,6 +484,125 @@ void main() {
           stageId: any(named: 'stageId'),
         ),
       ).called(2);
+    });
+  });
+
+  test('a created round refreshes the bracket and the Swiss stage', () {
+    fakeAsync((async) {
+      final c = makeContainer();
+      async.flushMicrotasks();
+      expect([bracketBuilds, stageBuilds], [1, 1]);
+
+      notifier(c).confirm();
+      async.flushMicrotasks();
+
+      c.pump(); // let invalidated providers rebuild
+      async.elapse(const Duration(milliseconds: 10));
+      async.flushMicrotasks();
+      expect([bracketBuilds, stageBuilds], [2, 2]);
+    });
+  });
+
+  test(
+    'ROUND_EXISTS then a failing reload drops the draft, keeps the reason',
+    () {
+      var previews = 0;
+      when(
+        () => repo.swissPreview(
+          any(),
+          divisionId: any(named: 'divisionId'),
+          stageId: any(named: 'stageId'),
+        ),
+      ).thenAnswer((_) async {
+        if (previews++ == 0) return _preview();
+        throw const SwissApiException(
+          status: 409,
+          code: 'SWISS_ROUND_INCOMPLETE',
+        );
+      });
+      when(
+        () => repo.swissNextRound(
+          any(),
+          any(),
+          confirmWarnings: any(named: 'confirmWarnings'),
+        ),
+      ).thenThrow(
+        const SwissApiException(status: 409, code: 'SWISS_ROUND_EXISTS'),
+      );
+
+      fakeAsync((async) {
+        final c = makeContainer();
+        async.flushMicrotasks();
+
+        notifier(c).confirm();
+        async.flushMicrotasks();
+
+        expect(read(c).preview, isNull);
+        expect(read(c).draft, isNull);
+        expect(read(c).errorKey, 'SWISS_ROUND_EXISTS');
+        expect(read(c).canConfirm, isFalse);
+        expect(read(c).loading, isFalse);
+        c.pump();
+        async.elapse(const Duration(milliseconds: 10));
+        async.flushMicrotasks();
+        expect([bracketBuilds, stageBuilds], [2, 2]);
+      });
+    },
+  );
+
+  test('a failed validate can be retried with revalidate()', () {
+    var calls = 0;
+    when(() => repo.swissValidate(any(), any())).thenAnswer((_) async {
+      if (calls++ == 0) throw const SwissApiException();
+      return _ok;
+    });
+    fakeAsync((async) {
+      final c = makeContainer();
+      async.flushMicrotasks();
+      final n = notifier(c);
+
+      n.move('b', const SwissPairSlot(1, 1));
+      async.elapse(const Duration(milliseconds: 300));
+      async.flushMicrotasks();
+      expect(read(c).valid, isFalse);
+      expect(read(c).errorKey, swissErrorNetwork);
+
+      n.revalidate();
+      async.flushMicrotasks();
+
+      expect(read(c).valid, isTrue);
+      expect(read(c).errorKey, isNull);
+      expect(read(c).canConfirm, isTrue);
+      verify(() => repo.swissValidate('t1', any())).called(2);
+    });
+  });
+
+  test('SWISS_INVALID_PAIRING details.errors reach the state', () {
+    when(
+      () => repo.swissNextRound(
+        any(),
+        any(),
+        confirmWarnings: any(named: 'confirmWarnings'),
+      ),
+    ).thenThrow(
+      const SwissApiException(
+        status: 400,
+        code: 'SWISS_INVALID_PAIRING',
+        errors: [
+          SwissError(code: 'DUPLICATE_PARTICIPANT', participantIds: ['a']),
+        ],
+      ),
+    );
+    fakeAsync((async) {
+      final c = makeContainer();
+      async.flushMicrotasks();
+
+      notifier(c).confirm();
+      async.flushMicrotasks();
+
+      expect(read(c).errorKey, 'SWISS_INVALID_PAIRING');
+      expect(read(c).errors.single.code, 'DUPLICATE_PARTICIPANT');
+      expect(read(c).valid, isFalse);
     });
   });
 }

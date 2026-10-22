@@ -1692,7 +1692,7 @@ class SwissRoundActions extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !context.mounted) return;
 
     String message;
     try {
@@ -1704,15 +1704,21 @@ class SwissRoundActions extends ConsumerWidget {
             divisionId: divisionId,
             stageId: stageId,
           );
-      ref.invalidate(
-        bracketMatchesWithDivisionProvider((
-          tournamentId: tournamentId,
-          divisionId: divisionId,
-        )),
-      );
-      ref.invalidate(
-        swissStageProvider((tournamentId: tournamentId, divisionId: divisionId)),
-      );
+      // The widget may be gone after the await; its ref is then unusable.
+      if (context.mounted) {
+        ref.invalidate(
+          bracketMatchesWithDivisionProvider((
+            tournamentId: tournamentId,
+            divisionId: divisionId,
+          )),
+        );
+        ref.invalidate(
+          swissStageProvider((
+            tournamentId: tournamentId,
+            divisionId: divisionId,
+          )),
+        );
+      }
       message = l10n.swissPairingUndone(round);
     } on SwissApiException catch (error) {
       message = swissApiErrorText(
