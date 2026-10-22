@@ -1117,7 +1117,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(completeRepository.completedIds, ['tournament-1']);
 
-      await tester.pumpWidget(_app(_tournament('COMPLETED')));
+      await tester.pumpWidget(
+        _app(
+          _tournament('COMPLETED'),
+          managementRepository: _LifecycleRepository(),
+        ),
+      );
       await tester.pumpAndSettle();
       await _openSettings(tester);
       final completedL10n = AppLocalizations.of(
