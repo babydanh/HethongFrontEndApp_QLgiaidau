@@ -71,3 +71,10 @@ So với lần trước: không đổi (đã so). Thêm 3 khóa l10n ngoài danh
 - Trang công khai `SwissBracketView` chỉ hiện top 8 xếp hạng ("thu gọn"); nếu cần đủ bảng thì đổi `_standingsLimit`.
 - Chưa xác minh payload `/bracket` có `groupName`; thiết kế không phụ thuộc vì ưu tiên `stageType == 'SWISS'`.
 - OpenSpec CLI `status`/`instructions apply` đã được thử nhưng không có JSON kết quả hiển thị trong runner; artifacts local đã đọc đầy đủ, plan không bị sửa.
+
+## Icon Swiss riêng
+- `BracketFormatIcons.swissSvg` (`lib/features/tournament/widgets/bracket_format_icons.dart`): lưới 24x24, 2 cột 3 chấm đặc (r=1.5) tại x=5/x=19, y=6/12/18; 3 đường nối nét 2px đầu bo tròn: (5,6)→(19,12), (5,12)→(19,6), (5,18)→(19,18). Cùng phong cách các SVG khác (`stroke="currentColor"`, chấm `fill="currentColor"`) nên `ColorFilter srcIn` tô đúng.
+- Nhánh `SWISS` của `getIcon` dùng `swissSvg` (trước đây mượn `roundRobinSvg`). Chỉ có 2 nơi gọi `getIcon` (`division_accordion.dart`, `create_public_quick_tournament_screen.dart`), cả hai đi qua `getIcon` nên tự nhận icon mới; không có nơi nào khác chọn icon theo thể thức.
+- Không đơn giản hóa (giữ đủ 3 cặp); chưa xem trực quan ở 18px, chỉ kiểm bằng test so chuỗi SVG.
+- Test: `test/features/swiss_format_labels_test.dart` ca "Swiss uses its own icon".
+- Ràng buộc: không đổi (đã so).

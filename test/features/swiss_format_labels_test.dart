@@ -4,8 +4,10 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 MatchModel _swissMatch(int round, {String stageType = 'SWISS'}) => MatchModel(
@@ -83,5 +85,18 @@ void main() {
       expect(label, 'Vòng 2');
       expect(label, isNot(vi.matchTableRoundFinal));
     });
+  });
+
+  test('Swiss uses its own icon, not the round robin one', () {
+    // SvgStringLoader compares by its SVG string, theme and colorMapper.
+    Object loaderOf(String type) =>
+        (BracketFormatIcons.getIcon(type) as SvgPicture).bytesLoader;
+
+    expect(loaderOf('SWISS'), const SvgStringLoader(BracketFormatIcons.swissSvg));
+    expect(
+      loaderOf('ROUND_ROBIN'),
+      const SvgStringLoader(BracketFormatIcons.roundRobinSvg),
+    );
+    expect(loaderOf('SWISS'), isNot(loaderOf('ROUND_ROBIN')));
   });
 }

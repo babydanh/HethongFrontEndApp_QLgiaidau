@@ -26,6 +26,21 @@ class BracketFormatIcons {
 </svg>
 ''';
 
+  /// Swiss: two columns of dots joined by crossing lines (score-based pairing).
+  static const String swissSvg = '''
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M5 6L19 12" />
+  <path d="M5 12L19 6" />
+  <path d="M5 18L19 18" />
+  <circle cx="5" cy="6" r="1.5" fill="currentColor" />
+  <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+  <circle cx="5" cy="18" r="1.5" fill="currentColor" />
+  <circle cx="19" cy="6" r="1.5" fill="currentColor" />
+  <circle cx="19" cy="12" r="1.5" fill="currentColor" />
+  <circle cx="19" cy="18" r="1.5" fill="currentColor" />
+</svg>
+''';
+
   static const String groupStageKnockoutSvg = '''
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <rect x="3" y="4" width="6" height="6" rx="1.5" />
@@ -62,7 +77,7 @@ class BracketFormatIcons {
 
     String rawSvg;
     if (type.contains('SWISS')) {
-      rawSvg = roundRobinSvg;
+      rawSvg = swissSvg;
     } else if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
       rawSvg = roundRobinSvg;
     } else if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
