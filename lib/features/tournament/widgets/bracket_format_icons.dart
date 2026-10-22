@@ -28,16 +28,16 @@ class BracketFormatIcons {
 
   /// Swiss: two columns of dots joined by crossing lines (score-based pairing).
   static const String swissSvg = '''
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M5 6L19 12" />
-  <path d="M5 12L19 6" />
-  <path d="M5 18L19 18" />
-  <circle cx="5" cy="6" r="1.5" fill="currentColor" />
-  <circle cx="5" cy="12" r="1.5" fill="currentColor" />
-  <circle cx="5" cy="18" r="1.5" fill="currentColor" />
-  <circle cx="19" cy="6" r="1.5" fill="currentColor" />
-  <circle cx="19" cy="12" r="1.5" fill="currentColor" />
-  <circle cx="19" cy="18" r="1.5" fill="currentColor" />
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 5L20 12" />
+  <path d="M4 12L20 5" />
+  <path d="M4 19L20 19" />
+  <circle cx="4" cy="5" r="2" fill="currentColor" stroke="none" />
+  <circle cx="4" cy="12" r="2" fill="currentColor" stroke="none" />
+  <circle cx="4" cy="19" r="2" fill="currentColor" stroke="none" />
+  <circle cx="20" cy="5" r="2" fill="currentColor" stroke="none" />
+  <circle cx="20" cy="12" r="2" fill="currentColor" stroke="none" />
+  <circle cx="20" cy="19" r="2" fill="currentColor" stroke="none" />
 </svg>
 ''';
 
