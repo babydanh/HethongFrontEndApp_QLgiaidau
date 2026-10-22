@@ -789,8 +789,6 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
     Future<Map<String, dynamic>> Function() operation,
     String confirmation, {
     bool destructive = false,
-    ValueNotifier<bool>? option,
-    String? optionLabel,
   }) async {
     if (_isActing) return;
     final l10n = AppLocalizations.of(context)!;
@@ -800,8 +798,6 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
       message: confirmation,
       confirmLabel: l10n.tournamentManagementConfirm,
       destructive: destructive,
-      option: option,
-      optionLabel: optionLabel,
     );
     if (!confirmed || !mounted) return;
     setState(() {
@@ -862,7 +858,6 @@ class _TournamentLifecycleCardState
     final divisionMatches = widget.tournament.divisions.isEmpty
         ? null
         : ref.watch(matchesProvider(id)).asData?.value;
-    final hasBracket = divisionMatches?.isNotEmpty ?? false;
     final hasDivisionWithoutBracket =
         divisionMatches != null &&
         widget.tournament.divisions.any(
@@ -887,7 +882,7 @@ class _TournamentLifecycleCardState
         Icons.lock_open_rounded,
         () => _reopen(id, l10n.tournamentManagementOpenRegistrationConfirm),
       ),
-      AppConstants.statusRegistration when !hasBracket => _lifecycleButton(
+      AppConstants.statusRegistration => _lifecycleButton(
         l10n.tournamentManagementCloseRegistration,
         Icons.lock_outline_rounded,
         () => _runAction(
@@ -897,14 +892,14 @@ class _TournamentLifecycleCardState
           l10n.tournamentManagementCloseRegistrationConfirm,
         ),
       ),
-      AppConstants.statusRegistration ||
       AppConstants.statusRegistrationClosed => _lifecycleButton(
         l10n.tournamentManagementStartTournament,
         Icons.play_arrow_rounded,
-        () => _start(
-          id,
-          offerClose: status == AppConstants.statusRegistration,
-          confirmation: hasDivisionWithoutBracket
+        () => _runAction(
+          () => ref
+              .read(tournamentManagementRepositoryProvider)
+              .startTournament(id),
+          hasDivisionWithoutBracket
               ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
               : l10n.tournamentManagementStartTournamentConfirm,
         ),
@@ -970,35 +965,6 @@ class _TournamentLifecycleCardState
           .reopenRegistration(id, registrationEndDate: newDeadline),
       confirmation,
     );
-  }
-
-  /// Khai mạc; giải còn mở đăng ký thì hỏi kèm "chốt luôn" (mặc định không).
-  /// Tick thì đóng đăng ký trước, đóng lỗi thì không khai mạc.
-  Future<void> _start(
-    String id, {
-    required bool offerClose,
-    required String confirmation,
-  }) async {
-    final l10n = AppLocalizations.of(context)!;
-    final closeOpen = ValueNotifier(false);
-    try {
-      await _runAction(
-        () async {
-          final repository = ref.read(tournamentManagementRepositoryProvider);
-          if (offerClose && closeOpen.value) {
-            await repository.closeRegistration(id);
-          }
-          return repository.startTournament(id);
-        },
-        confirmation,
-        option: offerClose ? closeOpen : null,
-        optionLabel: offerClose
-            ? l10n.tournamentManagementCloseOpenOnStart
-            : null,
-      );
-    } finally {
-      closeOpen.dispose();
-    }
   }
 
   Widget _lifecycleButton(

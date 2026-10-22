@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -13721,11 +13722,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementStartTournamentConfirm =>
-      'Are you sure you want to start this tournament?';
+      'Starting the tournament will lock registration for every division. Are you sure you want to start this tournament?';
 
   @override
   String get tournamentManagementStartTournamentMissingBracketConfirm =>
-      'Warning: at least one division has no draw yet. You can still start the tournament.';
+      'Warning: at least one division has no draw yet. Starting the tournament will lock registration for every division. You can still start the tournament.';
 
   @override
   String get tournamentManagementCompleteTournament => 'End tournament';
@@ -13764,10 +13765,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementOpenRegistrationConfirm =>
       'Open tournament registration now?';
-
-  @override
-  String get tournamentManagementCloseOpenOnStart =>
-      'Also close registration for divisions still open';
 
   @override
   String get tournamentManagementDivisionLockRegistration =>

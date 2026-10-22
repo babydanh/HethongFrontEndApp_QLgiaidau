@@ -1114,14 +1114,17 @@ void main() {
         find.text(startL10n.tournamentManagementReopenRegistration),
         findsOneWidget,
       );
-      // Đóng hết rồi nên không hỏi "chốt luôn".
       await tester.tap(
         find.text(startL10n.tournamentManagementStartTournament),
       );
       await tester.pumpAndSettle();
       expect(
-        find.text(startL10n.tournamentManagementCloseOpenOnStart),
-        findsNothing,
+        startL10n.tournamentManagementStartTournamentConfirm,
+        contains('Khai mạc sẽ khoá đăng ký tất cả nội dung.'),
+      );
+      expect(
+        find.text(startL10n.tournamentManagementStartTournamentConfirm),
+        findsOneWidget,
       );
       await tester.tap(
         find.widgetWithText(
@@ -1248,7 +1251,7 @@ void main() {
     },
   );
   testWidgets(
-    'TC-APP-LIFECYCLE-07: bracket ready while registration open starts, ticking closes first',
+    'TC-APP-LIFECYCLE-07: bracket ready while registration remains open must close first',
     (tester) async {
       tester.view.physicalSize = const Size(390, 1500);
       tester.view.devicePixelRatio = 1;
@@ -1281,20 +1284,18 @@ void main() {
       final l10n = AppLocalizations.of(
         tester.element(find.byType(TournamentManagementHubScreen)),
       )!;
-      // Đã có sơ đồ: nút duy nhất là khai mạc, không còn "Chốt đăng ký".
       expect(
         find.text(l10n.tournamentManagementCloseRegistration),
-        findsNothing,
+        findsOneWidget,
       );
-      await tester.tap(find.text(l10n.tournamentManagementStartTournament));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(l10n.tournamentManagementCloseOpenOnStart));
+      expect(find.text(l10n.tournamentManagementStartTournament), findsNothing);
+      await tester.tap(find.text(l10n.tournamentManagementCloseRegistration));
       await tester.pumpAndSettle();
       await tester.tap(
         find.widgetWithText(FilledButton, l10n.tournamentManagementConfirm),
       );
       await tester.pumpAndSettle();
-      expect(repository.calls, ['close-registration', 'start']);
+      expect(repository.calls, ['close-registration']);
     },
   );
   testWidgets(

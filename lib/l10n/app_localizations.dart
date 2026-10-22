@@ -24877,13 +24877,13 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementStartTournamentConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Bạn có chắc muốn khai mạc giải đấu này?'**
+  /// **'Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn có chắc muốn khai mạc giải đấu này?'**
   String get tournamentManagementStartTournamentConfirm;
 
   /// No description provided for @tournamentManagementStartTournamentMissingBracketConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Bạn vẫn có thể khai mạc giải.'**
+  /// **'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.'**
   String get tournamentManagementStartTournamentMissingBracketConfirm;
 
   /// No description provided for @tournamentManagementCompleteTournament.
@@ -24951,12 +24951,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Mở đăng ký giải đấu ngay bây giờ?'**
   String get tournamentManagementOpenRegistrationConfirm;
-
-  /// No description provided for @tournamentManagementCloseOpenOnStart.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chốt đăng ký các nội dung còn mở luôn'**
-  String get tournamentManagementCloseOpenOnStart;
 
   /// No description provided for @tournamentManagementDivisionLockRegistration.
   ///

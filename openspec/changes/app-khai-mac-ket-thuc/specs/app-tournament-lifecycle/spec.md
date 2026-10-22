@@ -1,15 +1,20 @@
 ## ADDED Requirements
 
 ### Requirement: Điều khiển vòng đời giải từ màn quản lý
-App SHALL hiển thị đúng một nút vòng đời theo việc tiếp theo như Web: DRAFT "Công bố"; UPCOMING "Mở đăng ký ngay"; REGISTRATION_OPEN chưa có trận "Chốt đăng ký" (`/close-registration`, không gọi `/lock`); đã có trận hoặc REGISTRATION_CLOSED "Khai mạc giải"; IN_PROGRESS "Kết thúc giải". Mỗi thao tác SHALL hỏi xác nhận, chống gửi lặp và hiện nguyên lỗi máy chủ.
+App SHALL hiển thị đúng một nút vòng đời theo việc tiếp theo: DRAFT "Công bố"; UPCOMING "Mở đăng ký ngay"; REGISTRATION_OPEN "Chốt đăng ký" (`/close-registration`), kể cả khi đã có sơ đồ; REGISTRATION_CLOSED "Khai mạc giải" với cảnh báo khóa đăng ký mọi nội dung; IN_PROGRESS "Kết thúc giải". Mỗi thao tác SHALL hỏi xác nhận, chống gửi lặp và hiện nguyên lỗi máy chủ. Khai mạc SHALL chỉ gọi POST `/tournaments/:id/start`; Backend khóa mọi division cùng transaction đổi trạng thái sang IN_PROGRESS.
 
-#### Scenario: Khai mạc giải đã đóng đăng ký
+
+#### Scenario: Khai mạc giải đã chốt đăng ký
 - WHEN BTC xác nhận khai mạc giải REGISTRATION_CLOSED
-- THEN App chỉ gửi POST `/tournaments/:id/start` và không hỏi "chốt luôn"
+- THEN App cảnh báo rằng khai mạc khóa đăng ký tất cả nội dung, chỉ gửi POST `/tournaments/:id/start`, và sau thành công không division nào còn nhận đăng ký
 
-#### Scenario: Khai mạc khi còn mở đăng ký
-- WHEN giải REGISTRATION_OPEN đã có trận, BTC tick "Chốt đăng ký các nội dung còn mở luôn" rồi xác nhận
-- THEN App gửi POST `/tournaments/:id/close-registration` rồi POST `/tournaments/:id/start`
+#### Scenario: Đăng ký còn mở dù đã có sơ đồ
+- WHEN giải REGISTRATION_OPEN và có ít nhất một division đang mở đăng ký
+- THEN App chỉ hiển thị "Chốt đăng ký", không hiển thị "Khai mạc giải", kể cả khi đã có sơ đồ
+
+#### Scenario: Mở lại một nội dung sau khai mạc
+- WHEN giải IN_PROGRESS và BTC mở lại một division
+- THEN App tiếp tục dùng `registrationOpen` do Backend trả về cho nội dung đó; quy tắc đăng ký không tự đổi theo trạng thái giải
 
 #### Scenario: Chốt đăng ký khi chưa có sơ đồ
 - WHEN giải REGISTRATION_OPEN chưa có trận và BTC xác nhận "Chốt đăng ký"

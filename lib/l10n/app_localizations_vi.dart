@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -13676,11 +13677,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementStartTournamentConfirm =>
-      'Bạn có chắc muốn khai mạc giải đấu này?';
+      'Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn có chắc muốn khai mạc giải đấu này?';
 
   @override
   String get tournamentManagementStartTournamentMissingBracketConfirm =>
-      'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Bạn vẫn có thể khai mạc giải.';
+      'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.';
 
   @override
   String get tournamentManagementCompleteTournament => 'Kết thúc giải';
@@ -13719,10 +13720,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementOpenRegistrationConfirm =>
       'Mở đăng ký giải đấu ngay bây giờ?';
-
-  @override
-  String get tournamentManagementCloseOpenOnStart =>
-      'Chốt đăng ký các nội dung còn mở luôn';
 
   @override
   String get tournamentManagementDivisionLockRegistration => 'Khoá đăng ký';

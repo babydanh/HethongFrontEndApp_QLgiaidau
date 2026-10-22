@@ -14,12 +14,18 @@
   - Chủ file chung: task này giữ `tournament_management_section_screen.dart`, hai file ARB, test hub và test API
   - Phụ thuộc: sau 1.1
 
-- [x] 2.2 Một nút vòng đời theo việc tiếp theo như Web (người dùng chốt 2026-10-22): bỏ `lockTournament`/`/lock`, thêm `closeRegistration` (`/close-registration`); UPCOMING "Mở đăng ký ngay"; mở mà chưa có trận "Chốt đăng ký"; có trận hoặc đã đóng "Khai mạc giải" kèm ô "chốt luôn" khi còn mở; đã đóng thêm "Mở lại đăng ký". Tiêu chí: test TC-APP-LIFECYCLE-04/06/07 và test API lifecycle qua trên cloud.
+- [x] 2.2 Một nút vòng đời theo việc tiếp theo như Web; lần triển khai đầu cho phép khai mạc từ trận bắt đầu kèm ô chốt đăng ký, sau đó được thay bằng hợp đồng 2.4 (REGISTRATION_OPEN luôn chốt trước, REGISTRATION_CLOSED mới khai mạc). Tiêu chí ban đầu: test TC-APP-LIFECYCLE-04/06/07 và test API lifecycle qua trên cloud.
   - Files: `lib/domain/repositories/tournament_management_repository.dart`, `lib/data/repositories/api/api_tournament_management_repository.dart`, `lib/features/tournament/screens/tournament_management_section_screen.dart`, `lib/features/tournament/screens/tournament_management_widgets.dart`, ARB + file sinh, `test/features/tournament_management_hub_screen_test.dart`, `test/tournament_management_repository_api_test.dart`
   - Phụ thuộc: sau 2.1
 - [x] 2.3 Menu nội dung khoá/mở đăng ký mọi lúc trừ giải đã kết thúc/huỷ; quá hạn thì mở lại kèm hạn mới; thẻ ghi trạng thái đăng ký và "Không có hạn đăng ký". Tiêu chí: TC-APP-DIVLOCK-01/02/03 qua trên cloud.
   - Files: `lib/features/tournament/screens/tournament_management_divisions_section.dart`, `test/features/tournament_management_divisions_section_test.dart`
   - Phụ thuộc: sau 2.2
+- [ ] 2.4 Đồng bộ App với hợp đồng khai mạc khóa toàn bộ nội dung: bỏ tick chốt đăng ký trước start, bắt buộc chốt khi REGISTRATION_OPEN, cảnh báo trong hộp xác nhận, chỉ gọi `startTournament`. Tiêu chí: `cloud-test-runner.py run --target app --branch thanh-tien-trinh-gon` → exit 0.
+  - Files: `lib/features/tournament/screens/tournament_management_section_screen.dart`, `lib/features/tournament/screens/tournament_management_widgets.dart`, `lib/l10n/app_vi.arb`, `lib/l10n/app_en.arb`, `lib/l10n/app_localizations.dart`, `lib/l10n/app_localizations_en.dart`, `lib/l10n/app_localizations_vi.dart`, `test/features/tournament_management_hub_screen_test.dart`, `openspec/changes/app-khai-mac-ket-thuc/specs/app-tournament-lifecycle/spec.md`
+  - Giao: `POST /tournaments/:id/start` khóa mọi division · Nhận: App chỉ gọi `startTournament(String id): Future<Map<String, dynamic>>`
+  - Chủ file chung: màn lifecycle, widget xác nhận, ARB/file sinh và test lifecycle
+  - Phụ thuộc: sau 2.2
+
 ## 3. Kiểm chứng tích hợp
 
 - [x] 3.1 Chạy kiểm tra tĩnh và test liên quan cho toàn bộ file đã sửa; chạy `openspec validate app-khai-mac-ket-thuc --strict`; chạy cloud app tests, ghi run ID và kết quả. Tiêu chí: kiểm tra tĩnh/test liên quan exit 0; validate strict pass; cloud app xanh.
