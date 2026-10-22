@@ -28,3 +28,4 @@
   - Chủ file chung: task này giữ `tasks.md`
   - Phụ thuộc: sau 1.1, 2.1
 - Bằng chứng cloud: run ID `39724753066` — https://github.com/babydanh/agent-orchestrator/actions/runs/39724753066 — job “Test Flutter App (Dart Analyze & Widget)” thành công.
+- Bằng chứng cloud cho 2.2/2.3 (App `c2d3dcc6`): run ID `39806384925` — https://github.com/babydanh/agent-orchestrator/actions/runs/39806384925 — analyze + toàn bộ widget test xanh. Lần chạy trước `39805362668` đỏ 2 ca TC-APP-LIFECYCLE-06/07 vì card so "REGISTRATION_OPEN" trong khi entity lưu mã chuẩn hoá "registration"; đã sửa.
