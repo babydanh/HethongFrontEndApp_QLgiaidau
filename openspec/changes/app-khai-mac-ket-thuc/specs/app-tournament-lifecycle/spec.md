@@ -1,11 +1,19 @@
 ## ADDED Requirements
 
 ### Requirement: Điều khiển vòng đời giải từ màn quản lý
-App SHALL hiển thị thao tác khai mạc chỉ khi giải ở trạng thái UPCOMING, REGISTRATION_OPEN hoặc REGISTRATION_CLOSED; SHALL hiển thị thao tác kết thúc khi giải IN_PROGRESS. Mỗi thao tác SHALL yêu cầu xác nhận, chống gửi lặp trong lúc xử lý, gọi đúng endpoint vòng đời và tải lại chi tiết sau thành công. Nếu khai mạc còn division chưa có sơ đồ, hộp xác nhận SHALL cảnh báo nhưng vẫn cho xác nhận. Khi máy chủ từ chối, App SHALL hiển thị nguyên thông điệp máy chủ.
+App SHALL hiển thị đúng một nút vòng đời theo việc tiếp theo như Web: DRAFT "Công bố"; UPCOMING "Mở đăng ký ngay"; REGISTRATION_OPEN chưa có trận "Chốt đăng ký" (`/close-registration`, không gọi `/lock`); đã có trận hoặc REGISTRATION_CLOSED "Khai mạc giải"; IN_PROGRESS "Kết thúc giải". Mỗi thao tác SHALL hỏi xác nhận, chống gửi lặp và hiện nguyên lỗi máy chủ.
 
-#### Scenario: Khai mạc giải đã công bố
-- WHEN BTC xác nhận khai mạc giải UPCOMING, REGISTRATION_OPEN hoặc REGISTRATION_CLOSED
-- THEN App gửi POST `/tournaments/:id/start`, tải lại chi tiết khi thành công và không cho gửi lặp khi request đang chạy
+#### Scenario: Khai mạc giải đã đóng đăng ký
+- WHEN BTC xác nhận khai mạc giải REGISTRATION_CLOSED
+- THEN App chỉ gửi POST `/tournaments/:id/start` và không hỏi "chốt luôn"
+
+#### Scenario: Khai mạc khi còn mở đăng ký
+- WHEN giải REGISTRATION_OPEN đã có trận, BTC tick "Chốt đăng ký các nội dung còn mở luôn" rồi xác nhận
+- THEN App gửi POST `/tournaments/:id/close-registration` rồi POST `/tournaments/:id/start`
+
+#### Scenario: Chốt đăng ký khi chưa có sơ đồ
+- WHEN giải REGISTRATION_OPEN chưa có trận và BTC xác nhận "Chốt đăng ký"
+- THEN App gửi POST `/tournaments/:id/close-registration` và không hiện nút khai mạc
 
 #### Scenario: Cảnh báo sơ đồ chưa có
 - WHEN khai mạc giải còn nội dung chưa có sơ đồ
@@ -16,8 +24,19 @@ App SHALL hiển thị thao tác khai mạc chỉ khi giải ở trạng thái U
 - THEN App gửi POST `/tournaments/:id/complete` và hiển thị đúng nguyên văn message lỗi do Backend trả
 
 #### Scenario: Trạng thái không đủ điều kiện
-- WHEN giải ở trạng thái DRAFT, COMPLETED hoặc CANCELLED
+- WHEN giải ở trạng thái DRAFT, UPCOMING, COMPLETED hoặc CANCELLED
 - THEN App không hiển thị nút khai mạc; khi giải không IN_PROGRESS App không hiển thị nút kết thúc
+
+### Requirement: Khoá/mở đăng ký từng nội dung mọi lúc trước khi kết thúc
+Menu của mỗi nội dung ở mục Nội dung SHALL cho khoá hoặc mở lại đăng ký (PATCH `/tournaments/:id/divisions/:divisionId/config` với `isRegistrationLocked`) ở mọi trạng thái giải trừ COMPLETED và CANCELLED. Nội dung đã quá hạn SHALL mở lại kèm hạn mới ở tương lai. Thẻ nội dung SHALL ghi "Đang nhận đăng ký" hoặc "Đã đóng đăng ký" theo `registrationOpen`, và thêm "Không có hạn đăng ký" khi còn mở mà không có hạn.
+
+#### Scenario: Khoá khi giải đang diễn ra
+- WHEN giải IN_PROGRESS và BTC chọn "Khoá đăng ký" ở một nội dung
+- THEN App gửi PATCH config với `isRegistrationLocked: true`
+
+#### Scenario: Giải đã kết thúc
+- WHEN giải COMPLETED
+- THEN mục khoá/mở đăng ký trong menu nội dung bị tắt
 
 ### Requirement: Đăng ký theo trạng thái division
 App SHALL dùng `registrationOpen` do Backend trả về cho từng division khi trường này có mặt; SHALL không bao giờ coi division CANCELLED là mở. Trạng thái IN_PROGRESS của giải không SHALL tự đóng đăng ký ở division vẫn mở. Khi server cũ không trả `registrationOpen`, App SHALL giữ luật dự phòng hiện có.

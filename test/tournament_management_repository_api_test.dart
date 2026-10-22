@@ -1113,7 +1113,9 @@ void main() {
       backend.onPost('/tournaments/$tournamentId/reopen-registration', {
         'status': 'REGISTRATION_REOPENED',
       });
-      backend.onPost('/tournaments/$tournamentId/lock', {'status': 'LOCKED'});
+      backend.onPost('/tournaments/$tournamentId/close-registration', {
+        'status': 'REGISTRATION_CLOSED',
+      });
       backend.onPost('/tournaments/$tournamentId/regenerate-invite', {
         'inviteCode': 'ABC123',
       });
@@ -1135,8 +1137,8 @@ void main() {
         'REGISTRATION_REOPENED',
       );
       expect(
-        (await repository.lockTournament(tournamentId))['status'],
-        'LOCKED',
+        (await repository.closeRegistration(tournamentId))['status'],
+        'REGISTRATION_CLOSED',
       );
       expect(
         (await repository.regenerateInviteCode(tournamentId))['inviteCode'],
@@ -1149,7 +1151,7 @@ void main() {
         '/tournaments/$tournamentId/complete',
         '/tournaments/$tournamentId/publish',
         '/tournaments/$tournamentId/reopen-registration',
-        '/tournaments/$tournamentId/lock',
+        '/tournaments/$tournamentId/close-registration',
         '/tournaments/$tournamentId/regenerate-invite',
       ]);
     });

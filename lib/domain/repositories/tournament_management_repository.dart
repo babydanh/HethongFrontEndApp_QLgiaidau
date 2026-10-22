@@ -136,7 +136,9 @@ abstract interface class TournamentManagementRepository {
 
   Future<Map<String, dynamic>> publishTournament(String id);
   Future<Map<String, dynamic>> reopenRegistration(String id);
-  Future<Map<String, dynamic>> lockTournament(String id);
+  /// Đóng đăng ký mọi nội dung (không tạo sơ đồ). Nội dung riêng thì khoá qua
+  /// `updateDivisionConfig` với `isRegistrationLocked`.
+  Future<Map<String, dynamic>> closeRegistration(String id);
   Future<Map<String, dynamic>> regenerateInviteCode(String id);
 }
 

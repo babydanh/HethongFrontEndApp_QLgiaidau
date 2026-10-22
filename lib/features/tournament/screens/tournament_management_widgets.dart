@@ -155,19 +155,42 @@ class TournamentManagementEmpty extends StatelessWidget {
   }
 }
 
+/// [option] + [optionLabel]: thêm một ô tick (mặc định theo giá trị hiện tại
+/// của [option]); người gọi đọc lại [option] sau khi xác nhận.
 Future<bool> confirmTournamentManagementAction(
   BuildContext context, {
   required String title,
   required String message,
   required String confirmLabel,
   bool destructive = false,
+  ValueNotifier<bool>? option,
+  String? optionLabel,
 }) async {
   final colors = context.colors;
   final result = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
       title: Text(title),
-      content: Text(message),
+      content: option == null || optionLabel == null
+          ? Text(message)
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(message),
+                const SizedBox(height: 8),
+                ValueListenableBuilder<bool>(
+                  valueListenable: option,
+                  builder: (context, checked, _) => CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: checked,
+                    onChanged: (value) => option.value = value ?? false,
+                    title: Text(optionLabel),
+                  ),
+                ),
+              ],
+            ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext, false),

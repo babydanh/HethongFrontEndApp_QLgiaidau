@@ -24796,12 +24796,6 @@ abstract class AppLocalizations {
   /// **'Không thể xuất dữ liệu giải đấu.'**
   String get tournamentManagementExportError;
 
-  /// No description provided for @tournamentManagementFinalizeRegistrationUnavailable.
-  ///
-  /// In vi, this message translates to:
-  /// **'Ứng dụng di động chưa hỗ trợ kết thúc đăng ký vì thao tác phía máy chủ chưa được xác nhận. Vui lòng liên hệ bộ phận hỗ trợ trước khi thực hiện chuyển trạng thái này.'**
-  String get tournamentManagementFinalizeRegistrationUnavailable;
-
   /// No description provided for @tournamentManagementFinance.
   ///
   /// In vi, this message translates to:
@@ -24934,17 +24928,77 @@ abstract class AppLocalizations {
   /// **'Không thể tải mục này.'**
   String get tournamentManagementLoadError;
 
-  /// No description provided for @tournamentManagementLockConfirm.
+  /// No description provided for @tournamentManagementCloseRegistration.
   ///
   /// In vi, this message translates to:
-  /// **'Khóa đăng ký giải đấu ngay bây giờ?'**
-  String get tournamentManagementLockConfirm;
+  /// **'Chốt đăng ký'**
+  String get tournamentManagementCloseRegistration;
 
-  /// No description provided for @tournamentManagementLockTournament.
+  /// No description provided for @tournamentManagementCloseRegistrationConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Khóa đăng ký'**
-  String get tournamentManagementLockTournament;
+  /// **'Chốt đăng ký mọi nội dung còn mở? Không tạo sơ đồ; từng nội dung vẫn mở lại được ở mục Nội dung.'**
+  String get tournamentManagementCloseRegistrationConfirm;
+
+  /// No description provided for @tournamentManagementOpenRegistrationNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở đăng ký ngay'**
+  String get tournamentManagementOpenRegistrationNow;
+
+  /// No description provided for @tournamentManagementOpenRegistrationConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở đăng ký giải đấu ngay bây giờ?'**
+  String get tournamentManagementOpenRegistrationConfirm;
+
+  /// No description provided for @tournamentManagementCloseOpenOnStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt đăng ký các nội dung còn mở luôn'**
+  String get tournamentManagementCloseOpenOnStart;
+
+  /// No description provided for @tournamentManagementDivisionLockRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoá đăng ký'**
+  String get tournamentManagementDivisionLockRegistration;
+
+  /// No description provided for @tournamentManagementDivisionUnlockRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại đăng ký'**
+  String get tournamentManagementDivisionUnlockRegistration;
+
+  /// No description provided for @tournamentManagementDivisionReopenWithDeadline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại kèm hạn mới'**
+  String get tournamentManagementDivisionReopenWithDeadline;
+
+  /// No description provided for @tournamentManagementDivisionReopenDeadlineFuture.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạn đăng ký mới phải ở tương lai.'**
+  String get tournamentManagementDivisionReopenDeadlineFuture;
+
+  /// No description provided for @tournamentManagementDivisionRegistrationOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang nhận đăng ký'**
+  String get tournamentManagementDivisionRegistrationOpen;
+
+  /// No description provided for @tournamentManagementDivisionRegistrationClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng đăng ký'**
+  String get tournamentManagementDivisionRegistrationClosed;
+
+  /// No description provided for @tournamentManagementDivisionNoDeadline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có hạn đăng ký'**
+  String get tournamentManagementDivisionNoDeadline;
 
   /// No description provided for @tournamentManagementLogo.
   ///

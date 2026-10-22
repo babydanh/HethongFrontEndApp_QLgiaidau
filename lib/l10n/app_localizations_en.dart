@@ -13675,10 +13675,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not export tournament data.';
 
   @override
-  String get tournamentManagementFinalizeRegistrationUnavailable =>
-      'Finalizing registration is unavailable in this mobile app because the server operation is not confirmed. Contact support before using this transition.';
-
-  @override
   String get tournamentManagementFinance => 'Finance & payout';
 
   @override
@@ -13756,11 +13752,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementLoadError => 'Could not load this section.';
 
   @override
-  String get tournamentManagementLockConfirm =>
-      'Lock tournament registration now?';
+  String get tournamentManagementCloseRegistration => 'Close registration';
 
   @override
-  String get tournamentManagementLockTournament => 'Lock registration';
+  String get tournamentManagementCloseRegistrationConfirm =>
+      'Close registration for every open division? No bracket is created; each division can still be reopened under Divisions.';
+
+  @override
+  String get tournamentManagementOpenRegistrationNow => 'Open registration now';
+
+  @override
+  String get tournamentManagementOpenRegistrationConfirm =>
+      'Open tournament registration now?';
+
+  @override
+  String get tournamentManagementCloseOpenOnStart =>
+      'Also close registration for divisions still open';
+
+  @override
+  String get tournamentManagementDivisionLockRegistration =>
+      'Lock registration';
+
+  @override
+  String get tournamentManagementDivisionUnlockRegistration =>
+      'Reopen registration';
+
+  @override
+  String get tournamentManagementDivisionReopenWithDeadline =>
+      'Reopen with a new deadline';
+
+  @override
+  String get tournamentManagementDivisionReopenDeadlineFuture =>
+      'The new registration deadline must be in the future.';
+
+  @override
+  String get tournamentManagementDivisionRegistrationOpen =>
+      'Accepting registrations';
+
+  @override
+  String get tournamentManagementDivisionRegistrationClosed =>
+      'Registration closed';
+
+  @override
+  String get tournamentManagementDivisionNoDeadline =>
+      'No registration deadline';
 
   @override
   String get tournamentManagementLogo => 'Tournament logo';

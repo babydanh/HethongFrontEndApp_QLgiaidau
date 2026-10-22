@@ -787,6 +787,8 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
     Future<Map<String, dynamic>> Function() operation,
     String confirmation, {
     bool destructive = false,
+    ValueNotifier<bool>? option,
+    String? optionLabel,
   }) async {
     if (_isActing) return;
     final l10n = AppLocalizations.of(context)!;
@@ -796,6 +798,8 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
       message: confirmation,
       confirmLabel: l10n.tournamentManagementConfirm,
       destructive: destructive,
+      option: option,
+      optionLabel: optionLabel,
     );
     if (!confirmed || !mounted) return;
     setState(() {
@@ -805,7 +809,6 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
     });
     try {
       await operation();
-      ref.invalidate(tournamentProvider(_actionTournamentId));
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -819,13 +822,17 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
         });
       }
     } finally {
-      if (mounted) setState(() => _isActing = false);
+      // Thao tác nhiều bước có thể đã đổi một phần (vd. đã chốt rồi khai mạc lỗi): luôn tải lại.
+      if (mounted) {
+        ref.invalidate(tournamentProvider(_actionTournamentId));
+        setState(() => _isActing = false);
+      }
     }
   }
 }
 
-/// Thao tác vòng đời giải (công bố, mở lại, khoá đăng ký) theo trạng thái
-/// hiện tại. Không thao tác nào áp dụng thì không hiển thị.
+/// Vòng đời giải: mỗi lúc một nút theo việc tiếp theo (công bố, mở đăng ký,
+/// chốt đăng ký, khai mạc, kết thúc). Không thao tác nào áp dụng thì ẩn.
 class TournamentLifecycleCard extends ConsumerStatefulWidget {
   const TournamentLifecycleCard({super.key, required this.tournament});
 
@@ -850,6 +857,7 @@ class _TournamentLifecycleCardState
     final divisionMatches = widget.tournament.divisions.isEmpty
         ? null
         : ref.watch(matchesProvider(id)).asData?.value;
+    final hasBracket = divisionMatches?.isNotEmpty ?? false;
     final hasDivisionWithoutBracket =
         divisionMatches != null &&
         widget.tournament.divisions.any(
@@ -857,85 +865,81 @@ class _TournamentLifecycleCardState
               division.status?.toUpperCase() != 'CANCELLED' &&
               !divisionMatches.any((match) => match.divisionId == division.id),
         );
-    final buttons = <Widget>[
-      if (status == 'DRAFT')
-        _lifecycleButton(
-          l10n.tournamentManagementPublish,
-          Icons.public_rounded,
-          () => _runAction(
-            () => ref
-                .read(tournamentManagementRepositoryProvider)
-                .publishTournament(id),
-            l10n.tournamentManagementPublishConfirm,
-          ),
+    // Mỗi lúc một nút theo việc tiếp theo (như Web). Khoá/mở từng nội dung nằm ở mục Nội dung.
+    final primary = switch (status) {
+      'DRAFT' => _lifecycleButton(
+        l10n.tournamentManagementPublish,
+        Icons.public_rounded,
+        () => _runAction(
+          () => ref
+              .read(tournamentManagementRepositoryProvider)
+              .publishTournament(id),
+          l10n.tournamentManagementPublishConfirm,
         ),
-      if (status == 'REGISTRATION_CLOSED' || status == 'UPCOMING')
-        _lifecycleButton(
-          l10n.tournamentManagementReopenRegistration,
-          Icons.lock_open_rounded,
-          () => _runAction(
-            () => ref
-                .read(tournamentManagementRepositoryProvider)
-                .reopenRegistration(id),
-            l10n.tournamentManagementReopenConfirm,
-          ),
+      ),
+      'UPCOMING' => _lifecycleButton(
+        l10n.tournamentManagementOpenRegistrationNow,
+        Icons.lock_open_rounded,
+        () => _runAction(
+          () => ref
+              .read(tournamentManagementRepositoryProvider)
+              .reopenRegistration(id),
+          l10n.tournamentManagementOpenRegistrationConfirm,
         ),
-      if (status == 'REGISTRATION_OPEN')
-        _lifecycleButton(
-          l10n.tournamentManagementLockTournament,
-          Icons.lock_outline_rounded,
-          () => _runAction(
-            () => ref
-                .read(tournamentManagementRepositoryProvider)
-                .lockTournament(id),
-            l10n.tournamentManagementLockConfirm,
-            destructive: true,
-          ),
+      ),
+      'REGISTRATION_OPEN' when !hasBracket => _lifecycleButton(
+        l10n.tournamentManagementCloseRegistration,
+        Icons.lock_outline_rounded,
+        () => _runAction(
+          () => ref
+              .read(tournamentManagementRepositoryProvider)
+              .closeRegistration(id),
+          l10n.tournamentManagementCloseRegistrationConfirm,
         ),
-      if (const {
-        'UPCOMING',
-        'REGISTRATION_OPEN',
-        'REGISTRATION_CLOSED',
-      }.contains(status))
-        _lifecycleButton(
-          l10n.tournamentManagementStartTournament,
-          Icons.play_arrow_rounded,
-          () => _runAction(
-            () => ref
-                .read(tournamentManagementRepositoryProvider)
-                .startTournament(id),
-            hasDivisionWithoutBracket
-                ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
-                : l10n.tournamentManagementStartTournamentConfirm,
-          ),
+      ),
+      'REGISTRATION_OPEN' || 'REGISTRATION_CLOSED' => _lifecycleButton(
+        l10n.tournamentManagementStartTournament,
+        Icons.play_arrow_rounded,
+        () => _start(
+          id,
+          offerClose: status == 'REGISTRATION_OPEN',
+          confirmation: hasDivisionWithoutBracket
+              ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
+              : l10n.tournamentManagementStartTournamentConfirm,
         ),
-      if (status == 'IN_PROGRESS')
-        _lifecycleButton(
-          l10n.tournamentManagementCompleteTournament,
-          Icons.check_circle_outline_rounded,
-          () => _runAction(
-            () => ref
-                .read(tournamentManagementRepositoryProvider)
-                .completeTournament(id),
-            l10n.tournamentManagementCompleteTournamentConfirm,
-          ),
+      ),
+      'IN_PROGRESS' => _lifecycleButton(
+        l10n.tournamentManagementCompleteTournament,
+        Icons.check_circle_outline_rounded,
+        () => _runAction(
+          () => ref
+              .read(tournamentManagementRepositoryProvider)
+              .completeTournament(id),
+          l10n.tournamentManagementCompleteTournamentConfirm,
         ),
-    ];
-    if (buttons.isEmpty) return const SizedBox.shrink();
+      ),
+      _ => null,
+    };
+    if (primary == null) return const SizedBox.shrink();
     return TournamentManagementSectionCard(
       title: l10n.tournamentManagementLifecycle,
       subtitle: l10n.tournamentManagementLifecycleDescription,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ...buttons,
-          if (status == 'REGISTRATION_OPEN')
-            Padding(
-              padding: const EdgeInsets.only(top: 4, bottom: 8),
-              child: Text(
-                l10n.tournamentManagementFinalizeRegistrationUnavailable,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+          primary,
+          // Đã đóng hết: vẫn cần lối mở lại cả giải; chỉ là nút chữ, không phải nút chính.
+          if (status == 'REGISTRATION_CLOSED')
+            TextButton(
+              onPressed: _isActing
+                  ? null
+                  : () => _runAction(
+                      () => ref
+                          .read(tournamentManagementRepositoryProvider)
+                          .reopenRegistration(id),
+                      l10n.tournamentManagementReopenConfirm,
+                    ),
+              child: Text(l10n.tournamentManagementReopenRegistration),
             ),
           if (_isActing) ...[
             const SizedBox(height: 8),
@@ -953,6 +957,35 @@ class _TournamentLifecycleCardState
         ],
       ),
     );
+  }
+
+  /// Khai mạc; giải còn mở đăng ký thì hỏi kèm "chốt luôn" (mặc định không).
+  /// Tick thì đóng đăng ký trước, đóng lỗi thì không khai mạc.
+  Future<void> _start(
+    String id, {
+    required bool offerClose,
+    required String confirmation,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final closeOpen = ValueNotifier(false);
+    try {
+      await _runAction(
+        () async {
+          final repository = ref.read(tournamentManagementRepositoryProvider);
+          if (offerClose && closeOpen.value) {
+            await repository.closeRegistration(id);
+          }
+          return repository.startTournament(id);
+        },
+        confirmation,
+        option: offerClose ? closeOpen : null,
+        optionLabel: offerClose
+            ? l10n.tournamentManagementCloseOpenOnStart
+            : null,
+      );
+    } finally {
+      closeOpen.dispose();
+    }
   }
 
   Widget _lifecycleButton(

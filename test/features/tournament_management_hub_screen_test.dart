@@ -69,6 +69,7 @@ Widget _app(
   UserProfile? profile,
   TournamentManagementRepository? managementRepository,
   ITournamentRepository? tournamentRepository,
+  List<MatchModel>? matches,
 }) => ProviderScope(
   overrides: [
     userProfileProvider.overrideWith(
@@ -86,6 +87,10 @@ Widget _app(
       ),
     if (tournamentRepository != null)
       tournamentRepositoryProvider.overrideWithValue(tournamentRepository),
+    if (matches != null)
+      matchesProvider(
+        'tournament-1',
+      ).overrideWith((ref) => Stream.value(matches)),
   ],
   child: MaterialApp(
     theme: AppTheme.lightTheme,
@@ -183,11 +188,25 @@ class _LifecycleRepository extends _EmptyTournamentManagementRepository
     implements TournamentLifecycleRepository {
   final startedIds = <String>[];
   final completedIds = <String>[];
+  final calls = <String>[];
   Object? completeError;
 
   @override
   Future<Map<String, dynamic>> startTournament(String id) async {
     startedIds.add(id);
+    calls.add('start');
+    return const {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> closeRegistration(String id) async {
+    calls.add('close-registration');
+    return const {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> reopenRegistration(String id) async {
+    calls.add('reopen-registration');
     return const {};
   }
 
@@ -1062,18 +1081,42 @@ void main() {
         find.byType(TournamentManagementHubScreen),
       );
       final startL10n = AppLocalizations.of(startContext)!;
+      // Sắp diễn ra: nút duy nhất là mở đăng ký.
       expect(
-        find.text(startL10n.tournamentManagementStartTournament),
+        find.text(startL10n.tournamentManagementOpenRegistrationNow),
         findsOneWidget,
       );
+      expect(
+        find.text(startL10n.tournamentManagementStartTournament),
+        findsNothing,
+      );
+
+      await tester.pumpWidget(
+        _app(
+          _tournament('REGISTRATION_CLOSED'),
+          managementRepository: startRepository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
       expect(
         find.text(startL10n.tournamentManagementCompleteTournament),
         findsNothing,
       );
+      // Đã đóng hết: khai mạc là nút chính, kèm lối "Mở lại đăng ký".
+      expect(
+        find.text(startL10n.tournamentManagementReopenRegistration),
+        findsOneWidget,
+      );
+      // Đóng hết rồi nên không hỏi "chốt luôn".
       await tester.tap(
         find.text(startL10n.tournamentManagementStartTournament),
       );
       await tester.pumpAndSettle();
+      expect(
+        find.text(startL10n.tournamentManagementCloseOpenOnStart),
+        findsNothing,
+      );
       await tester.tap(
         find.widgetWithText(
           FilledButton,
@@ -1082,6 +1125,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(startRepository.startedIds, ['tournament-1']);
+      expect(startRepository.calls, ['start']);
 
       final completeRepository = _LifecycleRepository();
       await tester.pumpWidget(
@@ -1170,6 +1214,83 @@ void main() {
 
     expect(find.text(serverMessage), findsOneWidget);
   });
+  testWidgets(
+    'TC-APP-LIFECYCLE-06: registration open without bracket closes registration, no lock',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      tester.view.devicePixelRatio = 1;
+      final repository = _LifecycleRepository();
+      await tester.pumpWidget(
+        _app(
+          _tournament('REGISTRATION_OPEN'),
+          managementRepository: repository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      expect(find.text(l10n.tournamentManagementStartTournament), findsNothing);
+      await tester.tap(find.text(l10n.tournamentManagementCloseRegistration));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementConfirm),
+      );
+      await tester.pumpAndSettle();
+      expect(repository.calls, ['close-registration']);
+    },
+  );
+  testWidgets(
+    'TC-APP-LIFECYCLE-07: bracket ready while registration open starts, ticking closes first',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      tester.view.devicePixelRatio = 1;
+      final repository = _LifecycleRepository();
+      final match = MatchModel(
+        id: 'match-1',
+        round: 1,
+        matchNumber: 1,
+        team1Name: 'A',
+        team2Name: 'B',
+        status: 'scheduled',
+        bracketPosition: const BracketPosition(round: 1, position: 1),
+        updatedAt: DateTime.utc(2026, 1, 1),
+        divisionId: 'div-1',
+      );
+      await tester.pumpWidget(
+        _app(
+          _tournament(
+            'REGISTRATION_OPEN',
+            divisions: [
+              {'id': 'div-1', 'name': 'Đôi nam', 'matchType': 'DOUBLES'},
+            ],
+          ),
+          managementRepository: repository,
+          matches: [match],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      // Đã có sơ đồ: nút duy nhất là khai mạc, không còn "Chốt đăng ký".
+      expect(
+        find.text(l10n.tournamentManagementCloseRegistration),
+        findsNothing,
+      );
+      await tester.tap(find.text(l10n.tournamentManagementStartTournament));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(l10n.tournamentManagementCloseOpenOnStart));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementConfirm),
+      );
+      await tester.pumpAndSettle();
+      expect(repository.calls, ['close-registration', 'start']);
+    },
+  );
 
   testWidgets(
     'registration editor holds visibility, mode, dates and deadlines',
