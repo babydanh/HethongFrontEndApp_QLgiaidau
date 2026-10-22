@@ -33,6 +33,20 @@ Hoàn tất task 1.1–1.2; dừng trước 1.3 vì mâu thuẫn đặc tả ở
 - Task 5.3: route đặt theo quy ước hiện có (không phải `/tournaments/:tournamentId/swiss-pairing` như tasks.md): `.../manage/swiss-pairing/:divisionId` (organizer) và `/admin/tournament/:id/swiss-pairing/:divisionId` (admin), query `stageId`, `round`, `total`; chung một `_swissPairingBuilder`. Widget `SwissRoundActions` (public) nằm cuối `bracket_view_screen.dart` (đúng danh sách Files, không tạo file mới); chỉ hiện khi `canManageGroupAssignment` (cờ có sẵn: `canEditBracket || admin`) và `swissStageProvider` đã có giá trị (không có thì tổng vòng chỉ là đoán). Điều kiện "chỉ người quản lý" nằm ở bracket_view_screen và KHÔNG có test (cần dựng cả `BracketViewScreen`); test chỉ phủ `SwissRoundActions`. Việc làm mới (`bracketMatchesWithDivisionProvider`, `swissStageProvider`) và thông báo `Đã tạo vòng N.` nằm trong `SwissPairingScreen` sau `confirm`, thoát bằng `Navigator.maybePop()` (không dùng `context.pop()` để test không cần GoRouter).
 - Task 6.1: `flutter gen-l10n` exit 0, không khác biệt file sinh ngoài các khóa đã định; `flutter analyze --no-pub` các thư mục theo tiêu chí: 0 error, 0 warning, 59 info đều có sẵn (không info nào ở file mới; các info ở `tournament_management_divisions_section.dart` là `curly_braces` ở code cũ); `flutter test --no-pub --no-test-assets` 13 file Swiss/sửa: 115 pass, 0 fail; `public_bracket_view_test.dart` 8 đỏ sẵn (thiếu asset/google_fonts, đã nêu ở 3.2) + 3 ca Swiss pass, `bracket_filter_test.dart` pass. Chưa chạy: E2E/integration, `test/core/utils/elo_tier_test.dart` (đỏ sẵn trên main).
 
+- Sửa sau 2 review độc lập (12 mục):
+  1. `swissRoundState` so `normalizedStatus` (status trong `MatchModel` luôn chữ thường); test dựng bằng `MatchModel.fromJson` với 'COMPLETED'/'SCHEDULED'. Test cũ ở `swiss_entry_actions_test.dart` vẫn truyền status HOA qua constructor (vẫn đúng vì so đã chuẩn hóa).
+  2-3. `planSwissSave` (swiss.dart): đã có stage thì CHỈ `PATCH /tournaments/stages/:stageId` với `{...rawRoundConfig, swiss: {...rawSwiss, ...mới}}`, không gọi `updateDivisionConfig`; chưa có stage thì gói vào payload nội dung như cũ. `SwissStageInfo` giữ `rawRoundConfig`. Cái này CHỈ kiểm bằng test hàm thuần (`planSwissSave`); nhánh điều khiển trong `_configureDivision` (gọi API nào) không có test vì hộp thoại/section private.
+  4. Xem dòng "Đã sửa sau review" ở Câu hỏi còn mở.
+  5. Editor báo giá trị đã kẹp ngay khi gõ (`onChanged`), ô chỉ được ghi lại khi mất focus/submit (để gõ "12" khi tối thiểu là 3 không bị đè). Test cấp editor; hộp thoại lưu đọc `_swiss` đã cập nhật nên bấm Lưu ngay sẽ lấy giá trị mới (không có test cấp hộp thoại).
+  6. `_unplaced` = số người ở "Chưa ghép" + số cặp chỉ có một người (thả một người vào "Chưa ghép" từ cặp đủ đôi → 2).
+  7. 409 `SWISS_ROUND_EXISTS` làm mới `bracketMatchesWithDivisionProvider` + `swissStageProvider` (trong notifier) rồi reload; reload lỗi thì xóa `preview`/`draft`, giữ `errorKey` "Vòng này vừa được tạo..." (màn hiện placeholder + Thử lại). Tạo vòng thành công cũng làm mới hai provider trong notifier (không còn làm ở màn).
+  8. `revalidate()` + nút chữ "Thử lại" (`swiss-revalidate`) chỉ hiện khi lỗi mạng của validate và chưa hợp lệ.
+  9. Màn ghép cặp có `PopScope(canPop: !submitting)`; kiểm `context.mounted` trước thao tác sau `await` ở `SwissPairingScreen._confirm` và `SwissRoundActions._undo`.
+  10. `SwissApiException.errors` đọc `details.errors` (kèm `details.warnings`); `SWISS_INVALID_PAIRING` đưa `errors` vào state để hiện chữ `swissError*`.
+  11. Khóa `swissApiErrorTournamentClosed` (vi/en) + ánh xạ `SWISS_TOURNAMENT_CLOSED`; mã lạ rơi về `swissApiErrorUnknown`.
+  12. `SwissStageInfo.hasTotalRounds`/`totalRounds` (null khi Backend không gửi `swiss.totalRounds`); `SwissConfig.fromJson` giữ nguyên (vẫn trả 1 làm giá trị tạm). Thiếu thì ẩn `SwissRoundActions`, `_computeTotalRounds` rơi về cách đoán cũ, trang công khai dùng số vòng lớn nhất.
+  Một số test (helper `swissDivisionTeamCount`/`swissConfigOrDefault`, test màn hình mục 6/8/9/11) được viết cùng lúc với mã, không có bước đỏ riêng; các mục 1, 5, 7, 10, 12 đã có bước đỏ trước.
+
 ## Ràng buộc đang có
 - Agent KHÔNG push `main`; không `git add -A`.
 - Worktree không có `.env`: không đọc/in/chép/tạo `.env`; `flutter test` chạy với `--no-test-assets` để không đóng gói asset không cần thiết.
@@ -46,7 +60,7 @@ So với lần trước: không đổi (đã so). Thêm 3 khóa l10n ngoài danh
 
 ## Câu hỏi còn mở
 - (Mới) Payload lưu cấu hình Swiss trước khi sinh sơ đồ: gửi `{matchType, bracketType, maxParticipants, isConfigOverride: true, roundConfig: {..., swiss}}` qua `PATCH /tournaments/:id/divisions/:divisionId/config`. `isConfigOverride` chép từ mẫu vòng bảng; chưa xác minh Backend Swiss có nhận `roundConfig.swiss` ở đường này (hợp đồng có nói "đường cấu hình division hiện có"). Cần xác nhận khi Backend xong.
-- (Mới) Số đội cho trình chỉnh lấy từ `division['participantCount']` rồi `maxParticipants` của `GET /tournaments/:id/divisions`; chưa xác minh trường nào có thật (thiếu thì chỉ cap 30 vòng và mặc định vòng = 1).
+- (Đã sửa sau review) Số đội lấy từ `division['_count']['participants']` (`swissDivisionTeamCount`); không có thì 0: editor chỉ cap 30 vòng, mặc định hiển thị 1 và payload KHÔNG gửi `totalRounds` nếu người dùng không đổi số đó (Backend tự tính lúc sinh sơ đồ).
 - (Mới) `PATCH /tournaments/stages/:stageId` gửi `roundConfig: {swiss: <đủ 3 trường>}`; nếu Backend thay cả `roundConfig` thì mất khóa khác (stage Swiss hiện chỉ có `swiss`).
 - (Mới) Màn ghép cặp không có test kéo-thả ở màn hẹp 320 dp (chỉ 360 và 800 dp); nút Lên/Xuống của editor tiebreak chưa kiểm vùng chạm ≥ 48 dp bằng test (TextButton mặc định 48 dp chiều cao).
 - (Đã giải quyết) Task 1.3: không thêm chữ vào map của `AppConstants`, chỉ thêm hằng; nhãn từ l10n.
