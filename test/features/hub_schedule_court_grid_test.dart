@@ -103,8 +103,9 @@ void main() {
 
     expect(find.byType(ScheduleGrid), findsOneWidget);
     // "Sân 3" không có trận nào: nếu cột suy từ trận thì nó sẽ mất.
-    expect(find.text('Sân 3'), findsOneWidget); // chỉ tiêu đề cột
-    expect(find.text('Sân 1'), findsOneWidget);
+    // Tên đầy đủ nằm ở tooltip của tiêu đề cột (chữ hiển thị đã rút gọn "3").
+    expect(find.byTooltip('Sân 3'), findsOneWidget);
+    expect(find.byTooltip('Sân 1'), findsOneWidget);
     expect(find.text('Đội m1 A'), findsOneWidget);
   });
 
@@ -117,7 +118,7 @@ void main() {
         _match('m3', court: 'Sân 3', at: DateTime(2026, 10, 24, 8, 0)),
       ],
     );
-    expect(find.text('Sân 3'), findsOneWidget);
+    expect(find.byTooltip('Sân 3'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('court-picker-button')));
     await tester.pumpAndSettle();
@@ -127,7 +128,7 @@ void main() {
     await tester.tapAt(const Offset(5, 5));
     await tester.pumpAndSettle();
 
-    expect(find.text('Sân 3'), findsNothing);
+    expect(find.byTooltip('Sân 3'), findsNothing);
     expect(find.text('Đội m3 A'), findsNothing);
     expect(find.text('Đội m1 A'), findsOneWidget);
   });

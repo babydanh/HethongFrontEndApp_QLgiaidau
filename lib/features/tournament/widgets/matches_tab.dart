@@ -250,7 +250,6 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                       widget.scheduleSettings['minutesPerSet'],
                     ),
                     divisionNameById: widget.divisionNameById,
-                    slotHeight: 120,
                     emphasizeTimeLabels: true,
                     onTapMatch: _openMatchById,
                     roundLabelOf: roundLabelOf,

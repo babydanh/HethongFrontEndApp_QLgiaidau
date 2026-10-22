@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -82,8 +83,8 @@ class ScheduleGrid extends StatefulWidget {
   final ValueChanged<double>? onSlotHeightChanged;
 
   /// Giới hạn chiều cao một ô 15 phút khi kéo giãn.
-  static const double minSlotHeight = 96;
-  static const double maxSlotHeight = 288;
+  static const double minSlotHeight = 80;
+  static const double maxSlotHeight = 224;
 
   const ScheduleGrid({
     super.key,
@@ -94,7 +95,7 @@ class ScheduleGrid extends StatefulWidget {
     this.selectedMatchId,
     required this.onTapMatch,
     this.divisionNameById = const {},
-    this.slotHeight = 144,
+    this.slotHeight = 112,
     this.emphasizeTimeLabels = false,
     this.minutesPerSet = 15,
     this.day,
@@ -112,8 +113,9 @@ class ScheduleGrid extends StatefulWidget {
 }
 
 class _ScheduleGridState extends State<ScheduleGrid> {
-  /// Shared-grid default is 144dp; the public schedule opts into 120dp.
-  /// `BASE_PIXELS_PER_MINUTE` remains the web grid's separate layout scale.
+  /// Default is 112dp: the smallest 15-minute slot that still holds a doubles
+  /// card (see `_minimumHeightFor`). `BASE_PIXELS_PER_MINUTE` remains the web
+  /// grid's separate layout scale.
   double get _slotHeight => widget.slotHeight;
   static const double _timeColumnWidth = 56;
   static const double _minCourtLaneWidth = 120;
@@ -297,7 +299,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                           )
                             SizedBox(
                               width: courtLayouts[index].laneCount * laneWidth,
-                              child: _courtHeader(widget.courts[index]),
+                              child: _courtHeader(widget.courts[index], index),
                             ),
                         ],
                       ),
@@ -362,7 +364,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  Widget _courtHeader(String court) {
+  Widget _courtHeader(String court, int index) {
     return Container(
       height: 38,
       alignment: Alignment.center,
@@ -374,15 +376,39 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           left: BorderSide(color: AppTheme.primaryDark),
         ),
       ),
+      // Short label ("Sân 1" -> "1"); the full name stays in the tooltip.
+      child: Tooltip(
+        message: court,
+        child: _courtChip(court, index, fontSize: 12.5, hPadding: 10),
+      ),
+    );
+  }
+
+  /// Court label chip tinted by column index so a card can be tied to its column.
+  Widget _courtChip(
+    String court,
+    int index, {
+    required double fontSize,
+    required double hPadding,
+  }) {
+    final chip = courtChipColors(index);
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 80),
+      padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 1),
+      decoration: BoxDecoration(
+        color: chip.background,
+        border: Border.all(color: chip.border),
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: Text(
-        court,
+        formatCourtShortName(court),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
+        style: TextStyle(
+          fontSize: fontSize,
+          height: 1.2,
+          fontWeight: FontWeight.w800,
+          color: chip.foreground,
         ),
       ),
     );
@@ -931,8 +957,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Header thẻ: giờ bên trái, nhãn hạng mục (màu riêng mỗi hạng mục) và LIVE
-  /// bên phải; vạch trái cùng màu hạng mục để lướt là phân biệt được.
+  /// Header thẻ: "🕐 giờ / sân" một cụm bên trái (chip sân tô theo chỉ số sân), nhãn
+  /// hạng mục (màu riêng mỗi hạng mục) và LIVE bên phải; vạch trái cùng màu hạng
+  /// mục để lướt là phân biệt được.
   Widget _fullHeader(
     MatchModel match,
     DateTime start,
@@ -943,6 +970,8 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     final time =
         '${start.hour.toString().padLeft(2, '0')}:'
         '${start.minute.toString().padLeft(2, '0')}';
+    final court = _courtOf(match);
+    final muted = style.fg.withValues(alpha: 0.75);
     return Container(
       padding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
       decoration: BoxDecoration(
@@ -954,26 +983,48 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              time,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: style.fg.withValues(alpha: 0.75),
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+          Icon(Icons.schedule_rounded, size: 10, color: muted),
+          const SizedBox(width: 2),
+          Text(
+            time,
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: muted,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          if (divisionName != null)
+          if (court.isNotEmpty) ...[
+            Text(' / ', style: TextStyle(fontSize: 10, color: muted)),
             Flexible(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: _divisionChip(divisionName, divisionColor ?? style.fg),
+              child: Semantics(
+                label: court,
+                excludeSemantics: true,
+                child: _courtChip(
+                  court,
+                  widget.courts.indexOf(court),
+                  fontSize: 9.5,
+                  hPadding: 4,
+                ),
               ),
             ),
+          ],
+          Expanded(
+            flex: 2,
+            child: divisionName == null
+                ? const SizedBox.shrink()
+                : Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: _divisionChip(
+                        divisionName,
+                        divisionColor ?? style.fg,
+                      ),
+                    ),
+                  ),
+          ),
           if (match.isLive) _liveBadge(),
         ],
       ),

@@ -748,7 +748,7 @@ void main() {
     }
 
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Court 1'), findsOneWidget);
+    expect(find.byTooltip('Court 1'), findsOneWidget);
     expect(find.textContaining('Court hours'), findsOneWidget);
     expect(find.text('All (19)'), findsNothing);
     expect(find.text('Live (1)'), findsNothing);
@@ -813,7 +813,7 @@ void main() {
     final quarterHourLabel = find.text('08:15').first;
     expect(
       tester.getRect(quarterHourLabel).top - tester.getRect(timeLabel).top,
-      120,
+      112,
     );
     expect(tester.widget<Text>(timeLabel).style?.fontSize, 12);
     final timeLeftBefore = tester.getRect(timeLabel).left;
@@ -829,7 +829,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final frameRect = tester.getRect(frame);
-    final courtFour = tester.getRect(find.text('Court 4'));
+    final courtFour = tester.getRect(find.byTooltip('Court 4'));
     expect(courtFour.left, greaterThanOrEqualTo(frameRect.left + 56));
     expect(courtFour.right, lessThanOrEqualTo(frameRect.right));
     expect(tester.getRect(timeLabel).left, timeLeftBefore);
@@ -850,13 +850,38 @@ void main() {
     final quarterLabel = find.text('09:15').first;
     expect(
       tester.getRect(quarterLabel).top - tester.getRect(hourLabel).top,
-      144,
+      112,
     );
     expect(tester.widget<Text>(hourLabel).style?.fontSize, 10.5);
     expect(
       tester.widget<Text>(quarterLabel).style?.fontWeight,
       FontWeight.w500,
     );
+  });
+
+  testWidgets('card header shows the time with a short court chip', (
+    tester,
+  ) async {
+    final match = _scheduleMatch(
+      1,
+      court: 'Sân 2',
+      scheduledTime: DateTime(2026, 8, 12, 9),
+      durationMinutes: 30,
+    );
+    await _pumpGrid(tester, matches: [match], minutesPerSet: 15);
+
+    final card = find.byKey(ValueKey('schedule-match-${match.id}'));
+    expect(
+      find.descendant(of: card, matching: find.text('09:00')),
+      findsOneWidget,
+    );
+    expect(find.descendant(of: card, matching: find.text('2')), findsOneWidget);
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Sân')),
+      findsNothing,
+    );
+    // The column header keeps the full name in its tooltip.
+    expect(find.byTooltip('Sân 2'), findsOneWidget);
   });
 
   group('schedule card duration fallback', () {

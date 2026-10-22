@@ -121,7 +121,7 @@ void main() {
     await _pump(tester, matchesView: OrganizerOpsMatchesView.grid);
 
     expect(find.byType(ScheduleGrid), findsOneWidget);
-    expect(find.text('Sân 1'), findsOneWidget); // tiêu đề cột
+    expect(find.byTooltip('Sân 1'), findsOneWidget); // tiêu đề cột
     expect(find.text('Đội A'), findsOneWidget);
   });
 

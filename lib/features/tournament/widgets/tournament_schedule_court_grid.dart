@@ -153,7 +153,7 @@ class _TournamentScheduleCourtGridState
   late Future<List<ScheduleCourt>> _courtsFuture;
 
   /// Chiều cao một ô 15 phút; host giữ state, lưới chỉ báo khi kéo tay nắm.
-  double _slotHeight = 144;
+  double _slotHeight = 112;
 
   /// Null = hiện tất cả sân.
   Set<String>? _selectedCourts;
