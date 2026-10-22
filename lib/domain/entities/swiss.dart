@@ -230,18 +230,109 @@ class SwissNextRoundResult {
 }
 
 class SwissStageInfo {
-  const SwissStageInfo({required this.stageId, required this.config});
+  const SwissStageInfo({
+    required this.stageId,
+    required this.config,
+    this.rawRoundConfig = const {},
+    this.hasTotalRounds = true,
+  });
 
   final String stageId;
   final SwissConfig config;
 
+  /// The stage's whole `roundConfig` as sent by the server. The Backend
+  /// replaces `roundConfig` on PATCH, so a save must send every key back.
+  final Map<String, dynamic> rawRoundConfig;
+
+  /// False when the server sent no `swiss.totalRounds`; [config] then holds a
+  /// placeholder 1 that must not be shown or used as the real round count.
+  final bool hasTotalRounds;
+
+  int? get totalRounds => hasTotalRounds ? config.totalRounds : null;
+
   factory SwissStageInfo.fromJson(Map<String, dynamic> json) {
     final roundConfig = _map(json['roundConfig']);
+    final swiss = _map(roundConfig['swiss']);
     return SwissStageInfo(
       stageId: json['id']?.toString() ?? '',
-      config: SwissConfig.fromJson(_map(roundConfig['swiss'])),
+      config: SwissConfig.fromJson(swiss),
+      rawRoundConfig: roundConfig,
+      hasTotalRounds: swiss['totalRounds'] is num,
     );
   }
+}
+
+/// Valid team count of a division: `_count.participants` of
+/// `GET /tournaments/:id/divisions`; 0 when the response does not carry it.
+int swissDivisionTeamCount(Map<String, dynamic> division) {
+  final counts = division['_count'];
+  final count = counts is Map ? counts['participants'] : null;
+  return count is num ? count.toInt() : 0;
+}
+
+/// A saved `roundConfig.swiss` with the contract defaults for what is missing
+/// (the round count defaults to ceil(log2(teams)), never below [minPlayed]).
+SwissConfig swissConfigOrDefault(Object? raw, int teamCount, int minPlayed) {
+  final json = raw is Map
+      ? Map<String, dynamic>.from(raw)
+      : <String, dynamic>{};
+  final saved = SwissConfig.fromJson(json);
+  return SwissConfig(
+    totalRounds: json['totalRounds'] is num
+        ? saved.totalRounds
+        : math.max(minPlayed, SwissConfig.defaultTotalRounds(teamCount)),
+    tiebreakOrder: json['tiebreakOrder'] is List
+        ? saved.tiebreakOrder
+        : SwissConfig.defaultTiebreakOrder,
+    firstRoundPairing: saved.firstRoundPairing,
+  );
+}
+
+/// What a Swiss config save must send: [divisionPayload] for
+/// `updateDivisionConfig` (null = skip) and [stageRoundConfig] for
+/// `updateStageRoundConfig` (null = skip).
+class SwissSavePlan {
+  const SwissSavePlan({this.divisionPayload, this.stageRoundConfig});
+
+  final Map<String, dynamic>? divisionPayload;
+  final Map<String, dynamic>? stageRoundConfig;
+}
+
+/// Once the bracket exists the Backend refuses division config edits, so only
+/// the stage is patched (with the stage's other `roundConfig` keys kept).
+/// Before the bracket, the config rides in the division payload.
+/// [omitTotalRounds] leaves `totalRounds` out so the Backend derives it.
+SwissSavePlan planSwissSave({
+  required Map<String, dynamic> basePayload,
+  required Map<String, dynamic>? divisionRoundConfig,
+  required SwissConfig? swiss,
+  required SwissStageInfo? stage,
+  bool omitTotalRounds = false,
+}) {
+  if (swiss == null) return SwissSavePlan(divisionPayload: basePayload);
+  final swissJson = swiss.toJson();
+  if (omitTotalRounds) swissJson.remove('totalRounds');
+
+  if (stage != null) {
+    final rawSwiss = stage.rawRoundConfig['swiss'];
+    return SwissSavePlan(
+      stageRoundConfig: {
+        ...stage.rawRoundConfig,
+        'swiss': {if (rawSwiss is Map) ...rawSwiss, ...swissJson},
+      },
+    );
+  }
+  final rawSwiss = divisionRoundConfig?['swiss'];
+  return SwissSavePlan(
+    divisionPayload: {
+      ...basePayload,
+      'isConfigOverride': true,
+      'roundConfig': {
+        ...?divisionRoundConfig,
+        'swiss': {if (rawSwiss is Map) ...rawSwiss, ...swissJson},
+      },
+    },
+  );
 }
 
 class SwissRoundDraftRequest {
@@ -295,21 +386,29 @@ class SwissApiException implements Exception {
     this.status,
     this.code,
     this.warnings = const [],
+    this.errors = const [],
     this.message,
   });
 
   final int? status;
   final String? code;
   final List<SwissWarning> warnings;
+
+  /// `details.errors` of `SWISS_INVALID_PAIRING`.
+  final List<SwissError> errors;
   final String? message;
 
   factory SwissApiException.fromJson(Map<String, dynamic> json) {
     final data = _map(json['data']);
-    final warnings = json['warnings'] ?? data['warnings'];
+    final details = _map(json['details']);
+    final warnings =
+        json['warnings'] ?? data['warnings'] ?? details['warnings'];
+    final errors = json['errors'] ?? data['errors'] ?? details['errors'];
     return SwissApiException(
       status: _nullableInt(json['statusCode']),
       code: json['code']?.toString() ?? data['code']?.toString(),
       warnings: _objectList(warnings, SwissWarning.fromJson),
+      errors: _objectList(errors, SwissError.fromJson),
       message: json['message']?.toString(),
     );
   }

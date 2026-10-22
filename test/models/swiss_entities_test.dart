@@ -230,4 +230,185 @@ void main() {
       expect(exception.warnings.single.type, 'REMATCH');
     });
   });
+
+  group(
+    'SwissStageInfo giữ roundConfig thô và biết có totalRounds hay không',
+    () {
+      SwissStageInfo stage(Map<String, dynamic> roundConfig) =>
+          SwissStageInfo.fromJson({
+            'id': 's1',
+            'type': 'SWISS',
+            'roundConfig': roundConfig,
+          });
+
+      test('giữ nguyên khóa ngoài swiss và khóa lạ trong swiss', () {
+        final info = stage({
+          'other': {'a': 1},
+          'swiss': {'totalRounds': 4, 'future': true},
+        });
+
+        expect(info.rawRoundConfig['other'], {'a': 1});
+        expect(info.hasTotalRounds, isTrue);
+        expect(info.totalRounds, 4);
+      });
+
+      test(
+        'thiếu swiss.totalRounds thì totalRounds là null (không đoán 1)',
+        () {
+          final info = stage({
+            'swiss': {
+              'tiebreakOrder': ['BUCHHOLZ'],
+            },
+          });
+
+          expect(info.hasTotalRounds, isFalse);
+          expect(info.totalRounds, isNull);
+        },
+      );
+    },
+  );
+
+  group('planSwissSave', () {
+    const swiss = SwissConfig(
+      totalRounds: 4,
+      tiebreakOrder: [SwissTiebreak.buchholz],
+      firstRoundPairing: 'RANDOM',
+    );
+    const base = {'matchType': 'SINGLES', 'bracketType': 'SWISS'};
+
+    test('đã có stage: chỉ PATCH stage, giữ khóa khác của roundConfig', () {
+      final stage = SwissStageInfo.fromJson({
+        'id': 's1',
+        'roundConfig': {
+          'other': {'a': 1},
+          'swiss': {'totalRounds': 3, 'future': true},
+        },
+      });
+
+      final plan = planSwissSave(
+        basePayload: base,
+        divisionRoundConfig: null,
+        swiss: swiss,
+        stage: stage,
+      );
+
+      expect(plan.divisionPayload, isNull);
+      expect(plan.stageRoundConfig!['other'], {'a': 1});
+      expect(plan.stageRoundConfig!['swiss'], {
+        'future': true,
+        'totalRounds': 4,
+        'tiebreakOrder': ['BUCHHOLZ'],
+        'firstRoundPairing': 'RANDOM',
+      });
+    });
+
+    test('chưa có stage: ghi roundConfig.swiss vào cấu hình nội dung', () {
+      final plan = planSwissSave(
+        basePayload: base,
+        divisionRoundConfig: {
+          'groupsConfig': {'numGroups': 2},
+        },
+        swiss: swiss,
+        stage: null,
+      );
+
+      expect(plan.stageRoundConfig, isNull);
+      expect(plan.divisionPayload!['isConfigOverride'], isTrue);
+      final roundConfig =
+          plan.divisionPayload!['roundConfig'] as Map<String, dynamic>;
+      expect(roundConfig['groupsConfig'], {'numGroups': 2});
+      expect((roundConfig['swiss'] as Map)['totalRounds'], 4);
+      expect(plan.divisionPayload!['matchType'], 'SINGLES');
+    });
+
+    test('không phải Swiss: chỉ cấu hình nội dung cũ', () {
+      final plan = planSwissSave(
+        basePayload: base,
+        divisionRoundConfig: null,
+        swiss: null,
+        stage: null,
+      );
+
+      expect(plan.divisionPayload, base);
+      expect(plan.stageRoundConfig, isNull);
+    });
+
+    test('omitTotalRounds bỏ totalRounds khỏi payload', () {
+      final plan = planSwissSave(
+        basePayload: base,
+        divisionRoundConfig: null,
+        swiss: swiss,
+        stage: null,
+        omitTotalRounds: true,
+      );
+
+      final roundConfig =
+          plan.divisionPayload!['roundConfig'] as Map<String, dynamic>;
+      expect((roundConfig['swiss'] as Map).containsKey('totalRounds'), isFalse);
+      expect((roundConfig['swiss'] as Map)['firstRoundPairing'], 'RANDOM');
+    });
+  });
+
+  group('SwissApiException đọc details', () {
+    test('details.errors và details.warnings', () {
+      final exception = SwissApiException.fromJson({
+        'statusCode': 400,
+        'code': 'SWISS_INVALID_PAIRING',
+        'message': 'bad',
+        'details': {
+          'errors': [
+            {
+              'code': 'MISSING_PARTICIPANT',
+              'participantIds': ['p1'],
+            },
+          ],
+          'warnings': [
+            {
+              'type': 'REMATCH',
+              'participantIds': ['p1', 'p2'],
+              'round': 1,
+            },
+          ],
+        },
+      });
+
+      expect(exception.code, 'SWISS_INVALID_PAIRING');
+      expect(exception.errors.single.code, 'MISSING_PARTICIPANT');
+      expect(exception.errors.single.participantIds, ['p1']);
+      expect(exception.warnings.single.type, 'REMATCH');
+    });
+  });
+
+  group('số đội và cấu hình mặc định của nội dung', () {
+    test('số đội lấy từ _count.participants, không có thì 0', () {
+      expect(
+        swissDivisionTeamCount({
+          '_count': {'participants': 12},
+          'maxParticipants': 64,
+        }),
+        12,
+      );
+      expect(swissDivisionTeamCount({'maxParticipants': 64}), 0);
+      expect(swissDivisionTeamCount({'participantCount': 9}), 0);
+    });
+
+    test(
+      'thiếu cấu hình thì dùng mặc định theo số đội, không thấp hơn đã ghép',
+      () {
+        final config = swissConfigOrDefault(null, 8, 0);
+        expect(config.totalRounds, 3);
+        expect(config.tiebreakOrder, SwissConfig.defaultTiebreakOrder);
+        expect(config.firstRoundPairing, 'SEED');
+        expect(swissConfigOrDefault(null, 8, 5).totalRounds, 5);
+        expect(
+          swissConfigOrDefault(
+            {'totalRounds': 4, 'firstRoundPairing': 'RANDOM'},
+            8,
+            0,
+          ).totalRounds,
+          4,
+        );
+      },
+    );
+  });
 }

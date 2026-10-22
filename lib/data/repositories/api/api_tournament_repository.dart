@@ -1136,6 +1136,7 @@ class ApiTournamentRepository implements ITournamentRepository {
         status: e.response?.statusCode,
         code: parsed.code,
         warnings: parsed.warnings,
+        errors: parsed.errors,
         message: parsed.message ?? e.message,
       );
     }

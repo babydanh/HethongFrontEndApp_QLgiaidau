@@ -695,14 +695,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       mainAxisSize: widget.isEmbedded ? MainAxisSize.min : MainAxisSize.max,
       children: [
         _buildGroupStageTabBar(l10n, swiss: true),
-        // Without the stage config the total is a guess: show no actions.
-        if (canManage && stage != null && _activeDivisionId != null)
+        // Without a configured total the round count is a guess: no actions.
+        if (canManage &&
+            stage != null &&
+            stage.totalRounds != null &&
+            _activeDivisionId != null)
           SwissRoundActions(
             tournamentId: widget.tournamentId,
             divisionId: _activeDivisionId!,
             stageId: stage.stageId,
             matches: matches,
-            totalRounds: stage.config.totalRounds,
+            totalRounds: stage.totalRounds!,
             onOpenPairing: _openSwissPairing,
           ),
         if (widget.isEmbedded) body else Expanded(child: body),
@@ -1543,8 +1546,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             )),
           )
           .value
-          ?.config
-          .totalRounds;
+          ?.totalRounds;
       if (configured != null && configured > 0) return configured;
     }
     if (bracketType == AppConstants.bracketDoubleElimination) {

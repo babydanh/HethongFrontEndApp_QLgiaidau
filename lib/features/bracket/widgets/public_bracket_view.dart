@@ -133,9 +133,10 @@ class SwissBracketView extends ConsumerWidget {
     final params = (tournamentId: tournamentId, divisionId: divisionId);
     final standings =
         ref.watch(standingsWithDivisionProvider(params)).value ?? const [];
-    final config = ref.watch(swissStageProvider(params)).value?.config;
+    final stage = ref.watch(swissStageProvider(params)).value;
+    final config = stage?.config;
     final totalRounds =
-        config?.totalRounds ??
+        stage?.totalRounds ??
         matches.fold<int>(1, (max, m) => m.round > max ? m.round : max);
     final current = swissRoundState(matches, totalRounds).currentRound;
 

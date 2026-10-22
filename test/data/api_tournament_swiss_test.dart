@@ -263,12 +263,39 @@ void main() {
       expect(e.code, 'SWISS_INVALID_PAIRING');
     });
 
-    test('a dropped connection becomes SwissApiException without status', () async {
-      final adapter = _Adapter(networkError: true);
+    test('400 SWISS_INVALID_PAIRING carries details.errors', () async {
+      final adapter = _Adapter(
+        statusCode: 400,
+        body: {
+          'statusCode': 400,
+          'code': 'SWISS_INVALID_PAIRING',
+          'message': 'bad pairing',
+          'details': {
+            'errors': [
+              {
+                'code': 'DUPLICATE_PARTICIPANT',
+                'participantIds': ['p1'],
+              },
+            ],
+          },
+        },
+      );
       final e = await _caught(_repoWith(adapter).swissNextRound('t-1', _draft));
-      expect(e.status, isNull);
-      expect(e.code, isNull);
+      expect(e.errors.single.code, 'DUPLICATE_PARTICIPANT');
+      expect(e.errors.single.participantIds, ['p1']);
     });
+
+    test(
+      'a dropped connection becomes SwissApiException without status',
+      () async {
+        final adapter = _Adapter(networkError: true);
+        final e = await _caught(
+          _repoWith(adapter).swissNextRound('t-1', _draft),
+        );
+        expect(e.status, isNull);
+        expect(e.code, isNull);
+      },
+    );
   });
 
   group('swissUndoRound', () {
@@ -356,6 +383,31 @@ void main() {
       final stage = await _repoWith(adapter).getSwissStage('t-1');
       expect(stage!.config.tiebreakOrder, SwissConfig.defaultTiebreakOrder);
       expect(stage.config.firstRoundPairing, 'SEED');
+    });
+
+    test('keeps the raw roundConfig and flags a missing totalRounds', () async {
+      final adapter = _Adapter(
+        body: {
+          'data': {
+            'stages': [
+              {
+                'id': 's-1',
+                'type': 'SWISS',
+                'roundConfig': {
+                  'other': 1,
+                  'swiss': {
+                    'tiebreakOrder': ['SEED'],
+                  },
+                },
+              },
+            ],
+          },
+        },
+      );
+      final stage = await _repoWith(adapter).getSwissStage('t-1');
+      expect(stage!.rawRoundConfig['other'], 1);
+      expect(stage.hasTotalRounds, isFalse);
+      expect(stage.totalRounds, isNull);
     });
 
     test('returns null when there is no SWISS stage', () async {

@@ -109,11 +109,14 @@ class _SwissConfigEditorState extends State<SwissConfigEditor> {
 
   void _emit() => widget.onChanged(_current());
 
-  void _commitRounds() {
+  /// Applies the field text. While typing ([rewrite] false) the field keeps
+  /// what the user typed but the clamped value is already reported, so Save
+  /// never reads a stale number; on blur/submit the field shows the clamp.
+  void _applyRounds({required bool rewrite}) {
     final parsed = int.tryParse(_rounds.text.trim());
     if (parsed == null) {
-      // Empty or invalid: restore the previous value, send nothing.
-      setState(() => _rounds.text = '$_totalRounds');
+      // Empty or not a number: keep the previous value, send nothing.
+      if (rewrite) setState(() => _rounds.text = '$_totalRounds');
       return;
     }
     final clamped = parsed.clamp(_minRounds, _maxRounds);
@@ -123,13 +126,15 @@ class _SwissConfigEditorState extends State<SwissConfigEditor> {
       } else if (parsed != _totalRounds) {
         _clampedUp = false;
       }
-      _rounds.text = '$clamped';
+      if (rewrite) _rounds.text = '$clamped';
     });
     if (clamped != _totalRounds) {
       _totalRounds = clamped;
       _emit();
     }
   }
+
+  void _commitRounds() => _applyRounds(rewrite: true);
 
   void _setPairing(String? value) {
     if (value == null || value == _pairing) return;
@@ -174,6 +179,7 @@ class _SwissConfigEditorState extends State<SwissConfigEditor> {
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           textInputAction: TextInputAction.done,
+          onChanged: (_) => _applyRounds(rewrite: false),
           onSubmitted: (_) => _commitRounds(),
           decoration: InputDecoration(
             labelText: l10n.swissConfigTotalRounds,

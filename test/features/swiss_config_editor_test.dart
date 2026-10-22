@@ -71,6 +71,34 @@ void main() {
     expect(find.text('7'), findsOneWidget);
   });
 
+  testWidgets('typing alone (no submit, no focus change) already emits', (
+    tester,
+  ) async {
+    final emitted = <SwissConfig>[];
+    await _pump(tester, _host(emitted));
+
+    await tester.enterText(find.byKey(const Key('swiss-config-rounds')), '6');
+    await tester.pump();
+
+    expect(emitted.last.totalRounds, 6);
+  });
+
+  testWidgets('typing a value below the played rounds emits the clamped one', (
+    tester,
+  ) async {
+    final emitted = <SwissConfig>[];
+    await _pump(tester, _host(emitted, minPlayedRounds: 3));
+
+    await tester.enterText(find.byKey(const Key('swiss-config-rounds')), '1');
+    await tester.pump();
+
+    expect(emitted.last.totalRounds, 3);
+    // The field is not rewritten mid-typing, so "12" can still be typed.
+    await tester.enterText(find.byKey(const Key('swiss-config-rounds')), '12');
+    await tester.pump();
+    expect(emitted.last.totalRounds, 12);
+  });
+
   testWidgets('zero is clamped up to one round', (tester) async {
     final emitted = <SwissConfig>[];
     await _pump(tester, _host(emitted));

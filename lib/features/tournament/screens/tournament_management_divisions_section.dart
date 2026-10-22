@@ -177,7 +177,7 @@ class _TournamentManagementDivisionsSectionState
   Future<void> _configureDivision(Map<String, dynamic> division) async {
     final divisionId = _divisionId(division);
     if (divisionId.isEmpty) return;
-    final teamCount = _teamCount(division);
+    final teamCount = swissDivisionTeamCount(division);
     // Once the bracket exists the Swiss config lives on the stage.
     SwissStageInfo? stage;
     var minPlayed = 0;
@@ -201,38 +201,60 @@ class _TournamentManagementDivisionsSectionState
       }
       if (!mounted) return;
     }
+    final divisionRoundConfig = division['roundConfig'] is Map
+        ? Map<String, dynamic>.from(division['roundConfig'] as Map)
+        : null;
+    final rawSwiss = stage != null
+        ? stage.rawRoundConfig['swiss']
+        : divisionRoundConfig?['swiss'];
+    final initial = swissConfigOrDefault(rawSwiss, teamCount, minPlayed);
     final values = await showDialog<_DivisionConfigValues>(
       context: context,
       builder: (context) => _DivisionConfigDialog(
         division: division,
-        swissInitial:
-            stage?.config ?? _divisionSwissConfig(division, teamCount),
+        swissInitial: initial,
         teamCount: teamCount,
         minPlayedRounds: minPlayed,
       ),
     );
     if (values == null || !mounted) return;
     final swiss = values.swiss;
-    final payload = values.toPayload();
-    if (swiss != null && stage == null) {
-      final roundConfig = division['roundConfig'];
-      payload['isConfigOverride'] = true;
-      payload['roundConfig'] = {
-        if (roundConfig is Map) ...Map<String, dynamic>.from(roundConfig),
-        'swiss': swiss.toJson(),
-      };
-    }
+    // Unknown team count and no saved total: the "1" shown is a placeholder.
+    // Leave totalRounds out so the Backend derives it when generating.
+    final savedHasTotal = rawSwiss is Map && rawSwiss['totalRounds'] is num;
+    final plan = planSwissSave(
+      basePayload: values.toPayload(),
+      divisionRoundConfig: divisionRoundConfig,
+      swiss: swiss,
+      stage: stage,
+      omitTotalRounds:
+          !savedHasTotal &&
+          teamCount <= 0 &&
+          swiss?.totalRounds == initial.totalRounds,
+    );
+    final divisionPayload = plan.divisionPayload;
+    final stageRoundConfig = plan.stageRoundConfig;
     final stageId = stage?.stageId;
     await _mutate(() async {
+      // After the bracket exists the Backend rejects division config edits,
+      // so then only the stage is patched.
+      if (divisionPayload != null) {
+        await ref
+            .read(tournamentManagementRepositoryProvider)
+            .updateDivisionConfig(
+              widget.tournament.id,
+              divisionId,
+              divisionPayload,
+            );
+      }
+      if (stageRoundConfig == null || stageId == null) return;
       await ref
-          .read(tournamentManagementRepositoryProvider)
-          .updateDivisionConfig(widget.tournament.id, divisionId, payload);
-      if (swiss == null || stageId == null) return;
-      await ref.read(tournamentRepositoryProvider).updateStageRoundConfig(
-        widget.tournament.id,
-        stageId,
-        {'swiss': swiss.toJson()},
-      );
+          .read(tournamentRepositoryProvider)
+          .updateStageRoundConfig(
+            widget.tournament.id,
+            stageId,
+            stageRoundConfig,
+          );
       ref.invalidate(
         swissStageProvider((
           tournamentId: widget.tournament.id,
@@ -1022,31 +1044,6 @@ String _normalize(String value, List<String> values, String fallback) =>
 
 bool _isSwiss(Object? bracketType) =>
     bracketType?.toString().toUpperCase() == 'SWISS';
-
-int _teamCount(Map<String, dynamic> division) {
-  final count = division['participantCount'] ?? division['maxParticipants'];
-  return count is num ? count.toInt() : int.tryParse('$count') ?? 0;
-}
-
-/// Division-level `roundConfig.swiss` (before the bracket exists), with the
-/// contract defaults for anything missing.
-SwissConfig _divisionSwissConfig(Map<String, dynamic> division, int teamCount) {
-  final roundConfig = division['roundConfig'];
-  final raw = roundConfig is Map ? roundConfig['swiss'] : null;
-  final json = raw is Map
-      ? Map<String, dynamic>.from(raw)
-      : <String, dynamic>{};
-  final saved = SwissConfig.fromJson(json);
-  return SwissConfig(
-    totalRounds: json['totalRounds'] is num
-        ? saved.totalRounds
-        : SwissConfig.defaultTotalRounds(teamCount),
-    tiebreakOrder: json['tiebreakOrder'] is List
-        ? saved.tiebreakOrder
-        : SwissConfig.defaultTiebreakOrder,
-    firstRoundPairing: saved.firstRoundPairing,
-  );
-}
 
 String _matchTypeLabel(AppLocalizations l10n, String value) =>
     switch (value.toUpperCase()) {
