@@ -1,4 +1,6 @@
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
@@ -853,7 +855,10 @@ class _TournamentLifecycleCardState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final id = widget.tournament.id;
-    final status = widget.tournament.status.toUpperCase();
+    // Entity lưu mã đã chuẩn hoá ("registration", không phải "REGISTRATION_OPEN").
+    final status = StatusHelper.normalizeTournamentStatus(
+      widget.tournament.status,
+    );
     final divisionMatches = widget.tournament.divisions.isEmpty
         ? null
         : ref.watch(matchesProvider(id)).asData?.value;
@@ -867,7 +872,7 @@ class _TournamentLifecycleCardState
         );
     // Mỗi lúc một nút theo việc tiếp theo (như Web). Khoá/mở từng nội dung nằm ở mục Nội dung.
     final primary = switch (status) {
-      'DRAFT' => _lifecycleButton(
+      AppConstants.statusDraft => _lifecycleButton(
         l10n.tournamentManagementPublish,
         Icons.public_rounded,
         () => _runAction(
@@ -877,7 +882,7 @@ class _TournamentLifecycleCardState
           l10n.tournamentManagementPublishConfirm,
         ),
       ),
-      'UPCOMING' => _lifecycleButton(
+      AppConstants.statusUpcoming => _lifecycleButton(
         l10n.tournamentManagementOpenRegistrationNow,
         Icons.lock_open_rounded,
         () => _runAction(
@@ -887,7 +892,7 @@ class _TournamentLifecycleCardState
           l10n.tournamentManagementOpenRegistrationConfirm,
         ),
       ),
-      'REGISTRATION_OPEN' when !hasBracket => _lifecycleButton(
+      AppConstants.statusRegistration when !hasBracket => _lifecycleButton(
         l10n.tournamentManagementCloseRegistration,
         Icons.lock_outline_rounded,
         () => _runAction(
@@ -897,18 +902,19 @@ class _TournamentLifecycleCardState
           l10n.tournamentManagementCloseRegistrationConfirm,
         ),
       ),
-      'REGISTRATION_OPEN' || 'REGISTRATION_CLOSED' => _lifecycleButton(
+      AppConstants.statusRegistration ||
+      AppConstants.statusRegistrationClosed => _lifecycleButton(
         l10n.tournamentManagementStartTournament,
         Icons.play_arrow_rounded,
         () => _start(
           id,
-          offerClose: status == 'REGISTRATION_OPEN',
+          offerClose: status == AppConstants.statusRegistration,
           confirmation: hasDivisionWithoutBracket
               ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
               : l10n.tournamentManagementStartTournamentConfirm,
         ),
       ),
-      'IN_PROGRESS' => _lifecycleButton(
+      AppConstants.statusInProgress => _lifecycleButton(
         l10n.tournamentManagementCompleteTournament,
         Icons.check_circle_outline_rounded,
         () => _runAction(
@@ -929,7 +935,7 @@ class _TournamentLifecycleCardState
         children: [
           primary,
           // Đã đóng hết: vẫn cần lối mở lại cả giải; chỉ là nút chữ, không phải nút chính.
-          if (status == 'REGISTRATION_CLOSED')
+          if (status == AppConstants.statusRegistrationClosed)
             TextButton(
               onPressed: _isActing
                   ? null
