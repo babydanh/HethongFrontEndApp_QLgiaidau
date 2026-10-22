@@ -24874,6 +24874,36 @@ abstract class AppLocalizations {
   /// **'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.'**
   String get tournamentManagementLifecycleDescription;
 
+  /// No description provided for @tournamentManagementStartTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khai mạc giải'**
+  String get tournamentManagementStartTournament;
+
+  /// No description provided for @tournamentManagementStartTournamentConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn khai mạc giải đấu này?'**
+  String get tournamentManagementStartTournamentConfirm;
+
+  /// No description provided for @tournamentManagementStartTournamentMissingBracketConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Bạn vẫn có thể khai mạc giải.'**
+  String get tournamentManagementStartTournamentMissingBracketConfirm;
+
+  /// No description provided for @tournamentManagementCompleteTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc giải'**
+  String get tournamentManagementCompleteTournament;
+
+  /// No description provided for @tournamentManagementCompleteTournamentConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn kết thúc giải đấu này?'**
+  String get tournamentManagementCompleteTournamentConfirm;
+
   /// No description provided for @tournamentManagementLiveOperations.
   ///
   /// In vi, this message translates to:

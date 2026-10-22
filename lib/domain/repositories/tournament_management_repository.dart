@@ -98,6 +98,7 @@ abstract interface class TournamentManagementRepository {
     String id,
     RosterImportBatchRequest request,
   );
+
   /// Ghi các dòng đủ điều kiện. Idempotency-Key được tính từ nội dung request,
   /// nên gửi lại đúng payload không tạo bản ghi trùng.
   Future<RosterImportBatchResult> importRosterBatch(
@@ -137,4 +138,18 @@ abstract interface class TournamentManagementRepository {
   Future<Map<String, dynamic>> reopenRegistration(String id);
   Future<Map<String, dynamic>> lockTournament(String id);
   Future<Map<String, dynamic>> regenerateInviteCode(String id);
+}
+
+abstract interface class TournamentLifecycleRepository {
+  Future<Map<String, dynamic>> startTournament(String id);
+  Future<Map<String, dynamic>> completeTournament(String id);
+}
+
+extension TournamentLifecycleRepositoryAccess
+    on TournamentManagementRepository {
+  Future<Map<String, dynamic>> startTournament(String id) =>
+      (this as TournamentLifecycleRepository).startTournament(id);
+
+  Future<Map<String, dynamic>> completeTournament(String id) =>
+      (this as TournamentLifecycleRepository).completeTournament(id);
 }

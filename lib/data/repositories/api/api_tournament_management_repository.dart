@@ -9,7 +9,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 
 class ApiTournamentManagementRepository
-    implements TournamentManagementRepository {
+    implements TournamentManagementRepository, TournamentLifecycleRepository {
   ApiTournamentManagementRepository(this._dioClient);
 
   final DioClient _dioClient;
@@ -351,9 +351,8 @@ class ApiTournamentManagementRepository
     }
     return pairs
         .map(
-          (item) => AddedAthletePair.fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
+          (item) =>
+              AddedAthletePair.fromJson(Map<String, dynamic>.from(item as Map)),
         )
         .toList(growable: false);
   }
@@ -504,6 +503,14 @@ class ApiTournamentManagementRepository
       data: {if (divisionId != null) 'divisionId': divisionId},
     ),
   );
+
+  @override
+  Future<Map<String, dynamic>> startTournament(String id) async =>
+      _map(await _dio.post('/tournaments/$id/start'));
+
+  @override
+  Future<Map<String, dynamic>> completeTournament(String id) async =>
+      _map(await _dio.post('/tournaments/$id/complete'));
 
   @override
   Future<Map<String, dynamic>> publishTournament(String id) async =>

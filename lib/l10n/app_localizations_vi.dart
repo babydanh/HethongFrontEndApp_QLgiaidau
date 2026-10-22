@@ -13676,6 +13676,24 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.';
 
   @override
+  String get tournamentManagementStartTournament => 'Khai mạc giải';
+
+  @override
+  String get tournamentManagementStartTournamentConfirm =>
+      'Bạn có chắc muốn khai mạc giải đấu này?';
+
+  @override
+  String get tournamentManagementStartTournamentMissingBracketConfirm =>
+      'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Bạn vẫn có thể khai mạc giải.';
+
+  @override
+  String get tournamentManagementCompleteTournament => 'Kết thúc giải';
+
+  @override
+  String get tournamentManagementCompleteTournamentConfirm =>
+      'Bạn có chắc muốn kết thúc giải đấu này?';
+
+  @override
   String get tournamentManagementLiveOperations => 'Vận hành trực tiếp';
 
   @override

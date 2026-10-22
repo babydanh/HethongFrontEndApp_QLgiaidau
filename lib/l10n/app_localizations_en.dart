@@ -13721,6 +13721,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the server-supported tournament transitions. Authorization is enforced by the server.';
 
   @override
+  String get tournamentManagementStartTournament => 'Start tournament';
+
+  @override
+  String get tournamentManagementStartTournamentConfirm =>
+      'Are you sure you want to start this tournament?';
+
+  @override
+  String get tournamentManagementStartTournamentMissingBracketConfirm =>
+      'Warning: at least one division has no draw yet. You can still start the tournament.';
+
+  @override
+  String get tournamentManagementCompleteTournament => 'End tournament';
+
+  @override
+  String get tournamentManagementCompleteTournamentConfirm =>
+      'Are you sure you want to end this tournament?';
+
+  @override
   String get tournamentManagementLiveOperations => 'Live operations';
 
   @override

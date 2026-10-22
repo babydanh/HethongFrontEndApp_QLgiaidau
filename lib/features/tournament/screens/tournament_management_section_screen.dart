@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
@@ -294,10 +295,7 @@ class _TournamentSettingsFormState
               _InlineError(text: _errorMessage!),
             ],
             const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: _saveButton(l10n),
-            ),
+            Align(alignment: Alignment.centerRight, child: _saveButton(l10n)),
           ],
         ],
       ),
@@ -307,10 +305,7 @@ class _TournamentSettingsFormState
     return Column(
       children: [
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [card],
-          ),
+          child: ListView(padding: const EdgeInsets.all(16), children: [card]),
         ),
         _StickySaveBar(
           error: _errorMessage,
@@ -353,179 +348,174 @@ class _TournamentSettingsFormState
       l10n.manageSettingsRegistrationSectionDescription,
   };
 
-  List<Widget> _fields(BuildContext context, AppLocalizations l10n) =>
-      switch (widget.group) {
-        _SettingsGroup.information => [
-          TextField(
-            controller: _nameController,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              labelText: l10n.tournamentManagementName,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Rich text dùng chung với web: cùng Editor.js nên HTML xuất ra
-          // giống hệt, mô tả không bị đổi hình dạng khi lưu từ app.
-          RichTextField(
-            value: _description,
-            label: l10n.tournamentManagementDescription,
-            onChanged: (html) {
-              // Editor báo về cả lúc vừa sẵn sàng (giá trị chuẩn hoá) nên
-              // chỉ setState khi thực sự khác.
-              if (html != _description) setState(() => _description = html);
-            },
-          ),
-          const SizedBox(height: 12),
-          SwitchListTile(
-            key: const ValueKey('hide-featured-card-text'),
-            contentPadding: EdgeInsets.zero,
-            value: _hideFeaturedCardText,
-            title: Text(l10n.tournamentManagementHideFeaturedCardText),
-            subtitle: Text(
-              l10n.tournamentManagementHideFeaturedCardTextDescription,
-            ),
-            onChanged: _isSaving
-                ? null
-                : (value) => setState(() => _hideFeaturedCardText = value),
-          ),
-        ],
-        _SettingsGroup.registration => [
-          if (_locked)
-            _hint(context, l10n.tournamentManagementRegistrationLockedHint)
-          else if (_closed)
-            _hint(context, l10n.tournamentManagementRegistrationClosedHint),
-          _dateField(
-            context,
-            buttonKey: const ValueKey('registration-opens'),
-            label: l10n.tournamentManagementRegistrationStarts,
-            value: _registrationStartDate,
-            enabled: _settingsEditable,
-            onTap: () => _pickDate(
-              _registrationStartDate,
-              (value) => setState(() => _registrationStartDate = value),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _dateField(
-            context,
-            buttonKey: const ValueKey('registration-deadline'),
-            label: l10n.tournamentManagementRegistrationEnds,
-            value: _registrationEndDate,
-            enabled: _deadlineEditable,
-            onTap: () => _pickDate(
-              _registrationEndDate,
-              (value) => setState(() => _registrationEndDate = value),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _dateField(
-            context,
-            buttonKey: const ValueKey('tournament-opening'),
-            label: l10n.tournamentManagementStartDate,
-            value: _startDate,
-            enabled: _settingsEditable,
-            onTap: () => _pickDate(
-              _startDate,
-              (value) => setState(() => _startDate = value),
-            ),
-          ),
-          const SizedBox(height: 8),
-          _dateField(
-            context,
-            buttonKey: const ValueKey('tournament-closing'),
-            label: l10n.tournamentManagementEndDate,
-            value: _endDate,
-            enabled: _settingsEditable,
-            onTap: () => _pickDate(
-              _endDate,
-              (value) => setState(() => _endDate = value),
-            ),
-          ),
-          const Divider(height: 32),
-          SwitchListTile(
-            key: const ValueKey('registration-public'),
-            contentPadding: EdgeInsets.zero,
-            value: _visibility == 'PUBLIC',
-            title: Text(l10n.tournamentManagementPublic),
-            onChanged: _settingsEditable
-                ? (value) =>
-                      setState(() => _visibility = value ? 'PUBLIC' : 'PRIVATE')
+  List<Widget> _fields(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) => switch (widget.group) {
+    _SettingsGroup.information => [
+      TextField(
+        controller: _nameController,
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(
+          labelText: l10n.tournamentManagementName,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+      const SizedBox(height: 12),
+      // Rich text dùng chung với web: cùng Editor.js nên HTML xuất ra
+      // giống hệt, mô tả không bị đổi hình dạng khi lưu từ app.
+      RichTextField(
+        value: _description,
+        label: l10n.tournamentManagementDescription,
+        onChanged: (html) {
+          // Editor báo về cả lúc vừa sẵn sàng (giá trị chuẩn hoá) nên
+          // chỉ setState khi thực sự khác.
+          if (html != _description) setState(() => _description = html);
+        },
+      ),
+      const SizedBox(height: 12),
+      SwitchListTile(
+        key: const ValueKey('hide-featured-card-text'),
+        contentPadding: EdgeInsets.zero,
+        value: _hideFeaturedCardText,
+        title: Text(l10n.tournamentManagementHideFeaturedCardText),
+        subtitle: Text(
+          l10n.tournamentManagementHideFeaturedCardTextDescription,
+        ),
+        onChanged: _isSaving
+            ? null
+            : (value) => setState(() => _hideFeaturedCardText = value),
+      ),
+    ],
+    _SettingsGroup.registration => [
+      if (_locked)
+        _hint(context, l10n.tournamentManagementRegistrationLockedHint)
+      else if (_closed)
+        _hint(context, l10n.tournamentManagementRegistrationClosedHint),
+      _dateField(
+        context,
+        buttonKey: const ValueKey('registration-opens'),
+        label: l10n.tournamentManagementRegistrationStarts,
+        value: _registrationStartDate,
+        enabled: _settingsEditable,
+        onTap: () => _pickDate(
+          _registrationStartDate,
+          (value) => setState(() => _registrationStartDate = value),
+        ),
+      ),
+      const SizedBox(height: 8),
+      _dateField(
+        context,
+        buttonKey: const ValueKey('registration-deadline'),
+        label: l10n.tournamentManagementRegistrationEnds,
+        value: _registrationEndDate,
+        enabled: _deadlineEditable,
+        onTap: () => _pickDate(
+          _registrationEndDate,
+          (value) => setState(() => _registrationEndDate = value),
+        ),
+      ),
+      const SizedBox(height: 8),
+      _dateField(
+        context,
+        buttonKey: const ValueKey('tournament-opening'),
+        label: l10n.tournamentManagementStartDate,
+        value: _startDate,
+        enabled: _settingsEditable,
+        onTap: () => _pickDate(
+          _startDate,
+          (value) => setState(() => _startDate = value),
+        ),
+      ),
+      const SizedBox(height: 8),
+      _dateField(
+        context,
+        buttonKey: const ValueKey('tournament-closing'),
+        label: l10n.tournamentManagementEndDate,
+        value: _endDate,
+        enabled: _settingsEditable,
+        onTap: () =>
+            _pickDate(_endDate, (value) => setState(() => _endDate = value)),
+      ),
+      const Divider(height: 32),
+      SwitchListTile(
+        key: const ValueKey('registration-public'),
+        contentPadding: EdgeInsets.zero,
+        value: _visibility == 'PUBLIC',
+        title: Text(l10n.tournamentManagementPublic),
+        onChanged: _settingsEditable
+            ? (value) =>
+                  setState(() => _visibility = value ? 'PUBLIC' : 'PRIVATE')
+            : null,
+      ),
+      const SizedBox(height: 12),
+      Text(
+        l10n.tournamentManagementRegistrationMode,
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+      const SizedBox(height: 8),
+      SizedBox(
+        width: double.infinity,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: SegmentedButton<String>(
+            style: SegmentedButton.styleFrom(minimumSize: const Size(0, 44)),
+            segments: [
+              ButtonSegment(
+                value: 'OPEN',
+                label: Text(l10n.tournamentManagementRegistrationModeOpen),
+              ),
+              ButtonSegment(
+                value: 'APPROVAL',
+                label: Text(l10n.tournamentManagementRegistrationModeApproval),
+              ),
+              ButtonSegment(
+                value: 'INVITE_ONLY',
+                label: Text(
+                  l10n.tournamentManagementRegistrationModeInviteOnly,
+                ),
+              ),
+            ],
+            selected: {_registrationMode},
+            onSelectionChanged: _settingsEditable
+                ? (selection) =>
+                      setState(() => _registrationMode = selection.first)
                 : null,
           ),
-          const SizedBox(height: 12),
-          Text(
-            l10n.tournamentManagementRegistrationMode,
-            style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ),
+      if (_hasDoublesContent) ...[
+        const Divider(height: 32),
+        SwitchListTile(
+          key: const ValueKey('registration-pairing'),
+          contentPadding: EdgeInsets.zero,
+          value: _pairingMode == 'ORGANIZER',
+          title: Text(l10n.tournamentManagementPairing),
+          subtitle: Text(
+            _pairingMode == 'SELF'
+                ? l10n.tournamentManagementPairingSelf
+                : l10n.tournamentManagementPairingOrganizer,
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: SegmentedButton<String>(
-                style: SegmentedButton.styleFrom(
-                  minimumSize: const Size(0, 44),
-                ),
-                segments: [
-                  ButtonSegment(
-                    value: 'OPEN',
-                    label: Text(l10n.tournamentManagementRegistrationModeOpen),
-                  ),
-                  ButtonSegment(
-                    value: 'APPROVAL',
-                    label: Text(
-                      l10n.tournamentManagementRegistrationModeApproval,
-                    ),
-                  ),
-                  ButtonSegment(
-                    value: 'INVITE_ONLY',
-                    label: Text(
-                      l10n.tournamentManagementRegistrationModeInviteOnly,
-                    ),
-                  ),
-                ],
-                selected: {_registrationMode},
-                onSelectionChanged: _settingsEditable
-                    ? (selection) =>
-                          setState(() => _registrationMode = selection.first)
-                    : null,
-              ),
-            ),
-          ),
-          if (_hasDoublesContent) ...[
-            const Divider(height: 32),
-            SwitchListTile(
-              key: const ValueKey('registration-pairing'),
-              contentPadding: EdgeInsets.zero,
-              value: _pairingMode == 'ORGANIZER',
-              title: Text(l10n.tournamentManagementPairing),
-              subtitle: Text(
-                _pairingMode == 'SELF'
-                    ? l10n.tournamentManagementPairingSelf
-                    : l10n.tournamentManagementPairingOrganizer,
-              ),
-              onChanged: _settingsEditable
-                  ? (value) => setState(
-                      () => _pairingMode = value ? 'ORGANIZER' : 'SELF',
-                    )
-                  : null,
-            ),
-          ],
-          if (_showsInvite) ...[
-            const Divider(height: 32),
-            _inviteSection(context, l10n, _inviteCode!),
-          ],
-          if (_actionFailed) ...[
-            const SizedBox(height: 8),
-            _InlineError(text: l10n.tournamentManagementActionError),
-          ],
-          if (_isActing) ...[
-            const SizedBox(height: 8),
-            const LinearProgressIndicator(),
-          ],
-        ],
-      };
+          onChanged: _settingsEditable
+              ? (value) =>
+                    setState(() => _pairingMode = value ? 'ORGANIZER' : 'SELF')
+              : null,
+        ),
+      ],
+      if (_showsInvite) ...[
+        const Divider(height: 32),
+        _inviteSection(context, l10n, _inviteCode!),
+      ],
+      if (_actionFailed) ...[
+        const SizedBox(height: 8),
+        _InlineError(text: l10n.tournamentManagementActionError),
+      ],
+      if (_isActing) ...[
+        const SizedBox(height: 8),
+        const LinearProgressIndicator(),
+      ],
+    ],
+  };
 
   Widget _hint(BuildContext context, String text) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
@@ -768,9 +758,9 @@ class _TournamentSettingsFormState
           .update(widget.tournament.id, _payload());
       if (!mounted) return;
       ref.invalidate(tournamentProvider(widget.tournament.id));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.tournamentManagementSaved)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));
     } catch (error) {
       if (mounted) {
         setState(
@@ -789,6 +779,7 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
     on ConsumerState<T> {
   bool _isActing = false;
   bool _actionFailed = false;
+  String? _actionError;
 
   String get _actionTournamentId;
 
@@ -810,6 +801,7 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
     setState(() {
       _isActing = true;
       _actionFailed = false;
+      _actionError = null;
     });
     try {
       await operation();
@@ -818,8 +810,14 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));
-    } catch (_) {
-      if (mounted) setState(() => _actionFailed = true);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _actionFailed = true;
+          _actionError =
+              _serverMessage(error) ?? l10n.tournamentManagementActionError;
+        });
+      }
     } finally {
       if (mounted) setState(() => _isActing = false);
     }
@@ -849,6 +847,16 @@ class _TournamentLifecycleCardState
     final l10n = AppLocalizations.of(context)!;
     final id = widget.tournament.id;
     final status = widget.tournament.status.toUpperCase();
+    final divisionMatches = widget.tournament.divisions.isEmpty
+        ? null
+        : ref.watch(matchesProvider(id)).asData?.value;
+    final hasDivisionWithoutBracket =
+        divisionMatches != null &&
+        widget.tournament.divisions.any(
+          (division) =>
+              division.status?.toUpperCase() != 'CANCELLED' &&
+              !divisionMatches.any((match) => match.divisionId == division.id),
+        );
     final buttons = <Widget>[
       if (status == 'DRAFT')
         _lifecycleButton(
@@ -884,6 +892,34 @@ class _TournamentLifecycleCardState
             destructive: true,
           ),
         ),
+      if (const {
+        'UPCOMING',
+        'REGISTRATION_OPEN',
+        'REGISTRATION_CLOSED',
+      }.contains(status))
+        _lifecycleButton(
+          l10n.tournamentManagementStartTournament,
+          Icons.play_arrow_rounded,
+          () => _runAction(
+            () => ref
+                .read(tournamentManagementRepositoryProvider)
+                .startTournament(id),
+            hasDivisionWithoutBracket
+                ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
+                : l10n.tournamentManagementStartTournamentConfirm,
+          ),
+        ),
+      if (status == 'IN_PROGRESS')
+        _lifecycleButton(
+          l10n.tournamentManagementCompleteTournament,
+          Icons.check_circle_outline_rounded,
+          () => _runAction(
+            () => ref
+                .read(tournamentManagementRepositoryProvider)
+                .completeTournament(id),
+            l10n.tournamentManagementCompleteTournamentConfirm,
+          ),
+        ),
     ];
     if (buttons.isEmpty) return const SizedBox.shrink();
     return TournamentManagementSectionCard(
@@ -905,9 +941,9 @@ class _TournamentLifecycleCardState
             const SizedBox(height: 8),
             const LinearProgressIndicator(),
           ],
-          if (_actionFailed) ...[
+          if (_actionError case final error?) ...[
             const SizedBox(height: 8),
-            _InlineError(text: l10n.tournamentManagementActionError),
+            _InlineError(text: error),
           ],
           const SizedBox(height: 8),
           Text(
@@ -919,18 +955,21 @@ class _TournamentLifecycleCardState
     );
   }
 
-  Widget _lifecycleButton(String label, IconData icon, VoidCallback onPressed) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _isActing ? null : onPressed,
-            icon: Icon(icon),
-            label: Text(label, textAlign: TextAlign.center),
-          ),
-        ),
-      );
+  Widget _lifecycleButton(
+    String label,
+    IconData icon,
+    VoidCallback onPressed,
+  ) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _isActing ? null : onPressed,
+        icon: Icon(icon),
+        label: Text(label, textAlign: TextAlign.center),
+      ),
+    ),
+  );
 }
 
 void _addDateUpdate(

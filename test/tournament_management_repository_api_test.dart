@@ -1100,48 +1100,60 @@ void main() {
   });
 
   group('lifecycle', () {
-    test(
-      'publish, reopen, lock and invite regen post distinct routes',
-      () async {
-        backend.onPost('/tournaments/$tournamentId/publish', {
-          'status': 'PUBLISHED',
-        });
-        backend.onPost('/tournaments/$tournamentId/reopen-registration', {
-          'status': 'REGISTRATION_REOPENED',
-        });
-        backend.onPost('/tournaments/$tournamentId/lock', {'status': 'LOCKED'});
-        backend.onPost('/tournaments/$tournamentId/regenerate-invite', {
-          'inviteCode': 'ABC123',
-        });
+    test('lifecycle transitions post their dedicated routes', () async {
+      backend.onPost('/tournaments/$tournamentId/start', {
+        'status': 'IN_PROGRESS',
+      });
+      backend.onPost('/tournaments/$tournamentId/complete', {
+        'status': 'COMPLETED',
+      });
+      backend.onPost('/tournaments/$tournamentId/publish', {
+        'status': 'PUBLISHED',
+      });
+      backend.onPost('/tournaments/$tournamentId/reopen-registration', {
+        'status': 'REGISTRATION_REOPENED',
+      });
+      backend.onPost('/tournaments/$tournamentId/lock', {'status': 'LOCKED'});
+      backend.onPost('/tournaments/$tournamentId/regenerate-invite', {
+        'inviteCode': 'ABC123',
+      });
 
-        expect(
-          (await repository.publishTournament(tournamentId))['status'],
-          'PUBLISHED',
-        );
-        expect(
-          (await repository.reopenRegistration(tournamentId))['status'],
-          'REGISTRATION_REOPENED',
-        );
-        expect(
-          (await repository.lockTournament(tournamentId))['status'],
-          'LOCKED',
-        );
-        expect(
-          (await repository.regenerateInviteCode(tournamentId))['inviteCode'],
-          'ABC123',
-        );
+      expect(
+        (await repository.startTournament(tournamentId))['status'],
+        'IN_PROGRESS',
+      );
+      expect(
+        (await repository.completeTournament(tournamentId))['status'],
+        'COMPLETED',
+      );
+      expect(
+        (await repository.publishTournament(tournamentId))['status'],
+        'PUBLISHED',
+      );
+      expect(
+        (await repository.reopenRegistration(tournamentId))['status'],
+        'REGISTRATION_REOPENED',
+      );
+      expect(
+        (await repository.lockTournament(tournamentId))['status'],
+        'LOCKED',
+      );
+      expect(
+        (await repository.regenerateInviteCode(tournamentId))['inviteCode'],
+        'ABC123',
+      );
 
-        expect(backend.requests.map((r) => r.method), everyElement('POST'));
-        expect(backend.requests.map((r) => r.path), [
-          '/tournaments/$tournamentId/publish',
-          '/tournaments/$tournamentId/reopen-registration',
-          '/tournaments/$tournamentId/lock',
-          '/tournaments/$tournamentId/regenerate-invite',
-        ]);
-      },
-    );
+      expect(backend.requests.map((r) => r.method), everyElement('POST'));
+      expect(backend.requests.map((r) => r.path), [
+        '/tournaments/$tournamentId/start',
+        '/tournaments/$tournamentId/complete',
+        '/tournaments/$tournamentId/publish',
+        '/tournaments/$tournamentId/reopen-registration',
+        '/tournaments/$tournamentId/lock',
+        '/tournaments/$tournamentId/regenerate-invite',
+      ]);
+    });
   });
-
   group('response envelope', () {
     test('a body without the data envelope fails the read', () async {
       backend.onRawResponse('GET', '/tournaments/fees', {
