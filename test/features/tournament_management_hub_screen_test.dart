@@ -1081,7 +1081,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(startRepository.startCalls, 1);
+      expect(startRepository.startedIds, ['tournament-1']);
 
       final completeRepository = _LifecycleRepository();
       await tester.pumpWidget(
@@ -1115,7 +1115,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(completeRepository.completeCalls, 1);
+      expect(completeRepository.completedIds, ['tournament-1']);
 
       await tester.pumpWidget(_app(_tournament('COMPLETED')));
       await tester.pumpAndSettle();
