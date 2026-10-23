@@ -6198,5 +6198,12 @@
   "matchReplaySkippedSegment": "A failed recording segment was skipped.",
   "matchReplayPlay": "Play",
   "matchReplayPause": "Pause",
-  "matchReplayFinished": "Replay finished."
+  "matchReplayFinished": "Replay finished.",
+  "rankingTierSourceDupr": "Tiers powered by DUPR",
+  "rankingTierDuprFrom": "From {value}",
+  "@rankingTierDuprFrom": {
+    "placeholders": {
+      "value": {}
+    }
+  }
 }

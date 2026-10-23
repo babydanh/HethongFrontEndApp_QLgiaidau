@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 
@@ -7,6 +8,8 @@ class RankAvatar extends StatelessWidget {
   final String name;
   final int elo;
   final String? tierName;
+  final String? tierSource;
+  final bool? tierAvailable;
   final int matchesPlayed;
   final double size;
   final double ringWidth;
@@ -17,6 +20,8 @@ class RankAvatar extends StatelessWidget {
     required this.name,
     this.elo = 0,
     this.tierName,
+    this.tierSource,
+    this.tierAvailable,
     this.matchesPlayed = 0,
     this.size = 32,
     this.ringWidth = 2,
@@ -24,11 +29,16 @@ class RankAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tier = resolveDisplayTier(
+      tierName: tierName,
+      elo: elo,
+      tierSource: tierSource,
+      tierAvailable: tierAvailable,
+    );
     final ranked =
-        elo > 0 ||
-        (tierName != null && tierName!.isNotEmpty) ||
-        matchesPlayed > 0;
-    final palette = TierPalette.fromElo(elo, tierName);
+        tier != null &&
+        (elo > 0 || matchesPlayed > 0 || tierName?.isNotEmpty == true);
+    final palette = TierPalette.fromRank(elo, tierName, tierSource);
     final ringColor = ranked ? palette.ring : TierPalette.unrankedRing;
     final innerSize = size - (ringWidth * 2);
 

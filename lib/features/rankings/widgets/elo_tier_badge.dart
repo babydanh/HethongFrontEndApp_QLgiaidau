@@ -12,6 +12,8 @@ class EloTierBadge extends StatelessWidget {
   final String? categoryName;
   final bool showFullName;
   final double scale;
+  final String? tierSource;
+  final bool? tierAvailable;
 
   const EloTierBadge({
     super.key,
@@ -20,6 +22,8 @@ class EloTierBadge extends StatelessWidget {
     this.categoryName,
     this.showFullName = false,
     this.scale = 1.0,
+    this.tierSource,
+    this.tierAvailable,
   });
 
   Widget _buildSportIcon(String? sport, double sizePx) {
@@ -68,7 +72,13 @@ class EloTierBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final info = resolveEloTier(elo: elo, tierName: tierName);
+    final info = resolveDisplayTier(
+      tierName: tierName,
+      elo: elo,
+      tierSource: tierSource,
+      tierAvailable: tierAvailable,
+    );
+    if (info == null) return const SizedBox.shrink();
 
     return Container(
       padding: EdgeInsets.symmetric(

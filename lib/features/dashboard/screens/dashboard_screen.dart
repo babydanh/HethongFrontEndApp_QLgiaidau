@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -15,7 +16,6 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -479,10 +479,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Widget _buildPrivateRankCard(BuildContext context, PlayerRanking ranking) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final tierColor = TierPalette.fromElo(
-      ranking.eloPoints,
-      ranking.tierName,
-    ).badgeBg;
+    final tierColor =
+        resolveDisplayTier(
+          tierName: ranking.tierName,
+          elo: ranking.eloPoints,
+          tierSource: ranking.tierSource,
+          tierAvailable: ranking.tierAvailable,
+        )?.backgroundColor ??
+        colors.bgSurface;
     final winRate = ranking.matchesPlayed > 0
         ? (ranking.matchesWon / ranking.matchesPlayed * 100).round()
         : 0;
@@ -590,6 +594,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         tierName: ranking.tierName,
                         elo: ranking.eloPoints,
                         sportName: ranking.categoryName,
+                        tierSource: ranking.tierSource,
+                        tierAvailable: ranking.tierAvailable,
                       ),
                       const SizedBox(height: 8),
                       Text(

@@ -6211,5 +6211,12 @@
   "matchReplaySkippedSegment": "Đã bỏ qua một đoạn bản ghi bị lỗi.",
   "matchReplayPlay": "Phát",
   "matchReplayPause": "Tạm dừng",
-  "matchReplayFinished": "Đã phát hết bản ghi"
+  "matchReplayFinished": "Đã phát hết bản ghi",
+  "rankingTierSourceDupr": "Bậc theo DUPR",
+  "rankingTierDuprFrom": "Từ {value}",
+  "@rankingTierDuprFrom": {
+    "placeholders": {
+      "value": {}
+    }
+  }
 }

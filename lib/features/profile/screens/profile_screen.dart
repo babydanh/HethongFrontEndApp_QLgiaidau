@@ -597,6 +597,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               elo: r.eloPoints,
                               sportName: r.categoryName,
                               showLabel: false,
+                              tierSource: r.tierSource,
+                              tierAvailable: r.tierAvailable,
                             );
                           }).toList(),
                         ),

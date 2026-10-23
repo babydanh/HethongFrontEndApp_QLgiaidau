@@ -694,6 +694,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
             name: profile.fullName,
             elo: featuredRank?.eloPoints ?? 0,
             tierName: featuredRank?.tierName,
+            tierSource: featuredRank?.tierSource,
+            tierAvailable: featuredRank?.tierAvailable,
             matchesPlayed: featuredRank?.matchesPlayed ?? 0,
             size: 80,
             ringWidth: 3,
@@ -734,6 +736,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                           tierName: rank.tierName,
                           elo: rank.eloPoints,
                           sportName: rank.categoryName,
+                          tierSource: rank.tierSource,
+                          tierAvailable: rank.tierAvailable,
                         ),
                       ],
                     ),
@@ -909,7 +913,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     UserPublicRank rank,
     AppColorsExtension colors,
   ) {
-    final palette = TierPalette.fromElo(rank.eloPoints, rank.tierName);
+    final palette = TierPalette.fromRank(
+      rank.eloPoints,
+      rank.tierName,
+      rank.tierSource,
+    );
     final winRate = rank.matchesPlayed > 0
         ? (rank.matchesWon / rank.matchesPlayed * 100).round()
         : 0;
@@ -1021,6 +1029,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                       tierName: rank.tierName,
                       elo: rank.eloPoints,
                       sportName: rank.categoryName,
+                      tierSource: rank.tierSource,
+                      tierAvailable: rank.tierAvailable,
                     ),
                     const SizedBox(width: 4),
                     Icon(

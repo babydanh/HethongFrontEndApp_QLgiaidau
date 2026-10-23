@@ -189,3 +189,17 @@ EloTierInfo resolveEloTier({required int elo, String? tierName}) {
       );
   }
 }
+
+/// Chọn bậc hiển thị theo nguồn bậc từ API.
+EloTierInfo? resolveDisplayTier({
+  required String? tierName,
+  required int elo,
+  String? tierSource,
+  bool? tierAvailable,
+}) {
+  if (tierSource == 'DUPR') {
+    if (tierAvailable != true || (tierName ?? '').trim().isEmpty) return null;
+    return resolveEloTier(elo: elo, tierName: tierName);
+  }
+  return resolveEloTier(elo: elo, tierName: tierName);
+}
