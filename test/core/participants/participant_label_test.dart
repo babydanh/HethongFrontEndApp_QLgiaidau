@@ -95,11 +95,15 @@ void main() {
   ) async {
     await _pump(
       tester,
-      child: const ParticipantLabel(
-        teamName: null,
-        players: _players,
-        compact: true,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      // Align loosens the tight 240 wide box, as an Expanded parent would.
+      child: const Align(
+        alignment: Alignment.centerLeft,
+        child: ParticipantLabel(
+          teamName: null,
+          players: _players,
+          compact: true,
+          crossAxisAlignment: CrossAxisAlignment.end,
+        ),
       ),
     );
 
