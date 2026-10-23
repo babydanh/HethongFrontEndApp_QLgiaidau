@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
 void main() {
   group('abbreviateName (bảng ca hợp đồng §2)', () {
@@ -92,6 +93,38 @@ void main() {
       );
       expect(display.isTeam, isTrue);
       expect(display.teamName, 'Nguyễn Văn An / Trần Văn Bình');
+    });
+
+    test('tên đội là tên ghép các VĐV theo thứ tự → PLAYERS', () {
+      const khang = ParticipantPlayer(slot: 1, fullName: 'Minh Khang');
+      const linh = ParticipantPlayer(slot: 2, fullName: 'Hoang Linh');
+      final display = resolveParticipantDisplay(
+        teamName: 'minh khang / Hoang  Linh',
+        players: const [khang, linh],
+      );
+      expect(display.mode, ParticipantDisplayMode.players);
+      expect(display.teamName, isNull);
+    });
+
+    test('tên ghép sai thứ tự VĐV vẫn là tên đội → TEAM', () {
+      const khang = ParticipantPlayer(slot: 1, fullName: 'Minh Khang');
+      const linh = ParticipantPlayer(slot: 2, fullName: 'Hoang Linh');
+      final display = resolveParticipantDisplay(
+        teamName: 'Hoang Linh / Minh Khang',
+        players: const [khang, linh],
+      );
+      expect(display.isTeam, isTrue);
+    });
+
+    test('bóng đá giữ tên đội dù trùng tên ghép', () {
+      const khang = ParticipantPlayer(slot: 1, fullName: 'Minh Khang');
+      const linh = ParticipantPlayer(slot: 2, fullName: 'Hoang Linh');
+      final display = resolveParticipantDisplay(
+        teamName: 'Minh Khang / Hoang Linh',
+        players: const [khang, linh],
+        teamOnly: true,
+      );
+      expect(display.isTeam, isTrue);
     });
 
     test('VĐV rỗng tên bị lọc khỏi PLAYERS', () {
@@ -215,6 +248,69 @@ void main() {
 
     test('không có tên và không có VĐV → chuỗi rỗng', () {
       expect(participantLabel(teamName: null, players: const []), '');
+    });
+  });
+
+  group('loại trùng VĐV', () {
+    test('players[] trả cùng một userId nhiều lần → giữ một', () {
+      final players = toParticipantPlayers({
+        'players': [
+          for (var i = 0; i < 5; i++)
+            {'userId': 'u1', 'fullName': 'Lê Nguyễn Phúc Duy'},
+        ],
+      });
+      expect(players, hasLength(1));
+      expect(players.single.slot, 1);
+    });
+
+    test('members trùng userId bị loại, slot liên tục, giữ phần tử đầu', () {
+      final players = toParticipantPlayers({
+        'members': [
+          {'userId': 'u1', 'fullName': 'An'},
+          {'userId': 'u1', 'fullName': 'An'},
+          {'userId': 'u2', 'fullName': 'Bình'},
+        ],
+      });
+      expect(players.map((p) => p.fullName), ['An', 'Bình']);
+      expect(players.map((p) => p.slot), [1, 2]);
+    });
+
+    test('hai userId khác nhau cùng tên → giữ cả hai', () {
+      final players = toParticipantPlayers({
+        'players': [
+          {'userId': 'u1', 'fullName': 'Nguyễn Văn An'},
+          {'userId': 'u2', 'fullName': 'Nguyễn Văn An'},
+        ],
+      });
+      expect(players, hasLength(2));
+    });
+
+    test('khách trùng tên (hoa thường, khoảng trắng) bị loại', () {
+      final players = toParticipantPlayers({
+        'guestNames': ['Khách  Mời', 'khách mời'],
+      });
+      expect(players, hasLength(1));
+    });
+
+    test('players[] rỗng → rỗng, không lỗi', () {
+      expect(toParticipantPlayers({'players': <Object>[]}), isEmpty);
+    });
+
+    test('participantPlayersFromNames loại tên trùng', () {
+      final players = participantPlayersFromNames([
+        'C. nguyenthanh',
+        'C. nguyenthanh',
+      ]);
+      expect(players, hasLength(1));
+    });
+
+    test('participantPlayersFromMemberInfos loại userId trùng', () {
+      final players = participantPlayersFromMemberInfos(const [
+        MatchMemberInfo(userId: 'u1', fullName: 'H. Linh'),
+        MatchMemberInfo(userId: 'u1', fullName: 'H. Linh'),
+        MatchMemberInfo(userId: 'u1', fullName: 'H. Linh'),
+      ]);
+      expect(players, hasLength(1));
     });
   });
 

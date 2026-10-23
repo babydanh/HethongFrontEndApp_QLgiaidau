@@ -10,7 +10,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 ///
 /// - `TEAM`: hiện `teamName` khi sau khi chuẩn hoá không rỗng và không trùng
 ///   tên của bất kỳ VĐV nào.
-/// - `PLAYERS`: hiện từng VĐV (avatar + tên), không hiện tên đội.
+/// - `PLAYERS`: hiện các VĐV trên một dòng (tối đa 2 avatar + tên nối " / "), không hiện tên đội.
 /// - Tên đội không bao giờ viết tắt; tên VĐV viết tắt chỉ ở chỗ hẹp
 ///   ([ParticipantLabel.compact]).
 
@@ -113,7 +113,7 @@ List<ParticipantPlayer> toParticipantPlayers(Map<dynamic, dynamic> json) {
       if (player.fullName.isEmpty) continue;
       players.add(player);
     }
-    if (players.isNotEmpty) return players;
+    if (players.isNotEmpty) return _uniquePlayers(players);
   }
 
   final members = json['members'] ?? json['rosters'];
@@ -154,7 +154,30 @@ List<ParticipantPlayer> toParticipantPlayers(Map<dynamic, dynamic> json) {
       );
     }
   }
-  return players;
+  return _uniquePlayers(players);
+}
+
+/// Drops repeated players (same userId, or same normalised name for guests)
+/// keeping the first one, and renumbers slots from 1.
+List<ParticipantPlayer> _uniquePlayers(List<ParticipantPlayer> players) {
+  final seen = <String>{};
+  final unique = <ParticipantPlayer>[];
+  for (final p in players) {
+    final key = p.userId != null
+        ? 'u:${p.userId}'
+        : 'n:${normalizeParticipantText(p.fullName).toLowerCase()}';
+    if (!seen.add(key)) continue;
+    unique.add(
+      ParticipantPlayer(
+        slot: unique.length + 1,
+        userId: p.userId,
+        fullName: p.fullName,
+        avatarUrl: p.avatarUrl,
+        isGuest: p.isGuest,
+      ),
+    );
+  }
+  return unique;
 }
 
 /// VĐV từ roster của match (`team1MemberInfos`/`team2MemberInfos`).
@@ -175,7 +198,7 @@ List<ParticipantPlayer> participantPlayersFromMemberInfos(
       ),
     );
   }
-  return players;
+  return _uniquePlayers(players);
 }
 
 /// VĐV khách từ tên thuần (`team1Members`/`guestNames` của match).
@@ -192,7 +215,7 @@ List<ParticipantPlayer> participantPlayersFromNames(Iterable<String> names) {
       ),
     );
   }
-  return players;
+  return _uniquePlayers(players);
 }
 
 /// Quyết định TEAM hay PLAYERS.
@@ -212,7 +235,13 @@ ParticipantDisplay resolveParticipantDisplay({
     final clashesWithPlayer = filtered.any(
       (p) => normalizeParticipantText(p.fullName).toLowerCase() == key,
     );
-    if (teamOnly || !clashesWithPlayer) {
+    // Backend may auto-fill teamName with the players' names joined by " / ".
+    final joinedNames = filtered
+        .map((p) => normalizeParticipantText(p.fullName))
+        .join(' / ')
+        .toLowerCase();
+    final isJoinedNames = filtered.length > 1 && key == joinedNames;
+    if (teamOnly || !(clashesWithPlayer || isJoinedNames)) {
       return ParticipantDisplay._(
         mode: ParticipantDisplayMode.team,
         teamName: name,
@@ -261,9 +290,10 @@ String participantLabel({
 
 /// Hiển thị đội/VĐV theo quy chuẩn chung.
 ///
-/// [compact] (sơ đồ nhánh, thẻ trận, lịch sân, overlay): VĐV viết tắt, mỗi VĐV
-/// một dòng kèm avatar, tên đầy đủ hiện qua Tooltip/nhấn giữ. Tên đội luôn đầy
-/// đủ, cắt "…" khi dài và hiện đầy đủ qua Tooltip.
+/// [compact] (sơ đồ nhánh, thẻ trận, lịch sân, overlay): VĐV viết tắt, một
+/// dòng gồm tối đa 2 avatar chồng nhau + tên nối " / ", tên đầy đủ hiện qua
+/// Tooltip/nhấn giữ. Tên đội luôn đầy đủ, cắt "…" khi dài và hiện đầy đủ qua
+/// Tooltip.
 class ParticipantLabel extends StatelessWidget {
   final String? teamName;
   final List<ParticipantPlayer> players;
@@ -320,43 +350,65 @@ class ParticipantLabel extends StatelessWidget {
     final colors = context.colors;
     final avatarRadius = compact ? 7.0 : 11.0;
     final rowGap = compact ? 4.0 : 6.0;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: crossAxisAlignment,
-      children: [
-        for (final player in display.players)
-          Tooltip(
-            message: player.fullName,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _PlayerAvatar(
-                  name: player.fullName,
-                  avatarUrl: player.avatarUrl,
-                  radius: avatarRadius,
-                  backgroundColor: colors.bgSurface,
-                  textStyle: baseStyle.copyWith(
-                    fontSize: avatarRadius * 0.9,
-                    color: colors.textMuted,
-                  ),
-                ),
-                SizedBox(width: rowGap),
-                Flexible(
-                  child: Text(
-                    compact ? abbreviateName(player.fullName) : player.fullName,
-                    style: baseStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: textAlign,
-                  ),
-                ),
-              ],
+    final shown = display.players.take(_maxAvatars).toList(growable: false);
+    final overlap = avatarRadius * 1.3;
+    final names = display.players
+        .map((p) => compact ? abbreviateName(p.fullName) : p.fullName)
+        .join(' / ');
+    return Tooltip(
+      message: display.players.map((p) => p.fullName).join(' / '),
+      child: Row(
+        // Fill the width only when the label is aligned to the end/centre.
+        mainAxisSize: crossAxisAlignment == CrossAxisAlignment.start
+            ? MainAxisSize.min
+            : MainAxisSize.max,
+        mainAxisAlignment: switch (crossAxisAlignment) {
+          CrossAxisAlignment.end => MainAxisAlignment.end,
+          CrossAxisAlignment.center => MainAxisAlignment.center,
+          _ => MainAxisAlignment.start,
+        },
+        children: [
+          ExcludeSemantics(
+            child: SizedBox(
+              width: avatarRadius * 2 + overlap * (shown.length - 1),
+              height: avatarRadius * 2,
+              child: Stack(
+                children: [
+                  for (var i = 0; i < shown.length; i++)
+                    PositionedDirectional(
+                      start: overlap * i,
+                      child: _PlayerAvatar(
+                        name: shown[i].fullName,
+                        avatarUrl: shown[i].avatarUrl,
+                        radius: avatarRadius,
+                        backgroundColor: colors.bgSurface,
+                        textStyle: baseStyle.copyWith(
+                          fontSize: avatarRadius * 0.9,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
-      ],
+          SizedBox(width: rowGap),
+          Flexible(
+            child: Text(
+              names,
+              style: baseStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: textAlign,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+const int _maxAvatars = 2;
 
 class _PlayerAvatar extends StatelessWidget {
   final String name;
@@ -391,8 +443,5 @@ String _initials(String name) {
     name,
   ).split(' ').where((w) => w.isNotEmpty).toList(growable: false);
   if (words.isEmpty) return '?';
-  final first = String.fromCharCode(words.first.runes.first);
-  if (words.length == 1) return first.toUpperCase();
-  final last = String.fromCharCode(words.last.runes.first);
-  return '$first$last'.toUpperCase();
+  return String.fromCharCode(words.first.runes.first).toUpperCase();
 }
