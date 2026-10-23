@@ -1126,12 +1126,15 @@ void main() {
         find.text(startL10n.tournamentManagementStartTournamentConfirm),
         findsOneWidget,
       );
-      await tester.tap(
-        find.widgetWithText(
-          FilledButton,
-          startL10n.tournamentManagementConfirm,
-        ),
+      // Nút xác nhận tắt tới khi tick "Đóng đăng ký tất cả nội dung".
+      final confirmFinder = find.widgetWithText(
+        FilledButton,
+        startL10n.tournamentManagementConfirm,
       );
+      expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNull);
+      await tester.tap(find.text(startL10n.tournamentManagementStartCloseAll));
+      await tester.pumpAndSettle();
+      await tester.tap(confirmFinder);
       await tester.pumpAndSettle();
       expect(startRepository.startedIds, ['tournament-1']);
       expect(startRepository.calls, ['start']);

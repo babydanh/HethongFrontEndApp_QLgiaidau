@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -13723,6 +13722,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementStartTournamentConfirm =>
       'Starting the tournament will lock registration for every division. Are you sure you want to start this tournament?';
+
+  @override
+  String get tournamentManagementStartCloseAll =>
+      'Close registration for every division';
 
   @override
   String get tournamentManagementStartTournamentMissingBracketConfirm =>

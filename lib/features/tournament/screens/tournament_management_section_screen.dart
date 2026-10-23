@@ -789,6 +789,7 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
     Future<Map<String, dynamic>> Function() operation,
     String confirmation, {
     bool destructive = false,
+    String? requiredAcknowledgement,
   }) async {
     if (_isActing) return;
     final l10n = AppLocalizations.of(context)!;
@@ -798,6 +799,7 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
       message: confirmation,
       confirmLabel: l10n.tournamentManagementConfirm,
       destructive: destructive,
+      requiredAcknowledgement: requiredAcknowledgement,
     );
     if (!confirmed || !mounted) return;
     setState(() {
@@ -902,6 +904,8 @@ class _TournamentLifecycleCardState
           hasDivisionWithoutBracket
               ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
               : l10n.tournamentManagementStartTournamentConfirm,
+          // Khai mạc khoá đăng ký mọi nội dung: BTC phải tick đồng ý mới bấm được.
+          requiredAcknowledgement: l10n.tournamentManagementStartCloseAll,
         ),
       ),
       AppConstants.statusInProgress => _lifecycleButton(

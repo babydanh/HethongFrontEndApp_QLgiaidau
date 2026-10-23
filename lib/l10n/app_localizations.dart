@@ -24880,6 +24880,12 @@ abstract class AppLocalizations {
   /// **'Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn có chắc muốn khai mạc giải đấu này?'**
   String get tournamentManagementStartTournamentConfirm;
 
+  /// No description provided for @tournamentManagementStartCloseAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký tất cả nội dung'**
+  String get tournamentManagementStartCloseAll;
+
   /// No description provided for @tournamentManagementStartTournamentMissingBracketConfirm.
   ///
   /// In vi, this message translates to:

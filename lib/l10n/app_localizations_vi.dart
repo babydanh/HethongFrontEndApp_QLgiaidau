@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -13678,6 +13677,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementStartTournamentConfirm =>
       'Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn có chắc muốn khai mạc giải đấu này?';
+
+  @override
+  String get tournamentManagementStartCloseAll =>
+      'Đóng đăng ký tất cả nội dung';
 
   @override
   String get tournamentManagementStartTournamentMissingBracketConfirm =>

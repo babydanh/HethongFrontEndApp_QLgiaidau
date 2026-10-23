@@ -5555,6 +5555,7 @@
   "tournamentManagementLifecycleDescription": "Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.",
   "tournamentManagementStartTournament": "Khai mạc giải",
   "tournamentManagementStartTournamentConfirm": "Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn có chắc muốn khai mạc giải đấu này?",
+  "tournamentManagementStartCloseAll": "Đóng đăng ký tất cả nội dung",
   "tournamentManagementStartTournamentMissingBracketConfirm": "Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.",
   "tournamentManagementCompleteTournament": "Kết thúc giải",
   "tournamentManagementCompleteTournamentConfirm": "Bạn có chắc muốn kết thúc giải đấu này?",

@@ -155,34 +155,58 @@ class TournamentManagementEmpty extends StatelessWidget {
   }
 }
 
+/// [requiredAcknowledgement]: ô tick bắt buộc; nút xác nhận chỉ bấm được khi đã tick.
 Future<bool> confirmTournamentManagementAction(
   BuildContext context, {
   required String title,
   required String message,
   required String confirmLabel,
   bool destructive = false,
+  String? requiredAcknowledgement,
 }) async {
   final colors = context.colors;
+  var acknowledged = requiredAcknowledgement == null;
   final result = await showDialog<bool>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(
-            AppLocalizations.of(dialogContext)!.tournamentManagementCancel,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setDialogState) => AlertDialog(
+        title: Text(title),
+        content: requiredAcknowledgement == null
+            ? Text(message)
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(message),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: acknowledged,
+                    onChanged: (value) =>
+                        setDialogState(() => acknowledged = value ?? false),
+                    title: Text(requiredAcknowledgement),
+                  ),
+                ],
+              ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              AppLocalizations.of(dialogContext)!.tournamentManagementCancel,
+            ),
           ),
-        ),
-        FilledButton(
-          style: destructive
-              ? FilledButton.styleFrom(backgroundColor: colors.error)
-              : null,
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: Text(confirmLabel),
-        ),
-      ],
+          FilledButton(
+            style: destructive
+                ? FilledButton.styleFrom(backgroundColor: colors.error)
+                : null,
+            onPressed: acknowledged
+                ? () => Navigator.pop(dialogContext, true)
+                : null,
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
     ),
   );
   return result == true;

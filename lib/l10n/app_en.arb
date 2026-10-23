@@ -5460,6 +5460,7 @@
   "tournamentManagementLifecycleDescription": "Use the server-supported tournament transitions. Authorization is enforced by the server.",
   "tournamentManagementStartTournament": "Start tournament",
   "tournamentManagementStartTournamentConfirm": "Starting the tournament will lock registration for every division. Are you sure you want to start this tournament?",
+  "tournamentManagementStartCloseAll": "Close registration for every division",
   "tournamentManagementStartTournamentMissingBracketConfirm": "Warning: at least one division has no draw yet. Starting the tournament will lock registration for every division. You can still start the tournament.",
   "tournamentManagementCompleteTournament": "End tournament",
   "tournamentManagementCompleteTournamentConfirm": "Are you sure you want to end this tournament?",
