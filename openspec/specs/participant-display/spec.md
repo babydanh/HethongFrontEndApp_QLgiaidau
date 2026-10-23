@@ -7,7 +7,7 @@ Tên hiển thị của một đội/cặp/VĐV dùng chung một quy tắc vớ
 
 ### Requirement: Hiển thị TEAM hoặc PLAYERS theo tên đội và VĐV
 
-Hệ thống SHALL hiển thị tên đội khi `teamName` sau khi trim và gộp khoảng trắng không rỗng và không trùng tên của bất kỳ VĐV nào (không phân biệt hoa thường). Trong các trường hợp còn lại hệ thống MUST hiển thị từng VĐV kèm avatar và MUST NOT hiển thị tên đội. Tên đội bóng đá MUST luôn là TEAM khi có tên.
+Hệ thống SHALL hiển thị tên đội khi `teamName` sau khi trim và gộp khoảng trắng không rỗng, không trùng tên của bất kỳ VĐV nào (không phân biệt hoa thường) và không phải tên ghép các VĐV bằng " / " theo đúng thứ tự (dạng `A / B`, khi có từ hai VĐV). Trong các trường hợp còn lại hệ thống MUST hiển thị từng VĐV kèm avatar và MUST NOT hiển thị tên đội. Tên đội bóng đá MUST luôn là TEAM khi có tên.
 
 #### Scenario: Đội có tên riêng khác tên VĐV
 
@@ -19,10 +19,20 @@ Hệ thống SHALL hiển thị tên đội khi `teamName` sau khi trim và gộ
 - **WHEN** `teamName` là `nguyễn văn an` và một VĐV có `fullName` là `Nguyễn Văn An`
 - **THEN** hệ thống hiển thị PLAYERS và không hiển thị tên đội
 
+#### Scenario: Tên đội là tên ghép các VĐV
+
+- **WHEN** `teamName` là `Minh Khang / Hoang Linh` và hai VĐV có `fullName` lần lượt là `Minh Khang`, `Hoang Linh`
+- **THEN** hệ thống hiển thị PLAYERS (hai VĐV kèm avatar) và không hiển thị chuỗi `Minh Khang / Hoang Linh` như tên đội
+
 #### Scenario: Đội không có tên
 
 - **WHEN** `teamName` là `null` hoặc chỉ có khoảng trắng và đội có hai VĐV
 - **THEN** hệ thống hiển thị hai VĐV kèm avatar và không hiển thị tên đội
+
+#### Scenario: Bóng đá giữ tên đội
+
+- **WHEN** là bóng đá, `teamName` là `FC A / B` và không trùng tên VĐV nào
+- **THEN** hệ thống hiển thị TEAM `FC A / B`
 
 ### Requirement: Viết tắt tên người theo một quy tắc
 
@@ -40,12 +50,17 @@ Hệ thống SHALL viết tắt tên người bằng `abbreviateName`: mỗi ch�
 
 ### Requirement: Chỗ hẹp viết tắt, chỗ rộng hiển thị đầy đủ
 
-Hệ thống SHALL dùng `ParticipantLabel` với `compact` cho sơ đồ nhánh, thẻ trận, lịch sân công khai và BTC, overlay và điều khiển tỉ số. Ở chế độ compact, mỗi VĐV MUST nằm trên một dòng kèm avatar, tên viết tắt, và tên đầy đủ hiện qua Tooltip hoặc nhấn giữ. Danh sách, bảng xếp hạng, kết quả, roster và Excel MUST hiển thị tên đầy đủ. Tên đội MUST NOT bị viết tắt ở mọi chế độ; tên dài MUST được cắt bằng dấu "…" và hiện đầy đủ qua Tooltip.
+Hệ thống SHALL dùng `ParticipantLabel` với `compact` cho sơ đồ nhánh, thẻ trận, lịch sân, overlay và điều khiển tỉ số. Ở PLAYERS, mỗi bên MUST là một dòng: tối đa 2 avatar chồng nhau và tên các VĐV nối bằng " / "; compact viết tắt bằng `abbreviateName`, tên đầy đủ qua Tooltip hoặc nhấn giữ. Danh sách, bảng xếp hạng, kết quả, roster và Excel MUST hiển thị tên đầy đủ. Tên đội MUST NOT bị viết tắt; tên dài cắt bằng "…" kèm Tooltip.
 
 #### Scenario: Thẻ trận compact hiển thị hai VĐV
 
 - **WHEN** một đội không có tên và có hai VĐV `Nguyễn Văn An`, `Trần Văn Bình` ở chế độ compact
-- **THEN** hiển thị hai dòng `N. V. An` và `T. V. Bình` theo `abbreviateName`, mỗi dòng có avatar và Tooltip tên đầy đủ, không tràn khung
+- **THEN** hiển thị đúng một dòng `N. V. An / T. V. Bình` kèm hai avatar chồng nhau, Tooltip là tên đầy đủ, không tràn khung
+
+#### Scenario: Avatar không có ảnh
+
+- **WHEN** VĐV `Nguyễn Văn An` không có `avatarUrl`
+- **THEN** avatar hiện chữ `N`, không hiện `NA`
 
 #### Scenario: Tên đội dài ở danh sách
 
@@ -112,3 +127,22 @@ Mọi chuỗi hiển thị mới hoặc được dùng lại trong ParticipantLa
 
 - **WHEN** một key chỉ có ở `app_vi.arb`
 - **THEN** change không được coi là hoàn tất cho đến khi key có ở `app_en.arb` và `gen-l10n` chạy thành công
+
+### Requirement: Loại trùng VĐV khi dựng danh sách
+
+Các adapter dựng VĐV (`toParticipantPlayers`, `participantPlayersFromMemberInfos`, `participantPlayersFromNames`) SHALL chỉ giữ một lần mỗi VĐV: trùng `userId` (khác rỗng), hoặc khách trùng tên sau khi trim, gộp khoảng trắng và không phân biệt hoa thường. Phần tử xuất hiện đầu tiên MUST được giữ và thứ tự các phần tử còn lại MUST không đổi.
+
+#### Scenario: API trả cùng một VĐV nhiều lần
+
+- **WHEN** `players` có 5 phần tử cùng `userId` `u1`
+- **THEN** danh sách VĐV có đúng 1 phần tử và thẻ trận hiện một VĐV, không lặp dòng
+
+#### Scenario: Hai VĐV khác nhau cùng tên khác userId
+
+- **WHEN** `players` có hai phần tử `userId` `u1` và `u2` cùng `fullName` `Nguyễn Văn An`
+- **THEN** cả hai được giữ (khác tài khoản là hai người)
+
+#### Scenario: Danh sách rỗng
+
+- **WHEN** `players` là `[]`
+- **THEN** kết quả là `[]`, không lỗi
