@@ -100,24 +100,29 @@ class _NoSignalBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black,
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.videocam_outlined, color: Colors.white24, size: 36),
-          const SizedBox(height: 10),
-          Text(
-            AppLocalizations.of(context)!.liveNoSignalLabel,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+    // Cùng tỉ lệ dự phòng với LiveVideoPlayer: không có khung tỉ lệ thì khung
+    // chỉ cao vừa icon + chữ, bảng điểm và nhãn camera đè lên nhau.
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: Container(
+        color: Colors.black,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.videocam_outlined, color: Colors.white24, size: 36),
+            const SizedBox(height: 10),
+            Text(
+              AppLocalizations.of(context)!.liveNoSignalLabel,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

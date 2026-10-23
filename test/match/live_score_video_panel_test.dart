@@ -182,6 +182,18 @@ void main() {
     _expectNoPlayIconInVideoFrame();
   });
 
+  testWidgets('khung chưa có tín hiệu giữ tỉ lệ 16:9 như trình phát', (
+    tester,
+  ) async {
+    await _pumpLiveScore(tester, playback: (ref, matchId) => null);
+
+    // Không có khung tỉ lệ, khung chỉ cao vừa icon và một dòng chữ: bảng
+    // điểm và nhãn camera đè lên nhau trong dải đen thấp.
+    final box = tester.getSize(find.byType(LiveVideoBox));
+    expect(box.height, closeTo(box.width * 9 / 16, 1));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('backend lỗi khi tải playback: vẫn không icon play giả', (
     tester,
   ) async {

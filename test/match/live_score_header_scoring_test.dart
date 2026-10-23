@@ -2,11 +2,14 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/match_score_access_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +21,16 @@ const _refereeAuth = AuthState(
   status: AuthStatus.authenticated,
   role: UserRole.referee,
   tournamentId: _tournamentId,
+);
+
+const _adminAuth = AuthState(
+  status: AuthStatus.authenticated,
+  role: UserRole.admin,
+);
+
+const _organizerAuth = AuthState(
+  status: AuthStatus.authenticated,
+  role: UserRole.organizer,
 );
 
 const _viewerAuth = AuthState(
@@ -77,6 +90,7 @@ Future<void> _pumpLiveScreen(
   required AuthState auth,
   required MatchModel match,
   bool isViewer = true,
+  bool? scoreAccess,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -93,6 +107,12 @@ Future<void> _pumpLiveScreen(
         tournamentProvider.overrideWith((ref, id) => Stream.value(null)),
         viewerCountProvider.overrideWith((ref, id) => Stream.value(0)),
         matchPlaybackProvider.overrideWith((ref, id) => Future.value(null)),
+        matchScoreAccessProvider.overrideWith(
+          (ref, id) => Future.value(scoreAccess),
+        ),
+        userProfileProvider.overrideWith(
+          (ref) async => UserProfile(id: 'user-1', fullName: 'U', email: ''),
+        ),
         matchSocketServiceProvider.overrideWithValue(_SilentMatchSocket()),
       ],
       child: MaterialApp(
@@ -186,6 +206,63 @@ void main() {
     );
 
     expect(find.text('Team Alpha'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('admin của giải khác không thấy icon bấm điểm dù score-access true', (
+    tester,
+  ) async {
+    await _pumpLiveScreen(
+      tester,
+      auth: _adminAuth,
+      match: _match(),
+      isViewer: false,
+      scoreAccess: true,
+    );
+
+    expect(_appBarScoringIcon(), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('người có score-access true thấy icon bấm điểm', (tester) async {
+    await _pumpLiveScreen(
+      tester,
+      auth: _organizerAuth,
+      match: _match(),
+      isViewer: false,
+      scoreAccess: true,
+    );
+
+    expect(_appBarScoringIcon(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('người có score-access false không thấy icon bấm điểm', (
+    tester,
+  ) async {
+    await _pumpLiveScreen(
+      tester,
+      auth: _organizerAuth,
+      match: _match(),
+      isViewer: false,
+      scoreAccess: false,
+    );
+
+    expect(_appBarScoringIcon(), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('score-access lỗi (null) không thấy icon bấm điểm', (
+    tester,
+  ) async {
+    await _pumpLiveScreen(
+      tester,
+      auth: _organizerAuth,
+      match: _match(),
+      isViewer: false,
+    );
+
+    expect(_appBarScoringIcon(), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

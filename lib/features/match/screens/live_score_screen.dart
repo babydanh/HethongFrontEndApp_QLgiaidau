@@ -13,9 +13,11 @@ import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/match_score_access_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -643,10 +645,28 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     // A completed match remains viewable, but must never expose a scoring
     // action again. This also prevents the old score panel from appearing
     // after the server has finalized the match.
+    final profileId = ref.watch(userProfileProvider).asData?.value.id;
+    final scoreAccess = auth.isAuthenticated && effectiveTournamentId.isNotEmpty
+        ? ref.watch(matchScoreAccessProvider(widget.matchId)).asData?.value
+        : null;
+    // A referee signed in with a tournament token has no user profile, so keep
+    // their access for the tournament the token was issued for.
+    final isTokenReferee =
+        auth.isReferee &&
+        effectiveTournamentId.isNotEmpty &&
+        auth.tournamentId == effectiveTournamentId;
     final canOpenScoring =
         match != null &&
         !match.isCompleted &&
-        (auth.canScore || (isSuperLiteMatch && auth.isAuthenticated));
+        ((isSuperLiteMatch && auth.isAuthenticated) ||
+            isTokenReferee ||
+            canControlTournamentLive(
+              userId: profileId,
+              isAdmin: auth.isAdmin,
+              createdBy: tournamentAsync?.value?.creatorId,
+              refereeId: match.refereeId,
+              scoreAccess: scoreAccess,
+            ));
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
@@ -680,7 +700,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
             Text(
-              (!widget.isViewer && auth.canScore)
+              (!widget.isViewer && canOpenScoring)
                   ? l10n.liveRefereeDeskTitle
                   : (matchAsync.value?.isLive == true
                         ? l10n.liveMatchTitle
@@ -775,8 +795,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 return _buildLiveState(match, canOpenScoring: canOpenScoring);
               }
 
+              // No scoring right: show the read-only page instead of the
+              // referee-desk layout, which overflows on phone widths.
               if (!canOpenScoring) {
-                return _buildLiveState(match, canOpenScoring: false);
+                return _buildViewerState(match, canControl: false);
               }
 
               if (match.isScheduled) {
