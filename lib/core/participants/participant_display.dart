@@ -349,43 +349,55 @@ class ParticipantLabel extends StatelessWidget {
     final colors = context.colors;
     final avatarRadius = compact ? 7.0 : 11.0;
     final rowGap = compact ? 4.0 : 6.0;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: crossAxisAlignment,
-      children: [
-        for (final player in display.players)
-          Tooltip(
-            message: player.fullName,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+    final shown = display.players.take(_maxAvatars).toList(growable: false);
+    final overlap = avatarRadius * 1.3;
+    final names = display.players
+        .map((p) => compact ? abbreviateName(p.fullName) : p.fullName)
+        .join(' / ');
+    return Tooltip(
+      message: display.players.map((p) => p.fullName).join(' / '),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: avatarRadius * 2 + overlap * (shown.length - 1),
+            height: avatarRadius * 2,
+            child: Stack(
               children: [
-                _PlayerAvatar(
-                  name: player.fullName,
-                  avatarUrl: player.avatarUrl,
-                  radius: avatarRadius,
-                  backgroundColor: colors.bgSurface,
-                  textStyle: baseStyle.copyWith(
-                    fontSize: avatarRadius * 0.9,
-                    color: colors.textMuted,
+                for (var i = 0; i < shown.length; i++)
+                  Positioned(
+                    left: overlap * i,
+                    child: _PlayerAvatar(
+                      name: shown[i].fullName,
+                      avatarUrl: shown[i].avatarUrl,
+                      radius: avatarRadius,
+                      backgroundColor: colors.bgSurface,
+                      textStyle: baseStyle.copyWith(
+                        fontSize: avatarRadius * 0.9,
+                        color: colors.textMuted,
+                      ),
+                    ),
                   ),
-                ),
-                SizedBox(width: rowGap),
-                Flexible(
-                  child: Text(
-                    compact ? abbreviateName(player.fullName) : player.fullName,
-                    style: baseStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: textAlign,
-                  ),
-                ),
               ],
             ),
           ),
-      ],
+          SizedBox(width: rowGap),
+          Flexible(
+            child: Text(
+              names,
+              style: baseStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: textAlign,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+const int _maxAvatars = 2;
 
 class _PlayerAvatar extends StatelessWidget {
   final String name;
@@ -420,8 +432,5 @@ String _initials(String name) {
     name,
   ).split(' ').where((w) => w.isNotEmpty).toList(growable: false);
   if (words.isEmpty) return '?';
-  final first = String.fromCharCode(words.first.runes.first);
-  if (words.length == 1) return first.toUpperCase();
-  final last = String.fromCharCode(words.last.runes.first);
-  return '$first$last'.toUpperCase();
+  return String.fromCharCode(words.first.runes.first).toUpperCase();
 }
