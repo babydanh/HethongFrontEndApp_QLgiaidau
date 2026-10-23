@@ -8186,6 +8186,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Split into groups and advance selected teams';
 
   @override
+  String get createClubTournament_bracketSwiss => 'Swiss';
+
+  @override
+  String get createClubTournament_bracketSwissDescription =>
+      'Pair teams by score while limiting rematches.';
+
+  @override
   String get createClubTournament_successTitle =>
       'Tournament created successfully!';
 
@@ -10280,6 +10287,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerBracketGroupStageKnockout => 'Group stage + knockout';
+
+  @override
+  String get registerBracketSwiss => 'Swiss';
 
   @override
   String registerParticipantCount(Object count) {
@@ -13483,6 +13493,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Group stage then knockout';
 
   @override
+  String get tournamentManagementBracketSwiss => 'Swiss';
+
+  @override
   String get tournamentManagementBracketRoundRobin => 'Round robin';
 
   @override
@@ -15587,5 +15600,268 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String rankingTierDuprFrom(Object value) {
     return 'From $value';
+  }
+
+  @override
+  String get swissFormatName => 'Swiss';
+
+  @override
+  String swissRoundLabel(int number) {
+    return 'Round $number';
+  }
+
+  @override
+  String get swissBye => 'BYE';
+
+  @override
+  String get swissStandingsRank => 'Rank';
+
+  @override
+  String get swissStandingsTeam => 'Team';
+
+  @override
+  String get swissStandingsPlayed => 'Played';
+
+  @override
+  String get swissStandingsWon => 'Won';
+
+  @override
+  String get swissStandingsDrawn => 'Drawn';
+
+  @override
+  String get swissStandingsLost => 'Lost';
+
+  @override
+  String get swissStandingsPoints => 'Points';
+
+  @override
+  String get swissStandingsBuchholz => 'Buchholz';
+
+  @override
+  String get swissStandingsBuchholzCut1 => 'Buchholz Cut-1';
+
+  @override
+  String get swissStandingsSonnebornBerger => 'Sonneborn–Berger';
+
+  @override
+  String get swissStandingsPointDiff => 'Point difference';
+
+  @override
+  String get swissStandingsWins => 'Wins';
+
+  @override
+  String get swissStandingsEmpty => 'No standings yet';
+
+  @override
+  String get swissConfigTotalRounds => 'Total rounds';
+
+  @override
+  String get swissConfigFirstRound => 'Round 1 pairing';
+
+  @override
+  String get swissConfigFirstRoundSeed => 'By seed';
+
+  @override
+  String get swissConfigFirstRoundRandom => 'Random';
+
+  @override
+  String get swissConfigTiebreakTitle => 'Tiebreak order';
+
+  @override
+  String get swissConfigMoveUp => 'Move up';
+
+  @override
+  String get swissConfigMoveDown => 'Move down';
+
+  @override
+  String swissConfigRoundsRange(int max) {
+    return 'Up to $max rounds';
+  }
+
+  @override
+  String swissConfigRoundsMinPlayed(int number) {
+    return 'Cannot go below $number rounds already paired';
+  }
+
+  @override
+  String get swissTiebreakBuchholz => 'Buchholz';
+
+  @override
+  String get swissTiebreakBuchholzCut1 => 'Buchholz Cut-1';
+
+  @override
+  String get swissTiebreakSonnebornBerger => 'Sonneborn–Berger';
+
+  @override
+  String get swissTiebreakPointDiff => 'Point difference';
+
+  @override
+  String get swissTiebreakWins => 'Wins';
+
+  @override
+  String get swissTiebreakHeadToHead => 'Head-to-head';
+
+  @override
+  String get swissTiebreakSeed => 'Seed';
+
+  @override
+  String swissPairingTitle(int number) {
+    return 'Pairings for round $number';
+  }
+
+  @override
+  String swissPairingProgress(int number, int total, int pairs) {
+    return 'Round $number/$total · $pairs pairs';
+  }
+
+  @override
+  String get swissPairingPool => 'Unpaired';
+
+  @override
+  String get swissPairingSitOut => 'Sitting out this round';
+
+  @override
+  String get swissPairingDropHere => 'Drop here';
+
+  @override
+  String swissPairingBoard(int number) {
+    return 'Board $number';
+  }
+
+  @override
+  String get swissPairingAutoPair => 'Pair again';
+
+  @override
+  String get swissPairingUndo => 'Undo';
+
+  @override
+  String swissPairingConfirm(int number) {
+    return 'Confirm round $number';
+  }
+
+  @override
+  String get swissPairingConfirmWithWarnings => 'Confirm despite warnings';
+
+  @override
+  String get swissPairingSwapWith => 'Swap with…';
+
+  @override
+  String get swissPairingMoveTo => 'Move to…';
+
+  @override
+  String get swissPairingCancel => 'Cancel';
+
+  @override
+  String swissPairingPoints(num points) {
+    return '$points points';
+  }
+
+  @override
+  String get swissPairingLoading => 'Loading pairings…';
+
+  @override
+  String get swissPairingRetry => 'Retry';
+
+  @override
+  String swissPairingIncompleteHint(int count) {
+    return '$count teams still need a place';
+  }
+
+  @override
+  String swissPairingCreated(int number) {
+    return 'Round $number created.';
+  }
+
+  @override
+  String swissPairingUndone(int number) {
+    return 'Round $number undone.';
+  }
+
+  @override
+  String get swissPairingDragHint => 'Long press to drag';
+
+  @override
+  String swissWarningRematch(int round) {
+    return 'Met in round $round';
+  }
+
+  @override
+  String get swissWarningSecondBye => 'This team has already received a BYE';
+
+  @override
+  String swissWarningScoreGap(num gap) {
+    return 'Score gap: $gap points';
+  }
+
+  @override
+  String get swissErrorDuplicateParticipant => 'A team appears more than once';
+
+  @override
+  String get swissErrorUnknownParticipant =>
+      'A team is not part of this tournament';
+
+  @override
+  String get swissErrorMissingParticipant => 'A team has not been assigned';
+
+  @override
+  String get swissErrorSelfPairing => 'A team cannot be paired with itself';
+
+  @override
+  String get swissApiErrorRoundIncomplete =>
+      'The current round is not complete';
+
+  @override
+  String get swissApiErrorAllRoundsDone => 'All rounds are complete';
+
+  @override
+  String get swissApiErrorRoundExists =>
+      'This round was just created. Pairings have been reloaded.';
+
+  @override
+  String get swissApiErrorInvalidPairing => 'The pairings are invalid';
+
+  @override
+  String get swissApiErrorWarningsUnconfirmed =>
+      'Confirm the warnings before creating the round';
+
+  @override
+  String get swissApiErrorRoundStarted =>
+      'This round cannot be undone because it has started';
+
+  @override
+  String get swissApiErrorUndoRoundOne => 'The first round cannot be undone';
+
+  @override
+  String get swissApiErrorNotSwiss =>
+      'This tournament does not use the Swiss format';
+
+  @override
+  String get swissApiErrorTournamentClosed =>
+      'The tournament has ended or been cancelled; rounds cannot be changed';
+
+  @override
+  String get swissApiErrorNetwork => 'Could not connect. Please try again';
+
+  @override
+  String get swissApiErrorUnknown => 'Something went wrong. Please try again';
+
+  @override
+  String swissActionGenerateNextRound(int number) {
+    return 'Pair round $number';
+  }
+
+  @override
+  String swissActionUndoRound(int number) {
+    return 'Undo round $number';
+  }
+
+  @override
+  String swissActionRoundInProgress(int number) {
+    return 'Round $number in progress';
+  }
+
+  @override
+  String swissActionAllRoundsDone(int total) {
+    return 'All $total rounds complete';
   }
 }

@@ -26,6 +26,21 @@ class BracketFormatIcons {
 </svg>
 ''';
 
+  /// Swiss: two columns of dots joined by crossing lines (score-based pairing).
+  static const String swissSvg = '''
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M4 5L20 12" />
+  <path d="M4 12L20 5" />
+  <path d="M4 19L20 19" />
+  <circle cx="4" cy="5" r="2" fill="currentColor" stroke="none" />
+  <circle cx="4" cy="12" r="2" fill="currentColor" stroke="none" />
+  <circle cx="4" cy="19" r="2" fill="currentColor" stroke="none" />
+  <circle cx="20" cy="5" r="2" fill="currentColor" stroke="none" />
+  <circle cx="20" cy="12" r="2" fill="currentColor" stroke="none" />
+  <circle cx="20" cy="19" r="2" fill="currentColor" stroke="none" />
+</svg>
+''';
+
   static const String groupStageKnockoutSvg = '''
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <rect x="3" y="4" width="6" height="6" rx="1.5" />
@@ -61,7 +76,9 @@ class BracketFormatIcons {
     final type = raw.toUpperCase();
 
     String rawSvg;
-    if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
+    if (type.contains('SWISS')) {
+      rawSvg = swissSvg;
+    } else if (type.contains('ROUND_ROBIN') || type.contains('ROBIN') || type.contains('VÒNG TRÒN')) {
       rawSvg = roundRobinSvg;
     } else if (type.contains('GROUP_STAGE') || type.contains('GROUP') || type.contains('BẢNG')) {
       rawSvg = groupStageKnockoutSvg;
@@ -95,6 +112,7 @@ class BracketFormatIcons {
         : (fallbackBracketType ?? '');
     final type = raw.toUpperCase();
 
+    if (type.contains('SWISS')) return l10n?.swissFormatName ?? raw;
     if (type.contains('ROUND_ROBIN') ||
         type.contains('ROBIN') ||
         type.contains('VÒNG TRÒN')) {

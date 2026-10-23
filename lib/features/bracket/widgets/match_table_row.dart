@@ -93,6 +93,11 @@ class MatchTableRow extends StatelessWidget {
       roundLabel = l10n.matchTableGrandFinal;
     } else if (branch == 'losers') {
       roundLabel = l10n.matchTableLosersRound(match.round);
+    } else if (isSwissMatch(match)) {
+      roundLabel = l10n.matchTableRoundMatch(
+        l10n.swissRoundLabel(match.round),
+        match.matchNumber,
+      );
     } else if (isGroup &&
         match.groupName != null &&
         match.groupName!.trim().isNotEmpty) {
@@ -298,6 +303,8 @@ class MatchTableRow extends StatelessWidget {
                                 _buildUnassignButton(context, 'participant1'),
                             ],
                           ),
+                          // BYE has no opponent: do not render an empty second side.
+                          if (!match.isBye) ...[
                           const SizedBox(height: 10),
 
                           // Team 2
@@ -418,6 +425,7 @@ class MatchTableRow extends StatelessWidget {
                                 _buildUnassignButton(context, 'participant2'),
                             ],
                           ),
+                          ],
                         ],
                       ),
                     ),
@@ -452,7 +460,9 @@ class MatchTableRow extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          l10n.matchTableBye,
+                          isSwissMatch(match)
+                              ? l10n.swissBye
+                              : l10n.matchTableBye,
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,

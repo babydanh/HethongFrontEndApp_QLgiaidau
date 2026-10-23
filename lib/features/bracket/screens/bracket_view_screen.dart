@@ -19,6 +19,13 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
+import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen.dart'
+    show swissApiErrorText;
+import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
@@ -66,6 +73,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   String _matchFilter = '';
   String _selectedBranch = '';
   String _selectedGroup = '';
+  // Swiss: (division, current round) the round filter was last defaulted for.
+  (String?, int)? _swissDefaultedFor;
 
   BracketFilterState get _currentFilterState => BracketFilterState(
     matchFilter: _matchFilter,
@@ -365,7 +374,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   final hasKnockoutMatches = matches.any(isKnockoutMatch);
 
                   final String effectiveBracketType;
-                  if (hasDoubleElimMatches ||
+                  if (rawType == AppConstants.bracketSwiss ||
+                      matches.any(isSwissMatch)) {
+                    effectiveBracketType = AppConstants.bracketSwiss;
+                  } else if (hasDoubleElimMatches ||
                       rawType == 'double_elimination' ||
                       rawType == 'doubleelimination') {
                     effectiveBracketType =
@@ -412,6 +424,16 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       widget.isReferee;
                   final isReadOnlyMode =
                       !effectiveIsLite && auth.role == UserRole.viewer;
+
+                  if (effectiveBracketType == AppConstants.bracketSwiss) {
+                    return _buildSwissContent(
+                      matches,
+                      isReadOnlyMode,
+                      canActAsReferee,
+                      canScoreMatch,
+                      canManageGroupAssignment,
+                    );
+                  }
 
                   if (hasGroupStage) {
                     return Column(
@@ -531,7 +553,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     );
   }
 
-  Widget _buildGroupStageTabBar(AppLocalizations l10n) {
+  Widget _buildGroupStageTabBar(AppLocalizations l10n, {bool swiss = false}) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(3),
@@ -541,11 +563,16 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         border: Border.all(color: context.colors.border),
       ),
       child: Row(
-        children: [
-          _buildGroupTabItem(0, l10n.bracketView_crossTable),
-          _buildGroupTabItem(1, l10n.bracketView_standings),
-          _buildGroupTabItem(2, l10n.bracketView_schedule),
-        ],
+        children: swiss
+            ? [
+                _buildGroupTabItem(0, l10n.bracketView_standings),
+                _buildGroupTabItem(1, l10n.bracketView_schedule),
+              ]
+            : [
+                _buildGroupTabItem(0, l10n.bracketView_crossTable),
+                _buildGroupTabItem(1, l10n.bracketView_standings),
+                _buildGroupTabItem(2, l10n.bracketView_schedule),
+              ],
       ),
     );
   }
@@ -574,6 +601,25 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         : '/organizer/tournaments/${widget.tournamentId}/manage';
     context.push(
       '$routeBase/group-stage-assignment/${Uri.encodeComponent(divisionId)}',
+    );
+  }
+
+  void _openSwissPairing(String stageId, int round, int totalRounds) {
+    final divisionId = _activeDivisionId;
+    if (divisionId == null || divisionId.isEmpty) return;
+
+    final routeBase = ref.read(authProvider).role == UserRole.admin
+        ? '/admin/tournament/${widget.tournamentId}'
+        : '/organizer/tournaments/${widget.tournamentId}/manage';
+    context.push(
+      Uri(
+        path: '$routeBase/swiss-pairing/${Uri.encodeComponent(divisionId)}',
+        queryParameters: {
+          'stageId': stageId,
+          'round': '$round',
+          'total': '$totalRounds',
+        },
+      ).toString(),
     );
   }
 
@@ -611,6 +657,105 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Swiss: two tabs only (standings, schedule), never the cross table.
+  Widget _buildSwissContent(
+    List<MatchModel> matches,
+    bool isReadOnly,
+    bool isReferee,
+    bool canScoreMatch,
+    bool canManage,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final params = (
+      tournamentId: widget.tournamentId,
+      divisionId: _activeDivisionId,
+    );
+    final stage = ref.watch(swissStageProvider(params)).value;
+    final totalRounds = _computeTotalRounds(matches, AppConstants.bracketSwiss);
+    // The schedule follows the current round when it changes (a new round, an
+    // undone one, another division); otherwise it keeps the user's choice.
+    final currentRound = swissRoundState(matches, totalRounds).currentRound;
+    final defaultedFor = (_activeDivisionId, currentRound);
+    final reset = swissRoundFilterReset(
+      selected: _selectedRound,
+      currentRound: currentRound,
+      rounds: {for (final m in matches) m.round},
+      keyChanged: _swissDefaultedFor != defaultedFor,
+    );
+    _swissDefaultedFor = defaultedFor;
+    if (reset != null) _selectedRound = reset;
+    // Swiss has two tabs only; the tab state is shared with the group view.
+    if (_selectedGroupTab > 1) _selectedGroupTab = 1;
+    final showStandings = _selectedGroupTab == 0;
+    final body = showStandings
+        ? _buildSwissStandings(params, l10n)
+        : _buildKnockoutMatchTable(
+            matches,
+            AppConstants.bracketSwiss,
+            isReadOnly,
+            isReferee,
+            canScoreMatch,
+          );
+    return Column(
+      mainAxisSize: widget.isEmbedded ? MainAxisSize.min : MainAxisSize.max,
+      children: [
+        _buildGroupStageTabBar(l10n, swiss: true),
+        // Without a configured total the round count is a guess: no actions.
+        if (canManage &&
+            stage != null &&
+            stage.totalRounds != null &&
+            _activeDivisionId != null)
+          SwissRoundActions(
+            tournamentId: widget.tournamentId,
+            divisionId: _activeDivisionId!,
+            stageId: stage.stageId,
+            matches: matches,
+            totalRounds: stage.totalRounds!,
+            onOpenPairing: _openSwissPairing,
+          ),
+        if (widget.isEmbedded) body else Expanded(child: body),
+      ],
+    );
+  }
+
+  Widget _buildSwissStandings(
+    ({String tournamentId, String? divisionId}) params,
+    AppLocalizations l10n,
+  ) {
+    final standings = ref.watch(standingsWithDivisionProvider(params));
+    final tiebreakOrder =
+        ref.watch(swissStageProvider(params)).value?.config.tiebreakOrder ??
+        SwissConfig.defaultTiebreakOrder;
+    final Widget content = standings.when(
+      data: (rows) =>
+          SwissStandingsView(standings: rows, tiebreakOrder: tiebreakOrder),
+      loading: () => const _BracketShimmerLoading(),
+      error: (_, _) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Text(
+            l10n.bracketView_loadError,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.colors.textSecondary),
+          ),
+        ),
+      ),
+    );
+    return RefreshIndicator(
+      onRefresh: () async =>
+          ref.invalidate(standingsWithDivisionProvider(params)),
+      child: ListView(
+        controller: widget.isEmbedded ? null : widget.scrollController,
+        shrinkWrap: widget.isEmbedded,
+        physics: widget.isEmbedded
+            ? const NeverScrollableScrollPhysics()
+            : const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(0, 12, 0, 160),
+        children: [content],
       ),
     );
   }
@@ -673,16 +818,19 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
     final isGroupStageKnockout =
         bracketType == AppConstants.bracketGroupStageKnockout;
     final isRoundRobin = bracketType == AppConstants.bracketRoundRobin;
+    final isSwiss = bracketType == AppConstants.bracketSwiss;
 
     // Filter valid matches
     // Keep TBD/TBD knockout slots visible. The web shows these scheduled
     // placeholders so users can see every configured round before seeding.
-    final validMatches = matches.where((m) => !m.isBye).toList();
+    // Swiss keeps BYE rows: they show who sits out and score a win.
+    final validMatches = matches.where((m) => isSwiss || !m.isBye).toList();
 
-    // Status counts
-    final liveCount = validMatches.where((m) => m.isLive).length;
-    final scheduledCount = validMatches.where((m) => m.isScheduled).length;
-    final completedCount = validMatches.where((m) => m.isCompleted).length;
+    // Status counts (BYE rows are never counted)
+    final countable = validMatches.where((m) => !m.isBye);
+    final liveCount = countable.where((m) => m.isLive).length;
+    final scheduledCount = countable.where((m) => m.isScheduled).length;
+    final completedCount = countable.where((m) => m.isCompleted).length;
 
     final stageScopedMatches = validMatches.where((m) {
       if (isGroupStageKnockout) {
@@ -812,6 +960,12 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             final legCompare = (a.leg ?? 1).compareTo(b.leg ?? 1);
             if (legCompare != 0) return legCompare;
           }
+          if (isSwiss) {
+            final byRound = a.round.compareTo(b.round);
+            if (byRound != 0) return byRound;
+            final byNumber = a.matchNumber.compareTo(b.matchNumber);
+            if (byNumber != 0) return byNumber;
+          }
           return a.id.compareTo(b.id);
         });
     final filteredMatches = nonSearchMatches.where((m) {
@@ -842,10 +996,13 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       return '$groupName • ${l10n.crossTableLegIndicator(match.leg ?? 1, availableLegs.length)}';
     }
 
-    final groupMatches = filteredMatches.where(isGroupStageMatch).toList();
+    // Swiss lists every match as a plain row (no group sections, no diagram).
+    final groupMatches = filteredMatches
+        .where((m) => isSwiss || isGroupStageMatch(m))
+        .toList();
     // Search narrows only the group rows; the knockout tree must stay whole.
     final bracketMatches = nonSearchMatches
-        .where((m) => !isGroupStageMatch(m))
+        .where((m) => !isSwiss && !isGroupStageMatch(m))
         .toList();
 
     return ListView(
@@ -858,7 +1015,8 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 160),
       children: [
-        // ── Diagram Access Banner ──
+        // ── Diagram Access Banner (Swiss has no bracket diagram) ──
+        if (!isSwiss)
         Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1145,7 +1303,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     _buildActiveFilterChip(
                       label: _getRoundLabel(
                         _selectedRound,
-                        isRoundRobin,
+                        isRoundRobin || isSwiss,
                         isGroupStageKnockout,
                         _selectedBranch,
                         effectiveTotalRounds,
@@ -1181,6 +1339,30 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ),
           ),
 
+        // ── Swiss round picker: plain text pills; tap again for all rounds ──
+        if (isSwiss && availableRounds.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final r in availableRounds)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: RoundFilterPill(
+                        isSelected: _selectedRound == r,
+                        label: l10n.swissRoundLabel(r),
+                        onTap: () => setState(
+                          () => _selectedRound = _selectedRound == r ? 0 : r,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
         // ── MATCHES LIST ──
         if (filteredMatches.isEmpty && bracketMatches.isEmpty)
           Container(
@@ -1207,9 +1389,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ),
           ),
         for (var index = 0; index < groupMatches.length; index++) ...[
-          if (index == 0 ||
-              sectionKey(groupMatches[index]) !=
-                  sectionKey(groupMatches[index - 1]))
+          if (!isSwiss &&
+              (index == 0 ||
+                  sectionKey(groupMatches[index]) !=
+                      sectionKey(groupMatches[index - 1])))
             Padding(
               padding: const EdgeInsets.only(top: 6, bottom: 8),
               child: Row(
@@ -1363,6 +1546,18 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
 
   int _computeTotalRounds(List<MatchModel> matches, String bracketType) {
     if (matches.isEmpty) return 1;
+    if (bracketType == AppConstants.bracketSwiss) {
+      final configured = ref
+          .watch(
+            swissStageProvider((
+              tournamentId: widget.tournamentId,
+              divisionId: _activeDivisionId,
+            )),
+          )
+          .value
+          ?.totalRounds;
+      if (configured != null && configured > 0) return configured;
+    }
     if (bracketType == AppConstants.bracketDoubleElimination) {
       final winnersRounds = matches
           .where((m) => m.bracketPosition.bracket == 'winners')
@@ -1422,5 +1617,126 @@ class _BracketShimmerLoading extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// Manager-only strip above the Swiss tabs: open the pairing screen for the
+/// next round, undo the newest round, or a status line when neither applies.
+class SwissRoundActions extends ConsumerWidget {
+  const SwissRoundActions({
+    super.key,
+    required this.tournamentId,
+    required this.divisionId,
+    required this.stageId,
+    required this.matches,
+    required this.totalRounds,
+    required this.onOpenPairing,
+  });
+
+  final String tournamentId;
+  final String divisionId;
+  final String stageId;
+  final List<MatchModel> matches;
+  final int totalRounds;
+
+  /// Called with `(stageId, nextRound, totalRounds)`.
+  final void Function(String stageId, int round, int totalRounds)
+  onOpenPairing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final state = swissRoundState(matches, totalRounds);
+    if (state.currentRound == 0) return const SizedBox.shrink();
+
+    final nextRound = state.nextRound;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (nextRound != null)
+            TextButton(
+              key: const Key('swiss-next-round'),
+              onPressed: () => onOpenPairing(stageId, nextRound, totalRounds),
+              child: Text(l10n.swissActionGenerateNextRound(nextRound)),
+            )
+          else
+            Text(
+              state.roundComplete
+                  ? l10n.swissActionAllRoundsDone(totalRounds)
+                  : l10n.swissActionRoundInProgress(state.currentRound),
+              key: const Key('swiss-round-status'),
+              style: TextStyle(color: context.colors.textSecondary),
+            ),
+          if (state.canUndo)
+            TextButton(
+              key: const Key('swiss-undo-round'),
+              onPressed: () => _undo(context, ref, state.currentRound),
+              child: Text(l10n.swissActionUndoRound(state.currentRound)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _undo(BuildContext context, WidgetRef ref, int round) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        content: Text(l10n.swissActionUndoRound(round)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialog, false),
+            child: Text(l10n.swissPairingCancel),
+          ),
+          TextButton(
+            key: const Key('swiss-undo-round-confirm'),
+            onPressed: () => Navigator.pop(dialog, true),
+            child: Text(l10n.swissActionUndoRound(round)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    String message;
+    try {
+      await ref
+          .read(tournamentRepositoryProvider)
+          .swissUndoRound(
+            tournamentId,
+            round,
+            divisionId: divisionId,
+            stageId: stageId,
+          );
+      // The widget may be gone after the await; its ref is then unusable.
+      if (context.mounted) {
+        ref.invalidate(
+          bracketMatchesWithDivisionProvider((
+            tournamentId: tournamentId,
+            divisionId: divisionId,
+          )),
+        );
+        ref.invalidate(
+          swissStageProvider((
+            tournamentId: tournamentId,
+            divisionId: divisionId,
+          )),
+        );
+      }
+      message = l10n.swissPairingUndone(round);
+    } on SwissApiException catch (error) {
+      message = swissApiErrorText(
+        l10n,
+        error.code ?? (error.status == null ? 'NETWORK' : 'UNKNOWN'),
+      );
+    } catch (_) {
+      message = l10n.swissApiErrorUnknown;
+    }
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 }

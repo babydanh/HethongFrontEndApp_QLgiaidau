@@ -80,11 +80,11 @@ Future<List<Standing>> _fetchApiStandings(
     final data = rawData is Map<String, dynamic> ? rawData['data'] : null;
 
     if (data is List<dynamic>) {
-      return _parseLegacyGroupedStandings(data);
+      return _orderByRank(_parseLegacyGroupedStandings(data));
     }
 
     if (data is Map<String, dynamic>) {
-      return _parseBracketStandings(data);
+      return _orderByRank(_parseBracketStandings(data));
     }
   } catch (_) {
     // Fallback to client-side calculation below.
@@ -148,7 +148,25 @@ Standing _standingFromApi(
       fallback: pointsFor - pointsAgainst,
     ),
     totalPoints: _asInt(s['totalPoints'] ?? s['points']),
+    rank: s['rank'] is num ? (s['rank'] as num).toInt() : null,
+    buchholz: _asDouble(s['buchholz']),
+    buchholzCut1: _asDouble(s['buchholzCut1']),
+    sonnebornBerger: _asDouble(s['sonnebornBerger']),
   );
+}
+
+double _asDouble(Object? value) =>
+    value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+
+/// Swiss rows carry the Backend `rank`: trust that order (stable, unranked last).
+List<Standing> _orderByRank(List<Standing> rows) {
+  if (rows.every((s) => s.rank == null)) return rows;
+  final indexed = [for (var i = 0; i < rows.length; i++) (i, rows[i])];
+  indexed.sort((a, b) {
+    final byRank = (a.$2.rank ?? 1 << 30).compareTo(b.$2.rank ?? 1 << 30);
+    return byRank != 0 ? byRank : a.$1.compareTo(b.$1);
+  });
+  return [for (final e in indexed) e.$2];
 }
 
 int _asInt(Object? value, {int fallback = 0}) {

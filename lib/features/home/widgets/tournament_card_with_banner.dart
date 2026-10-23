@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -530,8 +531,11 @@ class _TournamentCardWithBannerState
                                         ),
                                       ),
                                       child: Text(
-                                        widget.tournament.format ==
-                                                "single_elimination"
+                                        widget.tournament.bracketType ==
+                                                AppConstants.bracketSwiss
+                                            ? l10n.swissFormatName
+                                            : widget.tournament.format ==
+                                                  "single_elimination"
                                             ? l10n.eliminationSingle
                                             : l10n.roundRobin,
                                         style: TextStyle(

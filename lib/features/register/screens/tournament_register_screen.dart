@@ -922,6 +922,7 @@ class _TournamentRegisterScreenState
       'DOUBLE_ELIMINATION' => l10n.registerBracketDoubleElimination,
       'ROUND_ROBIN' => l10n.registerBracketRoundRobin,
       'GROUP_STAGE_KNOCKOUT' => l10n.registerBracketGroupStageKnockout,
+      'SWISS' => l10n.registerBracketSwiss,
       _ => null,
     };
     if (bracket != null) items.add(bracket);

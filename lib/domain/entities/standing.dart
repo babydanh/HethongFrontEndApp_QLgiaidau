@@ -14,6 +14,12 @@ class Standing {
   final int totalPoints;
   final List<ParticipantPlayer> players;
 
+  /// Swiss only: Backend rank (1-based) and tiebreak values; null/0 elsewhere.
+  final int? rank;
+  final double buchholz;
+  final double buchholzCut1;
+  final double sonnebornBerger;
+
   const Standing({
     required this.id,
     required this.teamName,
@@ -27,6 +33,10 @@ class Standing {
     this.pointDifference = 0,
     this.totalPoints = 0,
     this.players = const [],
+    this.rank,
+    this.buchholz = 0,
+    this.buchholzCut1 = 0,
+    this.sonnebornBerger = 0,
   });
 
   factory Standing.fromJson(Map<String, dynamic> json, String id) {
@@ -48,6 +58,10 @@ class Standing {
       pointsAgainst: json['pointsAgainst'] ?? 0,
       pointDifference: json['pointDifference'] ?? 0,
       totalPoints: json['totalPoints'] ?? 0,
+      rank: (json['rank'] as num?)?.toInt(),
+      buchholz: (json['buchholz'] as num?)?.toDouble() ?? 0,
+      buchholzCut1: (json['buchholzCut1'] as num?)?.toDouble() ?? 0,
+      sonnebornBerger: (json['sonnebornBerger'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -79,6 +93,10 @@ class Standing {
     int? pointDifference,
     int? totalPoints,
     List<ParticipantPlayer>? players,
+    int? rank,
+    double? buchholz,
+    double? buchholzCut1,
+    double? sonnebornBerger,
   }) {
     return Standing(
       id: id ?? this.id,
@@ -93,6 +111,10 @@ class Standing {
       pointDifference: pointDifference ?? this.pointDifference,
       totalPoints: totalPoints ?? this.totalPoints,
       players: players ?? this.players,
+      rank: rank ?? this.rank,
+      buchholz: buchholz ?? this.buchholz,
+      buchholzCut1: buchholzCut1 ?? this.buchholzCut1,
+      sonnebornBerger: sonnebornBerger ?? this.sonnebornBerger,
     );
   }
 

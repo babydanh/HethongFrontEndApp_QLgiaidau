@@ -72,4 +72,35 @@ void main() {
       expect(s2.id, '1');
     });
   });
+
+  group('Standing Swiss fields', () {
+    test('fromJson reads rank and tiebreak values', () {
+      final standing = Standing.fromJson({
+        'teamName': 'Doi A',
+        'rank': 2,
+        'buchholz': 7.5,
+        'buchholzCut1': 5,
+        'sonnebornBerger': 3.5,
+      }, 's1');
+      expect(standing.rank, 2);
+      expect(standing.buchholz, 7.5);
+      expect(standing.buchholzCut1, 5.0);
+      expect(standing.sonnebornBerger, 3.5);
+    });
+
+    test('missing Swiss fields default to null rank and zero values', () {
+      final standing = Standing.fromJson({'teamName': 'Doi A'}, 's1');
+      expect(standing.rank, isNull);
+      expect(standing.buchholz, 0);
+      expect(standing.buchholzCut1, 0);
+      expect(standing.sonnebornBerger, 0);
+    });
+
+    test('copyWith keeps Swiss fields', () {
+      final s = Standing(id: '1', teamName: 'A', rank: 3, buchholz: 4.5);
+      final copy = s.copyWith(won: 1);
+      expect(copy.rank, 3);
+      expect(copy.buchholz, 4.5);
+    });
+  });
 }

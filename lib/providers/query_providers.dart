@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final homeProjectionProvider = StreamProvider.autoDispose
@@ -325,6 +326,30 @@ final bracketMatchesWithDivisionProvider =
           params.tournamentId,
           divisionId: params.divisionId,
         );
+      }
+    });
+
+/// Swiss stage (id + config) of a division, polled every 15 s like the bracket.
+/// A failed poll keeps the last value; null means no Swiss stage (or none yet).
+final swissStageProvider =
+    StreamProvider.family<
+      SwissStageInfo?,
+      ({String tournamentId, String? divisionId})
+    >((ref, params) async* {
+      final repo = ref.watch(tournamentRepositoryProvider);
+      Future<SwissStageInfo?> load() => repo
+          .getSwissStage(params.tournamentId, divisionId: params.divisionId)
+          .timeout(const Duration(seconds: 8));
+
+      try {
+        yield await load();
+      } catch (_) {
+        yield null;
+      }
+      await for (final _ in Stream<void>.periodic(const Duration(seconds: 15))) {
+        try {
+          yield await load();
+        } catch (_) {}
       }
     });
 

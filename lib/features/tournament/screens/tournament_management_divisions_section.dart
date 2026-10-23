@@ -3,8 +3,11 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/swiss_config_editor.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +19,7 @@ const _bracketTypes = [
   'DOUBLE_ELIMINATION',
   'ROUND_ROBIN',
   'GROUP_STAGE_KNOCKOUT',
+  'SWISS',
 ];
 
 class TournamentManagementDivisionsSection extends ConsumerStatefulWidget {
@@ -34,6 +38,7 @@ class _TournamentManagementDivisionsSectionState
     extends ConsumerState<TournamentManagementDivisionsSection> {
   late Future<List<Map<String, dynamic>>> _divisionsFuture;
   bool _isBusy = false;
+  bool _configuring = false;
   String? _mutationError;
 
   @override
@@ -181,22 +186,106 @@ class _TournamentManagementDivisionsSectionState
   }
 
   Future<void> _configureDivision(Map<String, dynamic> division) async {
+    // Loading the stage takes a moment: ignore taps meanwhile.
+    if (_configuring || _isBusy) return;
+    _configuring = true;
+    try {
+      await _runConfigureDivision(division);
+    } finally {
+      _configuring = false;
+    }
+  }
+
+  Future<void> _runConfigureDivision(Map<String, dynamic> division) async {
     final divisionId = _divisionId(division);
     if (divisionId.isEmpty) return;
+    final teamCount = swissDivisionTeamCount(division);
+    // Once the bracket exists the Swiss config lives on the stage.
+    SwissStageInfo? stage;
+    var minPlayed = 0;
+    if (_isSwiss(division['bracketType'])) {
+      try {
+        final repo = ref.read(tournamentRepositoryProvider);
+        stage = await repo.getSwissStage(
+          widget.tournament.id,
+          divisionId: divisionId,
+        );
+        if (stage != null) {
+          final matches = await repo.getBracketMatches(
+            widget.tournament.id,
+            divisionId: divisionId,
+          );
+          minPlayed = swissRoundState(matches, 0).currentRound;
+        }
+      } catch (_) {
+        if (mounted) setState(() => _mutationError = 'error');
+        return;
+      }
+      if (!mounted) return;
+    }
+    final divisionRoundConfig = division['roundConfig'] is Map
+        ? Map<String, dynamic>.from(division['roundConfig'] as Map)
+        : null;
+    final rawSwiss = stage != null
+        ? stage.rawRoundConfig['swiss']
+        : divisionRoundConfig?['swiss'];
+    final initial = swissConfigOrDefault(rawSwiss, teamCount, minPlayed);
     final values = await showDialog<_DivisionConfigValues>(
       context: context,
-      builder: (context) => _DivisionConfigDialog(division: division),
+      builder: (context) => _DivisionConfigDialog(
+        division: division,
+        swissInitial: initial,
+        teamCount: teamCount,
+        minPlayedRounds: minPlayed,
+        // After the bracket exists only the Swiss config can still change.
+        lockContent: stage != null,
+      ),
     );
     if (values == null || !mounted) return;
-    await _mutate(
-      () => ref
-          .read(tournamentManagementRepositoryProvider)
-          .updateDivisionConfig(
-            widget.tournament.id,
-            divisionId,
-            values.toPayload(),
-          ),
+    final swiss = values.swiss;
+    // Unknown team count and no saved total: the "1" shown is a placeholder.
+    // Leave totalRounds out so the Backend derives it when generating.
+    final savedHasTotal = rawSwiss is Map && rawSwiss['totalRounds'] is num;
+    final plan = planSwissSave(
+      basePayload: values.toPayload(),
+      divisionRoundConfig: divisionRoundConfig,
+      swiss: swiss,
+      stage: stage,
+      omitTotalRounds:
+          !savedHasTotal &&
+          teamCount <= 0 &&
+          swiss?.totalRounds == initial.totalRounds,
     );
+    final divisionPayload = plan.divisionPayload;
+    final stageRoundConfig = plan.stageRoundConfig;
+    final stageId = stage?.stageId;
+    await _mutate(() async {
+      // After the bracket exists the Backend rejects division config edits,
+      // so then only the stage is patched.
+      if (divisionPayload != null) {
+        await ref
+            .read(tournamentManagementRepositoryProvider)
+            .updateDivisionConfig(
+              widget.tournament.id,
+              divisionId,
+              divisionPayload,
+            );
+      }
+      if (stageRoundConfig == null || stageId == null) return;
+      await ref
+          .read(tournamentRepositoryProvider)
+          .updateStageRoundConfig(
+            widget.tournament.id,
+            stageId,
+            stageRoundConfig,
+          );
+      ref.invalidate(
+        swissStageProvider((
+          tournamentId: widget.tournament.id,
+          divisionId: divisionId,
+        )),
+      );
+    });
   }
 
   Future<void> _toggleRegistration(Map<String, dynamic> division) async {
@@ -464,10 +553,14 @@ class _DivisionConfigValues {
     required this.matchType,
     required this.bracketType,
     required this.maxParticipants,
+    this.swiss,
   });
   final String matchType;
   final String bracketType;
   final int? maxParticipants;
+
+  /// Only set when the chosen format is Swiss.
+  final SwissConfig? swiss;
   Map<String, dynamic> toPayload() => {
     'matchType': matchType,
     'bracketType': bracketType,
@@ -476,8 +569,18 @@ class _DivisionConfigValues {
 }
 
 class _DivisionConfigDialog extends StatefulWidget {
-  const _DivisionConfigDialog({required this.division});
+  const _DivisionConfigDialog({
+    required this.division,
+    required this.swissInitial,
+    required this.teamCount,
+    required this.minPlayedRounds,
+    required this.lockContent,
+  });
+  final bool lockContent;
   final Map<String, dynamic> division;
+  final SwissConfig swissInitial;
+  final int teamCount;
+  final int minPlayedRounds;
   @override
   State<_DivisionConfigDialog> createState() => _DivisionConfigDialogState();
 }
@@ -496,6 +599,7 @@ class _DivisionConfigDialogState extends State<_DivisionConfigDialog> {
   late final TextEditingController _max = TextEditingController(
     text: widget.division['maxParticipants']?.toString() ?? '',
   );
+  late SwissConfig _swiss = widget.swissInitial;
   bool _hasError = false;
   @override
   void dispose() {
@@ -508,63 +612,82 @@ class _DivisionConfigDialogState extends State<_DivisionConfigDialog> {
     final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       title: Text(l10n.tournamentManagementDivisionConfiguration),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: _matchType,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementMatchType,
-                border: const OutlineInputBorder(),
+      content: SizedBox(
+        // Fixed width: the Swiss tiebreak list is a viewport, which the
+        // dialog's intrinsic-width pass cannot measure.
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: _matchType,
+                decoration: InputDecoration(
+                  labelText: l10n.tournamentManagementMatchType,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  for (final value in _matchTypes)
+                    DropdownMenuItem(
+                      value: value,
+                      child: Text(_matchTypeLabel(l10n, value)),
+                    ),
+                ],
+                onChanged: widget.lockContent
+                    ? null
+                    : (value) {
+                        if (value != null) setState(() => _matchType = value);
+                      },
               ),
-              items: [
-                for (final value in _matchTypes)
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(_matchTypeLabel(l10n, value)),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _matchType = value);
-              },
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              initialValue: _bracketType,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementBracketType,
-                border: const OutlineInputBorder(),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                initialValue: _bracketType,
+                decoration: InputDecoration(
+                  labelText: l10n.tournamentManagementBracketType,
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  for (final value in _bracketTypes)
+                    DropdownMenuItem(
+                      value: value,
+                      child: Text(_bracketTypeLabel(l10n, value)),
+                    ),
+                ],
+                onChanged: widget.lockContent
+                    ? null
+                    : (value) {
+                        if (value != null) setState(() => _bracketType = value);
+                      },
               ),
-              items: [
-                for (final value in _bracketTypes)
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(_bracketTypeLabel(l10n, value)),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _bracketType = value);
-              },
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _max,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementMaxParticipants,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            if (_hasError)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.tournamentManagementRequiredFields,
-                  style: TextStyle(color: context.colors.error),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _max,
+                enabled: !widget.lockContent,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: l10n.tournamentManagementMaxParticipants,
+                  border: const OutlineInputBorder(),
                 ),
               ),
-          ],
+              if (_bracketType == 'SWISS') ...[
+                const SizedBox(height: 16),
+                SwissConfigEditor(
+                  value: _swiss,
+                  teamCount: widget.teamCount,
+                  minPlayedRounds: widget.minPlayedRounds,
+                  onChanged: (value) => _swiss = value,
+                ),
+              ],
+              if (_hasError)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.tournamentManagementRequiredFields,
+                    style: TextStyle(color: context.colors.error),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -593,6 +716,7 @@ class _DivisionConfigDialogState extends State<_DivisionConfigDialog> {
         matchType: _matchType,
         bracketType: _bracketType,
         maxParticipants: value,
+        swiss: _bracketType == 'SWISS' ? _swiss : null,
       ),
     );
   }
@@ -1044,6 +1168,9 @@ DateTime? _registrationDeadline(Map<String, dynamic> division) {
 String _normalize(String value, List<String> values, String fallback) =>
     values.contains(value.toUpperCase()) ? value.toUpperCase() : fallback;
 
+bool _isSwiss(Object? bracketType) =>
+    bracketType?.toString().toUpperCase() == 'SWISS';
+
 String _matchTypeLabel(AppLocalizations l10n, String value) =>
     switch (value.toUpperCase()) {
       'SINGLES' => l10n.tournamentManagementMatchSingles,
@@ -1058,5 +1185,6 @@ String _bracketTypeLabel(AppLocalizations l10n, String value) => switch (value
   'DOUBLE_ELIMINATION' => l10n.tournamentManagementBracketDoubleElimination,
   'ROUND_ROBIN' => l10n.tournamentManagementBracketRoundRobin,
   'GROUP_STAGE_KNOCKOUT' => l10n.tournamentManagementBracketGroupThenKnockout,
+  'SWISS' => l10n.tournamentManagementBracketSwiss,
   _ => l10n.tournamentManagementStatusOther,
 };

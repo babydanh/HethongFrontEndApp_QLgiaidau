@@ -8166,6 +8166,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chia bảng, chọn đội đi tiếp';
 
   @override
+  String get createClubTournament_bracketSwiss => 'Thụy Sĩ';
+
+  @override
+  String get createClubTournament_bracketSwissDescription =>
+      'Ghép cặp theo điểm và hạn chế gặp lại đối thủ.';
+
+  @override
   String get createClubTournament_successTitle => 'Tạo giải thành công!';
 
   @override
@@ -10255,6 +10262,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get registerBracketGroupStageKnockout => 'Vòng bảng + loại trực tiếp';
+
+  @override
+  String get registerBracketSwiss => 'Thụy Sĩ';
 
   @override
   String registerParticipantCount(Object count) {
@@ -13438,6 +13448,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Vòng bảng rồi loại trực tiếp';
 
   @override
+  String get tournamentManagementBracketSwiss => 'Thụy Sĩ';
+
+  @override
   String get tournamentManagementBracketRoundRobin => 'Vòng tròn';
 
   @override
@@ -15532,5 +15545,267 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String rankingTierDuprFrom(Object value) {
     return 'Từ $value';
+  }
+
+  @override
+  String get swissFormatName => 'Thụy Sĩ';
+
+  @override
+  String swissRoundLabel(int number) {
+    return 'Vòng $number';
+  }
+
+  @override
+  String get swissBye => 'BYE';
+
+  @override
+  String get swissStandingsRank => 'Hạng';
+
+  @override
+  String get swissStandingsTeam => 'Đội';
+
+  @override
+  String get swissStandingsPlayed => 'Trận';
+
+  @override
+  String get swissStandingsWon => 'Thắng';
+
+  @override
+  String get swissStandingsDrawn => 'Hòa';
+
+  @override
+  String get swissStandingsLost => 'Thua';
+
+  @override
+  String get swissStandingsPoints => 'Điểm';
+
+  @override
+  String get swissStandingsBuchholz => 'Buchholz';
+
+  @override
+  String get swissStandingsBuchholzCut1 => 'Buchholz (bỏ điểm thấp nhất)';
+
+  @override
+  String get swissStandingsSonnebornBerger => 'Sonneborn–Berger';
+
+  @override
+  String get swissStandingsPointDiff => 'Hiệu số';
+
+  @override
+  String get swissStandingsWins => 'Số trận thắng';
+
+  @override
+  String get swissStandingsEmpty => 'Chưa có bảng xếp hạng';
+
+  @override
+  String get swissConfigTotalRounds => 'Tổng số vòng';
+
+  @override
+  String get swissConfigFirstRound => 'Ghép cặp vòng 1';
+
+  @override
+  String get swissConfigFirstRoundSeed => 'Theo hạt giống';
+
+  @override
+  String get swissConfigFirstRoundRandom => 'Ngẫu nhiên';
+
+  @override
+  String get swissConfigTiebreakTitle => 'Thứ tự tiêu chí phụ';
+
+  @override
+  String get swissConfigMoveUp => 'Lên';
+
+  @override
+  String get swissConfigMoveDown => 'Xuống';
+
+  @override
+  String swissConfigRoundsRange(int max) {
+    return 'Tối đa $max vòng';
+  }
+
+  @override
+  String swissConfigRoundsMinPlayed(int number) {
+    return 'Không thể giảm dưới $number vòng đã ghép';
+  }
+
+  @override
+  String get swissTiebreakBuchholz => 'Buchholz';
+
+  @override
+  String get swissTiebreakBuchholzCut1 => 'Buchholz (bỏ điểm thấp nhất)';
+
+  @override
+  String get swissTiebreakSonnebornBerger => 'Sonneborn–Berger';
+
+  @override
+  String get swissTiebreakPointDiff => 'Hiệu số điểm';
+
+  @override
+  String get swissTiebreakWins => 'Số trận thắng';
+
+  @override
+  String get swissTiebreakHeadToHead => 'Đối đầu trực tiếp';
+
+  @override
+  String get swissTiebreakSeed => 'Hạt giống';
+
+  @override
+  String swissPairingTitle(int number) {
+    return 'Ghép cặp vòng $number';
+  }
+
+  @override
+  String swissPairingProgress(int number, int total, int pairs) {
+    return 'Vòng $number/$total · $pairs cặp';
+  }
+
+  @override
+  String get swissPairingPool => 'Chưa ghép';
+
+  @override
+  String get swissPairingSitOut => 'Nghỉ vòng này';
+
+  @override
+  String get swissPairingDropHere => 'Thả vào đây';
+
+  @override
+  String swissPairingBoard(int number) {
+    return 'Bàn $number';
+  }
+
+  @override
+  String get swissPairingAutoPair => 'Ghép lại';
+
+  @override
+  String get swissPairingUndo => 'Hoàn tác';
+
+  @override
+  String swissPairingConfirm(int number) {
+    return 'Xác nhận vòng $number';
+  }
+
+  @override
+  String get swissPairingConfirmWithWarnings => 'Xác nhận dù có cảnh báo';
+
+  @override
+  String get swissPairingSwapWith => 'Đổi với…';
+
+  @override
+  String get swissPairingMoveTo => 'Chuyển tới…';
+
+  @override
+  String get swissPairingCancel => 'Hủy';
+
+  @override
+  String swissPairingPoints(num points) {
+    return '$points điểm';
+  }
+
+  @override
+  String get swissPairingLoading => 'Đang tải bản ghép cặp…';
+
+  @override
+  String get swissPairingRetry => 'Thử lại';
+
+  @override
+  String swissPairingIncompleteHint(int count) {
+    return 'Còn $count đội chưa có chỗ';
+  }
+
+  @override
+  String swissPairingCreated(int number) {
+    return 'Đã tạo vòng $number.';
+  }
+
+  @override
+  String swissPairingUndone(int number) {
+    return 'Đã hoàn tác vòng $number.';
+  }
+
+  @override
+  String get swissPairingDragHint => 'Giữ để kéo';
+
+  @override
+  String swissWarningRematch(int round) {
+    return 'Đã gặp ở vòng $round';
+  }
+
+  @override
+  String get swissWarningSecondBye => 'Đội này đã nhận BYE trước đó';
+
+  @override
+  String swissWarningScoreGap(num gap) {
+    return 'Chênh $gap điểm';
+  }
+
+  @override
+  String get swissErrorDuplicateParticipant =>
+      'Đội xuất hiện nhiều hơn một lần';
+
+  @override
+  String get swissErrorUnknownParticipant => 'Có đội không thuộc giải đấu';
+
+  @override
+  String get swissErrorMissingParticipant => 'Còn đội chưa được xếp';
+
+  @override
+  String get swissErrorSelfPairing => 'Không thể ghép đội với chính mình';
+
+  @override
+  String get swissApiErrorRoundIncomplete => 'Vòng hiện tại chưa kết thúc';
+
+  @override
+  String get swissApiErrorAllRoundsDone => 'Đã hoàn tất tất cả các vòng';
+
+  @override
+  String get swissApiErrorRoundExists =>
+      'Vòng này vừa được tạo. Đã tải lại bản ghép cặp';
+
+  @override
+  String get swissApiErrorInvalidPairing => 'Bản ghép cặp không hợp lệ';
+
+  @override
+  String get swissApiErrorWarningsUnconfirmed =>
+      'Cần xác nhận các cảnh báo trước khi tạo vòng';
+
+  @override
+  String get swissApiErrorRoundStarted =>
+      'Không thể hoàn tác vì vòng này đã bắt đầu';
+
+  @override
+  String get swissApiErrorUndoRoundOne => 'Không thể hoàn tác vòng đầu tiên';
+
+  @override
+  String get swissApiErrorNotSwiss =>
+      'Giải đấu này không dùng thể thức Thụy Sĩ';
+
+  @override
+  String get swissApiErrorTournamentClosed =>
+      'Giải đã kết thúc hoặc đã hủy, không thể đổi vòng';
+
+  @override
+  String get swissApiErrorNetwork => 'Không kết nối được. Vui lòng thử lại';
+
+  @override
+  String get swissApiErrorUnknown => 'Có lỗi xảy ra. Vui lòng thử lại';
+
+  @override
+  String swissActionGenerateNextRound(int number) {
+    return 'Ghép cặp vòng $number';
+  }
+
+  @override
+  String swissActionUndoRound(int number) {
+    return 'Hoàn tác vòng $number';
+  }
+
+  @override
+  String swissActionRoundInProgress(int number) {
+    return 'Vòng $number đang đấu';
+  }
+
+  @override
+  String swissActionAllRoundsDone(int total) {
+    return 'Đã đủ $total vòng';
   }
 }

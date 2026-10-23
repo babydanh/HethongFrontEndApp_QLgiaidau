@@ -42,6 +42,7 @@ extension AppLocalizationsDisplayNames on AppLocalizations {
       AppConstants.bracketRoundRobin => createClubTournament_bracketRoundRobin,
       AppConstants.bracketGroupStageKnockout =>
         createClubTournament_bracketGroupStageKnockout,
+      AppConstants.bracketSwiss => createClubTournament_bracketSwiss,
       _ => key?.trim().replaceAll('_', ' ') ?? '',
     };
   }
@@ -56,6 +57,8 @@ extension AppLocalizationsDisplayNames on AppLocalizations {
         createClubTournament_bracketRoundRobinDescription,
       AppConstants.bracketGroupStageKnockout =>
         createClubTournament_bracketGroupStageKnockoutDescription,
+      AppConstants.bracketSwiss =>
+        createClubTournament_bracketSwissDescription,
       _ => '',
     };
   }

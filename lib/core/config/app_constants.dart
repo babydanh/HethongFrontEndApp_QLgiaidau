@@ -118,6 +118,7 @@ class AppConstants {
   static const String bracketDoubleElimination = 'double_elimination';
   static const String bracketRoundRobin = 'round_robin';
   static const String bracketGroupStageKnockout = 'group_stage_knockout';
+  static const String bracketSwiss = 'swiss';
 
   /// Hạt giống chỉ dùng cho vòng bảng + loại trực tiếp; thể thức khác xếp ngẫu nhiên, không hiện seed.
   static bool supportsSeeding(String? bracketType) =>

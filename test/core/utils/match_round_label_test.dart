@@ -87,4 +87,20 @@ void main() {
       );
     });
   });
+
+  test('swiss stage is labelled "Vòng N", not a knockout round', () {
+    final match = MatchModel(
+      id: 'swiss-1',
+      round: 3,
+      matchNumber: 1,
+      stageType: 'SWISS',
+      bracketPosition: const BracketPosition(round: 3, position: 1),
+      updatedAt: DateTime.utc(2026, 1, 1),
+    );
+    expect(
+      MatchRoundLabel.formatRound(match: match, bracketSize: 4, l10n: vi),
+      'Vòng 3',
+    );
+    expect(MatchRoundLabel.isGroupOrRoundRobin(match, 'round_robin'), isFalse);
+  });
 }

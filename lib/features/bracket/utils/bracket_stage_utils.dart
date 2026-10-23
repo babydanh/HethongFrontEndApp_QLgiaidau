@@ -4,11 +4,17 @@ String normalizeStageText(String? value) {
   return (value ?? '').trim().toUpperCase();
 }
 
+/// True khi trận thuộc stage Thụy Sĩ. Phải kiểm tra trước mọi heuristic theo
+/// tên bảng/stage vì trận Swiss mang `groupName` ("Thụy Sĩ") như vòng bảng.
+bool isSwissMatch(MatchModel match) =>
+    normalizeStageText(match.stageType) == 'SWISS';
+
 /// True khi trận thuộc nhánh loại trực tiếp kiểu DOUBLE ELIMINATION.
 /// Dùng để nhận diện knockout stage thực chất là double elimination
 /// (trong group_stage_knockout hoặc khi bracketType tổng không phản ánh đúng),
 /// giúp render đúng sơ đồ nhánh thắng / nhánh thua.
 bool isDoubleEliminationMatch(MatchModel match) {
+  if (isSwissMatch(match)) return false;
   final stageType = normalizeStageText(match.stageType);
   if (stageType == 'DOUBLE_ELIMINATION') return true;
   final branch = normalizeStageText(match.bracketPosition.bracket);
@@ -18,6 +24,7 @@ bool isDoubleEliminationMatch(MatchModel match) {
 }
 
 bool isGroupStageMatch(MatchModel match) {
+  if (isSwissMatch(match)) return false;
   final branch = normalizeStageText(match.bracketPosition.bracket);
   final stageType = normalizeStageText(match.stageType);
   final stageName = normalizeStageText(match.stageName);
@@ -53,6 +60,7 @@ bool isGroupStageMatch(MatchModel match) {
 }
 
 bool isKnockoutMatch(MatchModel match) {
+  if (isSwissMatch(match)) return false;
   final branch = normalizeStageText(match.bracketPosition.bracket);
   final stageType = normalizeStageText(match.stageType);
   final stageName = normalizeStageText(match.stageName);
