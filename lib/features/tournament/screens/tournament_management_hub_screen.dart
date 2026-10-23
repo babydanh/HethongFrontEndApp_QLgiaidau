@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
@@ -17,6 +18,8 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_ba
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,7 +96,8 @@ class _TournamentManagementHubScreenState
     final maxScroll = _scrollController.hasClients
         ? _scrollController.position.maxScrollExtent
         : 0.0;
-    final tabPinned = _scrollController.hasClients &&
+    final tabPinned =
+        _scrollController.hasClients &&
         maxScroll > 0 &&
         _scrollController.offset >= (maxScroll - 2.0);
     if (collapsed != _isCollapsed || tabPinned != _isTabBarPinned) {
@@ -264,9 +268,7 @@ class _TournamentManagementHubScreenState
           ),
         ),
         // Đệm chiều cao toolbar: không có đệm này tên giải nằm dưới app bar.
-        SliverToBoxAdapter(
-          child: SizedBox(height: 44 + topPadding),
-        ),
+        SliverToBoxAdapter(child: SizedBox(height: 44 + topPadding)),
         SliverToBoxAdapter(
           child: TournamentManagementSummary(
             tournament: tournament,
@@ -809,14 +811,24 @@ class _TournamentManagementHubScreenState
       if (mounted) setState(() => _isFinalizing = false);
       return;
     }
-    final success = await ref
-        .read(tournamentActionProvider.notifier)
-        .finalizeTournament(widget.tournament.id);
-    if (success) ref.invalidate(tournamentProvider(widget.tournament.id));
+    String? errorMessage;
+    try {
+      await ref
+          .read(tournamentManagementRepositoryProvider)
+          .completeTournament(widget.tournament.id);
+      ref.invalidate(tournamentProvider(widget.tournament.id));
+    } catch (error) {
+      final data = error is DioException ? error.response?.data : null;
+      final message = data is Map ? data['message'] : null;
+      errorMessage = message is String && message.trim().isNotEmpty
+          ? message
+          : l10n.endError;
+    } finally {
+      if (mounted) setState(() => _isFinalizing = false);
+    }
     if (!mounted) return;
-    setState(() => _isFinalizing = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(success ? l10n.tournamentEnded : l10n.endError)),
+      SnackBar(content: Text(errorMessage ?? l10n.tournamentEnded)),
     );
   }
 

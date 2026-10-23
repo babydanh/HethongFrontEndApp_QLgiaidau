@@ -1100,48 +1100,79 @@ void main() {
   });
 
   group('lifecycle', () {
-    test(
-      'publish, reopen, lock and invite regen post distinct routes',
-      () async {
-        backend.onPost('/tournaments/$tournamentId/publish', {
-          'status': 'PUBLISHED',
-        });
-        backend.onPost('/tournaments/$tournamentId/reopen-registration', {
-          'status': 'REGISTRATION_REOPENED',
-        });
-        backend.onPost('/tournaments/$tournamentId/lock', {'status': 'LOCKED'});
-        backend.onPost('/tournaments/$tournamentId/regenerate-invite', {
-          'inviteCode': 'ABC123',
-        });
+    test('lifecycle transitions post their dedicated routes', () async {
+      backend.onPost('/tournaments/$tournamentId/start', {
+        'status': 'IN_PROGRESS',
+      });
+      backend.onPost('/tournaments/$tournamentId/complete', {
+        'status': 'COMPLETED',
+      });
+      backend.onPost('/tournaments/$tournamentId/publish', {
+        'status': 'PUBLISHED',
+      });
+      backend.onPost('/tournaments/$tournamentId/reopen-registration', {
+        'status': 'REGISTRATION_REOPENED',
+      });
+      backend.onPost('/tournaments/$tournamentId/close-registration', {
+        'status': 'REGISTRATION_CLOSED',
+      });
+      backend.onPost('/tournaments/$tournamentId/regenerate-invite', {
+        'inviteCode': 'ABC123',
+      });
 
-        expect(
-          (await repository.publishTournament(tournamentId))['status'],
-          'PUBLISHED',
-        );
-        expect(
-          (await repository.reopenRegistration(tournamentId))['status'],
-          'REGISTRATION_REOPENED',
-        );
-        expect(
-          (await repository.lockTournament(tournamentId))['status'],
-          'LOCKED',
-        );
-        expect(
-          (await repository.regenerateInviteCode(tournamentId))['inviteCode'],
-          'ABC123',
-        );
+      expect(
+        (await repository.startTournament(tournamentId))['status'],
+        'IN_PROGRESS',
+      );
+      expect(
+        (await repository.completeTournament(tournamentId))['status'],
+        'COMPLETED',
+      );
+      expect(
+        (await repository.publishTournament(tournamentId))['status'],
+        'PUBLISHED',
+      );
+      expect(
+        (await repository.reopenRegistration(tournamentId))['status'],
+        'REGISTRATION_REOPENED',
+      );
+      expect(
+        (await repository.closeRegistration(tournamentId))['status'],
+        'REGISTRATION_CLOSED',
+      );
+      expect(
+        (await repository.regenerateInviteCode(tournamentId))['inviteCode'],
+        'ABC123',
+      );
 
-        expect(backend.requests.map((r) => r.method), everyElement('POST'));
-        expect(backend.requests.map((r) => r.path), [
-          '/tournaments/$tournamentId/publish',
-          '/tournaments/$tournamentId/reopen-registration',
-          '/tournaments/$tournamentId/lock',
-          '/tournaments/$tournamentId/regenerate-invite',
-        ]);
-      },
-    );
+      expect(backend.requests.map((r) => r.method), everyElement('POST'));
+      expect(backend.requests.map((r) => r.path), [
+        '/tournaments/$tournamentId/start',
+        '/tournaments/$tournamentId/complete',
+        '/tournaments/$tournamentId/publish',
+        '/tournaments/$tournamentId/reopen-registration',
+        '/tournaments/$tournamentId/close-registration',
+        '/tournaments/$tournamentId/regenerate-invite',
+      ]);
+    });
+
+    test('reopen sends a new deadline only when one is given', () async {
+      backend.onPost('/tournaments/$tournamentId/reopen-registration', {
+        'status': 'REGISTRATION_OPEN',
+      });
+
+      await repository.reopenRegistration(tournamentId);
+      await repository.reopenRegistration(
+        tournamentId,
+        registrationEndDate: DateTime.utc(2027, 3, 5, 11),
+      );
+
+      expect(backend.requests.map((r) => r.data), [
+        <String, dynamic>{},
+        {'registrationEndDate': '2027-03-05T11:00:00.000Z'},
+      ]);
+    });
   });
-
   group('response envelope', () {
     test('a body without the data envelope fails the read', () async {
       backend.onRawResponse('GET', '/tournaments/fees', {

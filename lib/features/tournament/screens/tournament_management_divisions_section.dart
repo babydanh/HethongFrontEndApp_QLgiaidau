@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -108,8 +109,18 @@ class _TournamentManagementDivisionsSectionState
                       _DivisionCard(
                         division: division,
                         isBusy: _isBusy,
+                        // Khoá/mở đăng ký chỉ chặn VĐV tự đăng ký, không đụng sơ đồ:
+                        // làm được mọi lúc trước khi giải kết thúc hoặc bị huỷ.
+                        canToggleRegistration: !const {
+                          'COMPLETED',
+                          'CANCELLED',
+                        }.contains(widget.tournament.status.toUpperCase()),
                         onRename: () => _renameDivision(division),
                         onConfigure: () => _configureDivision(division),
+                        onToggleRegistration: () =>
+                            _toggleRegistration(division),
+                        onReopenWithDeadline: () =>
+                            _reopenWithDeadline(division),
                         onDelete: () => _deleteDivision(division),
                       ),
                       const SizedBox(height: 8),
@@ -186,6 +197,38 @@ class _TournamentManagementDivisionsSectionState
             values.toPayload(),
           ),
     );
+  }
+
+  Future<void> _toggleRegistration(Map<String, dynamic> division) async {
+    final divisionId = _divisionId(division);
+    if (divisionId.isEmpty) return;
+    await _mutate(
+      () =>
+          ref.read(tournamentManagementRepositoryProvider).updateDivisionConfig(
+            widget.tournament.id,
+            divisionId,
+            {'isRegistrationLocked': !_isRegistrationLocked(division)},
+          ),
+    );
+    // Mở/đóng nội dung có thể đổi trạng thái cả giải (Đang mở ⇄ Đã đóng).
+    if (mounted) ref.invalidate(tournamentProvider(widget.tournament.id));
+  }
+
+  /// Quá hạn thì mở lại phải kèm hạn mới, nếu không server vẫn coi là đóng.
+  Future<void> _reopenWithDeadline(Map<String, dynamic> division) async {
+    final divisionId = _divisionId(division);
+    if (divisionId.isEmpty) return;
+    final deadline = await pickTournamentManagementDeadline(context);
+    if (deadline == null || !mounted) return;
+    await _mutate(
+      () => ref
+          .read(tournamentManagementRepositoryProvider)
+          .updateDivisionConfig(widget.tournament.id, divisionId, {
+            'isRegistrationLocked': false,
+            'registrationEndDate': deadline.toUtc().toIso8601String(),
+          }),
+    );
+    if (mounted) ref.invalidate(tournamentProvider(widget.tournament.id));
   }
 
   Future<void> _deleteDivision(Map<String, dynamic> division) async {
@@ -559,14 +602,20 @@ class _DivisionCard extends StatelessWidget {
   const _DivisionCard({
     required this.division,
     required this.isBusy,
+    required this.canToggleRegistration,
     required this.onRename,
     required this.onConfigure,
+    required this.onToggleRegistration,
+    required this.onReopenWithDeadline,
     required this.onDelete,
   });
   final Map<String, dynamic> division;
   final bool isBusy;
+  final bool canToggleRegistration;
   final VoidCallback onRename;
   final VoidCallback onConfigure;
+  final VoidCallback onToggleRegistration;
+  final VoidCallback onReopenWithDeadline;
   final VoidCallback onDelete;
 
   @override
@@ -576,6 +625,17 @@ class _DivisionCard extends StatelessWidget {
     final match = (division['matchType'] ?? '').toString().toUpperCase();
     final bracket = (division['bracketType'] ?? '').toString().toUpperCase();
     final maximum = division['maxParticipants']?.toString();
+    final locked = _isRegistrationLocked(division);
+    final deadline = _registrationDeadline(division);
+    final expired = deadline != null && !deadline.isAfter(DateTime.now());
+    final registrationOpen = division['registrationOpen'];
+    final registrationLabel = switch (registrationOpen) {
+      true when deadline == null =>
+        '${l10n.tournamentManagementDivisionRegistrationOpen} · ${l10n.tournamentManagementDivisionNoDeadline}',
+      true => l10n.tournamentManagementDivisionRegistrationOpen,
+      false => l10n.tournamentManagementDivisionRegistrationClosed,
+      _ => null,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -602,6 +662,16 @@ class _DivisionCard extends StatelessWidget {
                   '${_matchTypeLabel(l10n, match)} · ${_bracketTypeLabel(l10n, bracket)}${maximum == null ? '' : ' · ${l10n.tournamentManagementMaxParticipants}: $maximum'}',
                   style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
+                if (registrationLabel != null)
+                  Text(
+                    registrationLabel,
+                    style: TextStyle(
+                      color: registrationOpen == true
+                          ? colors.textSecondary
+                          : colors.error,
+                      fontSize: 12,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -610,6 +680,8 @@ class _DivisionCard extends StatelessWidget {
             onSelected: (value) {
               if (value == 'rename') onRename();
               if (value == 'config') onConfigure();
+              if (value == 'registration') onToggleRegistration();
+              if (value == 'reopen-deadline') onReopenWithDeadline();
               if (value == 'delete') onDelete();
             },
             itemBuilder: (context) => [
@@ -621,6 +693,25 @@ class _DivisionCard extends StatelessWidget {
                 value: 'config',
                 child: Text(l10n.tournamentManagementDivisionConfiguration),
               ),
+              // Quá hạn mà mở lại thì phải đặt hạn mới; còn hạn thì bật/tắt khoá.
+              if (expired)
+                PopupMenuItem(
+                  value: 'reopen-deadline',
+                  enabled: canToggleRegistration,
+                  child: Text(
+                    l10n.tournamentManagementDivisionReopenWithDeadline,
+                  ),
+                )
+              else
+                PopupMenuItem(
+                  value: 'registration',
+                  enabled: canToggleRegistration,
+                  child: Text(
+                    locked
+                        ? l10n.tournamentManagementDivisionUnlockRegistration
+                        : l10n.tournamentManagementDivisionLockRegistration,
+                  ),
+                ),
               PopupMenuItem(
                 value: 'delete',
                 child: Text(
@@ -935,6 +1026,21 @@ String _divisionId(Map<String, dynamic> division) =>
 String _divisionIdFor(Map<String, dynamic> division) => _divisionId(division);
 String _divisionName(Map<String, dynamic> division) =>
     (division['name'] ?? '').toString();
+
+/// Khoá hiệu lực do server tính (khoá nội dung hoặc khoá cả giải sau "Chốt").
+bool _isRegistrationLocked(Map<String, dynamic> division) =>
+    (division['effectiveIsRegistrationLocked'] ??
+        division['isRegistrationLocked']) ==
+    true;
+
+/// Hạn hiệu lực: hạn riêng nội dung, không có thì hạn giải (server tính sẵn).
+DateTime? _registrationDeadline(Map<String, dynamic> division) {
+  final raw =
+      division['effectiveRegistrationEndDate'] ??
+      division['registrationEndDate'];
+  return raw is String ? DateTime.tryParse(raw) : null;
+}
+
 String _normalize(String value, List<String> values, String fallback) =>
     values.contains(value.toUpperCase()) ? value.toUpperCase() : fallback;
 

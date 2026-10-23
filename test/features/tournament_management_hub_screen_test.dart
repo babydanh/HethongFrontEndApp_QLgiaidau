@@ -24,7 +24,7 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,6 +41,7 @@ Tournament _tournament(
   String? logoUrl,
   String description = '',
   DateTime? startDate,
+  DateTime? registrationEndDate,
   List<Map<String, dynamic>> divisions = const [],
 }) => Tournament.fromJson({
   'name': name,
@@ -58,6 +59,8 @@ Tournament _tournament(
   if (superLite)
     'tournamentConfig': {'mode': 'LITE', 'hideAdvancedSettings': true},
   if (startDate != null) 'startDate': startDate.toIso8601String(),
+  if (registrationEndDate != null)
+    'registrationEndDate': registrationEndDate.toIso8601String(),
   if (divisions.isNotEmpty) 'divisions': divisions,
   'createdAt': '2026-01-01T00:00:00Z',
   'updatedAt': '2026-01-01T00:00:00Z',
@@ -69,6 +72,7 @@ Widget _app(
   UserProfile? profile,
   TournamentManagementRepository? managementRepository,
   ITournamentRepository? tournamentRepository,
+  List<MatchModel>? matches,
 }) => ProviderScope(
   overrides: [
     userProfileProvider.overrideWith(
@@ -86,6 +90,10 @@ Widget _app(
       ),
     if (tournamentRepository != null)
       tournamentRepositoryProvider.overrideWithValue(tournamentRepository),
+    if (matches != null)
+      matchesProvider(
+        'tournament-1',
+      ).overrideWith((ref) => Stream.value(matches)),
   ],
   child: MaterialApp(
     theme: AppTheme.lightTheme,
@@ -100,18 +108,6 @@ Widget _app(
     ),
   ),
 );
-
-class _SuccessfulFinalizer extends TournamentActionNotifier {
-  _SuccessfulFinalizer(this.onFinalize);
-
-  final void Function(String tournamentId) onFinalize;
-
-  @override
-  Future<bool> finalizeTournament(String tournamentId) async {
-    onFinalize(tournamentId);
-    return true;
-  }
-}
 
 class _AuthenticatedAdmin extends AuthNotifier {
   @override
@@ -191,7 +187,45 @@ class _EmptyTournamentManagementRepository
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _RecordingManagementRepository extends _EmptyTournamentManagementRepository {
+class _LifecycleRepository extends _EmptyTournamentManagementRepository
+    implements TournamentLifecycleRepository {
+  final startedIds = <String>[];
+  final completedIds = <String>[];
+  final calls = <String>[];
+  Object? completeError;
+
+  @override
+  Future<Map<String, dynamic>> startTournament(String id) async {
+    startedIds.add(id);
+    calls.add('start');
+    return const {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> closeRegistration(String id) async {
+    calls.add('close-registration');
+    return const {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> reopenRegistration(
+    String id, {
+    DateTime? registrationEndDate,
+  }) async {
+    calls.add('reopen-registration');
+    return const {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> completeTournament(String id) async {
+    completedIds.add(id);
+    if (completeError != null) throw completeError!;
+    return const {};
+  }
+}
+
+class _RecordingManagementRepository
+    extends _EmptyTournamentManagementRepository {
   final directNames = <String>[];
   final statusUpdates = <Map<String, String>>[];
 
@@ -283,8 +317,14 @@ void main() {
         'tournament-overview-dates-edit',
         (l) => l.tournamentManagementRegistration,
       ),
-      ('tournament-overview-location-edit', (l) => l.manageSettingsVenueSection),
-      ('tournament-overview-entry-fee-edit', (l) => l.tournamentManagementFinance),
+      (
+        'tournament-overview-location-edit',
+        (l) => l.manageSettingsVenueSection,
+      ),
+      (
+        'tournament-overview-entry-fee-edit',
+        (l) => l.tournamentManagementFinance,
+      ),
     ];
 
     for (final (key, labelOf) in targets) {
@@ -310,7 +350,9 @@ void main() {
     expect(find.byType(TournamentManagementAthletesTab), findsOneWidget);
   });
 
-  testWidgets('hub shows five pinned tabs and grouped settings', (tester) async {
+  testWidgets('hub shows five pinned tabs and grouped settings', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(360, 1200);
     tester.view.devicePixelRatio = 1;
     await tester.pumpWidget(
@@ -517,7 +559,7 @@ void main() {
     tester.view.physicalSize = const Size(390, 1200);
     tester.view.devicePixelRatio = 1;
     var tournamentReads = 0;
-    final finalizedIds = <String>[];
+    final lifecycleRepository = _LifecycleRepository();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -534,8 +576,8 @@ void main() {
               _tournament(tournamentReads == 1 ? 'in_progress' : 'completed'),
             );
           }),
-          tournamentActionProvider.overrideWith(
-            () => _SuccessfulFinalizer(finalizedIds.add),
+          tournamentManagementRepositoryProvider.overrideWithValue(
+            lifecycleRepository,
           ),
         ],
         child: MaterialApp(
@@ -561,7 +603,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.continueButton));
     await tester.pumpAndSettle();
-    expect(finalizedIds, isEmpty);
+    expect(lifecycleRepository.completedIds, isEmpty);
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     expect(find.text(l10n.endTournament), findsOneWidget);
@@ -571,7 +613,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, l10n.confirmEndButton));
     await tester.pumpAndSettle();
 
-    expect(finalizedIds, ['tournament-1']);
+    expect(lifecycleRepository.completedIds, ['tournament-1']);
     expect(tournamentReads, 2);
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -763,61 +805,70 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
-  testWidgets('phone navigation opens the information editor with brand assets', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 2000);
-    tester.view.devicePixelRatio = 1;
-    await tester.pumpWidget(
-      _app(
-        _tournament('in_progress'),
-        managementRepository: _EmptyTournamentManagementRepository(),
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'phone navigation opens the information editor with brand assets',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 2000);
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        _app(
+          _tournament('in_progress'),
+          managementRepository: _EmptyTournamentManagementRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    final context = tester.element(find.byType(TournamentManagementHubScreen));
-    final l10n = AppLocalizations.of(context)!;
-    await _openSettings(tester);
-    await tester.tap(find.text(l10n.manageSettingsInfoSection).first);
-    await tester.pumpAndSettle();
+      final context = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
+      final l10n = AppLocalizations.of(context)!;
+      await _openSettings(tester);
+      await tester.tap(find.text(l10n.manageSettingsInfoSection).first);
+      await tester.pumpAndSettle();
 
-    expect(find.text(l10n.tournamentManagementName), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementDescription), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementBrandAssets), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
-    expect(find.text(l10n.tournamentManagementPublic), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+      expect(find.text(l10n.tournamentManagementName), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text(l10n.tournamentManagementDescription), findsOneWidget);
+      expect(find.text(l10n.tournamentManagementBrandAssets), findsOneWidget);
+      expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
+      expect(find.text(l10n.tournamentManagementPublic), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
-  testWidgets('venue editor shows venues only, without dates or registration fields', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 1200);
-    tester.view.devicePixelRatio = 1;
-    await tester.pumpWidget(
-      _app(
-        _tournament('in_progress'),
-        managementRepository: _EmptyTournamentManagementRepository(),
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'venue editor shows venues only, without dates or registration fields',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1200);
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        _app(
+          _tournament('in_progress'),
+          managementRepository: _EmptyTournamentManagementRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    final context = tester.element(find.byType(TournamentManagementHubScreen));
-    final l10n = AppLocalizations.of(context)!;
-    await _openSettings(tester);
-    await tester.tap(find.text(l10n.manageSettingsVenueSection).first);
-    await tester.pumpAndSettle();
+      final context = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
+      final l10n = AppLocalizations.of(context)!;
+      await _openSettings(tester);
+      await tester.tap(find.text(l10n.manageSettingsVenueSection).first);
+      await tester.pumpAndSettle();
 
-    expect(find.text(l10n.tournamentManagementVenues), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementStartDate), findsNothing);
-    expect(find.text(l10n.tournamentManagementEndDate), findsNothing);
-    expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
-    expect(find.text(l10n.tournamentManagementPublic), findsNothing);
-    expect(find.text(l10n.tournamentManagementRegistrationStarts), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+      expect(find.text(l10n.tournamentManagementVenues), findsOneWidget);
+      expect(find.text(l10n.tournamentManagementStartDate), findsNothing);
+      expect(find.text(l10n.tournamentManagementEndDate), findsNothing);
+      expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
+      expect(find.text(l10n.tournamentManagementPublic), findsNothing);
+      expect(
+        find.text(l10n.tournamentManagementRegistrationStarts),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('pinned tab strip never covers the first settings group', (
     tester,
@@ -994,7 +1045,10 @@ void main() {
     await tester.tap(find.text(l10n.tournamentManagementRegistration).first);
     await tester.pumpAndSettle();
 
-    expect(find.text(l10n.tournamentManagementRegistrationMode), findsOneWidget);
+    expect(
+      find.text(l10n.tournamentManagementRegistrationMode),
+      findsOneWidget,
+    );
     expect(find.text(l10n.tournamentManagementPublic), findsOneWidget);
     expect(find.byType(VerticalDivider), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -1017,37 +1071,312 @@ void main() {
     expect(find.text(l10n.tournamentManagementRegenerateInvite), findsNothing);
     expect(tester.takeException(), isNull);
   });
+  testWidgets(
+    'TC-APP-LIFECYCLE-04: lifecycle actions follow status and repository',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      tester.view.devicePixelRatio = 1;
+      final startRepository = _LifecycleRepository();
+      await tester.pumpWidget(
+        _app(_tournament('UPCOMING'), managementRepository: startRepository),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
 
-  testWidgets('registration editor holds visibility, mode, dates and deadlines', (
+      final startContext = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
+      final startL10n = AppLocalizations.of(startContext)!;
+      // Sắp diễn ra: nút duy nhất là mở đăng ký.
+      expect(
+        find.text(startL10n.tournamentManagementOpenRegistrationNow),
+        findsOneWidget,
+      );
+      expect(
+        find.text(startL10n.tournamentManagementStartTournament),
+        findsNothing,
+      );
+
+      await tester.pumpWidget(
+        _app(
+          _tournament('REGISTRATION_CLOSED'),
+          managementRepository: startRepository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      expect(
+        find.text(startL10n.tournamentManagementCompleteTournament),
+        findsNothing,
+      );
+      // Đã đóng hết: khai mạc là nút chính, kèm lối "Mở lại đăng ký".
+      expect(
+        find.text(startL10n.tournamentManagementReopenRegistration),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.text(startL10n.tournamentManagementStartTournament),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        startL10n.tournamentManagementStartTournamentConfirm,
+        contains('Khai mạc sẽ khoá đăng ký tất cả nội dung.'),
+      );
+      expect(
+        find.text(startL10n.tournamentManagementStartTournamentConfirm),
+        findsOneWidget,
+      );
+      // Nút xác nhận tắt tới khi tick "Đóng đăng ký tất cả nội dung".
+      final confirmFinder = find.widgetWithText(
+        FilledButton,
+        startL10n.tournamentManagementConfirm,
+      );
+      expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNull);
+      await tester.tap(find.text(startL10n.tournamentManagementStartCloseAll));
+      await tester.pumpAndSettle();
+      await tester.tap(confirmFinder);
+      await tester.pumpAndSettle();
+      expect(startRepository.startedIds, ['tournament-1']);
+      expect(startRepository.calls, ['start']);
+
+      final completeRepository = _LifecycleRepository();
+      await tester.pumpWidget(
+        _app(
+          _tournament('IN_PROGRESS'),
+          managementRepository: completeRepository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final completeContext = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
+      final completeL10n = AppLocalizations.of(completeContext)!;
+      expect(
+        find.text(completeL10n.tournamentManagementCompleteTournament),
+        findsOneWidget,
+      );
+      expect(
+        find.text(completeL10n.tournamentManagementStartTournament),
+        findsNothing,
+      );
+      await tester.tap(
+        find.text(completeL10n.tournamentManagementCompleteTournament),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(
+          FilledButton,
+          completeL10n.tournamentManagementConfirm,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(completeRepository.completedIds, ['tournament-1']);
+
+      await tester.pumpWidget(
+        _app(
+          _tournament('COMPLETED'),
+          managementRepository: _LifecycleRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final completedL10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      expect(
+        find.text(completedL10n.tournamentManagementStartTournament),
+        findsNothing,
+      );
+      expect(
+        find.text(completedL10n.tournamentManagementCompleteTournament),
+        findsNothing,
+      );
+    },
+  );
+  testWidgets('TC-APP-LIFECYCLE-05: displays the server completion error', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.physicalSize = const Size(390, 1500);
     tester.view.devicePixelRatio = 1;
+    const serverMessage = 'Còn trận đang diễn ra: Nội dung đôi';
+    final request = RequestOptions(path: '/tournaments/tournament-1/complete');
+    final repository = _LifecycleRepository()
+      ..completeError = DioException(
+        requestOptions: request,
+        response: Response<dynamic>(
+          requestOptions: request,
+          statusCode: 400,
+          data: const {'message': serverMessage},
+        ),
+      );
     await tester.pumpWidget(
-      _app(
-        _tournament('in_progress'),
-        managementRepository: _EmptyTournamentManagementRepository(),
-      ),
+      _app(_tournament('IN_PROGRESS'), managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openSettings(tester);
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await tester.tap(find.text(l10n.tournamentManagementCompleteTournament));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledButton, l10n.tournamentManagementConfirm),
     );
     await tester.pumpAndSettle();
 
-    final context = tester.element(find.byType(TournamentManagementHubScreen));
-    final l10n = AppLocalizations.of(context)!;
-    await _openSettings(tester);
-    await tester.tap(find.text(l10n.tournamentManagementRegistration).first);
-    await tester.pumpAndSettle();
-
-    expect(find.text(l10n.tournamentManagementPublic), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementRegistrationMode), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementRegistrationStarts), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementRegistrationEnds), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementStartDate), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementEndDate), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementRegenerateInvite), findsNothing);
-    expect(find.text(l10n.tournamentManagementName), findsNothing);
-    expect(tester.takeException(), isNull);
+    expect(find.text(serverMessage), findsOneWidget);
   });
+  testWidgets(
+    'TC-APP-LIFECYCLE-06: registration open without bracket closes registration, no lock',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      tester.view.devicePixelRatio = 1;
+      final repository = _LifecycleRepository();
+      await tester.pumpWidget(
+        _app(
+          _tournament('REGISTRATION_OPEN'),
+          managementRepository: repository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      expect(find.text(l10n.tournamentManagementStartTournament), findsNothing);
+      await tester.tap(find.text(l10n.tournamentManagementCloseRegistration));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementConfirm),
+      );
+      await tester.pumpAndSettle();
+      expect(repository.calls, ['close-registration']);
+    },
+  );
+  testWidgets(
+    'TC-APP-LIFECYCLE-07: bracket ready while registration remains open must close first',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      tester.view.devicePixelRatio = 1;
+      final repository = _LifecycleRepository();
+      final match = MatchModel(
+        id: 'match-1',
+        round: 1,
+        matchNumber: 1,
+        team1Name: 'A',
+        team2Name: 'B',
+        status: 'scheduled',
+        bracketPosition: const BracketPosition(round: 1, position: 1),
+        updatedAt: DateTime.utc(2026, 1, 1),
+        divisionId: 'div-1',
+      );
+      await tester.pumpWidget(
+        _app(
+          _tournament(
+            'REGISTRATION_OPEN',
+            divisions: [
+              {'id': 'div-1', 'name': 'Đôi nam', 'matchType': 'DOUBLES'},
+            ],
+          ),
+          managementRepository: repository,
+          matches: [match],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      expect(
+        find.text(l10n.tournamentManagementCloseRegistration),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.tournamentManagementStartTournament), findsNothing);
+      await tester.tap(find.text(l10n.tournamentManagementCloseRegistration));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementConfirm),
+      );
+      await tester.pumpAndSettle();
+      expect(repository.calls, ['close-registration']);
+    },
+  );
+  testWidgets(
+    'TC-APP-LIFECYCLE-08: reopening after the deadline passed asks for a new deadline first',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1500);
+      tester.view.devicePixelRatio = 1;
+      final repository = _LifecycleRepository();
+      await tester.pumpWidget(
+        _app(
+          _tournament(
+            'REGISTRATION_CLOSED',
+            registrationEndDate: DateTime.utc(2020, 1, 1),
+          ),
+          managementRepository: repository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await _openSettings(tester);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      await tester.tap(find.text(l10n.tournamentManagementReopenRegistration));
+      await tester.pumpAndSettle();
 
+      // Server từ chối mở lại khi hạn cũ đã qua: phải chọn hạn mới trước.
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsNothing);
+      expect(repository.calls, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'registration editor holds visibility, mode, dates and deadlines',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 1200);
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        _app(
+          _tournament('in_progress'),
+          managementRepository: _EmptyTournamentManagementRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final context = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
+      final l10n = AppLocalizations.of(context)!;
+      await _openSettings(tester);
+      await tester.tap(find.text(l10n.tournamentManagementRegistration).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.tournamentManagementPublic), findsOneWidget);
+      expect(
+        find.text(l10n.tournamentManagementRegistrationMode),
+        findsOneWidget,
+      );
+      expect(
+        find.text(l10n.tournamentManagementRegistrationStarts),
+        findsOneWidget,
+      );
+      expect(
+        find.text(l10n.tournamentManagementRegistrationEnds),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.tournamentManagementStartDate), findsOneWidget);
+      expect(find.text(l10n.tournamentManagementEndDate), findsOneWidget);
+      expect(
+        find.text(l10n.tournamentManagementRegenerateInvite),
+        findsNothing,
+      );
+      expect(find.text(l10n.tournamentManagementName), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('banner collapses while tabs stay pinned', (tester) async {
     tester.view.physicalSize = const Size(390, 800);
@@ -1060,7 +1389,9 @@ void main() {
     final title = find.text(l10n.managementTitle);
     double titleOpacity() => tester
         .widget<AnimatedOpacity>(
-          find.ancestor(of: title, matching: find.byType(AnimatedOpacity)).first,
+          find
+              .ancestor(of: title, matching: find.byType(AnimatedOpacity))
+              .first,
         )
         .opacity;
 
@@ -1098,9 +1429,15 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          introTeamsProvider('tournament-1').overrideWith((ref) async => const []),
-          tournamentProvider('tournament-1').overrideWith((ref) => Stream.value(tournament)),
-          tournamentDivisionsProvider('tournament-1').overrideWith((ref) async => divisions),
+          introTeamsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => const []),
+          tournamentProvider(
+            'tournament-1',
+          ).overrideWith((ref) => Stream.value(tournament)),
+          tournamentDivisionsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => divisions),
         ],
         child: _app(
           tournament,
@@ -1221,9 +1558,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            introTeamsProvider('tournament-1').overrideWith((ref) async => const []),
-            tournamentProvider('tournament-1').overrideWith((ref) => Stream.value(tournament)),
-            tournamentDivisionsProvider('tournament-1').overrideWith((ref) async => divisions),
+            introTeamsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => const []),
+            tournamentProvider(
+              'tournament-1',
+            ).overrideWith((ref) => Stream.value(tournament)),
+            tournamentDivisionsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => divisions),
           ],
           child: _app(
             tournament,
@@ -1234,9 +1577,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(TournamentManagementHubScreen));
+      final context = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
       final l10n = AppLocalizations.of(context)!;
-      final tabFinder = find.widgetWithText(Tab, l10n.tournamentManagementTabAthletes);
+      final tabFinder = find.widgetWithText(
+        Tab,
+        l10n.tournamentManagementTabAthletes,
+      );
       await tester.tap(tabFinder);
       await tester.pumpAndSettle();
       // Cuộn lên 180px kéo trên outer header (tương ứng với ảnh người dùng gửi)
@@ -1244,7 +1592,9 @@ void main() {
       await tester.pumpAndSettle();
 
       final tabBarRect = tester.getRect(find.byType(TabBar).first);
-      final firstRow = find.byKey(const ValueKey('athlete-division-row-div-mixed'));
+      final firstRow = find.byKey(
+        const ValueKey('athlete-division-row-div-mixed'),
+      );
       expect(firstRow, findsOneWidget);
       final rowRect = tester.getRect(firstRow);
 
@@ -1279,12 +1629,15 @@ void main() {
         }
         // Đáy khung cắt là phần người dùng nhìn thấy; ảnh parallax bên trong
         // có thể kéo dài hơn khung nên không dùng làm mốc.
-        final frameBottom = tester.getRect(find.byType(FlexibleSpaceBar)).bottom;
+        final frameBottom = tester
+            .getRect(find.byType(FlexibleSpaceBar))
+            .bottom;
         final titleTop = tester.getRect(find.text('City Pickleball Cup')).top;
         expect(
           titleTop - frameBottom,
           inInclusiveRange(0.0, 24.0),
-          reason: 'sau khi kéo thêm $dy: đáy khung=$frameBottom, đỉnh tên giải=$titleTop',
+          reason:
+              'sau khi kéo thêm $dy: đáy khung=$frameBottom, đỉnh tên giải=$titleTop',
         );
       }
     },
@@ -1301,10 +1654,18 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            introTeamsProvider('tournament-1').overrideWith((ref) async => const []),
-            tournamentRepositoryProvider.overrideWithValue(_EmptyTournamentRepository()),
-            tournamentProvider('tournament-1').overrideWith((ref) => Stream.value(_tournament('in_progress'))),
-            tournamentDivisionsProvider('tournament-1').overrideWith((ref) async => <Map<String, dynamic>>[]),
+            introTeamsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => const []),
+            tournamentRepositoryProvider.overrideWithValue(
+              _EmptyTournamentRepository(),
+            ),
+            tournamentProvider(
+              'tournament-1',
+            ).overrideWith((ref) => Stream.value(_tournament('in_progress'))),
+            tournamentDivisionsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => <Map<String, dynamic>>[]),
           ],
           child: _app(
             _tournament('in_progress'),
@@ -1315,9 +1676,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(TournamentManagementHubScreen));
+      final context = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
       final l10n = AppLocalizations.of(context)!;
-      final tabFinder = find.widgetWithText(Tab, l10n.tournamentManagementTabBracket);
+      final tabFinder = find.widgetWithText(
+        Tab,
+        l10n.tournamentManagementTabBracket,
+      );
       await tester.tap(tabFinder);
       await tester.pumpAndSettle();
 
@@ -1346,10 +1712,18 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            introTeamsProvider('tournament-1').overrideWith((ref) async => const []),
-            tournamentRepositoryProvider.overrideWithValue(_EmptyTournamentRepository()),
-            tournamentProvider('tournament-1').overrideWith((ref) => Stream.value(_tournament('in_progress'))),
-            tournamentDivisionsProvider('tournament-1').overrideWith((ref) async => <Map<String, dynamic>>[]),
+            introTeamsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => const []),
+            tournamentRepositoryProvider.overrideWithValue(
+              _EmptyTournamentRepository(),
+            ),
+            tournamentProvider(
+              'tournament-1',
+            ).overrideWith((ref) => Stream.value(_tournament('in_progress'))),
+            tournamentDivisionsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => <Map<String, dynamic>>[]),
           ],
           child: _app(
             _tournament('in_progress'),
@@ -1360,7 +1734,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(TournamentManagementHubScreen));
+      final context = tester.element(
+        find.byType(TournamentManagementHubScreen),
+      );
       final l10n = AppLocalizations.of(context)!;
       await _openTab(tester, l10n.tournamentManagementSchedule);
       // Không drag thêm (đo ở vị trí sau khi chọn tab)
@@ -1368,7 +1744,9 @@ void main() {
       final iconFinder = find.byIcon(Icons.category_outlined);
       expect(iconFinder, findsOneWidget);
       final iconRect = tester.getRect(iconFinder);
-      final cardFinder = find.ancestor(of: iconFinder, matching: find.byType(Container)).first;
+      final cardFinder = find
+          .ancestor(of: iconFinder, matching: find.byType(Container))
+          .first;
       final cardRect = tester.getRect(cardFinder);
 
       final gap = cardRect.top - tabBarRect.bottom;
@@ -1435,9 +1813,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            introTeamsProvider('tournament-1').overrideWith((ref) async => const []),
-            tournamentProvider('tournament-1').overrideWith((ref) => Stream.value(tournament)),
-            tournamentDivisionsProvider('tournament-1').overrideWith((ref) async => divisions),
+            introTeamsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => const []),
+            tournamentProvider(
+              'tournament-1',
+            ).overrideWith((ref) => Stream.value(tournament)),
+            tournamentDivisionsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => divisions),
           ],
           child: _app(
             tournament,
@@ -1453,9 +1837,13 @@ void main() {
       await _openTab(tester, l10n.tournamentManagementTabAthletes);
     }
 
-    final rowMixed = find.byKey(const ValueKey('athlete-division-row-div-mixed'));
+    final rowMixed = find.byKey(
+      const ValueKey('athlete-division-row-div-mixed'),
+    );
     final rowMen = find.byKey(const ValueKey('athlete-division-row-div-men'));
-    final bodyMixed = find.byKey(const ValueKey('athlete-division-body-div-mixed'));
+    final bodyMixed = find.byKey(
+      const ValueKey('athlete-division-body-div-mixed'),
+    );
     final bodyMen = find.byKey(const ValueKey('athlete-division-body-div-men'));
 
     testWidgets('shows one row per division and no old segment or chips', (
@@ -1608,11 +1996,19 @@ void main() {
         find.descendant(of: detail, matching: find.byType(RankAvatar)),
         findsNWidgets(2),
       );
-      expect(find.descendant(of: detail, matching: find.text('Danh')), findsOneWidget);
-      expect(find.descendant(of: detail, matching: find.text('Luân')), findsOneWidget);
+      expect(
+        find.descendant(of: detail, matching: find.text('Danh')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: detail, matching: find.text('Luân')),
+        findsOneWidget,
+      );
 
       // Bấm vào tên đội (dòng tiêu đề); tâm cả cột đã rơi vào panel chi tiết.
-      await tester.tap(find.descendant(of: row, matching: find.text('Danh – Luân')));
+      await tester.tap(
+        find.descendant(of: row, matching: find.text('Danh – Luân')),
+      );
       await tester.pumpAndSettle();
       expect(find.byKey(teamPairDetail), findsNothing);
     });
@@ -1625,12 +2021,20 @@ void main() {
       await tester.ensureVisible(row);
       // Nội dung đôi: có mũi tên dù mới có 1 người, như web.
       expect(
-        find.descendant(of: row, matching: find.byIcon(Icons.expand_more_rounded)),
+        find.descendant(
+          of: row,
+          matching: find.byIcon(Icons.expand_more_rounded),
+        ),
         findsOneWidget,
       );
-      await tester.tap(find.descendant(of: row, matching: find.text('Nhật Minh')));
+      await tester.tap(
+        find.descendant(of: row, matching: find.text('Nhật Minh')),
+      );
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('athlete-team-detail-p-4')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('athlete-team-detail-p-4')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('single-player team has no expand affordance', (tester) async {
@@ -1643,12 +2047,18 @@ void main() {
       expect(row, findsOneWidget);
       // Đội đơn: không có mũi tên mở rộng, bấm vào không sinh panel chi tiết.
       expect(
-        find.descendant(of: row, matching: find.byIcon(Icons.expand_more_rounded)),
+        find.descendant(
+          of: row,
+          matching: find.byIcon(Icons.expand_more_rounded),
+        ),
         findsNothing,
       );
       await tester.tap(row);
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('athlete-team-detail-p-3')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('athlete-team-detail-p-3')),
+        findsNothing,
+      );
     });
 
     testWidgets('team-sport tournament teams are expandable like web', (
@@ -1669,9 +2079,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            introTeamsProvider('tournament-1').overrideWith((ref) async => const []),
-            tournamentProvider('tournament-1').overrideWith((ref) => Stream.value(tournament)),
-            tournamentDivisionsProvider('tournament-1').overrideWith((ref) async => footballDivisions),
+            introTeamsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => const []),
+            tournamentProvider(
+              'tournament-1',
+            ).overrideWith((ref) => Stream.value(tournament)),
+            tournamentDivisionsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => footballDivisions),
           ],
           child: _app(
             tournament,
@@ -1701,7 +2117,10 @@ void main() {
 
       final team = find.byKey(const ValueKey('athlete-team-row-p-fb'));
       expect(
-        find.descendant(of: team, matching: find.byIcon(Icons.expand_more_rounded)),
+        find.descendant(
+          of: team,
+          matching: find.byIcon(Icons.expand_more_rounded),
+        ),
         findsOneWidget,
       );
     });
@@ -1717,11 +2136,17 @@ void main() {
 
       // Chưa mở đội vẫn thấy Duyệt / Từ chối ngay trên dòng.
       expect(
-        find.descendant(of: row, matching: find.text(l10n.tournamentManagementApprove)),
+        find.descendant(
+          of: row,
+          matching: find.text(l10n.tournamentManagementApprove),
+        ),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: row, matching: find.text(l10n.tournamentManagementReject)),
+        find.descendant(
+          of: row,
+          matching: find.text(l10n.tournamentManagementReject),
+        ),
         findsOneWidget,
       );
     });
@@ -1746,14 +2171,17 @@ void main() {
         matching: find.byWidgetPredicate((w) {
           if (w is! Container) return false;
           final d = w.decoration;
-          return d is BoxDecoration && d.border is Border && d.borderRadius != null;
+          return d is BoxDecoration &&
+              d.border is Border &&
+              d.borderRadius != null;
         }),
       );
       expect(bordered, findsNothing);
 
       // Nội dung nới ra sát mép: bỏ padding ngang 16 của tab.
       final rowRect = tester.getRect(rowMixed);
-      final screen = tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      final screen =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
       expect(rowRect.left, lessThanOrEqualTo(0.5));
       expect(rowRect.right, greaterThanOrEqualTo(screen - 0.5));
 
@@ -1787,9 +2215,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            introTeamsProvider('tournament-1').overrideWith((ref) async => const []),
-            tournamentProvider('tournament-1').overrideWith((ref) => Stream.value(tournament)),
-            tournamentDivisionsProvider('tournament-1').overrideWith((ref) async => feeDivisions),
+            introTeamsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => const []),
+            tournamentProvider(
+              'tournament-1',
+            ).overrideWith((ref) => Stream.value(tournament)),
+            tournamentDivisionsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => feeDivisions),
           ],
           child: _app(
             tournament,
@@ -1827,7 +2261,10 @@ void main() {
     testWidgets('add athlete from a row with a fee does not auto-approve', (
       tester,
     ) async {
-      final management = await addAthleteFromRow(tester, effectiveEntryFee: 100);
+      final management = await addAthleteFromRow(
+        tester,
+        effectiveEntryFee: 100,
+      );
 
       expect(management.directNames, ['Paid athlete']);
       // Phí dương: VĐV phải chờ duyệt, không được tự động duyệt.

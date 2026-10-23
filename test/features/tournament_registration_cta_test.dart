@@ -159,43 +159,35 @@ void main() {
     expect(find.text(registerLabel), findsNothing);
     expect(find.byType(FloatingBottomNav), findsOneWidget);
   });
-  testWidgets(
-    'in-progress tournament shows CTA when any division is open',
-    (tester) async {
-      _setPhoneViewport(tester);
-      final router = _createRouter();
-      addTearDown(router.dispose);
+  testWidgets('in-progress tournament keeps CTA for open division', (
+    tester,
+  ) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
 
-      await tester.pumpWidget(
-        _scope(
-          tournament: _tournament(status: 'IN_PROGRESS'),
-          invite: null,
-          divisionData: const [
-            {
-              'id': 'division-1',
-              'name': 'Adults',
-              'registrationOpen': false,
-              'registrationClosedReason': 'DIVISION_LOCKED',
-            },
-            {
-              'id': 'division-2',
-              'name': 'Juniors',
-              'registrationOpen': true,
-            },
-          ],
-          child: _app(router),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(status: 'IN_PROGRESS'),
+        invite: null,
+        divisionData: const [
+          {
+            'id': 'division-1',
+            'name': 'Adults',
+            'registrationOpen': false,
+            'registrationClosedReason': 'DIVISION_LOCKED',
+          },
+          {'id': 'division-2', 'name': 'Juniors', 'registrationOpen': true},
+        ],
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-      final context = tester.element(find.byType(TournamentIntroScreen));
-      expect(
-        find.text(AppLocalizations.of(context)!.register),
-        findsOneWidget,
-      );
-    },
-  );
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(find.text(AppLocalizations.of(context)!.register), findsOneWidget);
+  });
   testWidgets('hides CTA when every server-reported division is closed', (
     tester,
   ) async {
@@ -228,14 +220,36 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     final context = tester.element(find.byType(TournamentIntroScreen));
-    expect(
-      find.text(AppLocalizations.of(context)!.register),
-      findsNothing,
-    );
+    expect(find.text(AppLocalizations.of(context)!.register), findsNothing);
     expect(find.byType(TournamentRegisterBar), findsNothing);
   });
+  testWidgets('cancelled open division hides CTA', (tester) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
 
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(status: 'IN_PROGRESS'),
+        invite: null,
+        divisionData: const [
+          {
+            'id': 'division-cancelled',
+            'name': 'Cancelled',
+            'status': 'CANCELLED',
+            'registrationOpen': true,
+          },
+        ],
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(find.text(AppLocalizations.of(context)!.register), findsNothing);
+    expect(find.byType(TournamentRegisterBar), findsNothing);
+  });
 
   testWidgets('locked registration hides CTA instead of disabling it', (
     tester,

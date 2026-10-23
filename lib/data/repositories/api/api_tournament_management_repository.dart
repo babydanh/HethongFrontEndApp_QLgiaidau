@@ -9,7 +9,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 
 class ApiTournamentManagementRepository
-    implements TournamentManagementRepository {
+    implements TournamentManagementRepository, TournamentLifecycleRepository {
   ApiTournamentManagementRepository(this._dioClient);
 
   final DioClient _dioClient;
@@ -351,9 +351,8 @@ class ApiTournamentManagementRepository
     }
     return pairs
         .map(
-          (item) => AddedAthletePair.fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
+          (item) =>
+              AddedAthletePair.fromJson(Map<String, dynamic>.from(item as Map)),
         )
         .toList(growable: false);
   }
@@ -506,16 +505,34 @@ class ApiTournamentManagementRepository
   );
 
   @override
+  Future<Map<String, dynamic>> startTournament(String id) async =>
+      _map(await _dio.post('/tournaments/$id/start'));
+
+  @override
+  Future<Map<String, dynamic>> completeTournament(String id) async =>
+      _map(await _dio.post('/tournaments/$id/complete'));
+
+  @override
   Future<Map<String, dynamic>> publishTournament(String id) async =>
       _map(await _dio.post('/tournaments/$id/publish'));
 
   @override
-  Future<Map<String, dynamic>> reopenRegistration(String id) async =>
-      _map(await _dio.post('/tournaments/$id/reopen-registration'));
+  Future<Map<String, dynamic>> reopenRegistration(
+    String id, {
+    DateTime? registrationEndDate,
+  }) async => _map(
+    await _dio.post(
+      '/tournaments/$id/reopen-registration',
+      data: {
+        if (registrationEndDate != null)
+          'registrationEndDate': registrationEndDate.toUtc().toIso8601String(),
+      },
+    ),
+  );
 
   @override
-  Future<Map<String, dynamic>> lockTournament(String id) async =>
-      _map(await _dio.post('/tournaments/$id/lock'));
+  Future<Map<String, dynamic>> closeRegistration(String id) async =>
+      _map(await _dio.post('/tournaments/$id/close-registration'));
 
   @override
   Future<Map<String, dynamic>> regenerateInviteCode(String id) async =>

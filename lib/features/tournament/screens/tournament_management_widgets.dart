@@ -155,37 +155,97 @@ class TournamentManagementEmpty extends StatelessWidget {
   }
 }
 
+/// [requiredAcknowledgement]: ô tick bắt buộc; nút xác nhận chỉ bấm được khi đã tick.
 Future<bool> confirmTournamentManagementAction(
   BuildContext context, {
   required String title,
   required String message,
   required String confirmLabel,
   bool destructive = false,
+  String? requiredAcknowledgement,
 }) async {
   final colors = context.colors;
+  var acknowledged = requiredAcknowledgement == null;
   final result = await showDialog<bool>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(
-            AppLocalizations.of(dialogContext)!.tournamentManagementCancel,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setDialogState) => AlertDialog(
+        title: Text(title),
+        content: requiredAcknowledgement == null
+            ? Text(message)
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(message),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    value: acknowledged,
+                    onChanged: (value) =>
+                        setDialogState(() => acknowledged = value ?? false),
+                    title: Text(requiredAcknowledgement),
+                  ),
+                ],
+              ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              AppLocalizations.of(dialogContext)!.tournamentManagementCancel,
+            ),
           ),
-        ),
-        FilledButton(
-          style: destructive
-              ? FilledButton.styleFrom(backgroundColor: colors.error)
-              : null,
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: Text(confirmLabel),
-        ),
-      ],
+          FilledButton(
+            style: destructive
+                ? FilledButton.styleFrom(backgroundColor: colors.error)
+                : null,
+            onPressed: acknowledged
+                ? () => Navigator.pop(dialogContext, true)
+                : null,
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
     ),
   );
   return result == true;
+}
+
+/// Chọn hạn đăng ký mới (ngày rồi giờ). Trả null khi huỷ hoặc hạn không ở
+/// tương lai (đã báo cho người dùng); server từ chối mở lại khi hạn đã qua.
+Future<DateTime?> pickTournamentManagementDeadline(BuildContext context) async {
+  final now = DateTime.now();
+  final date = await showDatePicker(
+    context: context,
+    initialDate: now,
+    firstDate: now,
+    lastDate: now.add(const Duration(days: 730)),
+  );
+  if (date == null || !context.mounted) return null;
+  final time = await showTimePicker(
+    context: context,
+    initialTime: const TimeOfDay(hour: 23, minute: 59),
+  );
+  if (time == null || !context.mounted) return null;
+  final deadline = DateTime(
+    date.year,
+    date.month,
+    date.day,
+    time.hour,
+    time.minute,
+  );
+  if (deadline.isAfter(DateTime.now())) return deadline;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        AppLocalizations.of(
+          context,
+        )!.tournamentManagementDivisionReopenDeadlineFuture,
+      ),
+    ),
+  );
+  return null;
 }
 
 String tournamentManagementRecordName(Map<String, dynamic> record) =>

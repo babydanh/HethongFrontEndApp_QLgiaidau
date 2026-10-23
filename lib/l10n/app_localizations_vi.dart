@@ -13630,10 +13630,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể xuất dữ liệu giải đấu.';
 
   @override
-  String get tournamentManagementFinalizeRegistrationUnavailable =>
-      'Ứng dụng di động chưa hỗ trợ kết thúc đăng ký vì thao tác phía máy chủ chưa được xác nhận. Vui lòng liên hệ bộ phận hỗ trợ trước khi thực hiện chuyển trạng thái này.';
-
-  @override
   String get tournamentManagementFinance => 'Tài chính & thanh toán';
 
   @override
@@ -13676,6 +13672,28 @@ class AppLocalizationsVi extends AppLocalizations {
       'Dùng các chuyển trạng thái được máy chủ hỗ trợ. Máy chủ chịu trách nhiệm phân quyền.';
 
   @override
+  String get tournamentManagementStartTournament => 'Khai mạc giải';
+
+  @override
+  String get tournamentManagementStartTournamentConfirm =>
+      'Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn có chắc muốn khai mạc giải đấu này?';
+
+  @override
+  String get tournamentManagementStartCloseAll =>
+      'Đóng đăng ký tất cả nội dung';
+
+  @override
+  String get tournamentManagementStartTournamentMissingBracketConfirm =>
+      'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.';
+
+  @override
+  String get tournamentManagementCompleteTournament => 'Kết thúc giải';
+
+  @override
+  String get tournamentManagementCompleteTournamentConfirm =>
+      'Bạn có chắc muốn kết thúc giải đấu này?';
+
+  @override
   String get tournamentManagementLiveOperations => 'Vận hành trực tiếp';
 
   @override
@@ -13693,11 +13711,43 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementLoadError => 'Không thể tải mục này.';
 
   @override
-  String get tournamentManagementLockConfirm =>
-      'Khóa đăng ký giải đấu ngay bây giờ?';
+  String get tournamentManagementCloseRegistration => 'Chốt đăng ký';
 
   @override
-  String get tournamentManagementLockTournament => 'Khóa đăng ký';
+  String get tournamentManagementCloseRegistrationConfirm =>
+      'Chốt đăng ký mọi nội dung còn mở? Không tạo sơ đồ; từng nội dung vẫn mở lại được ở mục Nội dung.';
+
+  @override
+  String get tournamentManagementOpenRegistrationNow => 'Mở đăng ký ngay';
+
+  @override
+  String get tournamentManagementOpenRegistrationConfirm =>
+      'Mở đăng ký giải đấu ngay bây giờ?';
+
+  @override
+  String get tournamentManagementDivisionLockRegistration => 'Khoá đăng ký';
+
+  @override
+  String get tournamentManagementDivisionUnlockRegistration => 'Mở lại đăng ký';
+
+  @override
+  String get tournamentManagementDivisionReopenWithDeadline =>
+      'Mở lại kèm hạn mới';
+
+  @override
+  String get tournamentManagementDivisionReopenDeadlineFuture =>
+      'Hạn đăng ký mới phải ở tương lai.';
+
+  @override
+  String get tournamentManagementDivisionRegistrationOpen =>
+      'Đang nhận đăng ký';
+
+  @override
+  String get tournamentManagementDivisionRegistrationClosed =>
+      'Đã đóng đăng ký';
+
+  @override
+  String get tournamentManagementDivisionNoDeadline => 'Không có hạn đăng ký';
 
   @override
   String get tournamentManagementLogo => 'Logo giải đấu';
