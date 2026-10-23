@@ -90,6 +90,23 @@ void main() {
     expect(find.text('N. V. An / T. V. Bình'), findsNothing);
   });
 
+  testWidgets('crossAxisAlignment.end: nhãn PLAYERS canh sát mép phải', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      child: const ParticipantLabel(
+        teamName: null,
+        players: _players,
+        compact: true,
+        crossAxisAlignment: CrossAxisAlignment.end,
+      ),
+    );
+
+    // Test surface is 800 wide; the 240 wide box is centred, so its right edge is 520.
+    expect(tester.getTopRight(find.byType(Tooltip)).dx, closeTo(520, 0.5));
+  });
+
   testWidgets('TEAM: hiện tên đội nguyên văn, không viết tắt, không hiện VĐV', (
     tester,
   ) async {
