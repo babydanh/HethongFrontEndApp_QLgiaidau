@@ -104,28 +104,24 @@ class PickleballPanel extends ConsumerWidget {
                 child: compact
                     ? Column(
                         children: [
-                          Expanded(
-                            child: _buildTeamScore(
-                              isTeam1: true,
-                              pb: pb,
-                              state: state,
-                              notifier: notifier,
-                              colors: colors,
-                              teamName: team1Name,
-                              compact: compact,
-                            ),
+                          _buildTeamScore(
+                            isTeam1: true,
+                            pb: pb,
+                            state: state,
+                            notifier: notifier,
+                            colors: colors,
+                            teamName: team1Name,
+                            compact: compact,
                           ),
                           const SizedBox(height: 10),
-                          Expanded(
-                            child: _buildTeamScore(
-                              isTeam1: false,
-                              pb: pb,
-                              state: state,
-                              notifier: notifier,
-                              colors: colors,
-                              teamName: team2Name,
-                              compact: compact,
-                            ),
+                          _buildTeamScore(
+                            isTeam1: false,
+                            pb: pb,
+                            state: state,
+                            notifier: notifier,
+                            colors: colors,
+                            teamName: team2Name,
+                            compact: compact,
                           ),
                         ],
                       )
@@ -213,12 +209,14 @@ class PickleballPanel extends ConsumerWidget {
     final isServing = pb.isTeam1Serving == isTeam1;
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
 
-    return OrientationBuilder(
-      builder: (context, orientation) {
-        final isLandscape = orientation == Orientation.landscape;
+    // Expanded must be the direct child of the Row/Column that lays the cards
+    // out, so it wraps the OrientationBuilder, not the other way round.
+    return Expanded(
+      child: OrientationBuilder(
+        builder: (context, orientation) {
+          final isLandscape = orientation == Orientation.landscape;
 
-        return Expanded(
-          child: Container(
+          return Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: colors.bgCard,
@@ -414,9 +412,9 @@ class PickleballPanel extends ConsumerWidget {
                 ],
               ],
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

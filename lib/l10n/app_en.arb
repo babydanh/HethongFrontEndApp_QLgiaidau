@@ -719,9 +719,6 @@
   "pickleballLoseServe": "Lose serve",
   "pickleballTeam1": "Team 1",
   "pickleballTeam2": "Team 2",
-  "pickleballCourtTitle": "Court",
-  "pickleballCourtSettings": "Court settings",
-  "pickleballCourtStartingRight": "Starting right-court player",
   "pickleballCourtPlayerLabel": "Player {number}",
   "@pickleballCourtPlayerLabel": {
     "placeholders": {
@@ -730,13 +727,30 @@
       }
     }
   },
-  "pickleballCourtSwapNow": "Switch ends now",
   "pickleballCourtAutoSwitch": "Auto switch ends",
-  "pickleballCourtAutoSwitchHint": "Switch ends after each set and at the midpoint of the deciding set",
-  "pickleballCourtServerOverride": "Current server",
+  "pickleballCourtAddPoint": "Add point for team {team}",
+  "@pickleballCourtAddPoint": {
+    "placeholders": {
+      "team": {
+        "type": "int"
+      }
+    }
+  },
+  "pickleballCourtRemovePoint": "Remove point for team {team}",
+  "@pickleballCourtRemovePoint": {
+    "placeholders": {
+      "team": {
+        "type": "int"
+      }
+    }
+  },
+  "pickleballCourtBall": "Serving ball",
+  "pickleballCourtActionSwapPlaces": "Swap left and right",
+  "pickleballCourtActionSwitchEnds": "Switch ends",
+  "pickleballCourtActionServeHere": "Give serve here",
+  "pickleballCourtLabel": "Pickleball court",
   "pickleballCourtUndo": "Undo",
   "pickleballCourtRestoreAutomatic": "Restore automatic",
-  "pickleballCourtNoServingTeam": "No serving team yet",
   "pickleballCourtCallLabel": "Call",
   "pickleballCourtRightCell": "Right",
   "pickleballCourtLeftCell": "Left",

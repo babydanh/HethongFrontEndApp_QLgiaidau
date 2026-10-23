@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
@@ -52,7 +53,13 @@ final pickleballCourtContextProvider = Provider.autoDispose
       final panel = ref.watch(scorePanelNotifierProvider(arg));
       final lastScoringTeam = ref.watch(pickleballLastScoringTeamProvider(arg));
       final rally = panel.rally ?? const RallySetState();
-      final serve = panel.pickleball;
+      // The match rule decides side-out: the serve state only appears after the
+      // first tap on the scoring panel, so until then team 1 serves by default.
+      final sideOutRule =
+          panel.config.scoringModel == SportScoringModel.pickleballSideOut;
+      final serve =
+          panel.pickleball ??
+          (sideOutRule ? const PickleballServeState() : null);
       final team1PlayerCount = (match.team1Members?.length ?? 0) >= 2 ? 2 : 1;
       final team2PlayerCount = (match.team2Members?.length ?? 0) >= 2 ? 2 : 1;
       final config = panel.config;

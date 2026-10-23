@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/pickleball_court_notifier.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -193,5 +196,140 @@ void main() {
     expect(harness.notifier.claimErrorReport('404'), isTrue);
     expect(harness.notifier.claimErrorReport('404'), isFalse);
     expect(harness.notifier.claimErrorReport('Lỗi mạng'), isTrue);
+  });
+
+  _realContextTests();
+}
+
+// ---- Real court context (no override): rule decides side-out ----
+
+SportConfig _sideOutConfig() => const SportConfig(
+  kind: SportRuleKind.pickleball,
+  scoringModel: SportScoringModel.pickleballSideOut,
+  bestOf: 3,
+  setsToWin: 2,
+  pointsPerSet: 11,
+  mustWinByTwo: true,
+  maxPoints: 0,
+  tiebreakAt: 0,
+);
+
+ScorePanelState _scoreState({
+  int score1 = 0,
+  int score2 = 0,
+  PickleballServeState? serve,
+}) => ScorePanelState(
+  config: _sideOutConfig(),
+  pickleball: serve,
+  rally: RallySetState(currentP1: score1, currentP2: score2),
+);
+
+/// Score panel whose state a test sets directly.
+class _SettableScorePanel extends ScorePanelNotifier {
+  _SettableScorePanel(super.arg, this.initial);
+
+  final ScorePanelState initial;
+
+  @override
+  ScorePanelState build() => initial;
+
+  void set(ScorePanelState next) => state = next;
+}
+
+class _RealContextHarness {
+  _RealContextHarness() {
+    container = ProviderContainer(
+      overrides: [
+        singleMatchProvider.overrideWith(
+          (ref, params) => Stream.value(
+            MatchModel.fromJson({
+              'id': 'match-1',
+              'tournamentId': 'tournament-1',
+              'status': 'LIVE',
+              'team1Members': ['A', 'B'],
+              'team2Members': ['C', 'D'],
+            }, 'match-1'),
+          ),
+        ),
+        scorePanelNotifierProvider.overrideWith2(
+          (arg) => _SettableScorePanel(arg, _scoreState()),
+        ),
+        matchRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    container.listen(pickleballCourtNotifierProvider(_params), (_, _) {});
+  }
+
+  final repository = _EchoCourtRepository();
+  late final ProviderContainer container;
+
+  PickleballCourtNotifier get notifier =>
+      container.read(pickleballCourtNotifierProvider(_params).notifier);
+
+  CourtState get state =>
+      container.read(pickleballCourtNotifierProvider(_params));
+
+  CourtContext get context =>
+      container.read(pickleballCourtContextProvider(_params))!;
+
+  void setScore(ScorePanelState next) =>
+      (container.read(scorePanelNotifierProvider(_params).notifier)
+              as _SettableScorePanel)
+          .set(next);
+
+  Future<void> settle() async {
+    for (var i = 0; i < 3; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
+}
+
+void _realContextTests() {
+  group('side-out rule without serve state (real court context)', () {
+    test('the context is side-out with team 1 serving at 0-0', () async {
+      final harness = _RealContextHarness();
+      addTearDown(harness.container.dispose);
+      await harness.settle();
+
+      expect(harness.context.scoringMode, CourtScoringMode.sideOut);
+      expect(harness.context.servingTeam, 1);
+      expect(harness.context.serverNumber, 1);
+    });
+
+    test('moving the ball to the partner at 0-0 keeps the override', () async {
+      final harness = _RealContextHarness();
+      addTearDown(harness.container.dispose);
+      await harness.settle();
+      await harness.notifier.syncAutomatic();
+
+      await harness.notifier.apply(
+        (state, context) => setServerOverride(state, context, 1, 1),
+      );
+
+      final layout = resolveCourtLayout(harness.state, harness.context);
+      expect(harness.state.serverOverride?.playerIndex, 1);
+      expect(layout.serverPlayerIndex, 1);
+      expect(harness.state.turnStart, isNotNull);
+    });
+
+    test('the first point keeps the first server serving', () async {
+      final harness = _RealContextHarness();
+      addTearDown(harness.container.dispose);
+      await harness.settle();
+      await harness.notifier.syncAutomatic();
+      final server = resolveCourtLayout(
+        harness.state,
+        harness.context,
+      ).serverPlayerIndex;
+
+      harness.setScore(
+        _scoreState(score1: 1, serve: const PickleballServeState()),
+      );
+      await harness.notifier.syncAutomatic();
+
+      final layout = resolveCourtLayout(harness.state, harness.context);
+      expect(layout.serverPlayerIndex, server);
+      expect(harness.state.turnStart?.serverPlayerIndex, server);
+    });
   });
 }

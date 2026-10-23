@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/tennis_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_panel.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/court_score_layout.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/badminton_score_panel.dart';
@@ -745,35 +746,38 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     bool usePickleballSideOutPanel,
     bool isLite,
   ) {
+    final scorePanel = kind == SportRuleKind.football
+        ? FootballScorePanel(
+            params: params,
+            team1Name: widget.match.team1Name,
+            team2Name: widget.match.team2Name,
+          )
+        : kind == SportRuleKind.tennis
+        ? TennisScorePanel(params: params, isReadOnly: false)
+        : isLite
+        ? RallyScorePanel(params: params, isReadOnly: false)
+        : usePickleballSideOutPanel
+        ? PickleballPanel(params: params, isReadOnly: false)
+        : kind == SportRuleKind.badminton
+        ? BadmintonScorePanel(params: params, isReadOnly: false)
+        : kind == SportRuleKind.tableTennis
+        ? TableTennisScorePanel(params: params, isReadOnly: false)
+        : RallyScorePanel(params: params, isReadOnly: false);
+    final courtPanel = kind == SportRuleKind.pickleball && !isLite
+        ? PickleballCourtPanel(
+            params: params,
+            canScore: ref.watch(authProvider).canScore,
+          )
+        : null;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
         children: [
-          if (kind == SportRuleKind.pickleball && !isLite) ...[
-            PickleballCourtPanel(
-              params: params,
-              canScore: ref.watch(authProvider).canScore,
-            ),
-            const SizedBox(height: 8),
-          ],
           Expanded(
-            child: kind == SportRuleKind.football
-                ? FootballScorePanel(
-                    params: params,
-                    team1Name: widget.match.team1Name,
-                    team2Name: widget.match.team2Name,
-                  )
-                : kind == SportRuleKind.tennis
-                ? TennisScorePanel(params: params, isReadOnly: false)
-                : isLite
-                ? RallyScorePanel(params: params, isReadOnly: false)
-                : usePickleballSideOutPanel
-                ? PickleballPanel(params: params, isReadOnly: false)
-                : kind == SportRuleKind.badminton
-                ? BadmintonScorePanel(params: params, isReadOnly: false)
-                : kind == SportRuleKind.tableTennis
-                ? TableTennisScorePanel(params: params, isReadOnly: false)
-                : RallyScorePanel(params: params, isReadOnly: false),
+            // Pickleball: court + scoring block; side by side in landscape.
+            child: courtPanel != null
+                ? CourtScoreLayout(court: courtPanel, scorePanel: scorePanel)
+                : scorePanel,
           ),
           const SizedBox(height: 6),
           Consumer(

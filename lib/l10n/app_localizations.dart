@@ -4004,35 +4004,11 @@ abstract class AppLocalizations {
   /// **'Đội 2'**
   String get pickleballTeam2;
 
-  /// No description provided for @pickleballCourtTitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Sơ đồ sân'**
-  String get pickleballCourtTitle;
-
-  /// No description provided for @pickleballCourtSettings.
-  ///
-  /// In vi, this message translates to:
-  /// **'Cài đặt sân'**
-  String get pickleballCourtSettings;
-
-  /// No description provided for @pickleballCourtStartingRight.
-  ///
-  /// In vi, this message translates to:
-  /// **'VĐV đứng ô phải lúc xuất phát'**
-  String get pickleballCourtStartingRight;
-
   /// No description provided for @pickleballCourtPlayerLabel.
   ///
   /// In vi, this message translates to:
   /// **'VĐV {number}'**
   String pickleballCourtPlayerLabel(int number);
-
-  /// No description provided for @pickleballCourtSwapNow.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đổi sân ngay'**
-  String get pickleballCourtSwapNow;
 
   /// No description provided for @pickleballCourtAutoSwitch.
   ///
@@ -4040,17 +4016,47 @@ abstract class AppLocalizations {
   /// **'Tự đổi sân'**
   String get pickleballCourtAutoSwitch;
 
-  /// No description provided for @pickleballCourtAutoSwitchHint.
+  /// No description provided for @pickleballCourtAddPoint.
   ///
   /// In vi, this message translates to:
-  /// **'Tự đổi sân sau mỗi set và ở mốc giữa set quyết định'**
-  String get pickleballCourtAutoSwitchHint;
+  /// **'Cộng điểm đội {team}'**
+  String pickleballCourtAddPoint(int team);
 
-  /// No description provided for @pickleballCourtServerOverride.
+  /// No description provided for @pickleballCourtRemovePoint.
   ///
   /// In vi, this message translates to:
-  /// **'Người đang giao'**
-  String get pickleballCourtServerOverride;
+  /// **'Trừ điểm đội {team}'**
+  String pickleballCourtRemovePoint(int team);
+
+  /// No description provided for @pickleballCourtBall.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trái bóng giao'**
+  String get pickleballCourtBall;
+
+  /// No description provided for @pickleballCourtActionSwapPlaces.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi chỗ phải/trái'**
+  String get pickleballCourtActionSwapPlaces;
+
+  /// No description provided for @pickleballCourtActionSwitchEnds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi sân'**
+  String get pickleballCourtActionSwitchEnds;
+
+  /// No description provided for @pickleballCourtActionServeHere.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giao bóng cho người này'**
+  String get pickleballCourtActionServeHere;
+
+  /// No description provided for @pickleballCourtLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân pickleball'**
+  String get pickleballCourtLabel;
 
   /// No description provided for @pickleballCourtUndo.
   ///
@@ -4063,12 +4069,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Khôi phục tự động'**
   String get pickleballCourtRestoreAutomatic;
-
-  /// No description provided for @pickleballCourtNoServingTeam.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có đội giao'**
-  String get pickleballCourtNoServingTeam;
 
   /// No description provided for @pickleballCourtCallLabel.
   ///

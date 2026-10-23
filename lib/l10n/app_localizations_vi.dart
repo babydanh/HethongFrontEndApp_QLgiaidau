@@ -2072,40 +2072,43 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballTeam2 => 'Đội 2';
 
   @override
-  String get pickleballCourtTitle => 'Sơ đồ sân';
-
-  @override
-  String get pickleballCourtSettings => 'Cài đặt sân';
-
-  @override
-  String get pickleballCourtStartingRight => 'VĐV đứng ô phải lúc xuất phát';
-
-  @override
   String pickleballCourtPlayerLabel(int number) {
     return 'VĐV $number';
   }
 
   @override
-  String get pickleballCourtSwapNow => 'Đổi sân ngay';
-
-  @override
   String get pickleballCourtAutoSwitch => 'Tự đổi sân';
 
   @override
-  String get pickleballCourtAutoSwitchHint =>
-      'Tự đổi sân sau mỗi set và ở mốc giữa set quyết định';
+  String pickleballCourtAddPoint(int team) {
+    return 'Cộng điểm đội $team';
+  }
 
   @override
-  String get pickleballCourtServerOverride => 'Người đang giao';
+  String pickleballCourtRemovePoint(int team) {
+    return 'Trừ điểm đội $team';
+  }
+
+  @override
+  String get pickleballCourtBall => 'Trái bóng giao';
+
+  @override
+  String get pickleballCourtActionSwapPlaces => 'Đổi chỗ phải/trái';
+
+  @override
+  String get pickleballCourtActionSwitchEnds => 'Đổi sân';
+
+  @override
+  String get pickleballCourtActionServeHere => 'Giao bóng cho người này';
+
+  @override
+  String get pickleballCourtLabel => 'Sân pickleball';
 
   @override
   String get pickleballCourtUndo => 'Hoàn tác';
 
   @override
   String get pickleballCourtRestoreAutomatic => 'Khôi phục tự động';
-
-  @override
-  String get pickleballCourtNoServingTeam => 'Chưa có đội giao';
 
   @override
   String get pickleballCourtCallLabel => 'Lời hô';

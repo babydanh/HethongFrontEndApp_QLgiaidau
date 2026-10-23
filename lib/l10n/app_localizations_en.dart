@@ -2077,40 +2077,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballTeam2 => 'Team 2';
 
   @override
-  String get pickleballCourtTitle => 'Court';
-
-  @override
-  String get pickleballCourtSettings => 'Court settings';
-
-  @override
-  String get pickleballCourtStartingRight => 'Starting right-court player';
-
-  @override
   String pickleballCourtPlayerLabel(int number) {
     return 'Player $number';
   }
 
   @override
-  String get pickleballCourtSwapNow => 'Switch ends now';
-
-  @override
   String get pickleballCourtAutoSwitch => 'Auto switch ends';
 
   @override
-  String get pickleballCourtAutoSwitchHint =>
-      'Switch ends after each set and at the midpoint of the deciding set';
+  String pickleballCourtAddPoint(int team) {
+    return 'Add point for team $team';
+  }
 
   @override
-  String get pickleballCourtServerOverride => 'Current server';
+  String pickleballCourtRemovePoint(int team) {
+    return 'Remove point for team $team';
+  }
+
+  @override
+  String get pickleballCourtBall => 'Serving ball';
+
+  @override
+  String get pickleballCourtActionSwapPlaces => 'Swap left and right';
+
+  @override
+  String get pickleballCourtActionSwitchEnds => 'Switch ends';
+
+  @override
+  String get pickleballCourtActionServeHere => 'Give serve here';
+
+  @override
+  String get pickleballCourtLabel => 'Pickleball court';
 
   @override
   String get pickleballCourtUndo => 'Undo';
 
   @override
   String get pickleballCourtRestoreAutomatic => 'Restore automatic';
-
-  @override
-  String get pickleballCourtNoServingTeam => 'No serving team yet';
 
   @override
   String get pickleballCourtCallLabel => 'Call';
