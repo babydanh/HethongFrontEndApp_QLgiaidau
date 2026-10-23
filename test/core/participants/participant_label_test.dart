@@ -102,6 +102,8 @@ void main() {
           teamName: null,
           players: _players,
           compact: true,
+          // Tiny font: the Ahem test font would otherwise fill the whole box.
+          style: TextStyle(fontSize: 6),
           crossAxisAlignment: CrossAxisAlignment.end,
         ),
       ),
