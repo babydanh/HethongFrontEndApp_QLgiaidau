@@ -10,7 +10,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 ///
 /// - `TEAM`: hiện `teamName` khi sau khi chuẩn hoá không rỗng và không trùng
 ///   tên của bất kỳ VĐV nào.
-/// - `PLAYERS`: hiện từng VĐV (avatar + tên), không hiện tên đội.
+/// - `PLAYERS`: hiện các VĐV trên một dòng (tối đa 2 avatar + tên nối " / "), không hiện tên đội.
 /// - Tên đội không bao giờ viết tắt; tên VĐV viết tắt chỉ ở chỗ hẹp
 ///   ([ParticipantLabel.compact]).
 
@@ -290,9 +290,10 @@ String participantLabel({
 
 /// Hiển thị đội/VĐV theo quy chuẩn chung.
 ///
-/// [compact] (sơ đồ nhánh, thẻ trận, lịch sân, overlay): VĐV viết tắt, mỗi VĐV
-/// một dòng kèm avatar, tên đầy đủ hiện qua Tooltip/nhấn giữ. Tên đội luôn đầy
-/// đủ, cắt "…" khi dài và hiện đầy đủ qua Tooltip.
+/// [compact] (sơ đồ nhánh, thẻ trận, lịch sân, overlay): VĐV viết tắt, một
+/// dòng gồm tối đa 2 avatar chồng nhau + tên nối " / ", tên đầy đủ hiện qua
+/// Tooltip/nhấn giữ. Tên đội luôn đầy đủ, cắt "…" khi dài và hiện đầy đủ qua
+/// Tooltip.
 class ParticipantLabel extends StatelessWidget {
   final String? teamName;
   final List<ParticipantPlayer> players;
@@ -357,28 +358,38 @@ class ParticipantLabel extends StatelessWidget {
     return Tooltip(
       message: display.players.map((p) => p.fullName).join(' / '),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        // Fill the width only when the label is aligned to the end/centre.
+        mainAxisSize: crossAxisAlignment == CrossAxisAlignment.start
+            ? MainAxisSize.min
+            : MainAxisSize.max,
+        mainAxisAlignment: switch (crossAxisAlignment) {
+          CrossAxisAlignment.end => MainAxisAlignment.end,
+          CrossAxisAlignment.center => MainAxisAlignment.center,
+          _ => MainAxisAlignment.start,
+        },
         children: [
-          SizedBox(
-            width: avatarRadius * 2 + overlap * (shown.length - 1),
-            height: avatarRadius * 2,
-            child: Stack(
-              children: [
-                for (var i = 0; i < shown.length; i++)
-                  Positioned(
-                    left: overlap * i,
-                    child: _PlayerAvatar(
-                      name: shown[i].fullName,
-                      avatarUrl: shown[i].avatarUrl,
-                      radius: avatarRadius,
-                      backgroundColor: colors.bgSurface,
-                      textStyle: baseStyle.copyWith(
-                        fontSize: avatarRadius * 0.9,
-                        color: colors.textMuted,
+          ExcludeSemantics(
+            child: SizedBox(
+              width: avatarRadius * 2 + overlap * (shown.length - 1),
+              height: avatarRadius * 2,
+              child: Stack(
+                children: [
+                  for (var i = 0; i < shown.length; i++)
+                    PositionedDirectional(
+                      start: overlap * i,
+                      child: _PlayerAvatar(
+                        name: shown[i].fullName,
+                        avatarUrl: shown[i].avatarUrl,
+                        radius: avatarRadius,
+                        backgroundColor: colors.bgSurface,
+                        textStyle: baseStyle.copyWith(
+                          fontSize: avatarRadius * 0.9,
+                          color: colors.textMuted,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
           SizedBox(width: rowGap),
