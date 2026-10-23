@@ -113,7 +113,7 @@ List<ParticipantPlayer> toParticipantPlayers(Map<dynamic, dynamic> json) {
       if (player.fullName.isEmpty) continue;
       players.add(player);
     }
-    if (players.isNotEmpty) return players;
+    if (players.isNotEmpty) return _uniquePlayers(players);
   }
 
   final members = json['members'] ?? json['rosters'];
@@ -154,7 +154,30 @@ List<ParticipantPlayer> toParticipantPlayers(Map<dynamic, dynamic> json) {
       );
     }
   }
-  return players;
+  return _uniquePlayers(players);
+}
+
+/// Drops repeated players (same userId, or same normalised name for guests)
+/// keeping the first one, and renumbers slots from 1.
+List<ParticipantPlayer> _uniquePlayers(List<ParticipantPlayer> players) {
+  final seen = <String>{};
+  final unique = <ParticipantPlayer>[];
+  for (final p in players) {
+    final key = p.userId != null
+        ? 'u:${p.userId}'
+        : 'n:${normalizeParticipantText(p.fullName).toLowerCase()}';
+    if (!seen.add(key)) continue;
+    unique.add(
+      ParticipantPlayer(
+        slot: unique.length + 1,
+        userId: p.userId,
+        fullName: p.fullName,
+        avatarUrl: p.avatarUrl,
+        isGuest: p.isGuest,
+      ),
+    );
+  }
+  return unique;
 }
 
 /// VĐV từ roster của match (`team1MemberInfos`/`team2MemberInfos`).
@@ -175,7 +198,7 @@ List<ParticipantPlayer> participantPlayersFromMemberInfos(
       ),
     );
   }
-  return players;
+  return _uniquePlayers(players);
 }
 
 /// VĐV khách từ tên thuần (`team1Members`/`guestNames` của match).
@@ -192,7 +215,7 @@ List<ParticipantPlayer> participantPlayersFromNames(Iterable<String> names) {
       ),
     );
   }
-  return players;
+  return _uniquePlayers(players);
 }
 
 /// Quyết định TEAM hay PLAYERS.
@@ -212,7 +235,13 @@ ParticipantDisplay resolveParticipantDisplay({
     final clashesWithPlayer = filtered.any(
       (p) => normalizeParticipantText(p.fullName).toLowerCase() == key,
     );
-    if (teamOnly || !clashesWithPlayer) {
+    // Backend may auto-fill teamName with the players' names joined by " / ".
+    final joinedNames = filtered
+        .map((p) => normalizeParticipantText(p.fullName))
+        .join(' / ')
+        .toLowerCase();
+    final isJoinedNames = filtered.length > 1 && key == joinedNames;
+    if (teamOnly || !(clashesWithPlayer || isJoinedNames)) {
       return ParticipantDisplay._(
         mode: ParticipantDisplayMode.team,
         teamName: name,
