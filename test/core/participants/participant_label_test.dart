@@ -30,11 +30,11 @@ Future<void> _pump(
 
 void main() {
   testWidgets(
-    'compact hai VĐV: viết tắt, mỗi VĐV một dòng, tooltip tên đầy đủ',
+    'compact hai VĐV: một dòng viết tắt, hai avatar, tooltip tên đầy đủ',
     (tester) async {
       await _pump(
         tester,
-        width: 120,
+        width: 160,
         child: const ParticipantLabel(
           teamName: null,
           players: _players,
@@ -42,27 +42,52 @@ void main() {
         ),
       );
 
-      expect(find.text('N. V. An'), findsOneWidget);
-      expect(find.text('T. V. Bình'), findsOneWidget);
+      expect(find.text('N. V. An / T. V. Bình'), findsOneWidget);
       expect(find.text('Nguyễn Văn An'), findsNothing);
-      expect(find.byTooltip('Nguyễn Văn An'), findsOneWidget);
-      expect(find.byTooltip('Trần Văn Bình'), findsOneWidget);
+      expect(find.byTooltip('Nguyễn Văn An / Trần Văn Bình'), findsOneWidget);
       expect(find.byType(CircleAvatar), findsNWidgets(2));
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('avatar không ảnh chỉ hiện đúng một chữ cái đầu', (tester) async {
+    await _pump(
+      tester,
+      child: const ParticipantLabel(teamName: null, players: _players),
+    );
+
+    expect(find.text('N'), findsOneWidget);
+    expect(find.text('T'), findsOneWidget);
+    expect(find.text('NA'), findsNothing);
+  });
+
+  testWidgets('hơn hai VĐV: tối đa hai avatar', (tester) async {
+    await _pump(
+      tester,
+      child: const ParticipantLabel(
+        teamName: null,
+        players: [
+          ParticipantPlayer(slot: 1, fullName: 'An'),
+          ParticipantPlayer(slot: 2, fullName: 'Bình'),
+          ParticipantPlayer(slot: 3, fullName: 'Cường'),
+        ],
+      ),
+    );
+
+    expect(find.byType(CircleAvatar), findsNWidgets(2));
+  });
 
   testWidgets('đầy đủ (danh sách rộng): hiện tên đầy đủ, không viết tắt', (
     tester,
   ) async {
     await _pump(
       tester,
+      width: 320,
       child: const ParticipantLabel(teamName: null, players: _players),
     );
 
-    expect(find.text('Nguyễn Văn An'), findsOneWidget);
-    expect(find.text('Trần Văn Bình'), findsOneWidget);
-    expect(find.text('N. V. An'), findsNothing);
+    expect(find.text('Nguyễn Văn An / Trần Văn Bình'), findsOneWidget);
+    expect(find.text('N. V. An / T. V. Bình'), findsNothing);
   });
 
   testWidgets('TEAM: hiện tên đội nguyên văn, không viết tắt, không hiện VĐV', (
@@ -78,7 +103,7 @@ void main() {
     );
 
     expect(find.text('Đội Ánh Dương'), findsOneWidget);
-    expect(find.text('N. V. An'), findsNothing);
+    expect(find.textContaining('N. V. An'), findsNothing);
     expect(find.byType(CircleAvatar), findsNothing);
   });
 
@@ -94,7 +119,7 @@ void main() {
     );
 
     expect(find.text('nguyễn văn an'), findsNothing);
-    expect(find.text('Nguyễn Văn An'), findsOneWidget);
+    expect(find.text('Nguyễn Văn An / Trần Văn Bình'), findsOneWidget);
   });
 
   testWidgets('không có tên và không có VĐV: hiện "Chưa xác định"', (
