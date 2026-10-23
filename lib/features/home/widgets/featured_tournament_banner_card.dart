@@ -161,6 +161,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                           fontSize: AppResponsive.bannerFontSize(
                             viewportSize.height,
                             viewportWidth: viewportSize.width,
+                            ratio: AppResponsive.bannerTitleRatio * 0.85,
                           ),
                           height: 1.2,
                           fontWeight: FontWeight.w800,
