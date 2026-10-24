@@ -29,24 +29,27 @@ class TournamentManageSheet extends StatelessWidget {
   final List<Widget>? actions;
 
   /// Đang xử lý: khoá nút, hiện spinner, chặn đóng sheet qua `PopScope`
-  /// (barrier/back). Lưu ý kéo xuống dismiss bypass `PopScope` — nơi gọi
-  /// tự mở sheet qua `showModalBottomSheet` thì truyền `enableDrag: false`
-  /// khi busy (helper [show] đã tự làm theo busy lúc mở).
+  /// (barrier/back). Lưu ý kéo xuống và drag handle dismiss đều gọi thẳng
+  /// `Navigator.pop` (bypass `PopScope`) — nơi gọi tự mở sheet qua
+  /// `showModalBottomSheet` thì truyền `enableDrag: false` và
+  /// `showDragHandle: false` khi busy (helper [show] đã tự làm theo busy
+  /// lúc mở).
   final bool busy;
 
   /// Tỉ lệ chiều cao sheet so với màn hình.
   final double heightFactor;
 
-  /// Mở sheet một dòng theo quy ước app: full-height control, drag handle,
-  /// tối rộng 640, bo góc trên. Trả về kết quả `T?` khi sheet pop có giá trị.
+  /// Mở sheet một dòng theo quy ước app: full-height control, drag handle
+  /// (khi không busy), tối rộng 640, bo góc trên. Trả về kết quả `T?` khi
+  /// sheet pop có giá trị.
   ///
-  /// [busy] là snapshot chụp MỘT LẦN lúc mở sheet: `enableDrag: !busy` và
-  /// trạng thái khung đều lấy giá trị lúc gọi — cha đổi `busy` sau khi mở
-  /// không tự cập nhật lên sheet (nơi gọi cần widget riêng giữ state busy).
-  /// Muốn chặn kéo khi đang lưu: kéo xuống dismiss gọi thẳng `Navigator.pop`
-  /// (bypass `PopScope`), nên gọi `setState` với `busy: true` ở widget cha
-  /// rồi ĐÓNG/MỞ lại sheet qua helper này, hoặc tự quản `enableDrag` theo
-  /// state trong `showModalBottomSheet` builder của nơi gọi.
+  /// [busy] là snapshot chụp MỘT LẦN lúc mở sheet: `enableDrag: !busy`,
+  /// `showDragHandle: !busy` và trạng thái khung đều lấy giá trị lúc gọi —
+  /// cha đổi `busy` sau khi mở không tự cập nhật lên sheet. Kéo xuống và
+  /// drag handle đều gọi thẳng `Navigator.pop` (bypass `PopScope`), nên
+  /// nơi gọi cần truyền `busy: true` vào helper khi mở sheet ở trạng thái
+  /// bận, hoặc đóng/mở lại sheet sau khi đổi state — không đổi được
+  /// `enableDrag`/`showDragHandle` từ builder (tham số route chốt lúc push).
   static Future<T?> show<T>(
     BuildContext context, {
     required String title,
@@ -58,10 +61,11 @@ class TournamentManageSheet extends StatelessWidget {
     return showModalBottomSheet<T>(
       context: context,
       isScrollControlled: true,
-      showDragHandle: true,
-      // Kéo xuống dismiss của SDK gọi thẳng Navigator.pop, bypass PopScope,
-      // nên tắt luôn kéo khi mở sheet ở trạng thái busy.
+      // Kéo xuống và drag handle đều gọi thẳng Navigator.pop (bypass
+      // PopScope); handle còn có gesture detector riêng khi enableDrag tắt,
+      // nên tắt cả hai khi mở sheet ở trạng thái busy.
       enableDrag: !busy,
+      showDragHandle: !busy,
       builder: (_) => TournamentManageSheet(
         title: title,
         actions: actions,

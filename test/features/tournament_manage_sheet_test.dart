@@ -51,6 +51,13 @@ PopScope _sheetPopScope(WidgetTester tester) {
   );
 }
 
+/// Drag handle của modal bottom sheet là class private `_DragHandle` của SDK
+/// (khi `enableDrag: false` nó có gesture detector riêng gọi thẳng
+/// `Navigator.pop`, bypass `PopScope`), nên dò theo tên runtimeType.
+final Finder dragHandleFinder = find.byWidgetPredicate(
+  (widget) => widget.runtimeType.toString() == '_DragHandle',
+);
+
 void main() {
   testWidgets(
     'TC-WP-00-01: busy chặn đóng sheet, disable nút hành động, hiện spinner',
@@ -115,6 +122,9 @@ void main() {
       expect(_sheetPopScope(tester).canPop, isTrue);
       expect(find.byKey(_spinnerKey), findsNothing);
 
+      // Drag handle hiển thị khi không busy (đối chứng cho case busy).
+      expect(dragHandleFinder, findsOneWidget);
+
       // Nút hành động bấm được khi không busy.
       await tester.tap(find.text('Lưu'));
       await tester.pump();
@@ -144,6 +154,29 @@ void main() {
         find.byType(TournamentManageSheet),
         const Offset(0, 600),
       );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(TournamentManageSheet), findsOneWidget);
+      expect(find.text('Nội dung hạng mục'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'TC-WP-00-01: lúc busy không có drag handle, kéo từ vị trí handle không đóng sheet',
+    (tester) async {
+      final taps = ValueNotifier<int>(0);
+      await tester.pumpWidget(_harness(busy: true, taps: taps));
+
+      await tester.tap(find.text('Mở sheet'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Helper phải bỏ luôn drag handle khi busy: handle có gesture detector
+      // riêng (kể cả khi enableDrag tắt) gọi thẳng Navigator.pop, bypass
+      // PopScope — SDK bottom_sheet.dart gắn detector riêng vào handle.
+      expect(dragHandleFinder, findsNothing);
+
+      // Kéo từ tâm vùng handle (đầu trang giữa sheet) không đóng sheet.
+      await tester.dragFrom(const Offset(400, 72), const Offset(0, 600));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(TournamentManageSheet), findsOneWidget);
       expect(find.text('Nội dung hạng mục'), findsOneWidget);
