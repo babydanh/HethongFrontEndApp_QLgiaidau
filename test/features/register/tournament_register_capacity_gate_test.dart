@@ -99,18 +99,21 @@ Future<List<String>> _pumpRegisterScreen(
           requests.add('${options.method} ${options.path}');
           final data = switch (options.path) {
             '/tournaments/tournament-1/divisions' => {'data': [division]},
-            '/tournaments/tournament-1/my-registration' => {
-              'data': {
-                'registered': alreadyRegistered,
-                if (alreadyRegistered) 'paymentEligible': true,
+            // Màn đăng ký đọc đơn theo từng nội dung: mỗi phần tử là payload của my-registration.
+            '/tournaments/tournament-1/my-registrations' => {
+              'data': [
                 if (alreadyRegistered)
-                  'participant': {
-                    'id': 'participant-1',
-                    'tournamentDivisionId': division['id'],
-                    'teamStatus': 'COMPLETE',
-                    'isPaid': false,
+                  {
+                    'registered': true,
+                    'paymentEligible': true,
+                    'participant': {
+                      'id': 'participant-1',
+                      'tournamentDivisionId': division['id'],
+                      'teamStatus': 'COMPLETE',
+                      'isPaid': false,
+                    },
                   },
-              },
+              ],
             },
             _ => <String, dynamic>{'data': <String, dynamic>{}},
           };

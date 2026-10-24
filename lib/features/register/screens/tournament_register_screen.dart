@@ -93,52 +93,61 @@ class _TournamentRegisterScreenState
 
   Future<void> _checkExistingRegistration() async {
     try {
-      final dio = ref.read(dioProvider);
-      // Truy vấn theo CẢ GIẢI (không lọc `?divisionId`): card "Đã đăng ký" là
-      // GLOBAL (`if (_alreadyRegistered)` chiếm toàn màn hình, không theo tab).
-      // Nếu lọc theo divisionId của tab đang xem, thì khi intro mở bằng
-      // `?divisionId=<tab khác division đã đăng ký>` → backend trả registered:false
-      // → app hiện form thay vì status card → mất nghiệp vụ "duyệt chưa / rút lui".
-      // (khớp web: luôn show trạng thái đăng ký dù vào từ tab nào). fix #34
-      final response = await dio.get(
-        '/tournaments/${widget.tournamentId}/my-registration',
-      );
+      final response = await ref
+          .read(dioProvider)
+          .get('/tournaments/${widget.tournamentId}/my-registrations');
       final raw = response.data;
-      final payload = raw is Map && raw['data'] is Map ? raw['data'] : raw;
-      final participant = payload is Map && payload['participant'] is Map
-          ? payload['participant'] as Map
-          : null;
-      if (payload is Map &&
-          payload['registered'] == true &&
-          participant != null) {
+      final registrations = raw is Map && raw['data'] is List
+          ? raw['data'] as List
+          : const [];
+      final byDivision = <String, Map>{};
+      for (final registration in registrations) {
+        if (registration is! Map ||
+            registration['registered'] != true ||
+            registration['participant'] is! Map) {
+          continue;
+        }
+        final participant = registration['participant'] as Map;
         final status = participant['teamStatus']?.toString();
         const closedStatuses = {'WITHDRAWN', 'REJECTED', 'KICKED', 'EXPIRED'};
-        if (closedStatuses.contains(status)) {
-          if (mounted) {
-            setState(() {
-              _alreadyRegistered = false;
-              _checkingRegistration = false;
-            });
-          }
-          return;
-        }
-        if (mounted) {
-          setState(() {
-            _alreadyRegistered = true;
-            _existingParticipantId = participant['id']?.toString();
-            _existingDivisionId = participant['tournamentDivisionId']
-                ?.toString();
-            _existingTeamStatus = status;
-            _existingIsPaid = participant['isPaid'] == true;
-            _existingPaymentEligible = payload['paymentEligible'] == true;
-            _checkingRegistration = false;
-          });
-        }
-        return;
+        if (closedStatuses.contains(status)) continue;
+        final divisionId = participant['tournamentDivisionId']?.toString();
+        if (divisionId == null || divisionId.isEmpty) continue;
+        byDivision[divisionId] = registration;
       }
+      if (mounted) {
+        setState(() {
+          _registrationsByDivision = byDivision;
+          _checkingRegistration = false;
+        });
+      }
+      return;
     } catch (_) {}
     if (mounted) setState(() => _checkingRegistration = false);
   }
+
+  Map? get _selectedRegistration {
+    final divisionId = _selectedDiv;
+    if (divisionId == null) return null;
+    return _registrationsByDivision[divisionId];
+  }
+
+  Map? get _existingParticipant {
+    final participant = _selectedRegistration?['participant'];
+    return participant is Map ? participant : null;
+  }
+
+  bool get _alreadyRegistered => _selectedRegistration != null;
+  String? get _existingParticipantId =>
+      _existingParticipant?['id']?.toString();
+  String? get _existingDivisionId =>
+      _existingParticipant?['tournamentDivisionId']?.toString();
+  String? get _existingTeamStatus =>
+      _existingParticipant?['teamStatus']?.toString();
+  bool get _existingIsPaid => _existingParticipant?['isPaid'] == true;
+  bool get _existingPaymentEligible =>
+      _selectedRegistration?['paymentEligible'] == true;
+
 
   String? _divisionError;
   bool _submitting = false;
@@ -162,12 +171,7 @@ class _TournamentRegisterScreenState
   TournamentDivisionOption? _registeredDivision;
   String? _registrationTeamStatus;
   bool _checkingRegistration = true;
-  bool _alreadyRegistered = false;
-  String? _existingParticipantId;
-  String? _existingDivisionId;
-  String? _existingTeamStatus;
-  bool _existingIsPaid = false;
-  bool _existingPaymentEligible = false;
+  Map<String, Map> _registrationsByDivision = {};
 
   bool _rankingConsent = false;
   final Map<String, dynamic> _customResponses = {};
@@ -500,23 +504,6 @@ class _TournamentRegisterScreenState
     String id,
     List<TournamentDivisionOption> divisions,
   ) {
-    if (_alreadyRegistered &&
-        _existingDivisionId != null &&
-        _existingDivisionId != id) {
-      final existingDiv =
-          divisions.where((d) => d.id == _existingDivisionId).firstOrNull;
-      final name = existingDiv?.name ?? 'nội dung khác';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Bạn đang có đơn/đội đã tạo ở nội dung "$name". Vui lòng hủy đăng ký hiện tại trước khi chuyển sang nội dung khác.',
-          ),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
     setState(() {
       _selectedDiv = id;
       _divisionError = null;
@@ -524,7 +511,7 @@ class _TournamentRegisterScreenState
       _eloError = null;
     });
     // Find selected division for validation
-    final div = _selectedDivision;
+    final div = divisions.where((candidate) => candidate.id == id).firstOrNull;
     if (div == null) return;
 
     // Check gender restriction
@@ -546,6 +533,7 @@ class _TournamentRegisterScreenState
     if (div.categoryId != null && user != null) {
       _checkElo(user.id, div.categoryId!, div.minElo, div.maxElo);
     }
+
   }
 
   Future<void> _checkElo(
@@ -1082,6 +1070,9 @@ class _TournamentRegisterScreenState
       'COMPLETE' => l10n.registerStatusCompleteUnpaid,
       _ => l10n.registerAlreadyRegistered,
     };
+    final otherActiveDivisions = activeRegistrationDivisions(
+      divisions,
+    ).where((division) => division.id != _selectedDiv).toList(growable: false);
 
     return Container(
       width: double.infinity,
@@ -1108,6 +1099,22 @@ class _TournamentRegisterScreenState
               fontWeight: FontWeight.w800,
             ),
           ),
+          if (otherActiveDivisions.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.registerContentTitle,
+              style: TextStyle(
+                color: context.colors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            ...otherActiveDivisions.map(
+              (division) => TextButton(
+                onPressed: () => _onDivisionSelected(division.id, divisions),
+                child: Text(division.name),
+              ),
+            ),
+          ],
           if (isPendingApproval) ...[
             const SizedBox(height: 12),
             Container(

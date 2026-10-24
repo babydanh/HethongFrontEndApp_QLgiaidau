@@ -82,9 +82,7 @@ Future<void> _pumpStandaloneRegister(
               'data': <dynamic>[],
             },
             '/tournaments/tournament-1/sponsors' => {'data': <dynamic>[]},
-            '/tournaments/tournament-1/my-registration' => {
-              'data': {'registered': false},
-            },
+            '/tournaments/tournament-1/my-registrations' => {'data': <dynamic>[]},
             _ => <String, dynamic>{'data': <String, dynamic>{}},
           };
           handler.resolve(
