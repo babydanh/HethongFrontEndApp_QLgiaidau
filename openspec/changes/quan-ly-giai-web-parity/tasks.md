@@ -1,6 +1,6 @@
 ## 0. Khung sheet chung
 
-- [ ] 0.1 Widget `TournamentManageSheet`: tiêu đề + thân cuộn + thanh thao tác sticky + cờ busy (spinner trong nút, chống double-tap) + `PopScope(canPop: !busy)` + padding bàn phím. Tiêu chí: `flutter test --no-pub test/features/tournament_manage_sheet_test.dart` exit 0 (TC-WP-00-01: busy chặn đóng sheet, nút disabled).
+- [x] 0.1 Widget `TournamentManageSheet`: tiêu đề + thân cuộn + thanh thao tác sticky + cờ busy (spinner trong nút, chống double-tap) + `PopScope(canPop: !busy)` + padding bàn phím. Tiêu chí: `flutter test --no-pub test/features/tournament_manage_sheet_test.dart` exit 0 (TC-WP-00-01: busy chặn đóng sheet, nút disabled).
   - Files: tạo `lib/features/tournament/widgets/tournament_manage_sheet.dart`, `test/features/tournament_manage_sheet_test.dart`
   - Giao: `TournamentManageSheet({title, child, actions, busy})` · Nhận: mọi sheet của change này
   - Chủ file chung: không
