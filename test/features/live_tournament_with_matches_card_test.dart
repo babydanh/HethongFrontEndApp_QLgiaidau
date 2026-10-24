@@ -107,6 +107,187 @@ void main() {
     expect(find.text(_tournament.name.toUpperCase()), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('match rows show each athlete photo once, initials otherwise', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    const photo = 'https://example.test/alpha.png';
+    // Payload thật lặp cùng một thành viên nhiều lần; chuẩn hiển thị chỉ
+    // render ảnh một lần cho mỗi VĐV sau khi lọc trùng.
+    final match = MatchModel(
+      id: 'photo-match',
+      tournamentId: _tournament.id,
+      round: 1,
+      matchNumber: 1,
+      team1Id: 'team-alpha-id',
+      team2Id: 'team-beta-id',
+      team1Name: 'Minh Anh / Quốc Bảo',
+      team2Name: 'Team Beta',
+      status: 'scheduled',
+      bracketPosition: const BracketPosition(round: 1, position: 1),
+      updatedAt: DateTime.utc(2026, 9, 27),
+      team1MemberInfos: const [
+        MatchMemberInfo(
+          userId: 'user-alpha',
+          fullName: 'Minh Anh',
+          avatarUrl: photo,
+        ),
+        MatchMemberInfo(userId: 'user-bao', fullName: 'Quốc Bảo'),
+        MatchMemberInfo(
+          userId: 'user-alpha',
+          fullName: 'Minh Anh',
+          avatarUrl: photo,
+        ),
+      ],
+      team2MemberInfos: const [
+        MatchMemberInfo(userId: 'user-beta', fullName: 'Team Beta'),
+      ],
+    );
+    final repository = _PagedMatchRepository({
+      null: (matches: [match], nextCursor: null),
+    });
+
+    await tester.pumpWidget(_cardApp(repository));
+    await tester.pumpAndSettle();
+
+    final photos = find.byWidgetPredicate(
+      (widget) =>
+          widget is CircleAvatar &&
+          widget.backgroundImage is NetworkImage &&
+          (widget.backgroundImage as NetworkImage).url == photo,
+    );
+    expect(photos, findsOneWidget);
+    expect(find.text('Q'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a pair whose team name differs from API order shows the team name', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    const linhPhoto = 'https://example.test/linh.png';
+    // API trả Hoang Linh trước, nhưng tên đội đặt Quy Dương trước: chuẩn
+    // hiển thị ưu tiên tên đội (avatar chỉ render khi tên khớp thứ tự API).
+    final match = MatchModel(
+      id: 'pair-match',
+      tournamentId: _tournament.id,
+      round: 1,
+      matchNumber: 1,
+      team1Id: 'team-alpha-id',
+      team2Id: 'team-pair-id',
+      team1Name: 'Team Alpha',
+      team2Name: 'Quy Dương / Hoang Linh',
+      status: 'scheduled',
+      bracketPosition: const BracketPosition(round: 1, position: 1),
+      updatedAt: DateTime.utc(2026, 9, 27),
+      team2MemberInfos: const [
+        MatchMemberInfo(
+          userId: 'user-linh',
+          fullName: 'Hoang Linh',
+          avatarUrl: linhPhoto,
+        ),
+        MatchMemberInfo(userId: 'user-duong', fullName: 'Quy Dương'),
+      ],
+    );
+    final repository = _PagedMatchRepository({
+      null: (matches: [match], nextCursor: null),
+    });
+
+    await tester.pumpWidget(_cardApp(repository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quy Dương / Hoang Linh'), findsWidgets);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is CircleAvatar &&
+            widget.backgroundImage is NetworkImage &&
+            (widget.backgroundImage as NetworkImage).url == linhPhoto,
+      ),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a guest pair shows one circle per athlete, not the team', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    // Cặp VĐV chưa có tài khoản: tên đội là tên ghép hai VĐV nên chuẩn
+    // hiển thị chọn chế độ VĐV — mỗi người một vòng tròn chữ cái đầu.
+    final match = MatchModel(
+      id: 'guest-match',
+      tournamentId: _tournament.id,
+      round: 1,
+      matchNumber: 1,
+      team1Id: 'p-guest',
+      team2Id: 'p-other',
+      team1Name: 'Nguyễn Minh Anh / Trần Quốc Bảo',
+      team2Name: 'Biên Hòa Pickleball',
+      status: 'scheduled',
+      bracketPosition: const BracketPosition(round: 1, position: 1),
+      updatedAt: DateTime.utc(2026, 10, 19),
+      team1MemberInfos: MatchMemberInfo.guestsOf({
+        'guestNames': ['Nguyễn Minh Anh', 'Trần Quốc Bảo'],
+      }),
+      team2MemberInfos: MatchMemberInfo.guestsOf({
+        'guestNames': ['Võ Thành Đạt', 'Đặng Gia Khánh'],
+      }),
+    );
+    final repository = _PagedMatchRepository({
+      null: (matches: [match], nextCursor: null),
+    });
+
+    await tester.pumpWidget(_cardApp(repository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('N'), findsWidgets);
+    expect(find.text('T'), findsWidgets);
+    expect(find.text('Nguyễn Minh Anh / Trần Quốc Bảo'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a pair named "A / B" without members shows the full name', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final match = _match(
+      id: 'named-pair-match',
+      team2Id: 'team-pair-id',
+      team2Name: 'Phan Anh Khoa / Hồ Minh Trí',
+    );
+    final repository = _PagedMatchRepository({
+      null: (matches: [match], nextCursor: null),
+    });
+
+    await tester.pumpWidget(_cardApp(repository));
+    await tester.pumpAndSettle();
+
+    // Không dựng VĐV giả từ tên đội: hiện nguyên tên đội hai người.
+    expect(find.text('Phan Anh Khoa / Hồ Minh Trí'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Widget _cardApp(IMatchRepository repository) {

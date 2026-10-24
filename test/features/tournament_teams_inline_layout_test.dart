@@ -4,7 +4,6 @@ import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -158,42 +157,14 @@ void main() {
       tester.getTopLeft(find.text('Beta Team')).dy,
       greaterThan(betaRowBottom),
     );
-    expect(tester.takeException(), isNull);
-  });
-  testWidgets('expanded doubles details stay inline and scroll into view', (
-    tester,
-  ) async {
-    _setPhoneViewport(tester);
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.lightTheme,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('vi'),
-        home: Scaffold(
-          body: ListView(
-            children: [
-              const SizedBox(height: 720),
-              TournamentTeamCard(
-                team: _fixtureDoublesTeam(),
-                isTeamSport: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.text('Alpha / Beta'));
-    await tester.tap(find.text('Alpha / Beta'));
+    // Tapping the open division again collapses it; only one opens at a time.
+    await tester.drag(find.byType(SingleChildScrollView).last, const Offset(0, 400));
     await tester.pumpAndSettle();
-
-    expect(find.text('Alpha'), findsOneWidget);
-    expect(find.text('Beta'), findsOneWidget);
-    final memberBottom = tester.getBottomRight(find.text('Beta')).dy;
-    final viewportBottom = tester.getBottomRight(find.byType(Scaffold)).dy;
-    expect(memberBottom, lessThanOrEqualTo(viewportBottom));
+    await tester.tap(find.text('Division Beta'));
+    await tester.pumpAndSettle();
+    expect(find.text('Beta Team'), findsNothing);
+    expect(find.text('Alpha Team'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

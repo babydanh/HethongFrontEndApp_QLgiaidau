@@ -153,14 +153,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
               return NotFoundView(onGoHome: () => context.go('/home'));
             }
 
-            // ─── ACCESS GATE: Giải nội bộ CLB / Giải siêu lite / Private ───
+            // ─── ACCESS GATE: chỉ giải PRIVATE mới chặn người ngoài ───
             final isCreator = tournament.creatorId == currentUserId;
-            final isClubRestricted =
-                tournament.isClubTournament ||
-                tournament.isClubLite ||
-                (tournament.communityId != null &&
-                    tournament.communityId!.isNotEmpty) ||
-                tournament.visibility == 'PRIVATE';
+            final isClubRestricted = tournament.visibility == 'PRIVATE';
 
             if (isClubRestricted &&
                 activeInvite == null &&
@@ -521,13 +516,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final activeInvite = _customInviteCode ?? widget.inviteCode;
     final hasInvite = activeInvite != null && activeInvite.trim().isNotEmpty;
 
-    // ─── ACCESS GATE: Giải nội bộ CLB / Giải siêu lite / Private ───
-    final isClubRestricted =
-        tournament.isClubTournament ||
-        tournament.isClubLite ||
-        (tournament.communityId != null &&
-            tournament.communityId!.isNotEmpty) ||
-        tournament.visibility == 'PRIVATE';
+    // ─── ACCESS GATE: chỉ giải PRIVATE mới chặn người ngoài ───
+    final isClubRestricted = tournament.visibility == 'PRIVATE';
 
     if (isClubRestricted && !isCreator && !isAdmin && !hasInvite) {
       final membership =
@@ -610,6 +600,13 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament.divisions.isNotEmpty) {
       _selectedDivision = tournament.divisions.first.name;
       _selectedDivisionId = tournament.divisions.first.id;
+    }
+    String? selectedMatchType;
+    for (final division in tournament.divisions) {
+      if (division.id == _selectedDivisionId) {
+        selectedMatchType = division.matchType;
+        break;
+      }
     }
     final teamsAsync = ref.watch(introTeamsProvider(widget.tournamentId));
     // The flat public-only endpoint intentionally excludes Lite tournaments.
@@ -742,6 +739,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       tournamentId: widget.tournamentId,
                       selectedDivisionId: _selectedDivisionId,
                       selectedDivision: _selectedDivision,
+                      matchType: selectedMatchType,
                     ),
                   ),
                 ],
@@ -751,6 +749,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 tournamentId: widget.tournamentId,
                 selectedDivisionId: _selectedDivisionId,
                 selectedDivision: _selectedDivision,
+                matchType: selectedMatchType,
               ),
       );
     }
@@ -833,6 +832,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                         isTeamSport: isTeamSport,
                         shrinkWrap: true,
                         showDivisionHeading: false,
+                        isDoublesDivision: division.isDoubles,
                       ),
                     ),
                   )
@@ -843,6 +843,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     selectedDivisionId: _selectedDivisionId,
                     divisions: tournament.divisions,
                     isTeamSport: isTeamSport,
+                    isDoublesDivision:
+                        tournament.divisions.firstOrNull?.isDoubles ?? false,
                   )),
     );
 
@@ -885,6 +887,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           divisionNameById: {
             for (final division in tournament.divisions)
               division.id: division.name,
+          },
+          divisionMetadataById: {
+            for (final division in tournament.divisions) division.id: division,
           },
         ),
       ),

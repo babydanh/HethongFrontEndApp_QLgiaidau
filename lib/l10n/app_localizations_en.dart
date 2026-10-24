@@ -12,6 +12,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialPending => 'Pending approval';
 
   @override
+  String get scorePanel_tournamentNotStarted =>
+      'Scoring is unavailable until the tournament has started.';
+
+  @override
   String get socialCancelRequestTitle => 'Cancel your join request?';
 
   @override
@@ -1212,6 +1216,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabBracket => 'Bracket';
+
+  @override
+  String get publicBracketTabStandings => 'Standings';
+
+  @override
+  String get publicBracketTabPlayoff => 'Playoff';
 
   @override
   String get tabGallery => 'Gallery';
@@ -10832,6 +10842,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String crossTableLegTitle(Object leg, Object title) {
     return '$title - Leg $leg';
+  }
+
+  @override
+  String matchRoundGroupPrefix(Object name) {
+    return 'Group $name';
+  }
+
+  @override
+  String matchRoundGroupLeg(Object group, Object leg) {
+    return '$group • Leg $leg';
   }
 
   @override

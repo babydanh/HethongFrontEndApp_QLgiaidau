@@ -110,7 +110,11 @@ class _NoSignalBox extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.videocam_outlined, color: Colors.white24, size: 36),
+            const Icon(
+              Icons.videocam_outlined,
+              color: Colors.white24,
+              size: 36,
+            ),
             const SizedBox(height: 10),
             Text(
               AppLocalizations.of(context)!.liveNoSignalLabel,

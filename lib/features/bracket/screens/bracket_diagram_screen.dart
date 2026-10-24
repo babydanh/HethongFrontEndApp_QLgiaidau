@@ -146,6 +146,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     ref.invalidate(bracketMatchesWithDivisionProvider(params));
     ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
     ref.invalidate(matchesWithDivisionProvider(params));
+    ref.invalidate(managedMatchesWithDivisionProvider(params));
   }
 
   Future<void> _unassignBracketSlot(BracketSlotDragData slot) async {

@@ -103,4 +103,47 @@ void main() {
     );
     expect(MatchRoundLabel.isGroupOrRoundRobin(match, 'round_robin'), isFalse);
   });
+  // Như Web: bảng chỉ có ký hiệu thì ghi "Bảng X • Lượt n"; thẻ hẹp "Bảng X".
+  group('group stage label matches the web', () {
+    MatchModel groupMatch(String groupName, {int? leg}) => _match(3, 12)
+        .copyWith(
+          groupName: groupName,
+          stageName: 'Vòng bảng',
+          stageType: 'ROUND_ROBIN',
+          leg: leg,
+        );
+
+    test('a bare letter becomes Bảng B with its leg', () {
+      expect(
+        MatchRoundLabel.formatRound(match: groupMatch('B'), l10n: vi),
+        'Bảng B • Lượt 1',
+      );
+      expect(
+        MatchRoundLabel.formatRound(
+          match: groupMatch('B'),
+          l10n: vi,
+          short: true,
+        ),
+        'Bảng B',
+      );
+      expect(
+        MatchRoundLabel.formatRound(match: groupMatch('B'), l10n: en),
+        'Group B • Leg 1',
+      );
+    });
+
+    test('a name that already says Bảng is not doubled', () {
+      expect(
+        MatchRoundLabel.formatRound(match: groupMatch('Bảng a'), l10n: vi),
+        'Bảng A • Lượt 1',
+      );
+    });
+
+    test('the return leg keeps its number', () {
+      expect(
+        MatchRoundLabel.formatRound(match: groupMatch('B', leg: 2), l10n: vi),
+        'Bảng B • Lượt 2',
+      );
+    });
+  });
 }

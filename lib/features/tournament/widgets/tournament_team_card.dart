@@ -10,6 +10,7 @@ class TournamentTeamCard extends StatefulWidget {
   final bool isTeamSport;
   final Function(String? userId, String memberName)? onMemberTap;
   final bool showSeed;
+  final bool isDoublesDivision;
 
   const TournamentTeamCard({
     super.key,
@@ -17,6 +18,7 @@ class TournamentTeamCard extends StatefulWidget {
     this.isTeamSport = false,
     this.onMemberTap,
     this.showSeed = false,
+    this.isDoublesDivision = false,
   });
 
   @override
@@ -62,9 +64,17 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     final l10n = AppLocalizations.of(context)!;
     final team = widget.team;
 
-    // Đơn/đôi theo số VĐV (players[]); không suy từ tên đội hay isTeamSport.
-    final players = team.players;
-    final isDoubles = players.length > 1;
+    // Đơn/đôi theo số VĐV: players[] là chuẩn, rỗng thì fallback theo thứ tự
+    // ưu tiên như matchSidePlayers (memberInfos rồi members). Không suy từ tên
+    // đội hay isTeamSport.
+    final players = team.players.isNotEmpty
+        ? team.players
+        : team.memberInfos.isNotEmpty
+        ? participantPlayersFromMemberInfos(team.memberInfos)
+        : participantPlayersFromNames(team.members);
+    // Roster thật là chuẩn; hạng mục đôi (theo metadata) vẫn ép layout đôi
+    // để đội một mình hiện ô chờ đồng đội.
+    final isDoubles = players.length > 1 || widget.isDoublesDivision;
     final memberNames = players.map((p) => p.fullName).toList();
 
     final seedLabel = widget.showSeed && team.seed > 0
@@ -82,7 +92,10 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
       final singleInfo = singlePlayer == null
           ? null
           : _memberInfoFor(singlePlayer);
-      final effectiveUserId = singlePlayer?.userId ?? team.userId;
+      // VĐV khách (player không userId) không mở hồ sơ người đăng ký thay họ.
+      final effectiveUserId = singlePlayer != null
+          ? singlePlayer.userId
+          : team.userId;
       final eloVal = singleInfo?.eloPoints ?? team.eloPoints ?? 1200;
       final eloStr = '${l10n.eloLabel} $eloVal';
 
@@ -280,6 +293,11 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
     }
 
     // ── DOUBLES (ĐÔI) LAYOUT: INLINE EXPANSION ACCORDION ──
+    // Ô chờ đồng đội: đội đang PENDING_PARTNER hoặc roster thô còn thiếu
+    // một người trong hạng mục đôi (không đếm player tổng hợp từ tên đội).
+    final waitingPartner =
+        team.isPendingPartner ||
+        (widget.isDoublesDivision && team.members.length == 1);
     final headerDisplay = resolveParticipantDisplay(
       teamName: team.name,
       players: players,
@@ -407,6 +425,10 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                                     ),
                                   ),
                                 ),
+                                if (waitingPartner) ...[
+                                  const SizedBox(width: 6),
+                                  _waitingPartnerChip(l10n),
+                                ],
                               ],
                             ),
                             const SizedBox(height: 2),
@@ -483,7 +505,8 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                         final eloStr = '${l10n.eloLabel} $eloVal';
                         final tierStr = mInfo?.tierName;
                         final isCaptain = idx == 0;
-                        final memberAvatar = player.avatarUrl ?? mInfo?.avatarUrl;
+                        final memberAvatar =
+                            player.avatarUrl ?? mInfo?.avatarUrl;
 
                         return Container(
                           margin: EdgeInsets.zero,
@@ -675,4 +698,59 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
       ),
     );
   }
+
+  /// Ô giữ chỗ cho đồng đội chưa vào: chỉ icon, chữ nằm trong tooltip.
+  Widget _waitingPartnerChip(AppLocalizations l10n) {
+    final label = l10n.teamStatusWaitingForPartner;
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        label: label,
+        child: CustomPaint(
+          painter: const _DashedPillPainter(color: Color(0xFFF59E0B)),
+          child: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.person_add_alt_1_rounded,
+              size: 14,
+              color: Color(0xFFB45309),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Viền đứt bo tròn cho ô "Chờ đồng đội".
+class _DashedPillPainter extends CustomPainter {
+  const _DashedPillPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final rect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(16),
+    );
+    for (final metric in (Path()..addRRect(rect)).computeMetrics()) {
+      for (double d = 0; d < metric.length; d += 7) {
+        canvas.drawPath(metric.extractPath(d, d + 4), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedPillPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

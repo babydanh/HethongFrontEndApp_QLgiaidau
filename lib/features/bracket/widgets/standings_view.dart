@@ -14,12 +14,14 @@ class StandingsView extends ConsumerWidget {
   final List<MatchModel> matches;
   final String tournamentId;
   final String? divisionId;
+  final String? bracketType;
 
   const StandingsView({
     super.key,
     required this.matches,
     required this.tournamentId,
     this.divisionId,
+    this.bracketType,
   });
 
   @override
@@ -33,8 +35,14 @@ class StandingsView extends ConsumerWidget {
     );
     final tournamentAsync = ref.watch(tournamentProvider(tournamentId));
     final tournament = tournamentAsync.value;
+    final divisionBracketType = bracketType?.trim();
+    final resolvedBracketType =
+        (divisionBracketType == null || divisionBracketType.isEmpty
+                ? tournament?.bracketType ?? ''
+                : divisionBracketType)
+            .toLowerCase();
     final isGsknockout =
-        tournament?.bracketType == AppConstants.bracketGroupStageKnockout;
+        resolvedBracketType == AppConstants.bracketGroupStageKnockout;
     final isFootball =
         (tournament?.sport.toLowerCase() == 'football' ||
             tournament?.sport.toLowerCase() == 'bóng đá' ||

@@ -153,7 +153,7 @@ class _TournamentScheduleCourtGridState
   late Future<List<ScheduleCourt>> _courtsFuture;
 
   /// Chiều cao một ô 15 phút; host giữ state, lưới chỉ báo khi kéo tay nắm.
-  double _slotHeight = 144;
+  double _slotHeight = 112;
 
   /// Null = hiện tất cả sân.
   Set<String>? _selectedCourts;
@@ -263,6 +263,17 @@ class _TournamentScheduleCourtGridState
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               children: [
+                if (widget.divisions.length > 1 &&
+                    widget.onDivisionSelected != null) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 180),
+                      child: _divisionDropdown(context),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
                 Icon(
                   Icons.stadium_outlined,
                   size: 40,
@@ -843,32 +854,7 @@ class _TournamentScheduleCourtGridState
             Flexible(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 180),
-                child: DropdownButton<String>(
-                  key: const ValueKey('schedule-division-dropdown'),
-                  value: widget.selectedDivisionId,
-                  isDense: true,
-                  isExpanded: true,
-                  underline: const SizedBox.shrink(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                  items: [
-                    for (final division in widget.divisions)
-                      DropdownMenuItem(
-                        value: division.id,
-                        child: Text(
-                          division.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) widget.onDivisionSelected!(value);
-                  },
-                ),
+                child: _divisionDropdown(context),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -919,6 +905,36 @@ class _TournamentScheduleCourtGridState
           ],
         ),
       ),
+    );
+  }
+
+  Widget _divisionDropdown(BuildContext context) {
+    final colors = context.colors;
+    return DropdownButton<String>(
+      key: const ValueKey('schedule-division-dropdown'),
+      value: widget.selectedDivisionId,
+      isDense: true,
+      isExpanded: true,
+      underline: const SizedBox.shrink(),
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: colors.textPrimary,
+      ),
+      items: [
+        for (final division in widget.divisions)
+          DropdownMenuItem(
+            value: division.id,
+            child: Text(
+              division.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+      onChanged: (value) {
+        if (value != null) widget.onDivisionSelected!(value);
+      },
     );
   }
 

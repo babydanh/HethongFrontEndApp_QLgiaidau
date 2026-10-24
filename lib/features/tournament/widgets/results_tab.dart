@@ -1,4 +1,3 @@
-import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -6,14 +5,17 @@ import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
 class ResultsTab extends ConsumerWidget {
   final String tournamentId;
+
   final String? selectedDivisionId;
   final String? selectedDivision;
+  final String? matchType;
 
   const ResultsTab({
     super.key,
     required this.tournamentId,
     this.selectedDivisionId,
     this.selectedDivision,
+    this.matchType,
   });
 
   @override
@@ -95,11 +97,6 @@ class ResultsTab extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── 1. PODIUM BỤC VINH DANH (3 CỘT VÀNG - BẠC - ĐỒNG) ──
-              _buildPodiumView(context, gold, silver, bronzes),
-              const SizedBox(height: 20),
-
-              // ── 2. DANH SÁCH CHI TIẾT GIẢI THƯỞNG ──
               Padding(
                 padding: const EdgeInsets.only(left: 2, bottom: 10),
                 child: Row(
@@ -208,374 +205,65 @@ class ResultsTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildPodiumView(
-    BuildContext context,
-    Map<String, dynamic>? gold,
-    Map<String, dynamic>? silver,
-    List<Map<String, dynamic>> bronzes,
-  ) {
-    final colors = context.colors;
+  List<Map<String, dynamic>> _visibleMembers(Map<String, dynamic> participant) {
+    final rawMembers = participant['members'];
+    final members = rawMembers is List
+        ? rawMembers
+              .whereType<Map>()
+              .map((member) => Map<String, dynamic>.from(member))
+              .toList()
+        : <Map<String, dynamic>>[];
+    final memberLimit = switch (matchType?.toUpperCase()) {
+      'SINGLES' => 1,
+      'DOUBLES' || 'MIXED_DOUBLES' => 2,
+      _ => members.length,
+    };
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(8, 14, 8, 0),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border.withValues(alpha: 0.8)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // ── Bục 2: Á Quân (Bên Trái) ──
-          Expanded(
-            flex: 10,
-            child: _buildPodiumColumn(
-              context,
-              award: silver,
-              rank: 2,
-              rankLabel: 'Á QUÂN',
-              podiumHeight: 82,
-              accentColor: const Color(0xFF64748B),
-              podiumGradient: const LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  Color(0xFFE2E8F0),
-                  Color(0xFFF1F5F9),
-                  Color(0xFFF8FAFC),
-                ],
-              ),
-              borderColor: const Color(0xFFCBD5E1),
-              numberColor: const Color(0xFF475569),
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // ── Bục 1: Quán Quân (Ở Giữa - Cao nhất) ──
-          Expanded(
-            flex: 12,
-            child: _buildPodiumColumn(
-              context,
-              award: gold,
-              rank: 1,
-              rankLabel: 'QUÁN QUÂN',
-              podiumHeight: 114,
-              accentColor: const Color(0xFFD97706),
-              podiumGradient: const LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  Color(0xFFFDE68A),
-                  Color(0xFFFEF3C7),
-                  Color(0xFFFFFBEB),
-                ],
-              ),
-              borderColor: const Color(0xFFF59E0B),
-              numberColor: const Color(0xFFB45309),
-              isGold: true,
-            ),
-          ),
-          const SizedBox(width: 8),
-
-          // ── Bục 3: Đồng Hạng 3 / Hạng 3 (Bên Phải) ──
-          Expanded(
-            flex: 10,
-            child: _buildPodiumColumn(
-              context,
-              award: bronzes.isNotEmpty ? bronzes.first : null,
-              extraAwards: bronzes.length > 1 ? bronzes.sublist(1) : const [],
-              rank: 3,
-              rankLabel: bronzes.length > 1 ? 'ĐỒNG HẠNG 3' : 'HẠNG 3',
-              podiumHeight: 68,
-              accentColor: const Color(0xFFEA580C),
-              podiumGradient: const LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  Color(0xFFFED7AA),
-                  Color(0xFFFFEDD5),
-                  Color(0xFFFFF7ED),
-                ],
-              ),
-              borderColor: const Color(0xFFFB923C),
-              numberColor: const Color(0xFFC2410C),
-            ),
-          ),
-        ],
-      ),
-    );
+    return members.take(memberLimit).toList();
   }
 
-  Widget _buildPodiumColumn(
-    BuildContext context, {
-    required Map<String, dynamic>? award,
-    List<Map<String, dynamic>> extraAwards = const [],
-    required int rank,
-    required String rankLabel,
-    required double podiumHeight,
-    required Color accentColor,
-    required Gradient podiumGradient,
-    required Color borderColor,
-    required Color numberColor,
-    bool isGold = false,
-  }) {
-    final colors = context.colors;
-    final participant = award?['participant'] is Map
-        ? Map<String, dynamic>.from(award!['participant'] as Map)
-        : null;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (participant != null) ...[
-          // Crown icon for 1st place
-          if (isGold)
-            Container(
-              width: 22,
-              height: 22,
-              margin: const EdgeInsets.only(bottom: 3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFF59E0B), Color(0xFFFBBF24)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.star_rounded,
-                color: Colors.white,
-                size: 14,
-              ),
-            ),
-
-          // Avatar display
-          if (extraAwards.isNotEmpty)
-            // Khi có đồng hạng (nhiều đội hạng 3): hiển thị 2 avatar cạnh nhau hoặc badge tie
-            _buildTiePodiumAvatars(participant, extraAwards.first, accentColor)
-          else
-            _buildPodiumAvatar(participant, isGold ? 21 : 18, accentColor),
-          const SizedBox(height: 6),
-
-          // Tên đội / VĐV
-          if (extraAwards.isNotEmpty) ...[
-            // Đội 1
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: _podiumLabel(
-                participant,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                  height: 1.2,
-                ),
-              ),
-            ),
-            // Đội đồng hạng tiếp theo
-            for (final extra in extraAwards) ...[
-              const SizedBox(height: 2),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: _podiumLabel(
-                  extra['participant'] is Map
-                      ? Map<String, dynamic>.from(extra['participant'] as Map)
-                      : null,
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textSecondary,
-                    height: 1.2,
-                  ),
-                ),
-              ),
-            ],
-          ] else ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: _podiumLabel(
-                participant,
-                style: TextStyle(
-                  fontSize: isGold ? 11.5 : 10.5,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                  height: 1.2,
-                ),
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-        ] else ...[
-          const SizedBox(height: 48),
-        ],
-
-        // Khối bục Podium
-        Container(
-          height: podiumHeight,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: podiumGradient,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-            border: Border.all(color: borderColor, width: isGold ? 1.5 : 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 4,
-                offset: const Offset(0, -1),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '$rank',
-                style: TextStyle(
-                  fontSize: isGold ? 26 : 20,
-                  fontWeight: FontWeight.w900,
-                  color: numberColor,
-                  height: 1,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
-                  vertical: 1.5,
-                ),
-                child: Text(
-                  rankLabel,
-                  style: TextStyle(
-                    fontSize: isGold ? 8.5 : 7.5,
-                    fontWeight: FontWeight.w800,
-                    color: accentColor,
-                    letterSpacing: 0.2,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _podiumLabel(
-    Map<String, dynamic>? participant, {
-    required TextStyle style,
-  }) {
-    return ParticipantLabel(
-      teamName: participant?['teamName']?.toString(),
-      players: participant == null
-          ? const <ParticipantPlayer>[]
-          : toParticipantPlayers(participant),
-      textAlign: TextAlign.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      style: style,
-    );
-  }
-
-  Widget _buildTiePodiumAvatars(
-    Map<String, dynamic> p1,
-    Map<String, dynamic> p2Award,
-    Color accentColor,
-  ) {
-    final p2 = p2Award['participant'] is Map
-        ? Map<String, dynamic>.from(p2Award['participant'] as Map)
-        : const <String, dynamic>{};
-
-    return SizedBox(
-      height: 36,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildPodiumAvatar(p1, 15, accentColor),
-          const SizedBox(width: 4),
-          _buildPodiumAvatar(p2, 15, accentColor),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPodiumAvatar(
-    Map<String, dynamic> participant,
+  Widget _buildMemberAvatars(
+    List<Map<String, dynamic>> members,
     double radius,
     Color ringColor,
   ) {
-    final players = toParticipantPlayers(participant);
-
-    if (players.length >= 2) {
-      return SizedBox(
-        width: radius * 2 + 10,
-        height: radius * 2,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 10,
-              child: _buildSingleAvatar(players[1], radius - 2, ringColor),
-            ),
-            Positioned(
-              left: 0,
-              child: _buildSingleAvatar(players[0], radius, ringColor),
-            ),
-          ],
-        ),
-      );
+    if (members.isEmpty) return const SizedBox.shrink();
+    if (members.length == 1) {
+      return _buildSingleAvatar(members.first, radius, ringColor);
     }
 
-    if (players.isNotEmpty) {
-      return _buildSingleAvatar(players[0], radius, ringColor);
-    }
-
-    return Container(
-      width: radius * 2,
+    return SizedBox(
+      width: radius * 2 + 10,
       height: radius * 2,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: ringColor.withValues(alpha: 0.12),
-        border: Border.all(color: ringColor, width: 1.5),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        '?',
-        style: TextStyle(
-          fontSize: radius * 0.8,
-          fontWeight: FontWeight.w800,
-          color: ringColor,
-        ),
+      child: Stack(
+        children: [
+          Positioned(
+            left: 10,
+            child: _buildSingleAvatar(members[1], radius - 2, ringColor),
+          ),
+          Positioned(
+            left: 0,
+            child: _buildSingleAvatar(members[0], radius, ringColor),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSingleAvatar(
-    ParticipantPlayer player,
+    Map<String, dynamic> member,
     double radius,
     Color ringColor,
   ) {
-    final avatarUrl = player.avatarUrl;
-    final name = player.fullName;
+    final avatarUrl = member['avatarUrl']?.toString();
+    final name = member['fullName']?.toString() ?? 'V';
 
     return Container(
       width: radius * 2,
       height: radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: ringColor, width: 1.5),
+        border: Border.all(color: ringColor, width: 1),
         color: Colors.white,
       ),
       child: ClipOval(
@@ -599,7 +287,7 @@ class ResultsTab extends ConsumerWidget {
         name.isNotEmpty ? name[0].toUpperCase() : '?',
         style: TextStyle(
           fontSize: 11,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w700,
           color: color,
         ),
       ),
@@ -616,109 +304,80 @@ class ResultsTab extends ConsumerWidget {
     final participant = award['participant'] is Map
         ? Map<String, dynamic>.from(award['participant'] as Map)
         : const <String, dynamic>{};
-    final isGold = rank == 1;
-    final isSilver = rank == 2;
-    final isBronze = rank == 3 || rank == 4;
-
-    final badgeColor = isGold
-        ? const Color(0xFFF59E0B)
-        : isSilver
-        ? const Color(0xFF64748B)
-        : isBronze
-        ? const Color(0xFFEA580C)
-        : const Color(0xFF64748B);
-
-    final borderColor = isGold
-        ? const Color(0xFFF59E0B).withValues(alpha: 0.35)
-        : isSilver
-        ? const Color(0xFF94A3B8).withValues(alpha: 0.35)
-        : isBronze
-        ? const Color(0xFFEA580C).withValues(alpha: 0.35)
-        : colors.border.withValues(alpha: 0.7);
+    final teamName = participant['teamName']?.toString() ?? 'Chưa xác định';
+    final members = _visibleMembers(participant);
+    final memberNames = members
+        .map((member) => member['fullName']?.toString().trim() ?? '')
+        .where((name) => name.isNotEmpty)
+        .join(' · ');
+    final badgeColor = colors.textSecondary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor, width: isGold ? 1.4 : 1.0),
+        border: Border.all(color: colors.border.withValues(alpha: 0.65)),
       ),
       child: Row(
         children: [
-          // Huy hiệu Rank Medal với màu nhận diện chuẩn thể thao
           Container(
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: badgeColor,
+              color: colors.border.withValues(alpha: 0.12),
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: badgeColor.withValues(alpha: 0.25),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             alignment: Alignment.center,
             child: Text(
               '$rank',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                color: badgeColor,
                 height: 1,
               ),
             ),
           ),
           const SizedBox(width: 12),
-
-          // Thông tin tên đội và danh hiệu
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ParticipantLabel(
-                  teamName: participant['teamName']?.toString(),
-                  players: toParticipantPlayers(participant),
+                Text(
+                  teamName,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     color: colors.textPrimary,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 1.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: badgeColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        badgeTitle,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: badgeColor,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ),
-                  ],
+                if (memberNames.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    memberNames,
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: 4),
+                Text(
+                  badgeTitle,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textMuted,
+                    letterSpacing: 0.2,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-
-          // Avatar VĐV / Đội
-          if (participant.isNotEmpty)
-            _buildPodiumAvatar(participant, 17, badgeColor),
+          if (members.isNotEmpty) _buildMemberAvatars(members, 17, badgeColor),
         ],
       ),
     );

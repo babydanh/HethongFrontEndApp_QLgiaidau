@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -59,6 +60,13 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
     shootoutTeam1Goals: _parseOptionalFootballInt(shootout?['team1Goals']),
     shootoutTeam2Goals: _parseOptionalFootballInt(shootout?['team2Goals']),
   );
+}
+
+String? scorePanelWriteErrorMessage(AppLocalizations l10n, Object error) {
+  if (error is TournamentNotStartedException) {
+    return l10n.scorePanel_tournamentNotStarted;
+  }
+  return null;
 }
 
 /// Quản lý scoring logic cho tất cả môn thể thao (Tennis, Pickleball, Rally).
@@ -1304,7 +1312,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     } on Exception catch (e) {
       if (_isDisposed) return;
       final msg = e.toString();
-      if (msg.contains('409') || msg.contains('thay đổi từ thiết bị khác')) {
+      final tournamentNotStartedMessage = scorePanelWriteErrorMessage(
+        _l10n,
+        e,
+      );
+      if (tournamentNotStartedMessage != null) {
+        state = state.copyWith(errorMessage: tournamentNotStartedMessage);
+      } else if (msg.contains('409') ||
+          msg.contains('thay đổi từ thiết bị khác')) {
         _log.warning(
           'Conflict 409: điểm đã thay đổi từ thiết bị khác. Refetching latest match...',
         );

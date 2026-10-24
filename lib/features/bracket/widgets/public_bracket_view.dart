@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
@@ -12,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
@@ -59,11 +61,28 @@ class PublicBracketView extends StatelessWidget {
     return _Kind.single;
   }
 
+  bool _isGroupStageKnockout(List<MatchModel> all) {
+    final raw = (bracketType ?? '').trim().toLowerCase();
+    if (raw == AppConstants.bracketGroupStageKnockout ||
+        raw == 'groupstageknockout') {
+      return true;
+    }
+    if (raw == AppConstants.bracketRoundRobin ||
+        raw == 'roundrobin' ||
+        raw == 'double_elimination' ||
+        raw == 'doubleelimination' ||
+        all.any(isDoubleEliminationMatch)) {
+      return false;
+    }
+    return all.any(isGroupStageMatch) && all.any(isKnockoutMatch);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    if (matches.isEmpty) {
+    final isGroupPlayoff = _isGroupStageKnockout(matches);
+    if (matches.isEmpty && !isGroupPlayoff) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
         child: Center(
@@ -77,9 +96,21 @@ class PublicBracketView extends StatelessWidget {
     }
 
     final kind = _kindOf(matches);
-    // Vòng bảng + knockout: chỉ vẽ phần knockout.
-    final knockoutOnly = matches.any(isGroupStageMatch) &&
-            matches.any(isKnockoutMatch)
+    if (isGroupPlayoff) {
+      return _GroupPlayoffTabs(
+        tournamentId: tournamentId,
+        divisionId: divisionId,
+        bracketType: bracketType,
+        matches: matches,
+        knockoutMatches: matches
+            .where(isKnockoutMatch)
+            .toList(growable: false),
+      );
+    }
+
+    final hasGroupAndKnockout =
+        matches.any(isGroupStageMatch) && matches.any(isKnockoutMatch);
+    final knockoutOnly = hasGroupAndKnockout
         ? matches.where(isKnockoutMatch).toList(growable: false)
         : matches;
 
@@ -167,6 +198,111 @@ class SwissBracketView extends ConsumerWidget {
               totalRounds: totalRounds,
               tournamentId: tournamentId,
             ),
+          ),
+      ],
+    );
+  }
+}
+
+class _GroupPlayoffTabs extends StatefulWidget {
+  const _GroupPlayoffTabs({
+    required this.tournamentId,
+    required this.divisionId,
+    required this.bracketType,
+    required this.matches,
+    required this.knockoutMatches,
+  });
+
+  final String tournamentId;
+  final String? divisionId;
+  final String? bracketType;
+  final List<MatchModel> matches;
+  final List<MatchModel> knockoutMatches;
+
+  @override
+  State<_GroupPlayoffTabs> createState() => _GroupPlayoffTabsState();
+}
+
+class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
+  int _selectedTab = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+
+    Widget tabButton(String label, int index) {
+      final isSelected = _selectedTab == index;
+      return Expanded(
+        child: TextButton(
+          onPressed: () => setState(() => _selectedTab = index),
+          style: TextButton.styleFrom(
+            backgroundColor: isSelected
+                ? AppTheme.primary.withValues(alpha: 0.1)
+                : Colors.transparent,
+            foregroundColor: isSelected
+                ? AppTheme.primary
+                : colors.textSecondary,
+            minimumSize: const Size(0, 40),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: colors.bgSurface,
+            border: Border.all(color: colors.border),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              tabButton(l10n.publicBracketTabStandings, 0),
+              const SizedBox(width: 4),
+              tabButton(l10n.publicBracketTabPlayoff, 1),
+            ],
+          ),
+        ),
+        if (_selectedTab == 0)
+          StandingsView(
+            matches: widget.matches,
+            tournamentId: widget.tournamentId,
+            divisionId: widget.divisionId,
+            bracketType: widget.bracketType,
+          )
+        else if (widget.knockoutMatches.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+            child: Center(
+              child: Text(
+                l10n.bracketView_noMatches,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.textSecondary),
+              ),
+            ),
+          )
+        else
+          SingleElimDiagram(
+            matches: widget.knockoutMatches,
+            tournamentId: widget.tournamentId,
+            scrollOnly: true,
           ),
       ],
     );

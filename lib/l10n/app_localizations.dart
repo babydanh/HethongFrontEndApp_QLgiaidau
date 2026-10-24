@@ -104,6 +104,12 @@ abstract class AppLocalizations {
   /// **'Chờ duyệt'**
   String get socialPending;
 
+  /// No description provided for @scorePanel_tournamentNotStarted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu chưa khai mạc nên chưa thể cập nhật tỉ số.'**
+  String get scorePanel_tournamentNotStarted;
+
   /// No description provided for @socialCancelRequestTitle.
   ///
   /// In vi, this message translates to:
@@ -2377,6 +2383,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bảng thi đấu'**
   String get tabBracket;
+
+  /// No description provided for @publicBracketTabStandings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng'**
+  String get publicBracketTabStandings;
+
+  /// No description provided for @publicBracketTabPlayoff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Playoff'**
+  String get publicBracketTabPlayoff;
 
   /// No description provided for @tabGallery.
   ///
@@ -19799,6 +19817,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{title} - Lượt {leg}'**
   String crossTableLegTitle(Object leg, Object title);
+
+  /// No description provided for @matchRoundGroupPrefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng {name}'**
+  String matchRoundGroupPrefix(Object name);
+
+  /// No description provided for @matchRoundGroupLeg.
+  ///
+  /// In vi, this message translates to:
+  /// **'{group} • Lượt {leg}'**
+  String matchRoundGroupLeg(Object group, Object leg);
 
   /// No description provided for @crossTablePreviousLeg.
   ///

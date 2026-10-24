@@ -12,6 +12,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialPending => 'Chờ duyệt';
 
   @override
+  String get scorePanel_tournamentNotStarted =>
+      'Giải đấu chưa khai mạc nên chưa thể cập nhật tỉ số.';
+
+  @override
   String get socialCancelRequestTitle => 'Hủy yêu cầu tham gia?';
 
   @override
@@ -1208,6 +1212,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tabBracket => 'Bảng thi đấu';
+
+  @override
+  String get publicBracketTabStandings => 'Bảng';
+
+  @override
+  String get publicBracketTabPlayoff => 'Playoff';
 
   @override
   String get tabGallery => 'Thư viện';
@@ -10802,6 +10812,16 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String crossTableLegTitle(Object leg, Object title) {
     return '$title - Lượt $leg';
+  }
+
+  @override
+  String matchRoundGroupPrefix(Object name) {
+    return 'Bảng $name';
+  }
+
+  @override
+  String matchRoundGroupLeg(Object group, Object leg) {
+    return '$group • Lượt $leg';
   }
 
   @override

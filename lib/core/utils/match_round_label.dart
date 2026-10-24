@@ -99,10 +99,10 @@ class MatchRoundLabel {
           !normGroup.contains('VONG_BANG') &&
           !normGroup.contains('MAIN') &&
           !normGroup.contains('BRACKET')) {
-        if (short || match.leg == null || match.leg! <= 1) {
-          return groupName;
-        }
-        return strings.crossTableLegTitle(groupName, match.leg ?? 1);
+        // Như Web (`match-round-label.ts`): "Bảng B • Lượt 1"; thẻ hẹp "Bảng B".
+        final display = groupDisplayName(groupName, l10n: strings);
+        if (short) return display;
+        return strings.matchRoundGroupLeg(display, match.leg ?? 1);
       }
     }
     final title = strings.bracketView_groupStage;
@@ -110,6 +110,21 @@ class MatchRoundLabel {
       return title;
     }
     return strings.crossTableLegTitle(title, match.leg ?? 1);
+  }
+
+  static final RegExp _groupLetter = RegExp(
+    r'^(?:bảng|group)?\s*([a-z0-9]+)$',
+    caseSensitive: false,
+  );
+
+  /// Tên bảng chỉ là ký hiệu ("B", "Bảng b", "Group B") thành "Bảng B"; tên
+  /// khác giữ nguyên.
+  static String groupDisplayName(String groupName, {AppLocalizations? l10n}) {
+    final strings =
+        l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final letter = _groupLetter.firstMatch(groupName.trim())?.group(1);
+    if (letter == null) return groupName.trim();
+    return strings.matchRoundGroupPrefix(letter.toUpperCase());
   }
 
   static String formatStageOrGroupName(String? raw, {AppLocalizations? l10n}) {

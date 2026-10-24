@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -113,10 +114,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final diagram = tester.widget<SingleElimDiagram>(
-      find.byType(SingleElimDiagram),
-    );
-    expect(diagram.scrollOnly, isTrue);
+    expect(find.text('Bảng'), findsNothing);
+    expect(find.text('Playoff'), findsNothing);
     expect(find.byType(InteractiveViewer), findsNothing);
   });
 
@@ -166,10 +165,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final diagram = tester.widget<DoubleElimDiagram>(
-      find.byType(DoubleElimDiagram),
-    );
-    expect(diagram.scrollOnly, isTrue);
+    expect(find.text('Bảng'), findsNothing);
+    expect(find.text('Playoff'), findsNothing);
     expect(find.byType(SingleElimDiagram), findsNothing);
   });
 
@@ -199,52 +196,139 @@ void main() {
         ],
       ),
     );
-    await tester.pumpAndSettle();
-
+    expect(find.text('Bảng'), findsNothing);
+    expect(find.text('Playoff'), findsNothing);
     expect(find.byType(CrossTableView), findsOneWidget);
     expect(find.byType(SingleElimDiagram), findsNothing);
     expect(find.byType(DoubleElimDiagram), findsNothing);
   });
 
-  testWidgets('group stage + knockout shows only the knockout diagram', (
+  testWidgets(
+    'TC-FEAT-01 group stage + knockout shows both tabs and division standings',
+    (tester) async {
+      final matches = [
+        _match('g1', groupName: 'A', stageType: 'GROUP'),
+        _match('k1', round: 1, position: 0, stageType: 'KNOCKOUT'),
+        _match('k2', round: 1, position: 1, stageType: 'KNOCKOUT'),
+        _match('k3', round: 2, position: 0, stageType: 'KNOCKOUT'),
+      ];
+      final standings = [
+        const Standing(
+          id: 'a1',
+          teamName: 'Đội bảng A1',
+          group: 'A',
+          totalPoints: 9,
+        ),
+        const Standing(
+          id: 'a2',
+          teamName: 'Đội bảng A2',
+          group: 'A',
+          totalPoints: 6,
+        ),
+        const Standing(
+          id: 'a3',
+          teamName: 'Đội bảng A3',
+          group: 'A',
+          totalPoints: 3,
+        ),
+        const Standing(
+          id: 'a4',
+          teamName: 'Đội bảng A4',
+          group: 'A',
+          totalPoints: 0,
+        ),
+      ];
+      final tournament = Tournament(
+        id: 't-1',
+        name: 'Giải kiểm thử',
+        sport: 'pickleball',
+        format: 'doubles',
+        bracketType: 'round_robin',
+        adminToken: '',
+        refereeToken: '',
+        viewerToken: '',
+        creatorId: '',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          PublicBracketView(
+            tournamentId: 't-1',
+            divisionId: 'division-1',
+            matches: matches,
+            bracketType: 'group_stage_knockout',
+          ),
+          overrides: [
+            standingsWithDivisionProvider((
+              tournamentId: 't-1',
+              divisionId: 'division-1',
+            )).overrideWith((ref) => Stream.value(standings)),
+            tournamentProvider(
+              't-1',
+            ).overrideWith((ref) => Stream.value(tournament)),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bảng'), findsOneWidget);
+      expect(find.text('Playoff'), findsOneWidget);
+      expect(find.byType(StandingsView), findsOneWidget);
+      expect(find.text('Đội bảng A1'), findsOneWidget);
+      expect(find.byType(SingleElimDiagram), findsNothing);
+      final table = tester.widget<DataTable>(find.byType(DataTable));
+      expect(table.rows.take(2).every((row) => row.color != null), isTrue);
+      expect(table.rows[2].color, isNull);
+
+      await tester.tap(find.text('Playoff'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(StandingsView), findsNothing);
+      final diagram = tester.widget<SingleElimDiagram>(
+        find.byType(SingleElimDiagram),
+      );
+      expect(diagram.matches.map((match) => match.id), ['k1', 'k2', 'k3']);
+    },
+  );
+
+  testWidgets('TC-FEAT-02 group stage + knockout with no matches keeps tabs', (
     tester,
   ) async {
-    final matches = [
-      _match('g1', groupName: 'A', stageType: 'GROUP'),
-      _match(
-        'k1',
-        round: 1,
-        position: 0,
-        nextMatchId: 'k3',
-        stageType: 'KNOCKOUT',
-      ),
-      _match(
-        'k2',
-        round: 1,
-        position: 1,
-        nextMatchId: 'k3',
-        stageType: 'KNOCKOUT',
-      ),
-      _match('k3', round: 2, position: 0, stageType: 'KNOCKOUT'),
-    ];
     await tester.pumpWidget(
       _host(
-        PublicBracketView(
+        const PublicBracketView(
           tournamentId: 't-1',
-          matches: matches,
+          divisionId: 'division-1',
+          matches: [],
           bracketType: 'group_stage_knockout',
         ),
+        overrides: [
+          standingsWithDivisionProvider((
+            tournamentId: 't-1',
+            divisionId: 'division-1',
+          )).overrideWith((ref) => Stream.value(const <Standing>[])),
+          tournamentProvider(
+            't-1',
+          ).overrideWith((ref) => Stream.value(null)),
+        ],
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(SingleElimDiagram), findsOneWidget);
-    expect(find.byType(CrossTableView), findsNothing);
-    // Chỉ thẻ knockout nằm trong sơ đồ; trận vòng bảng không lọt vào.
-    final diagram = tester.widget<SingleElimDiagram>(
-      find.byType(SingleElimDiagram),
-    );
-    expect(diagram.matches.map((m) => m.id), unorderedEquals(['k1', 'k2', 'k3']));
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(PublicBracketView)),
+    )!;
+    expect(find.text('Bảng'), findsOneWidget);
+    expect(find.text('Playoff'), findsOneWidget);
+    expect(find.text(l10n.standings_empty), findsOneWidget);
+
+    await tester.tap(find.text('Playoff'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(l10n.bracketView_noMatches), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('no matches yet shows an empty state, no diagram', (tester) async {
@@ -447,5 +531,54 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(MatchTableRow), findsNWidgets(1));
     });
+  });
+  testWidgets('horizontal drag starting on a double-elim match card pans it', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final matches = [
+      for (var i = 0; i < 4; i++)
+        _match('w1$i', round: 1, position: i, nextMatchId: 'w2${i ~/ 2}'),
+      for (var i = 0; i < 2; i++)
+        _match('w2$i', round: 2, position: i, nextMatchId: 'w30'),
+      _match('w30', round: 3, position: 0),
+      for (var i = 0; i < 2; i++)
+        _match(
+          'l1$i',
+          round: 1,
+          position: i,
+          bracket: 'losers',
+          stageType: 'DOUBLE_ELIMINATION',
+        ),
+    ];
+    await tester.pumpWidget(
+      _host(
+        PublicBracketView(
+          tournamentId: 't-1',
+          matches: matches,
+          bracketType: 'double_elimination',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final bracket = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byType(DoubleElimDiagram),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    expect(bracket.position.maxScrollExtent, greaterThan(0));
+
+    await tester.dragFrom(
+      tester.getCenter(find.text('Đội w10-A')),
+      const Offset(-200, 0),
+    );
+    await tester.pumpAndSettle();
+
+    expect(bracket.position.pixels, greaterThan(0));
   });
 }

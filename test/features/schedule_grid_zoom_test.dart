@@ -50,7 +50,7 @@ void main() {
     final captured = await _dragScaleHandle(tester, 40);
 
     expect(captured, isNotNull);
-    expect(captured!, greaterThan(144));
+    expect(captured!, greaterThan(112));
   });
 
   testWidgets('dragging the grip up shrinks the hour rows', (tester) async {
@@ -62,6 +62,6 @@ void main() {
     final captured = await _dragScaleHandle(tester, -40);
 
     expect(captured, isNotNull);
-    expect(captured!, lessThan(144));
+    expect(captured!, lessThan(112));
   });
 }

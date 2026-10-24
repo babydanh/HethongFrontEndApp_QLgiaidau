@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -61,6 +62,8 @@ MatchModel _match(
   required int position,
   String nextMatchId = '',
   String divisionId = 'division-a',
+  String bracket = 'winners',
+  String? stageType,
 }) => MatchModel.fromJson({
   'id': id,
   'tournamentId': _tournamentId,
@@ -71,7 +74,8 @@ MatchModel _match(
   'team1Name': 'Đội $id-A',
   'team2Name': 'Đội $id-B',
   'nextMatchId': nextMatchId,
-  'bracketPosition': {'bracket': 'winners', 'round': round, 'position': position},
+  'bracketPosition': {'bracket': bracket, 'round': round, 'position': position},
+  'stageType': ?stageType,
 }, id);
 
 void _phone(WidgetTester tester) {
@@ -81,12 +85,14 @@ void _phone(WidgetTester tester) {
   addTearDown(tester.view.resetDevicePixelRatio);
 }
 
-Future<void> _pump(WidgetTester tester) async {
-  final matches = [
-    _match('m1', round: 1, position: 0, nextMatchId: 'm3'),
-    _match('m2', round: 1, position: 1, nextMatchId: 'm3'),
-    _match('m3', round: 2, position: 0),
-  ];
+Future<void> _pump(WidgetTester tester, {List<MatchModel>? matchList}) async {
+  final matches =
+      matchList ??
+      [
+        _match('m1', round: 1, position: 0, nextMatchId: 'm3'),
+        _match('m2', round: 1, position: 1, nextMatchId: 'm3'),
+        _match('m3', round: 2, position: 0),
+      ];
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -202,5 +208,82 @@ void main() {
     final diagramRect = tester.getRect(find.byType(SingleElimDiagram));
     final otherRect = tester.getRect(find.text('Đơn nam'));
     expect(otherRect.top, greaterThanOrEqualTo(diagramRect.bottom - 1));
+  });
+
+  testWidgets('horizontal drag pans the bracket instead of switching tab', (
+    tester,
+  ) async {
+    _phone(tester);
+    await _pump(tester);
+
+    final diagram = find.byType(SingleElimDiagram);
+    final horizontal = find.descendant(
+      of: diagram,
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is Scrollable && widget.axisDirection == AxisDirection.right,
+      ),
+    );
+    final state = tester.state<ScrollableState>(horizontal.first);
+    expect(state.position.maxScrollExtent, greaterThan(0));
+
+    await tester.drag(diagram, const Offset(-200, 0));
+    await tester.pumpAndSettle();
+
+    expect(state.position.pixels, greaterThan(0));
+    final bar = tester.widget<TabBar>(find.byType(TabBar).first);
+    expect((bar.tabs[bar.controller!.index] as Tab).text, 'Bảng đấu');
+  });
+
+  testWidgets('horizontal drag on a double-elim card pans it inside the tab', (
+    tester,
+  ) async {
+    _phone(tester);
+    await _pump(
+      tester,
+      matchList: [
+        for (var i = 0; i < 8; i++)
+          _match('w1$i', round: 1, position: i, nextMatchId: 'w2${i ~/ 2}'),
+        for (var i = 0; i < 4; i++)
+          _match('w2$i', round: 2, position: i, nextMatchId: 'w3${i ~/ 2}'),
+        for (var i = 0; i < 2; i++)
+          _match('w3$i', round: 3, position: i, nextMatchId: 'w40'),
+        _match('w40', round: 4, position: 0),
+        for (var i = 0; i < 4; i++)
+          _match(
+            'l1$i',
+            round: 1,
+            position: i,
+            bracket: 'losers',
+            stageType: 'DOUBLE_ELIMINATION',
+          ),
+      ],
+    );
+
+    final diagram = find.byType(DoubleElimDiagram);
+    expect(diagram, findsOneWidget);
+    final horizontal = tester.state<ScrollableState>(
+      find
+          .descendant(
+            of: diagram,
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is Scrollable &&
+                  widget.axisDirection == AxisDirection.right,
+            ),
+          )
+          .first,
+    );
+    expect(horizontal.position.maxScrollExtent, greaterThan(0));
+
+    final card = find.text('Đội w10-A');
+    await tester.ensureVisible(card);
+    await tester.pumpAndSettle();
+    await tester.dragFrom(tester.getCenter(card), const Offset(-200, 0));
+    await tester.pumpAndSettle();
+
+    expect(horizontal.position.pixels, greaterThan(0));
+    final bar = tester.widget<TabBar>(find.byType(TabBar).first);
+    expect((bar.tabs[bar.controller!.index] as Tab).text, 'Bảng đấu');
   });
 }

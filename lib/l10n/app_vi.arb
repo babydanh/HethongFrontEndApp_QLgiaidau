@@ -1,6 +1,7 @@
 {
   "@@locale": "vi",
   "socialPending": "Chờ duyệt",
+  "scorePanel_tournamentNotStarted": "Giải đấu chưa khai mạc nên chưa thể cập nhật tỉ số.",
   "socialCancelRequestTitle": "Hủy yêu cầu tham gia?",
   "socialKeepRequest": "Vẫn tham gia",
   "socialConfirmCancelRequest": "Xác nhận",
@@ -435,6 +436,8 @@
   "tabTeams": "Danh sách đội",
   "tabSchedule": "Lịch thi đấu",
   "tabBracket": "Bảng thi đấu",
+  "publicBracketTabStandings": "Bảng",
+  "publicBracketTabPlayoff": "Playoff",
   "tabGallery": "Thư viện",
   "tabSponsors": "Tài trợ",
   "sponsorsTitle": "Nhà tài trợ chính thức",
@@ -4333,6 +4336,19 @@
     "placeholders": {
       "leg": {},
       "title": {}
+    }
+  },
+  "matchRoundGroupPrefix": "Bảng {name}",
+  "@matchRoundGroupPrefix": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "matchRoundGroupLeg": "{group} • Lượt {leg}",
+  "@matchRoundGroupLeg": {
+    "placeholders": {
+      "group": {},
+      "leg": {}
     }
   },
   "crossTablePreviousLeg": "Lượt trước",

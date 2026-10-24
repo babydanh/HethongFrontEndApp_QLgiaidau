@@ -1,6 +1,7 @@
 {
   "@@locale": "en",
   "socialPending": "Pending approval",
+  "scorePanel_tournamentNotStarted": "Scoring is unavailable until the tournament has started.",
   "socialCancelRequestTitle": "Cancel your join request?",
   "socialKeepRequest": "Keep request",
   "socialConfirmCancelRequest": "Confirm",
@@ -433,6 +434,8 @@
   "tabTeams": "Teams",
   "tabSchedule": "Schedule",
   "tabBracket": "Bracket",
+  "publicBracketTabStandings": "Standings",
+  "publicBracketTabPlayoff": "Playoff",
   "tabGallery": "Gallery",
   "tabSponsors": "Sponsors",
   "sponsorsTitle": "Official sponsors",
@@ -4314,6 +4317,19 @@
     "placeholders": {
       "leg": {},
       "title": {}
+    }
+  },
+  "matchRoundGroupPrefix": "Group {name}",
+  "@matchRoundGroupPrefix": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "matchRoundGroupLeg": "{group} • Leg {leg}",
+  "@matchRoundGroupLeg": {
+    "placeholders": {
+      "group": {},
+      "leg": {}
     }
   },
   "crossTablePreviousLeg": "Previous leg",

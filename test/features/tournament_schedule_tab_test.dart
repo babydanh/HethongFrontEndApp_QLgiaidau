@@ -68,6 +68,10 @@ MatchModel _scheduleMatch(
   String court = '',
   String? team1Name,
   String? team2Name,
+  String team1Id = '',
+  String team2Id = '',
+  String winnerId = '',
+  List<SetScore> sets = const [],
   String status = 'scheduled',
   DateTime? scheduledTime,
   int? durationMinutes,
@@ -76,8 +80,12 @@ MatchModel _scheduleMatch(
   id: 'schedule-match-$matchNumber',
   round: 1,
   matchNumber: matchNumber,
+  team1Id: team1Id,
+  team2Id: team2Id,
   team1Name: team1Name ?? 'Player $matchNumber',
   team2Name: team2Name ?? 'Opponent $matchNumber',
+  winnerId: winnerId,
+  sets: sets,
   status: status,
   bracketPosition: BracketPosition(round: 1, position: matchNumber),
   court: court,
@@ -512,45 +520,112 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('each division has its own header colour', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
+  testWidgets(
+    'TC-FEAT-01 division header colors use type and gender metadata',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
-    await _pumpTournamentDetail(
-      tester,
-      locale: const Locale('vi'),
-      divisions: const [
-        {'id': 'div-1', 'name': 'Đôi Nam'},
-        {'id': 'div-2', 'name': 'Đôi Nữ'},
-      ],
-      matches: [
-        _scheduleMatch(
-          1,
-          divisionId: 'div-1',
-          courtName: 'Sân 1',
-          scheduledTime: DateTime(2026, 8, 12, 8),
-        ),
-        _scheduleMatch(
-          2,
-          divisionId: 'div-2',
-          courtName: 'Sân 2',
-          scheduledTime: DateTime(2026, 8, 12, 8),
-        ),
-      ],
-    );
-    await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
+      await _pumpTournamentDetail(
+        tester,
+        locale: const Locale('vi'),
+        divisions: const [
+          {
+            'id': 'div-female',
+            'name': 'Nhóm B',
+            'matchType': 'DOUBLES',
+            'genderRestriction': 'FEMALE',
+          },
+          {
+            'id': 'div-male',
+            'name': 'Nhóm A',
+            'matchType': 'DOUBLES',
+            'genderRestriction': 'MALE',
+          },
+          {
+            'id': 'div-mixed',
+            'name': 'Nhóm C',
+            'matchType': 'MIXED_DOUBLES',
+            'genderRestriction': 'MIXED',
+          },
+        ],
+        matches: [
+          _scheduleMatch(
+            1,
+            divisionId: 'div-female',
+            courtName: 'Sân 1',
+            scheduledTime: DateTime(2026, 8, 12, 8),
+          ),
+          _scheduleMatch(
+            2,
+            divisionId: 'div-male',
+            courtName: 'Sân 2',
+            scheduledTime: DateTime(2026, 8, 12, 8),
+          ),
+          _scheduleMatch(
+            3,
+            divisionId: 'div-mixed',
+            courtName: 'Sân 3',
+            scheduledTime: DateTime(2026, 8, 12, 8),
+          ),
+        ],
+      );
+      await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
 
-    Color? colourOf(String division) =>
-        tester.widget<Text>(find.text(division)).style?.color;
-    expect(colourOf('Đôi Nam'), isNotNull);
-    expect(colourOf('Đôi Nữ'), isNotNull);
-    expect(colourOf('Đôi Nam'), isNot(colourOf('Đôi Nữ')));
-    expect(tester.takeException(), isNull);
-  });
+      Color? colourOf(String division) =>
+          tester.widget<Text>(find.text(division)).style?.color;
+      final colors = AppTheme.lightTheme.extension<AppColorsExtension>()!;
+      expect(colourOf('Nhóm A'), colors.info);
+      expect(colourOf('Nhóm B'), const Color(0xFFDB2777));
+      expect(colourOf('Nhóm C'), isNot(colors.info));
+      expect(colourOf('Nhóm C'), isNot(const Color(0xFFDB2777)));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'TC-FEAT-02 long live team names stay on one abbreviated line with scores trailing and no winner styling',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final match = _scheduleMatch(
+        1,
+        courtId: 'court-1',
+        court: 'Sân 1',
+        courtName: 'Sân 1',
+        scheduledTime: DateTime(2026, 8, 12, 8),
+        durationMinutes: 45,
+        team1Name: 'Câu lạc bộ Pickleball Thành phố Hồ Chí Minh',
+        team2Name: 'Đội khách Pickleball Hải Phòng',
+        team1Id: 'team-a',
+        team2Id: 'team-b',
+        winnerId: 'team-a',
+        sets: const [SetScore(score1: 11, score2: 8)],
+        status: 'live',
+      );
+      await _pumpGrid(tester, matches: [match], minutesPerSet: 15);
+      final teamName = tester.widget<Text>(
+        find.text('Câu lạc bộ Pickleball Thành phố Hồ Chí Minh'),
+      );
+      expect(teamName.overflow, TextOverflow.ellipsis);
+      expect(teamName.style?.fontWeight, FontWeight.w700);
+
+      final card = find.byKey(ValueKey('schedule-match-${match.id}'));
+      final cardRight = tester.getRect(card).right;
+      final scoreRight = tester.getRect(find.text('11')).right;
+      expect(cardRight - scoreRight, lessThanOrEqualTo(12));
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('single-division tournament still labels cards', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -748,7 +823,7 @@ void main() {
     }
 
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.text('Court 1'), findsOneWidget);
+    expect(find.byTooltip('Court 1'), findsOneWidget);
     expect(find.textContaining('Court hours'), findsOneWidget);
     expect(find.text('All (19)'), findsNothing);
     expect(find.text('Live (1)'), findsNothing);
@@ -813,7 +888,7 @@ void main() {
     final quarterHourLabel = find.text('08:15').first;
     expect(
       tester.getRect(quarterHourLabel).top - tester.getRect(timeLabel).top,
-      120,
+      112,
     );
     expect(tester.widget<Text>(timeLabel).style?.fontSize, 12);
     final timeLeftBefore = tester.getRect(timeLabel).left;
@@ -829,7 +904,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final frameRect = tester.getRect(frame);
-    final courtFour = tester.getRect(find.text('Court 4'));
+    final courtFour = tester.getRect(find.byTooltip('Court 4'));
     expect(courtFour.left, greaterThanOrEqualTo(frameRect.left + 56));
     expect(courtFour.right, lessThanOrEqualTo(frameRect.right));
     expect(tester.getRect(timeLabel).left, timeLeftBefore);
@@ -850,13 +925,38 @@ void main() {
     final quarterLabel = find.text('09:15').first;
     expect(
       tester.getRect(quarterLabel).top - tester.getRect(hourLabel).top,
-      144,
+      112,
     );
     expect(tester.widget<Text>(hourLabel).style?.fontSize, 10.5);
     expect(
       tester.widget<Text>(quarterLabel).style?.fontWeight,
       FontWeight.w500,
     );
+  });
+
+  testWidgets('card header shows the time with a short court chip', (
+    tester,
+  ) async {
+    final match = _scheduleMatch(
+      1,
+      court: 'Sân 2',
+      scheduledTime: DateTime(2026, 8, 12, 9),
+      durationMinutes: 30,
+    );
+    await _pumpGrid(tester, matches: [match], minutesPerSet: 15);
+
+    final card = find.byKey(ValueKey('schedule-match-${match.id}'));
+    expect(
+      find.descendant(of: card, matching: find.text('09:00')),
+      findsOneWidget,
+    );
+    expect(find.descendant(of: card, matching: find.text('2')), findsOneWidget);
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Sân')),
+      findsNothing,
+    );
+    // The column header keeps the full name in its tooltip.
+    expect(find.byTooltip('Sân 2'), findsOneWidget);
   });
 
   group('schedule card duration fallback', () {

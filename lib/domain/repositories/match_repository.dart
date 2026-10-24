@@ -5,9 +5,19 @@ import 'package:app_quanly_giaidau/domain/entities/match_schedule.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
+class TournamentNotStartedException implements Exception {
+  const TournamentNotStartedException();
+}
+
 abstract class IMatchRepository {
   Future<MatchModel> create(String tournamentId, MatchModel match);
   Stream<List<MatchModel>> watchByTournament(
+    String tournamentId, {
+    String? divisionId,
+  });
+  /// Trận cho màn quản lý của BTC, lấy từ route quản lý có đăng nhập
+  /// (`GET /tournaments/:id/manage/matches`), không dùng nguồn công khai.
+  Stream<List<MatchModel>> watchManagedByTournament(
     String tournamentId, {
     String? divisionId,
   });

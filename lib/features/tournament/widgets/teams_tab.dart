@@ -17,6 +17,7 @@ class TeamsTab extends StatefulWidget {
   final bool shrinkWrap;
   final bool showDivisionHeading;
   final List<TournamentDivision> divisions;
+  final bool isDoublesDivision;
 
   const TeamsTab({
     super.key,
@@ -28,6 +29,7 @@ class TeamsTab extends StatefulWidget {
     this.shrinkWrap = false,
     this.showDivisionHeading = true,
     this.divisions = const [],
+    this.isDoublesDivision = false,
   });
 
   @override
@@ -277,13 +279,11 @@ class _TeamsTabState extends State<TeamsTab> {
                           team: team,
                           isTeamSport: widget.isTeamSport,
                           showSeed: _showsSeedFor(team),
+                          isDoublesDivision: widget.isDoublesDivision,
                           onMemberTap: (userId, memberName) {
-                            final targetId =
-                                (userId != null && userId.isNotEmpty)
-                                ? userId
-                                : team.userId;
-                            if (targetId != null && targetId.isNotEmpty) {
-                              context.push('/user/$targetId');
+                            // Card đã chọn đúng userId; null = VĐV chưa có tài khoản.
+                            if (userId != null && userId.isNotEmpty) {
+                              context.push('/user/$userId');
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

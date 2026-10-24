@@ -733,6 +733,9 @@ class TournamentDivision {
     this.roundConfig,
   });
 
+  /// DOUBLES / MIXED_DOUBLES: mỗi suất là một cặp 2 người.
+  bool get isDoubles => matchType.toUpperCase().contains('DOUBLE');
+
   factory TournamentDivision.fromJson(Map<String, dynamic> json) {
     int parsedCount = 0;
     if (json['_count'] != null &&

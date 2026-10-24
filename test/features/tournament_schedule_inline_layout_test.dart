@@ -526,7 +526,10 @@ void main() {
         find.byKey(const ValueKey('schedule-frame')),
       );
       final courtTwoHeader = find
-          .ancestor(of: find.text('Court 2'), matching: find.byType(Container))
+          .ancestor(
+            of: find.byTooltip('Court 2'),
+            matching: find.byType(Container),
+          )
           .first;
       final headerRect = tester.getRect(courtTwoHeader);
       final secondCard = tester.getRect(

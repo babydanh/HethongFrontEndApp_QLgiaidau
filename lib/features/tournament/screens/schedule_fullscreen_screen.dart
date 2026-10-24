@@ -101,7 +101,7 @@ class _ScheduleFullscreenScreenState
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final matchesAsync = ref.watch(
-      matchesWithDivisionProvider((
+      managedMatchesWithDivisionProvider((
         tournamentId: widget.tournamentId,
         divisionId: widget.divisionId,
       )),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -22,6 +23,7 @@ class MatchesTab extends ConsumerStatefulWidget {
   final String? tournamentVenueName;
   final String? tournamentLocationAddress;
   final Map<String, String> divisionNameById;
+  final Map<String, TournamentDivision> divisionMetadataById;
 
   const MatchesTab({
     super.key,
@@ -32,6 +34,7 @@ class MatchesTab extends ConsumerStatefulWidget {
     this.tournamentVenueName,
     this.tournamentLocationAddress,
     this.divisionNameById = const {},
+    this.divisionMetadataById = const {},
   });
 
   @override
@@ -143,7 +146,6 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           );
         final hours = _configuredHours(l10n);
 
-
         // ── Dữ liệu cho lưới ──
         // Cột sân = sân của địa điểm giải + sân từ TOÀN BỘ trận, KHÔNG lọc theo
         // ngày: sân không có trận hôm nay vẫn giữ cột, số cột không nhảy theo
@@ -250,7 +252,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                       widget.scheduleSettings['minutesPerSet'],
                     ),
                     divisionNameById: widget.divisionNameById,
-                    slotHeight: 120,
+                    divisionMetadataById: widget.divisionMetadataById,
                     emphasizeTimeLabels: true,
                     onTapMatch: _openMatchById,
                     roundLabelOf: roundLabelOf,

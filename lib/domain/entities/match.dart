@@ -114,6 +114,19 @@ class MatchMemberInfo {
     );
   }
 
+  /// VĐV chưa có tài khoản của một đội (`participant.guestNames` của API
+  /// trận): chỉ có tên, không `userId` nên không mở hồ sơ ai. Nối sau thành
+  /// viên có tài khoản, đúng thứ tự ô.
+  static List<MatchMemberInfo> guestsOf(dynamic participant) {
+    final names = participant is Map ? participant['guestNames'] : null;
+    if (names is! List) return const [];
+    return names
+        .map((name) => name?.toString().trim() ?? '')
+        .where((name) => name.isNotEmpty)
+        .map((name) => MatchMemberInfo(fullName: name))
+        .toList(growable: false);
+  }
+
   Map<String, dynamic> toJson() {
     return {
       if (userId != null) 'userId': userId,
@@ -347,20 +360,24 @@ class MatchModel {
           : participant is Map<String, dynamic>
           ? (participant['rosters'] ?? participant['members']) as List<dynamic>?
           : null;
-      if (source == null) return const [];
-      return source
-          .map((entry) {
-            if (entry is String) return MatchMemberInfo(fullName: entry);
-            if (entry is Map<String, dynamic>) {
-              return MatchMemberInfo.fromJson(entry);
-            }
-            if (entry is Map) {
-              return MatchMemberInfo.fromJson(Map<String, dynamic>.from(entry));
-            }
-            return MatchMemberInfo(fullName: entry.toString());
-          })
-          .where((member) => member.fullName.trim().isNotEmpty)
-          .toList();
+      if (source == null) return MatchMemberInfo.guestsOf(participant);
+      return [
+        ...source
+            .map((entry) {
+              if (entry is String) return MatchMemberInfo(fullName: entry);
+              if (entry is Map<String, dynamic>) {
+                return MatchMemberInfo.fromJson(entry);
+              }
+              if (entry is Map) {
+                return MatchMemberInfo.fromJson(
+                  Map<String, dynamic>.from(entry),
+                );
+              }
+              return MatchMemberInfo(fullName: entry.toString());
+            })
+            .where((member) => member.fullName.trim().isNotEmpty),
+        if (explicitMembers is! List) ...MatchMemberInfo.guestsOf(participant),
+      ];
     }
 
     final team1MemberInfos = parseMemberInfos(
