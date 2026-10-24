@@ -127,4 +127,41 @@ void main() {
       expect(find.text('Mở sheet'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'TC-WP-00-01: kéo xuống lúc busy không đóng được sheet (enableDrag tắt)',
+    (tester) async {
+      final taps = ValueNotifier<int>(0);
+      await tester.pumpWidget(_harness(busy: true, taps: taps));
+
+      await tester.tap(find.text('Mở sheet'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Kéo xuống dismiss của SDK gọi thẳng Navigator.pop (bypass PopScope),
+      // nên helper phải tắt enableDrag khi busy — kéo không đóng sheet.
+      await tester.drag(
+        find.byType(TournamentManageSheet),
+        const Offset(0, 600),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(TournamentManageSheet), findsOneWidget);
+      expect(find.text('Nội dung hạng mục'), findsOneWidget);
+    },
+  );
+
+  testWidgets('TC-WP-00-01 (không busy): kéo xuống đóng được sheet', (
+    tester,
+  ) async {
+    final taps = ValueNotifier<int>(0);
+    await tester.pumpWidget(_harness(busy: false, taps: taps));
+
+    await tester.tap(find.text('Mở sheet'));
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(TournamentManageSheet), const Offset(0, 600));
+    await tester.pumpAndSettle();
+    expect(find.byType(TournamentManageSheet), findsNothing);
+    expect(find.text('Mở sheet'), findsOneWidget);
+  });
 }
