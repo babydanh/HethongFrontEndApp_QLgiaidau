@@ -16040,4 +16040,337 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeFeeOrganizerNetPerPlayer => 'Organizer receives / player';
+
+  @override
+  String get divisionEditorEditTitle => 'Edit division';
+
+  @override
+  String get divisionEditorSaveChanges => 'Save changes';
+
+  @override
+  String get divisionEditorTypeLabel => 'Type';
+
+  @override
+  String get divisionEditorFormatOpenSingles => 'Open singles';
+
+  @override
+  String get divisionEditorFormatOpenDoubles => 'Open doubles';
+
+  @override
+  String get divisionEditorNameHint =>
+      'Leave blank to use the default name for this type.';
+
+  @override
+  String get divisionEditorStandardRules => 'Standard rules';
+
+  @override
+  String get divisionEditorLimitsTitle => 'Limits and fee';
+
+  @override
+  String get divisionEditorParticipantLimit => 'Max teams';
+
+  @override
+  String get divisionEditorMaxCount => 'Maximum quantity';
+
+  @override
+  String get divisionEditorEloLimit => 'Custom ELO';
+
+  @override
+  String get divisionEditorEloMin => 'Min ELO';
+
+  @override
+  String get divisionEditorEloMax => 'Max ELO';
+
+  @override
+  String get divisionEditorEloBlankHint => 'Leave blank for no limit';
+
+  @override
+  String get divisionEditorEloRangeError =>
+      'Min ELO must be less than or equal to max ELO.';
+
+  @override
+  String get divisionEditorEntryFee => 'Fee';
+
+  @override
+  String get divisionEditorEntryFeeFollowsHint => 'Follows the tournament fee';
+
+  @override
+  String get divisionEditorEntryFeeCustomHint => 'Custom fee for this division';
+
+  @override
+  String get divisionEditorEntryFeePlaceholder => 'Enter amount';
+
+  @override
+  String get divisionEditorRulesPaneTitle => 'Rules setup';
+
+  @override
+  String get divisionEditorPickleballMode => 'Scoring mode';
+
+  @override
+  String get divisionEditorRallyScoring => 'Rally scoring';
+
+  @override
+  String get divisionEditorSideOutScoring => 'Side-out scoring';
+
+  @override
+  String get divisionEditorPresets => 'Quick presets';
+
+  @override
+  String get divisionEditorScoreTitle => 'Sets and points';
+
+  @override
+  String get divisionEditorSetsToWin => 'Sets to win';
+
+  @override
+  String get divisionEditorWinByTwo => 'Win by 2 points';
+
+  @override
+  String get divisionEditorMaxDeucePoints => 'Max score';
+
+  @override
+  String get divisionEditorNoDeuceLimit => 'No limit';
+
+  @override
+  String get divisionEditorSuperTiebreak => 'Super tie-break';
+
+  @override
+  String get divisionEditorTiebreakSet => 'Tiebreak set';
+
+  @override
+  String get divisionEditorTiebreakPoints => 'Tiebreak target points';
+
+  @override
+  String get divisionEditorRoundsToPlay => 'Number of legs (home / away)';
+
+  @override
+  String get divisionEditorStage1Title => 'Stage 1 · Group stage';
+
+  @override
+  String get divisionEditorNumGroups => 'Number of groups';
+
+  @override
+  String get divisionEditorGroupStageRounds => 'Group-stage legs';
+
+  @override
+  String get divisionEditorTeamsPerGroup => 'Teams per group';
+
+  @override
+  String get divisionEditorTeamsAdvancing => 'Teams advancing';
+
+  @override
+  String divisionEditorConfiguredTeams(Object count) {
+    return '$count teams';
+  }
+
+  @override
+  String divisionEditorAdvanceSummary(
+    Object advancing,
+    Object groups,
+    Object total,
+  ) {
+    return '$groups groups · top $advancing → $total teams';
+  }
+
+  @override
+  String get divisionEditorStage2Title => 'Stage 2 · Knockout';
+
+  @override
+  String get divisionEditorPlayoffFormat => 'Play-off format';
+
+  @override
+  String get divisionEditorSeedingType => 'Seeding type';
+
+  @override
+  String get divisionEditorSeededByElo => 'Seed by ELO';
+
+  @override
+  String get divisionEditorRandomSeeding => 'Random seeding';
+
+  @override
+  String get divisionEditorPlayoffSingle => 'Single elimination';
+
+  @override
+  String get divisionEditorPlayoffDouble => 'Double elimination';
+
+  @override
+  String get divisionEditorSetUnitBadminton => 'Points per set';
+
+  @override
+  String get divisionEditorSetUnitTableTennis => 'Points per set';
+
+  @override
+  String get divisionEditorSetUnitPickleballRally => 'Target points per set';
+
+  @override
+  String get divisionEditorSetUnitPickleballSideOut => 'Target points per game';
+
+  @override
+  String get divisionEditorSetUnitTennis => 'Games per set';
+
+  @override
+  String get divisionEditorSetUnitFootball => 'Goals';
+
+  @override
+  String get divisionEditorBadmintonSet1 => '1 set';
+
+  @override
+  String get divisionEditorBadmintonSet2 => 'Best of 3 sets';
+
+  @override
+  String get divisionEditorBadmintonSet3 => 'Best of 5 sets';
+
+  @override
+  String get divisionEditorTableTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTableTennisSet2 => 'Best of 3 sets (BO3)';
+
+  @override
+  String get divisionEditorTableTennisSet3 => 'Best of 5 sets (BO5)';
+
+  @override
+  String get divisionEditorTableTennisSet4 => 'Best of 7 sets (BO7)';
+
+  @override
+  String get divisionEditorPickleballRallySet1 => '1 set';
+
+  @override
+  String get divisionEditorPickleballRallySet2 => 'Best of 3 sets';
+
+  @override
+  String get divisionEditorPickleballRallySet3 => 'Best of 5 sets';
+
+  @override
+  String get divisionEditorPickleballSideOutSet1 => '1 game';
+
+  @override
+  String get divisionEditorPickleballSideOutSet2 => 'Best of 3 games';
+
+  @override
+  String get divisionEditorPickleballSideOutSet3 => 'Best of 5 games';
+
+  @override
+  String get divisionEditorTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTennisSet2 => 'Best of 3 sets (BO3)';
+
+  @override
+  String get divisionEditorTennisSet3 => 'Best of 5 sets (BO5)';
+
+  @override
+  String get divisionEditorFootballSet1 => '1 match';
+
+  @override
+  String get divisionEditorPresetBadmintonQuick => 'Fast early round';
+
+  @override
+  String get divisionEditorPresetBadmintonQuickDesc =>
+      'Play 1 set to 21, suitable for qualifiers or large tournaments.';
+
+  @override
+  String get divisionEditorPresetBadmintonStandard => 'Standard recreational';
+
+  @override
+  String get divisionEditorPresetBadmintonStandardDesc =>
+      'Best of 3 to 21, first to 30 wins.';
+
+  @override
+  String get divisionEditorPresetBadmintonShort => 'Time-saving';
+
+  @override
+  String get divisionEditorPresetBadmintonShortDesc =>
+      'Best of 3 to 15, for shorter match duration.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3 => 'Fast standard BO3';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3Desc =>
+      'Best of 3 to 11 points, suitable for groups or early rounds.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5 => 'BO5 elimination';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5Desc =>
+      'Best of 5 to 11 points, suitable for semifinals or the final.';
+
+  @override
+  String get divisionEditorPresetTableTennisSingle => 'Fast single set';
+
+  @override
+  String get divisionEditorPresetTableTennisSingleDesc =>
+      'One set to 11 points for quick rotation.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuick => '1 game to 11';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuickDesc =>
+      'One rally-point game to 11, concise for early rounds.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandard => 'Standard rally';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandardDesc =>
+      'Best of 3 games to 11, easy to live-score and coordinate.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtended => 'Game to 15';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtendedDesc =>
+      'Best of 3 games to 15 for later matches with less variation.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandard =>
+      'Standard side-out';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandardDesc =>
+      '1 game to 11; only the serving side scores.';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15 => 'Game to 15';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15Desc =>
+      '1 game to 15 for longer matches while keeping side-out scoring.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinals => 'Best of 3';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinalsDesc =>
+      'Best of 3 games to 11, suitable for longer semifinals/finals.';
+
+  @override
+  String get divisionEditorPresetTennisProSet => 'Pro set';
+
+  @override
+  String get divisionEditorPresetTennisProSetDesc =>
+      '1 set to 8 games, suitable for groups or strict time limits.';
+
+  @override
+  String get divisionEditorPresetTennisStandard => 'Standard BO3';
+
+  @override
+  String get divisionEditorPresetTennisStandardDesc =>
+      'Best of 3, 6 games per set, 7-point tie-break at 6–6.';
+
+  @override
+  String get divisionEditorPresetTennisShortSet => 'Short set';
+
+  @override
+  String get divisionEditorPresetTennisShortSetDesc =>
+      '1 set to 4 games for recreational events or many consecutive matches.';
+
+  @override
+  String get divisionEditorPresetFootballStandard => 'Standard';
+
+  @override
+  String get divisionEditorPresetFootballStandardDesc =>
+      'Two halves of 20 minutes each.';
 }

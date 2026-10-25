@@ -15986,4 +15986,336 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get financeFeeOrganizerNetPerPlayer => 'BTC thực nhận / VĐV';
+
+  @override
+  String get divisionEditorEditTitle => 'Chỉnh sửa nội dung thi đấu';
+
+  @override
+  String get divisionEditorSaveChanges => 'Lưu thay đổi';
+
+  @override
+  String get divisionEditorTypeLabel => 'Loại';
+
+  @override
+  String get divisionEditorFormatOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get divisionEditorFormatOpenDoubles => 'Đôi linh hoạt';
+
+  @override
+  String get divisionEditorNameHint =>
+      'Để trống sẽ dùng tên mặc định theo loại.';
+
+  @override
+  String get divisionEditorStandardRules => 'Luật chuẩn';
+
+  @override
+  String get divisionEditorLimitsTitle => 'Giới hạn và phí';
+
+  @override
+  String get divisionEditorParticipantLimit => 'Số đội tối đa';
+
+  @override
+  String get divisionEditorMaxCount => 'Số lượng tối đa';
+
+  @override
+  String get divisionEditorEloLimit => 'ELO riêng';
+
+  @override
+  String get divisionEditorEloMin => 'ELO tối thiểu';
+
+  @override
+  String get divisionEditorEloMax => 'ELO tối đa';
+
+  @override
+  String get divisionEditorEloBlankHint => 'Để trống = không giới hạn';
+
+  @override
+  String get divisionEditorEloRangeError =>
+      'ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.';
+
+  @override
+  String get divisionEditorEntryFee => 'Phí riêng';
+
+  @override
+  String get divisionEditorEntryFeeFollowsHint => 'Theo lệ phí chung của giải';
+
+  @override
+  String get divisionEditorEntryFeeCustomHint => 'Phí riêng cho nội dung này';
+
+  @override
+  String get divisionEditorEntryFeePlaceholder => 'Nhập số tiền';
+
+  @override
+  String get divisionEditorRulesPaneTitle => 'Cấu hình luật';
+
+  @override
+  String get divisionEditorPickleballMode => 'Chế độ tính điểm';
+
+  @override
+  String get divisionEditorRallyScoring => 'Rally Scoring';
+
+  @override
+  String get divisionEditorSideOutScoring => 'Side-out Scoring';
+
+  @override
+  String get divisionEditorPresets => 'Mẫu nhanh';
+
+  @override
+  String get divisionEditorScoreTitle => 'Số set và điểm';
+
+  @override
+  String get divisionEditorSetsToWin => 'Số set chạm thắng';
+
+  @override
+  String get divisionEditorWinByTwo => 'Thắng cách biệt 2 điểm';
+
+  @override
+  String get divisionEditorMaxDeucePoints => 'Điểm tối đa';
+
+  @override
+  String get divisionEditorNoDeuceLimit => 'Không giới hạn';
+
+  @override
+  String get divisionEditorSuperTiebreak => 'Loạt phụ (Super tie-break)';
+
+  @override
+  String get divisionEditorTiebreakSet => 'Set loạt phụ';
+
+  @override
+  String get divisionEditorTiebreakPoints => 'Điểm chạm loạt phụ';
+
+  @override
+  String get divisionEditorRoundsToPlay => 'Số lượt đấu (Lượt đi / Lượt về)';
+
+  @override
+  String get divisionEditorStage1Title => 'Giai đoạn 1 · Vòng bảng';
+
+  @override
+  String get divisionEditorNumGroups => 'Số bảng';
+
+  @override
+  String get divisionEditorGroupStageRounds => 'Số lượt vòng bảng';
+
+  @override
+  String get divisionEditorTeamsPerGroup => 'Số đội mỗi bảng';
+
+  @override
+  String get divisionEditorTeamsAdvancing => 'Số đội đi tiếp';
+
+  @override
+  String divisionEditorConfiguredTeams(Object count) {
+    return '$count đội';
+  }
+
+  @override
+  String divisionEditorAdvanceSummary(
+    Object advancing,
+    Object groups,
+    Object total,
+  ) {
+    return '$groups bảng · top $advancing → $total đội';
+  }
+
+  @override
+  String get divisionEditorStage2Title => 'Giai đoạn 2 · Knockout';
+
+  @override
+  String get divisionEditorPlayoffFormat => 'Thể thức knockout';
+
+  @override
+  String get divisionEditorSeedingType => 'Cách xếp hạt giống';
+
+  @override
+  String get divisionEditorSeededByElo => 'Xếp theo ELO';
+
+  @override
+  String get divisionEditorRandomSeeding => 'Xếp ngẫu nhiên';
+
+  @override
+  String get divisionEditorPlayoffSingle => 'Loại trực tiếp đơn';
+
+  @override
+  String get divisionEditorPlayoffDouble => 'Loại trực tiếp kép';
+
+  @override
+  String get divisionEditorSetUnitBadminton => 'Điểm mỗi set';
+
+  @override
+  String get divisionEditorSetUnitTableTennis => 'Điểm mỗi set';
+
+  @override
+  String get divisionEditorSetUnitPickleballRally => 'Điểm mục tiêu mỗi set';
+
+  @override
+  String get divisionEditorSetUnitPickleballSideOut => 'Điểm mục tiêu mỗi game';
+
+  @override
+  String get divisionEditorSetUnitTennis => 'Game mỗi set';
+
+  @override
+  String get divisionEditorSetUnitFootball => 'Bàn thắng';
+
+  @override
+  String get divisionEditorBadmintonSet1 => '1 set';
+
+  @override
+  String get divisionEditorBadmintonSet2 => 'Thắng 2 set';
+
+  @override
+  String get divisionEditorBadmintonSet3 => 'Thắng 3 set';
+
+  @override
+  String get divisionEditorTableTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTableTennisSet2 => 'Thắng 2 set (BO3)';
+
+  @override
+  String get divisionEditorTableTennisSet3 => 'Thắng 3 set (BO5)';
+
+  @override
+  String get divisionEditorTableTennisSet4 => 'Thắng 4 set (BO7)';
+
+  @override
+  String get divisionEditorPickleballRallySet1 => '1 set';
+
+  @override
+  String get divisionEditorPickleballRallySet2 => 'Thắng 2 set';
+
+  @override
+  String get divisionEditorPickleballRallySet3 => 'Thắng 3 set';
+
+  @override
+  String get divisionEditorPickleballSideOutSet1 => '1 game';
+
+  @override
+  String get divisionEditorPickleballSideOutSet2 => 'Thắng 2 game';
+
+  @override
+  String get divisionEditorPickleballSideOutSet3 => 'Thắng 3 game';
+
+  @override
+  String get divisionEditorTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTennisSet2 => 'Thắng 2 set (BO3)';
+
+  @override
+  String get divisionEditorTennisSet3 => 'Thắng 3 set (BO5)';
+
+  @override
+  String get divisionEditorFootballSet1 => '1 trận';
+
+  @override
+  String get divisionEditorPresetBadmintonQuick => 'Vòng đầu nhanh';
+
+  @override
+  String get divisionEditorPresetBadmintonQuickDesc =>
+      'Đánh 1 set 21, phù hợp vòng loại hoặc giải đông VĐV.';
+
+  @override
+  String get divisionEditorPresetBadmintonStandard => 'Chuẩn phong trào';
+
+  @override
+  String get divisionEditorPresetBadmintonStandardDesc =>
+      'Thắng 2 set 21, chạm 30 thắng luôn.';
+
+  @override
+  String get divisionEditorPresetBadmintonShort => 'Tiết kiệm thời gian';
+
+  @override
+  String get divisionEditorPresetBadmintonShortDesc =>
+      'Thắng 2 set 15, dùng khi cần rút ngắn thời lượng.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3 => 'BO3 chuẩn nhanh';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3Desc =>
+      'Thắng 2 set 11 điểm, hợp vòng bảng hoặc vòng đầu.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5 => 'BO5 loại trực tiếp';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5Desc =>
+      'Thắng 3 set 11 điểm, hợp bán kết hoặc chung kết.';
+
+  @override
+  String get divisionEditorPresetTableTennisSingle => '1 set chốt nhanh';
+
+  @override
+  String get divisionEditorPresetTableTennisSingleDesc =>
+      'Một set 11 điểm để xoay vòng đấu thật nhanh.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuick => '1 game 11';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuickDesc =>
+      'Một game 11 rally point, gọn cho vòng đầu.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandard => 'Chuẩn rally';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandardDesc =>
+      'Thắng 2 game 11, dễ live score và dễ điều phối.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtended => 'Game 15';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtendedDesc =>
+      'Thắng 2 game 15 cho các trận sâu, ít biến động hơn.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandard => 'Chuẩn side-out';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandardDesc =>
+      '1 game 11, chỉ bên giao bóng mới ghi điểm.';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15 => 'Game 15';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15Desc =>
+      '1 game 15, hợp trận kéo dài hơn nhưng vẫn giữ side-out.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinals => 'Best of 3';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinalsDesc =>
+      'Thắng 2 game 11, hợp bán kết/chung kết có thời lượng tốt hơn.';
+
+  @override
+  String get divisionEditorPresetTennisProSet => 'Pro set';
+
+  @override
+  String get divisionEditorPresetTennisProSetDesc =>
+      '1 set 8 game, hợp vòng bảng hoặc vòng tính thời gian chặt.';
+
+  @override
+  String get divisionEditorPresetTennisStandard => 'BO3 chuẩn';
+
+  @override
+  String get divisionEditorPresetTennisStandardDesc =>
+      'Thắng 2 set, mỗi set 6 game, 6-6 tie-break 7.';
+
+  @override
+  String get divisionEditorPresetTennisShortSet => 'Short set';
+
+  @override
+  String get divisionEditorPresetTennisShortSetDesc =>
+      '1 set 4 game, hợp giải phong trào hoặc nhiều trận liên tiếp.';
+
+  @override
+  String get divisionEditorPresetFootballStandard => 'Chuẩn';
+
+  @override
+  String get divisionEditorPresetFootballStandardDesc =>
+      '2 hiệp, mỗi hiệp 20 phút';
 }

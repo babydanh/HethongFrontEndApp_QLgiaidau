@@ -28897,6 +28897,622 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'BTC thực nhận / VĐV'**
   String get financeFeeOrganizerNetPerPlayer;
+
+  /// No description provided for @divisionEditorEditTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa nội dung thi đấu'**
+  String get divisionEditorEditTitle;
+
+  /// No description provided for @divisionEditorSaveChanges.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu thay đổi'**
+  String get divisionEditorSaveChanges;
+
+  /// No description provided for @divisionEditorTypeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại'**
+  String get divisionEditorTypeLabel;
+
+  /// No description provided for @divisionEditorFormatOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get divisionEditorFormatOpenSingles;
+
+  /// No description provided for @divisionEditorFormatOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get divisionEditorFormatOpenDoubles;
+
+  /// No description provided for @divisionEditorNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống sẽ dùng tên mặc định theo loại.'**
+  String get divisionEditorNameHint;
+
+  /// No description provided for @divisionEditorStandardRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật chuẩn'**
+  String get divisionEditorStandardRules;
+
+  /// No description provided for @divisionEditorLimitsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới hạn và phí'**
+  String get divisionEditorLimitsTitle;
+
+  /// No description provided for @divisionEditorParticipantLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội tối đa'**
+  String get divisionEditorParticipantLimit;
+
+  /// No description provided for @divisionEditorMaxCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượng tối đa'**
+  String get divisionEditorMaxCount;
+
+  /// No description provided for @divisionEditorEloLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO riêng'**
+  String get divisionEditorEloLimit;
+
+  /// No description provided for @divisionEditorEloMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tối thiểu'**
+  String get divisionEditorEloMin;
+
+  /// No description provided for @divisionEditorEloMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tối đa'**
+  String get divisionEditorEloMax;
+
+  /// No description provided for @divisionEditorEloBlankHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống = không giới hạn'**
+  String get divisionEditorEloBlankHint;
+
+  /// No description provided for @divisionEditorEloRangeError.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.'**
+  String get divisionEditorEloRangeError;
+
+  /// No description provided for @divisionEditorEntryFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí riêng'**
+  String get divisionEditorEntryFee;
+
+  /// No description provided for @divisionEditorEntryFeeFollowsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo lệ phí chung của giải'**
+  String get divisionEditorEntryFeeFollowsHint;
+
+  /// No description provided for @divisionEditorEntryFeeCustomHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí riêng cho nội dung này'**
+  String get divisionEditorEntryFeeCustomHint;
+
+  /// No description provided for @divisionEditorEntryFeePlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số tiền'**
+  String get divisionEditorEntryFeePlaceholder;
+
+  /// No description provided for @divisionEditorRulesPaneTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình luật'**
+  String get divisionEditorRulesPaneTitle;
+
+  /// No description provided for @divisionEditorPickleballMode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ tính điểm'**
+  String get divisionEditorPickleballMode;
+
+  /// No description provided for @divisionEditorRallyScoring.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rally Scoring'**
+  String get divisionEditorRallyScoring;
+
+  /// No description provided for @divisionEditorSideOutScoring.
+  ///
+  /// In vi, this message translates to:
+  /// **'Side-out Scoring'**
+  String get divisionEditorSideOutScoring;
+
+  /// No description provided for @divisionEditorPresets.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mẫu nhanh'**
+  String get divisionEditorPresets;
+
+  /// No description provided for @divisionEditorScoreTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số set và điểm'**
+  String get divisionEditorScoreTitle;
+
+  /// No description provided for @divisionEditorSetsToWin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số set chạm thắng'**
+  String get divisionEditorSetsToWin;
+
+  /// No description provided for @divisionEditorWinByTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng cách biệt 2 điểm'**
+  String get divisionEditorWinByTwo;
+
+  /// No description provided for @divisionEditorMaxDeucePoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm tối đa'**
+  String get divisionEditorMaxDeucePoints;
+
+  /// No description provided for @divisionEditorNoDeuceLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn'**
+  String get divisionEditorNoDeuceLimit;
+
+  /// No description provided for @divisionEditorSuperTiebreak.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loạt phụ (Super tie-break)'**
+  String get divisionEditorSuperTiebreak;
+
+  /// No description provided for @divisionEditorTiebreakSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Set loạt phụ'**
+  String get divisionEditorTiebreakSet;
+
+  /// No description provided for @divisionEditorTiebreakPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm chạm loạt phụ'**
+  String get divisionEditorTiebreakPoints;
+
+  /// No description provided for @divisionEditorRoundsToPlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượt đấu (Lượt đi / Lượt về)'**
+  String get divisionEditorRoundsToPlay;
+
+  /// No description provided for @divisionEditorStage1Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giai đoạn 1 · Vòng bảng'**
+  String get divisionEditorStage1Title;
+
+  /// No description provided for @divisionEditorNumGroups.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số bảng'**
+  String get divisionEditorNumGroups;
+
+  /// No description provided for @divisionEditorGroupStageRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượt vòng bảng'**
+  String get divisionEditorGroupStageRounds;
+
+  /// No description provided for @divisionEditorTeamsPerGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội mỗi bảng'**
+  String get divisionEditorTeamsPerGroup;
+
+  /// No description provided for @divisionEditorTeamsAdvancing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội đi tiếp'**
+  String get divisionEditorTeamsAdvancing;
+
+  /// No description provided for @divisionEditorConfiguredTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đội'**
+  String divisionEditorConfiguredTeams(Object count);
+
+  /// No description provided for @divisionEditorAdvanceSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{groups} bảng · top {advancing} → {total} đội'**
+  String divisionEditorAdvanceSummary(
+    Object advancing,
+    Object groups,
+    Object total,
+  );
+
+  /// No description provided for @divisionEditorStage2Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giai đoạn 2 · Knockout'**
+  String get divisionEditorStage2Title;
+
+  /// No description provided for @divisionEditorPlayoffFormat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức knockout'**
+  String get divisionEditorPlayoffFormat;
+
+  /// No description provided for @divisionEditorSeedingType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách xếp hạt giống'**
+  String get divisionEditorSeedingType;
+
+  /// No description provided for @divisionEditorSeededByElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp theo ELO'**
+  String get divisionEditorSeededByElo;
+
+  /// No description provided for @divisionEditorRandomSeeding.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp ngẫu nhiên'**
+  String get divisionEditorRandomSeeding;
+
+  /// No description provided for @divisionEditorPlayoffSingle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp đơn'**
+  String get divisionEditorPlayoffSingle;
+
+  /// No description provided for @divisionEditorPlayoffDouble.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp kép'**
+  String get divisionEditorPlayoffDouble;
+
+  /// No description provided for @divisionEditorSetUnitBadminton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mỗi set'**
+  String get divisionEditorSetUnitBadminton;
+
+  /// No description provided for @divisionEditorSetUnitTableTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mỗi set'**
+  String get divisionEditorSetUnitTableTennis;
+
+  /// No description provided for @divisionEditorSetUnitPickleballRally.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mục tiêu mỗi set'**
+  String get divisionEditorSetUnitPickleballRally;
+
+  /// No description provided for @divisionEditorSetUnitPickleballSideOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mục tiêu mỗi game'**
+  String get divisionEditorSetUnitPickleballSideOut;
+
+  /// No description provided for @divisionEditorSetUnitTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game mỗi set'**
+  String get divisionEditorSetUnitTennis;
+
+  /// No description provided for @divisionEditorSetUnitFootball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bàn thắng'**
+  String get divisionEditorSetUnitFootball;
+
+  /// No description provided for @divisionEditorBadmintonSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorBadmintonSet1;
+
+  /// No description provided for @divisionEditorBadmintonSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set'**
+  String get divisionEditorBadmintonSet2;
+
+  /// No description provided for @divisionEditorBadmintonSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set'**
+  String get divisionEditorBadmintonSet3;
+
+  /// No description provided for @divisionEditorTableTennisSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorTableTennisSet1;
+
+  /// No description provided for @divisionEditorTableTennisSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set (BO3)'**
+  String get divisionEditorTableTennisSet2;
+
+  /// No description provided for @divisionEditorTableTennisSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set (BO5)'**
+  String get divisionEditorTableTennisSet3;
+
+  /// No description provided for @divisionEditorTableTennisSet4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 4 set (BO7)'**
+  String get divisionEditorTableTennisSet4;
+
+  /// No description provided for @divisionEditorPickleballRallySet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorPickleballRallySet1;
+
+  /// No description provided for @divisionEditorPickleballRallySet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set'**
+  String get divisionEditorPickleballRallySet2;
+
+  /// No description provided for @divisionEditorPickleballRallySet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set'**
+  String get divisionEditorPickleballRallySet3;
+
+  /// No description provided for @divisionEditorPickleballSideOutSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game'**
+  String get divisionEditorPickleballSideOutSet1;
+
+  /// No description provided for @divisionEditorPickleballSideOutSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game'**
+  String get divisionEditorPickleballSideOutSet2;
+
+  /// No description provided for @divisionEditorPickleballSideOutSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 game'**
+  String get divisionEditorPickleballSideOutSet3;
+
+  /// No description provided for @divisionEditorTennisSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorTennisSet1;
+
+  /// No description provided for @divisionEditorTennisSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set (BO3)'**
+  String get divisionEditorTennisSet2;
+
+  /// No description provided for @divisionEditorTennisSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set (BO5)'**
+  String get divisionEditorTennisSet3;
+
+  /// No description provided for @divisionEditorFootballSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 trận'**
+  String get divisionEditorFootballSet1;
+
+  /// No description provided for @divisionEditorPresetBadmintonQuick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng đầu nhanh'**
+  String get divisionEditorPresetBadmintonQuick;
+
+  /// No description provided for @divisionEditorPresetBadmintonQuickDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh 1 set 21, phù hợp vòng loại hoặc giải đông VĐV.'**
+  String get divisionEditorPresetBadmintonQuickDesc;
+
+  /// No description provided for @divisionEditorPresetBadmintonStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn phong trào'**
+  String get divisionEditorPresetBadmintonStandard;
+
+  /// No description provided for @divisionEditorPresetBadmintonStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set 21, chạm 30 thắng luôn.'**
+  String get divisionEditorPresetBadmintonStandardDesc;
+
+  /// No description provided for @divisionEditorPresetBadmintonShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiết kiệm thời gian'**
+  String get divisionEditorPresetBadmintonShort;
+
+  /// No description provided for @divisionEditorPresetBadmintonShortDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set 15, dùng khi cần rút ngắn thời lượng.'**
+  String get divisionEditorPresetBadmintonShortDesc;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo3.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO3 chuẩn nhanh'**
+  String get divisionEditorPresetTableTennisBo3;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo3Desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set 11 điểm, hợp vòng bảng hoặc vòng đầu.'**
+  String get divisionEditorPresetTableTennisBo3Desc;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo5.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO5 loại trực tiếp'**
+  String get divisionEditorPresetTableTennisBo5;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo5Desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set 11 điểm, hợp bán kết hoặc chung kết.'**
+  String get divisionEditorPresetTableTennisBo5Desc;
+
+  /// No description provided for @divisionEditorPresetTableTennisSingle.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set chốt nhanh'**
+  String get divisionEditorPresetTableTennisSingle;
+
+  /// No description provided for @divisionEditorPresetTableTennisSingleDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một set 11 điểm để xoay vòng đấu thật nhanh.'**
+  String get divisionEditorPresetTableTennisSingleDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyQuick.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game 11'**
+  String get divisionEditorPresetPickleballRallyQuick;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyQuickDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một game 11 rally point, gọn cho vòng đầu.'**
+  String get divisionEditorPresetPickleballRallyQuickDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn rally'**
+  String get divisionEditorPresetPickleballRallyStandard;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game 11, dễ live score và dễ điều phối.'**
+  String get divisionEditorPresetPickleballRallyStandardDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyExtended.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game 15'**
+  String get divisionEditorPresetPickleballRallyExtended;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyExtendedDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game 15 cho các trận sâu, ít biến động hơn.'**
+  String get divisionEditorPresetPickleballRallyExtendedDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn side-out'**
+  String get divisionEditorPresetPickleballSideoutStandard;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game 11, chỉ bên giao bóng mới ghi điểm.'**
+  String get divisionEditorPresetPickleballSideoutStandardDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballSideout15.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game 15'**
+  String get divisionEditorPresetPickleballSideout15;
+
+  /// No description provided for @divisionEditorPresetPickleballSideout15Desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game 15, hợp trận kéo dài hơn nhưng vẫn giữ side-out.'**
+  String get divisionEditorPresetPickleballSideout15Desc;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutFinals.
+  ///
+  /// In vi, this message translates to:
+  /// **'Best of 3'**
+  String get divisionEditorPresetPickleballSideoutFinals;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutFinalsDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game 11, hợp bán kết/chung kết có thời lượng tốt hơn.'**
+  String get divisionEditorPresetPickleballSideoutFinalsDesc;
+
+  /// No description provided for @divisionEditorPresetTennisProSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Pro set'**
+  String get divisionEditorPresetTennisProSet;
+
+  /// No description provided for @divisionEditorPresetTennisProSetDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set 8 game, hợp vòng bảng hoặc vòng tính thời gian chặt.'**
+  String get divisionEditorPresetTennisProSetDesc;
+
+  /// No description provided for @divisionEditorPresetTennisStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO3 chuẩn'**
+  String get divisionEditorPresetTennisStandard;
+
+  /// No description provided for @divisionEditorPresetTennisStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set, mỗi set 6 game, 6-6 tie-break 7.'**
+  String get divisionEditorPresetTennisStandardDesc;
+
+  /// No description provided for @divisionEditorPresetTennisShortSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Short set'**
+  String get divisionEditorPresetTennisShortSet;
+
+  /// No description provided for @divisionEditorPresetTennisShortSetDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set 4 game, hợp giải phong trào hoặc nhiều trận liên tiếp.'**
+  String get divisionEditorPresetTennisShortSetDesc;
+
+  /// No description provided for @divisionEditorPresetFootballStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn'**
+  String get divisionEditorPresetFootballStandard;
+
+  /// No description provided for @divisionEditorPresetFootballStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'2 hiệp, mỗi hiệp 20 phút'**
+  String get divisionEditorPresetFootballStandardDesc;
 }
 
 class _AppLocalizationsDelegate
