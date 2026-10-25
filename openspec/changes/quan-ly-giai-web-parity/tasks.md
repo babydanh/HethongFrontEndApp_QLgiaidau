@@ -17,11 +17,11 @@
   - Files: `lib/features/tournament/screens/tournament_management_hub_screen.dart:530-633,790-834`, repository, ARB, test hub + `test/tournament_management_repository_api_test.dart`
   - Chủ file chung: hub screen (cùng task 3.9 menu export)
   - Phụ thuộc: 0.1
-- [ ] 1.3 Prompt hạng mục đủ chỗ tự đề nghị đóng (ghi nhớ đã hỏi theo phiên màn). Tiêu chí: TC-WP-01-05.
+- [x] 1.3 Prompt hạng mục đủ chỗ tự đề nghị đóng (ghi nhớ đã hỏi theo phiên màn). Tiêu chí: TC-WP-01-05.
   - Files: `tournament_management_hub_screen.dart` (state), `tournament_management_divisions_section.dart` (helper đếm), ARB, test hub
   - Chủ file chung: divisions_section (cùng 2.1)
   - Phụ thuộc: 1.1
-- [ ] 1.4 Sheet đóng/mở đăng ký hàng loạt: checkbox nhiều hạng mục + chọn hết, chế độ close/open, hạn mới bắt buộc khi mở lại hạng mục quá hạn. Tiêu chí: TC-WP-01-06/07.
+- [x] 1.4 Sheet đóng/mở đăng ký hàng loạt: checkbox nhiều hạng mục + chọn hết, chế độ close/open, hạn mới bắt buộc khi mở lại hạng mục quá hạn. Tiêu chí: TC-WP-01-06/07.
   - Files: `tournament_management_divisions_section.dart`, `tournament_management_section_screen.dart` (nút vào), repository (body `divisionIds`), ARB, test
   - Chủ file chung: divisions_section, section_screen
   - Phụ thuộc: 1.1
