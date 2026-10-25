@@ -16318,4 +16318,98 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get divisionEditorPresetFootballStandardDesc =>
       '2 hiệp, mỗi hiệp 20 phút';
+
+  @override
+  String get stageRoundTitle => 'Cấu hình vòng đấu';
+
+  @override
+  String get stageRoundMenuTitle => 'Cấu hình từng vòng';
+
+  @override
+  String get stageRoundSelectLabel => 'Chọn vòng';
+
+  @override
+  String get stageRoundSharedGroupStage => 'Vòng bảng dùng chung';
+
+  @override
+  String stageRoundLeg(int number) {
+    return 'Lượt $number';
+  }
+
+  @override
+  String stageRoundKnockoutOf(int round) {
+    return 'Vòng $round';
+  }
+
+  @override
+  String get stageRoundLiteTitle => 'Chế độ Tự do (Lite) đang bật toàn giải';
+
+  @override
+  String get stageRoundLiteDescription =>
+      'Trọng tài nhập điểm tự do, không bị giới hạn bởi luật thi đấu.';
+
+  @override
+  String get stageRoundQuickPresets => 'Preset nhanh cho vòng đấu';
+
+  @override
+  String get stageRoundCourtLabel => 'Địa điểm sân đấu';
+
+  @override
+  String get stageRoundCourtPlaceholder =>
+      'Nhập sân thi đấu riêng cho vòng này (để trống sẽ dùng địa điểm giải đấu)...';
+
+  @override
+  String get stageRoundDefaultTimeLabel => 'Giờ mặc định cho vòng này';
+
+  @override
+  String get stageRoundNoTime => 'Chưa đặt giờ';
+
+  @override
+  String get stageRoundClearTime => 'Xoá giờ mặc định';
+
+  @override
+  String get stageRoundNoteLabel => 'Ghi chú điều phối vòng này';
+
+  @override
+  String get stageRoundNotePlaceholder =>
+      'Ví dụ: ưu tiên gọi đồng loạt ở sân trung tâm lúc 08:00';
+
+  @override
+  String get stageRoundSave => 'Lưu cấu hình';
+
+  @override
+  String get stageRoundEmpty => 'Hạng mục này không có vòng nào để cấu hình.';
+
+  @override
+  String stageRoundSummary(
+    int sets,
+    String unit,
+    int points,
+    String pointUnit,
+    String margin,
+    String tiebreak,
+  ) {
+    return 'Vòng này sẽ đánh: thắng $sets $unit • $points $pointUnit$margin$tiebreak';
+  }
+
+  @override
+  String get stageRoundUnitSet => 'set';
+
+  @override
+  String get stageRoundUnitGame => 'game';
+
+  @override
+  String get stageRoundPoints => 'điểm';
+
+  @override
+  String get stageRoundPointUnitTennis => 'game/set';
+
+  @override
+  String get stageRoundMarginWinByTwo => ' • hơn 2';
+
+  @override
+  String get stageRoundMarginTarget => ' • chạm đích là chốt';
+
+  @override
+  String get stageRoundSideOutSummary => 'Chỉ đội đang giao bóng mới ghi điểm.';
 }

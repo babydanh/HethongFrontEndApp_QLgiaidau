@@ -6513,5 +6513,51 @@
   "divisionEditorPresetTennisShortSet": "Short set",
   "divisionEditorPresetTennisShortSetDesc": "1 set to 4 games for recreational events or many consecutive matches.",
   "divisionEditorPresetFootballStandard": "Standard",
-  "divisionEditorPresetFootballStandardDesc": "Two halves of 20 minutes each."
+  "divisionEditorPresetFootballStandardDesc": "Two halves of 20 minutes each.",
+  "stageRoundTitle": "Round configuration",
+  "stageRoundMenuTitle": "Configure rounds",
+  "stageRoundSelectLabel": "Select round",
+  "stageRoundSharedGroupStage": "Shared group stage",
+  "stageRoundLeg": "Leg {number}",
+  "@stageRoundLeg": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "stageRoundKnockoutOf": "Round of {round}",
+  "@stageRoundKnockoutOf": {
+    "placeholders": {
+      "round": {"type": "int"}
+    }
+  },
+  "stageRoundLiteTitle": "Free mode (Lite) is enabled for the entire tournament",
+  "stageRoundLiteDescription": "Referees can enter scores freely, without rule limits.",
+  "stageRoundQuickPresets": "Quick round presets",
+  "stageRoundCourtLabel": "Court or venue",
+  "stageRoundCourtPlaceholder": "Enter a court for this round (leave blank to use the tournament venue)...",
+  "stageRoundDefaultTimeLabel": "Default time for this round",
+  "stageRoundNoTime": "No time set",
+  "stageRoundClearTime": "Clear default time",
+  "stageRoundNoteLabel": "Round coordination note",
+  "stageRoundNotePlaceholder": "Example: call players together at the center court at 08:00",
+  "stageRoundSave": "Save configuration",
+  "stageRoundEmpty": "This division has no rounds to configure.",
+  "stageRoundSummary": "This round: win {sets} {unit} • {points} {pointUnit}{margin}{tiebreak}",
+  "@stageRoundSummary": {
+    "placeholders": {
+      "sets": {"type": "int"},
+      "unit": {"type": "String"},
+      "points": {"type": "int"},
+      "pointUnit": {"type": "String"},
+      "margin": {"type": "String"},
+      "tiebreak": {"type": "String"}
+    }
+  },
+  "stageRoundUnitSet": "set",
+  "stageRoundUnitGame": "game",
+  "stageRoundPoints": "points",
+  "stageRoundPointUnitTennis": "game/set",
+  "stageRoundMarginWinByTwo": " • win by 2",
+  "stageRoundMarginTarget": " • target score decides",
+  "stageRoundSideOutSummary": "Only the serving team scores."
 }

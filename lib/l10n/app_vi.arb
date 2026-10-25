@@ -6526,5 +6526,51 @@
   "divisionEditorPresetTennisShortSet": "Short set",
   "divisionEditorPresetTennisShortSetDesc": "1 set 4 game, hợp giải phong trào hoặc nhiều trận liên tiếp.",
   "divisionEditorPresetFootballStandard": "Chuẩn",
-  "divisionEditorPresetFootballStandardDesc": "2 hiệp, mỗi hiệp 20 phút"
+  "divisionEditorPresetFootballStandardDesc": "2 hiệp, mỗi hiệp 20 phút",
+  "stageRoundTitle": "Cấu hình vòng đấu",
+  "stageRoundMenuTitle": "Cấu hình từng vòng",
+  "stageRoundSelectLabel": "Chọn vòng",
+  "stageRoundSharedGroupStage": "Vòng bảng dùng chung",
+  "stageRoundLeg": "Lượt {number}",
+  "@stageRoundLeg": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "stageRoundKnockoutOf": "Vòng {round}",
+  "@stageRoundKnockoutOf": {
+    "placeholders": {
+      "round": {"type": "int"}
+    }
+  },
+  "stageRoundLiteTitle": "Chế độ Tự do (Lite) đang bật toàn giải",
+  "stageRoundLiteDescription": "Trọng tài nhập điểm tự do, không bị giới hạn bởi luật thi đấu.",
+  "stageRoundQuickPresets": "Preset nhanh cho vòng đấu",
+  "stageRoundCourtLabel": "Địa điểm sân đấu",
+  "stageRoundCourtPlaceholder": "Nhập sân thi đấu riêng cho vòng này (để trống sẽ dùng địa điểm giải đấu)...",
+  "stageRoundDefaultTimeLabel": "Giờ mặc định cho vòng này",
+  "stageRoundNoTime": "Chưa đặt giờ",
+  "stageRoundClearTime": "Xoá giờ mặc định",
+  "stageRoundNoteLabel": "Ghi chú điều phối vòng này",
+  "stageRoundNotePlaceholder": "Ví dụ: ưu tiên gọi đồng loạt ở sân trung tâm lúc 08:00",
+  "stageRoundSave": "Lưu cấu hình",
+  "stageRoundEmpty": "Hạng mục này không có vòng nào để cấu hình.",
+  "stageRoundSummary": "Vòng này sẽ đánh: thắng {sets} {unit} • {points} {pointUnit}{margin}{tiebreak}",
+  "@stageRoundSummary": {
+    "placeholders": {
+      "sets": {"type": "int"},
+      "unit": {"type": "String"},
+      "points": {"type": "int"},
+      "pointUnit": {"type": "String"},
+      "margin": {"type": "String"},
+      "tiebreak": {"type": "String"}
+    }
+  },
+  "stageRoundUnitSet": "set",
+  "stageRoundUnitGame": "game",
+  "stageRoundPoints": "điểm",
+  "stageRoundPointUnitTennis": "game/set",
+  "stageRoundMarginWinByTwo": " • hơn 2",
+  "stageRoundMarginTarget": " • chạm đích là chốt",
+  "stageRoundSideOutSummary": "Chỉ đội đang giao bóng mới ghi điểm."
 }

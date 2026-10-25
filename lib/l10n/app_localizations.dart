@@ -29513,6 +29513,169 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'2 hiệp, mỗi hiệp 20 phút'**
   String get divisionEditorPresetFootballStandardDesc;
+
+  /// No description provided for @stageRoundTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình vòng đấu'**
+  String get stageRoundTitle;
+
+  /// No description provided for @stageRoundMenuTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình từng vòng'**
+  String get stageRoundMenuTitle;
+
+  /// No description provided for @stageRoundSelectLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn vòng'**
+  String get stageRoundSelectLabel;
+
+  /// No description provided for @stageRoundSharedGroupStage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng dùng chung'**
+  String get stageRoundSharedGroupStage;
+
+  /// No description provided for @stageRoundLeg.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lượt {number}'**
+  String stageRoundLeg(int number);
+
+  /// No description provided for @stageRoundKnockoutOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {round}'**
+  String stageRoundKnockoutOf(int round);
+
+  /// No description provided for @stageRoundLiteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ Tự do (Lite) đang bật toàn giải'**
+  String get stageRoundLiteTitle;
+
+  /// No description provided for @stageRoundLiteDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trọng tài nhập điểm tự do, không bị giới hạn bởi luật thi đấu.'**
+  String get stageRoundLiteDescription;
+
+  /// No description provided for @stageRoundQuickPresets.
+  ///
+  /// In vi, this message translates to:
+  /// **'Preset nhanh cho vòng đấu'**
+  String get stageRoundQuickPresets;
+
+  /// No description provided for @stageRoundCourtLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm sân đấu'**
+  String get stageRoundCourtLabel;
+
+  /// No description provided for @stageRoundCourtPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập sân thi đấu riêng cho vòng này (để trống sẽ dùng địa điểm giải đấu)...'**
+  String get stageRoundCourtPlaceholder;
+
+  /// No description provided for @stageRoundDefaultTimeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ mặc định cho vòng này'**
+  String get stageRoundDefaultTimeLabel;
+
+  /// No description provided for @stageRoundNoTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đặt giờ'**
+  String get stageRoundNoTime;
+
+  /// No description provided for @stageRoundClearTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá giờ mặc định'**
+  String get stageRoundClearTime;
+
+  /// No description provided for @stageRoundNoteLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú điều phối vòng này'**
+  String get stageRoundNoteLabel;
+
+  /// No description provided for @stageRoundNotePlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: ưu tiên gọi đồng loạt ở sân trung tâm lúc 08:00'**
+  String get stageRoundNotePlaceholder;
+
+  /// No description provided for @stageRoundSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu cấu hình'**
+  String get stageRoundSave;
+
+  /// No description provided for @stageRoundEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng mục này không có vòng nào để cấu hình.'**
+  String get stageRoundEmpty;
+
+  /// No description provided for @stageRoundSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng này sẽ đánh: thắng {sets} {unit} • {points} {pointUnit}{margin}{tiebreak}'**
+  String stageRoundSummary(
+    int sets,
+    String unit,
+    int points,
+    String pointUnit,
+    String margin,
+    String tiebreak,
+  );
+
+  /// No description provided for @stageRoundUnitSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'set'**
+  String get stageRoundUnitSet;
+
+  /// No description provided for @stageRoundUnitGame.
+  ///
+  /// In vi, this message translates to:
+  /// **'game'**
+  String get stageRoundUnitGame;
+
+  /// No description provided for @stageRoundPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'điểm'**
+  String get stageRoundPoints;
+
+  /// No description provided for @stageRoundPointUnitTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'game/set'**
+  String get stageRoundPointUnitTennis;
+
+  /// No description provided for @stageRoundMarginWinByTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **' • hơn 2'**
+  String get stageRoundMarginWinByTwo;
+
+  /// No description provided for @stageRoundMarginTarget.
+  ///
+  /// In vi, this message translates to:
+  /// **' • chạm đích là chốt'**
+  String get stageRoundMarginTarget;
+
+  /// No description provided for @stageRoundSideOutSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ đội đang giao bóng mới ghi điểm.'**
+  String get stageRoundSideOutSummary;
 }
 
 class _AppLocalizationsDelegate

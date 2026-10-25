@@ -16373,4 +16373,99 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get divisionEditorPresetFootballStandardDesc =>
       'Two halves of 20 minutes each.';
+
+  @override
+  String get stageRoundTitle => 'Round configuration';
+
+  @override
+  String get stageRoundMenuTitle => 'Configure rounds';
+
+  @override
+  String get stageRoundSelectLabel => 'Select round';
+
+  @override
+  String get stageRoundSharedGroupStage => 'Shared group stage';
+
+  @override
+  String stageRoundLeg(int number) {
+    return 'Leg $number';
+  }
+
+  @override
+  String stageRoundKnockoutOf(int round) {
+    return 'Round of $round';
+  }
+
+  @override
+  String get stageRoundLiteTitle =>
+      'Free mode (Lite) is enabled for the entire tournament';
+
+  @override
+  String get stageRoundLiteDescription =>
+      'Referees can enter scores freely, without rule limits.';
+
+  @override
+  String get stageRoundQuickPresets => 'Quick round presets';
+
+  @override
+  String get stageRoundCourtLabel => 'Court or venue';
+
+  @override
+  String get stageRoundCourtPlaceholder =>
+      'Enter a court for this round (leave blank to use the tournament venue)...';
+
+  @override
+  String get stageRoundDefaultTimeLabel => 'Default time for this round';
+
+  @override
+  String get stageRoundNoTime => 'No time set';
+
+  @override
+  String get stageRoundClearTime => 'Clear default time';
+
+  @override
+  String get stageRoundNoteLabel => 'Round coordination note';
+
+  @override
+  String get stageRoundNotePlaceholder =>
+      'Example: call players together at the center court at 08:00';
+
+  @override
+  String get stageRoundSave => 'Save configuration';
+
+  @override
+  String get stageRoundEmpty => 'This division has no rounds to configure.';
+
+  @override
+  String stageRoundSummary(
+    int sets,
+    String unit,
+    int points,
+    String pointUnit,
+    String margin,
+    String tiebreak,
+  ) {
+    return 'This round: win $sets $unit • $points $pointUnit$margin$tiebreak';
+  }
+
+  @override
+  String get stageRoundUnitSet => 'set';
+
+  @override
+  String get stageRoundUnitGame => 'game';
+
+  @override
+  String get stageRoundPoints => 'points';
+
+  @override
+  String get stageRoundPointUnitTennis => 'game/set';
+
+  @override
+  String get stageRoundMarginWinByTwo => ' • win by 2';
+
+  @override
+  String get stageRoundMarginTarget => ' • target score decides';
+
+  @override
+  String get stageRoundSideOutSummary => 'Only the serving team scores.';
 }

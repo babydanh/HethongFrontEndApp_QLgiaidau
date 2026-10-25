@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_s
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/registration_divisions_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/stage_round_config_sheet.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -136,6 +137,24 @@ class _TournamentManagementDivisionsSectionState
                           'CANCELLED',
                         }.contains(widget.tournament.status.toUpperCase()),
                         onEdit: () => _editDivision(division),
+                        // Watch (không read) để menu hiện đúng ngay khi trận
+                        // của giải mới về; read lúc build luôn thấy rỗng.
+                        onConfigureRounds:
+                            (ref
+                                        .watch(
+                                          matchesProvider(widget.tournament.id),
+                                        )
+                                        .asData
+                                        ?.value
+                                        .any(
+                                          (match) =>
+                                              match.divisionId ==
+                                              _divisionId(division),
+                                        ) ??
+                                    false) &&
+                                !_isSwiss(division['bracketType'])
+                            ? () => _configureRounds(division)
+                            : null,
                         onToggleRegistration: () =>
                             _toggleRegistration(division),
                         onReopenWithDeadline: () =>
@@ -267,6 +286,24 @@ class _TournamentManagementDivisionsSectionState
     if (saved == true && mounted) _reload();
   }
 
+  /// Sheet cấu hình từng vòng của stage (task 2.2): chỉ mở khi hạng mục đã
+  /// sinh sơ đồ; Swiss không có vòng riêng để cấu hình (Web trả danh sách
+  /// rỗng cho SWISS) nên ẩn nút.
+  Future<void> _configureRounds(Map<String, dynamic> division) async {
+    if (_configuring || _isBusy) return;
+    _configuring = true;
+    try {
+      final saved = await StageRoundConfigSheet.show(
+        context,
+        tournament: widget.tournament,
+        division: division,
+      );
+      if (saved == true && mounted) _reload();
+    } finally {
+      _configuring = false;
+    }
+  }
+
   /// Hạng mục đã có sơ đồ chưa: soi danh sách trận của giải (trận sinh cùng
   /// sơ đồ, cùng tín hiệu với cảnh báo "chưa sơ đồ" của sheet khai mạc).
   bool _divisionHasBracket(String divisionId) {
@@ -353,6 +390,7 @@ class _DivisionCard extends StatelessWidget {
     required this.isBusy,
     required this.canToggleRegistration,
     required this.onEdit,
+    required this.onConfigureRounds,
     required this.onToggleRegistration,
     required this.onReopenWithDeadline,
     required this.onDelete,
@@ -361,6 +399,9 @@ class _DivisionCard extends StatelessWidget {
   final bool isBusy;
   final bool canToggleRegistration;
   final VoidCallback onEdit;
+
+  /// null = chưa có sơ đồ (hoặc Swiss): ẩn mục cấu hình từng vòng.
+  final VoidCallback? onConfigureRounds;
   final VoidCallback onToggleRegistration;
   final VoidCallback onReopenWithDeadline;
   final VoidCallback onDelete;
@@ -426,6 +467,7 @@ class _DivisionCard extends StatelessWidget {
             enabled: !isBusy,
             onSelected: (value) {
               if (value == 'edit') onEdit();
+              if (value == 'rounds') onConfigureRounds?.call();
               if (value == 'registration') onToggleRegistration();
               if (value == 'reopen-deadline') onReopenWithDeadline();
               if (value == 'delete') onDelete();
@@ -435,6 +477,12 @@ class _DivisionCard extends StatelessWidget {
                 value: 'edit',
                 child: Text(l10n.divisionEditorEditTitle),
               ),
+              // Cấu hình từng vòng chỉ có khi hạng mục đã sinh sơ đồ.
+              if (onConfigureRounds != null)
+                PopupMenuItem(
+                  value: 'rounds',
+                  child: Text(l10n.stageRoundMenuTitle),
+                ),
               // Quá hạn mà mở lại thì phải đặt hạn mới; còn hạn thì bật/tắt khoá.
               if (expired)
                 PopupMenuItem(

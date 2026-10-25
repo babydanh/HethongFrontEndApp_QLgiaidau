@@ -527,6 +527,7 @@ Map<String, dynamic> buildSportRulesPayload({
   required bool winByTwo,
   int? maxPoints,
   int? tiebreakPoints,
+  String? tiebreakerMode,
   int? roundsToPlay,
   String? mode,
 }) {
@@ -562,6 +563,8 @@ Map<String, dynamic> buildSportRulesPayload({
   };
 
   if (mode != null) payload['mode'] = mode;
+  // Port payload.ts: tiebreakerMode của vòng tròn ('split' | 'playoff').
+  if (tiebreakerMode != null) payload['tiebreakerMode'] = tiebreakerMode;
   if (safeMaxPoints != null) payload['maxPoints'] = safeMaxPoints;
   if (safeTiebreakPoints != null) {
     payload['tiebreakPoints'] = safeTiebreakPoints;

@@ -822,11 +822,11 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           // preset hiện trong tooltip (Web dùng thuộc tính title).
           for (final preset in getSportRulePresets(_sportKind).take(2))
             Tooltip(
-              message: _presetDescription(l10n, preset.id),
+              message: divisionEditorPresetDescription(l10n, preset.id),
               child: ChoiceChip(
                 key: ValueKey('division-editor-preset-${preset.id}'),
                 label: Text(
-                  '${_presetLabel(l10n, preset.id)} · ${preset.setsToWin}×${preset.pointsPerSet}',
+                  '${divisionEditorPresetLabel(l10n, preset.id)} · ${preset.setsToWin}×${preset.pointsPerSet}',
                 ),
                 selected:
                     _setsToWin == preset.setsToWin &&
@@ -857,7 +857,9 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
                 for (final value in _setsToWinOptions)
                   DropdownMenuItem(
                     value: value,
-                    child: Text(_setOptionLabel(l10n, _sportKind, value)),
+                    child: Text(
+                      divisionEditorSetOptionLabel(l10n, _sportKind, value),
+                    ),
                   ),
               ],
               onChanged: _busy || widget.lockContent
@@ -881,7 +883,7 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
-                labelText: _setUnitLabel(l10n, _sportKind),
+                labelText: divisionEditorSetUnitLabel(l10n, _sportKind),
                 border: const OutlineInputBorder(),
               ),
               onChanged: _clampPoints,
@@ -1074,100 +1076,6 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           '${defaults.tiebreakPoints ?? defaults.pointsPerSet}';
     });
   }
-
-  String _setUnitLabel(AppLocalizations l10n, SportRulePresetKind kind) =>
-      switch (kind) {
-        SportRulePresetKind.badminton => l10n.divisionEditorSetUnitBadminton,
-        SportRulePresetKind.tableTennis =>
-          l10n.divisionEditorSetUnitTableTennis,
-        SportRulePresetKind.pickleballRally =>
-          l10n.divisionEditorSetUnitPickleballRally,
-        SportRulePresetKind.pickleballSideOut =>
-          l10n.divisionEditorSetUnitPickleballSideOut,
-        SportRulePresetKind.tennis => l10n.divisionEditorSetUnitTennis,
-        SportRulePresetKind.football => l10n.divisionEditorSetUnitFootball,
-      };
-
-  String _setOptionLabel(
-    AppLocalizations l10n,
-    SportRulePresetKind kind,
-    int value,
-  ) => switch (kind) {
-    SportRulePresetKind.badminton => switch (value) {
-      1 => l10n.divisionEditorBadmintonSet1,
-      2 => l10n.divisionEditorBadmintonSet2,
-      _ => l10n.divisionEditorBadmintonSet3,
-    },
-    SportRulePresetKind.tableTennis => switch (value) {
-      1 => l10n.divisionEditorTableTennisSet1,
-      2 => l10n.divisionEditorTableTennisSet2,
-      3 => l10n.divisionEditorTableTennisSet3,
-      _ => l10n.divisionEditorTableTennisSet4,
-    },
-    SportRulePresetKind.pickleballRally => switch (value) {
-      1 => l10n.divisionEditorPickleballRallySet1,
-      2 => l10n.divisionEditorPickleballRallySet2,
-      _ => l10n.divisionEditorPickleballRallySet3,
-    },
-    SportRulePresetKind.pickleballSideOut => switch (value) {
-      1 => l10n.divisionEditorPickleballSideOutSet1,
-      2 => l10n.divisionEditorPickleballSideOutSet2,
-      _ => l10n.divisionEditorPickleballSideOutSet3,
-    },
-    SportRulePresetKind.tennis => switch (value) {
-      1 => l10n.divisionEditorTennisSet1,
-      2 => l10n.divisionEditorTennisSet2,
-      _ => l10n.divisionEditorTennisSet3,
-    },
-    SportRulePresetKind.football => l10n.divisionEditorFootballSet1,
-  };
-
-  String _presetLabel(AppLocalizations l10n, String id) => switch (id) {
-    'badminton-quick' => l10n.divisionEditorPresetBadmintonQuick,
-    'badminton-standard' => l10n.divisionEditorPresetBadmintonStandard,
-    'badminton-short' => l10n.divisionEditorPresetBadmintonShort,
-    'table-tennis-bo3' => l10n.divisionEditorPresetTableTennisBo3,
-    'table-tennis-bo5' => l10n.divisionEditorPresetTableTennisBo5,
-    'table-tennis-single' => l10n.divisionEditorPresetTableTennisSingle,
-    'pickleball-rally-quick' => l10n.divisionEditorPresetPickleballRallyQuick,
-    'pickleball-rally-standard' =>
-      l10n.divisionEditorPresetPickleballRallyStandard,
-    'pickleball-rally-extended' =>
-      l10n.divisionEditorPresetPickleballRallyExtended,
-    'pickleball-sideout-standard' =>
-      l10n.divisionEditorPresetPickleballSideoutStandard,
-    'pickleball-sideout-15' => l10n.divisionEditorPresetPickleballSideout15,
-    'pickleball-sideout-finals' =>
-      l10n.divisionEditorPresetPickleballSideoutFinals,
-    'tennis-pro-set' => l10n.divisionEditorPresetTennisProSet,
-    'tennis-standard' => l10n.divisionEditorPresetTennisStandard,
-    'tennis-short-set' => l10n.divisionEditorPresetTennisShortSet,
-    _ => l10n.divisionEditorPresetFootballStandard,
-  };
-
-  String _presetDescription(AppLocalizations l10n, String id) => switch (id) {
-    'badminton-quick' => l10n.divisionEditorPresetBadmintonQuickDesc,
-    'badminton-standard' => l10n.divisionEditorPresetBadmintonStandardDesc,
-    'badminton-short' => l10n.divisionEditorPresetBadmintonShortDesc,
-    'table-tennis-bo3' => l10n.divisionEditorPresetTableTennisBo3Desc,
-    'table-tennis-bo5' => l10n.divisionEditorPresetTableTennisBo5Desc,
-    'table-tennis-single' => l10n.divisionEditorPresetTableTennisSingleDesc,
-    'pickleball-rally-quick' =>
-      l10n.divisionEditorPresetPickleballRallyQuickDesc,
-    'pickleball-rally-standard' =>
-      l10n.divisionEditorPresetPickleballRallyStandardDesc,
-    'pickleball-rally-extended' =>
-      l10n.divisionEditorPresetPickleballRallyExtendedDesc,
-    'pickleball-sideout-standard' =>
-      l10n.divisionEditorPresetPickleballSideoutStandardDesc,
-    'pickleball-sideout-15' => l10n.divisionEditorPresetPickleballSideout15Desc,
-    'pickleball-sideout-finals' =>
-      l10n.divisionEditorPresetPickleballSideoutFinalsDesc,
-    'tennis-pro-set' => l10n.divisionEditorPresetTennisProSetDesc,
-    'tennis-standard' => l10n.divisionEditorPresetTennisStandardDesc,
-    'tennis-short-set' => l10n.divisionEditorPresetTennisShortSetDesc,
-    _ => l10n.divisionEditorPresetFootballStandardDesc,
-  };
 
   // ─── Vòng tròn / vòng bảng + playoff ───
 
@@ -1533,3 +1441,103 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
 
 String _normalize(String value, List<String> values, String fallback) =>
     values.contains(value.toUpperCase()) ? value.toUpperCase() : fallback;
+
+// ─── Nhãn luật theo môn, dùng chung cho division editor và sheet vòng ───
+
+String divisionEditorSetUnitLabel(
+  AppLocalizations l10n,
+  SportRulePresetKind kind,
+) => switch (kind) {
+  SportRulePresetKind.badminton => l10n.divisionEditorSetUnitBadminton,
+  SportRulePresetKind.tableTennis => l10n.divisionEditorSetUnitTableTennis,
+  SportRulePresetKind.pickleballRally =>
+    l10n.divisionEditorSetUnitPickleballRally,
+  SportRulePresetKind.pickleballSideOut =>
+    l10n.divisionEditorSetUnitPickleballSideOut,
+  SportRulePresetKind.tennis => l10n.divisionEditorSetUnitTennis,
+  SportRulePresetKind.football => l10n.divisionEditorSetUnitFootball,
+};
+
+String divisionEditorSetOptionLabel(
+  AppLocalizations l10n,
+  SportRulePresetKind kind,
+  int value,
+) => switch (kind) {
+  SportRulePresetKind.badminton => switch (value) {
+    1 => l10n.divisionEditorBadmintonSet1,
+    2 => l10n.divisionEditorBadmintonSet2,
+    _ => l10n.divisionEditorBadmintonSet3,
+  },
+  SportRulePresetKind.tableTennis => switch (value) {
+    1 => l10n.divisionEditorTableTennisSet1,
+    2 => l10n.divisionEditorTableTennisSet2,
+    3 => l10n.divisionEditorTableTennisSet3,
+    _ => l10n.divisionEditorTableTennisSet4,
+  },
+  SportRulePresetKind.pickleballRally => switch (value) {
+    1 => l10n.divisionEditorPickleballRallySet1,
+    2 => l10n.divisionEditorPickleballRallySet2,
+    _ => l10n.divisionEditorPickleballRallySet3,
+  },
+  SportRulePresetKind.pickleballSideOut => switch (value) {
+    1 => l10n.divisionEditorPickleballSideOutSet1,
+    2 => l10n.divisionEditorPickleballSideOutSet2,
+    _ => l10n.divisionEditorPickleballSideOutSet3,
+  },
+  SportRulePresetKind.tennis => switch (value) {
+    1 => l10n.divisionEditorTennisSet1,
+    2 => l10n.divisionEditorTennisSet2,
+    _ => l10n.divisionEditorTennisSet3,
+  },
+  SportRulePresetKind.football => l10n.divisionEditorFootballSet1,
+};
+
+String divisionEditorPresetLabel(AppLocalizations l10n, String id) =>
+    switch (id) {
+      'badminton-quick' => l10n.divisionEditorPresetBadmintonQuick,
+      'badminton-standard' => l10n.divisionEditorPresetBadmintonStandard,
+      'badminton-short' => l10n.divisionEditorPresetBadmintonShort,
+      'table-tennis-bo3' => l10n.divisionEditorPresetTableTennisBo3,
+      'table-tennis-bo5' => l10n.divisionEditorPresetTableTennisBo5,
+      'table-tennis-single' => l10n.divisionEditorPresetTableTennisSingle,
+      'pickleball-rally-quick' => l10n.divisionEditorPresetPickleballRallyQuick,
+      'pickleball-rally-standard' =>
+        l10n.divisionEditorPresetPickleballRallyStandard,
+      'pickleball-rally-extended' =>
+        l10n.divisionEditorPresetPickleballRallyExtended,
+      'pickleball-sideout-standard' =>
+        l10n.divisionEditorPresetPickleballSideoutStandard,
+      'pickleball-sideout-15' => l10n.divisionEditorPresetPickleballSideout15,
+      'pickleball-sideout-finals' =>
+        l10n.divisionEditorPresetPickleballSideoutFinals,
+      'tennis-pro-set' => l10n.divisionEditorPresetTennisProSet,
+      'tennis-standard' => l10n.divisionEditorPresetTennisStandard,
+      'tennis-short-set' => l10n.divisionEditorPresetTennisShortSet,
+      _ => l10n.divisionEditorPresetFootballStandard,
+    };
+
+String divisionEditorPresetDescription(
+  AppLocalizations l10n,
+  String id,
+) => switch (id) {
+  'badminton-quick' => l10n.divisionEditorPresetBadmintonQuickDesc,
+  'badminton-standard' => l10n.divisionEditorPresetBadmintonStandardDesc,
+  'badminton-short' => l10n.divisionEditorPresetBadmintonShortDesc,
+  'table-tennis-bo3' => l10n.divisionEditorPresetTableTennisBo3Desc,
+  'table-tennis-bo5' => l10n.divisionEditorPresetTableTennisBo5Desc,
+  'table-tennis-single' => l10n.divisionEditorPresetTableTennisSingleDesc,
+  'pickleball-rally-quick' => l10n.divisionEditorPresetPickleballRallyQuickDesc,
+  'pickleball-rally-standard' =>
+    l10n.divisionEditorPresetPickleballRallyStandardDesc,
+  'pickleball-rally-extended' =>
+    l10n.divisionEditorPresetPickleballRallyExtendedDesc,
+  'pickleball-sideout-standard' =>
+    l10n.divisionEditorPresetPickleballSideoutStandardDesc,
+  'pickleball-sideout-15' => l10n.divisionEditorPresetPickleballSideout15Desc,
+  'pickleball-sideout-finals' =>
+    l10n.divisionEditorPresetPickleballSideoutFinalsDesc,
+  'tennis-pro-set' => l10n.divisionEditorPresetTennisProSetDesc,
+  'tennis-standard' => l10n.divisionEditorPresetTennisStandardDesc,
+  'tennis-short-set' => l10n.divisionEditorPresetTennisShortSetDesc,
+  _ => l10n.divisionEditorPresetFootballStandardDesc,
+};
