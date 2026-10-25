@@ -13,7 +13,7 @@
   - Giao: `closeDivisionRegistrations(String tournamentId, List<String> divisionIds)` · Nhận: card vòng đời
   - Chủ file chung: `tournament_management_section_screen.dart` (cùng task 1.2, 1.4)
   - Phụ thuộc: 0.1
-- [ ] 1.2 Sheet kết thúc: checklist "trận đã xong X/Y", danh sách trận LIVE chặn nút, hạng mục còn trận; bỏ `_canFinalizeTournament` admin-only cho organizer cũng kết thúc (Backend chốt quyền). Tiêu chí: TC-WP-01-03/04 + test API complete qua cloud.
+- [x] 1.2 Sheet kết thúc: checklist "trận đã xong X/Y", danh sách trận LIVE chặn nút, hạng mục còn trận; bỏ `_canFinalizeTournament` admin-only cho organizer cũng kết thúc (Backend chốt quyền). Tiêu chí: TC-WP-01-03/04 + test API complete qua cloud.
   - Files: `lib/features/tournament/screens/tournament_management_hub_screen.dart:530-633,790-834`, repository, ARB, test hub + `test/tournament_management_repository_api_test.dart`
   - Chủ file chung: hub screen (cùng task 3.9 menu export)
   - Phụ thuộc: 0.1
