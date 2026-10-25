@@ -29,6 +29,6 @@ Khi hạng mục đã có sơ đồ, màn quản lý SHALL cho mở sheet cấu 
 - WHEN BTC đặt giờ mặc định vòng 2 là 08:30 và bấm lưu
 - THEN App gửi PATCH stages với scheduledAt mặc định mới và vòng đó cập nhật sau tải lại
 
-#### Scenario: Lỗi validate
-- WHEN BTC nhập điểm/set bằng 0
-- THEN sheet báo lỗi validate và không gửi request
+#### Scenario: Nhập điểm/set bằng 0
+- WHEN BTC nhập điểm/set bằng 0 (hoặc bỏ trống)
+- THEN sheet tự kẹp về tối thiểu 1 như Web (`toPositiveInteger` của payload.ts, không báo lỗi chặn lưu) và gửi payload với giá trị đã kẹp

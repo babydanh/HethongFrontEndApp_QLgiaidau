@@ -445,4 +445,76 @@ void main() {
       });
     });
   });
+
+  group('getDivisionStages', () {
+    test('GETs bracket?divisionId and returns data.stages as-is', () async {
+      final adapter = _Adapter(
+        body: {
+          'data': {
+            'stages': [
+              {
+                'id': 's-1',
+                'name': 'Knockout',
+                'type': 'SINGLE_ELIMINATION',
+                'roundConfig': {'kind': 'BADMINTON'},
+                'venueId': 'venue-1',
+                'scheduledDate': '2026-06-01T02:00:00.000Z',
+                'groups': [
+                  {
+                    'id': 'g-1',
+                    'name': 'Winners',
+                    'matches': [
+                      {'id': 'm-1', 'roundNumber': 1},
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      );
+
+      final stages = await _repoWith(
+        adapter,
+      ).getDivisionStages('t-1', divisionId: 'd-1');
+
+      expect(adapter.method, 'GET');
+      expect(adapter.uri!.path, endsWith('/tournaments/t-1/bracket'));
+      expect(adapter.uri!.queryParameters['divisionId'], 'd-1');
+      expect(stages, hasLength(1));
+      // Map nguyên trạng: sheet đếm vòng từ groups[].matches và đọc
+      // roundConfig/venueId/scheduledDate trực tiếp.
+      expect(stages.single['id'], 's-1');
+      expect(stages.single['type'], 'SINGLE_ELIMINATION');
+      expect(stages.single['roundConfig'], {'kind': 'BADMINTON'});
+      expect(stages.single['venueId'], 'venue-1');
+      expect(stages.single['scheduledDate'], '2026-06-01T02:00:00.000Z');
+      expect((stages.single['groups'] as List).single['matches'], hasLength(1));
+    });
+
+    test('skips non-map entries and returns empty without stages', () async {
+      final adapter = _Adapter(
+        body: {
+          'data': {
+            'stages': [
+              'junk',
+              {'id': 's-2'},
+            ],
+          },
+        },
+      );
+      expect(
+        await _repoWith(adapter).getDivisionStages('t-1', divisionId: 'd-1'),
+        [
+          {'id': 's-2'},
+        ],
+      );
+      expect(
+        await _repoWith(
+          _Adapter(body: {}),
+        ).getDivisionStages('t-1', divisionId: 'd-1'),
+        isEmpty,
+      );
+    });
+  });
 }

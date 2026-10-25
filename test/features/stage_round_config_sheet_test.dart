@@ -567,6 +567,46 @@ void main() {
   );
 
   testWidgets(
+    'TC-WP-02-04: nhập điểm/set bằng 0 — sheet kẹp về 1 như Web và vẫn gửi request',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final stage = _StageRepo([_seStage()]);
+      await _open(
+        tester,
+        _app(
+          stage,
+          openSheet: (context) => StageRoundConfigSheet.show(
+            context,
+            tournament: _tournament(),
+            division: _division(roundConfig: _strictDivisionRules),
+          ),
+        ),
+      );
+
+      await _selectRound(tester, 'Chung kết');
+      await tester.enterText(
+        find.byKey(const ValueKey('stage-round-points-per-set')),
+        '0',
+      );
+      await tester.pumpAndSettle();
+      // Không có lỗi validate chặn lưu (Web cũng chỉ kẹp ở payload qua
+      // toPositiveInteger) — bấm lưu vẫn gửi.
+      await tester.tap(find.byKey(const ValueKey('stage-round-save')));
+      await tester.pumpAndSettle();
+
+      final round2 =
+          (stage.stagePatches.single.roundConfig['rounds']
+                  as Map<String, dynamic>)['2']
+              as Map<String, dynamic>;
+      expect(round2['pointsPerSet'], 1);
+      expect(round2['format']['pointsPerGame'], 1);
+      expect(stage.stagePatches, hasLength(1));
+    },
+  );
+
+  testWidgets(
     'TC-WP-02-04: stage Swiss không có vòng riêng — sheet báo rỗng và không lưu',
     (tester) async {
       tester.view.physicalSize = const Size(800, 2400);
