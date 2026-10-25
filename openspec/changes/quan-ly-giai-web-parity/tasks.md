@@ -25,7 +25,7 @@
   - Files: `tournament_management_divisions_section.dart`, `tournament_management_section_screen.dart` (nút vào), repository (body `divisionIds`), ARB, test
   - Chủ file chung: divisions_section, section_screen
   - Phụ thuộc: 1.1
-- [ ] 1.5 Sửa lệ phí nhanh: nút mức phí nhanh (0/+20/+50/+100/+200k) + bảng phân tích phí sàn (port `getPlatformFeeBreakdown` thành Dart util). Tiêu chí: TC-WP-01-08 + util test riêng.
+- [x] 1.5 Sửa lệ phí nhanh: nút mức phí nhanh (0/+20/+50/+100/+200k) + bảng phân tích phí sàn (port `getPlatformFeeBreakdown` thành Dart util). Tiêu chí: TC-WP-01-08 + util test riêng.
   - Files: `lib/features/tournament/screens/tournament_management_finance_section.dart:397-584`, tạo `lib/features/tournament/utils/platform_fee.dart`, `test/features/platform_fee_test.dart`, ARB
   - Chủ file chung: finance_section
   - Phụ thuộc: 0.1
