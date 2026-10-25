@@ -5514,6 +5514,33 @@
       "count": {"type": "int"}
     }
   },
+  "lifecycleEndTitle": "Complete tournament",
+  "lifecycleEndWarning": "Make sure all live matches are resolved before completing the tournament.",
+  "lifecycleEndCheckMatches": "Completed matches: {completed}/{total}",
+  "@lifecycleEndCheckMatches": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "lifecycleEndCheckLive": "Live matches remaining: {live}",
+  "@lifecycleEndCheckLive": {
+    "placeholders": {
+      "live": {"type": "int"}
+    }
+  },
+  "lifecycleEndLiveMatch": "{team1} vs {team2}",
+  "@lifecycleEndLiveMatch": {
+    "placeholders": {
+      "team1": {"type": "String"},
+      "team2": {"type": "String"}
+    }
+  },
+  "lifecycleEndNotPassed": "Not passed",
+  "lifecycleEndNoMatches": "There are no matches yet. You can still complete this tournament.",
+  "lifecycleEndLoadingMatches": "Loading matches…",
+  "lifecycleEndLoadMatchesError": "Could not load the match list. Close this and try again.",
+  "lifecycleEndConfirm": "Complete tournament",
   "tournamentManagementCompleteTournament": "End tournament",
   "tournamentManagementCompleteTournamentConfirm": "Are you sure you want to end this tournament?",
   "tournamentManagementLiveOperations": "Live operations",

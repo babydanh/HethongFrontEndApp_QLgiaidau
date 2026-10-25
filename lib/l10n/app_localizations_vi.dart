@@ -13752,6 +13752,45 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get lifecycleEndTitle => 'Hoàn tất giải đấu';
+
+  @override
+  String get lifecycleEndWarning =>
+      'Hãy bảo đảm tất cả trận đang diễn ra đã được xử lý trước khi hoàn tất giải đấu.';
+
+  @override
+  String lifecycleEndCheckMatches(int completed, int total) {
+    return 'Trận đã hoàn tất: $completed/$total';
+  }
+
+  @override
+  String lifecycleEndCheckLive(int live) {
+    return 'Trận đang diễn ra còn lại: $live';
+  }
+
+  @override
+  String lifecycleEndLiveMatch(String team1, String team2) {
+    return '$team1 vs $team2';
+  }
+
+  @override
+  String get lifecycleEndNotPassed => 'Chưa đạt';
+
+  @override
+  String get lifecycleEndNoMatches =>
+      'Chưa có trận đấu nào. Bạn vẫn có thể hoàn tất giải đấu này.';
+
+  @override
+  String get lifecycleEndLoadingMatches => 'Đang tải danh sách trận đấu…';
+
+  @override
+  String get lifecycleEndLoadMatchesError =>
+      'Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.';
+
+  @override
+  String get lifecycleEndConfirm => 'Hoàn tất giải đấu';
+
+  @override
   String get tournamentManagementCompleteTournament => 'Kết thúc giải';
 
   @override

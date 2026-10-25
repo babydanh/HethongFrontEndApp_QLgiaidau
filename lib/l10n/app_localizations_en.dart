@@ -13797,6 +13797,45 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get lifecycleEndTitle => 'Complete tournament';
+
+  @override
+  String get lifecycleEndWarning =>
+      'Make sure all live matches are resolved before completing the tournament.';
+
+  @override
+  String lifecycleEndCheckMatches(int completed, int total) {
+    return 'Completed matches: $completed/$total';
+  }
+
+  @override
+  String lifecycleEndCheckLive(int live) {
+    return 'Live matches remaining: $live';
+  }
+
+  @override
+  String lifecycleEndLiveMatch(String team1, String team2) {
+    return '$team1 vs $team2';
+  }
+
+  @override
+  String get lifecycleEndNotPassed => 'Not passed';
+
+  @override
+  String get lifecycleEndNoMatches =>
+      'There are no matches yet. You can still complete this tournament.';
+
+  @override
+  String get lifecycleEndLoadingMatches => 'Loading matches…';
+
+  @override
+  String get lifecycleEndLoadMatchesError =>
+      'Could not load the match list. Close this and try again.';
+
+  @override
+  String get lifecycleEndConfirm => 'Complete tournament';
+
+  @override
   String get tournamentManagementCompleteTournament => 'End tournament';
 
   @override

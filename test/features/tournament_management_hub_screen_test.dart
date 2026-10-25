@@ -584,6 +584,11 @@ void main() {
           tournamentManagementRepositoryProvider.overrideWithValue(
             lifecycleRepository,
           ),
+          // Sheet kết thúc đếm trận từ matchesProvider: mọi trận đã xong, không
+          // còn trận LIVE nên nút kết thúc bật được.
+          matchesProvider(
+            'tournament-1',
+          ).overrideWith((ref) => Stream.value(<MatchModel>[])),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
@@ -606,7 +611,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.continueButton));
+    await tester.tap(find.byKey(const ValueKey('lifecycle-end-cancel')));
     await tester.pumpAndSettle();
     expect(lifecycleRepository.completedIds, isEmpty);
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -615,7 +620,7 @@ void main() {
 
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, l10n.confirmEndButton));
+    await tester.tap(find.byKey(const ValueKey('lifecycle-end-confirm')));
     await tester.pumpAndSettle();
 
     expect(lifecycleRepository.completedIds, ['tournament-1']);
@@ -626,7 +631,7 @@ void main() {
     expect(find.text(l10n.tournamentEnded), findsOneWidget);
   });
 
-  testWidgets('organizer cannot see the server-forbidden end action', (
+  testWidgets('organizer sees the end action; permission stays server-side', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -645,7 +650,9 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    expect(find.text(l10n.endTournament), findsNothing);
+    // Change quan-ly-giai-web-parity: organizer/co-organizer cũng kết thúc
+    // được — backend chốt quyền (403 hiện nguyên văn trong sheet).
+    expect(find.text(l10n.endTournament), findsOneWidget);
   });
 
   testWidgets('keeps lite management accessible from overflow actions', (

@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
@@ -18,9 +19,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_ba
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
-import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
-import 'package:dio/dio.dart';
-import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,7 +76,6 @@ class _TournamentManagementHubScreenState
   TournamentManagementSection? _openedSection;
   bool _isCollapsed = false;
   bool _isTabBarPinned = false;
-  bool _isFinalizing = false;
   bool _isExporting = false;
   bool _isDeleting = false;
 
@@ -129,13 +126,12 @@ class _TournamentManagementHubScreenState
   Widget build(BuildContext context) {
     final tournament = widget.tournament;
     final l10n = AppLocalizations.of(context)!;
-    // Kết thúc giải là thao tác admin: backend từ chối organizer.
-    final canFinalize = _canFinalizeTournament(
-      tournament.status,
-      isAdmin:
-          ref.watch(userProfileProvider).asData?.value.hasRole('ADMIN') ??
-          false,
-    );
+    // Kết thúc giải hiển thị theo trạng thái giải (đang thi đấu); phân quyền
+    // do backend chốt — organizer/co-organizer cũng kết thúc được, lỗi 403
+    // hiển thị nguyên văn trong sheet (OpenSpec quan-ly-giai-web-parity).
+    final canFinalize =
+        tournament.status.toUpperCase() ==
+        AppConstants.statusInProgress.toUpperCase();
     final teamCount =
         ref.watch(introTeamsProvider(tournament.id)).value?.length ?? 0;
     final openedSection = _openedSection;
@@ -574,7 +570,6 @@ class _TournamentManagementHubScreenState
         if (canFinalize)
           PopupMenuItem(
             value: 'end',
-            enabled: !_isFinalizing,
             child: Row(
               children: [
                 Icon(
@@ -787,48 +782,18 @@ class _TournamentManagementHubScreenState
     ),
   };
 
-  static bool _canFinalizeTournament(String status, {required bool isAdmin}) =>
-      status.toUpperCase() == AppConstants.statusInProgress.toUpperCase() &&
-      isAdmin;
-
+  /// Kết thúc giải qua sheet checklist (như Web): "trận đã xong X/Y", liệt kê
+  /// trận LIVE và hạng mục chặn; còn trận LIVE thì khoá nút kết thúc. Sheet
+  /// tự gọi `complete-tournament`, chống double-tap và hiển thị lỗi server
+  /// nguyên văn; kết thúc xong báo thành công qua snackbar.
   Future<void> _finalizeTournament() async {
-    final isAdmin =
-        ref.read(userProfileProvider).asData?.value.hasRole('ADMIN') ?? false;
-    if (_isFinalizing ||
-        !_canFinalizeTournament(widget.tournament.status, isAdmin: isAdmin)) {
-      return;
-    }
-    setState(() => _isFinalizing = true);
-    final l10n = AppLocalizations.of(context)!;
-    final confirm = await showConfirmDialog(
-      context: context,
-      title: l10n.confirmEndTitle,
-      content: l10n.confirmEndContent,
-      confirmText: l10n.confirmEndButton,
-      cancelText: l10n.continueButton,
+    final ended = await LifecycleEndSheet.show(
+      context,
+      tournament: widget.tournament,
     );
-    if (confirm != true || !mounted) {
-      if (mounted) setState(() => _isFinalizing = false);
-      return;
-    }
-    String? errorMessage;
-    try {
-      await ref
-          .read(tournamentManagementRepositoryProvider)
-          .completeTournament(widget.tournament.id);
-      ref.invalidate(tournamentProvider(widget.tournament.id));
-    } catch (error) {
-      final data = error is DioException ? error.response?.data : null;
-      final message = data is Map ? data['message'] : null;
-      errorMessage = message is String && message.trim().isNotEmpty
-          ? message
-          : l10n.endError;
-    } finally {
-      if (mounted) setState(() => _isFinalizing = false);
-    }
-    if (!mounted) return;
+    if (!mounted || ended != true) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage ?? l10n.tournamentEnded)),
+      SnackBar(content: Text(AppLocalizations.of(context)!.tournamentEnded)),
     );
   }
 

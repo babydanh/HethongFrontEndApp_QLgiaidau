@@ -24994,6 +24994,66 @@ abstract class AppLocalizations {
   /// **'Có {count} lượt đăng ký đang chờ duyệt.'**
   String lifecycleOpeningWarningPending(int count);
 
+  /// No description provided for @lifecycleEndTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất giải đấu'**
+  String get lifecycleEndTitle;
+
+  /// No description provided for @lifecycleEndWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy bảo đảm tất cả trận đang diễn ra đã được xử lý trước khi hoàn tất giải đấu.'**
+  String get lifecycleEndWarning;
+
+  /// No description provided for @lifecycleEndCheckMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đã hoàn tất: {completed}/{total}'**
+  String lifecycleEndCheckMatches(int completed, int total);
+
+  /// No description provided for @lifecycleEndCheckLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đang diễn ra còn lại: {live}'**
+  String lifecycleEndCheckLive(int live);
+
+  /// No description provided for @lifecycleEndLiveMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'{team1} vs {team2}'**
+  String lifecycleEndLiveMatch(String team1, String team2);
+
+  /// No description provided for @lifecycleEndNotPassed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đạt'**
+  String get lifecycleEndNotPassed;
+
+  /// No description provided for @lifecycleEndNoMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận đấu nào. Bạn vẫn có thể hoàn tất giải đấu này.'**
+  String get lifecycleEndNoMatches;
+
+  /// No description provided for @lifecycleEndLoadingMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách trận đấu…'**
+  String get lifecycleEndLoadingMatches;
+
+  /// No description provided for @lifecycleEndLoadMatchesError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.'**
+  String get lifecycleEndLoadMatchesError;
+
+  /// No description provided for @lifecycleEndConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất giải đấu'**
+  String get lifecycleEndConfirm;
+
   /// No description provided for @tournamentManagementCompleteTournament.
   ///
   /// In vi, this message translates to:

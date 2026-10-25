@@ -5609,6 +5609,33 @@
       "count": {"type": "int"}
     }
   },
+  "lifecycleEndTitle": "Hoàn tất giải đấu",
+  "lifecycleEndWarning": "Hãy bảo đảm tất cả trận đang diễn ra đã được xử lý trước khi hoàn tất giải đấu.",
+  "lifecycleEndCheckMatches": "Trận đã hoàn tất: {completed}/{total}",
+  "@lifecycleEndCheckMatches": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "lifecycleEndCheckLive": "Trận đang diễn ra còn lại: {live}",
+  "@lifecycleEndCheckLive": {
+    "placeholders": {
+      "live": {"type": "int"}
+    }
+  },
+  "lifecycleEndLiveMatch": "{team1} vs {team2}",
+  "@lifecycleEndLiveMatch": {
+    "placeholders": {
+      "team1": {"type": "String"},
+      "team2": {"type": "String"}
+    }
+  },
+  "lifecycleEndNotPassed": "Chưa đạt",
+  "lifecycleEndNoMatches": "Chưa có trận đấu nào. Bạn vẫn có thể hoàn tất giải đấu này.",
+  "lifecycleEndLoadingMatches": "Đang tải danh sách trận đấu…",
+  "lifecycleEndLoadMatchesError": "Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.",
+  "lifecycleEndConfirm": "Hoàn tất giải đấu",
   "tournamentManagementCompleteTournament": "Kết thúc giải",
   "tournamentManagementCompleteTournamentConfirm": "Bạn có chắc muốn kết thúc giải đấu này?",
   "tournamentManagementLiveOperations": "Vận hành trực tiếp",
