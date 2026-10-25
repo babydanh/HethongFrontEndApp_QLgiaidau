@@ -5496,6 +5496,24 @@
   "tournamentManagementStartTournamentConfirm": "Starting the tournament will lock registration for every division. Are you sure you want to start this tournament?",
   "tournamentManagementStartCloseAll": "Close registration for every division",
   "tournamentManagementStartTournamentMissingBracketConfirm": "Warning: at least one division has no draw yet. Starting the tournament will lock registration for every division. You can still start the tournament.",
+  "lifecycleOpeningTitle": "Start the tournament?",
+  "lifecycleOpeningCloseHeading": "Close registration to start",
+  "lifecycleOpeningCloseAll": "Select all",
+  "lifecycleOpeningStart": "Start",
+  "lifecycleOpeningOpenAnyway": "Start anyway",
+  "lifecycleOpeningForceWarning": "No division is selected to close registration. Starting will lock registration for every open division.",
+  "lifecycleOpeningWarningNoBracket": "No draw yet for: {divisions}.",
+  "@lifecycleOpeningWarningNoBracket": {
+    "placeholders": {
+      "divisions": {"type": "String"}
+    }
+  },
+  "lifecycleOpeningWarningPending": "{count} registrations are awaiting approval.",
+  "@lifecycleOpeningWarningPending": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "tournamentManagementCompleteTournament": "End tournament",
   "tournamentManagementCompleteTournamentConfirm": "Are you sure you want to end this tournament?",
   "tournamentManagementLiveOperations": "Live operations",

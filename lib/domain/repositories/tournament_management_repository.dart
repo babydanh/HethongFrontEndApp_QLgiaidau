@@ -146,6 +146,14 @@ abstract interface class TournamentManagementRepository {
   /// Đóng đăng ký mọi nội dung (không tạo sơ đồ). Nội dung riêng thì khoá qua
   /// `updateDivisionConfig` với `isRegistrationLocked`.
   Future<Map<String, dynamic>> closeRegistration(String id);
+
+  /// Đóng đăng ký đúng các nội dung trong [divisionIds] (body `divisionIds`,
+  /// đối chiếu Web `tournamentsApi.closeRegistration`). Backend từ chối mảng
+  /// rỗng nên danh sách phải có ít nhất một id.
+  Future<Map<String, dynamic>> closeDivisionRegistrations(
+    String id,
+    List<String> divisionIds,
+  );
   Future<Map<String, dynamic>> regenerateInviteCode(String id);
 }
 

@@ -194,6 +194,11 @@ class _LifecycleRepository extends _EmptyTournamentManagementRepository
   final calls = <String>[];
   Object? completeError;
 
+  /// Không hạng mục nào mở đăng ký: card khai mạc giữ hộp thoại xác nhận cũ.
+  @override
+  Future<List<Map<String, dynamic>>> getManageDivisions(String id) async =>
+      const [];
+
   @override
   Future<Map<String, dynamic>> startTournament(String id) async {
     startedIds.add(id);

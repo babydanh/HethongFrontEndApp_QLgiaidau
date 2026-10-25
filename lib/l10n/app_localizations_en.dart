@@ -13768,6 +13768,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Warning: at least one division has no draw yet. Starting the tournament will lock registration for every division. You can still start the tournament.';
 
   @override
+  String get lifecycleOpeningTitle => 'Start the tournament?';
+
+  @override
+  String get lifecycleOpeningCloseHeading => 'Close registration to start';
+
+  @override
+  String get lifecycleOpeningCloseAll => 'Select all';
+
+  @override
+  String get lifecycleOpeningStart => 'Start';
+
+  @override
+  String get lifecycleOpeningOpenAnyway => 'Start anyway';
+
+  @override
+  String get lifecycleOpeningForceWarning =>
+      'No division is selected to close registration. Starting will lock registration for every open division.';
+
+  @override
+  String lifecycleOpeningWarningNoBracket(String divisions) {
+    return 'No draw yet for: $divisions.';
+  }
+
+  @override
+  String lifecycleOpeningWarningPending(int count) {
+    return '$count registrations are awaiting approval.';
+  }
+
+  @override
   String get tournamentManagementCompleteTournament => 'End tournament';
 
   @override

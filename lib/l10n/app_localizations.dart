@@ -24946,6 +24946,54 @@ abstract class AppLocalizations {
   /// **'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.'**
   String get tournamentManagementStartTournamentMissingBracketConfirm;
 
+  /// No description provided for @lifecycleOpeningTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khai mạc giải?'**
+  String get lifecycleOpeningTitle;
+
+  /// No description provided for @lifecycleOpeningCloseHeading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký để khai mạc'**
+  String get lifecycleOpeningCloseHeading;
+
+  /// No description provided for @lifecycleOpeningCloseAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn hết'**
+  String get lifecycleOpeningCloseAll;
+
+  /// No description provided for @lifecycleOpeningStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khai mạc'**
+  String get lifecycleOpeningStart;
+
+  /// No description provided for @lifecycleOpeningOpenAnyway.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vẫn khai mạc'**
+  String get lifecycleOpeningOpenAnyway;
+
+  /// No description provided for @lifecycleOpeningForceWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa chọn hạng mục nào để đóng đăng ký. Khai mạc sẽ khoá đăng ký tất cả nội dung còn mở.'**
+  String get lifecycleOpeningForceWarning;
+
+  /// No description provided for @lifecycleOpeningWarningNoBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có sơ đồ thi đấu: {divisions}.'**
+  String lifecycleOpeningWarningNoBracket(String divisions);
+
+  /// No description provided for @lifecycleOpeningWarningPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có {count} lượt đăng ký đang chờ duyệt.'**
+  String lifecycleOpeningWarningPending(int count);
+
   /// No description provided for @tournamentManagementCompleteTournament.
   ///
   /// In vi, this message translates to:

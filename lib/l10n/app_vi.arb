@@ -5591,6 +5591,24 @@
   "tournamentManagementStartTournamentConfirm": "Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn có chắc muốn khai mạc giải đấu này?",
   "tournamentManagementStartCloseAll": "Đóng đăng ký tất cả nội dung",
   "tournamentManagementStartTournamentMissingBracketConfirm": "Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.",
+  "lifecycleOpeningTitle": "Khai mạc giải?",
+  "lifecycleOpeningCloseHeading": "Đóng đăng ký để khai mạc",
+  "lifecycleOpeningCloseAll": "Chọn hết",
+  "lifecycleOpeningStart": "Khai mạc",
+  "lifecycleOpeningOpenAnyway": "Vẫn khai mạc",
+  "lifecycleOpeningForceWarning": "Bạn chưa chọn hạng mục nào để đóng đăng ký. Khai mạc sẽ khoá đăng ký tất cả nội dung còn mở.",
+  "lifecycleOpeningWarningNoBracket": "Chưa có sơ đồ thi đấu: {divisions}.",
+  "@lifecycleOpeningWarningNoBracket": {
+    "placeholders": {
+      "divisions": {"type": "String"}
+    }
+  },
+  "lifecycleOpeningWarningPending": "Có {count} lượt đăng ký đang chờ duyệt.",
+  "@lifecycleOpeningWarningPending": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "tournamentManagementCompleteTournament": "Kết thúc giải",
   "tournamentManagementCompleteTournamentConfirm": "Bạn có chắc muốn kết thúc giải đấu này?",
   "tournamentManagementLiveOperations": "Vận hành trực tiếp",

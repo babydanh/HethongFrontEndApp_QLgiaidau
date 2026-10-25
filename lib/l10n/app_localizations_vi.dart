@@ -13723,6 +13723,35 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.';
 
   @override
+  String get lifecycleOpeningTitle => 'Khai mạc giải?';
+
+  @override
+  String get lifecycleOpeningCloseHeading => 'Đóng đăng ký để khai mạc';
+
+  @override
+  String get lifecycleOpeningCloseAll => 'Chọn hết';
+
+  @override
+  String get lifecycleOpeningStart => 'Khai mạc';
+
+  @override
+  String get lifecycleOpeningOpenAnyway => 'Vẫn khai mạc';
+
+  @override
+  String get lifecycleOpeningForceWarning =>
+      'Bạn chưa chọn hạng mục nào để đóng đăng ký. Khai mạc sẽ khoá đăng ký tất cả nội dung còn mở.';
+
+  @override
+  String lifecycleOpeningWarningNoBracket(String divisions) {
+    return 'Chưa có sơ đồ thi đấu: $divisions.';
+  }
+
+  @override
+  String lifecycleOpeningWarningPending(int count) {
+    return 'Có $count lượt đăng ký đang chờ duyệt.';
+  }
+
+  @override
   String get tournamentManagementCompleteTournament => 'Kết thúc giải';
 
   @override

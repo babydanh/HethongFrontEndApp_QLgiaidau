@@ -535,6 +535,17 @@ class ApiTournamentManagementRepository
       _map(await _dio.post('/tournaments/$id/close-registration'));
 
   @override
+  Future<Map<String, dynamic>> closeDivisionRegistrations(
+    String id,
+    List<String> divisionIds,
+  ) async => _map(
+    await _dio.post(
+      '/tournaments/$id/close-registration',
+      data: {'divisionIds': divisionIds},
+    ),
+  );
+
+  @override
   Future<Map<String, dynamic>> regenerateInviteCode(String id) async =>
       _map(await _dio.post('/tournaments/$id/regenerate-invite'));
 }
