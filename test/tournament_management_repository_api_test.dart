@@ -608,6 +608,114 @@ void main() {
     });
   });
 
+  group('participant mutations (web parity, task 3.2/3.3)', () {
+    test('note patches the note route with the note body', () async {
+      backend.onPatch(
+        '/tournaments/$tournamentId/participants/participant-1/note',
+        <String, dynamic>{},
+      );
+
+      await repository.updateParticipantNote(
+        tournamentId,
+        'participant-1',
+        'Ghi chú của BTC',
+      );
+
+      expect(backend.only.method, 'PATCH');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/note',
+      );
+      expect(backend.only.data, {'note': 'Ghi chú của BTC'});
+    });
+
+    test('entry edit patches the entry route with member payload', () async {
+      backend.onPatch(
+        '/tournaments/$tournamentId/participants/participant-1/entry',
+        <String, dynamic>{},
+      );
+
+      await repository.updateOrganizerEntry(tournamentId, 'participant-1', {
+        'members': [
+          {
+            'slot': 1,
+            'name': 'Khách A',
+            'email': 'a@x.com',
+            'phone': null,
+            'expectedKey': 'guest:Khách A|a@x.com',
+          },
+        ],
+      });
+
+      expect(backend.only.method, 'PATCH');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/entry',
+      );
+      expect(backend.only.data, isA<Map<String, dynamic>>());
+    });
+
+    test('roster lock posts its route without a body', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/participants/participant-1/lock-roster',
+        <String, dynamic>{},
+      );
+
+      await repository.lockParticipantRoster(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/lock-roster',
+      );
+    });
+
+    test('roster unlock posts its route without a body', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/participants/participant-1/unlock-roster',
+        <String, dynamic>{},
+      );
+
+      await repository.unlockParticipantRoster(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/unlock-roster',
+      );
+    });
+
+    test('mock delete issues DELETE on the mock route', () async {
+      backend.onDelete(
+        '/tournaments/$tournamentId/participants/participant-1/mock',
+        <String, dynamic>{},
+      );
+
+      await repository.deleteMockParticipant(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'DELETE');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/mock',
+      );
+    });
+
+    test('unpair posts the pairing unpair route', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/pairing/participant-1/unpair',
+        <String, dynamic>{},
+      );
+
+      await repository.unpairParticipant(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/pairing/participant-1/unpair',
+      );
+    });
+  });
+
   group('add athletes', () {
     test(
       'candidate search scopes source, participant and fresh results',

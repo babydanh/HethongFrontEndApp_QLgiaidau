@@ -6559,5 +6559,86 @@
   "stageRoundPointUnitTennis": "game/set",
   "stageRoundMarginWinByTwo": " • win by 2",
   "stageRoundMarginTarget": " • target score decides",
-  "stageRoundSideOutSummary": "Only the serving team scores."
+  "stageRoundSideOutSummary": "Only the serving team scores.",
+  "participantFilterAll": "All",
+  "participantFilterPending": "Pending",
+  "participantFilterPendingPartner": "Awaiting partner",
+  "participantFilterApproved": "Approved",
+  "participantFilterUnpaid": "Unpaid",
+  "participantFilterRejected": "Rejected",
+  "participantFilterEmpty": "No profiles with this status.",
+  "participantRowActions": "Actions for {name}",
+  "@participantRowActions": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "participantUnpair": "Unpair",
+  "participantUnpairConfirm": "Unpair {name}? Both athletes return to the waiting list; an existing bracket must be regenerated.",
+  "@participantUnpairConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "participantUnpaired": "Pair split. Both athletes are waiting for a partner.",
+  "participantDetailContact": "Contact",
+  "participantDetailEditContacts": "Edit athlete contacts",
+  "participantDetailNoMembers": "No members in this profile.",
+  "participantDetailHiddenEmail": "Email hidden/not updated",
+  "participantDetailNoPhone": "No phone yet",
+  "participantDetailGuestSlot": "Athlete {slot}",
+  "@participantDetailGuestSlot": {
+    "placeholders": {
+      "slot": {
+        "type": "num"
+      }
+    }
+  },
+  "participantDetailName": "Name",
+  "participantDetailEmail": "Email",
+  "participantDetailPhone": "Phone",
+  "participantDetailNameRequired": "Enter a name",
+  "participantDetailEmailInvalid": "Invalid email",
+  "participantDetailEmailDuplicate": "Duplicate email",
+  "participantDetailPhoneTooLong": "Phone: 20 characters max",
+  "participantDetailSave": "Save",
+  "participantDetailNoteTitle": "Organizer note",
+  "participantDetailNoteHint": "Internal note",
+  "participantDetailNoteSave": "Save note",
+  "participantDetailNoteSaved": "Note saved.",
+  "participantDetailFormAnswers": "Registration form answers",
+  "participantDetailAnswerYes": "Yes",
+  "participantDetailAnswerNo": "No",
+  "participantDetailSeedLabel": "Seed",
+  "participantDetailSeedSave": "Assign seed",
+  "participantDetailSeedSaved": "Seed updated!",
+  "participantDetailSeedInvalid": "Seed must be an integer of at least 1.",
+  "participantDetailPairBadge": "Pair",
+  "participantDetailSingleBadge": "Single",
+  "participantDetailUnassignedDivision": "Division not assigned",
+  "participantDetailPayment": "Payment",
+  "participantDetailPaymentRef": "Txn ref",
+  "participantDetailPaid": "Paid",
+  "participantDetailUnpaid": "Unpaid",
+  "participantDetailFreeEntry": "Free",
+  "participantDetailWildcard": "Wildcard",
+  "participantDetailLockRoster": "Lock roster",
+  "participantDetailUnlockRoster": "Unlock roster",
+  "participantDetailRosterLocked": "Team roster locked.",
+  "participantDetailRosterUnlocked": "Roster unlocked.",
+  "participantDetailDeleteMock": "Delete mock athlete",
+  "participantDetailDeleteMockConfirm": "Are you sure you want to delete mock data for \"{name}\"?",
+  "@participantDetailDeleteMockConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "participantDetailMockDeleted": "Mock athlete deleted.",
+  "participantDetailEntrySaved": "Contacts saved."
 }

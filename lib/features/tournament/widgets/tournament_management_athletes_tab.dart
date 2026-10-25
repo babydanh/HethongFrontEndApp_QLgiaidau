@@ -144,8 +144,7 @@ class _TournamentManagementAthletesTabState
             ),
           );
         }
-        final participants =
-            snapshot.data ?? const <OrganizerOpsParticipant>[];
+        final participants = snapshot.data ?? const <OrganizerOpsParticipant>[];
         // Không padding ngang: row nội dung sát mép, ngăn cách bằng đường kẻ.
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
@@ -310,7 +309,9 @@ class _DivisionRow extends StatelessWidget {
                             children: [
                               FilledButton.icon(
                                 onPressed: () => onAddAthlete(participants),
-                                icon: const Icon(Icons.person_add_alt_1_rounded),
+                                icon: const Icon(
+                                  Icons.person_add_alt_1_rounded,
+                                ),
                                 label: Text(l10n.opsAddAthlete),
                               ),
                               OutlinedButton.icon(
@@ -320,7 +321,9 @@ class _DivisionRow extends StatelessWidget {
                                 label: Text(l10n.rosterImportOpen),
                               ),
                               OutlinedButton.icon(
-                                key: const ValueKey('athletes-download-template'),
+                                key: const ValueKey(
+                                  'athletes-download-template',
+                                ),
                                 onPressed: onDownloadTemplate,
                                 icon: const Icon(Icons.download_rounded),
                                 label: Text(l10n.rosterImportDownloadTemplate),
@@ -332,6 +335,7 @@ class _DivisionRow extends StatelessWidget {
                           tournament: tournament,
                           showRegistration: true,
                           divisionId: division.id,
+                          divisionName: division.name,
                           embedded: true,
                           // Như web: nội dung đôi hoặc môn đồng đội (teamSize).
                           pairFormat:

@@ -44,16 +44,16 @@
 
 ## 3. VĐV & ghép cặp
 
-- [ ] 3.1 Lọc trạng thái VĐV (chips + số đếm) trong tab VĐV của hub. Tiêu chí: TC-WP-03-01.
+- [x] 3.1 Lọc trạng thái VĐV (chips + số đếm) trong tab VĐV của hub. Tiêu chí: TC-WP-03-01.
   - Files: `lib/features/tournament/widgets/tournament_management_athletes_tab.dart`, `tournament_management_people_section.dart`, ARB, test
   - Chủ file chung: athletes_tab (cùng 3.2, 3.3)
   - Phụ thuộc: không
-- [ ] 3.2 Sheet hồ sơ VĐV chi tiết: liên hệ từng thành viên, ghi chú BTC (`PATCH /participants/:id/note`), câu trả lời form tùy chỉnh, seed nhanh, khoá/mở roster bóng đá, xoá VĐV ảo, duyệt/từ chối. Tiêu chí: TC-WP-03-02/03/04 + test API note qua cloud.
+- [x] 3.2 Sheet hồ sơ VĐV chi tiết: liên hệ từng thành viên, ghi chú BTC (`PATCH /participants/:id/note`), câu trả lời form tùy chỉnh, seed nhanh, khoá/mở roster bóng đá, xoá VĐV ảo, duyệt/từ chối. Tiêu chí: TC-WP-03-02/03/04 + test API note qua cloud.
   - Files: tạo `lib/features/tournament/widgets/participant_detail_sheet.dart`, `tournament_management_people_section.dart:179-228,686-843`, repository (route note, lock roster), ARB, test
   - Giao: `updateParticipantNote(String id, String note)` · Nhận: thay card mở rộng hiện có
   - Chủ file chung: people_section
   - Phụ thuộc: 0.1, 3.1
-- [ ] 3.3 Tách cặp trong menu dòng VĐV (confirm) → `POST /pairing/:pid/unpair`. Tiêu chí: TC-WP-03-05 + test API.
+- [x] 3.3 Tách cặp trong menu dòng VĐV (confirm) → `POST /pairing/:pid/unpair`. Tiêu chí: TC-WP-03-05 + test API.
   - Files: `participant_detail_sheet.dart` hoặc people_section (menu dòng), repository (`unpairParticipant`), ARB, test
   - Chủ file chung: people_section
   - Phụ thuộc: 3.2

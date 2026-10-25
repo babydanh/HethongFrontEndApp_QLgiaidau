@@ -82,9 +82,10 @@ void main() {
 
     final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)))!;
     expect(find.text('Waiting Pair'), findsOneWidget);
+    // Nhãn "Chờ duyệt" hiện 2 lần: chip lọc trạng thái (task 3.1) + nhãn trạng thái của dòng.
     expect(
       find.text(l10n.tournamentManagementParticipantPending),
-      findsOneWidget,
+      findsNWidgets(2),
     );
     expect(find.text(l10n.tournamentManagementApprove), findsOneWidget);
     expect(find.text(l10n.tournamentManagementReject), findsOneWidget);

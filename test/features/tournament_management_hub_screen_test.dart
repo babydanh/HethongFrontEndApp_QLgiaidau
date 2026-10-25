@@ -17,6 +17,7 @@ import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -216,6 +217,7 @@ class _LifecycleRepository extends _EmptyTournamentManagementRepository
   Future<Map<String, dynamic>> reopenRegistration(
     String id, {
     DateTime? registrationEndDate,
+    List<String>? divisionIds,
   }) async {
     calls.add('reopen-registration');
     return const {};
@@ -1981,7 +1983,6 @@ void main() {
     });
 
     final teamPairKey = const ValueKey('athlete-team-row-p-1');
-    final teamPairDetail = const ValueKey('athlete-team-detail-p-1');
 
     Future<void> openMixed(WidgetTester tester) async {
       await pumpAthletes(tester);
@@ -1990,66 +1991,66 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('doubles team opens member details with avatar and role', (
+    testWidgets('doubles team opens the detail sheet with members', (
       tester,
     ) async {
       await openMixed(tester);
-      expect(find.byKey(teamPairDetail), findsNothing);
 
       final row = find.byKey(teamPairKey);
       await tester.ensureVisible(row);
       await tester.tap(row);
       await tester.pumpAndSettle();
 
-      final detail = find.byKey(teamPairDetail);
-      expect(detail, findsOneWidget);
+      // Bấm dòng đội mở sheet hồ sơ chi tiết (thay card mở rộng cũ).
+      final sheet = find.byType(ParticipantDetailSheet);
+      expect(sheet, findsOneWidget);
       // Mỗi VĐV trong đội có avatar riêng (chữ cái đầu khi chưa có ảnh).
       expect(
-        find.descendant(of: detail, matching: find.byType(RankAvatar)),
+        find.descendant(of: sheet, matching: find.byType(RankAvatar)),
         findsNWidgets(2),
       );
       expect(
-        find.descendant(of: detail, matching: find.text('Danh')),
+        find.descendant(of: sheet, matching: find.text('Danh')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: detail, matching: find.text('Luân')),
+        find.descendant(of: sheet, matching: find.text('Luân')),
         findsOneWidget,
       );
-
-      // Bấm vào tên đội (dòng tiêu đề); tâm cả cột đã rơi vào panel chi tiết.
-      await tester.tap(
-        find.descendant(of: row, matching: find.text('Danh – Luân')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byKey(teamPairDetail), findsNothing);
     });
 
-    testWidgets('doubles team with one member is still expandable', (
+    testWidgets('single-member pair still opens the detail sheet', (
       tester,
     ) async {
       await openMixed(tester);
       final row = find.byKey(const ValueKey('athlete-team-row-p-4'));
       await tester.ensureVisible(row);
-      // Nội dung đôi: có mũi tên dù mới có 1 người, như web.
+      // Nội dung đôi không còn mũi tên mở rộng inline; bấm dòng mở sheet.
       expect(
         find.descendant(
           of: row,
           matching: find.byIcon(Icons.expand_more_rounded),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       await tester.tap(
         find.descendant(of: row, matching: find.text('Nhật Minh')),
       );
       await tester.pumpAndSettle();
+      expect(find.byType(ParticipantDetailSheet), findsOneWidget);
+      // Tên VĐV hiện ở cả tiêu đề sheet và dòng thành viên.
       expect(
-        find.byKey(const ValueKey('athlete-team-detail-p-4')),
-        findsOneWidget,
+        find.descendant(
+          of: find.byType(ParticipantDetailSheet),
+          matching: find.text('Nhật Minh'),
+        ),
+        findsNWidgets(2),
       );
     });
 
-    testWidgets('single-player team has no expand affordance', (tester) async {
+    testWidgets('single-player team opens the detail sheet too', (
+      tester,
+    ) async {
       await pumpAthletes(tester);
       await tester.ensureVisible(rowMen);
       await tester.tap(rowMen);
@@ -2057,7 +2058,7 @@ void main() {
 
       final row = find.byKey(const ValueKey('athlete-team-row-p-3'));
       expect(row, findsOneWidget);
-      // Đội đơn: không có mũi tên mở rộng, bấm vào không sinh panel chi tiết.
+      // Đội đơn: không mũi tên mở rộng; bấm dòng mở sheet hồ sơ.
       expect(
         find.descendant(
           of: row,
@@ -2067,13 +2068,10 @@ void main() {
       );
       await tester.tap(row);
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('athlete-team-detail-p-3')),
-        findsNothing,
-      );
+      expect(find.byType(ParticipantDetailSheet), findsOneWidget);
     });
 
-    testWidgets('team-sport tournament teams are expandable like web', (
+    testWidgets('team-sport tournament teams open the detail sheet', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390, 1200);
@@ -2086,7 +2084,7 @@ void main() {
         sport: 'football',
         divisions: footballDivisions,
       );
-      // Bóng đá: teamSize có giá trị -> môn đồng đội, đội luôn mở được.
+      // Bóng đá: teamSize có giá trị -> môn đồng đội.
       expect(tournament.teamSize, isNotNull);
       await tester.pumpWidget(
         ProviderScope(
@@ -2128,13 +2126,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final team = find.byKey(const ValueKey('athlete-team-row-p-fb'));
-      expect(
-        find.descendant(
-          of: team,
-          matching: find.byIcon(Icons.expand_more_rounded),
-        ),
-        findsOneWidget,
-      );
+      await tester.ensureVisible(team);
+      await tester.tap(team);
+      await tester.pumpAndSettle();
+      expect(find.byType(ParticipantDetailSheet), findsOneWidget);
     });
 
     testWidgets('pending approval actions sit on the team row itself', (

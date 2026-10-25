@@ -16468,4 +16468,173 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stageRoundSideOutSummary => 'Only the serving team scores.';
+
+  @override
+  String get participantFilterAll => 'All';
+
+  @override
+  String get participantFilterPending => 'Pending';
+
+  @override
+  String get participantFilterPendingPartner => 'Awaiting partner';
+
+  @override
+  String get participantFilterApproved => 'Approved';
+
+  @override
+  String get participantFilterUnpaid => 'Unpaid';
+
+  @override
+  String get participantFilterRejected => 'Rejected';
+
+  @override
+  String get participantFilterEmpty => 'No profiles with this status.';
+
+  @override
+  String participantRowActions(String name) {
+    return 'Actions for $name';
+  }
+
+  @override
+  String get participantUnpair => 'Unpair';
+
+  @override
+  String participantUnpairConfirm(String name) {
+    return 'Unpair $name? Both athletes return to the waiting list; an existing bracket must be regenerated.';
+  }
+
+  @override
+  String get participantUnpaired =>
+      'Pair split. Both athletes are waiting for a partner.';
+
+  @override
+  String get participantDetailContact => 'Contact';
+
+  @override
+  String get participantDetailEditContacts => 'Edit athlete contacts';
+
+  @override
+  String get participantDetailNoMembers => 'No members in this profile.';
+
+  @override
+  String get participantDetailHiddenEmail => 'Email hidden/not updated';
+
+  @override
+  String get participantDetailNoPhone => 'No phone yet';
+
+  @override
+  String participantDetailGuestSlot(num slot) {
+    return 'Athlete $slot';
+  }
+
+  @override
+  String get participantDetailName => 'Name';
+
+  @override
+  String get participantDetailEmail => 'Email';
+
+  @override
+  String get participantDetailPhone => 'Phone';
+
+  @override
+  String get participantDetailNameRequired => 'Enter a name';
+
+  @override
+  String get participantDetailEmailInvalid => 'Invalid email';
+
+  @override
+  String get participantDetailEmailDuplicate => 'Duplicate email';
+
+  @override
+  String get participantDetailPhoneTooLong => 'Phone: 20 characters max';
+
+  @override
+  String get participantDetailSave => 'Save';
+
+  @override
+  String get participantDetailNoteTitle => 'Organizer note';
+
+  @override
+  String get participantDetailNoteHint => 'Internal note';
+
+  @override
+  String get participantDetailNoteSave => 'Save note';
+
+  @override
+  String get participantDetailNoteSaved => 'Note saved.';
+
+  @override
+  String get participantDetailFormAnswers => 'Registration form answers';
+
+  @override
+  String get participantDetailAnswerYes => 'Yes';
+
+  @override
+  String get participantDetailAnswerNo => 'No';
+
+  @override
+  String get participantDetailSeedLabel => 'Seed';
+
+  @override
+  String get participantDetailSeedSave => 'Assign seed';
+
+  @override
+  String get participantDetailSeedSaved => 'Seed updated!';
+
+  @override
+  String get participantDetailSeedInvalid =>
+      'Seed must be an integer of at least 1.';
+
+  @override
+  String get participantDetailPairBadge => 'Pair';
+
+  @override
+  String get participantDetailSingleBadge => 'Single';
+
+  @override
+  String get participantDetailUnassignedDivision => 'Division not assigned';
+
+  @override
+  String get participantDetailPayment => 'Payment';
+
+  @override
+  String get participantDetailPaymentRef => 'Txn ref';
+
+  @override
+  String get participantDetailPaid => 'Paid';
+
+  @override
+  String get participantDetailUnpaid => 'Unpaid';
+
+  @override
+  String get participantDetailFreeEntry => 'Free';
+
+  @override
+  String get participantDetailWildcard => 'Wildcard';
+
+  @override
+  String get participantDetailLockRoster => 'Lock roster';
+
+  @override
+  String get participantDetailUnlockRoster => 'Unlock roster';
+
+  @override
+  String get participantDetailRosterLocked => 'Team roster locked.';
+
+  @override
+  String get participantDetailRosterUnlocked => 'Roster unlocked.';
+
+  @override
+  String get participantDetailDeleteMock => 'Delete mock athlete';
+
+  @override
+  String participantDetailDeleteMockConfirm(String name) {
+    return 'Are you sure you want to delete mock data for \"$name\"?';
+  }
+
+  @override
+  String get participantDetailMockDeleted => 'Mock athlete deleted.';
+
+  @override
+  String get participantDetailEntrySaved => 'Contacts saved.';
 }

@@ -433,6 +433,52 @@ class ApiTournamentManagementRepository
   }
 
   @override
+  Future<void> updateParticipantNote(
+    String id,
+    String participantId,
+    String note,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/note',
+      data: {'note': note},
+    );
+  }
+
+  @override
+  Future<void> updateOrganizerEntry(
+    String id,
+    String participantId,
+    Map<String, dynamic> payload,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/entry',
+      data: payload,
+    );
+  }
+
+  @override
+  Future<void> lockParticipantRoster(String id, String participantId) async {
+    await _dio.post('/tournaments/$id/participants/$participantId/lock-roster');
+  }
+
+  @override
+  Future<void> unlockParticipantRoster(String id, String participantId) async {
+    await _dio.post(
+      '/tournaments/$id/participants/$participantId/unlock-roster',
+    );
+  }
+
+  @override
+  Future<void> deleteMockParticipant(String id, String participantId) async {
+    await _dio.delete('/tournaments/$id/participants/$participantId/mock');
+  }
+
+  @override
+  Future<void> unpairParticipant(String id, String participantId) async {
+    await _dio.post('/tournaments/$id/pairing/$participantId/unpair');
+  }
+
+  @override
   Future<List<String>> getGallery(String id) async => _list(
     await _dio.get('/tournaments/$id/gallery'),
   ).map((url) => url as String).toList(growable: false);

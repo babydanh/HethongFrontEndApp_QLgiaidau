@@ -6572,5 +6572,86 @@
   "stageRoundPointUnitTennis": "game/set",
   "stageRoundMarginWinByTwo": " • hơn 2",
   "stageRoundMarginTarget": " • chạm đích là chốt",
-  "stageRoundSideOutSummary": "Chỉ đội đang giao bóng mới ghi điểm."
+  "stageRoundSideOutSummary": "Chỉ đội đang giao bóng mới ghi điểm.",
+  "participantFilterAll": "Tất cả",
+  "participantFilterPending": "Chờ duyệt",
+  "participantFilterPendingPartner": "Chờ đồng đội",
+  "participantFilterApproved": "Đã duyệt",
+  "participantFilterUnpaid": "Chưa thanh toán",
+  "participantFilterRejected": "Bị từ chối",
+  "participantFilterEmpty": "Không có hồ sơ nào ở trạng thái này.",
+  "participantRowActions": "Thao tác với {name}",
+  "@participantRowActions": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "participantUnpair": "Tách cặp",
+  "participantUnpairConfirm": "Tách cặp {name}? Hai VĐV về hàng chờ ghép; sơ đồ đã tạo cần tạo lại.",
+  "@participantUnpairConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "participantUnpaired": "Đã tách cặp. Hai VĐV đang chờ ghép lại.",
+  "participantDetailContact": "Liên hệ",
+  "participantDetailEditContacts": "Sửa liên hệ VĐV",
+  "participantDetailNoMembers": "Chưa có thành viên trong hồ sơ.",
+  "participantDetailHiddenEmail": "Email được ẩn/chưa cập nhật",
+  "participantDetailNoPhone": "Chưa có SĐT",
+  "participantDetailGuestSlot": "VĐV {slot}",
+  "@participantDetailGuestSlot": {
+    "placeholders": {
+      "slot": {
+        "type": "num"
+      }
+    }
+  },
+  "participantDetailName": "Tên",
+  "participantDetailEmail": "Email",
+  "participantDetailPhone": "SĐT",
+  "participantDetailNameRequired": "Nhập tên",
+  "participantDetailEmailInvalid": "Email chưa đúng",
+  "participantDetailEmailDuplicate": "Email bị trùng",
+  "participantDetailPhoneTooLong": "SĐT tối đa 20 ký tự",
+  "participantDetailSave": "Lưu",
+  "participantDetailNoteTitle": "Ghi chú BTC",
+  "participantDetailNoteHint": "Ghi chú nội bộ",
+  "participantDetailNoteSave": "Lưu ghi chú",
+  "participantDetailNoteSaved": "Đã lưu ghi chú.",
+  "participantDetailFormAnswers": "Câu trả lời form đăng ký",
+  "participantDetailAnswerYes": "Có",
+  "participantDetailAnswerNo": "Không",
+  "participantDetailSeedLabel": "Seed",
+  "participantDetailSeedSave": "Gán seed",
+  "participantDetailSeedSaved": "Đã cập nhật seed!",
+  "participantDetailSeedInvalid": "Seed phải là số nguyên từ 1 trở lên.",
+  "participantDetailPairBadge": "Cặp",
+  "participantDetailSingleBadge": "Đơn",
+  "participantDetailUnassignedDivision": "Chưa phân nội dung",
+  "participantDetailPayment": "Thanh toán",
+  "participantDetailPaymentRef": "Mã GD",
+  "participantDetailPaid": "Đã thanh toán",
+  "participantDetailUnpaid": "Chưa thanh toán",
+  "participantDetailFreeEntry": "Miễn phí",
+  "participantDetailWildcard": "Đặc cách",
+  "participantDetailLockRoster": "Khoá roster",
+  "participantDetailUnlockRoster": "Mở khoá roster",
+  "participantDetailRosterLocked": "Đã khoá roster đội bóng.",
+  "participantDetailRosterUnlocked": "Đã mở khoá roster.",
+  "participantDetailDeleteMock": "Xoá VĐV ảo",
+  "participantDetailDeleteMockConfirm": "Bạn có chắc muốn xoá dữ liệu mock của \"{name}\" không?",
+  "@participantDetailDeleteMockConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "participantDetailMockDeleted": "Đã xoá VĐV ảo.",
+  "participantDetailEntrySaved": "Đã lưu liên hệ."
 }

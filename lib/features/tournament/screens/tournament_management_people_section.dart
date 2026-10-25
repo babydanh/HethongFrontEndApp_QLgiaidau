@@ -5,9 +5,21 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Bộ lọc trạng thái VĐV của tab VĐV (task 3.1, đối chiếu bộ lọc của Web
+/// `RegistrationTab`): lọc danh sách đang có, không gọi lại API.
+enum ParticipantStatusFilter {
+  all,
+  pending,
+  pendingPartner,
+  approved,
+  unpaid,
+  rejected,
+}
 
 class TournamentManagementPeopleSection extends StatelessWidget {
   const TournamentManagementPeopleSection({
@@ -15,6 +27,7 @@ class TournamentManagementPeopleSection extends StatelessWidget {
     required this.tournament,
     required this.showRegistration,
     this.divisionId,
+    this.divisionName,
     this.embedded = false,
     this.pairFormat = false,
   });
@@ -24,10 +37,13 @@ class TournamentManagementPeopleSection extends StatelessWidget {
   /// Chỉ hiện người tham gia của nội dung này. Null: toàn giải (hành vi cũ).
   final String? divisionId;
 
+  /// Tên hạng mục (subtitle của sheet hồ sơ); null khi lọc toàn giải.
+  final String? divisionName;
+
   /// Nhúng trong một vùng đã cuộn sẵn: dùng Column thay vì ListView riêng.
   final bool embedded;
 
-  /// Nội dung đôi: đội mở được để xem từng thành viên (như web).
+  /// Nội dung đôi: hồ sơ mở được sheet chi tiết kèm badge cặp (như web).
   final bool pairFormat;
 
   @override
@@ -35,6 +51,7 @@ class TournamentManagementPeopleSection extends StatelessWidget {
       ? _RegistrationPeople(
           tournament: tournament,
           divisionId: divisionId,
+          divisionName: divisionName,
           embedded: embedded,
           pairFormat: pairFormat,
         )
@@ -45,11 +62,13 @@ class _RegistrationPeople extends ConsumerStatefulWidget {
   const _RegistrationPeople({
     required this.tournament,
     this.divisionId,
+    this.divisionName,
     this.embedded = false,
     this.pairFormat = false,
   });
   final Tournament tournament;
   final String? divisionId;
+  final String? divisionName;
   final bool embedded;
   final bool pairFormat;
 
@@ -62,6 +81,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   late Future<List<OrganizerOpsParticipant>> _participantsFuture;
   String? _busyParticipantId;
   String? _mutationError;
+  ParticipantStatusFilter _filter = ParticipantStatusFilter.all;
 
   @override
   void initState() {
@@ -78,6 +98,95 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
           .read(tournamentRepositoryProvider)
           .getOrganizerParticipants(widget.tournament.id);
     });
+  }
+
+  /// Đếm theo trạng thái của danh sách hiện tại (Web `participantSummary`).
+  Map<ParticipantStatusFilter, int> _counts(
+    List<OrganizerOpsParticipant> participants,
+  ) => {
+    ParticipantStatusFilter.all: participants.length,
+    ParticipantStatusFilter.pending: participants
+        .where((item) => _isPending(item.teamStatus))
+        .length,
+    ParticipantStatusFilter.pendingPartner: participants
+        .where((item) => item.teamStatus.toUpperCase() == 'PENDING_PARTNER')
+        .length,
+    ParticipantStatusFilter.approved: participants
+        .where((item) => item.teamStatus.toUpperCase() == 'COMPLETE')
+        .length,
+    ParticipantStatusFilter.unpaid: participants
+        .where((item) => !item.isPaid)
+        .length,
+    ParticipantStatusFilter.rejected: participants
+        .where((item) => item.teamStatus.toUpperCase() == 'REJECTED')
+        .length,
+  };
+
+  bool _matchesFilter(
+    OrganizerOpsParticipant participant,
+    ParticipantStatusFilter filter,
+  ) => switch (filter) {
+    ParticipantStatusFilter.all => true,
+    ParticipantStatusFilter.pending => _isPending(participant.teamStatus),
+    ParticipantStatusFilter.pendingPartner =>
+      participant.teamStatus.toUpperCase() == 'PENDING_PARTNER',
+    ParticipantStatusFilter.approved =>
+      participant.teamStatus.toUpperCase() == 'COMPLETE',
+    ParticipantStatusFilter.unpaid => !participant.isPaid,
+    ParticipantStatusFilter.rejected =>
+      participant.teamStatus.toUpperCase() == 'REJECTED',
+  };
+
+  /// Mở sheet hồ sơ chi tiết (thay card mở rộng cũ).
+  Future<void> _openDetail(OrganizerOpsParticipant participant) async {
+    await ParticipantDetailSheet.show(
+      context,
+      tournamentId: widget.tournament.id,
+      participant: participant,
+      tournamentStatus: widget.tournament.status,
+      divisionName: widget.divisionName,
+      pairFormat: widget.pairFormat,
+      onRefresh: () async {
+        if (mounted) _reload();
+      },
+    );
+  }
+
+  /// Tách cặp (task 3.3): confirm rồi POST pairing/:pid/unpair, làm mới danh sách.
+  Future<void> _unpair(OrganizerOpsParticipant participant) async {
+    if (_busyParticipantId != null) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.participantUnpair,
+      message: l10n.participantUnpairConfirm(
+        participantLabel(
+          teamName: participant.teamName,
+          players: participant.players,
+        ),
+      ),
+      confirmLabel: l10n.participantUnpair,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _busyParticipantId = participant.id;
+      _mutationError = null;
+    });
+    try {
+      await ref
+          .read(tournamentManagementRepositoryProvider)
+          .unpairParticipant(widget.tournament.id, participant.id);
+      if (!mounted) return;
+      _reload();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.participantUnpaired)));
+    } catch (_) {
+      if (mounted) setState(() => _mutationError = 'error');
+    } finally {
+      if (mounted) setState(() => _busyParticipantId = null);
+    }
   }
 
   @override
@@ -103,6 +212,16 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
         final pending = participants
             .where((item) => _isPending(item.teamStatus))
             .toList(growable: false);
+        final counts = _counts(participants);
+        // Chip "Chờ đối tác" chỉ hiện với nội dung đôi hoặc khi có người chờ
+        // (Web `showPendingPartnerFilter`).
+        final showPendingPartner =
+            widget.pairFormat ||
+            counts[ParticipantStatusFilter.pendingPartner]! > 0 ||
+            _filter == ParticipantStatusFilter.pendingPartner;
+        final visible = participants
+            .where((item) => _matchesFilter(item, _filter))
+            .toList(growable: false);
         final body = <Widget>[
           if (_mutationError != null) ...[
             const SizedBox(height: 12),
@@ -119,16 +238,50 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             )
           else ...[
             if (!widget.embedded) const SizedBox(height: 12),
-            for (final participant in participants) ...[
-              _ParticipantCard(
-                participant: participant,
-                pairFormat: widget.pairFormat,
-                isBusy: _busyParticipantId == participant.id,
-                onApprove: () => _setParticipantStatus(participant, 'COMPLETE'),
-                onReject: () => _setParticipantStatus(participant, 'REJECTED'),
+            // Chips lọc trạng thái kèm số đếm (task 3.1).
+            Padding(
+              padding: EdgeInsets.only(top: widget.embedded ? 4 : 0, bottom: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final option in ParticipantStatusFilter.values)
+                    if (option != ParticipantStatusFilter.pendingPartner ||
+                        showPendingPartner)
+                      _FilterChip(
+                        key: ValueKey('participant-filter-${option.name}'),
+                        label: _filterLabel(l10n, option),
+                        count: counts[option]!,
+                        selected: _filter == option,
+                        onTap: () => setState(() => _filter = option),
+                      ),
+                ],
               ),
-              Divider(height: 1, color: context.colors.border),
-            ],
+            ),
+            if (visible.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  l10n.participantFilterEmpty,
+                  style: TextStyle(color: context.colors.textSecondary),
+                ),
+              )
+            else
+              for (final participant in visible) ...[
+                _ParticipantCard(
+                  participant: participant,
+                  pairFormat: widget.pairFormat,
+                  tournamentStatus: widget.tournament.status,
+                  isBusy: _busyParticipantId == participant.id,
+                  onApprove: () =>
+                      _setParticipantStatus(participant, 'COMPLETE'),
+                  onReject: () =>
+                      _setParticipantStatus(participant, 'REJECTED'),
+                  onOpenDetail: () => _openDetail(participant),
+                  onUnpair: () => _unpair(participant),
+                ),
+                Divider(height: 1, color: context.colors.border),
+              ],
           ],
         ];
         if (widget.embedded) {
@@ -172,6 +325,17 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
       },
     );
   }
+
+  String _filterLabel(AppLocalizations l10n, ParticipantStatusFilter filter) =>
+      switch (filter) {
+        ParticipantStatusFilter.all => l10n.participantFilterAll,
+        ParticipantStatusFilter.pending => l10n.participantFilterPending,
+        ParticipantStatusFilter.pendingPartner =>
+          l10n.participantFilterPendingPartner,
+        ParticipantStatusFilter.approved => l10n.participantFilterApproved,
+        ParticipantStatusFilter.unpaid => l10n.participantFilterUnpaid,
+        ParticipantStatusFilter.rejected => l10n.participantFilterRejected,
+      };
 
   bool _isPending(String status) =>
       const {'PENDING', 'PENDING_APPROVAL'}.contains(status.toUpperCase());
@@ -663,44 +827,100 @@ class _CountChip extends StatelessWidget {
   );
 }
 
-class _ParticipantCard extends StatefulWidget {
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    super.key,
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? AppTheme.primary.withValues(alpha: 0.15) : null,
+          border: Border.all(
+            color: selected ? AppTheme.primary : colors.border,
+          ),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? AppTheme.primary : colors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '$count',
+              style: TextStyle(
+                color: selected ? AppTheme.primary : colors.textMuted,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ParticipantCard extends StatelessWidget {
   const _ParticipantCard({
     required this.participant,
+    required this.tournamentStatus,
     required this.isBusy,
     required this.onApprove,
     required this.onReject,
+    required this.onOpenDetail,
+    required this.onUnpair,
     this.pairFormat = false,
   });
   final OrganizerOpsParticipant participant;
+
+  /// Trạng thái giải: COMPLETED/CANCELLED thì ẩn menu tách cặp (luật Web).
+  final String tournamentStatus;
   final bool isBusy;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final VoidCallback onOpenDetail;
+  final VoidCallback onUnpair;
 
-  /// Nội dung đôi / đôi nam nữ: đội luôn mở được kể cả khi mới có 1 người.
+  /// Nội dung đôi / đôi nam nữ: hồ sơ luôn mở được sheet kể cả khi mới có 1 người.
   final bool pairFormat;
 
-  @override
-  State<_ParticipantCard> createState() => _ParticipantCardState();
-}
-
-class _ParticipantCardState extends State<_ParticipantCard> {
-  static const _duration = Duration(milliseconds: 200);
-  bool _expanded = false;
-
-  // Như web (`isExpandableFormat || members.length > 1`).
-  bool get _expandable =>
-      widget.pairFormat || widget.participant.members.length > 1;
+  bool get _canUnpair =>
+      participant.canUnpair &&
+      !const {
+        'COMPLETED',
+        'CANCELLED',
+      }.contains(tournamentStatus.toUpperCase());
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final participant = widget.participant;
     final status = participant.teamStatus.toUpperCase();
     final pending = const {'PENDING', 'PENDING_APPROVAL'}.contains(status);
     final (statusLabel, statusColor) = switch (status) {
-      'PENDING' ||
-      'PENDING_APPROVAL' => (
+      'PENDING' || 'PENDING_APPROVAL' => (
         l10n.tournamentManagementParticipantPending,
         colors.warning,
       ),
@@ -724,6 +944,10 @@ class _ParticipantCardState extends State<_ParticipantCard> {
     };
     final lead = participant.members.isEmpty ? null : participant.members.first;
     final nameDisplay = resolveParticipantDisplay(
+      teamName: participant.teamName,
+      players: participant.players,
+    );
+    final rowLabel = participantLabel(
       teamName: participant.teamName,
       players: participant.players,
     );
@@ -771,12 +995,23 @@ class _ParticipantCardState extends State<_ParticipantCard> {
             fontWeight: FontWeight.w700,
           ),
         ),
-        if (_expandable)
-          AnimatedRotation(
-            turns: _expanded ? 0.5 : 0,
-            duration: _duration,
-            curve: Curves.easeOutCubic,
-            child: Icon(Icons.expand_more_rounded, color: colors.textMuted),
+        // Menu dòng: Tách cặp (task 3.3) — chỉ khi server cho phép.
+        if (_canUnpair)
+          PopupMenuButton<String>(
+            key: ValueKey('participant-row-menu-${participant.id}'),
+            tooltip: l10n.participantRowActions(rowLabel),
+            enabled: !isBusy,
+            icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
+            onSelected: (value) {
+              if (value == 'unpair') onUnpair();
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                key: ValueKey('participant-unpair-${participant.id}'),
+                value: 'unpair',
+                child: Text(l10n.participantUnpair),
+              ),
+            ],
           ),
       ],
     );
@@ -785,16 +1020,13 @@ class _ParticipantCardState extends State<_ParticipantCard> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Semantics(
-          button: _expandable,
-          expanded: _expandable ? _expanded : null,
+          button: true,
           label: participantLabel(
             teamName: participant.teamName,
             players: participant.players,
           ),
           child: InkWell(
-            onTap: _expandable
-                ? () => setState(() => _expanded = !_expanded)
-                : null,
+            onTap: onOpenDetail,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: header,
@@ -808,15 +1040,15 @@ class _ParticipantCardState extends State<_ParticipantCard> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: widget.isBusy ? null : widget.onReject,
+                    onPressed: isBusy ? null : onReject,
                     child: Text(l10n.tournamentManagementReject),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton(
-                    onPressed: widget.isBusy ? null : widget.onApprove,
-                    child: widget.isBusy
+                    onPressed: isBusy ? null : onApprove,
+                    child: isBusy
                         ? const SizedBox.square(
                             dimension: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
@@ -827,79 +1059,7 @@ class _ParticipantCardState extends State<_ParticipantCard> {
               ],
             ),
           ),
-        AnimatedSize(
-          duration: _duration,
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: _expandable && _expanded
-              ? _TeamDetail(
-                  key: ValueKey('athlete-team-detail-${participant.id}'),
-                  members: participant.members,
-                )
-              : const SizedBox(width: double.infinity),
-        ),
       ],
-    );
-  }
-}
-
-/// Danh sách thành viên của một đội, hiện khi mở dòng đội (giống panel
-/// "Thành viên" của web): avatar + tên + vai trò, nền nhạt, không viền.
-class _TeamDetail extends StatelessWidget {
-  const _TeamDetail({super.key, required this.members});
-  final List<OrganizerOpsMember> members;
-
-  String? _role(AppLocalizations l10n, String? role) => switch (role) {
-    'CAPTAIN' => l10n.tournamentTeamCaptain,
-    null || '' => null,
-    _ => l10n.memberRole,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return ColoredBox(
-      color: colors.bgElevated,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Column(
-          children: [
-            for (final member in members)
-              Row(
-                children: [
-                  UserAvatarTap(
-                    userId: member.userId,
-                    name: member.fullName,
-                    imageUrl: member.avatarUrl,
-                    size: 40,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      member.fullName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  if (_role(l10n, member.role) case final role?)
-                    Text(
-                      role,
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                ],
-              ),
-          ],
-        ),
-      ),
     );
   }
 }

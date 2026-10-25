@@ -16412,4 +16412,172 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get stageRoundSideOutSummary => 'Chỉ đội đang giao bóng mới ghi điểm.';
+
+  @override
+  String get participantFilterAll => 'Tất cả';
+
+  @override
+  String get participantFilterPending => 'Chờ duyệt';
+
+  @override
+  String get participantFilterPendingPartner => 'Chờ đồng đội';
+
+  @override
+  String get participantFilterApproved => 'Đã duyệt';
+
+  @override
+  String get participantFilterUnpaid => 'Chưa thanh toán';
+
+  @override
+  String get participantFilterRejected => 'Bị từ chối';
+
+  @override
+  String get participantFilterEmpty => 'Không có hồ sơ nào ở trạng thái này.';
+
+  @override
+  String participantRowActions(String name) {
+    return 'Thao tác với $name';
+  }
+
+  @override
+  String get participantUnpair => 'Tách cặp';
+
+  @override
+  String participantUnpairConfirm(String name) {
+    return 'Tách cặp $name? Hai VĐV về hàng chờ ghép; sơ đồ đã tạo cần tạo lại.';
+  }
+
+  @override
+  String get participantUnpaired => 'Đã tách cặp. Hai VĐV đang chờ ghép lại.';
+
+  @override
+  String get participantDetailContact => 'Liên hệ';
+
+  @override
+  String get participantDetailEditContacts => 'Sửa liên hệ VĐV';
+
+  @override
+  String get participantDetailNoMembers => 'Chưa có thành viên trong hồ sơ.';
+
+  @override
+  String get participantDetailHiddenEmail => 'Email được ẩn/chưa cập nhật';
+
+  @override
+  String get participantDetailNoPhone => 'Chưa có SĐT';
+
+  @override
+  String participantDetailGuestSlot(num slot) {
+    return 'VĐV $slot';
+  }
+
+  @override
+  String get participantDetailName => 'Tên';
+
+  @override
+  String get participantDetailEmail => 'Email';
+
+  @override
+  String get participantDetailPhone => 'SĐT';
+
+  @override
+  String get participantDetailNameRequired => 'Nhập tên';
+
+  @override
+  String get participantDetailEmailInvalid => 'Email chưa đúng';
+
+  @override
+  String get participantDetailEmailDuplicate => 'Email bị trùng';
+
+  @override
+  String get participantDetailPhoneTooLong => 'SĐT tối đa 20 ký tự';
+
+  @override
+  String get participantDetailSave => 'Lưu';
+
+  @override
+  String get participantDetailNoteTitle => 'Ghi chú BTC';
+
+  @override
+  String get participantDetailNoteHint => 'Ghi chú nội bộ';
+
+  @override
+  String get participantDetailNoteSave => 'Lưu ghi chú';
+
+  @override
+  String get participantDetailNoteSaved => 'Đã lưu ghi chú.';
+
+  @override
+  String get participantDetailFormAnswers => 'Câu trả lời form đăng ký';
+
+  @override
+  String get participantDetailAnswerYes => 'Có';
+
+  @override
+  String get participantDetailAnswerNo => 'Không';
+
+  @override
+  String get participantDetailSeedLabel => 'Seed';
+
+  @override
+  String get participantDetailSeedSave => 'Gán seed';
+
+  @override
+  String get participantDetailSeedSaved => 'Đã cập nhật seed!';
+
+  @override
+  String get participantDetailSeedInvalid =>
+      'Seed phải là số nguyên từ 1 trở lên.';
+
+  @override
+  String get participantDetailPairBadge => 'Cặp';
+
+  @override
+  String get participantDetailSingleBadge => 'Đơn';
+
+  @override
+  String get participantDetailUnassignedDivision => 'Chưa phân nội dung';
+
+  @override
+  String get participantDetailPayment => 'Thanh toán';
+
+  @override
+  String get participantDetailPaymentRef => 'Mã GD';
+
+  @override
+  String get participantDetailPaid => 'Đã thanh toán';
+
+  @override
+  String get participantDetailUnpaid => 'Chưa thanh toán';
+
+  @override
+  String get participantDetailFreeEntry => 'Miễn phí';
+
+  @override
+  String get participantDetailWildcard => 'Đặc cách';
+
+  @override
+  String get participantDetailLockRoster => 'Khoá roster';
+
+  @override
+  String get participantDetailUnlockRoster => 'Mở khoá roster';
+
+  @override
+  String get participantDetailRosterLocked => 'Đã khoá roster đội bóng.';
+
+  @override
+  String get participantDetailRosterUnlocked => 'Đã mở khoá roster.';
+
+  @override
+  String get participantDetailDeleteMock => 'Xoá VĐV ảo';
+
+  @override
+  String participantDetailDeleteMockConfirm(String name) {
+    return 'Bạn có chắc muốn xoá dữ liệu mock của \"$name\" không?';
+  }
+
+  @override
+  String get participantDetailMockDeleted => 'Đã xoá VĐV ảo.';
+
+  @override
+  String get participantDetailEntrySaved => 'Đã lưu liên hệ.';
 }

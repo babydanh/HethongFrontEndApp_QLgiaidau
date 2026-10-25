@@ -29676,6 +29676,324 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chỉ đội đang giao bóng mới ghi điểm.'**
   String get stageRoundSideOutSummary;
+
+  /// No description provided for @participantFilterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get participantFilterAll;
+
+  /// No description provided for @participantFilterPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get participantFilterPending;
+
+  /// No description provided for @participantFilterPendingPartner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ đồng đội'**
+  String get participantFilterPendingPartner;
+
+  /// No description provided for @participantFilterApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get participantFilterApproved;
+
+  /// No description provided for @participantFilterUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thanh toán'**
+  String get participantFilterUnpaid;
+
+  /// No description provided for @participantFilterRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bị từ chối'**
+  String get participantFilterRejected;
+
+  /// No description provided for @participantFilterEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có hồ sơ nào ở trạng thái này.'**
+  String get participantFilterEmpty;
+
+  /// No description provided for @participantRowActions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác với {name}'**
+  String participantRowActions(String name);
+
+  /// No description provided for @participantUnpair.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tách cặp'**
+  String get participantUnpair;
+
+  /// No description provided for @participantUnpairConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tách cặp {name}? Hai VĐV về hàng chờ ghép; sơ đồ đã tạo cần tạo lại.'**
+  String participantUnpairConfirm(String name);
+
+  /// No description provided for @participantUnpaired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tách cặp. Hai VĐV đang chờ ghép lại.'**
+  String get participantUnpaired;
+
+  /// No description provided for @participantDetailContact.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên hệ'**
+  String get participantDetailContact;
+
+  /// No description provided for @participantDetailEditContacts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa liên hệ VĐV'**
+  String get participantDetailEditContacts;
+
+  /// No description provided for @participantDetailNoMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thành viên trong hồ sơ.'**
+  String get participantDetailNoMembers;
+
+  /// No description provided for @participantDetailHiddenEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email được ẩn/chưa cập nhật'**
+  String get participantDetailHiddenEmail;
+
+  /// No description provided for @participantDetailNoPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có SĐT'**
+  String get participantDetailNoPhone;
+
+  /// No description provided for @participantDetailGuestSlot.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV {slot}'**
+  String participantDetailGuestSlot(num slot);
+
+  /// No description provided for @participantDetailName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên'**
+  String get participantDetailName;
+
+  /// No description provided for @participantDetailEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get participantDetailEmail;
+
+  /// No description provided for @participantDetailPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT'**
+  String get participantDetailPhone;
+
+  /// No description provided for @participantDetailNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên'**
+  String get participantDetailNameRequired;
+
+  /// No description provided for @participantDetailEmailInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email chưa đúng'**
+  String get participantDetailEmailInvalid;
+
+  /// No description provided for @participantDetailEmailDuplicate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email bị trùng'**
+  String get participantDetailEmailDuplicate;
+
+  /// No description provided for @participantDetailPhoneTooLong.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT tối đa 20 ký tự'**
+  String get participantDetailPhoneTooLong;
+
+  /// No description provided for @participantDetailSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get participantDetailSave;
+
+  /// No description provided for @participantDetailNoteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú BTC'**
+  String get participantDetailNoteTitle;
+
+  /// No description provided for @participantDetailNoteHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú nội bộ'**
+  String get participantDetailNoteHint;
+
+  /// No description provided for @participantDetailNoteSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu ghi chú'**
+  String get participantDetailNoteSave;
+
+  /// No description provided for @participantDetailNoteSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu ghi chú.'**
+  String get participantDetailNoteSaved;
+
+  /// No description provided for @participantDetailFormAnswers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu trả lời form đăng ký'**
+  String get participantDetailFormAnswers;
+
+  /// No description provided for @participantDetailAnswerYes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có'**
+  String get participantDetailAnswerYes;
+
+  /// No description provided for @participantDetailAnswerNo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không'**
+  String get participantDetailAnswerNo;
+
+  /// No description provided for @participantDetailSeedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Seed'**
+  String get participantDetailSeedLabel;
+
+  /// No description provided for @participantDetailSeedSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán seed'**
+  String get participantDetailSeedSave;
+
+  /// No description provided for @participantDetailSeedSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật seed!'**
+  String get participantDetailSeedSaved;
+
+  /// No description provided for @participantDetailSeedInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Seed phải là số nguyên từ 1 trở lên.'**
+  String get participantDetailSeedInvalid;
+
+  /// No description provided for @participantDetailPairBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cặp'**
+  String get participantDetailPairBadge;
+
+  /// No description provided for @participantDetailSingleBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn'**
+  String get participantDetailSingleBadge;
+
+  /// No description provided for @participantDetailUnassignedDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa phân nội dung'**
+  String get participantDetailUnassignedDivision;
+
+  /// No description provided for @participantDetailPayment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán'**
+  String get participantDetailPayment;
+
+  /// No description provided for @participantDetailPaymentRef.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã GD'**
+  String get participantDetailPaymentRef;
+
+  /// No description provided for @participantDetailPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thanh toán'**
+  String get participantDetailPaid;
+
+  /// No description provided for @participantDetailUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thanh toán'**
+  String get participantDetailUnpaid;
+
+  /// No description provided for @participantDetailFreeEntry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get participantDetailFreeEntry;
+
+  /// No description provided for @participantDetailWildcard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặc cách'**
+  String get participantDetailWildcard;
+
+  /// No description provided for @participantDetailLockRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khoá roster'**
+  String get participantDetailLockRoster;
+
+  /// No description provided for @participantDetailUnlockRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở khoá roster'**
+  String get participantDetailUnlockRoster;
+
+  /// No description provided for @participantDetailRosterLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã khoá roster đội bóng.'**
+  String get participantDetailRosterLocked;
+
+  /// No description provided for @participantDetailRosterUnlocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã mở khoá roster.'**
+  String get participantDetailRosterUnlocked;
+
+  /// No description provided for @participantDetailDeleteMock.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá VĐV ảo'**
+  String get participantDetailDeleteMock;
+
+  /// No description provided for @participantDetailDeleteMockConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xoá dữ liệu mock của \"{name}\" không?'**
+  String participantDetailDeleteMockConfirm(String name);
+
+  /// No description provided for @participantDetailMockDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá VĐV ảo.'**
+  String get participantDetailMockDeleted;
+
+  /// No description provided for @participantDetailEntrySaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu liên hệ.'**
+  String get participantDetailEntrySaved;
 }
 
 class _AppLocalizationsDelegate

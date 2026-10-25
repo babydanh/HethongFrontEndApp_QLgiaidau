@@ -62,6 +62,35 @@ abstract interface class TournamentManagementRepository {
     String participantId,
     String status,
   );
+
+  /// Ghi chú nội bộ BTC (`PATCH /tournaments/:id/participants/:pid/note`,
+  /// body `{ note }` — lưu vào `customResponses.notes`, VĐV không thấy).
+  Future<void> updateParticipantNote(
+    String id,
+    String participantId,
+    String note,
+  );
+
+  /// Sửa liên hệ hồ sơ do BTC tạo (`PATCH .../participants/:pid/entry`):
+  /// payload `{ members: [{ slot, name, email, phone, expectedKey }] }`
+  /// (chỉ thành viên khách, giống Web `updateOrganizerEntry`).
+  Future<void> updateOrganizerEntry(
+    String id,
+    String participantId,
+    Map<String, dynamic> payload,
+  );
+
+  /// Khoá/mở roster đội bóng (`POST .../participants/:pid/lock-roster`
+  /// / `unlock-roster`, không body).
+  Future<void> lockParticipantRoster(String id, String participantId);
+  Future<void> unlockParticipantRoster(String id, String participantId);
+
+  /// Xoá một VĐV ảo (`DELETE /tournaments/:id/participants/:pid/mock`,
+  /// route Web `deleteMockParticipant`).
+  Future<void> deleteMockParticipant(String id, String participantId);
+
+  /// Tách một cặp đã ghép (`POST /tournaments/:id/pairing/:pid/unpair`).
+  Future<void> unpairParticipant(String id, String participantId);
   Future<List<AddAthleteCandidate>> listAddAthleteCandidates(
     String id, {
     required AddAthleteSource source,
