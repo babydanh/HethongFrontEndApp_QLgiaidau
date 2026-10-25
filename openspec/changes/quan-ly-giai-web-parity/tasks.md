@@ -8,7 +8,7 @@
 
 ## 1. Vòng đời & đăng ký
 
-- [ ] 1.1 Sheet khai mạc checklist: liệt kê hạng mục đang mở kèm toggle đóng từng hạng mục (mặc định đóng hết) + cảnh báo (chưa có sơ đồ, VĐV chờ duyệt); gửi `close-registration` (divisionIds chọn đóng) rồi `POST /start`. Tiêu chí: TC-WP-01-01/02 xanh trên cloud.
+- [x] 1.1 Sheet khai mạc checklist: liệt kê hạng mục đang mở kèm toggle đóng từng hạng mục (mặc định đóng hết) + cảnh báo (chưa có sơ đồ, VĐV chờ duyệt); gửi `close-registration` (divisionIds chọn đóng) rồi `POST /start`. Tiêu chí: TC-WP-01-01/02 xanh trên cloud.
   - Files: `lib/features/tournament/screens/tournament_management_section_screen.dart:836-989`, `lib/data/repositories/api/api_tournament_management_repository.dart`, ARB vi/en, `test/features/tournament_management_hub_screen_test.dart`
   - Giao: `closeDivisionRegistrations(String tournamentId, List<String> divisionIds)` · Nhận: card vòng đời
   - Chủ file chung: `tournament_management_section_screen.dart` (cùng task 1.2, 1.4)
