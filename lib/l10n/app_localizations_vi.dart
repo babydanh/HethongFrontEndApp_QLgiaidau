@@ -16556,16 +16556,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get participantDetailWildcard => 'Đặc cách';
 
   @override
-  String get participantDetailLockRoster => 'Khoá roster';
+  String get participantDetailLockRoster => 'Khóa roster';
 
   @override
-  String get participantDetailUnlockRoster => 'Mở khoá roster';
+  String get participantDetailUnlockRoster => 'Mở khóa roster';
 
   @override
-  String get participantDetailRosterLocked => 'Đã khoá roster đội bóng.';
+  String get participantDetailRosterLocked => 'Đã khóa roster đội bóng.';
 
   @override
-  String get participantDetailRosterUnlocked => 'Đã mở khoá roster.';
+  String get participantDetailRosterUnlocked =>
+      'Đã mở khóa roster trước khi giải bắt đầu.';
 
   @override
   String get participantDetailDeleteMock => 'Xoá VĐV ảo';
@@ -16580,4 +16581,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get participantDetailEntrySaved => 'Đã lưu liên hệ.';
+
+  @override
+  String get participantDetailRegistrationSource => 'Nguồn hồ sơ';
+
+  @override
+  String get participantSourceOrganizerDirect => 'Ban tổ chức thêm trực tiếp';
+
+  @override
+  String get participantSourceManualEmail => 'Nhập thủ công theo email';
+
+  @override
+  String get participantSourceExcel => 'Nhập từ Excel';
+
+  @override
+  String get participantSourceAiExcel => 'Nhập từ Excel (AI đọc)';
+
+  @override
+  String get participantSourceGoogleForm => 'Nhập từ Google Form';
 }

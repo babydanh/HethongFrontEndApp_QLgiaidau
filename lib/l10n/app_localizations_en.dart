@@ -16622,7 +16622,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get participantDetailRosterLocked => 'Team roster locked.';
 
   @override
-  String get participantDetailRosterUnlocked => 'Roster unlocked.';
+  String get participantDetailRosterUnlocked =>
+      'Roster unlocked before the tournament starts.';
 
   @override
   String get participantDetailDeleteMock => 'Delete mock athlete';
@@ -16637,4 +16638,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get participantDetailEntrySaved => 'Contacts saved.';
+
+  @override
+  String get participantDetailRegistrationSource => 'Registration source';
+
+  @override
+  String get participantSourceOrganizerDirect =>
+      'Added directly by the organizer';
+
+  @override
+  String get participantSourceManualEmail => 'Entered manually by email';
+
+  @override
+  String get participantSourceExcel => 'Imported from Excel';
+
+  @override
+  String get participantSourceAiExcel => 'Imported from Excel (AI-assisted)';
+
+  @override
+  String get participantSourceGoogleForm => 'Imported from Google Form';
 }

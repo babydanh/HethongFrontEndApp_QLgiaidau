@@ -6639,10 +6639,10 @@
   "participantDetailUnpaid": "Chưa thanh toán",
   "participantDetailFreeEntry": "Miễn phí",
   "participantDetailWildcard": "Đặc cách",
-  "participantDetailLockRoster": "Khoá roster",
-  "participantDetailUnlockRoster": "Mở khoá roster",
-  "participantDetailRosterLocked": "Đã khoá roster đội bóng.",
-  "participantDetailRosterUnlocked": "Đã mở khoá roster.",
+  "participantDetailLockRoster": "Khóa roster",
+  "participantDetailUnlockRoster": "Mở khóa roster",
+  "participantDetailRosterLocked": "Đã khóa roster đội bóng.",
+  "participantDetailRosterUnlocked": "Đã mở khóa roster trước khi giải bắt đầu.",
   "participantDetailDeleteMock": "Xoá VĐV ảo",
   "participantDetailDeleteMockConfirm": "Bạn có chắc muốn xoá dữ liệu mock của \"{name}\" không?",
   "@participantDetailDeleteMockConfirm": {
@@ -6653,5 +6653,11 @@
     }
   },
   "participantDetailMockDeleted": "Đã xoá VĐV ảo.",
-  "participantDetailEntrySaved": "Đã lưu liên hệ."
+  "participantDetailEntrySaved": "Đã lưu liên hệ.",
+  "participantDetailRegistrationSource": "Nguồn hồ sơ",
+  "participantSourceOrganizerDirect": "Ban tổ chức thêm trực tiếp",
+  "participantSourceManualEmail": "Nhập thủ công theo email",
+  "participantSourceExcel": "Nhập từ Excel",
+  "participantSourceAiExcel": "Nhập từ Excel (AI đọc)",
+  "participantSourceGoogleForm": "Nhập từ Google Form"
 }

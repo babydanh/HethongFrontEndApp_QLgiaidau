@@ -6629,7 +6629,7 @@
   "participantDetailLockRoster": "Lock roster",
   "participantDetailUnlockRoster": "Unlock roster",
   "participantDetailRosterLocked": "Team roster locked.",
-  "participantDetailRosterUnlocked": "Roster unlocked.",
+  "participantDetailRosterUnlocked": "Roster unlocked before the tournament starts.",
   "participantDetailDeleteMock": "Delete mock athlete",
   "participantDetailDeleteMockConfirm": "Are you sure you want to delete mock data for \"{name}\"?",
   "@participantDetailDeleteMockConfirm": {
@@ -6640,5 +6640,11 @@
     }
   },
   "participantDetailMockDeleted": "Mock athlete deleted.",
-  "participantDetailEntrySaved": "Contacts saved."
+  "participantDetailEntrySaved": "Contacts saved.",
+  "participantDetailRegistrationSource": "Registration source",
+  "participantSourceOrganizerDirect": "Added directly by the organizer",
+  "participantSourceManualEmail": "Entered manually by email",
+  "participantSourceExcel": "Imported from Excel",
+  "participantSourceAiExcel": "Imported from Excel (AI-assisted)",
+  "participantSourceGoogleForm": "Imported from Google Form"
 }

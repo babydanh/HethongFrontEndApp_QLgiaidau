@@ -31,8 +31,8 @@ class ParticipantDetailSheet extends ConsumerStatefulWidget {
   final String tournamentId;
   final OrganizerOpsParticipant participant;
 
-  /// Trạng thái giải: COMPLETED/CANCELLED thì ẩn khoá roster, xoá VĐV ảo
-  /// (cùng luật footer của Web).
+  /// Trạng thái giải, giữ tham số cho nơi gọi (màn quản lý) — Web footer modal
+  /// không khoá nút theo trạng thái giải nên sheet cũng không dùng để ẩn nút.
   final String tournamentStatus;
   final String? divisionName;
 
@@ -100,11 +100,6 @@ class _ParticipantDetailSheetState
   }
 
   OrganizerOpsParticipant get participant => widget.participant;
-
-  bool get _tournamentEnded => const {
-    'COMPLETED',
-    'CANCELLED',
-  }.contains(widget.tournamentStatus.toUpperCase());
 
   /// BTC sửa được liên hệ chỉ khi server cho phép (`canOrganizerEdit`) và hồ
   /// sơ có thành viên khách (tài khoản đã liên kết là chỉ đọc, như Web).
@@ -330,7 +325,9 @@ class _ParticipantDetailSheetState
         validationError = l10n.participantDetailEmailInvalid;
       } else if (phone.length > _phoneMaxLength) {
         validationError = l10n.participantDetailPhoneTooLong;
-      } else if (!emails.add(email.toLowerCase())) {
+      } else if (email.isNotEmpty && !emails.add(email.toLowerCase())) {
+        // Web bỏ qua email trống/không hợp lệ khi soi trùng
+        // (entry-edit-draft.ts), nên hai khách cùng không email vẫn lưu được.
         validationError = l10n.participantDetailEmailDuplicate;
       }
       if (validationError != null) break;
@@ -399,7 +396,10 @@ class _ParticipantDetailSheetState
     final pending = const {'PENDING', 'PENDING_APPROVAL'}.contains(status);
     final isFootball = participant.footballTeamId != null;
     final approved = status == 'COMPLETE';
-    final canDeleteMock = participant.hasMockMember && !_tournamentEnded;
+    // Như Web footer: nút xoá VĐV ảo chỉ cần hồ sơ có mock; nút roster hiện
+    // với đội bóng và CHỈ disable khi dòng chưa duyệt, không khoá theo
+    // trạng thái giải (RegistrationTab.tsx:1825-1880).
+    final canDeleteMock = participant.hasMockMember;
 
     final actions = <Widget>[
       if (pending) ...[
@@ -414,10 +414,10 @@ class _ParticipantDetailSheetState
           child: Text(l10n.tournamentManagementReject),
         ),
       ],
-      if (isFootball && approved)
+      if (isFootball)
         OutlinedButton.icon(
           key: const ValueKey('participant-detail-roster-lock'),
-          onPressed: _busy ? null : _toggleRosterLock,
+          onPressed: _busy || !approved ? null : _toggleRosterLock,
           icon: Icon(
             _rosterLocked ? Icons.lock_open_rounded : Icons.lock_rounded,
           ),
@@ -555,6 +555,15 @@ class _ParticipantDetailSheetState
           ].join(' · '),
           style: TextStyle(color: colors.textSecondary, fontSize: 12),
         ),
+        // Dòng nguồn import: "Nguồn hồ sơ: Excel · file.xlsx" (Web hiện một
+        // dòng duy nhất, sourceFileName/SheetName/RowIndex chỉ để phục vụ dòng này).
+        if (_registrationSourceLine(l10n) case final sourceLine?) ...[
+          const SizedBox(height: 6),
+          Text(
+            sourceLine,
+            style: TextStyle(color: colors.textSecondary, fontSize: 12),
+          ),
+        ],
         // Thanh toán: chỉ hiện khi có lệ phí hoặc có giao dịch (như Web).
         if ((participant.entryFee ?? 0) > 0 || participant.payment != null) ...[
           const SizedBox(height: 8),
@@ -562,16 +571,54 @@ class _ParticipantDetailSheetState
             [
               l10n.participantDetailPayment,
               if ((participant.entryFee ?? 0) > 0)
-                '${NumberFormat('#,###').format(participant.entryFee!.round())}₫',
+                '${NumberFormat.decimalPattern('vi_VN').format(participant.entryFee!.round())}₫',
               if (participant.payment?['transactionReference'] != null)
                 '${l10n.participantDetailPaymentRef}: '
                     '${participant.payment!['transactionReference']}',
+              // Ngày thanh toán của giao dịch hệ thống (Web formatDate).
+              if (_paymentPaidAt != null)
+                DateFormat('dd/MM/yyyy').format(_paymentPaidAt!),
             ].join(' · '),
             style: TextStyle(color: colors.textSecondary, fontSize: 12),
           ),
         ],
       ],
     );
+  }
+
+  DateTime? get _paymentPaidAt {
+    final raw = participant.payment?['paidAt'];
+    return raw is String ? DateTime.tryParse(raw) : null;
+  }
+
+  /// Một dòng nguồn như Web (`selectedSourceLine`): nhãn nguồn đã biết hoặc
+  /// key humanize, nối tên file nếu có. Null khi hồ sơ tự đăng ký.
+  String? _registrationSourceLine(AppLocalizations l10n) {
+    final source = participant.customResponses['importedFrom']
+        ?.toString()
+        .trim();
+    final fileName = participant.customResponses['sourceFileName']
+        ?.toString()
+        .trim();
+    if ((source == null || source.isEmpty) &&
+        (fileName == null || fileName.isEmpty)) {
+      return null;
+    }
+    final label = source == null || source.isEmpty
+        ? null
+        : switch (source) {
+            'ORGANIZER_DIRECT' => l10n.participantSourceOrganizerDirect,
+            'MANUAL_EMAIL' => l10n.participantSourceManualEmail,
+            'EXCEL' => l10n.participantSourceExcel,
+            'AI_EXCEL' => l10n.participantSourceAiExcel,
+            'GOOGLE_FORM' => l10n.participantSourceGoogleForm,
+            _ => _humanizeResponseKey(source),
+          };
+    return [
+      l10n.participantDetailRegistrationSource,
+      ?label,
+      if (fileName != null && fileName.isNotEmpty) fileName,
+    ].join(' · ');
   }
 
   (String, Color) _statusStyle(

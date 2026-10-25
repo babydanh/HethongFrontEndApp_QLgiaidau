@@ -29950,25 +29950,25 @@ abstract class AppLocalizations {
   /// No description provided for @participantDetailLockRoster.
   ///
   /// In vi, this message translates to:
-  /// **'Khoá roster'**
+  /// **'Khóa roster'**
   String get participantDetailLockRoster;
 
   /// No description provided for @participantDetailUnlockRoster.
   ///
   /// In vi, this message translates to:
-  /// **'Mở khoá roster'**
+  /// **'Mở khóa roster'**
   String get participantDetailUnlockRoster;
 
   /// No description provided for @participantDetailRosterLocked.
   ///
   /// In vi, this message translates to:
-  /// **'Đã khoá roster đội bóng.'**
+  /// **'Đã khóa roster đội bóng.'**
   String get participantDetailRosterLocked;
 
   /// No description provided for @participantDetailRosterUnlocked.
   ///
   /// In vi, this message translates to:
-  /// **'Đã mở khoá roster.'**
+  /// **'Đã mở khóa roster trước khi giải bắt đầu.'**
   String get participantDetailRosterUnlocked;
 
   /// No description provided for @participantDetailDeleteMock.
@@ -29994,6 +29994,42 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã lưu liên hệ.'**
   String get participantDetailEntrySaved;
+
+  /// No description provided for @participantDetailRegistrationSource.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nguồn hồ sơ'**
+  String get participantDetailRegistrationSource;
+
+  /// No description provided for @participantSourceOrganizerDirect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban tổ chức thêm trực tiếp'**
+  String get participantSourceOrganizerDirect;
+
+  /// No description provided for @participantSourceManualEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập thủ công theo email'**
+  String get participantSourceManualEmail;
+
+  /// No description provided for @participantSourceExcel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ Excel'**
+  String get participantSourceExcel;
+
+  /// No description provided for @participantSourceAiExcel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ Excel (AI đọc)'**
+  String get participantSourceAiExcel;
+
+  /// No description provided for @participantSourceGoogleForm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ Google Form'**
+  String get participantSourceGoogleForm;
 }
 
 class _AppLocalizationsDelegate

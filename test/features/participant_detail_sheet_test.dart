@@ -181,8 +181,8 @@ void main() {
     );
     expect(find.text('Chưa thanh toán'), findsOneWidget);
     expect(find.text('Cặp · Đôi Nam Nữ'), findsOneWidget);
-    // Lệ phí hiển thị trên dòng thanh toán (150000 -> 150,000₫).
-    expect(find.textContaining('150'), findsOneWidget);
+    // Lệ phí hiển thị kiểu vi-VN (150000 -> 150.000₫, như Web toLocaleString('vi-VN')).
+    expect(find.textContaining('150.000'), findsOneWidget);
     // Câu trả lời form: key humanize, bool dịch Có, tệp đính kèm hiện tên file.
     expect(find.text('Shirt size'), findsOneWidget);
     expect(find.text('L'), findsOneWidget);
@@ -192,6 +192,120 @@ void main() {
     // Ghi chú (notes) và key hệ thống không lặp lại thành câu trả lời.
     expect(find.text('Notes'), findsNothing);
     expect(repo.notes, isEmpty);
+  });
+
+  testWidgets('TC-WP-03-02: dòng nguồn import theo Web (nhãn + tên file)', (
+    tester,
+  ) async {
+    final repo = _RecordingManagementRepository();
+    final imported = OrganizerOpsParticipant(
+      id: 'p-excel',
+      teamName: 'Đội Nhập Từ File',
+      teamStatus: 'COMPLETE',
+      isPaid: true,
+      members: const [],
+      customResponses: {
+        'importedFrom': 'EXCEL',
+        'sourceFileName': 'danh-sach.xlsx',
+      },
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tournamentManagementRepositoryProvider.overrideWithValue(repo),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => Center(
+                child: TextButton(
+                  onPressed: () => ParticipantDetailSheet.show(
+                    context,
+                    tournamentId: 't1',
+                    participant: imported,
+                    tournamentStatus: 'IN_PROGRESS',
+                  ),
+                  child: const Text('Mở sheet'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Mở sheet'));
+    await tester.pumpAndSettle();
+
+    // Một dòng nguồn duy nhất: "Nguồn hồ sơ · Nhập từ Excel · danh-sach.xlsx".
+    expect(
+      find.text('Nguồn hồ sơ · Nhập từ Excel · danh-sach.xlsx'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('TC-WP-03-02: nút footer không khoá theo trạng thái giải (Web)', (
+    tester,
+  ) async {
+    final repo = _RecordingManagementRepository();
+    final mockFootball = OrganizerOpsParticipant(
+      id: 'p-fb-mock',
+      teamName: 'FC ảo',
+      teamStatus: 'PENDING_APPROVAL',
+      isPaid: true,
+      footballTeamId: 'ft-1',
+      members: [
+        const OrganizerOpsMember(
+          userId: 'mock-1',
+          fullName: 'VĐV ảo',
+          isMock: true,
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tournamentManagementRepositoryProvider.overrideWithValue(repo),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => Center(
+                child: TextButton(
+                  onPressed: () => ParticipantDetailSheet.show(
+                    context,
+                    tournamentId: 't1',
+                    participant: mockFootball,
+                    // Giải đã kết thúc: Web không ẩn nút theo trạng thái này.
+                    tournamentStatus: 'COMPLETED',
+                  ),
+                  child: const Text('Mở sheet'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Mở sheet'));
+    await tester.pumpAndSettle();
+
+    // Nút xoá VĐV ảo vẫn hiện; nút roster hiện nhưng disable vì dòng chưa duyệt.
+    expect(
+      find.byKey(const ValueKey('participant-detail-delete-mock')),
+      findsOneWidget,
+    );
+    final rosterButton = tester.widget<OutlinedButton>(
+      find.byKey(const ValueKey('participant-detail-roster-lock')),
+    );
+    expect(rosterButton.onPressed, isNull);
   });
 
   testWidgets('TC-WP-03-02: duyệt gửi COMPLETE rồi đóng sheet', (tester) async {
@@ -520,4 +634,78 @@ void main() {
     expect(find.text('Nhập tên'), findsOneWidget);
     expect(repo.entries, isEmpty);
   });
+
+  testWidgets(
+    'TC-WP-03-02: hai khách cùng không email vẫn lưu được (như Web)',
+    (tester) async {
+      final repo = _RecordingManagementRepository();
+      final guests = OrganizerOpsParticipant(
+        id: 'p-guest',
+        teamName: 'Hồ Sơ Khách',
+        teamStatus: 'COMPLETE',
+        isPaid: true,
+        canOrganizerEdit: true,
+        members: const [],
+        players: [
+          const ParticipantPlayer(slot: 1, fullName: 'Khách A', isGuest: true),
+          const ParticipantPlayer(slot: 2, fullName: 'Khách B', isGuest: true),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            tournamentManagementRepositoryProvider.overrideWithValue(repo),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.darkTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('vi'),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => Center(
+                  child: TextButton(
+                    onPressed: () => ParticipantDetailSheet.show(
+                      context,
+                      tournamentId: 't1',
+                      participant: guests,
+                      tournamentStatus: 'IN_PROGRESS',
+                    ),
+                    child: const Text('Mở sheet'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Mở sheet'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('participant-contact-edit')));
+      await tester.pumpAndSettle();
+      // Hai khách đều không có email: Web bỏ qua email trống khi soi trùng.
+      await tester.enterText(
+        find.byKey(const ValueKey('participant-contact-name-1')),
+        'Khách A mới',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('participant-contact-name-2')),
+        'Khách B mới',
+      );
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('participant-contact-save')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('participant-contact-save')));
+      await tester.pumpAndSettle();
+
+      // Không hiện "Email bị trùng", cả hai dòng được gửi.
+      expect(find.text('Email bị trùng'), findsNothing);
+      expect(repo.entries, hasLength(1));
+      final members = repo.entries.first.$2['members'] as List;
+      expect(members, hasLength(2));
+      expect(members.every((member) => member['email'] == null), isTrue);
+    },
+  );
 }
