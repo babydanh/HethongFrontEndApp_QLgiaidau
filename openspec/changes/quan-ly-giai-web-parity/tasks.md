@@ -37,7 +37,7 @@
   - Giao: `createDivision/updateDivision` mở rộng payload · Nhận: thay dialog thêm/sửa/cấu hình hiện có
   - Chủ file chung: divisions_section (cùng 1.3, 1.4)
   - Phụ thuộc: 0.1
-- [ ] 2.2 Sheet cấu hình từng vòng: chọn vòng của stage, sân + giờ mặc định + luật vòng + ghi chú → `PATCH /tournaments/stages/:stageId`. Tiêu chí: TC-WP-02-04 + test API stages.
+- [x] 2.2 Sheet cấu hình từng vòng: chọn vòng của stage, sân + giờ mặc định + luật vòng + ghi chú → `PATCH /tournaments/stages/:stageId`. Tiêu chí: TC-WP-02-04 + test API stages.
   - Files: tạo `lib/features/tournament/widgets/stage_round_config_sheet.dart`, divisions_section (nút mở khi có bracket), repository (`updateStageRoundConfig` đã có — đối chiếu Web `handleSaveStageDetails`), ARB, `test/features/stage_round_config_sheet_test.dart`
   - Chủ file chung: divisions_section
   - Phụ thuộc: 2.1
