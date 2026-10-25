@@ -520,12 +520,14 @@ class ApiTournamentManagementRepository
   Future<Map<String, dynamic>> reopenRegistration(
     String id, {
     DateTime? registrationEndDate,
+    List<String>? divisionIds,
   }) async => _map(
     await _dio.post(
       '/tournaments/$id/reopen-registration',
       data: {
         if (registrationEndDate != null)
           'registrationEndDate': registrationEndDate.toUtc().toIso8601String(),
+        if (divisionIds != null) 'divisionIds': divisionIds,
       },
     ),
   );

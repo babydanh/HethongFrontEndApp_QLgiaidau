@@ -15952,4 +15952,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String swissActionAllRoundsDone(int total) {
     return 'All $total rounds complete';
   }
+
+  @override
+  String get divisionFullPromptTitle => 'Divisions are full';
+
+  @override
+  String get divisionFullPromptMessage =>
+      'These divisions are full and still open for registration. Close registration to stop taking entries, or keep them open.';
+
+  @override
+  String get divisionFullPromptClose => 'Close registration';
+
+  @override
+  String get divisionFullPromptKeepOpen => 'Keep open';
+
+  @override
+  String divisionFullPromptCloseAll(int count) {
+    return 'Close registration ($count)';
+  }
+
+  @override
+  String divisionFullPromptCapacity(int registered, int capacity) {
+    return '$registered/$capacity players';
+  }
+
+  @override
+  String get divisionBulkTitle => 'Registration by division';
+
+  @override
+  String get divisionBulkModeClose => 'Close';
+
+  @override
+  String get divisionBulkModeOpen => 'Reopen';
+
+  @override
+  String get divisionBulkSelectAll => 'Select all';
+
+  @override
+  String get divisionBulkEmptyClose => 'No division is open for registration.';
+
+  @override
+  String get divisionBulkEmptyOpen => 'No division is closed.';
+
+  @override
+  String divisionBulkConfirmClose(int count) {
+    return 'Close $count divisions';
+  }
+
+  @override
+  String divisionBulkConfirmOpen(int count) {
+    return 'Reopen $count divisions';
+  }
+
+  @override
+  String get divisionBulkNewDeadline =>
+      'A selected division is past its deadline — pick a new future registration deadline before reopening.';
+
+  @override
+  String get divisionBulkNewDeadlineMissing =>
+      'Pick a new future registration deadline first.';
+
+  @override
+  String get divisionBulkPickDeadline => 'Pick new deadline';
+
+  @override
+  String get divisionBulkOpenButton => 'Registration';
 }

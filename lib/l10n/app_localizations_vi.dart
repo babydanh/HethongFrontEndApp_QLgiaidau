@@ -15896,4 +15896,71 @@ class AppLocalizationsVi extends AppLocalizations {
   String swissActionAllRoundsDone(int total) {
     return 'Đã đủ $total vòng';
   }
+
+  @override
+  String get divisionFullPromptTitle => 'Hạng mục đã đủ chỗ';
+
+  @override
+  String get divisionFullPromptMessage =>
+      'Các hạng mục sau đã đủ VĐV và vẫn còn mở đăng ký. Đóng đăng ký để tránh nhận thêm, hoặc giữ mở nếu còn muốn nhận.';
+
+  @override
+  String get divisionFullPromptClose => 'Đóng đăng ký';
+
+  @override
+  String get divisionFullPromptKeepOpen => 'Giữ mở';
+
+  @override
+  String divisionFullPromptCloseAll(int count) {
+    return 'Đóng đăng ký ($count)';
+  }
+
+  @override
+  String divisionFullPromptCapacity(int registered, int capacity) {
+    return '$registered/$capacity VĐV';
+  }
+
+  @override
+  String get divisionBulkTitle => 'Đóng/mở đăng ký theo hạng mục';
+
+  @override
+  String get divisionBulkModeClose => 'Đóng đăng ký';
+
+  @override
+  String get divisionBulkModeOpen => 'Mở lại đăng ký';
+
+  @override
+  String get divisionBulkSelectAll => 'Chọn hết';
+
+  @override
+  String get divisionBulkEmptyClose =>
+      'Không còn hạng mục nào đang mở đăng ký.';
+
+  @override
+  String get divisionBulkEmptyOpen =>
+      'Không có hạng mục nào đang đóng đăng ký.';
+
+  @override
+  String divisionBulkConfirmClose(int count) {
+    return 'Đóng $count hạng mục';
+  }
+
+  @override
+  String divisionBulkConfirmOpen(int count) {
+    return 'Mở lại $count hạng mục';
+  }
+
+  @override
+  String get divisionBulkNewDeadline =>
+      'Có hạng mục đã quá hạn — chọn hạn đăng ký mới (ở tương lai) trước khi mở lại.';
+
+  @override
+  String get divisionBulkNewDeadlineMissing =>
+      'Chưa chọn hạn đăng ký mới ở tương lai.';
+
+  @override
+  String get divisionBulkPickDeadline => 'Chọn hạn đăng ký mới';
+
+  @override
+  String get divisionBulkOpenButton => 'Đăng ký';
 }

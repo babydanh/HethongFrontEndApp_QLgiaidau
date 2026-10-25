@@ -9,6 +9,8 @@ import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/swiss_config_editor.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/registration_divisions_sheet.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,6 +43,11 @@ class _TournamentManagementDivisionsSectionState
   bool _configuring = false;
   String? _mutationError;
 
+  /// Hạng mục đủ chỗ đã đề nghị đóng trong phiên màn này (không persist,
+  /// rời màn là hỏi lại — tương đương sessionStorage của Web).
+  final _askedFullDivisionIds = <String>{};
+  bool _fullPromptActive = false;
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +76,11 @@ class _TournamentManagementDivisionsSectionState
             onRetry: _reload,
           );
         final divisions = snapshot.data ?? const <Map<String, dynamic>>[];
+        // Hạng mục vừa đủ chỗ còn mở: đề nghị đóng sau khi khung hiển thị xong
+        // (đối chiếu Web prompt close-full-divisions).
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _maybePromptFullDivisions(divisions),
+        );
         // Hạt giống chỉ áp dụng cho nội dung vòng bảng + loại trực tiếp.
         final seedDivisions = divisions
             .where(
@@ -86,13 +98,25 @@ class _TournamentManagementDivisionsSectionState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton.icon(
-                      onPressed: _isBusy ? null : _createDivision,
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(l10n.tournamentManagementAddDivision),
-                    ),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        key: const ValueKey('division-bulk-open'),
+                        onPressed: _isBusy || divisions.isEmpty
+                            ? null
+                            : _openBulkRegistrationSheet(divisions),
+                        icon: const Icon(Icons.event_available_rounded),
+                        label: Text(l10n.divisionBulkOpenButton),
+                      ),
+                      FilledButton.icon(
+                        onPressed: _isBusy ? null : _createDivision,
+                        icon: const Icon(Icons.add_rounded),
+                        label: Text(l10n.tournamentManagementAddDivision),
+                      ),
+                    ],
                   ),
                   if (_mutationError != null) ...[
                     const SizedBox(height: 10),
@@ -146,6 +170,51 @@ class _TournamentManagementDivisionsSectionState
       },
     );
   }
+
+  void _maybePromptFullDivisions(List<Map<String, dynamic>> divisions) {
+    if (!mounted || _fullPromptActive) return;
+    final pending = divisions
+        .where((division) {
+          final id = _divisionId(division);
+          if (id.isEmpty || _askedFullDivisionIds.contains(id)) {
+            return false;
+          }
+          return divisionIsFull(division) &&
+              divisionRegistrationOpen(
+                division,
+                widget.tournament.status.toUpperCase(),
+              );
+        })
+        .toList(growable: false);
+    if (pending.isEmpty) return;
+    _fullPromptActive = true;
+    // Huỷ prompt coi như đã hỏi các hạng mục đangshown (không lặp lại vòng
+    // lặp hỏi ngay sau khi đóng); quyết định từng hàng vẫn ghi riêng.
+    for (final division in pending) {
+      _askedFullDivisionIds.add(_divisionId(division));
+    }
+    FullDivisionsPromptSheet.show(
+      context,
+      tournamentId: widget.tournament.id,
+      divisions: pending,
+    ).whenComplete(() {
+      if (mounted) setState(() => _fullPromptActive = false);
+    });
+  }
+
+  VoidCallback _openBulkRegistrationSheet(
+    List<Map<String, dynamic>> divisions,
+  ) => () {
+    RegistrationDivisionsBulkSheet.show(
+      context,
+      tournamentId: widget.tournament.id,
+      tournamentStatus: widget.tournament.status.toUpperCase(),
+      tournamentDeadline: widget.tournament.registrationEndDate,
+      divisions: divisions,
+    ).whenComplete(() {
+      if (mounted) _reload();
+    });
+  };
 
   Future<void> _createDivision() async {
     final values = await showDialog<_DivisionValues>(

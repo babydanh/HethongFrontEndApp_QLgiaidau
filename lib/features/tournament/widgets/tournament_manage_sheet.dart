@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 /// Khung bottom sheet dùng chung cho các sheet quản lý giải đấu
@@ -199,4 +200,21 @@ class TournamentManageSheet extends StatelessWidget {
     }
     return wrapped;
   }
+}
+
+/// Lấy thông điệp lỗi server (Dio `message`) hiển thị nguyên văn trong các
+/// sheet quản lý giải; null khi lỗi không mang message hiển thị được.
+String? tournamentSheetServerMessage(Object error) {
+  if (error is DioException) {
+    final data = error.response?.data;
+    if (data is Map) {
+      final message = data['message'];
+      if (message is String && message.trim().isNotEmpty) return message;
+      if (message is List && message.isNotEmpty) {
+        final first = message.first;
+        if (first is String && first.trim().isNotEmpty) return first;
+      }
+    }
+  }
+  return null;
 }

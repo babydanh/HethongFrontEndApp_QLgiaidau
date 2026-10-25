@@ -28747,6 +28747,114 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã đủ {total} vòng'**
   String swissActionAllRoundsDone(int total);
+
+  /// Tiêu đề prompt đề nghị đóng đăng ký hạng mục đủ chỗ.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng mục đã đủ chỗ'**
+  String get divisionFullPromptTitle;
+
+  /// Giải thích prompt hạng mục đủ chỗ.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các hạng mục sau đã đủ VĐV và vẫn còn mở đăng ký. Đóng đăng ký để tránh nhận thêm, hoặc giữ mở nếu còn muốn nhận.'**
+  String get divisionFullPromptMessage;
+
+  /// Nút đóng đăng ký một hạng mục.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký'**
+  String get divisionFullPromptClose;
+
+  /// Nút giữ nguyên hạng mục đang mở.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ mở'**
+  String get divisionFullPromptKeepOpen;
+
+  /// Nút đóng đăng ký mọi hạng mục còn lại.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký ({count})'**
+  String divisionFullPromptCloseAll(int count);
+
+  /// Số VĐV đã đăng ký trên sức chứa.
+  ///
+  /// In vi, this message translates to:
+  /// **'{registered}/{capacity} VĐV'**
+  String divisionFullPromptCapacity(int registered, int capacity);
+
+  /// Tiêu đề sheet thao tác đăng ký theo nhóm hạng mục.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng/mở đăng ký theo hạng mục'**
+  String get divisionBulkTitle;
+
+  /// Chế độ đóng đăng ký.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký'**
+  String get divisionBulkModeClose;
+
+  /// Chế độ mở lại đăng ký.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại đăng ký'**
+  String get divisionBulkModeOpen;
+
+  /// Nút chọn mọi hạng mục áp dụng.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn hết'**
+  String get divisionBulkSelectAll;
+
+  /// Trống ở chế độ đóng.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không còn hạng mục nào đang mở đăng ký.'**
+  String get divisionBulkEmptyClose;
+
+  /// Trống ở chế độ mở lại.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có hạng mục nào đang đóng đăng ký.'**
+  String get divisionBulkEmptyOpen;
+
+  /// Nút xác nhận đóng hàng loạt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng {count} hạng mục'**
+  String divisionBulkConfirmClose(int count);
+
+  /// Nút xác nhận mở lại hàng loạt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại {count} hạng mục'**
+  String divisionBulkConfirmOpen(int count);
+
+  /// Nhắc chọn hạn mới khi mở lại hạng mục quá hạn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có hạng mục đã quá hạn — chọn hạn đăng ký mới (ở tương lai) trước khi mở lại.'**
+  String get divisionBulkNewDeadline;
+
+  /// Báo lỗi thiếu hạn mới.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn hạn đăng ký mới ở tương lai.'**
+  String get divisionBulkNewDeadlineMissing;
+
+  /// Nút mở bộ chọn hạn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn hạn đăng ký mới'**
+  String get divisionBulkPickDeadline;
+
+  /// Nút vào sheet đóng/mở đăng ký theo hạng mục.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký'**
+  String get divisionBulkOpenButton;
 }
 
 class _AppLocalizationsDelegate
