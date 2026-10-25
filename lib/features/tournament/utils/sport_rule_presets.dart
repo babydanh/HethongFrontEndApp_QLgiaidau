@@ -548,11 +548,16 @@ Map<String, dynamic> buildSportRulesPayload({
     'setsToWin': safeSetsToWin,
     'pointsPerSet': safePointsPerSet,
     'winByTwo': winByTwo,
+    // Khối scoring lồng như Web payload.ts: chép nguyên mặc định của môn
+    // (kèm maxPoints/tiebreakPoints riêng nếu môn có) rồi ghi đè bằng lựa
+    // chọn hiện tại và override ở dưới.
     'scoring': <String, dynamic>{
       'mode': 'LITE',
-      'setsToWin': safeSetsToWin,
-      'pointsPerSet': safePointsPerSet,
-      'winByTwo': winByTwo,
+      'setsToWin': base.setsToWin,
+      'pointsPerSet': base.pointsPerSet,
+      'winByTwo': base.winByTwo,
+      'maxPoints': base.maxPoints,
+      if (base.tiebreakPoints != null) 'tiebreakPoints': base.tiebreakPoints,
     },
   };
 
@@ -563,6 +568,15 @@ Map<String, dynamic> buildSportRulesPayload({
   }
   if (roundsToPlay != null) {
     payload['roundsToPlay'] = _toPositiveInteger(roundsToPlay);
+  }
+
+  final scoring = payload['scoring'] as Map<String, dynamic>;
+  scoring['setsToWin'] = safeSetsToWin;
+  scoring['pointsPerSet'] = safePointsPerSet;
+  scoring['winByTwo'] = winByTwo;
+  if (safeMaxPoints != null) scoring['maxPoints'] = safeMaxPoints;
+  if (safeTiebreakPoints != null) {
+    scoring['tiebreakPoints'] = safeTiebreakPoints;
   }
 
   final baseFormat = base.format;

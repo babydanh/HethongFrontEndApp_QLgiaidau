@@ -428,6 +428,72 @@ void main() {
     },
   );
 
+  testWidgets(
+    'Review 2.1: legacy không mode → theo mode giải; max "0" tự chuẩn về 2; payload gửi startDate giải',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final mgmt = _MgmtRepo();
+      final stage = _StageRepo();
+      // Giải bật mode STRICT; legacy roundConfig không ghi mode tường minh.
+      final tournament = Tournament.fromJson({
+        'name': 'City Pickleball Cup',
+        'sport': 'pickleball',
+        'format': 'doubles',
+        'bracketType': 'single_elimination',
+        'status': 'REGISTRATION',
+        'maxTeams': 32,
+        'entryFee': '50000',
+        'startDate': '2026-06-01T00:00:00Z',
+        'sportRules': {'mode': 'STRICT', 'kind': 'PICKLEBALL_RALLY'},
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      }, 'tournament-1');
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          stage,
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: tournament,
+            division: {
+              'id': 'div-3',
+              'name': 'Đơn tự do',
+              'matchType': 'SINGLES',
+              'bracketType': 'SINGLE_ELIMINATION',
+              'roundConfig': {
+                'kind': 'PICKLEBALL_RALLY',
+                'setsToWin': 2,
+                'pointsPerSet': 11,
+              },
+            },
+          ),
+        ),
+      );
+
+      // Sức chứa "0": không chặn lưu như Web, tự chuẩn về 2.
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-limit-switch')),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-max')),
+        '0',
+      );
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.updated.single.payload;
+      expect(payload['roundConfig']['mode'], 'STRICT');
+      expect(payload['maxParticipants'], 2);
+      // Ngày giải làm lịch mặc định cho hạng mục (Web handleCreateDivision).
+      expect(payload['startDate'], contains('2026-06-01'));
+    },
+  );
+
   group('port Web registration-fee (divisionFeePayload/feeInputValue)', () {
     test('ô trống hoặc bằng phí giải → theo phí giải, không override', () {
       final payload = divisionFeePayload('', 50000);
@@ -524,11 +590,26 @@ void main() {
       expect(payload['mode'], 'STRICT');
       expect(payload['setsToWin'], 2);
       expect(payload['maxPoints'], 7);
+      // Scoring lồng chép mặc định môn (kèm maxPoints/tiebreakPoints riêng)
+      // rồi ghi đè bằng lựa chọn — port payload.ts đầy đủ.
       expect(payload['scoring']['setsToWin'], 2);
+      expect(payload['scoring']['maxPoints'], 7);
+      expect(payload['scoring']['tiebreakPoints'], 7);
       final format = payload['format'] as Map<String, dynamic>;
       expect(format['bestOfSets'], 3);
       expect(format['gamesPerSet'], 6);
       expect(format['tiebreakPoints'], 7);
+      // Override khác mặc định môn: scoring.maxPoints nhận override (30 → 25).
+      final badminton = buildSportRulesPayload(
+        kind: SportRulePresetKind.badminton,
+        setsToWin: 2,
+        pointsPerSet: 21,
+        winByTwo: true,
+        maxPoints: 25,
+        mode: 'LITE',
+      );
+      expect(badminton['scoring']['maxPoints'], 25);
+      expect(badminton['maxPoints'], 25);
     });
 
     test('resolveSportRuleView đọc cấu hình đã lưu và lấp mặc định', () {

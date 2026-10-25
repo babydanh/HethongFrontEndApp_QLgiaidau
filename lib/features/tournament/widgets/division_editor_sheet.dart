@@ -329,7 +329,6 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
 
   bool _busy = false;
   bool _eloInvalid = false;
-  bool _maxInvalid = false;
   String? _errorText;
 
   @override
@@ -366,7 +365,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
       _superTiebreakEnabled = view.hasCustomTiebreakTarget;
       _superTiebreakSetIndex = view.bestOf;
       _superTiebreakPoints = view.tiebreakPoints;
-      _isLiteMode = explicitScoringMode(_divisionRoundConfig) != 'STRICT';
+      // Legacy roundConfig không ghi mode tường minh: rơi về mode của giải
+      // (đối chiếu Web applyDivisionFormValues đọc sportRules kế tiếp).
+      _isLiteMode =
+          (explicitScoringMode(_divisionRoundConfig) ??
+              explicitScoringMode(widget.tournament.sportRules) ??
+              'LITE') !=
+          'STRICT';
       _rrRounds = view.roundsToPlay;
     } else {
       final defaults = sportRuleDefaults(fallbackKind);
@@ -675,14 +680,8 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
                 ],
                 decoration: InputDecoration(
                   labelText: l10n.divisionEditorMaxCount,
-                  errorText: _maxInvalid
-                      ? l10n.tournamentManagementRequiredFields
-                      : null,
                   border: const OutlineInputBorder(),
                 ),
-                onChanged: (_) {
-                  if (_maxInvalid) setState(() => _maxInvalid = false);
-                },
               ),
             ),
           ),
@@ -1381,20 +1380,18 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
   Future<void> _save() async {
     if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
-    final maxRaw = _parseField(_max);
-    final invalidMax =
-        _limitEnabled &&
-        _max.text.trim().isNotEmpty &&
-        (maxRaw == null || maxRaw < 1);
+    // Sức chứa: Web không chặn lưu mà tự chuẩn hoá (rỗng/không hợp lệ → 2,
+    // kẹp 2..128) — kẹp luôn ở đây và hiện lại vào ô.
+    if (_limitEnabled) {
+      final normalized = _normalizedMaxParticipants().toString();
+      if (_max.text.trim() != normalized) _max.text = normalized;
+    }
     final minElo = _parseField(_minElo);
     final maxElo = _parseField(_maxElo);
     final invalidElo =
         _eloEnabled && minElo != null && maxElo != null && minElo > maxElo;
-    if (invalidMax || invalidElo) {
-      setState(() {
-        _maxInvalid = invalidMax;
-        _eloInvalid = invalidElo;
-      });
+    if (invalidElo) {
+      setState(() => _eloInvalid = invalidElo);
       return;
     }
     setState(() {
@@ -1506,6 +1503,10 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
       'matchType': mapped.matchType,
       'genderRestriction': mapped.genderRestriction,
       'bracketType': _bracketType,
+      // Web gửi ngày giải làm lịch mặc định cho hạng mục (useManageState.ts
+      // handleCreateDivision); repo create của App vốn strip endDate nên
+      // chỉ gửi startDate.
+      'startDate': widget.tournament.startDate?.toIso8601String(),
       'isConfigOverride': true,
       'roundConfig': roundConfig,
       'minElo': _eloEnabled ? _parseField(_minElo) : null,

@@ -27,7 +27,7 @@ omp chỉ tự nạp file này (gốc repo) và `AGENTS.md` toàn cục. `D:/Dua
 
 - `.env` là secret, gitignored: KHÔNG đọc, KHÔNG in, KHÔNG copy từ repo chính. Worktree mới không có `.env`; cần chạy app hoặc test cần file này thì hỏi người dùng.
 - Agent chỉ được gộp và push `main` qua `merge-lane.py --push` sau khi các cổng kiểm tra đạt; không push `main` trực tiếp. Deploy iOS/App Store chỉ chạy bằng tay qua `workflow_dispatch` của `.github/workflows/deploy-ios.yml`; push `main` không tự deploy iOS.
-- Repo này chưa có workflow test trên GitHub Actions (chỉ `.github/workflows/deploy-ios.yml`).
+- CI `.github/workflows/ci.yml` (từ 2026-10-19) chạy `flutter analyze` + `flutter test` đầy đủ trên mỗi push nhánh KHÔNG phải `main` (bỏ qua chỉ tài liệu; `.env` test tự copy từ `.env.example`) — push nhánh worktree là có kiểm tự động, không cần cloud-test-runner cho unit test. Deploy iOS/App Store chỉ chạy bằng tay qua `workflow_dispatch` của `.github/workflows/deploy-ios.yml`.
 
 ## Kế hoạch và thay đổi
 
