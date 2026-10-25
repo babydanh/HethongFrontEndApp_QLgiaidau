@@ -168,7 +168,14 @@ class TournamentManageSheet extends StatelessWidget {
         color: colors.bgCard,
         border: Border(top: BorderSide(color: colors.border)),
       ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.end, children: items),
+      // OverflowBar thay Row: nút dài tiếng Việt trên màn hẹp tự xuống hàng
+      // thay vì tràn ngang (RenderFlex overflow).
+      child: OverflowBar(
+        alignment: MainAxisAlignment.end,
+        spacing: 8,
+        overflowSpacing: 8,
+        children: items,
+      ),
     );
   }
 
