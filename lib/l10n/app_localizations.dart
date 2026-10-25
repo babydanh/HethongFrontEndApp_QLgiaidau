@@ -28855,6 +28855,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng ký'**
   String get divisionBulkOpenButton;
+
+  /// Nhãn hàng nút mức lệ phí nhanh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng/giảm nhanh:'**
+  String get financeFeeQuickAdjustLabel;
+
+  /// Nút đặt lệ phí về 0 (miễn phí).
+  ///
+  /// In vi, this message translates to:
+  /// **'0đ'**
+  String get financeFeeQuickFree;
+
+  /// Nút cộng nhanh thêm vào lệ phí.
+  ///
+  /// In vi, this message translates to:
+  /// **'+{amount}k'**
+  String financeFeeQuickAdd(int amount);
+
+  /// Dòng lệ phí thu trên mỗi VĐV trong bảng phân tích.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lệ phí thu / VĐV'**
+  String get financeFeeCollectedPerPlayer;
+
+  /// Hiển thị khi lệ phí bằng 0.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get financeFeeFreeLabel;
+
+  /// Dòng phí sàn trên mỗi VĐV trong bảng phân tích.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí sàn / dịch vụ nền tảng'**
+  String get financeFeePlatformFeePerPlayer;
+
+  /// Dòng phần BTC thực nhận trên mỗi VĐV sau khi trừ phí sàn.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC thực nhận / VĐV'**
+  String get financeFeeOrganizerNetPerPlayer;
 }
 
 class _AppLocalizationsDelegate

@@ -16017,4 +16017,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get divisionBulkOpenButton => 'Registration';
+
+  @override
+  String get financeFeeQuickAdjustLabel => 'Quick adjust:';
+
+  @override
+  String get financeFeeQuickFree => '0đ';
+
+  @override
+  String financeFeeQuickAdd(int amount) {
+    return '+${amount}k';
+  }
+
+  @override
+  String get financeFeeCollectedPerPlayer => 'Fee collected / player';
+
+  @override
+  String get financeFeeFreeLabel => 'Free';
+
+  @override
+  String get financeFeePlatformFeePerPlayer => 'Platform / service fee';
+
+  @override
+  String get financeFeeOrganizerNetPerPlayer => 'Organizer receives / player';
 }

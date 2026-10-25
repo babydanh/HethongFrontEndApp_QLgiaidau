@@ -76,7 +76,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(
-      find.text(l10n.tournamentManagementBankAccountNumber),
+      find.text(
+        l10n.tournamentManagementBankAccountNumber,
+        skipOffstage: false,
+      ),
     );
     await tester.pumpAndSettle();
     expect(
@@ -104,11 +107,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text(l10n.tournamentManagementBankAccountNumber),
+        find.text(
+          l10n.tournamentManagementBankAccountNumber,
+          skipOffstage: false,
+        ),
         findsOneWidget,
       );
       await tester.ensureVisible(
-        find.text(l10n.tournamentManagementBankAccountNumber),
+        find.text(
+          l10n.tournamentManagementBankAccountNumber,
+          skipOffstage: false,
+        ),
       );
       await tester.pumpAndSettle();
       expect(repository.payoutHistoryRequests, 1);
@@ -130,7 +139,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text(l10n.tournamentManagementPayoutCreatorOnly),
+      find.text(
+        l10n.tournamentManagementPayoutCreatorOnly,
+        skipOffstage: false,
+      ),
       findsOneWidget,
     );
     expect(find.text(l10n.tournamentManagementBankAccountNumber), findsNothing);
@@ -152,7 +164,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text(l10n.tournamentManagementPayoutCreatorOnly),
+      find.text(
+        l10n.tournamentManagementPayoutCreatorOnly,
+        skipOffstage: false,
+      ),
       findsOneWidget,
     );
     expect(find.text(l10n.tournamentManagementBankAccountNumber), findsNothing);
@@ -172,7 +187,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text(l10n.tournamentManagementPayoutRequiresCompleted),
+      find.text(
+        l10n.tournamentManagementPayoutRequiresCompleted,
+        skipOffstage: false,
+      ),
       findsOneWidget,
     );
     expect(find.text(l10n.tournamentManagementBankAccountNumber), findsNothing);

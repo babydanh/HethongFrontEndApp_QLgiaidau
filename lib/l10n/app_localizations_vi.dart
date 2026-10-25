@@ -15963,4 +15963,27 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get divisionBulkOpenButton => 'Đăng ký';
+
+  @override
+  String get financeFeeQuickAdjustLabel => 'Tăng/giảm nhanh:';
+
+  @override
+  String get financeFeeQuickFree => '0đ';
+
+  @override
+  String financeFeeQuickAdd(int amount) {
+    return '+${amount}k';
+  }
+
+  @override
+  String get financeFeeCollectedPerPlayer => 'Lệ phí thu / VĐV';
+
+  @override
+  String get financeFeeFreeLabel => 'Miễn phí';
+
+  @override
+  String get financeFeePlatformFeePerPlayer => 'Phí sàn / dịch vụ nền tảng';
+
+  @override
+  String get financeFeeOrganizerNetPerPlayer => 'BTC thực nhận / VĐV';
 }

@@ -6410,5 +6410,19 @@
   "divisionBulkPickDeadline": "Chọn hạn đăng ký mới",
   "@divisionBulkPickDeadline": {"description": "Nút mở bộ chọn hạn."},
   "divisionBulkOpenButton": "Đăng ký",
-  "@divisionBulkOpenButton": {"description": "Nút vào sheet đóng/mở đăng ký theo hạng mục."}
+  "@divisionBulkOpenButton": {"description": "Nút vào sheet đóng/mở đăng ký theo hạng mục."},
+  "financeFeeQuickAdjustLabel": "Tăng/giảm nhanh:",
+  "@financeFeeQuickAdjustLabel": {"description": "Nhãn hàng nút mức lệ phí nhanh."},
+  "financeFeeQuickFree": "0đ",
+  "@financeFeeQuickFree": {"description": "Nút đặt lệ phí về 0 (miễn phí)."},
+  "financeFeeQuickAdd": "+{amount}k",
+  "@financeFeeQuickAdd": {"description": "Nút cộng nhanh thêm vào lệ phí.", "placeholders": {"amount": {"type": "int", "description": "Số nghìn đồng cộng thêm."}}},
+  "financeFeeCollectedPerPlayer": "Lệ phí thu / VĐV",
+  "@financeFeeCollectedPerPlayer": {"description": "Dòng lệ phí thu trên mỗi VĐV trong bảng phân tích."},
+  "financeFeeFreeLabel": "Miễn phí",
+  "@financeFeeFreeLabel": {"description": "Hiển thị khi lệ phí bằng 0."},
+  "financeFeePlatformFeePerPlayer": "Phí sàn / dịch vụ nền tảng",
+  "@financeFeePlatformFeePerPlayer": {"description": "Dòng phí sàn trên mỗi VĐV trong bảng phân tích."},
+  "financeFeeOrganizerNetPerPlayer": "BTC thực nhận / VĐV",
+  "@financeFeeOrganizerNetPerPlayer": {"description": "Dòng phần BTC thực nhận trên mỗi VĐV sau khi trừ phí sàn."}
 }

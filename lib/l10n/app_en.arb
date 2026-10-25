@@ -6397,5 +6397,19 @@
   "divisionBulkPickDeadline": "Pick new deadline",
   "@divisionBulkPickDeadline": {"description": "Open the deadline picker."},
   "divisionBulkOpenButton": "Registration",
-  "@divisionBulkOpenButton": {"description": "Open the bulk registration sheet."}
+  "@divisionBulkOpenButton": {"description": "Open the bulk registration sheet."},
+  "financeFeeQuickAdjustLabel": "Quick adjust:",
+  "@financeFeeQuickAdjustLabel": {"description": "Label for the quick fee buttons row."},
+  "financeFeeQuickFree": "0đ",
+  "@financeFeeQuickFree": {"description": "Button resetting the entry fee to 0 (free)."},
+  "financeFeeQuickAdd": "+{amount}k",
+  "@financeFeeQuickAdd": {"description": "Quick add button for the entry fee.", "placeholders": {"amount": {"type": "int", "description": "Thousands added."}}},
+  "financeFeeCollectedPerPlayer": "Fee collected / player",
+  "@financeFeeCollectedPerPlayer": {"description": "Fee collected per player row in the breakdown."},
+  "financeFeeFreeLabel": "Free",
+  "@financeFeeFreeLabel": {"description": "Shown when the entry fee is 0."},
+  "financeFeePlatformFeePerPlayer": "Platform / service fee",
+  "@financeFeePlatformFeePerPlayer": {"description": "Platform fee per player row in the breakdown."},
+  "financeFeeOrganizerNetPerPlayer": "Organizer receives / player",
+  "@financeFeeOrganizerNetPerPlayer": {"description": "Organizer net per player after the platform fee."}
 }
