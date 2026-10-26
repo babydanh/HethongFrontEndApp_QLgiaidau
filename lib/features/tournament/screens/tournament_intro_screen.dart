@@ -5,6 +5,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
+import 'package:app_quanly_giaidau/domain/services/tournament_manage_access.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
@@ -290,7 +292,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
-
   Widget? _buildRegistrationAction(
     BuildContext context,
     Tournament? tournament,
@@ -507,12 +508,16 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final currentUserId = userProfile?.id;
     final isCreator = tournament.creatorId == currentUserId;
     final isAdmin = authState.isAdmin;
-    final canManage =
-        isAdmin ||
-        authState.isOrganizer ||
-        (userProfile != null &&
-            userProfile.id.isNotEmpty &&
-            userProfile.id == tournament.creatorId);
+    final workspace = ref.watch(myTournamentWorkspaceProvider).value;
+    final canManage = canManageTournament(
+      tournamentId: tournament.id,
+      userId: currentUserId,
+      creatorId: tournament.creatorId,
+      managedTournamentIds: {
+        ...?workspace?.organizedTournaments.map((t) => t.id),
+        ...?workspace?.coOrganizerTournaments.map((t) => t.id),
+      },
+    );
     final activeInvite = _customInviteCode ?? widget.inviteCode;
     final hasInvite = activeInvite != null && activeInvite.trim().isNotEmpty;
 
