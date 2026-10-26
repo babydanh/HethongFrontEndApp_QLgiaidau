@@ -10,7 +10,7 @@
   - Files: `lib/features/bracket/widgets/match_table_row.dart:99, 112`, `lib/core/utils/match_round_label.dart:322`, `lib/features/organizer_ops/screens/organizer_ops_screen.dart:3789`, `lib/features/tournament/widgets/schedule_grid.dart:1056`, `lib/core/services/excel_export_service.dart:42, 204`
   - Nhận: `formatMatchCode` từ 1.1
   - Phụ thuộc: 1.1
-- [ ] 2.2 Kiểm App có thẻ "Theo vòng"/popup ma trận vòng bảng không; nếu có thì hiện mã cùng quy tắc, nếu không thì ghi vào handoff "không áp dụng". Tiêu chí: kết luận có bằng chứng `rg`/ripwire, kèm test nếu có sửa.
+- [x] 2.2 Kiểm App có thẻ "Theo vòng"/popup ma trận vòng bảng không; nếu có thì hiện mã cùng quy tắc, nếu không thì ghi vào handoff "không áp dụng". Tiêu chí: kết luận có bằng chứng `rg`/ripwire, kèm test nếu có sửa.
   - Phụ thuộc: 1.1
 
 ## 3. Kiểm chứng
