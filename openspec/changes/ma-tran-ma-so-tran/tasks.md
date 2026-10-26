@@ -16,3 +16,13 @@
 ## 3. Kiểm chứng
 - [ ] 3.1 `ripwire affected` các file đã sửa và chạy đúng test nó chọn; xem `app-run.py status` trước khi báo người dùng nhìn máy. Tiêu chí: exit 0, `errors` rỗng với nhánh `ma-tran`.
   - Phụ thuộc: 2.1, 2.2
+
+## 4. Định dạng mã mới (`#DNTB-K1-T3`, không tên tắt VĐV)
+Backend trả `matchCode` đầy đủ (`DNTB-K1-T3`); App chỉ thêm `#`. Giữ chữ ký công khai để không phải sửa các màn gọi.
+- [ ] 4.1 Đổi helper sang định dạng mới (TDD: sửa test trước, thấy đỏ). Tiêu chí: `flutter test --no-pub test/core/utils/match_code_test.dart` exit 0, có ca: `#DDNTB-K1-T3` dù chưa biết đối thủ, thiếu mã → "Trận 7"; `flutter analyze --no-pub lib/core/utils/match_code.dart` exit 0.
+  - Files: sửa `lib/core/utils/match_code.dart` (`buildMatchCode`, `matchCodeOrNull`, `formatMatchCode`; xoá `abbreviateNameForCode`/`_sideNameForCode` nếu `uses` không còn nơi dùng), `test/core/utils/match_code_test.dart`; call-site chỉ sửa khi bắt buộc; không `git add` file sinh tự động (`generated_plugin_registrant.*`)
+  - Giao: `formatMatchCode(match, {l10n})` và `matchCodeOrNull` giữ chữ ký
+  - Chủ file chung: task này sở hữu `match_code.dart`
+  - Phụ thuộc: Backend 4.2
+- [ ] 4.2 Kiểm tra cuối. Tiêu chí: `flutter test --no-pub` đúng các file test liên quan exit 0; `ripwire affected`; `openspec validate ma-tran-ma-so-tran --strict` exit 0; xem `app-run.py status`.
+  - Phụ thuộc: 4.1

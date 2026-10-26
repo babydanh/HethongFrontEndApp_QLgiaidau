@@ -1,15 +1,11 @@
 ## ADDED Requirements
 
-### Requirement: Ghép mã trận và tên tắt
-App MUST hiển thị mã dạng `<matchCode><tên tắt bên 1><tên tắt bên 2>`, tên tắt là chữ cái đầu hai từ cuối mỗi tên (tên một từ thì một chữ), bỏ dấu, `Đ` thành `D`, chữ hoa; đánh đôi lấy VĐV thứ nhất mỗi bên. Kết quả MUST trùng với Web cho cùng đầu vào.
+### Requirement: Hiển thị mã trận kèm dấu `#`
+App MUST hiển thị mã dạng `#<matchCode>`, với `matchCode` do Backend trả (không có `#`). Tên VĐV MUST NOT được ghép vào mã. Kết quả MUST trùng với Web cho cùng đầu vào.
 
-#### Scenario: Đủ hai bên
-- **WHEN** `matchCode` là `DN1W2T3`, bên 1 "Nguyễn Văn An", bên 2 "Trần Thị Bình"
-- **THEN** hiển thị `DN1W2T3VATB`
-
-#### Scenario: Chưa biết đối thủ hoặc chờ một bên
-- **WHEN** chưa có bên nào, hoặc chỉ bên 1 là "Nguyễn Văn An"
-- **THEN** hiển thị `DN1W2T3`, hoặc `DN1W2T3VA`
+#### Scenario: Có mã
+- **WHEN** `matchCode` là `DDNTB-K1-T3`, dù hai bên đã hay chưa xác định
+- **THEN** hiển thị `#DDNTB-K1-T3`
 
 ### Requirement: Dự phòng khi thiếu mã
 Khi `matchCode` thiếu hoặc `null`, App MUST giữ nhãn "Trận N" hiện tại và không lỗi parse.
