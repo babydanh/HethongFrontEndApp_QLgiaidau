@@ -4928,6 +4928,7 @@
   "excelStatus": "Trạng thái:",
   "excelRound": "Vòng:",
   "excelMatchNumber": "Trận số:",
+  "excelMatchCode": "Mã trận",
   "excelStartTime": "Thời gian bắt đầu:",
   "excelEndTime": "Thời gian kết thúc:",
   "excelNotStarted": "Chưa bắt đầu",

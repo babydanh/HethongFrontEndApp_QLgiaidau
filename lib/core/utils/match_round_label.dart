@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -320,7 +321,7 @@ class MatchRoundLabel {
       if (match.round > 0) {
         baseLabel = strings.matchTableRound(match.round);
       } else if (match.matchNumber > 0) {
-        baseLabel = 'Trận ${match.matchNumber}';
+        baseLabel = matchCodeOrNull(match) ?? 'Trận ${match.matchNumber}';
       } else {
         baseLabel = strings.matchTableRoundQualifying;
       }

@@ -11854,6 +11854,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get excelMatchNumber => 'Match number:';
 
   @override
+  String get excelMatchCode => 'Match code';
+
+  @override
   String get excelStartTime => 'Start time:';
 
   @override

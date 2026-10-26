@@ -6,7 +6,7 @@
   - Phụ thuộc: Backend 2.2 (hợp đồng trường)
 
 ## 2. Màn hình
-- [ ] 2.1 Hiện mã ở dòng bảng trận, nhãn vòng/trận, Vận hành, lưới lịch, workspace, xuất Excel. Tiêu chí: widget test hiện mã khi có, "Trận N" khi thiếu; `flutter test --no-pub` đúng các file test mới exit 0.
+- [x] 2.1 Hiện mã ở dòng bảng trận, nhãn vòng/trận, Vận hành, lưới lịch, workspace, xuất Excel. Tiêu chí: widget test hiện mã khi có, "Trận N" khi thiếu; `flutter test --no-pub` đúng các file test mới exit 0.
   - Files: `lib/features/bracket/widgets/match_table_row.dart:99, 112`, `lib/core/utils/match_round_label.dart:322`, `lib/features/organizer_ops/screens/organizer_ops_screen.dart:3789`, `lib/features/tournament/widgets/schedule_grid.dart:1056`, `lib/core/services/excel_export_service.dart:42, 204`
   - Nhận: `formatMatchCode` từ 1.1
   - Phụ thuộc: 1.1

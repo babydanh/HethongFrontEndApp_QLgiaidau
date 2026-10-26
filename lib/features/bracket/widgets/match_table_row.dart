@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -88,16 +89,18 @@ class MatchTableRow extends StatelessWidget {
     // Round / Group / Match location label
     final branch = match.bracketPosition.bracket.toLowerCase();
     final isGroup = isGroupStageMatch(match);
+    // Round + match code when the backend sent one, else the old "Trận N".
+    final matchCode = matchCodeOrNull(match);
+    String roundWithMatch(String round) => matchCode == null
+        ? l10n.matchTableRoundMatch(round, match.matchNumber)
+        : '$round - $matchCode';
     final String roundLabel;
     if (branch == 'grand_final' || branch == 'grand_final_reset') {
       roundLabel = l10n.matchTableGrandFinal;
     } else if (branch == 'losers') {
       roundLabel = l10n.matchTableLosersRound(match.round);
     } else if (isSwissMatch(match)) {
-      roundLabel = l10n.matchTableRoundMatch(
-        l10n.swissRoundLabel(match.round),
-        match.matchNumber,
-      );
+      roundLabel = roundWithMatch(l10n.swissRoundLabel(match.round));
     } else if (isGroup &&
         match.groupName != null &&
         match.groupName!.trim().isNotEmpty) {
@@ -107,9 +110,8 @@ class MatchTableRow extends StatelessWidget {
       );
       roundLabel = l10n.crossTableLegTitle(groupDisplay, match.leg ?? 1);
     } else {
-      roundLabel = l10n.matchTableRoundMatch(
+      roundLabel = roundWithMatch(
         _getRoundName(match.round, totalRounds, l10n),
-        match.matchNumber,
       );
     }
 
