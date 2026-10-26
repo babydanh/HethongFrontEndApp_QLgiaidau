@@ -21406,6 +21406,12 @@ abstract class AppLocalizations {
   /// **'Trận số:'**
   String get excelMatchNumber;
 
+  /// No description provided for @excelMatchCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã trận'**
+  String get excelMatchCode;
+
   /// No description provided for @excelStartTime.
   ///
   /// In vi, this message translates to:

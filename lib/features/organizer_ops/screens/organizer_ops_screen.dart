@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
@@ -3780,14 +3781,15 @@ class _OpsMatchCard extends StatelessWidget {
         : colors.warning;
     final groupName = match.groupName?.trim();
     final isRoundRobin = isGroupStageMatch(match);
+    final matchCode = matchCodeOrNull(match);
     final contextLabel = isRoundRobin
         ? groupName?.isNotEmpty == true
               ? l10n.crossTableLegTitle(
                   MatchRoundLabel.formatStageOrGroupName(groupName, l10n: l10n),
                   match.leg ?? 1,
                 )
-              : '#${match.matchNumber}'
-        : l10n.organizer_matchTitle(match.round, match.matchNumber);
+              : matchCode ?? '#${match.matchNumber}'
+        : matchCode ?? l10n.organizer_matchTitle(match.round, match.matchNumber);
     final scheduledLabel = match.scheduledTime == null
         ? l10n.opsUnscheduled
         : '${MaterialLocalizations.of(context).formatFullDate(match.scheduledTime!.toLocal())} '

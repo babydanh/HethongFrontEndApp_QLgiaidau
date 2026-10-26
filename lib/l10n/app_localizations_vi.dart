@@ -11755,6 +11755,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get excelMatchNumber => 'Trận số:';
 
   @override
+  String get excelMatchCode => 'Mã trận';
+
+  @override
   String get excelStartTime => 'Thời gian bắt đầu:';
 
   @override

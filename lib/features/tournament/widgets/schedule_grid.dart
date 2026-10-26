@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
@@ -1053,7 +1054,8 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     final colors = context.colors;
     final roundLabelOf = widget.roundLabelOf;
     final title = roundLabelOf == null
-        ? l10n.organizer_matchTitle(match.round, match.matchNumber)
+        ? matchCodeOrNull(match) ??
+              l10n.organizer_matchTitle(match.round, match.matchNumber)
         : roundLabelOf(match);
     final showTotal =
         match.scoreHistory.isEmpty && (match.isLive || match.isCompleted);

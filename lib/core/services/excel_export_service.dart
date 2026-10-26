@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_event_model.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
@@ -41,6 +42,13 @@ class ExcelExportService {
       TextCellValue(l10n.excelMatchNumber),
       IntCellValue(match.matchNumber),
     ]);
+    final matchCode = matchCodeOrNull(match);
+    if (matchCode != null) {
+      overviewSheet.appendRow([
+        TextCellValue(l10n.excelMatchCode),
+        TextCellValue(matchCode),
+      ]);
+    }
     overviewSheet.appendRow([
       TextCellValue(l10n.excelStartTime),
       TextCellValue(
@@ -190,6 +198,7 @@ class ExcelExportService {
       TextCellValue(l10n.excelStatusHeader),
       TextCellValue(l10n.excelEndTimeHeader),
       TextCellValue(l10n.excelReferee),
+      TextCellValue(l10n.excelMatchCode),
     ]);
 
     for (var match in matches) {
@@ -216,6 +225,7 @@ class ExcelExportService {
               : '',
         ),
         TextCellValue(match.refereeName ?? ''),
+        TextCellValue(matchCodeOrNull(match) ?? ''),
       ]);
     }
 
