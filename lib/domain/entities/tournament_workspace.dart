@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'dart:ui';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -51,6 +52,9 @@ class TournamentAssignedMatch {
   final String groupName;
   final int roundNumber;
   final int matchOrder;
+
+  /// Backend-issued display code; null on older payloads.
+  final String? matchCode;
   final String status;
   final DateTime? scheduledAt;
   final String courtName;
@@ -66,6 +70,7 @@ class TournamentAssignedMatch {
     required this.groupName,
     required this.roundNumber,
     required this.matchOrder,
+    this.matchCode,
     required this.status,
     required this.scheduledAt,
     required this.courtName,
@@ -87,6 +92,7 @@ class TournamentAssignedMatch {
       groupName: json['groupName']?.toString() ?? '',
       roundNumber: _toInt(json['roundNumber']) ?? 1,
       matchOrder: _toInt(json['matchOrder']) ?? 1,
+      matchCode: json['matchCode']?.toString(),
       status: json['status']?.toString() ?? 'SCHEDULED',
       scheduledAt: DateParser.parseDateOptional(json['scheduledAt']),
       courtName: json['courtName']?.toString() ?? '',
@@ -100,6 +106,12 @@ class TournamentAssignedMatch {
   );
 
   String localizedMatchLabel(AppLocalizations l10n) =>
+      buildMatchCode(
+        matchCode,
+        // Doubles arrive as "A / B"; only the first player counts.
+        participant1Name?.split(' / ').first,
+        participant2Name?.split(' / ').first,
+      ) ??
       l10n.workspaceMatchLabel(matchOrder);
 
   String get participantLabel => localizedParticipantLabel(
