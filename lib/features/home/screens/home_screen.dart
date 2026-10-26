@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,9 +12,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
-import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
-import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
@@ -27,14 +23,11 @@ import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
-import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 
 import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/global_search_screen.dart';
@@ -50,8 +43,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/global_search_screen.da
 // ═══════════════════════════════════════════════════════
 class HomeScreen extends ConsumerStatefulWidget {
   final int initialTab;
-  final int initialSubTab;
-  const HomeScreen({super.key, this.initialTab = 0, this.initialSubTab = 0});
+  const HomeScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -60,7 +52,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
-  int _exploreSubTabIndex = 0; // 0: CLB (default), 1: Social
   // Animation controller for compacting/expanding header on scroll
   late final AnimationController _collapseAnimController;
   late final Animation<double> _collapseProgress;
@@ -98,8 +89,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   final String _exploreRanked = 'all';
   String _tournamentSport = 'all';
   String _tournamentStatus = 'all';
-  String _clubSport = 'all';
-  String? _clubProvinceCode;
   String _rankingsSport = 'all';
 
   // ─── Server-side Cursor Pagination states (Tab 1: Giải đấu) ───
@@ -109,15 +98,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool _isTournamentLoadingMore = false;
   bool _serverTournamentHasMore = false;
   int _tournamentRequestVersion = 0;
-
-  // ─── Server-side Cursor Pagination states (Tab 3: Câu lạc bộ) ───
-  final List<Community> _serverClubsList = [];
-  String? _serverClubNextCursor;
-  bool _isClubInitialLoading = true;
-  bool _isClubLoadingMore = false;
-  bool _serverClubHasMore = false;
-  int _clubRequestVersion = 0;
-  static const int _clubsPageSize = 6;
 
   // Show the global search action only on searchable public tabs.
   bool get _shouldShowGlobalSearchButton =>
@@ -130,7 +110,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return switch (_currentIndex) {
       0 => _exploreSport,
       1 => _tournamentSport,
-      3 => _clubSport,
       4 => _rankingsSport == 'all' ? 'pickleball' : _rankingsSport,
       _ => 'all',
     };
@@ -143,7 +122,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _exploreStatus = 'scheduled';
       _exploreSport = key;
       _tournamentSport = key;
-      _clubSport = key;
       _rankingsSport = key == 'all' ? 'pickleball' : key;
       if (_currentIndex != 1) {
         ++_tournamentRequestVersion;
@@ -152,16 +130,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         _serverTournamentHasMore = false;
         _isTournamentInitialLoading = true;
       }
-      if (_currentIndex != 3) {
-        ++_clubRequestVersion;
-        _serverClubsList.clear();
-        _serverClubNextCursor = null;
-        _serverClubHasMore = false;
-        _isClubInitialLoading = true;
-      }
     });
     if (_currentIndex == 1) _resetTournamentCursorPagination();
-    if (_currentIndex == 3) _resetClubCursorPagination();
   }
 
   Future<String?> _resolveTournamentCategoryId(String sportKey) async {
@@ -232,73 +202,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _fetchServerTournamentPage(isLoadMore: false);
   }
 
-  Future<void> _fetchServerClubPage({bool isLoadMore = false}) async {
-    if (isLoadMore) {
-      if (_isClubLoadingMore ||
-          !_serverClubHasMore ||
-          _serverClubNextCursor == null) {
-        return;
-      }
-      setState(() => _isClubLoadingMore = true);
-    } else {
-      setState(() => _isClubInitialLoading = true);
-    }
-    final requestVersion = ++_clubRequestVersion;
-
-    try {
-      final repo = ref.read(communityRepositoryProvider);
-      final result = await repo.getCommunitiesPaged(
-        cursor: isLoadMore ? _serverClubNextCursor : null,
-        limit: _clubsPageSize,
-        search: _searchQueries[3]?.trim(),
-        provinceCode: _clubProvinceCode,
-        categoryId: _clubSport != 'all' ? _clubSport : null,
-      );
-
-      if (mounted && requestVersion == _clubRequestVersion) {
-        setState(() {
-          if (isLoadMore) {
-            final existingIds = _serverClubsList.map((c) => c.id).toSet();
-            final uniqueNew = result.communities.where(
-              (c) => !existingIds.contains(c.id),
-            );
-            _serverClubsList.addAll(uniqueNew);
-          } else {
-            _serverClubsList.clear();
-            _serverClubsList.addAll(result.communities);
-          }
-          _serverClubsList.sort((a, b) {
-            final aRole = a.myRole?.toUpperCase();
-            final bRole = b.myRole?.toUpperCase();
-            final aIsAdmin =
-                aRole == 'OWNER' || aRole == 'ADMIN' || aRole == 'MODERATOR';
-            final bIsAdmin =
-                bRole == 'OWNER' || bRole == 'ADMIN' || bRole == 'MODERATOR';
-            if (aIsAdmin && !bIsAdmin) return -1;
-            if (!aIsAdmin && bIsAdmin) return 1;
-            return 0;
-          });
-          _serverClubNextCursor = result.nextCursor;
-          _serverClubHasMore =
-              result.hasMore && (result.nextCursor?.isNotEmpty ?? false);
-          _isClubInitialLoading = false;
-          _isClubLoadingMore = false;
-        });
-      }
-    } catch (e) {
-      if (mounted && requestVersion == _clubRequestVersion) {
-        setState(() {
-          _isClubInitialLoading = false;
-          _isClubLoadingMore = false;
-        });
-      }
-    }
-  }
-
-  void _resetClubCursorPagination() {
-    _fetchServerClubPage(isLoadMore: false);
-  }
-
   List<(String, String)> _activeSportFilterItems(AppLocalizations l10n) {
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
@@ -315,13 +218,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   double get _safeAreaTop => MediaQuery.of(context).padding.top;
   double get _headerHeight => 84.0 + _safeAreaTop;
-  double get _pinnedHeaderHeight {
-    double h = _headerHeight;
-    if (_currentIndex == 3) {
-      h += 44.0; // Explore sub-tabs (CLB / Social)
-    }
-    return h;
-  }
+  double get _pinnedHeaderHeight => _headerHeight;
 
   @override
   void initState() {
@@ -336,10 +233,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
 
     _currentIndex = widget.initialTab;
-    _exploreSubTabIndex = widget.initialSubTab;
     _carouselController = PageController(viewportFraction: 1.0);
     if (_currentIndex == 1) _fetchServerTournamentPage(isLoadMore: false);
-    if (_currentIndex == 3) _fetchServerClubPage(isLoadMore: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(authProvider.notifier).init();
@@ -351,11 +246,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   void didUpdateWidget(covariant HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialTab != widget.initialTab ||
-        oldWidget.initialSubTab != widget.initialSubTab) {
+    if (oldWidget.initialTab != widget.initialTab) {
       setState(() {
         _currentIndex = widget.initialTab;
-        _exploreSubTabIndex = widget.initialSubTab;
       });
     }
   }
@@ -435,8 +328,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     });
     if (index == 1 && _serverTournamentsList.isEmpty) {
       _fetchServerTournamentPage(isLoadMore: false);
-    } else if (index == 3 && _serverClubsList.isEmpty) {
-      _fetchServerClubPage(isLoadMore: false);
     }
   }
 
@@ -724,56 +615,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               ],
                             ),
                           ),
-                          if (_currentIndex == 3)
-                            Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: context.colors.bgDark,
-                                border: Border(
-                                  bottom: BorderSide(
-                                    color: context.colors.border.withValues(
-                                      alpha: 0.5,
-                                    ),
-                                    width: 1,
-                                  ),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildExploreSubTabItem(
-                                      title: 'CLB',
-                                      isSelected: _exploreSubTabIndex == 0,
-                                      onTap: () {
-                                        if (_exploreSubTabIndex != 0) {
-                                          setState(() {
-                                            _exploreSubTabIndex = 0;
-                                          });
-                                          if (_serverClubsList.isEmpty) {
-                                            _fetchServerClubPage(
-                                              isLoadMore: false,
-                                            );
-                                          }
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _buildExploreSubTabItem(
-                                      title: 'Social',
-                                      isSelected: _exploreSubTabIndex == 1,
-                                      onTap: () {
-                                        if (_exploreSubTabIndex != 1) {
-                                          setState(() {
-                                            _exploreSubTabIndex = 1;
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                         ],
                       ),
                     ),
@@ -809,10 +650,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         );
       case 3:
         return KeyedSubtree(
-          key: ValueKey('explore_$_exploreSubTabIndex'),
-          child: _exploreSubTabIndex == 0
-              ? _buildCommunityTab()
-              : SocialListView(topPadding: _pinnedHeaderHeight),
+          key: const ValueKey('explore_social'),
+          child: SocialListView(topPadding: _pinnedHeaderHeight),
         );
       case 4:
       default:
@@ -826,49 +665,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
         );
     }
-  }
-
-  Widget _buildExploreSubTabItem({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    const activeColor = AppTheme.primary;
-
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Center(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  color: isSelected
-                      ? (isDark ? const Color(0xFF4ADE80) : activeColor)
-                      : (isDark ? Colors.white60 : const Color(0xFF64748B)),
-                ),
-              ),
-            ),
-          ),
-          Container(
-            height: 3,
-            width: 70,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? (isDark ? const Color(0xFF4ADE80) : activeColor)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(1.5),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   // ═══════════════════════════════════════════════════════
@@ -1181,60 +977,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             child: Text(l10n.loginButton),
           ),
         ],
-      ),
-    );
-  }
-
-  Future<void> _showCreateSocialSession() async {
-    if (!ref.read(authProvider).isAuthenticated) {
-      await context.push('/login');
-      return;
-    }
-
-    final createdSession = await showModalBottomSheet<SocialSessionModel>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CreateSocialScreen(clubId: '', clubName: ''),
-    );
-
-    if (createdSession == null || !mounted) return;
-    await context.push('/social/${createdSession.id}?isHost=true');
-  }
-
-  Widget _buildCreateClubButton() {
-    return GestureDetector(
-      onTap: () {
-        final auth = ref.read(authProvider);
-        if (!auth.isAuthenticated) {
-          context.push('/login');
-        } else {
-          context.push('/club-create');
-        }
-      },
-      child: Tooltip(
-        message: 'Tạo câu lạc bộ',
-        child: Container(
-          width: 38.0,
-          height: 38.0,
-          decoration: BoxDecoration(
-            color: const Color(0xFF60A5FA), // Vòng tròn màu xanh dương nhạt
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFBFDBFE), // Border circle bên ngoài
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          alignment: Alignment.center,
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
-        ),
       ),
     );
   }
@@ -1655,256 +1397,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   // ─── HELPERS ───
-
-  // ═══════════════════════════════════════════════════════
-  //  TAB 3: CÂU LẠC BỘ (Clubs) — Premium Card Design
-  //  Inspired by web communities & profile pages
-  // ═══════════════════════════════════════════════════════
-  Widget _buildCommunityTab() {
-    return _buildClubListWithApi();
-  }
-
-  Widget _buildClubListWithApi() {
-    final l10n = AppLocalizations.of(context)!;
-    final currentList = _serverClubsList;
-
-    return NotificationListener<ScrollNotification>(
-      onNotification: (ScrollNotification scrollInfo) {
-        if (scrollInfo.depth == 0 &&
-            scrollInfo is ScrollUpdateNotification &&
-            (scrollInfo.scrollDelta ?? 0) > 0 &&
-            !_isClubLoadingMore &&
-            _serverClubHasMore &&
-            scrollInfo.metrics.pixels >=
-                scrollInfo.metrics.maxScrollExtent - 400) {
-          _fetchServerClubPage(isLoadMore: true);
-        }
-        return false;
-      },
-      child: RefreshIndicator(
-        onRefresh: () => _fetchServerClubPage(isLoadMore: false),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          slivers: [
-            SliverToBoxAdapter(child: SizedBox(height: _pinnedHeaderHeight)),
-            SliverToBoxAdapter(child: const SizedBox(height: 8)),
-            if (_isClubInitialLoading && currentList.isEmpty)
-              const SliverFillRemaining(
-                child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.primary),
-                ),
-              )
-            else if (currentList.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 72.0,
-                        height: 72.0,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        child: const Icon(
-                          Icons.group_off_rounded,
-                          size: 36,
-                          color: Color(0xFFB0BEC5),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.homeNoClubs,
-                        style: const TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.homeNoClubsHint,
-                        style: const TextStyle(
-                          fontSize: 13.0,
-                          color: Color(0xFF94A3B8),
-                        ),
-                      ),
-                      const SizedBox(height: 80),
-                    ],
-                  ),
-                ),
-              )
-            else
-              SliverMainAxisGroup(
-                slivers: [
-                  SliverList.separated(
-                    itemCount: currentList.length,
-                    separatorBuilder: (context, i) => Divider(
-                      height: 1,
-                      thickness: 0.8,
-                      color: context.colors.border.withValues(alpha: 0.5),
-                    ),
-                    itemBuilder: (context, i) => _buildClubItem(currentList[i]),
-                  ),
-                  SliverToBoxAdapter(
-                    child: _buildCursorLoadMoreBar(
-                      isLoadingMore: _isClubLoadingMore,
-                      hasMore: _serverClubHasMore,
-                      loadMoreLabel: 'Xem thêm câu lạc bộ',
-                      allLoadedLabel: 'Đã hiển thị tất cả câu lạc bộ',
-                      onLoadMore: () => _fetchServerClubPage(isLoadMore: true),
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── TAB 3: CÂU LẠC BỘ (Clubs) — Compact List Style ───
-  String _resolveClubImageUrl(String? url) {
-    final value = url?.trim() ?? '';
-    if (value.isEmpty || value.startsWith('data:')) {
-      return '';
-    }
-    if (value.startsWith('http://') || value.startsWith('https://')) {
-      if (Platform.isAndroid && value.contains('localhost')) {
-        return value.replaceFirst('localhost', '10.0.2.2');
-      }
-      if (Platform.isAndroid && value.contains('127.0.0.1')) {
-        return value.replaceFirst('127.0.0.1', '10.0.2.2');
-      }
-      return value;
-    }
-
-    var apiBase = dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api/v1';
-    if (Platform.isAndroid && apiBase.contains('localhost')) {
-      apiBase = apiBase.replaceAll('localhost', '10.0.2.2');
-    }
-    final host = apiBase.replaceFirst(RegExp(r'/api/v1/?$'), '');
-    return '${host.replaceFirst(RegExp(r'/$'), '')}/${value.replaceFirst(RegExp(r'^/'), '')}';
-  }
-
-  Widget _buildClubItem(Community club) {
-    final logoUrl = _resolveClubImageUrl(
-      (club.logoUrl?.trim().isNotEmpty ?? false)
-          ? club.logoUrl!.split(',').first
-          : club.bannerUrl,
-    );
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => context.push("/club/${club.id}"),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Row(
-            children: [
-              Container(
-                width: 44.0,
-                height: 44.0,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: context.colors.bgSurface,
-                  border: Border.all(
-                    color: context.colors.border.withValues(alpha: 0.6),
-                    width: 0.8,
-                  ),
-                ),
-                child: ClipOval(
-                  child: logoUrl.isNotEmpty
-                      ? ClubNetworkImage(
-                          logoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Image.asset(
-                            AppConstants.appIconPng,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Image.asset(AppConstants.appIconPng, fit: BoxFit.cover),
-                ),
-              ),
-              const SizedBox(width: 14.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      club.name,
-                      style: TextStyle(
-                        fontSize: 15.0,
-                        fontWeight: FontWeight.w700,
-                        color: context.colors.textPrimary,
-                        height: 1.25,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (club.myRole != null &&
-                        (club.myRole!.toUpperCase() == 'OWNER' ||
-                            club.myRole!.toUpperCase() == 'ADMIN' ||
-                            club.myRole!.toUpperCase() == 'MODERATOR')) ...[
-                      const SizedBox(height: 4.0),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primaryLight.withValues(
-                                alpha: 0.2,
-                              ),
-                              borderRadius: BorderRadius.circular(
-                                AppTheme.radiusSmall,
-                              ),
-                              border: Border.all(
-                                color: AppTheme.primary.withValues(alpha: 0.4),
-                                width: 0.8,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.shield_rounded,
-                                  size: 11,
-                                  color: AppTheme.primary,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  club.myRole!.toUpperCase() == 'OWNER'
-                                      ? 'Quản lý CLB'
-                                      : 'Quản trị viên',
-                                  style: const TextStyle(
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppTheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   // ─────────────────────────────────────────────────────
   //  LOADING & ERROR
