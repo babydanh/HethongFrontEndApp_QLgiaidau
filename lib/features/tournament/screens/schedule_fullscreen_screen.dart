@@ -25,10 +25,13 @@ class ScheduleFullscreenScreen extends ConsumerStatefulWidget {
     this.onScheduleDrop,
     this.onBulkSchedule,
     this.onTapEmptyCell,
+    this.onScheduleWaitingWrite,
+    this.onWaitingBatchFinished,
     this.onScheduleSwap,
     this.onBulkDuration,
     this.onBulkMoveCourt,
     this.onTapMatch,
+    this.onOpenScheduleSettings,
   });
 
   final String tournamentId;
@@ -61,6 +64,19 @@ class ScheduleFullscreenScreen extends ConsumerStatefulWidget {
   final void Function(String courtId, String courtName, DateTime at)?
   onTapEmptyCell;
 
+  /// Ghi lịch một trận chọn từ khay chờ lên sân đích (task 4.2); khay tự chạy
+  /// dây chuyền giờ, tiến độ và huỷ giữa chừng, màn gọi lo gọi API.
+  final Future<bool> Function(
+    MatchModel match,
+    ScheduleCourt court,
+    DateTime scheduledAt,
+    int durationMinutes,
+  )?
+  onScheduleWaitingWrite;
+
+  /// Khay chờ ghi xong một lô: màn gọi tải lại nguồn trận quản lý.
+  final VoidCallback? onWaitingBatchFinished;
+
   /// Đổi chỗ hai trận khi thả trận lên thẻ trận khác; màn gọi lo ghi lịch.
   final void Function(String draggedMatchId, String targetMatchId)?
   onScheduleSwap;
@@ -71,6 +87,10 @@ class ScheduleFullscreenScreen extends ConsumerStatefulWidget {
   /// Dời các trận đã xếp trong vùng chọn sang sân khác, giữ nguyên giờ.
   final void Function(List<MatchModel> matches, ScheduleCourt court)?
   onBulkMoveCourt;
+
+  /// Mở sheet cài đặt khung giờ sân (giờ mở/đóng + bước ô, task 4.3); màn
+  /// gọi lo lưu cấu hình và tải lại nguồn giải.
+  final VoidCallback? onOpenScheduleSettings;
 
   @override
   ConsumerState<ScheduleFullscreenScreen> createState() =>
@@ -151,10 +171,13 @@ class _ScheduleFullscreenScreenState
             onScheduleDrop: widget.onScheduleDrop,
             onBulkSchedule: widget.onBulkSchedule,
             onTapEmptyCell: widget.onTapEmptyCell,
+            onScheduleWaitingWrite: widget.onScheduleWaitingWrite,
+            onWaitingBatchFinished: widget.onWaitingBatchFinished,
             onScheduleSwap: widget.onScheduleSwap,
             onBulkDuration: widget.onBulkDuration,
             onBulkMoveCourt: widget.onBulkMoveCourt,
             onTapMatch: widget.onTapMatch,
+            onOpenScheduleSettings: widget.onOpenScheduleSettings,
           ),
         ),
       ),

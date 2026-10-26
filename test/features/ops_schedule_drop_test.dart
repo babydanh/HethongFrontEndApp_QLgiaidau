@@ -365,6 +365,9 @@ void main() {
 
     expect(find.text('Xếp trận vào Sân 1 lúc 07:30'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('schedule-picker-m-wait')));
+    await tester.pump();
+    // Sheet mới chọn nhiều trận (task 4.1): xác nhận mới ghi.
+    await tester.tap(find.byKey(const ValueKey('schedule-multi-submit')));
     await tester.pumpAndSettle();
 
     expect(repository.calls, hasLength(1));
@@ -454,6 +457,9 @@ void main() {
     await tester.tap(cell);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('schedule-picker-m-wait')));
+    await tester.pump();
+    // Sheet mới chọn nhiều trận (task 4.1): xác nhận mới ghi.
+    await tester.tap(find.byKey(const ValueKey('schedule-multi-submit')));
     await tester.pumpAndSettle();
 
     expect(repository.calls, hasLength(1));

@@ -9,6 +9,8 @@ import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 
 class ExcelExportService {
   static Future<void> exportMatchProtocol(MatchModel match) async {
@@ -246,6 +248,170 @@ class ExcelExportService {
         ], text: l10n.excelResultsShare(tournamentName));
       }
     }
+  }
+
+  /// Tiêu đề cột của sheet danh sách VĐV (hàm thuần để kiểm thử được).
+  static List<String> participantsHeaderRow(AppLocalizations l10n) => [
+    l10n.excelRosterColumnName,
+    l10n.excelRosterColumnContact,
+    l10n.excelRosterColumnDivision,
+    l10n.excelStatusHeader,
+    l10n.excelRosterColumnSeed,
+    l10n.excelRosterColumnPayment,
+  ];
+
+  /// Một dòng của sheet danh sách VĐV (task 3.9): tên, liên hệ, hạng mục,
+  /// trạng thái, seed, thanh toán. Hàm thuần, không I/O, để kiểm thử được.
+  static List<String> participantsRow({
+    required OrganizerOpsParticipant participant,
+    required Map<String, String> divisionNameById,
+    required AppLocalizations l10n,
+  }) {
+    final label = participantLabel(
+      teamName: participant.teamName,
+      players: participant.players,
+    );
+    final paid = participant.isPaid
+        ? (participant.entryFee == null || participant.entryFee! <= 0
+              ? l10n.participantDetailFreeEntry
+              : l10n.participantDetailPaid)
+        : l10n.participantDetailUnpaid;
+    return [
+      label.isEmpty ? l10n.matchNotDetermined : label,
+      participantContacts(participant).join('; '),
+      divisionNameById[participant.divisionId] ?? '',
+      participantStatusLabel(participant.teamStatus, l10n),
+      participant.seed?.toString() ?? '',
+      paid,
+    ];
+  }
+
+  /// Liên hệ của hồ sơ: email/SĐT thành viên (chỉ có ở view BTC) và email/SĐT
+  /// khách lưu ở `playerNEmail`/`playerNPhone` của `customResponses` (nguồn
+  /// Web `readGuestSlots`). Bỏ giá trị rỗng và giá trị trùng lặp.
+  static List<String> participantContacts(OrganizerOpsParticipant participant) {
+    final contacts = <String>{};
+    void add(Object? value) {
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty) contacts.add(text);
+    }
+
+    for (final member in participant.members) {
+      add(member.email);
+      add(member.phoneNumber);
+    }
+    for (final player in participant.players) {
+      if (!player.isGuest) continue;
+      final slot = player.slot > 0 ? player.slot : 1;
+      add(participant.customResponses['player${slot}Email']);
+      add(participant.customResponses['player${slot}Phone']);
+    }
+    return contacts.toList(growable: false);
+  }
+
+  /// Nhãn trạng thái hồ sơ — cùng mapping chip của trang quản lý
+  /// (`tournament_management_people_section.dart`).
+  static String participantStatusLabel(
+    String teamStatus,
+    AppLocalizations l10n,
+  ) => switch (teamStatus.toUpperCase()) {
+    'PENDING' ||
+    'PENDING_APPROVAL' => l10n.tournamentManagementParticipantPending,
+    'PENDING_PARTNER' => l10n.tournamentManagementParticipantPendingPartner,
+    'COMPLETE' => l10n.tournamentManagementParticipantApproved,
+    'REJECTED' => l10n.tournamentManagementParticipantRejected,
+    'KICKED' => l10n.tournamentManagementParticipantRemoved,
+    _ => l10n.tournamentManagementStatusOther,
+  };
+
+  /// Xuất danh sách VĐV ra Excel rồi mở bảng chia sẻ.
+  static Future<void> exportParticipantsRoster({
+    required String tournamentName,
+    required List<OrganizerOpsParticipant> participants,
+    required Map<String, String> divisionNameById,
+  }) async {
+    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    var excel = Excel.createExcel();
+    final sheet = excel[l10n.excelRosterSheet];
+    excel.setDefaultSheet(l10n.excelRosterSheet);
+    if (excel.tables.containsKey('Sheet1')) {
+      excel.delete('Sheet1');
+    }
+
+    sheet.appendRow([TextCellValue(l10n.excelRosterTitle(tournamentName))]);
+    sheet.appendRow([TextCellValue('')]);
+    sheet.appendRow([
+      for (final header in participantsHeaderRow(l10n)) TextCellValue(header),
+    ]);
+
+    for (final participant in participants) {
+      sheet.appendRow([
+        for (final cell in participantsRow(
+          participant: participant,
+          divisionNameById: divisionNameById,
+          l10n: l10n,
+        ))
+          TextCellValue(cell),
+      ]);
+    }
+
+    final fileBytes = excel.save();
+    if (fileBytes == null) return;
+
+    final fileName = rosterFileName(
+      prefix: l10n.excelRosterFilePrefix,
+      tournamentName: tournamentName,
+      at: DateTime.now(),
+    );
+
+    if (kIsWeb) {
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([
+        XFile.fromData(
+          Uint8List.fromList(fileBytes),
+          name: fileName,
+          mimeType:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ),
+      ], text: l10n.excelRosterShare(tournamentName));
+    } else {
+      // The roster holds personal contacts: keep it in the temp directory and
+      // delete it once the share sheet is done.
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsBytes(fileBytes);
+      try {
+        if (Platform.isAndroid || Platform.isIOS) {
+          // ignore: deprecated_member_use
+          await Share.shareXFiles([
+            XFile(file.path),
+          ], text: l10n.excelRosterShare(tournamentName));
+        }
+      } finally {
+        try {
+          await file.delete();
+        } catch (_) {
+          // Best effort: the OS clears the temp directory anyway.
+        }
+      }
+    }
+  }
+
+  /// Roster file name built only from `[A-Za-z0-9_.-]`: every other character
+  /// (path separators, spaces, accents) becomes `_` and `..` is removed, so a
+  /// tournament name can never escape the target directory.
+  static String rosterFileName({
+    required String prefix,
+    required String tournamentName,
+    required DateTime at,
+  }) {
+    var name =
+        '${prefix}_${tournamentName}_${DateFormatterUtils.formatFileTime(at)}.xlsx'
+            .replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_');
+    while (name.contains('..')) {
+      name = name.replaceAll('..', '');
+    }
+    return name;
   }
 
   /// Ma trận lịch để in/xuất: hàng là từng khung 15 phút, cột là từng sân.

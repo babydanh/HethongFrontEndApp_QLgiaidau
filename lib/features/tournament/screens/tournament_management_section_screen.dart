@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_venues_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:dio/dio.dart';
@@ -897,16 +898,7 @@ class _TournamentLifecycleCardState
       AppConstants.statusRegistrationClosed => _lifecycleButton(
         l10n.tournamentManagementStartTournament,
         Icons.play_arrow_rounded,
-        () => _runAction(
-          () => ref
-              .read(tournamentManagementRepositoryProvider)
-              .startTournament(id),
-          hasDivisionWithoutBracket
-              ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
-              : l10n.tournamentManagementStartTournamentConfirm,
-          // Khai mạc khoá đăng ký mọi nội dung: BTC phải tick đồng ý mới bấm được.
-          requiredAcknowledgement: l10n.tournamentManagementStartCloseAll,
-        ),
+        () => _startTournament(id, hasDivisionWithoutBracket),
       ),
       AppConstants.statusInProgress => _lifecycleButton(
         l10n.tournamentManagementCompleteTournament,
@@ -969,6 +961,68 @@ class _TournamentLifecycleCardState
           .reopenRegistration(id, registrationEndDate: newDeadline),
       confirmation,
     );
+  }
+
+  /// Khai mạc: còn hạng mục mở đăng ký thì mở sheet chọn hạng mục cần đóng
+  /// trước khi khai mạc; không hạng mục nào mở thì giữ hộp thoại xác nhận cũ.
+  Future<void> _startTournament(
+    String id,
+    bool hasDivisionWithoutBracket,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_isActing) return;
+    setState(() {
+      _isActing = true;
+      _actionFailed = false;
+      _actionError = null;
+    });
+    List<Map<String, dynamic>> divisions;
+    try {
+      divisions = await ref
+          .read(tournamentManagementRepositoryProvider)
+          .getManageDivisions(id);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _actionFailed = true;
+          _actionError =
+              _serverMessage(error) ?? l10n.tournamentManagementActionError;
+          _isActing = false;
+        });
+      }
+      return;
+    }
+    if (!mounted) return;
+    final status = StatusHelper.normalizeTournamentStatus(
+      widget.tournament.status,
+    );
+    final hasOpenDivision = divisions.any(
+      (division) => divisionRegistrationOpen(division, status),
+    );
+    if (!hasOpenDivision) {
+      setState(() => _isActing = false);
+      await _runAction(
+        () => ref
+            .read(tournamentManagementRepositoryProvider)
+            .startTournament(id),
+        hasDivisionWithoutBracket
+            ? l10n.tournamentManagementStartTournamentMissingBracketConfirm
+            : l10n.tournamentManagementStartTournamentConfirm,
+        // Khai mạc khoá đăng ký mọi nội dung: BTC phải tick đồng ý mới bấm được.
+        requiredAcknowledgement: l10n.tournamentManagementStartCloseAll,
+      );
+      return;
+    }
+    setState(() => _isActing = false);
+    final started = await LifecycleOpeningSheet.show(
+      context,
+      tournament: widget.tournament,
+      divisions: divisions,
+    );
+    if (!mounted || started != true) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));
   }
 
   Widget _lifecycleButton(

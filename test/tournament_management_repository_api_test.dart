@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/services/token_manager.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
+import 'package:app_quanly_giaidau/domain/entities/pairing.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -605,6 +606,411 @@ void main() {
       expect(backend.only.method, 'DELETE');
       expect(backend.only.path, '/tournaments/$tournamentId/gallery/2');
       expect(backend.only.data, isNull);
+    });
+  });
+
+  group('participant mutations (web parity, task 3.2/3.3)', () {
+    test('note patches the note route with the note body', () async {
+      backend.onPatch(
+        '/tournaments/$tournamentId/participants/participant-1/note',
+        <String, dynamic>{},
+      );
+
+      await repository.updateParticipantNote(
+        tournamentId,
+        'participant-1',
+        'Ghi chú của BTC',
+      );
+
+      expect(backend.only.method, 'PATCH');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/note',
+      );
+      expect(backend.only.data, {'note': 'Ghi chú của BTC'});
+    });
+
+    test('entry edit patches the entry route with member payload', () async {
+      backend.onPatch(
+        '/tournaments/$tournamentId/participants/participant-1/entry',
+        <String, dynamic>{},
+      );
+
+      await repository.updateOrganizerEntry(tournamentId, 'participant-1', {
+        'members': [
+          {
+            'slot': 1,
+            'name': 'Khách A',
+            'email': 'a@x.com',
+            'phone': null,
+            'expectedKey': 'guest:Khách A|a@x.com',
+          },
+        ],
+      });
+
+      expect(backend.only.method, 'PATCH');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/entry',
+      );
+      expect(backend.only.data, isA<Map<String, dynamic>>());
+    });
+
+    test('roster lock posts its route without a body', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/participants/participant-1/lock-roster',
+        <String, dynamic>{},
+      );
+
+      await repository.lockParticipantRoster(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/lock-roster',
+      );
+    });
+
+    test('roster unlock posts its route without a body', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/participants/participant-1/unlock-roster',
+        <String, dynamic>{},
+      );
+
+      await repository.unlockParticipantRoster(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/unlock-roster',
+      );
+    });
+
+    test('mock delete issues DELETE on the mock route', () async {
+      backend.onDelete(
+        '/tournaments/$tournamentId/participants/participant-1/mock',
+        <String, dynamic>{},
+      );
+
+      await repository.deleteMockParticipant(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'DELETE');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/participants/participant-1/mock',
+      );
+    });
+
+    test('unpair posts the pairing unpair route', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/pairing/participant-1/unpair',
+        <String, dynamic>{},
+      );
+
+      await repository.unpairParticipant(tournamentId, 'participant-1');
+
+      expect(backend.only.method, 'POST');
+      expect(
+        backend.only.path,
+        '/tournaments/$tournamentId/pairing/participant-1/unpair',
+      );
+    });
+  });
+
+  group('mock participants and wildcard (web parity, task 3.4/3.5)', () {
+    test('seed posts names with division and pairing mode', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/mock-participants',
+        <String, dynamic>{},
+      );
+
+      await repository.seedMockParticipants(
+        tournamentId,
+        ['Nguyễn A', 'Nguyễn B'],
+        divisionId: 'division-1',
+        pairingMode: 'AUTO',
+      );
+
+      expect(backend.only.method, 'POST');
+      expect(backend.only.path, '/tournaments/$tournamentId/mock-participants');
+      expect(backend.only.data, {
+        'names': ['Nguyễn A', 'Nguyễn B'],
+        'divisionId': 'division-1',
+        'pairingMode': 'AUTO',
+      });
+    });
+
+    test('seed at tournament level omits division and pairing keys', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/mock-participants',
+        <String, dynamic>{},
+      );
+
+      await repository.seedMockParticipants(tournamentId, ['Khách 1']);
+
+      expect(backend.only.method, 'POST');
+      expect(backend.only.path, '/tournaments/$tournamentId/mock-participants');
+      expect(backend.only.data, {
+        'names': ['Khách 1'],
+      });
+    });
+
+    test(
+      'clear issues DELETE on the collection route with division query',
+      () async {
+        backend.onDelete(
+          '/tournaments/$tournamentId/mock-participants',
+          <String, dynamic>{},
+        );
+
+        await repository.clearMockParticipants(
+          tournamentId,
+          divisionId: 'division-1',
+        );
+
+        expect(backend.only.method, 'DELETE');
+        expect(
+          backend.only.path,
+          '/tournaments/$tournamentId/mock-participants',
+        );
+        expect(backend.only.queryParameters, {'divisionId': 'division-1'});
+      },
+    );
+
+    test('reserve-slots posts contact, team, partner and division', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/reserve-slots',
+        <String, dynamic>{},
+      );
+
+      await repository.reserveSlots(
+        tournamentId,
+        userEmailOrPhone: 'guest@test.vn',
+        teamName: 'Đội Khách Mời',
+        partnerEmailOrPhone: 'partner@test.vn',
+        divisionId: 'division-1',
+      );
+
+      expect(backend.only.method, 'POST');
+      expect(backend.only.path, '/tournaments/$tournamentId/reserve-slots');
+      expect(backend.only.data, {
+        'userEmailOrPhone': 'guest@test.vn',
+        'teamName': 'Đội Khách Mời',
+        'partnerEmailOrPhone': 'partner@test.vn',
+        'divisionId': 'division-1',
+      });
+    });
+
+    test('reserve-slots omits optional partner and division keys', () async {
+      backend.onPost(
+        '/tournaments/$tournamentId/reserve-slots',
+        <String, dynamic>{},
+      );
+
+      await repository.reserveSlots(
+        tournamentId,
+        userEmailOrPhone: '0912345678',
+        teamName: 'Đội SĐT',
+      );
+
+      expect(backend.only.method, 'POST');
+      expect(backend.only.path, '/tournaments/$tournamentId/reserve-slots');
+      expect(backend.only.data, {
+        'userEmailOrPhone': '0912345678',
+        'teamName': 'Đội SĐT',
+      });
+    });
+  });
+
+  group('pairing tools (web parity, task 3.6/3.7)', () {
+    test(
+      'pairing participants GETs its route and reads names like the web',
+      () async {
+        backend.onGet('/tournaments/$tournamentId/pairing/participants', [
+          {
+            'id': 'participant-1',
+            'tournamentDivisionId': 'division-1',
+            'teamName': null,
+            'teamStatus': 'PENDING_PARTNER',
+            'rosters': [
+              {
+                'userId': 'user-1',
+                'profile': {
+                  'fullName': 'Nguyễn Văn A',
+                  'avatarUrl': 'https://cdn.test/a.png',
+                },
+              },
+            ],
+            'players': [],
+          },
+          {
+            'id': 'participant-2',
+            'tournamentDivisionId': 'division-1',
+            'teamName': null,
+            'teamStatus': 'PENDING_PARTNER',
+            // Khách do BTC thêm trực tiếp luôn mang nguồn trong
+            // customResponses — holdsSingleAthlete của Web đọc nguồn này.
+            'customResponses': {
+              'importedFrom': 'ORGANIZER_DIRECT',
+              'player1Name': 'Khách B',
+            },
+            'rosters': [],
+            'players': [
+              {'slot': 1, 'userId': null, 'fullName': 'Khách B'},
+            ],
+          },
+          {
+            'id': 'participant-3',
+            'tournamentDivisionId': 'division-2',
+            'teamName': 'Đôi Nêu',
+            'teamStatus': 'COMPLETE',
+            'rosters': [],
+            'players': [],
+          },
+          {
+            // Entry import ghi sẵn VĐV 2 qua customResponses dù roster trống:
+            // không phải người chờ (Web holdsSingleAthlete).
+            'id': 'participant-4',
+            'tournamentDivisionId': 'division-1',
+            'teamName': null,
+            'teamStatus': 'PENDING_PARTNER',
+            'customResponses': {
+              'importedFrom': 'EXCEL',
+              'player1Name': 'Khách Một',
+              'player2Name': 'Khách Hai',
+            },
+            'rosters': [],
+            'players': [
+              {'slot': 1, 'userId': null, 'fullName': 'Khách Một'},
+            ],
+          },
+          {
+            // Giữ link mời đồng đội: không thể ghép hộ.
+            'id': 'participant-5',
+            'tournamentDivisionId': 'division-1',
+            'teamName': null,
+            'teamStatus': 'PENDING_PARTNER',
+            'teamInviteToken': 'invite-123',
+            'rosters': [],
+            'players': [
+              {'slot': 1, 'userId': null, 'fullName': 'Khách Mời'},
+            ],
+          },
+        ]);
+
+        final candidates = await repository.getPairingParticipants(
+          tournamentId,
+        );
+
+        expect(backend.only.method, 'GET');
+        expect(
+          backend.only.path,
+          '/tournaments/$tournamentId/pairing/participants',
+        );
+        expect(candidates, hasLength(5));
+        // Tên đọc ưu tiên roster profile như web pairingParticipantName.
+        expect(candidates[0].id, 'participant-1');
+        expect(candidates[0].name, 'Nguyễn Văn A');
+        expect(candidates[0].avatarUrl, 'https://cdn.test/a.png');
+        expect(candidates[0].divisionId, 'division-1');
+        expect(candidates[0].teamStatus, 'PENDING_PARTNER');
+        // Khách không roster: rơi về `players`.
+        expect(candidates[1].name, 'Khách B');
+        expect(candidates[1].avatarUrl, isNull);
+        // Không roster không players: rơi về teamName.
+        expect(candidates[2].name, 'Đôi Nêu');
+        expect(candidates[2].divisionId, 'division-2');
+        // Bộ lọc "đang chờ ghép" như web handleOpenPairing: chỉ người
+        // PENDING_PARTNER, không giữ link mời, giữ đúng 1 VĐV.
+        expect(candidates[0].isWaitingForPartner, isTrue);
+        expect(candidates[1].isWaitingForPartner, isTrue);
+        expect(candidates[2].isWaitingForPartner, isFalse);
+        expect(candidates[3].isWaitingForPartner, isFalse);
+        expect(candidates[3].holdsSingleAthlete, isFalse);
+        expect(candidates[4].isWaitingForPartner, isFalse);
+        expect(candidates[4].teamInviteToken, 'invite-123');
+      },
+    );
+
+    test('pair batch posts all pairs once on the batch route', () async {
+      backend.onPost('/tournaments/$tournamentId/pairing/batch', {'pairs': []});
+
+      await repository.pairBatch(tournamentId, [
+        const PairInput(
+          participant1Id: 'p1',
+          participant2Id: 'p2',
+          teamName: 'Chim Én',
+        ),
+        const PairInput(participant1Id: 'p3', participant2Id: 'p4'),
+      ]);
+
+      expect(backend.only.method, 'POST');
+      expect(backend.only.path, '/tournaments/$tournamentId/pairing/batch');
+      expect(backend.only.data, {
+        'pairs': [
+          {
+            'participant1Id': 'p1',
+            'participant2Id': 'p2',
+            'teamName': 'Chim Én',
+          },
+          {'participant1Id': 'p3', 'participant2Id': 'p4'},
+        ],
+      });
+    });
+
+    test('pair generate posts the strategy with division and counts', () async {
+      backend.onPost('/tournaments/$tournamentId/pairing/generate', {
+        'message': 'Đã ghép 2 cặp thành công.',
+        'strategy': 'ELO_BALANCED',
+        'paired': [
+          {
+            'participantId': 'p1',
+            'participant1Id': 'p1',
+            'participant2Id': 'p2',
+            'teamName': null,
+            'memberNames': ['A', 'B'],
+          },
+          {
+            'participantId': 'p3',
+            'participant1Id': 'p3',
+            'participant2Id': 'p4',
+            'teamName': null,
+            'memberNames': ['C', 'D'],
+          },
+        ],
+        'unpairedParticipantIds': ['p9'],
+      });
+
+      final result = await repository.pairGenerate(
+        tournamentId,
+        strategy: PairingStrategy.eloBalanced,
+        divisionId: 'division-1',
+      );
+
+      expect(backend.only.method, 'POST');
+      expect(backend.only.path, '/tournaments/$tournamentId/pairing/generate');
+      expect(backend.only.data, {
+        'strategy': 'ELO_BALANCED',
+        'divisionId': 'division-1',
+      });
+      expect(result.pairedCount, 2);
+      expect(result.unpairedCount, 1);
+    });
+
+    test('pair generate at tournament level omits the division key', () async {
+      backend.onPost('/tournaments/$tournamentId/pairing/generate', {
+        'paired': [],
+        'unpairedParticipantIds': [],
+      });
+
+      final result = await repository.pairGenerate(
+        tournamentId,
+        strategy: PairingStrategy.sameLevel,
+      );
+
+      expect(backend.only.data, {'strategy': 'SAME_LEVEL'});
+      expect(result.pairedCount, 0);
+      expect(result.unpairedCount, 0);
     });
   });
 

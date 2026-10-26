@@ -7,20 +7,14 @@ import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/swiss_config_editor.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/registration_divisions_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/stage_round_config_sheet.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-const _matchTypes = ['SINGLES', 'DOUBLES', 'MIXED_DOUBLES'];
-const _bracketTypes = [
-  'SINGLE_ELIMINATION',
-  'DOUBLE_ELIMINATION',
-  'ROUND_ROBIN',
-  'GROUP_STAGE_KNOCKOUT',
-  'SWISS',
-];
 
 class TournamentManagementDivisionsSection extends ConsumerStatefulWidget {
   const TournamentManagementDivisionsSection({
@@ -40,6 +34,11 @@ class _TournamentManagementDivisionsSectionState
   bool _isBusy = false;
   bool _configuring = false;
   String? _mutationError;
+
+  /// Hạng mục đủ chỗ đã đề nghị đóng trong phiên màn này (không persist,
+  /// rời màn là hỏi lại — tương đương sessionStorage của Web).
+  final _askedFullDivisionIds = <String>{};
+  bool _fullPromptActive = false;
 
   @override
   void initState() {
@@ -69,6 +68,11 @@ class _TournamentManagementDivisionsSectionState
             onRetry: _reload,
           );
         final divisions = snapshot.data ?? const <Map<String, dynamic>>[];
+        // Hạng mục vừa đủ chỗ còn mở: đề nghị đóng sau khi khung hiển thị xong
+        // (đối chiếu Web prompt close-full-divisions).
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _maybePromptFullDivisions(divisions),
+        );
         // Hạt giống chỉ áp dụng cho nội dung vòng bảng + loại trực tiếp.
         final seedDivisions = divisions
             .where(
@@ -86,13 +90,25 @@ class _TournamentManagementDivisionsSectionState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton.icon(
-                      onPressed: _isBusy ? null : _createDivision,
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(l10n.tournamentManagementAddDivision),
-                    ),
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        key: const ValueKey('division-bulk-open'),
+                        onPressed: _isBusy || divisions.isEmpty
+                            ? null
+                            : _openBulkRegistrationSheet(divisions),
+                        icon: const Icon(Icons.event_available_rounded),
+                        label: Text(l10n.divisionBulkOpenButton),
+                      ),
+                      FilledButton.icon(
+                        onPressed: _isBusy ? null : _addDivision,
+                        icon: const Icon(Icons.add_rounded),
+                        label: Text(l10n.tournamentManagementAddDivision),
+                      ),
+                    ],
                   ),
                   if (_mutationError != null) ...[
                     const SizedBox(height: 10),
@@ -120,8 +136,25 @@ class _TournamentManagementDivisionsSectionState
                           'COMPLETED',
                           'CANCELLED',
                         }.contains(widget.tournament.status.toUpperCase()),
-                        onRename: () => _renameDivision(division),
-                        onConfigure: () => _configureDivision(division),
+                        onEdit: () => _editDivision(division),
+                        // Watch (không read) để menu hiện đúng ngay khi trận
+                        // của giải mới về; read lúc build luôn thấy rỗng.
+                        onConfigureRounds:
+                            (ref
+                                        .watch(
+                                          matchesProvider(widget.tournament.id),
+                                        )
+                                        .asData
+                                        ?.value
+                                        .any(
+                                          (match) =>
+                                              match.divisionId ==
+                                              _divisionId(division),
+                                        ) ??
+                                    false) &&
+                                !_isSwiss(division['bracketType'])
+                            ? () => _configureRounds(division)
+                            : null,
                         onToggleRegistration: () =>
                             _toggleRegistration(division),
                         onReopenWithDeadline: () =>
@@ -147,59 +180,75 @@ class _TournamentManagementDivisionsSectionState
     );
   }
 
-  Future<void> _createDivision() async {
-    final values = await showDialog<_DivisionValues>(
-      context: context,
-      builder: (context) => _DivisionDialog(tournament: widget.tournament),
-    );
-    if (values == null || !mounted) return;
-    await _mutate(
-      () => ref
-          .read(tournamentManagementRepositoryProvider)
-          .createDivision(widget.tournament.id, values.toCreatePayload()),
-    );
-  }
-
-  Future<void> _renameDivision(Map<String, dynamic> division) async {
-    final divisionId = _divisionId(division);
-    if (divisionId.isEmpty) return;
-    final controller = TextEditingController(text: _divisionName(division));
-    final value = await showDialog<String>(
-      context: context,
-      builder: (context) => _NameDialog(controller: controller),
-    );
-    controller.dispose();
-    if (value == null || !mounted) return;
-    final name = value.trim();
-    if (name.isEmpty) {
-      _showMessage(
-        AppLocalizations.of(context)!.tournamentManagementRequiredFields,
-      );
-      return;
+  void _maybePromptFullDivisions(List<Map<String, dynamic>> divisions) {
+    if (!mounted || _fullPromptActive) return;
+    final pending = divisions
+        .where((division) {
+          final id = _divisionId(division);
+          if (id.isEmpty || _askedFullDivisionIds.contains(id)) {
+            return false;
+          }
+          return divisionIsFull(division) &&
+              divisionRegistrationOpen(
+                division,
+                widget.tournament.status.toUpperCase(),
+              );
+        })
+        .toList(growable: false);
+    if (pending.isEmpty) return;
+    _fullPromptActive = true;
+    // Huỷ prompt coi như đã hỏi các hạng mục đangshown (không lặp lại vòng
+    // lặp hỏi ngay sau khi đóng); quyết định từng hàng vẫn ghi riêng.
+    for (final division in pending) {
+      _askedFullDivisionIds.add(_divisionId(division));
     }
-    await _mutate(
-      () => ref.read(tournamentManagementRepositoryProvider).updateDivision(
-        divisionId,
-        {'name': name},
-      ),
-    );
+    FullDivisionsPromptSheet.show(
+      context,
+      tournamentId: widget.tournament.id,
+      divisions: pending,
+    ).whenComplete(() {
+      if (mounted) setState(() => _fullPromptActive = false);
+    });
   }
 
-  Future<void> _configureDivision(Map<String, dynamic> division) async {
+  VoidCallback _openBulkRegistrationSheet(
+    List<Map<String, dynamic>> divisions,
+  ) => () {
+    RegistrationDivisionsBulkSheet.show(
+      context,
+      tournamentId: widget.tournament.id,
+      tournamentStatus: widget.tournament.status.toUpperCase(),
+      tournamentDeadline: widget.tournament.registrationEndDate,
+      divisions: divisions,
+    ).whenComplete(() {
+      if (mounted) _reload();
+    });
+  };
+
+  /// Sheet hạng mục duy nhất cho tạo mới (đối chiếu Web `CreateDivisionModal`).
+  Future<void> _addDivision() async {
+    final saved = await DivisionEditorSheet.show(
+      context,
+      tournament: widget.tournament,
+    );
+    if (saved == true && mounted) _reload();
+  }
+
+  /// Sheet hạng mục cho sửa (thay dialog đổi tên + dialog cấu hình cũ).
+  Future<void> _editDivision(Map<String, dynamic> division) async {
     // Loading the stage takes a moment: ignore taps meanwhile.
     if (_configuring || _isBusy) return;
     _configuring = true;
     try {
-      await _runConfigureDivision(division);
+      await _runEditDivision(division);
     } finally {
       _configuring = false;
     }
   }
 
-  Future<void> _runConfigureDivision(Map<String, dynamic> division) async {
+  Future<void> _runEditDivision(Map<String, dynamic> division) async {
     final divisionId = _divisionId(division);
     if (divisionId.isEmpty) return;
-    final teamCount = swissDivisionTeamCount(division);
     // Once the bracket exists the Swiss config lives on the stage.
     SwissStageInfo? stage;
     var minPlayed = 0;
@@ -223,69 +272,46 @@ class _TournamentManagementDivisionsSectionState
       }
       if (!mounted) return;
     }
-    final divisionRoundConfig = division['roundConfig'] is Map
-        ? Map<String, dynamic>.from(division['roundConfig'] as Map)
-        : null;
-    final rawSwiss = stage != null
-        ? stage.rawRoundConfig['swiss']
-        : divisionRoundConfig?['swiss'];
-    final initial = swissConfigOrDefault(rawSwiss, teamCount, minPlayed);
-    final values = await showDialog<_DivisionConfigValues>(
-      context: context,
-      builder: (context) => _DivisionConfigDialog(
+    // Khoá kết cấu khi hạng mục đã sinh sơ đồ: Backend chặn updateDivision
+    // sau đó, Swiss thì chỉ vá được stage (lockContent như dialog cũ).
+    final lockContent = stage != null || _divisionHasBracket(divisionId);
+    final saved = await DivisionEditorSheet.show(
+      context,
+      tournament: widget.tournament,
+      division: division,
+      swissStage: stage,
+      swissMinPlayedRounds: minPlayed,
+      lockContent: lockContent,
+    );
+    if (saved == true && mounted) _reload();
+  }
+
+  /// Sheet cấu hình từng vòng của stage (task 2.2): chỉ mở khi hạng mục đã
+  /// sinh sơ đồ; Swiss không có vòng riêng để cấu hình (Web trả danh sách
+  /// rỗng cho SWISS) nên ẩn nút.
+  Future<void> _configureRounds(Map<String, dynamic> division) async {
+    if (_configuring || _isBusy) return;
+    _configuring = true;
+    try {
+      final saved = await StageRoundConfigSheet.show(
+        context,
+        tournament: widget.tournament,
         division: division,
-        swissInitial: initial,
-        teamCount: teamCount,
-        minPlayedRounds: minPlayed,
-        // After the bracket exists only the Swiss config can still change.
-        lockContent: stage != null,
-      ),
-    );
-    if (values == null || !mounted) return;
-    final swiss = values.swiss;
-    // Unknown team count and no saved total: the "1" shown is a placeholder.
-    // Leave totalRounds out so the Backend derives it when generating.
-    final savedHasTotal = rawSwiss is Map && rawSwiss['totalRounds'] is num;
-    final plan = planSwissSave(
-      basePayload: values.toPayload(),
-      divisionRoundConfig: divisionRoundConfig,
-      swiss: swiss,
-      stage: stage,
-      omitTotalRounds:
-          !savedHasTotal &&
-          teamCount <= 0 &&
-          swiss?.totalRounds == initial.totalRounds,
-    );
-    final divisionPayload = plan.divisionPayload;
-    final stageRoundConfig = plan.stageRoundConfig;
-    final stageId = stage?.stageId;
-    await _mutate(() async {
-      // After the bracket exists the Backend rejects division config edits,
-      // so then only the stage is patched.
-      if (divisionPayload != null) {
-        await ref
-            .read(tournamentManagementRepositoryProvider)
-            .updateDivisionConfig(
-              widget.tournament.id,
-              divisionId,
-              divisionPayload,
-            );
-      }
-      if (stageRoundConfig == null || stageId == null) return;
-      await ref
-          .read(tournamentRepositoryProvider)
-          .updateStageRoundConfig(
-            widget.tournament.id,
-            stageId,
-            stageRoundConfig,
-          );
-      ref.invalidate(
-        swissStageProvider((
-          tournamentId: widget.tournament.id,
-          divisionId: divisionId,
-        )),
       );
-    });
+      if (saved == true && mounted) _reload();
+    } finally {
+      _configuring = false;
+    }
+  }
+
+  /// Hạng mục đã có sơ đồ chưa: soi danh sách trận của giải (trận sinh cùng
+  /// sơ đồ, cùng tín hiệu với cảnh báo "chưa sơ đồ" của sheet khai mạc).
+  bool _divisionHasBracket(String divisionId) {
+    final matches = ref
+        .read(matchesProvider(widget.tournament.id))
+        .asData
+        ?.value;
+    return matches?.any((match) => match.divisionId == divisionId) ?? false;
   }
 
   Future<void> _toggleRegistration(Map<String, dynamic> division) async {
@@ -356,370 +382,6 @@ class _TournamentManagementDivisionsSectionState
       if (mounted) setState(() => _isBusy = false);
     }
   }
-
-  void _showMessage(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
-}
-
-class _DivisionValues {
-  const _DivisionValues({
-    required this.name,
-    required this.matchType,
-    required this.bracketType,
-    required this.maxParticipants,
-  });
-  final String name;
-  final String matchType;
-  final String bracketType;
-  final int? maxParticipants;
-
-  Map<String, dynamic> toCreatePayload() => {
-    'name': name,
-    'matchType': matchType,
-    'bracketType': bracketType,
-    if (maxParticipants != null) 'maxParticipants': maxParticipants,
-  };
-}
-
-class _DivisionDialog extends StatefulWidget {
-  const _DivisionDialog({required this.tournament});
-  final Tournament tournament;
-
-  @override
-  State<_DivisionDialog> createState() => _DivisionDialogState();
-}
-
-class _DivisionDialogState extends State<_DivisionDialog> {
-  final TextEditingController _name = TextEditingController();
-  final TextEditingController _max = TextEditingController();
-  late String _matchType = _normalize(
-    widget.tournament.format.toUpperCase(),
-    _matchTypes,
-    'DOUBLES',
-  );
-  late String _bracketType = _normalize(
-    widget.tournament.bracketType.toUpperCase(),
-    _bracketTypes,
-    'SINGLE_ELIMINATION',
-  );
-  bool _hasError = false;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _max.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      title: Text(l10n.tournamentManagementAddDivision),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _name,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementDivisionName,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              initialValue: _matchType,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementMatchType,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                for (final value in _matchTypes)
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(_matchTypeLabel(l10n, value)),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _matchType = value);
-              },
-            ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              initialValue: _bracketType,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementBracketType,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                for (final value in _bracketTypes)
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(_bracketTypeLabel(l10n, value)),
-                  ),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _bracketType = value);
-              },
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _max,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementMaxParticipants,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            if (_hasError)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.tournamentManagementRequiredFields,
-                  style: TextStyle(color: context.colors.error),
-                ),
-              ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.tournamentManagementCancel),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: Text(l10n.tournamentManagementSave),
-        ),
-      ],
-    );
-  }
-
-  void _save() {
-    final name = _name.text.trim();
-    final rawMax = _max.text.trim();
-    final max = rawMax.isEmpty ? null : int.tryParse(rawMax);
-    if (name.isEmpty || (rawMax.isNotEmpty && (max == null || max < 1))) {
-      setState(() => _hasError = true);
-      return;
-    }
-    Navigator.pop(
-      context,
-      _DivisionValues(
-        name: name,
-        matchType: _matchType,
-        bracketType: _bracketType,
-        maxParticipants: max,
-      ),
-    );
-  }
-}
-
-class _NameDialog extends StatelessWidget {
-  const _NameDialog({required this.controller});
-  final TextEditingController controller;
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      title: Text(l10n.tournamentManagementRenameDivision),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: InputDecoration(
-          labelText: l10n.tournamentManagementDivisionName,
-          border: const OutlineInputBorder(),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.tournamentManagementCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, controller.text),
-          child: Text(l10n.tournamentManagementSave),
-        ),
-      ],
-    );
-  }
-}
-
-class _DivisionConfigValues {
-  const _DivisionConfigValues({
-    required this.matchType,
-    required this.bracketType,
-    required this.maxParticipants,
-    this.swiss,
-  });
-  final String matchType;
-  final String bracketType;
-  final int? maxParticipants;
-
-  /// Only set when the chosen format is Swiss.
-  final SwissConfig? swiss;
-  Map<String, dynamic> toPayload() => {
-    'matchType': matchType,
-    'bracketType': bracketType,
-    'maxParticipants': maxParticipants,
-  };
-}
-
-class _DivisionConfigDialog extends StatefulWidget {
-  const _DivisionConfigDialog({
-    required this.division,
-    required this.swissInitial,
-    required this.teamCount,
-    required this.minPlayedRounds,
-    required this.lockContent,
-  });
-  final bool lockContent;
-  final Map<String, dynamic> division;
-  final SwissConfig swissInitial;
-  final int teamCount;
-  final int minPlayedRounds;
-  @override
-  State<_DivisionConfigDialog> createState() => _DivisionConfigDialogState();
-}
-
-class _DivisionConfigDialogState extends State<_DivisionConfigDialog> {
-  late String _matchType = _normalize(
-    (widget.division['matchType'] ?? 'DOUBLES').toString(),
-    _matchTypes,
-    'DOUBLES',
-  );
-  late String _bracketType = _normalize(
-    (widget.division['bracketType'] ?? 'SINGLE_ELIMINATION').toString(),
-    _bracketTypes,
-    'SINGLE_ELIMINATION',
-  );
-  late final TextEditingController _max = TextEditingController(
-    text: widget.division['maxParticipants']?.toString() ?? '',
-  );
-  late SwissConfig _swiss = widget.swissInitial;
-  bool _hasError = false;
-  @override
-  void dispose() {
-    _max.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      title: Text(l10n.tournamentManagementDivisionConfiguration),
-      content: SizedBox(
-        // Fixed width: the Swiss tiebreak list is a viewport, which the
-        // dialog's intrinsic-width pass cannot measure.
-        width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: _matchType,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementMatchType,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final value in _matchTypes)
-                    DropdownMenuItem(
-                      value: value,
-                      child: Text(_matchTypeLabel(l10n, value)),
-                    ),
-                ],
-                onChanged: widget.lockContent
-                    ? null
-                    : (value) {
-                        if (value != null) setState(() => _matchType = value);
-                      },
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                initialValue: _bracketType,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementBracketType,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final value in _bracketTypes)
-                    DropdownMenuItem(
-                      value: value,
-                      child: Text(_bracketTypeLabel(l10n, value)),
-                    ),
-                ],
-                onChanged: widget.lockContent
-                    ? null
-                    : (value) {
-                        if (value != null) setState(() => _bracketType = value);
-                      },
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _max,
-                enabled: !widget.lockContent,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementMaxParticipants,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              if (_bracketType == 'SWISS') ...[
-                const SizedBox(height: 16),
-                SwissConfigEditor(
-                  value: _swiss,
-                  teamCount: widget.teamCount,
-                  minPlayedRounds: widget.minPlayedRounds,
-                  onChanged: (value) => _swiss = value,
-                ),
-              ],
-              if (_hasError)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    l10n.tournamentManagementRequiredFields,
-                    style: TextStyle(color: context.colors.error),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.tournamentManagementCancel),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: Text(l10n.tournamentManagementSave),
-        ),
-      ],
-    );
-  }
-
-  void _save() {
-    final raw = _max.text.trim();
-    final value = raw.isEmpty ? null : int.tryParse(raw);
-    if (raw.isNotEmpty && (value == null || value < 1)) {
-      setState(() => _hasError = true);
-      return;
-    }
-    Navigator.pop(
-      context,
-      _DivisionConfigValues(
-        matchType: _matchType,
-        bracketType: _bracketType,
-        maxParticipants: value,
-        swiss: _bracketType == 'SWISS' ? _swiss : null,
-      ),
-    );
-  }
 }
 
 class _DivisionCard extends StatelessWidget {
@@ -727,8 +389,8 @@ class _DivisionCard extends StatelessWidget {
     required this.division,
     required this.isBusy,
     required this.canToggleRegistration,
-    required this.onRename,
-    required this.onConfigure,
+    required this.onEdit,
+    required this.onConfigureRounds,
     required this.onToggleRegistration,
     required this.onReopenWithDeadline,
     required this.onDelete,
@@ -736,8 +398,10 @@ class _DivisionCard extends StatelessWidget {
   final Map<String, dynamic> division;
   final bool isBusy;
   final bool canToggleRegistration;
-  final VoidCallback onRename;
-  final VoidCallback onConfigure;
+  final VoidCallback onEdit;
+
+  /// null = chưa có sơ đồ (hoặc Swiss): ẩn mục cấu hình từng vòng.
+  final VoidCallback? onConfigureRounds;
   final VoidCallback onToggleRegistration;
   final VoidCallback onReopenWithDeadline;
   final VoidCallback onDelete;
@@ -802,21 +466,23 @@ class _DivisionCard extends StatelessWidget {
           PopupMenuButton<String>(
             enabled: !isBusy,
             onSelected: (value) {
-              if (value == 'rename') onRename();
-              if (value == 'config') onConfigure();
+              if (value == 'edit') onEdit();
+              if (value == 'rounds') onConfigureRounds?.call();
               if (value == 'registration') onToggleRegistration();
               if (value == 'reopen-deadline') onReopenWithDeadline();
               if (value == 'delete') onDelete();
             },
             itemBuilder: (context) => [
               PopupMenuItem(
-                value: 'rename',
-                child: Text(l10n.tournamentManagementRenameDivision),
+                value: 'edit',
+                child: Text(l10n.divisionEditorEditTitle),
               ),
-              PopupMenuItem(
-                value: 'config',
-                child: Text(l10n.tournamentManagementDivisionConfiguration),
-              ),
+              // Cấu hình từng vòng chỉ có khi hạng mục đã sinh sơ đồ.
+              if (onConfigureRounds != null)
+                PopupMenuItem(
+                  value: 'rounds',
+                  child: Text(l10n.stageRoundMenuTitle),
+                ),
               // Quá hạn mà mở lại thì phải đặt hạn mới; còn hạn thì bật/tắt khoá.
               if (expired)
                 PopupMenuItem(
@@ -1164,9 +830,6 @@ DateTime? _registrationDeadline(Map<String, dynamic> division) {
       division['registrationEndDate'];
   return raw is String ? DateTime.tryParse(raw) : null;
 }
-
-String _normalize(String value, List<String> values, String fallback) =>
-    values.contains(value.toUpperCase()) ? value.toUpperCase() : fallback;
 
 bool _isSwiss(Object? bracketType) =>
     bracketType?.toString().toUpperCase() == 'SWISS';

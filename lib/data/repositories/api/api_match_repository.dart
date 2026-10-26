@@ -1077,13 +1077,71 @@ class ApiMatchRepository implements IMatchRepository {
         'strategy': 'ROUND_ORDER_EARLIEST_AVAILABLE',
       },
     );
+    return _parsePlanPreview(
+      _envelopeData(response.data),
+      fallbackDurationMinutes: durationMinutes,
+    );
+  }
+
+  @override
+  Future<AiSchedulePlan> previewScheduleWithAi(
+    String tournamentId, {
+    required String command,
+    required DateTime day,
+    required List<String> courtIds,
+    required DateTime windowStart,
+    required DateTime windowEnd,
+    String? divisionId,
+    int gridIncrementMinutes = 15,
+    String? locale,
+  }) async {
+    final Response<Object?> response;
+    try {
+      response = await _dioClient.dio.post<Object?>(
+        '/ai/tournaments/$tournamentId/schedule-preview',
+        data: {
+          'command': command,
+          'date': _calendarDayText(day),
+          'courtIds': courtIds,
+          'divisionId': ?divisionId,
+          'gridIncrementMinutes': gridIncrementMinutes,
+          'locale': ?locale,
+          'operatingWindow': {
+            'start': windowStart.toUtc().toIso8601String(),
+            'end': windowEnd.toUtc().toIso8601String(),
+          },
+        },
+      );
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) {
+        throw const AiScheduleUnavailableException();
+      }
+      rethrow;
+    }
     final json = _envelopeData(response.data);
+    final intent = json['intent'] is Map
+        ? json['intent'] as Map
+        : const <dynamic, dynamic>{};
+    final preview = json['preview'] is Map
+        ? json['preview'] as Map
+        : const <dynamic, dynamic>{};
+    return AiSchedulePlan(
+      plan: _parsePlanPreview(preview, fallbackDurationMinutes: 45),
+      needsReview: intent['needsReview'] == true,
+      explanation: intent['explanation']?.toString() ?? '',
+    );
+  }
+
+  SchedulePlanPreview _parsePlanPreview(
+    Map<dynamic, dynamic> json, {
+    required int fallbackDurationMinutes,
+  }) {
     final readiness = json['readiness'] is Map
         ? json['readiness'] as Map
         : const <dynamic, dynamic>{};
     return SchedulePlanPreview(
       durationMinutes:
-          (json['durationMinutes'] as num?)?.toInt() ?? durationMinutes,
+          (json['durationMinutes'] as num?)?.toInt() ?? fallbackDurationMinutes,
       assignments: <SchedulePlanAssignment>[
         for (final item in (json['assignments'] as List? ?? const []))
           if (item is Map)

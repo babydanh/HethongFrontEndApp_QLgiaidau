@@ -7,9 +7,12 @@ import 'package:app_quanly_giaidau/core/services/roster_template_service.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/add_athlete_sheet.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/mock_participants_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 
@@ -106,6 +109,67 @@ class _TournamentManagementAthletesTabState
     );
   }
 
+  /// Sheet sinh VĐV ảo của hạng mục (task 3.4); chọn sẵn hạng mục đang mở.
+  Future<void> _openMockParticipants(TournamentDivision division) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (_) => MockParticipantsSheet(
+        tournamentId: widget.tournament.id,
+        divisions: widget.tournament.divisions,
+        initialDivisionId: division.id,
+        onRefresh: () async {
+          if (!mounted) return;
+          ref.invalidate(tournamentDivisionsProvider(widget.tournament.id));
+          _reload();
+        },
+      ),
+    );
+  }
+
+  /// Sheet gán suất đặc cách của hạng mục (task 3.5).
+  Future<void> _openWildcard(TournamentDivision division) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (_) => WildcardSheet(
+        tournamentId: widget.tournament.id,
+        divisions: widget.tournament.divisions,
+        initialDivisionId: division.id,
+        onRefresh: () async {
+          if (!mounted) return;
+          ref.invalidate(tournamentDivisionsProvider(widget.tournament.id));
+          _reload();
+        },
+      ),
+    );
+  }
+
+  /// Sheet ghép cặp của hạng mục đôi (task 3.6/3.7); Web chỉ hiện nút ghép
+  /// khi giải có nội dung đôi nên App hiện theo từng hạng mục đôi.
+  Future<void> _openPairing(TournamentDivision division) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (_) => PairingSheet(
+        tournamentId: widget.tournament.id,
+        divisionId: division.id,
+        divisionName: division.name,
+        onRefresh: () async {
+          if (!mounted) return;
+          ref.invalidate(tournamentDivisionsProvider(widget.tournament.id));
+          _reload();
+        },
+      ),
+    );
+  }
+
   /// Tải file mẫu xlsx đúng ngôn ngữ đang dùng. Lỗi hiện thông báo thay vì văng ra ngoài.
   Future<void> _downloadTemplate() async {
     final l10n = AppLocalizations.of(context)!;
@@ -144,8 +208,7 @@ class _TournamentManagementAthletesTabState
             ),
           );
         }
-        final participants =
-            snapshot.data ?? const <OrganizerOpsParticipant>[];
+        final participants = snapshot.data ?? const <OrganizerOpsParticipant>[];
         // Không padding ngang: row nội dung sát mép, ngăn cách bằng đường kẻ.
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
@@ -165,6 +228,9 @@ class _TournamentManagementAthletesTabState
                   onAddAthlete: (list) => _addAthlete(division, list),
                   onImportExcel: () => _importRoster(division),
                   onDownloadTemplate: _downloadTemplate,
+                  onOpenMockParticipants: () => _openMockParticipants(division),
+                  onOpenWildcard: () => _openWildcard(division),
+                  onOpenPairing: () => _openPairing(division),
                 ),
             ],
           ),
@@ -185,6 +251,9 @@ class _DivisionRow extends StatelessWidget {
     required this.onAddAthlete,
     required this.onImportExcel,
     required this.onDownloadTemplate,
+    required this.onOpenMockParticipants,
+    required this.onOpenWildcard,
+    required this.onOpenPairing,
   });
 
   final TournamentDivision division;
@@ -196,6 +265,9 @@ class _DivisionRow extends StatelessWidget {
   final void Function(List<OrganizerOpsParticipant>) onAddAthlete;
   final VoidCallback onImportExcel;
   final VoidCallback onDownloadTemplate;
+  final VoidCallback onOpenMockParticipants;
+  final VoidCallback onOpenWildcard;
+  final VoidCallback onOpenPairing;
 
   bool _isPending(OrganizerOpsParticipant item) => const {
     'PENDING',
@@ -310,7 +382,9 @@ class _DivisionRow extends StatelessWidget {
                             children: [
                               FilledButton.icon(
                                 onPressed: () => onAddAthlete(participants),
-                                icon: const Icon(Icons.person_add_alt_1_rounded),
+                                icon: const Icon(
+                                  Icons.person_add_alt_1_rounded,
+                                ),
                                 label: Text(l10n.opsAddAthlete),
                               ),
                               OutlinedButton.icon(
@@ -320,11 +394,37 @@ class _DivisionRow extends StatelessWidget {
                                 label: Text(l10n.rosterImportOpen),
                               ),
                               OutlinedButton.icon(
-                                key: const ValueKey('athletes-download-template'),
+                                key: const ValueKey(
+                                  'athletes-download-template',
+                                ),
                                 onPressed: onDownloadTemplate,
                                 icon: const Icon(Icons.download_rounded),
                                 label: Text(l10n.rosterImportDownloadTemplate),
                               ),
+                              OutlinedButton.icon(
+                                key: const ValueKey('athletes-mock-data'),
+                                onPressed: onOpenMockParticipants,
+                                icon: const Icon(Icons.auto_awesome_rounded),
+                                label: Text(l10n.mockParticipantsOpen),
+                              ),
+                              OutlinedButton.icon(
+                                key: const ValueKey('athletes-wildcard'),
+                                onPressed: onOpenWildcard,
+                                icon: const Icon(
+                                  Icons.workspace_premium_rounded,
+                                ),
+                                label: Text(l10n.wildcardOpen),
+                              ),
+                              // Web chỉ hiện nút ghép khi giải có nội dung
+                              // đôi (hasTournamentDoubles); App hiện theo
+                              // từng hạng mục đôi.
+                              if (division.isDoubles)
+                                OutlinedButton.icon(
+                                  key: const ValueKey('athletes-pairing'),
+                                  onPressed: onOpenPairing,
+                                  icon: const Icon(Icons.handshake_rounded),
+                                  label: Text(l10n.pairingOpen),
+                                ),
                             ],
                           ),
                         ),
@@ -332,6 +432,7 @@ class _DivisionRow extends StatelessWidget {
                           tournament: tournament,
                           showRegistration: true,
                           divisionId: division.id,
+                          divisionName: division.name,
                           embedded: true,
                           // Như web: nội dung đôi hoặc môn đồng đội (teamSize).
                           pairFormat:

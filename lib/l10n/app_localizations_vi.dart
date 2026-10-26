@@ -11844,6 +11844,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String get excelResultsFilePrefix => 'KetQua';
 
   @override
+  String get excelRosterSheet => 'Danh sách VĐV';
+
+  @override
+  String excelRosterTitle(String tournamentName) {
+    return 'DANH SÁCH VĐV: $tournamentName';
+  }
+
+  @override
+  String excelRosterShare(String tournamentName) {
+    return 'Danh sách VĐV $tournamentName';
+  }
+
+  @override
+  String get excelRosterFilePrefix => 'DanhSachVDV';
+
+  @override
+  String get excelRosterColumnName => 'Họ tên';
+
+  @override
+  String get excelRosterColumnContact => 'Liên hệ';
+
+  @override
+  String get excelRosterColumnDivision => 'Hạng mục';
+
+  @override
+  String get excelRosterColumnSeed => 'Seed';
+
+  @override
+  String get excelRosterColumnPayment => 'Thanh toán';
+
+  @override
+  String get exportParticipantsRoster => 'Xuất danh sách VĐV';
+
+  @override
   String get excelScore1 => 'Điểm 1';
 
   @override
@@ -13723,6 +13757,74 @@ class AppLocalizationsVi extends AppLocalizations {
       'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.';
 
   @override
+  String get lifecycleOpeningTitle => 'Khai mạc giải?';
+
+  @override
+  String get lifecycleOpeningCloseHeading => 'Đóng đăng ký để khai mạc';
+
+  @override
+  String get lifecycleOpeningCloseAll => 'Chọn hết';
+
+  @override
+  String get lifecycleOpeningStart => 'Khai mạc';
+
+  @override
+  String get lifecycleOpeningOpenAnyway => 'Vẫn khai mạc';
+
+  @override
+  String get lifecycleOpeningForceWarning =>
+      'Bạn chưa chọn hạng mục nào để đóng đăng ký. Khai mạc sẽ khoá đăng ký tất cả nội dung còn mở.';
+
+  @override
+  String lifecycleOpeningWarningNoBracket(String divisions) {
+    return 'Chưa có sơ đồ thi đấu: $divisions.';
+  }
+
+  @override
+  String lifecycleOpeningWarningPending(int count) {
+    return 'Có $count lượt đăng ký đang chờ duyệt.';
+  }
+
+  @override
+  String get lifecycleEndTitle => 'Hoàn tất giải đấu';
+
+  @override
+  String get lifecycleEndWarning =>
+      'Hãy bảo đảm tất cả trận đang diễn ra đã được xử lý trước khi hoàn tất giải đấu.';
+
+  @override
+  String lifecycleEndCheckMatches(int completed, int total) {
+    return 'Trận đã hoàn tất: $completed/$total';
+  }
+
+  @override
+  String lifecycleEndCheckLive(int live) {
+    return 'Trận đang diễn ra còn lại: $live';
+  }
+
+  @override
+  String lifecycleEndLiveMatch(String team1, String team2) {
+    return '$team1 vs $team2';
+  }
+
+  @override
+  String get lifecycleEndNotPassed => 'Chưa đạt';
+
+  @override
+  String get lifecycleEndNoMatches =>
+      'Chưa có trận đấu nào. Bạn vẫn có thể hoàn tất giải đấu này.';
+
+  @override
+  String get lifecycleEndLoadingMatches => 'Đang tải danh sách trận đấu…';
+
+  @override
+  String get lifecycleEndLoadMatchesError =>
+      'Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.';
+
+  @override
+  String get lifecycleEndConfirm => 'Hoàn tất giải đấu';
+
+  @override
   String get tournamentManagementCompleteTournament => 'Kết thúc giải';
 
   @override
@@ -15226,10 +15328,61 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get scheduleQuickPickerSearch => 'Tìm theo tên đội';
+  String get scheduleQuickPickerEmpty => 'Không còn trận chờ để xếp.';
 
   @override
-  String get scheduleQuickPickerEmpty => 'Không còn trận chờ để xếp.';
+  String get scheduleMultiSheetDescription =>
+      'Tích chọn nhiều trận để xếp nối tiếp từ ô đã chọn, mỗi trận bắt đầu sau khi trận trước kết thúc.';
+
+  @override
+  String get scheduleMultiRoundLabel => 'Vòng đấu';
+
+  @override
+  String scheduleMultiAllRounds(int count) {
+    return 'Tất cả vòng ($count)';
+  }
+
+  @override
+  String get scheduleMultiSearchHint =>
+      'Tìm người chơi, tên đội hoặc vòng đấu...';
+
+  @override
+  String get scheduleMultiSelectVisible => 'Chọn tất cả';
+
+  @override
+  String get scheduleMultiDeselectVisible => 'Bỏ chọn hết';
+
+  @override
+  String get scheduleMultiMinutesSuffix => 'phút';
+
+  @override
+  String get scheduleMultiDurationInvalid =>
+      'Nhập số phút từ 15 đến 240, theo bước 5 phút.';
+
+  @override
+  String scheduleMultiSubmit(int count) {
+    return 'Xếp $count trận';
+  }
+
+  @override
+  String scheduleMultiDone(int done, int total) {
+    return 'Đã xếp $done/$total trận nối tiếp.';
+  }
+
+  @override
+  String scheduleMultiPartial(int done, int total) {
+    return 'Đã xếp $done/$total trận rồi dừng vì có trận chưa xếp được.';
+  }
+
+  @override
+  String scheduleTraySubmit(int count) {
+    return 'Xếp $count trận đã chọn vào sân';
+  }
+
+  @override
+  String scheduleTrayCancelled(int done, int total) {
+    return 'Đã xếp $done/$total trận rồi dừng theo yêu cầu huỷ.';
+  }
 
   @override
   String get scheduleQuickSwapTitle => 'Đổi chỗ hai trận?';
@@ -15332,6 +15485,34 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rosterImportNoRows => 'File không có dòng VĐV nào.';
+
+  @override
+  String get rosterImportCreateTitle =>
+      'Nội dung trong file chưa có trong giải';
+
+  @override
+  String get rosterImportCreateHint =>
+      'Chọn từng nội dung để tạo mới cho các dòng tương ứng, rồi bấm nút bên dưới. Bỏ chọn nội dung nào thì các dòng đó giữ nguyên cách kiểm tra cũ.';
+
+  @override
+  String rosterImportCreateRow(String name) {
+    return 'Tạo mới \"$name\"';
+  }
+
+  @override
+  String rosterImportCreateAndCheck(int count) {
+    return 'Tạo $count nội dung & kiểm tra';
+  }
+
+  @override
+  String get rosterImportSkipCreate => 'Kiểm tra trực tiếp';
+
+  @override
+  String get rosterImportCreatingDivisions => 'Đang tạo nội dung...';
+
+  @override
+  String get rosterImportCreateDivisionFailed =>
+      'Không tạo được nội dung. Vui lòng thử lại.';
 
   @override
   String get rosterImportAutoApprove =>
@@ -15828,4 +16009,1190 @@ class AppLocalizationsVi extends AppLocalizations {
   String swissActionAllRoundsDone(int total) {
     return 'Đã đủ $total vòng';
   }
+
+  @override
+  String get divisionFullPromptTitle => 'Hạng mục đã đủ chỗ';
+
+  @override
+  String get divisionFullPromptMessage =>
+      'Các hạng mục sau đã đủ VĐV và vẫn còn mở đăng ký. Đóng đăng ký để tránh nhận thêm, hoặc giữ mở nếu còn muốn nhận.';
+
+  @override
+  String get divisionFullPromptClose => 'Đóng đăng ký';
+
+  @override
+  String get divisionFullPromptKeepOpen => 'Giữ mở';
+
+  @override
+  String divisionFullPromptCloseAll(int count) {
+    return 'Đóng đăng ký ($count)';
+  }
+
+  @override
+  String divisionFullPromptCapacity(int registered, int capacity) {
+    return '$registered/$capacity VĐV';
+  }
+
+  @override
+  String get divisionBulkTitle => 'Đóng/mở đăng ký theo hạng mục';
+
+  @override
+  String get divisionBulkModeClose => 'Đóng đăng ký';
+
+  @override
+  String get divisionBulkModeOpen => 'Mở lại đăng ký';
+
+  @override
+  String get divisionBulkSelectAll => 'Chọn hết';
+
+  @override
+  String get divisionBulkEmptyClose =>
+      'Không còn hạng mục nào đang mở đăng ký.';
+
+  @override
+  String get divisionBulkEmptyOpen =>
+      'Không có hạng mục nào đang đóng đăng ký.';
+
+  @override
+  String divisionBulkConfirmClose(int count) {
+    return 'Đóng $count hạng mục';
+  }
+
+  @override
+  String divisionBulkConfirmOpen(int count) {
+    return 'Mở lại $count hạng mục';
+  }
+
+  @override
+  String get divisionBulkNewDeadline =>
+      'Có hạng mục đã quá hạn — chọn hạn đăng ký mới (ở tương lai) trước khi mở lại.';
+
+  @override
+  String get divisionBulkNewDeadlineMissing =>
+      'Chưa chọn hạn đăng ký mới ở tương lai.';
+
+  @override
+  String get divisionBulkPickDeadline => 'Chọn hạn đăng ký mới';
+
+  @override
+  String get divisionBulkOpenButton => 'Đăng ký';
+
+  @override
+  String get financeFeeQuickAdjustLabel => 'Tăng/giảm nhanh:';
+
+  @override
+  String get financeFeeQuickFree => '0đ';
+
+  @override
+  String financeFeeQuickAdd(int amount) {
+    return '+${amount}k';
+  }
+
+  @override
+  String get financeFeeCollectedPerPlayer => 'Lệ phí thu / VĐV';
+
+  @override
+  String get financeFeeFreeLabel => 'Miễn phí';
+
+  @override
+  String get financeFeePlatformFeePerPlayer => 'Phí sàn / dịch vụ nền tảng';
+
+  @override
+  String get financeFeeOrganizerNetPerPlayer => 'BTC thực nhận / VĐV';
+
+  @override
+  String get divisionEditorEditTitle => 'Chỉnh sửa nội dung thi đấu';
+
+  @override
+  String get divisionEditorSaveChanges => 'Lưu thay đổi';
+
+  @override
+  String get divisionEditorTypeLabel => 'Loại';
+
+  @override
+  String get divisionEditorFormatOpenSingles => 'Đơn linh hoạt';
+
+  @override
+  String get divisionEditorFormatOpenDoubles => 'Đôi linh hoạt';
+
+  @override
+  String get divisionEditorNameHint =>
+      'Để trống sẽ dùng tên mặc định theo loại.';
+
+  @override
+  String get divisionEditorStandardRules => 'Luật chuẩn';
+
+  @override
+  String get divisionEditorLimitsTitle => 'Giới hạn và phí';
+
+  @override
+  String get divisionEditorParticipantLimit => 'Số đội tối đa';
+
+  @override
+  String get divisionEditorMaxCount => 'Số lượng tối đa';
+
+  @override
+  String get divisionEditorEloLimit => 'ELO riêng';
+
+  @override
+  String get divisionEditorEloMin => 'ELO tối thiểu';
+
+  @override
+  String get divisionEditorEloMax => 'ELO tối đa';
+
+  @override
+  String get divisionEditorEloBlankHint => 'Để trống = không giới hạn';
+
+  @override
+  String get divisionEditorEloRangeError =>
+      'ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.';
+
+  @override
+  String get divisionEditorEntryFee => 'Phí riêng';
+
+  @override
+  String get divisionEditorEntryFeeFollowsHint => 'Theo lệ phí chung của giải';
+
+  @override
+  String get divisionEditorEntryFeeCustomHint => 'Phí riêng cho nội dung này';
+
+  @override
+  String get divisionEditorEntryFeePlaceholder => 'Nhập số tiền';
+
+  @override
+  String get divisionEditorRulesPaneTitle => 'Cấu hình luật';
+
+  @override
+  String get divisionEditorPickleballMode => 'Chế độ tính điểm';
+
+  @override
+  String get divisionEditorRallyScoring => 'Rally Scoring';
+
+  @override
+  String get divisionEditorSideOutScoring => 'Side-out Scoring';
+
+  @override
+  String get divisionEditorPresets => 'Mẫu nhanh';
+
+  @override
+  String get divisionEditorScoreTitle => 'Số set và điểm';
+
+  @override
+  String get divisionEditorSetsToWin => 'Số set chạm thắng';
+
+  @override
+  String get divisionEditorWinByTwo => 'Thắng cách biệt 2 điểm';
+
+  @override
+  String get divisionEditorMaxDeucePoints => 'Điểm tối đa';
+
+  @override
+  String get divisionEditorNoDeuceLimit => 'Không giới hạn';
+
+  @override
+  String get divisionEditorSuperTiebreak => 'Loạt phụ (Super tie-break)';
+
+  @override
+  String get divisionEditorTiebreakSet => 'Set loạt phụ';
+
+  @override
+  String get divisionEditorTiebreakPoints => 'Điểm chạm loạt phụ';
+
+  @override
+  String get divisionEditorRoundsToPlay => 'Số lượt đấu (Lượt đi / Lượt về)';
+
+  @override
+  String get divisionEditorStage1Title => 'Giai đoạn 1 · Vòng bảng';
+
+  @override
+  String get divisionEditorNumGroups => 'Số bảng';
+
+  @override
+  String get divisionEditorGroupStageRounds => 'Số lượt vòng bảng';
+
+  @override
+  String get divisionEditorTeamsPerGroup => 'Số đội mỗi bảng';
+
+  @override
+  String get divisionEditorTeamsAdvancing => 'Số đội đi tiếp';
+
+  @override
+  String divisionEditorConfiguredTeams(Object count) {
+    return '$count đội';
+  }
+
+  @override
+  String divisionEditorAdvanceSummary(
+    Object advancing,
+    Object groups,
+    Object total,
+  ) {
+    return '$groups bảng · top $advancing → $total đội';
+  }
+
+  @override
+  String get divisionEditorStage2Title => 'Giai đoạn 2 · Knockout';
+
+  @override
+  String get divisionEditorPlayoffFormat => 'Thể thức knockout';
+
+  @override
+  String get divisionEditorSeedingType => 'Cách xếp hạt giống';
+
+  @override
+  String get divisionEditorSeededByElo => 'Xếp theo ELO';
+
+  @override
+  String get divisionEditorRandomSeeding => 'Xếp ngẫu nhiên';
+
+  @override
+  String get divisionEditorPlayoffSingle => 'Loại trực tiếp đơn';
+
+  @override
+  String get divisionEditorPlayoffDouble => 'Loại trực tiếp kép';
+
+  @override
+  String get divisionEditorSetUnitBadminton => 'Điểm mỗi set';
+
+  @override
+  String get divisionEditorSetUnitTableTennis => 'Điểm mỗi set';
+
+  @override
+  String get divisionEditorSetUnitPickleballRally => 'Điểm mục tiêu mỗi set';
+
+  @override
+  String get divisionEditorSetUnitPickleballSideOut => 'Điểm mục tiêu mỗi game';
+
+  @override
+  String get divisionEditorSetUnitTennis => 'Game mỗi set';
+
+  @override
+  String get divisionEditorSetUnitFootball => 'Bàn thắng';
+
+  @override
+  String get divisionEditorBadmintonSet1 => '1 set';
+
+  @override
+  String get divisionEditorBadmintonSet2 => 'Thắng 2 set';
+
+  @override
+  String get divisionEditorBadmintonSet3 => 'Thắng 3 set';
+
+  @override
+  String get divisionEditorTableTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTableTennisSet2 => 'Thắng 2 set (BO3)';
+
+  @override
+  String get divisionEditorTableTennisSet3 => 'Thắng 3 set (BO5)';
+
+  @override
+  String get divisionEditorTableTennisSet4 => 'Thắng 4 set (BO7)';
+
+  @override
+  String get divisionEditorPickleballRallySet1 => '1 set';
+
+  @override
+  String get divisionEditorPickleballRallySet2 => 'Thắng 2 set';
+
+  @override
+  String get divisionEditorPickleballRallySet3 => 'Thắng 3 set';
+
+  @override
+  String get divisionEditorPickleballSideOutSet1 => '1 game';
+
+  @override
+  String get divisionEditorPickleballSideOutSet2 => 'Thắng 2 game';
+
+  @override
+  String get divisionEditorPickleballSideOutSet3 => 'Thắng 3 game';
+
+  @override
+  String get divisionEditorTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTennisSet2 => 'Thắng 2 set (BO3)';
+
+  @override
+  String get divisionEditorTennisSet3 => 'Thắng 3 set (BO5)';
+
+  @override
+  String get divisionEditorFootballSet1 => '1 trận';
+
+  @override
+  String get divisionEditorPresetBadmintonQuick => 'Vòng đầu nhanh';
+
+  @override
+  String get divisionEditorPresetBadmintonQuickDesc =>
+      'Đánh 1 set 21, phù hợp vòng loại hoặc giải đông VĐV.';
+
+  @override
+  String get divisionEditorPresetBadmintonStandard => 'Chuẩn phong trào';
+
+  @override
+  String get divisionEditorPresetBadmintonStandardDesc =>
+      'Thắng 2 set 21, chạm 30 thắng luôn.';
+
+  @override
+  String get divisionEditorPresetBadmintonShort => 'Tiết kiệm thời gian';
+
+  @override
+  String get divisionEditorPresetBadmintonShortDesc =>
+      'Thắng 2 set 15, dùng khi cần rút ngắn thời lượng.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3 => 'BO3 chuẩn nhanh';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3Desc =>
+      'Thắng 2 set 11 điểm, hợp vòng bảng hoặc vòng đầu.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5 => 'BO5 loại trực tiếp';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5Desc =>
+      'Thắng 3 set 11 điểm, hợp bán kết hoặc chung kết.';
+
+  @override
+  String get divisionEditorPresetTableTennisSingle => '1 set chốt nhanh';
+
+  @override
+  String get divisionEditorPresetTableTennisSingleDesc =>
+      'Một set 11 điểm để xoay vòng đấu thật nhanh.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuick => '1 game 11';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuickDesc =>
+      'Một game 11 rally point, gọn cho vòng đầu.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandard => 'Chuẩn rally';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandardDesc =>
+      'Thắng 2 game 11, dễ live score và dễ điều phối.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtended => 'Game 15';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtendedDesc =>
+      'Thắng 2 game 15 cho các trận sâu, ít biến động hơn.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandard => 'Chuẩn side-out';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandardDesc =>
+      '1 game 11, chỉ bên giao bóng mới ghi điểm.';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15 => 'Game 15';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15Desc =>
+      '1 game 15, hợp trận kéo dài hơn nhưng vẫn giữ side-out.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinals => 'Best of 3';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinalsDesc =>
+      'Thắng 2 game 11, hợp bán kết/chung kết có thời lượng tốt hơn.';
+
+  @override
+  String get divisionEditorPresetTennisProSet => 'Pro set';
+
+  @override
+  String get divisionEditorPresetTennisProSetDesc =>
+      '1 set 8 game, hợp vòng bảng hoặc vòng tính thời gian chặt.';
+
+  @override
+  String get divisionEditorPresetTennisStandard => 'BO3 chuẩn';
+
+  @override
+  String get divisionEditorPresetTennisStandardDesc =>
+      'Thắng 2 set, mỗi set 6 game, 6-6 tie-break 7.';
+
+  @override
+  String get divisionEditorPresetTennisShortSet => 'Short set';
+
+  @override
+  String get divisionEditorPresetTennisShortSetDesc =>
+      '1 set 4 game, hợp giải phong trào hoặc nhiều trận liên tiếp.';
+
+  @override
+  String get divisionEditorPresetFootballStandard => 'Chuẩn';
+
+  @override
+  String get divisionEditorPresetFootballStandardDesc =>
+      '2 hiệp, mỗi hiệp 20 phút';
+
+  @override
+  String get stageRoundTitle => 'Cấu hình vòng đấu';
+
+  @override
+  String get stageRoundMenuTitle => 'Cấu hình từng vòng';
+
+  @override
+  String get stageRoundSelectLabel => 'Chọn vòng';
+
+  @override
+  String get stageRoundSharedGroupStage => 'Vòng bảng dùng chung';
+
+  @override
+  String stageRoundLeg(int number) {
+    return 'Lượt $number';
+  }
+
+  @override
+  String stageRoundKnockoutOf(int round) {
+    return 'Vòng $round';
+  }
+
+  @override
+  String get stageRoundLiteTitle => 'Chế độ Tự do (Lite) đang bật toàn giải';
+
+  @override
+  String get stageRoundLiteDescription =>
+      'Trọng tài nhập điểm tự do, không bị giới hạn bởi luật thi đấu.';
+
+  @override
+  String get stageRoundQuickPresets => 'Preset nhanh cho vòng đấu';
+
+  @override
+  String get stageRoundCourtLabel => 'Địa điểm sân đấu';
+
+  @override
+  String get stageRoundCourtPlaceholder =>
+      'Nhập sân thi đấu riêng cho vòng này (để trống sẽ dùng địa điểm giải đấu)...';
+
+  @override
+  String get stageRoundDefaultTimeLabel => 'Giờ mặc định cho vòng này';
+
+  @override
+  String get stageRoundNoTime => 'Chưa đặt giờ';
+
+  @override
+  String get stageRoundClearTime => 'Xoá giờ mặc định';
+
+  @override
+  String get stageRoundNoteLabel => 'Ghi chú điều phối vòng này';
+
+  @override
+  String get stageRoundNotePlaceholder =>
+      'Ví dụ: ưu tiên gọi đồng loạt ở sân trung tâm lúc 08:00';
+
+  @override
+  String get stageRoundSave => 'Lưu cấu hình';
+
+  @override
+  String get stageRoundEmpty => 'Hạng mục này không có vòng nào để cấu hình.';
+
+  @override
+  String stageRoundSummary(
+    int sets,
+    String unit,
+    int points,
+    String pointUnit,
+    String margin,
+    String tiebreak,
+  ) {
+    return 'Vòng này sẽ đánh: thắng $sets $unit • $points $pointUnit$margin$tiebreak';
+  }
+
+  @override
+  String get stageRoundUnitSet => 'set';
+
+  @override
+  String get stageRoundUnitGame => 'game';
+
+  @override
+  String get stageRoundPoints => 'điểm';
+
+  @override
+  String get stageRoundPointUnitTennis => 'game/set';
+
+  @override
+  String get stageRoundMarginWinByTwo => ' • hơn 2';
+
+  @override
+  String get stageRoundMarginTarget => ' • chạm đích là chốt';
+
+  @override
+  String get stageRoundSideOutSummary => 'Chỉ đội đang giao bóng mới ghi điểm.';
+
+  @override
+  String get participantFilterAll => 'Tất cả';
+
+  @override
+  String get participantFilterPending => 'Chờ duyệt';
+
+  @override
+  String get participantFilterPendingPartner => 'Chờ đồng đội';
+
+  @override
+  String get participantFilterApproved => 'Đã duyệt';
+
+  @override
+  String get participantFilterUnpaid => 'Chưa thanh toán';
+
+  @override
+  String get participantFilterRejected => 'Bị từ chối';
+
+  @override
+  String get participantFilterEmpty => 'Không có hồ sơ nào ở trạng thái này.';
+
+  @override
+  String participantRowActions(String name) {
+    return 'Thao tác với $name';
+  }
+
+  @override
+  String get participantUnpair => 'Tách cặp';
+
+  @override
+  String participantUnpairConfirm(String name) {
+    return 'Tách cặp $name? Hai VĐV về hàng chờ ghép; sơ đồ đã tạo cần tạo lại.';
+  }
+
+  @override
+  String get participantUnpaired => 'Đã tách cặp. Hai VĐV đang chờ ghép lại.';
+
+  @override
+  String get participantDetailContact => 'Liên hệ';
+
+  @override
+  String get participantDetailEditContacts => 'Sửa liên hệ VĐV';
+
+  @override
+  String get participantDetailNoMembers => 'Chưa có thành viên trong hồ sơ.';
+
+  @override
+  String get participantDetailHiddenEmail => 'Email được ẩn/chưa cập nhật';
+
+  @override
+  String get participantDetailNoPhone => 'Chưa có SĐT';
+
+  @override
+  String participantDetailGuestSlot(num slot) {
+    return 'VĐV $slot';
+  }
+
+  @override
+  String get participantDetailName => 'Tên';
+
+  @override
+  String get participantDetailEmail => 'Email';
+
+  @override
+  String get participantDetailPhone => 'SĐT';
+
+  @override
+  String get participantDetailNameRequired => 'Nhập tên';
+
+  @override
+  String get participantDetailEmailInvalid => 'Email chưa đúng';
+
+  @override
+  String get participantDetailEmailDuplicate => 'Email bị trùng';
+
+  @override
+  String get participantDetailPhoneTooLong => 'SĐT tối đa 20 ký tự';
+
+  @override
+  String get participantDetailSave => 'Lưu';
+
+  @override
+  String get participantDetailNoteTitle => 'Ghi chú BTC';
+
+  @override
+  String get participantDetailNoteHint => 'Ghi chú nội bộ';
+
+  @override
+  String get participantDetailNoteSave => 'Lưu ghi chú';
+
+  @override
+  String get participantDetailNoteSaved => 'Đã lưu ghi chú.';
+
+  @override
+  String get participantDetailFormAnswers => 'Câu trả lời form đăng ký';
+
+  @override
+  String get participantDetailAnswerYes => 'Có';
+
+  @override
+  String get participantDetailAnswerNo => 'Không';
+
+  @override
+  String get participantDetailSeedLabel => 'Seed';
+
+  @override
+  String get participantDetailSeedSave => 'Gán seed';
+
+  @override
+  String get participantDetailSeedSaved => 'Đã cập nhật seed!';
+
+  @override
+  String get participantDetailSeedInvalid =>
+      'Seed phải là số nguyên từ 1 trở lên.';
+
+  @override
+  String get participantDetailPairBadge => 'Cặp';
+
+  @override
+  String get participantDetailSingleBadge => 'Đơn';
+
+  @override
+  String get participantDetailUnassignedDivision => 'Chưa phân nội dung';
+
+  @override
+  String get participantDetailPayment => 'Thanh toán';
+
+  @override
+  String get participantDetailPaymentRef => 'Mã GD';
+
+  @override
+  String get participantDetailPaid => 'Đã thanh toán';
+
+  @override
+  String get participantDetailUnpaid => 'Chưa thanh toán';
+
+  @override
+  String get participantDetailFreeEntry => 'Miễn phí';
+
+  @override
+  String get participantDetailWildcard => 'Đặc cách';
+
+  @override
+  String get participantDetailLockRoster => 'Khóa roster';
+
+  @override
+  String get participantDetailUnlockRoster => 'Mở khóa roster';
+
+  @override
+  String get participantDetailRosterLocked => 'Đã khóa roster đội bóng.';
+
+  @override
+  String get participantDetailRosterUnlocked =>
+      'Đã mở khóa roster trước khi giải bắt đầu.';
+
+  @override
+  String get participantDetailDeleteMock => 'Xoá VĐV ảo';
+
+  @override
+  String participantDetailDeleteMockConfirm(String name) {
+    return 'Bạn có chắc muốn xoá dữ liệu mock của \"$name\" không?';
+  }
+
+  @override
+  String get participantDetailMockDeleted => 'Đã xoá VĐV ảo.';
+
+  @override
+  String get participantDetailEntrySaved => 'Đã lưu liên hệ.';
+
+  @override
+  String get participantDetailRegistrationSource => 'Nguồn hồ sơ';
+
+  @override
+  String get participantSourceOrganizerDirect => 'Ban tổ chức thêm trực tiếp';
+
+  @override
+  String get participantSourceManualEmail => 'Nhập thủ công theo email';
+
+  @override
+  String get participantSourceExcel => 'Nhập từ Excel';
+
+  @override
+  String get participantSourceAiExcel => 'Nhập từ Excel (AI đọc)';
+
+  @override
+  String get participantSourceGoogleForm => 'Nhập từ Google Form';
+
+  @override
+  String get mockParticipantsOpen => 'VĐV ảo';
+
+  @override
+  String get mockSheetTitle => 'Bảng thử nghiệm dữ liệu ảo';
+
+  @override
+  String get mockSheetDescription =>
+      'Tạo VĐV ảo để thử nghiệm ghép cặp, bốc thăm và kiểm thử sơ đồ thi đấu bất kỳ lúc nào.';
+
+  @override
+  String get mockSheetNote =>
+      'Tính năng này chỉ phục vụ thử nghiệm tạo nhánh, xếp lịch và bốc thăm. VĐV ảo có thể được dọn dẹp bất kỳ lúc nào mà không ảnh hưởng tới người đăng ký thật.';
+
+  @override
+  String get mockDivisionLabel => 'Nội dung thi đấu đang chọn';
+
+  @override
+  String get mockDivisionSinglesBadge => 'ĐƠN (1 dòng = 1 VĐV)';
+
+  @override
+  String get mockDivisionDoublesBadge => 'ĐÔI (2 dòng = 1 cặp)';
+
+  @override
+  String get mockPairModeLabel => 'Chế độ ghép cặp';
+
+  @override
+  String get mockPairModeAuto => 'Thêm Đôi (Auto ghép)';
+
+  @override
+  String get mockPairModeAutoHint =>
+      'Cứ 2 dòng liên tiếp ghép thành 1 cặp hoàn chỉnh.';
+
+  @override
+  String get mockPairModeIndividual => 'Thêm Đơn (BTC tự ghép)';
+
+  @override
+  String get mockPairModeIndividualHint =>
+      'Sinh VĐV lẻ độc lập để BTC tự vào ghép cặp.';
+
+  @override
+  String get mockNamesLabel => 'Danh sách VĐV ảo';
+
+  @override
+  String get mockNamesPlaceholder =>
+      'Mỗi dòng là 1 tên VĐV.\nĐánh đôi: Cứ 2 dòng liên tiếp xếp 1 đội.\nVí dụ:\nVĐV A\nVĐV B';
+
+  @override
+  String get mockGenerate => 'Sinh VĐV ảo';
+
+  @override
+  String get mockGenerateIndividual => 'Sinh VĐV lẻ (Chờ ghép)';
+
+  @override
+  String get mockClear => 'Dọn dẹp';
+
+  @override
+  String get mockClearConfirmMessage =>
+      'Xóa toàn bộ dữ liệu người chơi thử nghiệm?';
+
+  @override
+  String mockSeedSuccess(int count) {
+    return 'Đã sinh $count người chơi ảo!';
+  }
+
+  @override
+  String mockSeedIndividualSuccess(int count) {
+    return 'Đã tạo $count VĐV lẻ (chờ BTC ghép cặp)!';
+  }
+
+  @override
+  String get mockCleared => 'Đã dọn dẹp!';
+
+  @override
+  String get mockActionFailed => 'Thao tác dữ liệu ảo thất bại.';
+
+  @override
+  String get wildcardOpen => 'Đặc cách';
+
+  @override
+  String get wildcardSheetTitle => 'Suất đặc cách';
+
+  @override
+  String get wildcardSheetDescription =>
+      'Gán trực tiếp khách mời, nhà tài trợ vào danh sách thi đấu. Bỏ qua mọi quy tắc giới hạn ELO.';
+
+  @override
+  String get wildcardDivisionLabel => 'Nội dung thi đấu đang chọn';
+
+  @override
+  String get wildcardContactLabel => 'Email hoặc SĐT người chơi';
+
+  @override
+  String get wildcardContactHint => 'partner@vndcsport.vn hoặc 09xxxx';
+
+  @override
+  String get wildcardPartnerLabel => 'Đồng đội (Email hoặc SĐT)';
+
+  @override
+  String get wildcardPartnerHint => 'Nhập email/số điện thoại đồng đội';
+
+  @override
+  String get wildcardTeamNameLabel => 'Tên đội thi đấu đặc cách';
+
+  @override
+  String get wildcardTeamNameHint => 'Ví dụ: Đội Khách Mời VIP';
+
+  @override
+  String get wildcardAssign => 'Gán suất đặc cách';
+
+  @override
+  String get wildcardContactRequired => 'Nhập email hoặc SĐT người chơi';
+
+  @override
+  String get wildcardContactInvalid => 'Email không đúng định dạng';
+
+  @override
+  String get wildcardTeamNameRequired => 'Nhập tên đội thi đấu đặc cách';
+
+  @override
+  String get wildcardDivisionRequired => 'Chọn nội dung thi đấu trước';
+
+  @override
+  String get wildcardAssignedToast => 'Đã gán suất đặc cách.';
+
+  @override
+  String get wildcardAssignFailed => 'Gán suất đặc cách thất bại.';
+
+  @override
+  String get pairingOpen => 'BTC ghép đôi';
+
+  @override
+  String get pairingSheetTitle => 'Chọn VĐV để ghép đôi';
+
+  @override
+  String pairingSheetDescription(String division) {
+    return 'Chọn VĐV theo thứ tự: cứ hai người liên tiếp là một đôi — $division';
+  }
+
+  @override
+  String get pairingManualTab => 'Thủ công';
+
+  @override
+  String get pairingAutoTab => 'Tự động';
+
+  @override
+  String get pairingSearchLabel => 'Tìm VĐV';
+
+  @override
+  String get pairingSearchPlaceholder => 'Nhập tên VĐV...';
+
+  @override
+  String get pairingLoading => 'Đang tải danh sách VĐV...';
+
+  @override
+  String get pairingEmpty => 'Chưa có VĐV nào đang chờ ghép.';
+
+  @override
+  String get pairingNoSearchResults => 'Không tìm thấy VĐV phù hợp.';
+
+  @override
+  String get pairingSearchEmptyHint => 'Thử từ khóa khác hoặc đóng sheet này.';
+
+  @override
+  String get pairingWaitingSubtitle => 'Đang chờ ghép';
+
+  @override
+  String pairingPairBadge(int n) {
+    return 'Đôi $n';
+  }
+
+  @override
+  String get pairingWaitingBadge => 'Chờ ghép';
+
+  @override
+  String get pairingOddHint =>
+      'VĐV cuối cùng chưa có đôi, sẽ tiếp tục chờ ghép.';
+
+  @override
+  String get pairingSelectionLimit => 'Tối đa 24 VĐV mỗi lần ghép.';
+
+  @override
+  String pairingOptionalNameLabel(int n) {
+    return 'Tên đôi $n (không bắt buộc)';
+  }
+
+  @override
+  String get pairingOptionalNamePlaceholder => 'Để trống để dùng tên hai VĐV';
+
+  @override
+  String get pairingShuffleButton => 'Xếp ngẫu nhiên';
+
+  @override
+  String pairingSubmitPairs(int count) {
+    return 'Ghép $count đôi';
+  }
+
+  @override
+  String get pairingSubmitting => 'Đang ghép...';
+
+  @override
+  String get pairingAutoTitle => 'Ghép đôi tự động';
+
+  @override
+  String get pairingAutoDescription => 'Chọn cách ghép cho nội dung đang xem.';
+
+  @override
+  String get pairingStrategyRandomLabel => 'Ngẫu nhiên';
+
+  @override
+  String get pairingStrategyRandomHint =>
+      'Xáo trộn rồi ghép cặp, không xét trình độ.';
+
+  @override
+  String get pairingStrategyEloBalancedLabel => 'Cân bằng mạnh–yếu';
+
+  @override
+  String get pairingStrategyEloBalancedHint =>
+      'Mạnh ghép yếu; chưa có điểm thì ghép ngẫu nhiên.';
+
+  @override
+  String get pairingStrategySameLevelLabel => 'Cùng trình';
+
+  @override
+  String get pairingStrategySameLevelHint =>
+      'Ghép người có điểm gần nhau; chưa có điểm thì ghép ngẫu nhiên.';
+
+  @override
+  String get pairingRandomConfirmAction => 'Bắt đầu ghép';
+
+  @override
+  String get pairingRunning => 'Đang ghép...';
+
+  @override
+  String pairingSuccess(int count) {
+    return 'Đã ghép $count cặp.';
+  }
+
+  @override
+  String pairingSuccessWithUnpaired(int count, int unpaired) {
+    return 'Đã ghép $count cặp. Vẫn chờ ghép: $unpaired';
+  }
+
+  @override
+  String get pairingNoPairsFormed => 'Chưa ghép được cặp nào.';
+
+  @override
+  String get pairingLoadFailed => 'Tải danh sách VĐV chờ ghép thất bại.';
+
+  @override
+  String get pairingActionFailed => 'Ghép cặp thất bại.';
+
+  @override
+  String get scheduleSettingsTitle => 'Cài đặt khung giờ sân';
+
+  @override
+  String get scheduleSettingsOpeningHours => 'Khung giờ mở sân trong ngày';
+
+  @override
+  String get scheduleSettingsEndTime => 'Giờ kết thúc';
+
+  @override
+  String get scheduleSettingsTimeInvalid =>
+      'Giờ kết thúc phải sau giờ bắt đầu.';
+
+  @override
+  String get scheduleSettingsStepLabel => 'Bước ô thời gian';
+
+  @override
+  String scheduleSettingsStepChip(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String get scheduleSettingsSaved => 'Đã lưu cài đặt khung giờ.';
+
+  @override
+  String scheduleConflictsTitle(int count) {
+    return 'Cảnh báo trùng lịch thi đấu ($count trận)';
+  }
+
+  @override
+  String get scheduleConflictsDescription =>
+      'VĐV bị xếp hai trận sát giờ hoặc trùng giờ ở hai sân.';
+
+  @override
+  String scheduleConflictsRow(String name, String court, String time) {
+    return 'VĐV \"$name\" cũng đang có lịch đấu tại $court lúc $time';
+  }
+
+  @override
+  String get scheduleConflictOtherCourt => 'Sân khác';
+
+  @override
+  String get scheduleAiButton => 'AI xếp lịch';
+
+  @override
+  String get scheduleAiTitle => 'AI xếp lịch';
+
+  @override
+  String get scheduleAiCommandLabel => 'Lệnh xếp lịch';
+
+  @override
+  String get scheduleAiCommandHint =>
+      'Ví dụ: vòng 1 từ 8h, 1 set 15 phút, cách nhau 5 phút trên sân 1-4';
+
+  @override
+  String get scheduleAiNoPlan =>
+      'AI chưa xếp được trận nào. Hãy thử lệnh khác hoặc kiểm tra khung giờ.';
+
+  @override
+  String get scheduleAiNeedsReview =>
+      'AI đánh dấu câu lệnh cần kiểm tra lại. Xem kỹ bản nháp trước khi áp dụng.';
+
+  @override
+  String get scheduleAiUnavailable =>
+      'AI xếp lịch chưa dùng được trên máy chủ này.';
+
+  @override
+  String get scheduleAiFailed =>
+      'Không tạo được bản xem trước từ AI. Hãy thử lại.';
+
+  @override
+  String get tournamentCameraPanelTitle => 'Camera của giải';
+
+  @override
+  String get tournamentCameraPanelSubtitle =>
+      'Thêm camera PUSH hoặc PULL, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.';
+
+  @override
+  String get tournamentCameraAdd => 'Thêm camera';
+
+  @override
+  String get tournamentCameraEmpty => 'Giải chưa có camera.';
+
+  @override
+  String get tournamentCameraNoCourt => 'Chưa gắn sân';
+
+  @override
+  String get tournamentCameraCourtsTitle => 'Sân';
+
+  @override
+  String get tournamentCameraCourtNoCameras => 'Chưa có camera ở sân này.';
+
+  @override
+  String get tournamentCameraAddTitle => 'Thêm camera';
+
+  @override
+  String get tournamentCameraEditTitle => 'Đổi sân camera';
+
+  @override
+  String get tournamentCameraNameLabel => 'Tên camera';
+
+  @override
+  String tournamentCameraNameInvalid(Object max, Object min) {
+    return 'Tên camera dài từ $min đến $max ký tự.';
+  }
+
+  @override
+  String get tournamentCameraModeLabel => 'Chế độ';
+
+  @override
+  String get tournamentCameraModePushHint =>
+      'PUSH: camera đẩy luồng lên máy chủ (RTMP).';
+
+  @override
+  String get tournamentCameraModePullHint => 'PULL: dán URL phát đã có sẵn.';
+
+  @override
+  String get tournamentCameraUrlLabel => 'URL phát (https)';
+
+  @override
+  String get tournamentCameraUrlInvalid =>
+      'Nhập URL phát hợp lệ, bắt đầu bằng https://.';
+
+  @override
+  String get tournamentCameraCourtLabel => 'Sân';
+
+  @override
+  String get tournamentCameraCourtNone => 'Không gắn sân';
+
+  @override
+  String get tournamentCameraEditTooltip => 'Đổi sân';
+
+  @override
+  String get tournamentCameraDeleteTooltip => 'Xoá camera';
+
+  @override
+  String tournamentCameraDeleteConfirm(Object name) {
+    return 'Xoá camera $name? Camera sẽ được lưu trữ và biến mất khỏi danh sách.';
+  }
+
+  @override
+  String get tournamentCameraActionFailed =>
+      'Không thực hiện được thao tác camera. Hãy thử lại.';
+
+  @override
+  String tournamentCameraCreated(Object name) {
+    return 'Đã thêm camera $name.';
+  }
+
+  @override
+  String tournamentCameraDeleted(Object name) {
+    return 'Đã xoá camera $name.';
+  }
+
+  @override
+  String tournamentCameraCourtChanged(Object court, Object name) {
+    return 'Đã gắn $name vào $court.';
+  }
+
+  @override
+  String get tournamentStreamKeyTitle => 'QR stream key';
+
+  @override
+  String get tournamentStreamKeyTooltip => 'Hiện QR stream key';
+
+  @override
+  String get tournamentStreamKeyQrWarning =>
+      'Mã QR là bí mật: ai quét được đều phát stream vào camera này được. Không chia sẻ ra ngoài.';
+
+  @override
+  String get tournamentStreamKeyNone => 'Camera này chưa có stream key.';
+
+  @override
+  String get tournamentStreamKeyForgotten =>
+      'Máy chủ không còn giữ key của camera này. Cấp lại để nhận key mới.';
+
+  @override
+  String get tournamentStreamKeyIssue => 'Cấp key';
+
+  @override
+  String get tournamentStreamKeyReissue => 'Cấp lại key';
+
+  @override
+  String get tournamentStreamKeyStreamName => 'Tên stream';
+
+  @override
+  String get tournamentStreamKeyRename => 'Đổi tên';
+
+  @override
+  String get tournamentStreamKeyRenameLocked =>
+      'Chỉ đổi tên được khi camera chưa có key.';
+
+  @override
+  String get tournamentStreamKeyRenameSave => 'Lưu tên';
+
+  @override
+  String get tournamentStreamKeyRenameInvalid =>
+      'Tên stream chỉ gồm chữ không dấu, số, gạch dưới và gạch ngang (tối đa 255 ký tự).';
+
+  @override
+  String get tournamentStreamKeyServerLabel => 'Máy chủ RTMP';
+
+  @override
+  String get tournamentStreamKeyKeyLabel => 'Stream key';
+
+  @override
+  String get tournamentStreamKeyShow => 'Hiện key';
+
+  @override
+  String get tournamentStreamKeyHide => 'Che key';
+
+  @override
+  String get tournamentStreamKeyCopyServer => 'Sao chép máy chủ';
+
+  @override
+  String get tournamentStreamKeyCopyKey => 'Sao chép key';
+
+  @override
+  String get tournamentStreamKeyCopied => 'Đã sao chép.';
+
+  @override
+  String get tournamentStreamKeyRotate => 'Đổi key';
+
+  @override
+  String get tournamentStreamKeyRotateConfirm =>
+      'Stream đang phát bằng key cũ sẽ bị ngắt ngay. Chỉ đổi key khi chắc chắn.';
+
+  @override
+  String get tournamentStreamKeyRotated =>
+      'Đã đổi key. Quét QR mới để phát lại.';
 }

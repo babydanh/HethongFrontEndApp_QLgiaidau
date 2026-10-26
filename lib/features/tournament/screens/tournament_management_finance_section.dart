@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/platform_fee.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -488,6 +489,56 @@ class _FeeConfigurationState extends ConsumerState<_FeeConfiguration> {
             style: TextStyle(color: context.colors.error),
           ),
         ],
+        const SizedBox(height: 12),
+        // Nút mức phí nhanh + bảng phân tích phí sàn, cập nhật tức thời theo
+        // giá trị đang nhập trong ô (port modal "Quick Edit Entry Fee" của
+        // Web; Web đọc tỷ lệ từ tournament.platformFeePercentage, App lấy tỷ
+        // lệ phí nền tảng theo loại giải từ cấu hình fees đã có ở trên).
+        ListenableBuilder(
+          listenable: _entryFeeController,
+          builder: (context, _) {
+            final currentFee = _currentEntryFeeValue() ?? 0;
+            final breakdown = getPlatformFeeBreakdown(
+              currentFee,
+              platformFeePercentage: platformPercentage,
+            );
+            final quickEnabled = canEditEntryFee && !_isSaving;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.financeFeeQuickAdjustLabel,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _QuickFeeButton(
+                      label: l10n.financeFeeQuickFree,
+                      highlighted: currentFee == 0,
+                      onPressed: quickEnabled
+                          ? () => _setEntryFeeValue(0)
+                          : null,
+                    ),
+                    for (final amount in const [20000, 50000, 100000, 200000])
+                      _QuickFeeButton(
+                        label: l10n.financeFeeQuickAdd(amount ~/ 1000),
+                        onPressed: quickEnabled
+                            ? () => _setEntryFeeValue(currentFee + amount)
+                            : null,
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _FeeBreakdownPanel(breakdown: breakdown),
+              ],
+            );
+          },
+        ),
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerRight,
@@ -536,10 +587,21 @@ class _FeeConfigurationState extends ConsumerState<_FeeConfiguration> {
     );
   }
 
+  /// Số tiền đang có trong ô lệ phí (chỉ giữ chữ số); null khi không parse
+  /// được (ví dụ số quá dài), 0 khi ô trống.
+  int? _currentEntryFeeValue() {
+    final digits = _entryFeeController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return 0;
+    return int.tryParse(digits);
+  }
+
+  void _setEntryFeeValue(int value) {
+    _entryFeeController.text = value.toString();
+  }
+
   Future<void> _saveEntryFee() async {
     if (_isSaving) return;
-    final digits = _entryFeeController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final entryFee = digits.isEmpty ? 0 : int.tryParse(digits);
+    final entryFee = _currentEntryFeeValue();
     if (entryFee == null) {
       setState(() => _hasError = true);
       return;
@@ -581,6 +643,172 @@ class _FeeConfigurationState extends ConsumerState<_FeeConfiguration> {
     symbol: '₫',
     decimalDigits: 0,
   ).format(value);
+}
+
+/// Nút mức phí nhanh (0đ / +20k / +50k / +100k / +200k) — port hàng nút
+/// tăng nhanh trong modal sửa lệ phí của Web ("Miễn phí (0đ)", "+20.000₫"...).
+class _QuickFeeButton extends StatelessWidget {
+  const _QuickFeeButton({
+    required this.label,
+    required this.onPressed,
+    this.highlighted = false,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  /// Đang được chọn (mức 0đ khi lệ phí hiện tại bằng 0).
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 34),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        foregroundColor: highlighted ? colors.success : colors.textSecondary,
+        side: BorderSide(color: highlighted ? colors.success : colors.border),
+      ),
+      child: Text(label),
+    );
+  }
+}
+
+/// Bảng phân tích phí sàn theo giá trị lệ phí đang nhập — port khối
+/// "Platform fee & net breakdown" của Web: lệ phí thu / VĐV, phí sàn (kèm
+/// tỷ lệ %), và phần BTC thực nhận / VĐV.
+class _FeeBreakdownPanel extends StatelessWidget {
+  const _FeeBreakdownPanel({required this.breakdown});
+
+  final PlatformFeeBreakdown breakdown;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final locale = Localizations.localeOf(context).toString();
+    final money = NumberFormat.currency(
+      locale: locale,
+      name: 'VND',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.chipBackground,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.borderLight),
+      ),
+      child: Column(
+        children: [
+          _BreakdownRow(
+            label: Text(
+              l10n.financeFeeCollectedPerPlayer,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            ),
+            value: Text(
+              breakdown.entryFee > 0
+                  ? money.format(breakdown.entryFee)
+                  : l10n.financeFeeFreeLabel,
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          _BreakdownRow(
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    l10n.financeFeePlatformFeePerPlayer,
+                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                  ),
+                ),
+                if (breakdown.percentage > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.borderLight,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${NumberFormat.decimalPattern(locale).format(breakdown.percentage)}%',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            value: Text(
+              breakdown.feePerPlayer > 0
+                  ? '-${money.format(breakdown.feePerPlayer)}'
+                  : money.format(0),
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                color: colors.warning,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Divider(height: 16, color: colors.borderLight),
+          _BreakdownRow(
+            label: Text(
+              l10n.financeFeeOrganizerNetPerPlayer,
+              style: TextStyle(
+                color: colors.success,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            value: Text(
+              money.format(breakdown.organizerNet),
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                color: colors.success,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BreakdownRow extends StatelessWidget {
+  const _BreakdownRow({required this.label, required this.value});
+
+  final Widget label;
+  final Widget value;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(child: label),
+      const SizedBox(width: 12),
+      value,
+    ],
+  );
 }
 
 class _FeeLine extends StatelessWidget {

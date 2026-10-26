@@ -1051,7 +1051,10 @@ class ApiTournamentRepository implements ITournamentRepository {
     String tournamentId,
     SwissRoundDraftRequest draft,
   ) async => SwissValidateResult.fromJson(
-    await _swissPost('/tournaments/$tournamentId/swiss/validate', draft.toJson()),
+    await _swissPost(
+      '/tournaments/$tournamentId/swiss/validate',
+      draft.toJson(),
+    ),
   );
 
   @override
@@ -1102,6 +1105,25 @@ class ApiTournamentRepository implements ITournamentRepository {
       }
     }
     return null;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getDivisionStages(
+    String tournamentId, {
+    required String divisionId,
+  }) async {
+    final response = await _dioClient.dio.get(
+      '/tournaments/$tournamentId/bracket',
+      queryParameters: {'divisionId': divisionId},
+    );
+    final data = response.data is Map ? response.data['data'] : null;
+    final stages = data is Map && data['stages'] is List
+        ? data['stages'] as List
+        : const [];
+    return [
+      for (final stage in stages)
+        if (stage is Map) Map<String, dynamic>.from(stage),
+    ];
   }
 
   @override

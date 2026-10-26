@@ -7,6 +7,8 @@ class OrganizerOpsMember {
     this.avatarUrl,
     this.role,
     this.isMock = false,
+    this.email,
+    this.phoneNumber,
   });
 
   final String userId;
@@ -14,6 +16,10 @@ class OrganizerOpsMember {
   final String? avatarUrl;
   final String? role;
   final bool isMock;
+
+  /// Chỉ màn quản lý BTC mới thấy email/SĐT thành viên (DTO organizer).
+  final String? email;
+  final String? phoneNumber;
 
   factory OrganizerOpsMember.fromJson(Map<String, dynamic> json) {
     return OrganizerOpsMember(
@@ -25,6 +31,8 @@ class OrganizerOpsMember {
       avatarUrl: (json['avatarUrl'] ?? json['avatar_url'])?.toString(),
       role: json['role']?.toString(),
       isMock: json['isMock'] == true || json['is_mock'] == true,
+      email: _textOrNull(json['email']),
+      phoneNumber: _textOrNull(json['phoneNumber'] ?? json['phone_number']),
     );
   }
 }
@@ -43,6 +51,13 @@ class OrganizerOpsParticipant {
     this.seed,
     this.entryFee,
     this.registeredAt,
+    this.customResponses = const {},
+    this.canUnpair = false,
+    this.canOrganizerEdit = false,
+    this.rosterLockedAt,
+    this.isWildcard = false,
+    this.teamInviteToken,
+    this.payment,
   });
 
   final String id;
@@ -57,6 +72,23 @@ class OrganizerOpsParticipant {
   final int? seed;
   final double? entryFee;
   final DateTime? registeredAt;
+
+  /// Câu trả lời form đăng ký + dữ liệu BTC nhập (ghi chú nằm ở `notes`).
+  final Map<String, dynamic> customResponses;
+
+  /// BTC tách được cặp này (server quyết định: cặp do BTC ghép/nhập, đang
+  /// COMPLETE/PENDING_APPROVAL và giữ đủ 2 VĐV).
+  final bool canUnpair;
+
+  /// BTC sửa được hồ sơ do BTC tạo (liên hệ từng thành viên khách).
+  final bool canOrganizerEdit;
+
+  final DateTime? rosterLockedAt;
+  final bool isWildcard;
+  final String? teamInviteToken;
+
+  /// Thanh toán thô (amount/status/transactionReference/paidAt…).
+  final Map<String, dynamic>? payment;
 
   factory OrganizerOpsParticipant.fromJson(Map<String, dynamic> json) {
     final rawMembers = json['members'];
@@ -73,6 +105,8 @@ class OrganizerOpsParticipant {
         : const <OrganizerOpsMember>[];
     final rawFee = json['entryFeeAtRegistration'] ?? json['entryFee'];
     final rawDate = json['registeredAt'] ?? json['registered_at'];
+    final rawRosterLock = json['rosterLockedAt'] ?? json['roster_locked_at'];
+    final rawPayment = json['payment'];
 
     return OrganizerOpsParticipant(
       id: json['id']?.toString() ?? '',
@@ -100,8 +134,22 @@ class OrganizerOpsParticipant {
       seed: _toInt(json['seed']),
       entryFee: _toDouble(rawFee),
       registeredAt: rawDate is String ? DateTime.tryParse(rawDate) : null,
+      customResponses: json['customResponses'] is Map
+          ? Map<String, dynamic>.from(json['customResponses'] as Map)
+          : const {},
+      canUnpair: json['canUnpair'] == true,
+      canOrganizerEdit: json['canOrganizerEdit'] == true,
+      rosterLockedAt: rawRosterLock is String
+          ? DateTime.tryParse(rawRosterLock)
+          : null,
+      isWildcard: json['isWildcard'] == true || json['is_wildcard'] == true,
+      teamInviteToken: _textOrNull(json['teamInviteToken']),
+      payment: rawPayment is Map ? Map<String, dynamic>.from(rawPayment) : null,
     );
   }
+
+  /// Có VĐV ảo (mock) trong roster — Web hiện nút "Xoá VĐV ảo" cho hồ sơ này.
+  bool get hasMockMember => members.any((member) => member.isMock);
 
   /// Tên đội đã chuẩn hoá; '' khi chưa có tên (không dựng tên giả, VĐV hiển thị qua ParticipantLabel).
   static String _teamNameOf(Object? value) =>
@@ -191,4 +239,10 @@ int? _toInt(dynamic value) {
   if (value is num) return value.toInt();
   if (value is String) return int.tryParse(value);
   return null;
+}
+
+/// Chuỗi đã trim; null khi rỗng (dùng cho trường tuỳ chọn của DTO organizer).
+String? _textOrNull(Object? value) {
+  final text = value?.toString().trim();
+  return text == null || text.isEmpty ? null : text;
 }

@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 import 'package:app_quanly_giaidau/core/services/schedule_print_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/court_schedule_cascade.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -65,7 +67,10 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
     this.onScheduleSwap,
     this.onBulkDuration,
     this.onBulkMoveCourt,
+    this.onScheduleWaitingWrite,
+    this.onWaitingBatchFinished,
     this.onAutoSchedule,
+    this.onOpenScheduleSettings,
     this.draftMatches = const [],
     this.draftSkippedCount = 0,
     this.onApplyDraft,
@@ -125,8 +130,28 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
   final void Function(List<MatchModel> matches, ScheduleCourt court)?
   onBulkMoveCourt;
 
+  /// Ghi lịch một trận chọn từ khay chờ lên sân đích; khay tự chạy dây chuyền
+  /// giờ, tiến độ và cho huỷ giữa chừng, chỉ gọi xuống đây từng trận. Trả về
+  /// false khi ghi lỗi — dây chuyền dừng và báo "đã xếp i/N". Null thì khay
+  /// chỉ kéo-thả như cũ.
+  final Future<bool> Function(
+    MatchModel match,
+    ScheduleCourt court,
+    DateTime scheduledAt,
+    int durationMinutes,
+  )?
+  onScheduleWaitingWrite;
+
+  /// Khay chờ ghi xong một lô (dù xong hết, dừng giữa chừng hay bị huỷ): màn
+  /// gọi tải lại nguồn trận quản lý.
+  final VoidCallback? onWaitingBatchFinished;
+
   /// Mở xếp tự động (nút ⚡). Null thì không hiện nút.
   final VoidCallback? onAutoSchedule;
+
+  /// Mở sheet cài đặt khung giờ sân (giờ mở/đóng + bước ô). Null thì không
+  /// hiện nút.
+  final VoidCallback? onOpenScheduleSettings;
 
   /// Bản nháp xếp tự động: hiện đứt nét, không kéo được, chưa tính là đã xếp.
   final List<MatchModel> draftMatches;
@@ -164,6 +189,20 @@ class _TournamentScheduleCourtGridState
   /// Vùng ô đang được chọn bằng nhấn giữ kéo.
   ScheduleRange? _range;
 
+  /// Trận chờ được tích chọn từ khay, theo thứ tự bấm — quyết định thứ tự xếp.
+  final List<String> _selectedWaitingIds = [];
+
+  /// Sân đích và mốc giờ bắt đầu của lô xếp từ khay; null là mặc định (sân đầu
+  /// tiên có id, giờ mở cửa).
+  ScheduleCourt? _trayCourt;
+  int? _trayStartMinute;
+
+  /// Đang ghi tuần tự một lô từ khay chờ: hiện tiến độ và nút huỷ, khoá chọn.
+  bool _writingBatch = false;
+  ({int done, int total})? _trayProgress;
+  bool _trayCancelRequested = false;
+  String? _trayNotice;
+
   @override
   void initState() {
     super.initState();
@@ -196,6 +235,10 @@ class _TournamentScheduleCourtGridState
 
   int get _minutesPerSet =>
       (widget.scheduleSettings['minutesPerSet'] as num?)?.toInt() ?? 15;
+
+  /// Bước ô của lưới theo cấu hình giải (task 4.3); chỉ nhận 5/10/15/30/60,
+  /// khác thì 15 — đúng lưới sẵn có.
+  int get _stepMinutes => scheduleStepMinutesOf(widget.scheduleSettings);
 
   int _hourOf(Object? value, {required int fallback}) {
     if (value == null) return fallback;
@@ -372,6 +415,7 @@ class _TournamentScheduleCourtGridState
                 startHour: _startHour,
                 endHour: _endHour,
                 minutesPerSet: _minutesPerSet,
+                stepMinutes: _stepMinutes,
                 selectedMatchId: widget.selectedMatchId,
                 day: day,
                 onTapMatch: widget.onTapMatch ?? (_) {},
@@ -419,7 +463,7 @@ class _TournamentScheduleCourtGridState
                 waiting,
               ),
             if (widget.onScheduleDrop != null && waiting.isNotEmpty)
-              _waitingTray(context, l10n, waiting),
+              _waitingTray(context, l10n, waiting, day),
           ],
         );
       },
@@ -473,7 +517,7 @@ class _TournamentScheduleCourtGridState
         final name = visibleCourts[index];
         // Sân chưa có id không ghi được lịch: không xếp trận vào sân này.
         if (_courtIdOf(name).isEmpty) continue;
-        final start = slot * 15 + _startHour * 60;
+        final start = slot * _stepMinutes + _startHour * 60;
         final match = waiting[next];
         final end =
             start +
@@ -487,7 +531,7 @@ class _TournamentScheduleCourtGridState
         cells.add((
           courtId: _courtIdOf(name),
           courtName: name,
-          at: dayStart.add(Duration(minutes: slot * 15)),
+          at: dayStart.add(Duration(minutes: slot * _stepMinutes)),
         ));
         batch.add(match);
         next++;
@@ -534,7 +578,7 @@ class _TournamentScheduleCourtGridState
       }
       final minutes = at.hour * 60 + at.minute - _startHour * 60;
       if (minutes < 0) continue;
-      final slot = minutes ~/ 15;
+      final slot = minutes ~/ _stepMinutes;
       if (slot < range.firstSlot || slot > range.lastSlot) continue;
       result.add(match);
     }
@@ -890,6 +934,13 @@ class _TournamentScheduleCourtGridState
                   )
                 : Icon(Icons.file_download_outlined, color: colors.textMuted),
           ),
+          if (widget.onOpenScheduleSettings != null)
+            IconButton(
+              key: const ValueKey('schedule-settings-button'),
+              tooltip: l10n.scheduleSettingsTitle,
+              onPressed: widget.onOpenScheduleSettings,
+              icon: Icon(Icons.schedule_rounded, color: colors.textMuted),
+            ),
           if (widget.onOpenFullscreen != null) ...[
             const SizedBox(width: 4),
             IconButton(
@@ -1043,12 +1094,56 @@ class _TournamentScheduleCourtGridState
     );
   }
 
+  /// Khay trận chưa xếp: chip kéo-thả lên lưới như cũ; khi có
+  /// [TournamentScheduleCourtGrid.onScheduleWaitingWrite] thì thêm tích chọn
+  /// nhiều trận (checkbox + chọn tất cả), chọn sân đích và khung giờ bắt đầu,
+  /// rồi xếp nối tiếp tuần tự có tiến độ và huỷ được giữa chừng (OpenSpec
+  /// `quan-ly-giai-web-parity` task 4.2, spec `Xếp hàng loạt từ khay chờ có sân
+  /// đích và khung giờ`). Bố cục giữ dạng dọc sẵn có — chỉ đưa chức năng của
+  /// bảng ngang Web vào đây, không copy bố cục.
   Widget _waitingTray(
     BuildContext context,
     AppLocalizations l10n,
     List<MatchModel> waiting,
+    DateTime? day,
   ) {
     final colors = context.colors;
+    final writable = widget.onScheduleWaitingWrite != null;
+    final selectable = writable
+        ? [
+            for (final match in waiting)
+              if (!isScheduleLocked(match)) match,
+          ]
+        : const <MatchModel>[];
+    final selectableIds = {for (final match in selectable) match.id};
+    final selectedById = {for (final match in selectable) match.id: match};
+    final selected = [
+      for (final id in _selectedWaitingIds)
+        if (selectedById.containsKey(id)) selectedById[id]!,
+    ];
+    final allSelected =
+        selectable.isNotEmpty &&
+        selectable.every((match) => _selectedWaitingIds.contains(match.id));
+
+    // Sân không có id không ghi được lịch: chỉ đưa sân có id vào chọn đích.
+    final writableCourts = [
+      for (final court in _allCourts)
+        if (court.id.isNotEmpty) court,
+    ];
+    final court = _trayCourt != null && writableCourts.contains(_trayCourt)
+        ? _trayCourt
+        : (writableCourts.isEmpty ? null : writableCourts.first);
+    final startChoices = quickScheduleMinutes(
+      startHour: _startHour,
+      endHour: _endHour,
+      // Các mốc giờ chọn nhanh theo bước ô cấu hình (task 4.3).
+      stepMinutes: _stepMinutes,
+    );
+    final startMinute =
+        _trayStartMinute != null && startChoices.contains(_trayStartMinute)
+        ? _trayStartMinute!
+        : (startChoices.isNotEmpty ? startChoices.first : _startHour * 60);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
@@ -1059,37 +1154,354 @@ class _TournamentScheduleCourtGridState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            '${l10n.opsUnscheduled} (${waiting.length})',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${l10n.opsUnscheduled} (${waiting.length})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ),
+              if (selectable.isNotEmpty)
+                TextButton(
+                  key: const ValueKey('schedule-tray-toggle-all'),
+                  onPressed: _writingBatch
+                      ? null
+                      : () => _toggleAllWaiting(selectable),
+                  child: Text(
+                    allSelected
+                        ? l10n.scheduleMultiDeselectVisible
+                        : l10n.scheduleMultiSelectVisible,
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.xs),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.xs,
             children: [
               for (final match in waiting)
-                LongPressDraggable<String>(
-                  key: ValueKey('schedule-tray-${match.id}'),
-                  data: match.id,
-                  feedback: Material(
-                    color: Colors.transparent,
-                    child: Chip(label: Text(_labelOf(match))),
-                  ),
-                  child: Chip(
-                    label: Text(_labelOf(match)),
-                    avatar: const Icon(Icons.drag_indicator_rounded, size: 16),
-                  ),
+                _waitingChip(
+                  match,
+                  selectable: selectableIds.contains(match.id),
+                  selected: _selectedWaitingIds.contains(match.id),
                 ),
             ],
           ),
+          if (_trayProgress != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                const SizedBox.square(
+                  dimension: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    key: const ValueKey('schedule-tray-progress'),
+                    l10n.scheduleQuickDraftProgress(
+                      _trayProgress!.done,
+                      _trayProgress!.total,
+                    ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: colors.info,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+                TextButton(
+                  key: const ValueKey('schedule-tray-cancel'),
+                  onPressed: _trayCancelRequested
+                      ? null
+                      : () => setState(() => _trayCancelRequested = true),
+                  child: Text(l10n.tournamentManagementCancel),
+                ),
+              ],
+            ),
+          ],
+          if (_trayNotice != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              key: const ValueKey('schedule-tray-notice'),
+              _trayNotice!,
+              style: TextStyle(
+                color: colors.error,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          if (!_writingBatch && selected.isNotEmpty && court != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  l10n.scheduleQuickCourt,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colors.border),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: DropdownButton<ScheduleCourt>(
+                    key: const ValueKey('schedule-tray-court'),
+                    value: court,
+                    isDense: true,
+                    underline: const SizedBox.shrink(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                    items: [
+                      for (final item in writableCourts)
+                        DropdownMenuItem(value: item, child: Text(item.name)),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setState(() => _trayCourt = value);
+                    },
+                  ),
+                ),
+                Text(
+                  l10n.scheduleQuickStart,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colors.border),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: DropdownButton<int>(
+                    key: const ValueKey('schedule-tray-start'),
+                    value: startMinute,
+                    isDense: true,
+                    underline: const SizedBox.shrink(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                    items: [
+                      for (final minute in startChoices)
+                        DropdownMenuItem(
+                          value: minute,
+                          child: Text(_hhmm(minute)),
+                        ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _trayStartMinute = value);
+                      }
+                    },
+                  ),
+                ),
+                FilledButton.icon(
+                  key: const ValueKey('schedule-tray-submit'),
+                  onPressed: () => _submitWaitingBatch(
+                    court: court,
+                    day: day,
+                    startMinute: startMinute,
+                    selected: selected,
+                  ),
+                  icon: const Icon(Icons.playlist_add_check_rounded, size: 16),
+                  label: Text(l10n.scheduleTraySubmit(selected.length)),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  /// Một chip trận chờ: giữ-kéo để thả lên lưới như cũ; khi [selectable] thì
+  /// chạm để tích chọn/bỏ chọn (checkbox), chip đang chọn tô đậm viền.
+  Widget _waitingChip(
+    MatchModel match, {
+    required bool selectable,
+    required bool selected,
+  }) {
+    final colors = context.colors;
+    return LongPressDraggable<String>(
+      key: ValueKey('schedule-tray-${match.id}'),
+      data: match.id,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Chip(label: Text(_labelOf(match))),
+      ),
+      child: selectable
+          ? InkWell(
+              onTap: () => _toggleWaiting(match),
+              borderRadius: BorderRadius.circular(8),
+              child: Chip(
+                avatar: Icon(
+                  selected
+                      ? Icons.check_box_rounded
+                      : Icons.check_box_outline_blank_rounded,
+                  size: 18,
+                  color: selected ? colors.info : colors.textMuted,
+                ),
+                label: Text(_labelOf(match)),
+                backgroundColor: selected
+                    ? colors.info.withValues(alpha: 0.08)
+                    : null,
+                side: selected ? BorderSide(color: colors.info) : null,
+              ),
+            )
+          : Chip(
+              label: Text(_labelOf(match)),
+              avatar: const Icon(Icons.drag_indicator_rounded, size: 16),
+            ),
+    );
+  }
+
+  void _toggleWaiting(MatchModel match) {
+    if (_writingBatch) return;
+    setState(() {
+      if (!_selectedWaitingIds.remove(match.id)) {
+        _selectedWaitingIds.add(match.id);
+      }
+    });
+  }
+
+  /// Chọn/bỏ chọn toàn bộ trận chờ có thể xếp (checkbox + chọn tất cả).
+  void _toggleAllWaiting(List<MatchModel> selectable) {
+    if (_writingBatch) return;
+    setState(() {
+      final allSelected = selectable.every(
+        (match) => _selectedWaitingIds.contains(match.id),
+      );
+      if (allSelected) {
+        final ids = {for (final match in selectable) match.id};
+        _selectedWaitingIds.removeWhere(ids.contains);
+      } else {
+        for (final match in selectable) {
+          if (!_selectedWaitingIds.contains(match.id)) {
+            _selectedWaitingIds.add(match.id);
+          }
+        }
+      }
+    });
+  }
+
+  /// Xếp nối tiếp tuần tự các trận đang chọn lên sân đích từ khung giờ bắt
+  /// đầu: giờ từng trận do [cascadeStartTimes] tính (trận sau bắt đầu sau khi
+  /// trận trước kết thúc, thời lượng tính như server), ghi qua
+  /// [TournamentScheduleCourtGrid.onScheduleWaitingWrite] từng trận với tiến độ
+  /// "đang ghi i/N"; lỗi giữa chừng dừng và báo "đã xếp i/N"; huỷ được giữa
+  /// chừng (dừng sau trận đang ghi).
+  Future<void> _submitWaitingBatch({
+    required ScheduleCourt court,
+    required DateTime? day,
+    required int startMinute,
+    required List<MatchModel> selected,
+  }) async {
+    if (_writingBatch || selected.isEmpty || court.id.isEmpty) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final base = day ?? DateTime.now();
+    final start = DateTime(
+      base.year,
+      base.month,
+      base.day,
+    ).add(Duration(minutes: startMinute));
+    final durations = [
+      for (final match in selected)
+        serverEffectiveDurationMinutes(
+          scheduledDurationMinutes(match, minutesPerSet: _minutesPerSet),
+        ),
+    ];
+    final starts = cascadeStartTimes(start, durations);
+    final total = selected.length;
+    setState(() {
+      _writingBatch = true;
+      _trayProgress = (done: 0, total: total);
+      _trayNotice = null;
+      _trayCancelRequested = false;
+    });
+
+    // Captured before the awaits so the refresh still fires if the grid is
+    // disposed after some matches were already written.
+    final onFinished = widget.onWaitingBatchFinished;
+    var done = 0;
+    var stopped = false;
+    var cancelled = false;
+    for (var i = 0; i < selected.length; i++) {
+      if (!mounted) {
+        if (done > 0) onFinished?.call();
+        return;
+      }
+      setState(() => _trayProgress = (done: done, total: total));
+      final ok = await widget.onScheduleWaitingWrite!(
+        selected[i],
+        court,
+        starts[i],
+        durations[i],
+      );
+      if (!mounted) {
+        if (done > 0 || ok) onFinished?.call();
+        return;
+      }
+      if (!ok) {
+        stopped = true;
+        break;
+      }
+      done++;
+      if (_trayCancelRequested && done < total) {
+        cancelled = true;
+        break;
+      }
+    }
+
+    if (!mounted) {
+      if (done > 0) onFinished?.call();
+      return;
+    }
+    setState(() {
+      _writingBatch = false;
+      _trayProgress = null;
+      _trayCancelRequested = false;
+      if (stopped || cancelled) {
+        // Các trận đã ghi sẽ rời khay sau khi tải lại; phần còn lại giữ chọn
+        // để xếp tiếp.
+        final written = {for (final match in selected.take(done)) match.id};
+        _selectedWaitingIds.removeWhere(written.contains);
+        _trayNotice = cancelled
+            ? l10n.scheduleTrayCancelled(done, total)
+            : l10n.scheduleMultiPartial(done, total);
+      } else {
+        _selectedWaitingIds.clear();
+      }
+    });
+    if (!stopped && done > 0) {
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.scheduleMultiDone(done, total))),
+        );
+    }
+    onFinished?.call();
   }
 
   String _labelOf(MatchModel match) {
@@ -1098,4 +1510,8 @@ class _TournamentScheduleCourtGridState
     if (a.isEmpty && b.isEmpty) return match.id;
     return '$a – $b';
   }
+
+  static String _hhmm(int minute) =>
+      '${(minute ~/ 60).toString().padLeft(2, '0')}:'
+      '${(minute % 60).toString().padLeft(2, '0')}';
 }

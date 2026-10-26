@@ -160,6 +160,15 @@ abstract class ITournamentRepository {
     Map<String, dynamic> roundConfig,
   );
 
+  /// Các stage thật của một hạng mục từ `GET /tournaments/:id/bracket` —
+  /// map nguyên trạng server (id, name, type, roundConfig, venueId,
+  /// scheduledDate, notificationNote, groups[].matches[]) để sheet cấu hình
+  /// từng vòng đếm vòng và đọc cấu hình đã lưu.
+  Future<List<Map<String, dynamic>>> getDivisionStages(
+    String tournamentId, {
+    required String divisionId,
+  });
+
   /// Server sinh sơ đồ chính thức; bản xem trước phía client có thể khác.
   /// Response có thể kèm `autoPaired`/`unpairedNames` (thiếu thì coi là rỗng).
   Future<Map<String, dynamic>> generateBracket(

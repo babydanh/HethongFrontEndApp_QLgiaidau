@@ -3,13 +3,17 @@ import 'dart:convert';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
+import 'package:app_quanly_giaidau/domain/entities/pairing.dart';
 import 'package:app_quanly_giaidau/domain/entities/roster_import.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 
 class ApiTournamentManagementRepository
-    implements TournamentManagementRepository, TournamentLifecycleRepository {
+    implements
+        TournamentManagementRepository,
+        TournamentLifecycleRepository,
+        TournamentSettingsRepository {
   ApiTournamentManagementRepository(this._dioClient);
 
   final DioClient _dioClient;
@@ -433,6 +437,138 @@ class ApiTournamentManagementRepository
   }
 
   @override
+  Future<void> updateParticipantNote(
+    String id,
+    String participantId,
+    String note,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/note',
+      data: {'note': note},
+    );
+  }
+
+  @override
+  Future<void> updateOrganizerEntry(
+    String id,
+    String participantId,
+    Map<String, dynamic> payload,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/entry',
+      data: payload,
+    );
+  }
+
+  @override
+  Future<void> lockParticipantRoster(String id, String participantId) async {
+    await _dio.post('/tournaments/$id/participants/$participantId/lock-roster');
+  }
+
+  @override
+  Future<void> unlockParticipantRoster(String id, String participantId) async {
+    await _dio.post(
+      '/tournaments/$id/participants/$participantId/unlock-roster',
+    );
+  }
+
+  @override
+  Future<void> deleteMockParticipant(String id, String participantId) async {
+    await _dio.delete('/tournaments/$id/participants/$participantId/mock');
+  }
+
+  @override
+  Future<void> seedMockParticipants(
+    String id,
+    List<String> names, {
+    String? divisionId,
+    String? pairingMode,
+  }) async {
+    await _dio.post(
+      '/tournaments/$id/mock-participants',
+      data: {
+        'names': names,
+        if (divisionId != null) 'divisionId': divisionId,
+        if (pairingMode != null) 'pairingMode': pairingMode,
+      },
+    );
+  }
+
+  @override
+  Future<void> clearMockParticipants(String id, {String? divisionId}) async {
+    await _dio.delete(
+      '/tournaments/$id/mock-participants',
+      queryParameters: divisionId == null ? null : {'divisionId': divisionId},
+    );
+  }
+
+  @override
+  Future<void> reserveSlots(
+    String id, {
+    required String userEmailOrPhone,
+    required String teamName,
+    String? partnerEmailOrPhone,
+    String? divisionId,
+  }) async {
+    await _dio.post(
+      '/tournaments/$id/reserve-slots',
+      data: {
+        'userEmailOrPhone': userEmailOrPhone,
+        'teamName': teamName,
+        if (partnerEmailOrPhone != null)
+          'partnerEmailOrPhone': partnerEmailOrPhone,
+        if (divisionId != null) 'divisionId': divisionId,
+      },
+    );
+  }
+
+  @override
+  Future<void> unpairParticipant(String id, String participantId) async {
+    await _dio.post('/tournaments/$id/pairing/$participantId/unpair');
+  }
+
+  @override
+  Future<List<PairingCandidate>> getPairingParticipants(String id) async =>
+      _mapList(await _dio.get('/tournaments/$id/pairing/participants'))
+          .map(PairingCandidate.fromJson)
+          .where((candidate) => candidate.id.isNotEmpty)
+          .toList(growable: false);
+
+  @override
+  Future<void> pairBatch(String id, List<PairInput> pairs) async {
+    await _dio.post(
+      '/tournaments/$id/pairing/batch',
+      data: {
+        'pairs': [for (final pair in pairs) pair.toJson()],
+      },
+    );
+  }
+
+  @override
+  Future<PairGenerateResult> pairGenerate(
+    String id, {
+    required PairingStrategy strategy,
+    String? divisionId,
+  }) async {
+    final data = _map(
+      await _dio.post(
+        '/tournaments/$id/pairing/generate',
+        data: {
+          'strategy': strategy.wire,
+          if (divisionId != null && divisionId.isNotEmpty)
+            'divisionId': divisionId,
+        },
+      ),
+    );
+    final paired = data['paired'];
+    final unpaired = data['unpairedParticipantIds'];
+    return PairGenerateResult(
+      pairedCount: paired is List ? paired.length : 0,
+      unpairedCount: unpaired is List ? unpaired.length : 0,
+    );
+  }
+
+  @override
   Future<List<String>> getGallery(String id) async => _list(
     await _dio.get('/tournaments/$id/gallery'),
   ).map((url) => url as String).toList(growable: false);
@@ -520,12 +656,14 @@ class ApiTournamentManagementRepository
   Future<Map<String, dynamic>> reopenRegistration(
     String id, {
     DateTime? registrationEndDate,
+    List<String>? divisionIds,
   }) async => _map(
     await _dio.post(
       '/tournaments/$id/reopen-registration',
       data: {
         if (registrationEndDate != null)
           'registrationEndDate': registrationEndDate.toUtc().toIso8601String(),
+        if (divisionIds != null) 'divisionIds': divisionIds,
       },
     ),
   );
@@ -535,6 +673,21 @@ class ApiTournamentManagementRepository
       _map(await _dio.post('/tournaments/$id/close-registration'));
 
   @override
+  Future<Map<String, dynamic>> closeDivisionRegistrations(
+    String id,
+    List<String> divisionIds,
+  ) async => _map(
+    await _dio.post(
+      '/tournaments/$id/close-registration',
+      data: {'divisionIds': divisionIds},
+    ),
+  );
+
+  @override
   Future<Map<String, dynamic>> regenerateInviteCode(String id) async =>
       _map(await _dio.post('/tournaments/$id/regenerate-invite'));
+
+  @override
+  Future<void> updateTournament(String id, Map<String, dynamic> payload) =>
+      _dio.patch('/tournaments/$id', data: payload);
 }

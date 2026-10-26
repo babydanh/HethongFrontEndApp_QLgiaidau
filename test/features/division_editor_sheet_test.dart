@@ -1,0 +1,668 @@
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_sheet.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// Mock repository quản lý giải: ghi lại payload tạo/sửa hạng mục.
+class _MgmtRepo implements TournamentManagementRepository {
+  final created = <Map<String, dynamic>>[];
+  final updated = <({String id, Map<String, dynamic> payload})>[];
+
+  @override
+  Future<Map<String, dynamic>> createDivision(
+    String id,
+    Map<String, dynamic> payload,
+  ) async {
+    created.add(Map<String, dynamic>.of(payload));
+    return {'id': 'new-1', ...payload};
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateDivision(
+    String divisionId,
+    Map<String, dynamic> payload,
+  ) async {
+    updated.add((id: divisionId, payload: Map<String, dynamic>.of(payload)));
+    return {'id': divisionId, ...payload};
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Mock repository giải đấu: ghi lại lần vá roundConfig của stage Swiss.
+class _StageRepo implements ITournamentRepository {
+  final stagePatches = <({String stageId, Map<String, dynamic> roundConfig})>[];
+
+  @override
+  Future<void> updateStageRoundConfig(
+    String tournamentId,
+    String stageId,
+    Map<String, dynamic> roundConfig,
+  ) async {
+    stagePatches.add((
+      stageId: stageId,
+      roundConfig: Map<String, dynamic>.of(roundConfig),
+    ));
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+Tournament _tournament() => Tournament.fromJson({
+  'name': 'City Pickleball Cup',
+  'sport': 'pickleball',
+  'format': 'doubles',
+  'bracketType': 'single_elimination',
+  'status': 'REGISTRATION',
+  'maxTeams': 32,
+  'entryFee': '50000',
+  'createdAt': '2026-01-01T00:00:00Z',
+  'updatedAt': '2026-01-01T00:00:00Z',
+}, 'tournament-1');
+
+Map<String, dynamic> _swissDivision() => {
+  'id': 'div-1',
+  'name': 'Swiss 16 đội',
+  'matchType': 'DOUBLES',
+  'bracketType': 'SWISS',
+  'maxParticipants': 16,
+  'roundConfig': {
+    'swiss': {
+      'totalRounds': 5,
+      'tiebreakOrder': ['BUCHHOLZ'],
+      'firstRoundPairing': 'SEED',
+    },
+  },
+  '_count': {'participants': 12},
+};
+
+SwissStageInfo _swissStage() {
+  final raw = _swissDivision()['roundConfig'] as Map<String, dynamic>;
+  return SwissStageInfo(
+    stageId: 'stage-1',
+    config: SwissConfig.fromJson(raw['swiss'] as Map<String, dynamic>),
+    rawRoundConfig: raw,
+  );
+}
+
+/// Trang chủ có nút mở sheet: sheet chạy trong modal route thật nên các nút
+/// bấm được như chạy thật (pattern chung của các sheet test trong repo).
+/// Tham số mở sheet do `openSheet` tự chốt (tạo mới hay sửa, có khoá không).
+Widget _app(
+  _MgmtRepo mgmt,
+  _StageRepo stage,
+  Future<bool?> Function(BuildContext context) openSheet,
+) => ProviderScope(
+  overrides: [
+    tournamentManagementRepositoryProvider.overrideWithValue(mgmt),
+    tournamentRepositoryProvider.overrideWithValue(stage),
+  ],
+  child: MaterialApp(
+    theme: AppTheme.darkTheme,
+    locale: const Locale('vi'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(
+      body: Builder(
+        builder: (context) => Center(
+          child: TextButton(
+            key: const ValueKey('open-sheet'),
+            onPressed: () => openSheet(
+              context,
+            ).then((_) {}), // kết quả kiểm qua repository mock
+            child: const Text('Mở sheet'),
+          ),
+        ),
+      ),
+    ),
+  ),
+);
+
+Future<void> _open(WidgetTester tester, Widget app) async {
+  await tester.pumpWidget(app);
+  await tester.tap(find.byKey(const ValueKey('open-sheet')));
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  testWidgets(
+    'TC-WP-02-01: tạo hạng mục đôi có ELO và phí riêng — payload đủ trường',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final mgmt = _MgmtRepo();
+      final stage = _StageRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          stage,
+          (context) =>
+              DivisionEditorSheet.show(context, tournament: _tournament()),
+        ),
+      );
+
+      // Chọn "Đôi nam": tên tự điền theo loại (đối chiếu Web handleFormatSelect).
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-format-MALE_DOUBLES')),
+      );
+      await tester.pumpAndSettle();
+      final nameField = tester.widget<TextField>(
+        find.byKey(const ValueKey('division-editor-name')),
+      );
+      expect(nameField.controller!.text, 'Đôi nam');
+
+      // Bật ELO riêng và điền min/max.
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-elo-switch')),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-elo-min')),
+        '1000',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-elo-max')),
+        '1600',
+      );
+      // Phí riêng khác phí giải 50.000 → bật override.
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-fee')),
+        '200000',
+      );
+
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.created.single;
+      expect(payload['name'], 'Đôi nam');
+      expect(payload['matchType'], 'DOUBLES');
+      expect(payload['genderRestriction'], 'MALE');
+      expect(payload['bracketType'], 'SINGLE_ELIMINATION');
+      expect(payload['maxParticipants'], 16);
+      expect(payload['minElo'], 1000);
+      expect(payload['maxElo'], 1600);
+      expect(payload['entryFeeOverrideEnabled'], true);
+      expect(payload['entryFee'], 200000);
+      expect(payload['isConfigOverride'], true);
+      final roundConfig = payload['roundConfig'] as Map<String, dynamic>;
+      // Môn suy từ giải pickleball → preset mặc định 2×11, mode Lite.
+      expect(roundConfig['kind'], 'PICKLEBALL_RALLY');
+      expect(roundConfig['mode'], 'LITE');
+      expect(roundConfig['setsToWin'], 2);
+      expect(roundConfig['pointsPerSet'], 11);
+      expect(mgmt.updated, isEmpty);
+      expect(stage.stagePatches, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'TC-WP-02-03: ELO min > max — báo lỗi tại trường, nút lưu bị chặn',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final mgmt = _MgmtRepo();
+      final stage = _StageRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          stage,
+          (context) =>
+              DivisionEditorSheet.show(context, tournament: _tournament()),
+        ),
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-elo-switch')),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-elo-min')),
+        '1600',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-elo-max')),
+        '1000',
+      );
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      // Không gửi request; sheet vẫn mở với lỗi tại trường ELO.
+      expect(
+        find.text('ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.'),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('division-editor-save')),
+        findsOneWidget,
+      );
+      expect(mgmt.created, isEmpty);
+      expect(mgmt.updated, isEmpty);
+    },
+  );
+
+  testWidgets('TC-WP-02-03: preset theo môn điền sẵn luật, vẫn sửa tay được', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final mgmt = _MgmtRepo();
+    final stage = _StageRepo();
+    await _open(
+      tester,
+      _app(
+        mgmt,
+        stage,
+        (context) =>
+            DivisionEditorSheet.show(context, tournament: _tournament()),
+      ),
+    );
+
+    // Bật Luật chuẩn để hiện khối cấu hình luật.
+    await tester.tap(
+      find.byKey(const ValueKey('division-editor-standard-rules')),
+    );
+    await tester.pumpAndSettle();
+
+    // Preset "Chuẩn rally" (2×11) của pickleball rally.
+    await tester.tap(
+      find.byKey(
+        const ValueKey('division-editor-preset-pickleball-rally-standard'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<DropdownButtonFormField<int>>(
+            find.byKey(const ValueKey('division-editor-sets-to-win')),
+          )
+          .initialValue,
+      2,
+    );
+
+    // Vẫn sửa tay được: đổi điểm/set thành 15 rồi lưu.
+    await tester.enterText(
+      find.byKey(const ValueKey('division-editor-points-per-set')),
+      '15',
+    );
+    await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+    await tester.pumpAndSettle();
+
+    final roundConfig =
+        mgmt.created.single['roundConfig'] as Map<String, dynamic>;
+    expect(roundConfig['setsToWin'], 2);
+    expect(roundConfig['pointsPerSet'], 15);
+    expect(roundConfig['maxPoints'], 15);
+    expect(roundConfig['mode'], 'STRICT');
+    expect(roundConfig.containsKey('tiebreakPoints'), isFalse);
+  });
+
+  testWidgets(
+    'TC-WP-02-02: sửa hạng mục Swiss đã có sơ đồ — kết cấu khoá, chỉ vá stage',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final mgmt = _MgmtRepo();
+      final stage = _StageRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          stage,
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: _tournament(),
+            division: _swissDivision(),
+            swissStage: _swissStage(),
+            swissMinPlayedRounds: 2,
+            lockContent: true,
+          ),
+        ),
+      );
+
+      // Kết cấu bị khoá: định dạng và thể thức không chọn được nữa.
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.byKey(const ValueKey('division-editor-format-MALE_DOUBLES')),
+            )
+            .onSelected,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.byKey(
+                const ValueKey('division-editor-bracket-SINGLE_ELIMINATION'),
+              ),
+            )
+            .onSelected,
+        isNull,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      // Không gọi create/updateDivision — chỉ vá stage giữ nguyên Swiss đã lưu.
+      expect(mgmt.created, isEmpty);
+      expect(mgmt.updated, isEmpty);
+      expect(stage.stagePatches.length, 1);
+      expect(stage.stagePatches.single.stageId, 'stage-1');
+      final swiss = stage.stagePatches.single.roundConfig['swiss'];
+      expect(swiss, isA<Map>());
+      expect((swiss as Map)['totalRounds'], 5);
+    },
+  );
+
+  testWidgets(
+    'TC-WP-02-02: sửa hạng mục thường đã có sơ đồ — kết cấu khoá, giới hạn vẫn sửa',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final mgmt = _MgmtRepo();
+      final stage = _StageRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          stage,
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: _tournament(),
+            division: {
+              'id': 'div-2',
+              'name': 'Đơn nam',
+              'matchType': 'SINGLES',
+              'genderRestriction': 'MALE',
+              'bracketType': 'SINGLE_ELIMINATION',
+              'maxParticipants': 8,
+            },
+            lockContent: true,
+          ),
+        ),
+      );
+
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.byKey(const ValueKey('division-editor-bracket-ROUND_ROBIN')),
+            )
+            .onSelected,
+        isNull,
+      );
+      // Giới hạn vẫn mở: tăng sức chứa 8 → 12.
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-max')),
+        '12',
+      );
+
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.updated.single.payload;
+      expect(mgmt.updated.single.id, 'div-2');
+      expect(payload['maxParticipants'], 12);
+      expect(payload['bracketType'], 'SINGLE_ELIMINATION');
+      expect(mgmt.created, isEmpty);
+    },
+  );
+
+  testWidgets(
+    'Review 2.1: legacy không mode → theo mode giải; max "0" tự chuẩn về 2; payload gửi startDate giải',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final mgmt = _MgmtRepo();
+      final stage = _StageRepo();
+      // Giải bật mode STRICT; legacy roundConfig không ghi mode tường minh.
+      final tournament = Tournament.fromJson({
+        'name': 'City Pickleball Cup',
+        'sport': 'pickleball',
+        'format': 'doubles',
+        'bracketType': 'single_elimination',
+        'status': 'REGISTRATION',
+        'maxTeams': 32,
+        'entryFee': '50000',
+        'startDate': '2026-06-01T00:00:00Z',
+        'sportRules': {'mode': 'STRICT', 'kind': 'PICKLEBALL_RALLY'},
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      }, 'tournament-1');
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          stage,
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: tournament,
+            division: {
+              'id': 'div-3',
+              'name': 'Đơn tự do',
+              'matchType': 'SINGLES',
+              'bracketType': 'SINGLE_ELIMINATION',
+              'roundConfig': {
+                'kind': 'PICKLEBALL_RALLY',
+                'setsToWin': 2,
+                'pointsPerSet': 11,
+              },
+            },
+          ),
+        ),
+      );
+
+      // Sức chứa "0": không chặn lưu như Web, tự chuẩn về 2.
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-limit-switch')),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('division-editor-max')),
+        '0',
+      );
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.updated.single.payload;
+      expect(payload['roundConfig']['mode'], 'STRICT');
+      expect(payload['maxParticipants'], 2);
+      // Ngày giải làm lịch mặc định cho hạng mục (Web handleCreateDivision).
+      expect(payload['startDate'], contains('2026-06-01'));
+    },
+  );
+
+  group('port Web registration-fee (divisionFeePayload/feeInputValue)', () {
+    test('ô trống hoặc bằng phí giải → theo phí giải, không override', () {
+      final payload = divisionFeePayload('', 50000);
+      expect(payload.entryFeeOverrideEnabled, false);
+      expect(payload.entryFee, isNull);
+      final same = divisionFeePayload('50000', 50000);
+      expect(same.entryFeeOverrideEnabled, false);
+      expect(same.entryFee, isNull);
+    });
+
+    test('số khác (kể cả 0) → bật phí riêng', () {
+      final custom = divisionFeePayload('200000', 50000);
+      expect(custom.entryFeeOverrideEnabled, true);
+      expect(custom.entryFee, 200000);
+      final free = divisionFeePayload('0', 50000);
+      expect(free.entryFeeOverrideEnabled, true);
+      expect(free.entryFee, 0);
+    });
+
+    test(
+      'giá trị khởi tạo: phí riêng nội dung khi override, không thì phí giải',
+      () {
+        expect(
+          divisionFeeInputValue({
+            'entryFeeOverrideEnabled': true,
+            'entryFee': 200000,
+          }, 50000),
+          '200000',
+        );
+        expect(divisionFeeInputValue(null, 50000), '50000');
+        expect(divisionFeeInputValue(null, null), '0');
+      },
+    );
+  });
+
+  group('port Web match-format-options (mapping hai chiều)', () {
+    test('lựa chọn UI → matchType + genderRestriction như Web', () {
+      expect(matchFormatApiMapping('MALE_SINGLES'), (
+        matchType: 'SINGLES',
+        genderRestriction: 'MALE',
+      ));
+      expect(matchFormatApiMapping('OPEN_DOUBLES'), (
+        matchType: 'DOUBLES',
+        genderRestriction: null,
+      ));
+      expect(matchFormatApiMapping('MIXED_DOUBLES'), (
+        matchType: 'MIXED_DOUBLES',
+        genderRestriction: 'MIXED',
+      ));
+    });
+
+    test('từ trường đã lưu suy lại lựa chọn UI', () {
+      expect(
+        matchFormatOptionFromDivision('SINGLES', 'FEMALE'),
+        'FEMALE_SINGLES',
+      );
+      expect(matchFormatOptionFromDivision('SINGLES', null), 'OPEN_SINGLES');
+      expect(matchFormatOptionFromDivision('DOUBLES', null), 'OPEN_DOUBLES');
+      expect(matchFormatOptionFromDivision('DOUBLES', 'MALE'), 'MALE_DOUBLES');
+      expect(
+        matchFormatOptionFromDivision('MIXED_DOUBLES', 'MIXED'),
+        'MIXED_DOUBLES',
+      );
+    });
+  });
+
+  group('port Web sport-rules (preset/defaults/payload)', () {
+    test('preset theo môn đúng dữ liệu Web', () {
+      final badminton = getSportRulePresets(SportRulePresetKind.badminton);
+      expect(badminton, hasLength(3));
+      expect(badminton.first.id, 'badminton-quick');
+      expect(badminton.first.pointsPerSet, 21);
+      expect(badminton.first.maxPoints, 30);
+      final sideOut = getSportRulePresets(
+        SportRulePresetKind.pickleballSideOut,
+      );
+      expect(sideOut.first.tiebreakPoints, 11);
+      final football = getSportRulePresets(SportRulePresetKind.football);
+      expect(football.single.winByTwo, false);
+    });
+
+    test('buildSportRulesPayload đủ khối scoring/format theo môn', () {
+      final payload = buildSportRulesPayload(
+        kind: SportRulePresetKind.tennis,
+        setsToWin: 2,
+        pointsPerSet: 6,
+        winByTwo: true,
+        maxPoints: 7,
+        tiebreakPoints: 7,
+        roundsToPlay: 1,
+        mode: 'STRICT',
+      );
+      expect(payload['kind'], 'TENNIS');
+      expect(payload['mode'], 'STRICT');
+      expect(payload['setsToWin'], 2);
+      expect(payload['maxPoints'], 7);
+      // Scoring lồng chép mặc định môn (kèm maxPoints/tiebreakPoints riêng)
+      // rồi ghi đè bằng lựa chọn — port payload.ts đầy đủ.
+      expect(payload['scoring']['setsToWin'], 2);
+      expect(payload['scoring']['maxPoints'], 7);
+      expect(payload['scoring']['tiebreakPoints'], 7);
+      final format = payload['format'] as Map<String, dynamic>;
+      expect(format['bestOfSets'], 3);
+      expect(format['gamesPerSet'], 6);
+      expect(format['tiebreakPoints'], 7);
+      // Override khác mặc định môn: scoring.maxPoints nhận override (30 → 25).
+      final badminton = buildSportRulesPayload(
+        kind: SportRulePresetKind.badminton,
+        setsToWin: 2,
+        pointsPerSet: 21,
+        winByTwo: true,
+        maxPoints: 25,
+        mode: 'LITE',
+      );
+      expect(badminton['scoring']['maxPoints'], 25);
+      expect(badminton['maxPoints'], 25);
+    });
+
+    test('resolveSportRuleView đọc cấu hình đã lưu và lấp mặc định', () {
+      final view = resolveSportRuleView({
+        'kind': 'BADMINTON',
+        'setsToWin': 2,
+        'pointsPerSet': 21,
+        'winByTwo': true,
+        'maxPoints': 30,
+        'mode': 'STRICT',
+        'roundsToPlay': 2,
+      });
+      expect(view.kind, SportRulePresetKind.badminton);
+      expect(view.mode, 'STRICT');
+      expect(view.setsToWin, 2);
+      expect(view.roundsToPlay, 2);
+      expect(view.hasCustomTiebreakTarget, isFalse);
+      // Thiếu gì lấp từ mặc định môn (side-out mặc định tiebreak 11).
+      final sideOut = resolveSportRuleView({
+        'kind': 'PICKLEBALL_SIDE_OUT',
+        'setsToWin': 1,
+        'pointsPerSet': 11,
+      });
+      expect(sideOut.maxPoints, 15);
+      expect(sideOut.tiebreakPoints, 11);
+      // `PICKLEBALL` cũ quy về rally.
+      expect(
+        resolveSportRuleView({'kind': 'PICKLEBALL'}).kind,
+        SportRulePresetKind.pickleballRally,
+      );
+    });
+
+    test('inferSportRuleKindFromText nhận tên tiếng Việt có dấu', () {
+      expect(
+        inferSportRuleKindFromText(null, 'Cầu lông phong trào'),
+        SportRulePresetKind.badminton,
+      );
+      expect(
+        inferSportRuleKindFromText(null, 'Bóng bàn'),
+        SportRulePresetKind.tableTennis,
+      );
+      expect(
+        inferSportRuleKindFromText(null, 'Quần vợt'),
+        SportRulePresetKind.tennis,
+      );
+      expect(
+        inferSportRuleKindFromText(null, 'Bóng đá sân 7'),
+        SportRulePresetKind.football,
+      );
+      expect(
+        inferSportRuleKindFromText(null, 'Pickleball'),
+        SportRulePresetKind.pickleballRally,
+      );
+    });
+  });
+}

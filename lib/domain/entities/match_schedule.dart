@@ -48,3 +48,28 @@ class SchedulePlanPreview {
   final List<SchedulePlanSkip> skipped;
   final int eligibleCount;
 }
+
+/// Kế hoạch AI xếp lịch từ lệnh chữ (`POST /ai/tournaments/:id/schedule-preview`).
+/// Chỉ là bản nháp: [plan] cùng dạng với xem trước xếp tự động, chưa ghi gì.
+class AiSchedulePlan {
+  const AiSchedulePlan({
+    required this.plan,
+    required this.needsReview,
+    required this.explanation,
+  });
+
+  final SchedulePlanPreview plan;
+
+  /// AI đánh dấu câu lệnh mơ hồ, cần BTC kiểm tra lại trước khi áp dụng.
+  final bool needsReview;
+  final String explanation;
+}
+
+/// Route AI xếp lịch không có trên máy chủ (HTTP 404): App ẩn mục AI trong
+/// phiên màn hiện tại, các chức năng khác vẫn dùng được.
+class AiScheduleUnavailableException implements Exception {
+  const AiScheduleUnavailableException();
+
+  @override
+  String toString() => 'AiScheduleUnavailableException';
+}

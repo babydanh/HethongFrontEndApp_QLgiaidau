@@ -57,6 +57,20 @@ abstract class IMatchRepository {
     int minimumStartIntervalMinutes = 15,
     int changeoverMinutes = 0,
   });
+
+  /// AI xếp lịch từ lệnh chữ. Không ghi gì xuống server. Ném
+  /// [AiScheduleUnavailableException] khi route AI không có (404).
+  Future<AiSchedulePlan> previewScheduleWithAi(
+    String tournamentId, {
+    required String command,
+    required DateTime day,
+    required List<String> courtIds,
+    required DateTime windowStart,
+    required DateTime windowEnd,
+    String? divisionId,
+    int gridIncrementMinutes = 15,
+    String? locale,
+  });
   Future<void> updateLiveState(
     String tournamentId,
     String matchId, {

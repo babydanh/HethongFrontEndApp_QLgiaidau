@@ -13,12 +13,15 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_management_rep
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/mock_participants_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
@@ -194,6 +197,11 @@ class _LifecycleRepository extends _EmptyTournamentManagementRepository
   final calls = <String>[];
   Object? completeError;
 
+  /// Không hạng mục nào mở đăng ký: card khai mạc giữ hộp thoại xác nhận cũ.
+  @override
+  Future<List<Map<String, dynamic>>> getManageDivisions(String id) async =>
+      const [];
+
   @override
   Future<Map<String, dynamic>> startTournament(String id) async {
     startedIds.add(id);
@@ -211,6 +219,7 @@ class _LifecycleRepository extends _EmptyTournamentManagementRepository
   Future<Map<String, dynamic>> reopenRegistration(
     String id, {
     DateTime? registrationEndDate,
+    List<String>? divisionIds,
   }) async {
     calls.add('reopen-registration');
     return const {};
@@ -228,6 +237,8 @@ class _RecordingManagementRepository
     extends _EmptyTournamentManagementRepository {
   final directNames = <String>[];
   final statusUpdates = <Map<String, String>>[];
+  final seededMockNames = <List<String>>[];
+  final reservedSlotContacts = <String>[];
 
   @override
   Future<String> addAthleteDirect(
@@ -247,6 +258,27 @@ class _RecordingManagementRepository
     String status,
   ) async {
     statusUpdates.add({'participantId': participantId, 'status': status});
+  }
+
+  @override
+  Future<void> seedMockParticipants(
+    String id,
+    List<String> names, {
+    String? divisionId,
+    String? pairingMode,
+  }) async {
+    seededMockNames.add(names);
+  }
+
+  @override
+  Future<void> reserveSlots(
+    String id, {
+    required String userEmailOrPhone,
+    required String teamName,
+    String? partnerEmailOrPhone,
+    String? divisionId,
+  }) async {
+    reservedSlotContacts.add(userEmailOrPhone);
   }
 }
 
@@ -579,6 +611,11 @@ void main() {
           tournamentManagementRepositoryProvider.overrideWithValue(
             lifecycleRepository,
           ),
+          // Sheet kết thúc đếm trận từ matchesProvider: mọi trận đã xong, không
+          // còn trận LIVE nên nút kết thúc bật được.
+          matchesProvider(
+            'tournament-1',
+          ).overrideWith((ref) => Stream.value(<MatchModel>[])),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
@@ -601,7 +638,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(l10n.continueButton));
+    await tester.tap(find.byKey(const ValueKey('lifecycle-end-cancel')));
     await tester.pumpAndSettle();
     expect(lifecycleRepository.completedIds, isEmpty);
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -610,7 +647,7 @@ void main() {
 
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, l10n.confirmEndButton));
+    await tester.tap(find.byKey(const ValueKey('lifecycle-end-confirm')));
     await tester.pumpAndSettle();
 
     expect(lifecycleRepository.completedIds, ['tournament-1']);
@@ -621,7 +658,7 @@ void main() {
     expect(find.text(l10n.tournamentEnded), findsOneWidget);
   });
 
-  testWidgets('organizer cannot see the server-forbidden end action', (
+  testWidgets('organizer sees the end action; permission stays server-side', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -640,7 +677,9 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    expect(find.text(l10n.endTournament), findsNothing);
+    // Change quan-ly-giai-web-parity: organizer/co-organizer cũng kết thúc
+    // được — backend chốt quyền (403 hiện nguyên văn trong sheet).
+    expect(find.text(l10n.endTournament), findsOneWidget);
   });
 
   testWidgets('keeps lite management accessible from overflow actions', (
@@ -734,7 +773,31 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(l10n.endTournament), findsOneWidget);
     expect(find.text(l10n.exportData), findsOneWidget);
+    expect(find.text(l10n.exportParticipantsRoster), findsOneWidget);
     expect(find.text(l10n.deleteTournament), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('export menu lists both export actions (task 3.9)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1500);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(_app(_tournament('in_progress')));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    // Kết quả và danh sách VĐV là hai mục xuất riêng, cùng bị chặn khi đang export.
+    expect(find.text(l10n.exportData), findsOneWidget);
+    expect(find.text(l10n.exportParticipantsRoster), findsOneWidget);
+    expect(
+      find.widgetWithText(PopupMenuItem<String>, l10n.exportParticipantsRoster),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -1969,7 +2032,6 @@ void main() {
     });
 
     final teamPairKey = const ValueKey('athlete-team-row-p-1');
-    final teamPairDetail = const ValueKey('athlete-team-detail-p-1');
 
     Future<void> openMixed(WidgetTester tester) async {
       await pumpAthletes(tester);
@@ -1978,66 +2040,66 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('doubles team opens member details with avatar and role', (
+    testWidgets('doubles team opens the detail sheet with members', (
       tester,
     ) async {
       await openMixed(tester);
-      expect(find.byKey(teamPairDetail), findsNothing);
 
       final row = find.byKey(teamPairKey);
       await tester.ensureVisible(row);
       await tester.tap(row);
       await tester.pumpAndSettle();
 
-      final detail = find.byKey(teamPairDetail);
-      expect(detail, findsOneWidget);
+      // Bấm dòng đội mở sheet hồ sơ chi tiết (thay card mở rộng cũ).
+      final sheet = find.byType(ParticipantDetailSheet);
+      expect(sheet, findsOneWidget);
       // Mỗi VĐV trong đội có avatar riêng (chữ cái đầu khi chưa có ảnh).
       expect(
-        find.descendant(of: detail, matching: find.byType(RankAvatar)),
+        find.descendant(of: sheet, matching: find.byType(RankAvatar)),
         findsNWidgets(2),
       );
       expect(
-        find.descendant(of: detail, matching: find.text('Danh')),
+        find.descendant(of: sheet, matching: find.text('Danh')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: detail, matching: find.text('Luân')),
+        find.descendant(of: sheet, matching: find.text('Luân')),
         findsOneWidget,
       );
-
-      // Bấm vào tên đội (dòng tiêu đề); tâm cả cột đã rơi vào panel chi tiết.
-      await tester.tap(
-        find.descendant(of: row, matching: find.text('Danh – Luân')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byKey(teamPairDetail), findsNothing);
     });
 
-    testWidgets('doubles team with one member is still expandable', (
+    testWidgets('single-member pair still opens the detail sheet', (
       tester,
     ) async {
       await openMixed(tester);
       final row = find.byKey(const ValueKey('athlete-team-row-p-4'));
       await tester.ensureVisible(row);
-      // Nội dung đôi: có mũi tên dù mới có 1 người, như web.
+      // Nội dung đôi không còn mũi tên mở rộng inline; bấm dòng mở sheet.
       expect(
         find.descendant(
           of: row,
           matching: find.byIcon(Icons.expand_more_rounded),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       await tester.tap(
         find.descendant(of: row, matching: find.text('Nhật Minh')),
       );
       await tester.pumpAndSettle();
+      expect(find.byType(ParticipantDetailSheet), findsOneWidget);
+      // Tên VĐV hiện ở cả tiêu đề sheet và dòng thành viên.
       expect(
-        find.byKey(const ValueKey('athlete-team-detail-p-4')),
-        findsOneWidget,
+        find.descendant(
+          of: find.byType(ParticipantDetailSheet),
+          matching: find.text('Nhật Minh'),
+        ),
+        findsNWidgets(2),
       );
     });
 
-    testWidgets('single-player team has no expand affordance', (tester) async {
+    testWidgets('single-player team opens the detail sheet too', (
+      tester,
+    ) async {
       await pumpAthletes(tester);
       await tester.ensureVisible(rowMen);
       await tester.tap(rowMen);
@@ -2045,7 +2107,7 @@ void main() {
 
       final row = find.byKey(const ValueKey('athlete-team-row-p-3'));
       expect(row, findsOneWidget);
-      // Đội đơn: không có mũi tên mở rộng, bấm vào không sinh panel chi tiết.
+      // Đội đơn: không mũi tên mở rộng; bấm dòng mở sheet hồ sơ.
       expect(
         find.descendant(
           of: row,
@@ -2055,13 +2117,10 @@ void main() {
       );
       await tester.tap(row);
       await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('athlete-team-detail-p-3')),
-        findsNothing,
-      );
+      expect(find.byType(ParticipantDetailSheet), findsOneWidget);
     });
 
-    testWidgets('team-sport tournament teams are expandable like web', (
+    testWidgets('team-sport tournament teams open the detail sheet', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390, 1200);
@@ -2074,7 +2133,7 @@ void main() {
         sport: 'football',
         divisions: footballDivisions,
       );
-      // Bóng đá: teamSize có giá trị -> môn đồng đội, đội luôn mở được.
+      // Bóng đá: teamSize có giá trị -> môn đồng đội.
       expect(tournament.teamSize, isNotNull);
       await tester.pumpWidget(
         ProviderScope(
@@ -2116,13 +2175,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final team = find.byKey(const ValueKey('athlete-team-row-p-fb'));
-      expect(
-        find.descendant(
-          of: team,
-          matching: find.byIcon(Icons.expand_more_rounded),
-        ),
-        findsOneWidget,
-      );
+      await tester.ensureVisible(team);
+      await tester.tap(team);
+      await tester.pumpAndSettle();
+      expect(find.byType(ParticipantDetailSheet), findsOneWidget);
     });
 
     testWidgets('pending approval actions sit on the team row itself', (
@@ -2191,6 +2247,64 @@ void main() {
       expect(teamRect.right, greaterThanOrEqualTo(screen - 0.5));
       // Bỏ lề không được gây tràn: hàng tên + trạng thái + mũi tên vừa khung.
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('mock data and wildcard buttons open their own sheets', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 1200);
+      tester.view.devicePixelRatio = 1;
+      final tournament = _tournament('in_progress', divisions: divisions);
+      final management = _RecordingManagementRepository();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            introTeamsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => const []),
+            tournamentProvider(
+              'tournament-1',
+            ).overrideWith((ref) => Stream.value(tournament)),
+            tournamentDivisionsProvider(
+              'tournament-1',
+            ).overrideWith((ref) async => divisions),
+          ],
+          child: _app(
+            tournament,
+            managementRepository: management,
+            tournamentRepository: _DivisionParticipantsRepository(participants),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      await _openTab(tester, l10n.tournamentManagementTabAthletes);
+
+      await tester.ensureVisible(rowMixed);
+      await tester.tap(rowMixed);
+      await tester.pumpAndSettle();
+
+      // Nút VĐV ảo mở đúng sheet ảo, chưa sinh gì.
+      final mockButton = find.byKey(const ValueKey('athletes-mock-data'));
+      await tester.ensureVisible(mockButton);
+      await tester.tap(mockButton);
+      await tester.pumpAndSettle();
+      expect(find.byType(MockParticipantsSheet), findsOneWidget);
+      expect(management.seededMockNames, isEmpty);
+      await tester.tap(
+        find.byKey(const ValueKey('tournament-manage-sheet-close')),
+      );
+      await tester.pumpAndSettle();
+
+      // Nút đặc cách mở đúng sheet đặc cách.
+      final wildcardButton = find.byKey(const ValueKey('athletes-wildcard'));
+      await tester.ensureVisible(wildcardButton);
+      await tester.tap(wildcardButton);
+      await tester.pumpAndSettle();
+      expect(find.byType(WildcardSheet), findsOneWidget);
+      expect(management.reservedSlotContacts, isEmpty);
     });
 
     Future<_RecordingManagementRepository> addAthleteFromRow(

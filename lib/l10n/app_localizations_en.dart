@@ -11878,6 +11878,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get excelResultsFilePrefix => 'Results';
 
   @override
+  String get excelRosterSheet => 'Participant list';
+
+  @override
+  String excelRosterTitle(String tournamentName) {
+    return 'PARTICIPANT LIST: $tournamentName';
+  }
+
+  @override
+  String excelRosterShare(String tournamentName) {
+    return 'Participant list $tournamentName';
+  }
+
+  @override
+  String get excelRosterFilePrefix => 'Participants';
+
+  @override
+  String get excelRosterColumnName => 'Full name';
+
+  @override
+  String get excelRosterColumnContact => 'Contact';
+
+  @override
+  String get excelRosterColumnDivision => 'Division';
+
+  @override
+  String get excelRosterColumnSeed => 'Seed';
+
+  @override
+  String get excelRosterColumnPayment => 'Payment';
+
+  @override
+  String get exportParticipantsRoster => 'Export participant list';
+
+  @override
   String get excelScore1 => 'Score 1';
 
   @override
@@ -13768,6 +13802,74 @@ class AppLocalizationsEn extends AppLocalizations {
       'Warning: at least one division has no draw yet. Starting the tournament will lock registration for every division. You can still start the tournament.';
 
   @override
+  String get lifecycleOpeningTitle => 'Start the tournament?';
+
+  @override
+  String get lifecycleOpeningCloseHeading => 'Close registration to start';
+
+  @override
+  String get lifecycleOpeningCloseAll => 'Select all';
+
+  @override
+  String get lifecycleOpeningStart => 'Start';
+
+  @override
+  String get lifecycleOpeningOpenAnyway => 'Start anyway';
+
+  @override
+  String get lifecycleOpeningForceWarning =>
+      'No division is selected to close registration. Starting will lock registration for every open division.';
+
+  @override
+  String lifecycleOpeningWarningNoBracket(String divisions) {
+    return 'No draw yet for: $divisions.';
+  }
+
+  @override
+  String lifecycleOpeningWarningPending(int count) {
+    return '$count registrations are awaiting approval.';
+  }
+
+  @override
+  String get lifecycleEndTitle => 'Complete tournament';
+
+  @override
+  String get lifecycleEndWarning =>
+      'Make sure all live matches are resolved before completing the tournament.';
+
+  @override
+  String lifecycleEndCheckMatches(int completed, int total) {
+    return 'Completed matches: $completed/$total';
+  }
+
+  @override
+  String lifecycleEndCheckLive(int live) {
+    return 'Live matches remaining: $live';
+  }
+
+  @override
+  String lifecycleEndLiveMatch(String team1, String team2) {
+    return '$team1 vs $team2';
+  }
+
+  @override
+  String get lifecycleEndNotPassed => 'Not passed';
+
+  @override
+  String get lifecycleEndNoMatches =>
+      'There are no matches yet. You can still complete this tournament.';
+
+  @override
+  String get lifecycleEndLoadingMatches => 'Loading matches…';
+
+  @override
+  String get lifecycleEndLoadMatchesError =>
+      'Could not load the match list. Close this and try again.';
+
+  @override
+  String get lifecycleEndConfirm => 'Complete tournament';
+
+  @override
   String get tournamentManagementCompleteTournament => 'End tournament';
 
   @override
@@ -15281,10 +15383,61 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get scheduleQuickPickerSearch => 'Search by team';
+  String get scheduleQuickPickerEmpty => 'No waiting matches to schedule.';
 
   @override
-  String get scheduleQuickPickerEmpty => 'No waiting matches to schedule.';
+  String get scheduleMultiSheetDescription =>
+      'Pick multiple matches to schedule back-to-back from the selected cell; each match starts right after the previous one ends.';
+
+  @override
+  String get scheduleMultiRoundLabel => 'Round';
+
+  @override
+  String scheduleMultiAllRounds(int count) {
+    return 'All rounds ($count)';
+  }
+
+  @override
+  String get scheduleMultiSearchHint =>
+      'Search players, team names or rounds...';
+
+  @override
+  String get scheduleMultiSelectVisible => 'Select all';
+
+  @override
+  String get scheduleMultiDeselectVisible => 'Deselect all';
+
+  @override
+  String get scheduleMultiMinutesSuffix => 'min';
+
+  @override
+  String get scheduleMultiDurationInvalid =>
+      'Enter 15 to 240 minutes, in steps of 5.';
+
+  @override
+  String scheduleMultiSubmit(int count) {
+    return 'Schedule $count matches';
+  }
+
+  @override
+  String scheduleMultiDone(int done, int total) {
+    return 'Scheduled $done/$total matches back-to-back.';
+  }
+
+  @override
+  String scheduleMultiPartial(int done, int total) {
+    return 'Scheduled $done/$total matches, then stopped because one failed to save.';
+  }
+
+  @override
+  String scheduleTraySubmit(int count) {
+    return 'Schedule $count selected matches';
+  }
+
+  @override
+  String scheduleTrayCancelled(int done, int total) {
+    return 'Scheduled $done/$total matches, then stopped as requested.';
+  }
 
   @override
   String get scheduleQuickSwapTitle => 'Swap these two matches?';
@@ -15386,6 +15539,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rosterImportNoRows => 'The file has no athlete rows.';
+
+  @override
+  String get rosterImportCreateTitle =>
+      'Divisions in the file missing from the tournament';
+
+  @override
+  String get rosterImportCreateHint =>
+      'Select each division to create it for its rows, then tap the button below. Unchecked divisions keep the previous check flow for their rows.';
+
+  @override
+  String rosterImportCreateRow(String name) {
+    return 'Create \"$name\"';
+  }
+
+  @override
+  String rosterImportCreateAndCheck(int count) {
+    return 'Create $count divisions & check';
+  }
+
+  @override
+  String get rosterImportSkipCreate => 'Check directly';
+
+  @override
+  String get rosterImportCreatingDivisions => 'Creating divisions...';
+
+  @override
+  String get rosterImportCreateDivisionFailed =>
+      'Could not create the division. Please try again.';
 
   @override
   String get rosterImportAutoApprove =>
@@ -15884,4 +16065,1195 @@ class AppLocalizationsEn extends AppLocalizations {
   String swissActionAllRoundsDone(int total) {
     return 'All $total rounds complete';
   }
+
+  @override
+  String get divisionFullPromptTitle => 'Divisions are full';
+
+  @override
+  String get divisionFullPromptMessage =>
+      'These divisions are full and still open for registration. Close registration to stop taking entries, or keep them open.';
+
+  @override
+  String get divisionFullPromptClose => 'Close registration';
+
+  @override
+  String get divisionFullPromptKeepOpen => 'Keep open';
+
+  @override
+  String divisionFullPromptCloseAll(int count) {
+    return 'Close registration ($count)';
+  }
+
+  @override
+  String divisionFullPromptCapacity(int registered, int capacity) {
+    return '$registered/$capacity players';
+  }
+
+  @override
+  String get divisionBulkTitle => 'Registration by division';
+
+  @override
+  String get divisionBulkModeClose => 'Close';
+
+  @override
+  String get divisionBulkModeOpen => 'Reopen';
+
+  @override
+  String get divisionBulkSelectAll => 'Select all';
+
+  @override
+  String get divisionBulkEmptyClose => 'No division is open for registration.';
+
+  @override
+  String get divisionBulkEmptyOpen => 'No division is closed.';
+
+  @override
+  String divisionBulkConfirmClose(int count) {
+    return 'Close $count divisions';
+  }
+
+  @override
+  String divisionBulkConfirmOpen(int count) {
+    return 'Reopen $count divisions';
+  }
+
+  @override
+  String get divisionBulkNewDeadline =>
+      'A selected division is past its deadline — pick a new future registration deadline before reopening.';
+
+  @override
+  String get divisionBulkNewDeadlineMissing =>
+      'Pick a new future registration deadline first.';
+
+  @override
+  String get divisionBulkPickDeadline => 'Pick new deadline';
+
+  @override
+  String get divisionBulkOpenButton => 'Registration';
+
+  @override
+  String get financeFeeQuickAdjustLabel => 'Quick adjust:';
+
+  @override
+  String get financeFeeQuickFree => '0đ';
+
+  @override
+  String financeFeeQuickAdd(int amount) {
+    return '+${amount}k';
+  }
+
+  @override
+  String get financeFeeCollectedPerPlayer => 'Fee collected / player';
+
+  @override
+  String get financeFeeFreeLabel => 'Free';
+
+  @override
+  String get financeFeePlatformFeePerPlayer => 'Platform / service fee';
+
+  @override
+  String get financeFeeOrganizerNetPerPlayer => 'Organizer receives / player';
+
+  @override
+  String get divisionEditorEditTitle => 'Edit division';
+
+  @override
+  String get divisionEditorSaveChanges => 'Save changes';
+
+  @override
+  String get divisionEditorTypeLabel => 'Type';
+
+  @override
+  String get divisionEditorFormatOpenSingles => 'Open singles';
+
+  @override
+  String get divisionEditorFormatOpenDoubles => 'Open doubles';
+
+  @override
+  String get divisionEditorNameHint =>
+      'Leave blank to use the default name for this type.';
+
+  @override
+  String get divisionEditorStandardRules => 'Standard rules';
+
+  @override
+  String get divisionEditorLimitsTitle => 'Limits and fee';
+
+  @override
+  String get divisionEditorParticipantLimit => 'Max teams';
+
+  @override
+  String get divisionEditorMaxCount => 'Maximum quantity';
+
+  @override
+  String get divisionEditorEloLimit => 'Custom ELO';
+
+  @override
+  String get divisionEditorEloMin => 'Min ELO';
+
+  @override
+  String get divisionEditorEloMax => 'Max ELO';
+
+  @override
+  String get divisionEditorEloBlankHint => 'Leave blank for no limit';
+
+  @override
+  String get divisionEditorEloRangeError =>
+      'Min ELO must be less than or equal to max ELO.';
+
+  @override
+  String get divisionEditorEntryFee => 'Fee';
+
+  @override
+  String get divisionEditorEntryFeeFollowsHint => 'Follows the tournament fee';
+
+  @override
+  String get divisionEditorEntryFeeCustomHint => 'Custom fee for this division';
+
+  @override
+  String get divisionEditorEntryFeePlaceholder => 'Enter amount';
+
+  @override
+  String get divisionEditorRulesPaneTitle => 'Rules setup';
+
+  @override
+  String get divisionEditorPickleballMode => 'Scoring mode';
+
+  @override
+  String get divisionEditorRallyScoring => 'Rally scoring';
+
+  @override
+  String get divisionEditorSideOutScoring => 'Side-out scoring';
+
+  @override
+  String get divisionEditorPresets => 'Quick presets';
+
+  @override
+  String get divisionEditorScoreTitle => 'Sets and points';
+
+  @override
+  String get divisionEditorSetsToWin => 'Sets to win';
+
+  @override
+  String get divisionEditorWinByTwo => 'Win by 2 points';
+
+  @override
+  String get divisionEditorMaxDeucePoints => 'Max score';
+
+  @override
+  String get divisionEditorNoDeuceLimit => 'No limit';
+
+  @override
+  String get divisionEditorSuperTiebreak => 'Super tie-break';
+
+  @override
+  String get divisionEditorTiebreakSet => 'Tiebreak set';
+
+  @override
+  String get divisionEditorTiebreakPoints => 'Tiebreak target points';
+
+  @override
+  String get divisionEditorRoundsToPlay => 'Number of legs (home / away)';
+
+  @override
+  String get divisionEditorStage1Title => 'Stage 1 · Group stage';
+
+  @override
+  String get divisionEditorNumGroups => 'Number of groups';
+
+  @override
+  String get divisionEditorGroupStageRounds => 'Group-stage legs';
+
+  @override
+  String get divisionEditorTeamsPerGroup => 'Teams per group';
+
+  @override
+  String get divisionEditorTeamsAdvancing => 'Teams advancing';
+
+  @override
+  String divisionEditorConfiguredTeams(Object count) {
+    return '$count teams';
+  }
+
+  @override
+  String divisionEditorAdvanceSummary(
+    Object advancing,
+    Object groups,
+    Object total,
+  ) {
+    return '$groups groups · top $advancing → $total teams';
+  }
+
+  @override
+  String get divisionEditorStage2Title => 'Stage 2 · Knockout';
+
+  @override
+  String get divisionEditorPlayoffFormat => 'Play-off format';
+
+  @override
+  String get divisionEditorSeedingType => 'Seeding type';
+
+  @override
+  String get divisionEditorSeededByElo => 'Seed by ELO';
+
+  @override
+  String get divisionEditorRandomSeeding => 'Random seeding';
+
+  @override
+  String get divisionEditorPlayoffSingle => 'Single elimination';
+
+  @override
+  String get divisionEditorPlayoffDouble => 'Double elimination';
+
+  @override
+  String get divisionEditorSetUnitBadminton => 'Points per set';
+
+  @override
+  String get divisionEditorSetUnitTableTennis => 'Points per set';
+
+  @override
+  String get divisionEditorSetUnitPickleballRally => 'Target points per set';
+
+  @override
+  String get divisionEditorSetUnitPickleballSideOut => 'Target points per game';
+
+  @override
+  String get divisionEditorSetUnitTennis => 'Games per set';
+
+  @override
+  String get divisionEditorSetUnitFootball => 'Goals';
+
+  @override
+  String get divisionEditorBadmintonSet1 => '1 set';
+
+  @override
+  String get divisionEditorBadmintonSet2 => 'Best of 3 sets';
+
+  @override
+  String get divisionEditorBadmintonSet3 => 'Best of 5 sets';
+
+  @override
+  String get divisionEditorTableTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTableTennisSet2 => 'Best of 3 sets (BO3)';
+
+  @override
+  String get divisionEditorTableTennisSet3 => 'Best of 5 sets (BO5)';
+
+  @override
+  String get divisionEditorTableTennisSet4 => 'Best of 7 sets (BO7)';
+
+  @override
+  String get divisionEditorPickleballRallySet1 => '1 set';
+
+  @override
+  String get divisionEditorPickleballRallySet2 => 'Best of 3 sets';
+
+  @override
+  String get divisionEditorPickleballRallySet3 => 'Best of 5 sets';
+
+  @override
+  String get divisionEditorPickleballSideOutSet1 => '1 game';
+
+  @override
+  String get divisionEditorPickleballSideOutSet2 => 'Best of 3 games';
+
+  @override
+  String get divisionEditorPickleballSideOutSet3 => 'Best of 5 games';
+
+  @override
+  String get divisionEditorTennisSet1 => '1 set';
+
+  @override
+  String get divisionEditorTennisSet2 => 'Best of 3 sets (BO3)';
+
+  @override
+  String get divisionEditorTennisSet3 => 'Best of 5 sets (BO5)';
+
+  @override
+  String get divisionEditorFootballSet1 => '1 match';
+
+  @override
+  String get divisionEditorPresetBadmintonQuick => 'Fast early round';
+
+  @override
+  String get divisionEditorPresetBadmintonQuickDesc =>
+      'Play 1 set to 21, suitable for qualifiers or large tournaments.';
+
+  @override
+  String get divisionEditorPresetBadmintonStandard => 'Standard recreational';
+
+  @override
+  String get divisionEditorPresetBadmintonStandardDesc =>
+      'Best of 3 to 21, first to 30 wins.';
+
+  @override
+  String get divisionEditorPresetBadmintonShort => 'Time-saving';
+
+  @override
+  String get divisionEditorPresetBadmintonShortDesc =>
+      'Best of 3 to 15, for shorter match duration.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3 => 'Fast standard BO3';
+
+  @override
+  String get divisionEditorPresetTableTennisBo3Desc =>
+      'Best of 3 to 11 points, suitable for groups or early rounds.';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5 => 'BO5 elimination';
+
+  @override
+  String get divisionEditorPresetTableTennisBo5Desc =>
+      'Best of 5 to 11 points, suitable for semifinals or the final.';
+
+  @override
+  String get divisionEditorPresetTableTennisSingle => 'Fast single set';
+
+  @override
+  String get divisionEditorPresetTableTennisSingleDesc =>
+      'One set to 11 points for quick rotation.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuick => '1 game to 11';
+
+  @override
+  String get divisionEditorPresetPickleballRallyQuickDesc =>
+      'One rally-point game to 11, concise for early rounds.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandard => 'Standard rally';
+
+  @override
+  String get divisionEditorPresetPickleballRallyStandardDesc =>
+      'Best of 3 games to 11, easy to live-score and coordinate.';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtended => 'Game to 15';
+
+  @override
+  String get divisionEditorPresetPickleballRallyExtendedDesc =>
+      'Best of 3 games to 15 for later matches with less variation.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandard =>
+      'Standard side-out';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutStandardDesc =>
+      '1 game to 11; only the serving side scores.';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15 => 'Game to 15';
+
+  @override
+  String get divisionEditorPresetPickleballSideout15Desc =>
+      '1 game to 15 for longer matches while keeping side-out scoring.';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinals => 'Best of 3';
+
+  @override
+  String get divisionEditorPresetPickleballSideoutFinalsDesc =>
+      'Best of 3 games to 11, suitable for longer semifinals/finals.';
+
+  @override
+  String get divisionEditorPresetTennisProSet => 'Pro set';
+
+  @override
+  String get divisionEditorPresetTennisProSetDesc =>
+      '1 set to 8 games, suitable for groups or strict time limits.';
+
+  @override
+  String get divisionEditorPresetTennisStandard => 'Standard BO3';
+
+  @override
+  String get divisionEditorPresetTennisStandardDesc =>
+      'Best of 3, 6 games per set, 7-point tie-break at 6–6.';
+
+  @override
+  String get divisionEditorPresetTennisShortSet => 'Short set';
+
+  @override
+  String get divisionEditorPresetTennisShortSetDesc =>
+      '1 set to 4 games for recreational events or many consecutive matches.';
+
+  @override
+  String get divisionEditorPresetFootballStandard => 'Standard';
+
+  @override
+  String get divisionEditorPresetFootballStandardDesc =>
+      'Two halves of 20 minutes each.';
+
+  @override
+  String get stageRoundTitle => 'Round configuration';
+
+  @override
+  String get stageRoundMenuTitle => 'Configure rounds';
+
+  @override
+  String get stageRoundSelectLabel => 'Select round';
+
+  @override
+  String get stageRoundSharedGroupStage => 'Shared group stage';
+
+  @override
+  String stageRoundLeg(int number) {
+    return 'Leg $number';
+  }
+
+  @override
+  String stageRoundKnockoutOf(int round) {
+    return 'Round of $round';
+  }
+
+  @override
+  String get stageRoundLiteTitle =>
+      'Free mode (Lite) is enabled for the entire tournament';
+
+  @override
+  String get stageRoundLiteDescription =>
+      'Referees can enter scores freely, without rule limits.';
+
+  @override
+  String get stageRoundQuickPresets => 'Quick round presets';
+
+  @override
+  String get stageRoundCourtLabel => 'Court or venue';
+
+  @override
+  String get stageRoundCourtPlaceholder =>
+      'Enter a court for this round (leave blank to use the tournament venue)...';
+
+  @override
+  String get stageRoundDefaultTimeLabel => 'Default time for this round';
+
+  @override
+  String get stageRoundNoTime => 'No time set';
+
+  @override
+  String get stageRoundClearTime => 'Clear default time';
+
+  @override
+  String get stageRoundNoteLabel => 'Round coordination note';
+
+  @override
+  String get stageRoundNotePlaceholder =>
+      'Example: call players together at the center court at 08:00';
+
+  @override
+  String get stageRoundSave => 'Save configuration';
+
+  @override
+  String get stageRoundEmpty => 'This division has no rounds to configure.';
+
+  @override
+  String stageRoundSummary(
+    int sets,
+    String unit,
+    int points,
+    String pointUnit,
+    String margin,
+    String tiebreak,
+  ) {
+    return 'This round: win $sets $unit • $points $pointUnit$margin$tiebreak';
+  }
+
+  @override
+  String get stageRoundUnitSet => 'set';
+
+  @override
+  String get stageRoundUnitGame => 'game';
+
+  @override
+  String get stageRoundPoints => 'points';
+
+  @override
+  String get stageRoundPointUnitTennis => 'game/set';
+
+  @override
+  String get stageRoundMarginWinByTwo => ' • win by 2';
+
+  @override
+  String get stageRoundMarginTarget => ' • target score decides';
+
+  @override
+  String get stageRoundSideOutSummary => 'Only the serving team scores.';
+
+  @override
+  String get participantFilterAll => 'All';
+
+  @override
+  String get participantFilterPending => 'Pending';
+
+  @override
+  String get participantFilterPendingPartner => 'Awaiting partner';
+
+  @override
+  String get participantFilterApproved => 'Approved';
+
+  @override
+  String get participantFilterUnpaid => 'Unpaid';
+
+  @override
+  String get participantFilterRejected => 'Rejected';
+
+  @override
+  String get participantFilterEmpty => 'No profiles with this status.';
+
+  @override
+  String participantRowActions(String name) {
+    return 'Actions for $name';
+  }
+
+  @override
+  String get participantUnpair => 'Unpair';
+
+  @override
+  String participantUnpairConfirm(String name) {
+    return 'Unpair $name? Both athletes return to the waiting list; an existing bracket must be regenerated.';
+  }
+
+  @override
+  String get participantUnpaired =>
+      'Pair split. Both athletes are waiting for a partner.';
+
+  @override
+  String get participantDetailContact => 'Contact';
+
+  @override
+  String get participantDetailEditContacts => 'Edit athlete contacts';
+
+  @override
+  String get participantDetailNoMembers => 'No members in this profile.';
+
+  @override
+  String get participantDetailHiddenEmail => 'Email hidden/not updated';
+
+  @override
+  String get participantDetailNoPhone => 'No phone yet';
+
+  @override
+  String participantDetailGuestSlot(num slot) {
+    return 'Athlete $slot';
+  }
+
+  @override
+  String get participantDetailName => 'Name';
+
+  @override
+  String get participantDetailEmail => 'Email';
+
+  @override
+  String get participantDetailPhone => 'Phone';
+
+  @override
+  String get participantDetailNameRequired => 'Enter a name';
+
+  @override
+  String get participantDetailEmailInvalid => 'Invalid email';
+
+  @override
+  String get participantDetailEmailDuplicate => 'Duplicate email';
+
+  @override
+  String get participantDetailPhoneTooLong => 'Phone: 20 characters max';
+
+  @override
+  String get participantDetailSave => 'Save';
+
+  @override
+  String get participantDetailNoteTitle => 'Organizer note';
+
+  @override
+  String get participantDetailNoteHint => 'Internal note';
+
+  @override
+  String get participantDetailNoteSave => 'Save note';
+
+  @override
+  String get participantDetailNoteSaved => 'Note saved.';
+
+  @override
+  String get participantDetailFormAnswers => 'Registration form answers';
+
+  @override
+  String get participantDetailAnswerYes => 'Yes';
+
+  @override
+  String get participantDetailAnswerNo => 'No';
+
+  @override
+  String get participantDetailSeedLabel => 'Seed';
+
+  @override
+  String get participantDetailSeedSave => 'Assign seed';
+
+  @override
+  String get participantDetailSeedSaved => 'Seed updated!';
+
+  @override
+  String get participantDetailSeedInvalid =>
+      'Seed must be an integer of at least 1.';
+
+  @override
+  String get participantDetailPairBadge => 'Pair';
+
+  @override
+  String get participantDetailSingleBadge => 'Single';
+
+  @override
+  String get participantDetailUnassignedDivision => 'Division not assigned';
+
+  @override
+  String get participantDetailPayment => 'Payment';
+
+  @override
+  String get participantDetailPaymentRef => 'Txn ref';
+
+  @override
+  String get participantDetailPaid => 'Paid';
+
+  @override
+  String get participantDetailUnpaid => 'Unpaid';
+
+  @override
+  String get participantDetailFreeEntry => 'Free';
+
+  @override
+  String get participantDetailWildcard => 'Wildcard';
+
+  @override
+  String get participantDetailLockRoster => 'Lock roster';
+
+  @override
+  String get participantDetailUnlockRoster => 'Unlock roster';
+
+  @override
+  String get participantDetailRosterLocked => 'Team roster locked.';
+
+  @override
+  String get participantDetailRosterUnlocked =>
+      'Roster unlocked before the tournament starts.';
+
+  @override
+  String get participantDetailDeleteMock => 'Delete mock athlete';
+
+  @override
+  String participantDetailDeleteMockConfirm(String name) {
+    return 'Are you sure you want to delete mock data for \"$name\"?';
+  }
+
+  @override
+  String get participantDetailMockDeleted => 'Mock athlete deleted.';
+
+  @override
+  String get participantDetailEntrySaved => 'Contacts saved.';
+
+  @override
+  String get participantDetailRegistrationSource => 'Registration source';
+
+  @override
+  String get participantSourceOrganizerDirect =>
+      'Added directly by the organizer';
+
+  @override
+  String get participantSourceManualEmail => 'Entered manually by email';
+
+  @override
+  String get participantSourceExcel => 'Imported from Excel';
+
+  @override
+  String get participantSourceAiExcel => 'Imported from Excel (AI-assisted)';
+
+  @override
+  String get participantSourceGoogleForm => 'Imported from Google Form';
+
+  @override
+  String get mockParticipantsOpen => 'Mock athletes';
+
+  @override
+  String get mockSheetTitle => 'Mock data sandbox';
+
+  @override
+  String get mockSheetDescription =>
+      'Create mock athletes to test pairing, draws and bracket setups at any time.';
+
+  @override
+  String get mockSheetNote =>
+      'This feature is for testing bracket creation, scheduling and draws only. Mock athletes can be cleared at any time without affecting real registrations.';
+
+  @override
+  String get mockDivisionLabel => 'Selected division';
+
+  @override
+  String get mockDivisionSinglesBadge => 'SINGLES (1 line = 1 athlete)';
+
+  @override
+  String get mockDivisionDoublesBadge => 'DOUBLES (2 lines = 1 pair)';
+
+  @override
+  String get mockPairModeLabel => 'Pairing mode';
+
+  @override
+  String get mockPairModeAuto => 'Add pairs (auto-pair)';
+
+  @override
+  String get mockPairModeAutoHint =>
+      'Every 2 consecutive lines become one complete pair.';
+
+  @override
+  String get mockPairModeIndividual => 'Add individuals (pair later)';
+
+  @override
+  String get mockPairModeIndividualHint =>
+      'Create standalone athletes for the organizer to pair later.';
+
+  @override
+  String get mockNamesLabel => 'Mock athlete list';
+
+  @override
+  String get mockNamesPlaceholder =>
+      'One athlete name per line.\nPairs: every 2 consecutive lines form one team.\nExample:\nAthlete A\nAthlete B';
+
+  @override
+  String get mockGenerate => 'Generate mock athletes';
+
+  @override
+  String get mockGenerateIndividual => 'Generate individuals (pending pairs)';
+
+  @override
+  String get mockClear => 'Clear';
+
+  @override
+  String get mockClearConfirmMessage => 'Remove all mock athlete data?';
+
+  @override
+  String mockSeedSuccess(int count) {
+    return 'Generated $count mock athletes!';
+  }
+
+  @override
+  String mockSeedIndividualSuccess(int count) {
+    return 'Created $count individual athletes (pending pairing)!';
+  }
+
+  @override
+  String get mockCleared => 'Cleared!';
+
+  @override
+  String get mockActionFailed => 'Mock data action failed.';
+
+  @override
+  String get wildcardOpen => 'Wildcard';
+
+  @override
+  String get wildcardSheetTitle => 'Wildcard slot';
+
+  @override
+  String get wildcardSheetDescription =>
+      'Directly assign guests or sponsors into the draw. Bypasses every ELO restriction.';
+
+  @override
+  String get wildcardDivisionLabel => 'Selected division';
+
+  @override
+  String get wildcardContactLabel => 'Player email or phone';
+
+  @override
+  String get wildcardContactHint => 'partner@vndcsport.vn or 09xxxx';
+
+  @override
+  String get wildcardPartnerLabel => 'Teammate (email or phone)';
+
+  @override
+  String get wildcardPartnerHint => 'Enter teammate email or phone number';
+
+  @override
+  String get wildcardTeamNameLabel => 'Wildcard team name';
+
+  @override
+  String get wildcardTeamNameHint => 'e.g. VIP Guest Team';
+
+  @override
+  String get wildcardAssign => 'Assign wildcard slot';
+
+  @override
+  String get wildcardContactRequired => 'Enter the player email or phone';
+
+  @override
+  String get wildcardContactInvalid => 'Email format is invalid';
+
+  @override
+  String get wildcardTeamNameRequired => 'Enter the wildcard team name';
+
+  @override
+  String get wildcardDivisionRequired => 'Choose a division first';
+
+  @override
+  String get wildcardAssignedToast => 'Wildcard slot assigned.';
+
+  @override
+  String get wildcardAssignFailed => 'Failed to assign the wildcard slot.';
+
+  @override
+  String get pairingOpen => 'Pair athletes';
+
+  @override
+  String get pairingSheetTitle => 'Choose athletes to pair';
+
+  @override
+  String pairingSheetDescription(String division) {
+    return 'Pick athletes in order: every two consecutive ones form a pair — $division';
+  }
+
+  @override
+  String get pairingManualTab => 'Manual';
+
+  @override
+  String get pairingAutoTab => 'Automatic';
+
+  @override
+  String get pairingSearchLabel => 'Search athletes';
+
+  @override
+  String get pairingSearchPlaceholder => 'Type an athlete name...';
+
+  @override
+  String get pairingLoading => 'Loading athletes...';
+
+  @override
+  String get pairingEmpty => 'No athletes are waiting to be paired.';
+
+  @override
+  String get pairingNoSearchResults => 'No matching athletes.';
+
+  @override
+  String get pairingSearchEmptyHint =>
+      'Try another keyword or close this sheet.';
+
+  @override
+  String get pairingWaitingSubtitle => 'Waiting for a partner';
+
+  @override
+  String pairingPairBadge(int n) {
+    return 'Pair $n';
+  }
+
+  @override
+  String get pairingWaitingBadge => 'Waiting';
+
+  @override
+  String get pairingOddHint =>
+      'The last athlete has no partner yet and keeps waiting.';
+
+  @override
+  String get pairingSelectionLimit => 'Up to 24 athletes per pairing run.';
+
+  @override
+  String pairingOptionalNameLabel(int n) {
+    return 'Pair $n name (optional)';
+  }
+
+  @override
+  String get pairingOptionalNamePlaceholder =>
+      'Leave blank to use both athlete names';
+
+  @override
+  String get pairingShuffleButton => 'Shuffle';
+
+  @override
+  String pairingSubmitPairs(int count) {
+    return 'Pair $count pairs';
+  }
+
+  @override
+  String get pairingSubmitting => 'Pairing...';
+
+  @override
+  String get pairingAutoTitle => 'Automatic pairing';
+
+  @override
+  String get pairingAutoDescription =>
+      'Choose how to pair the current division.';
+
+  @override
+  String get pairingStrategyRandomLabel => 'Random';
+
+  @override
+  String get pairingStrategyRandomHint =>
+      'Shuffle then pair, ignoring skill levels.';
+
+  @override
+  String get pairingStrategyEloBalancedLabel => 'Balance strong–weak';
+
+  @override
+  String get pairingStrategyEloBalancedHint =>
+      'Strong pairs with weak; unscored athletes pair randomly.';
+
+  @override
+  String get pairingStrategySameLevelLabel => 'Same level';
+
+  @override
+  String get pairingStrategySameLevelHint =>
+      'Pairs athletes with close scores; unscored athletes pair randomly.';
+
+  @override
+  String get pairingRandomConfirmAction => 'Start pairing';
+
+  @override
+  String get pairingRunning => 'Pairing...';
+
+  @override
+  String pairingSuccess(int count) {
+    return 'Paired $count pairs.';
+  }
+
+  @override
+  String pairingSuccessWithUnpaired(int count, int unpaired) {
+    return 'Paired $count pairs. Still waiting: $unpaired';
+  }
+
+  @override
+  String get pairingNoPairsFormed => 'No pairs were formed.';
+
+  @override
+  String get pairingLoadFailed => 'Failed to load the waiting list.';
+
+  @override
+  String get pairingActionFailed => 'Pairing failed.';
+
+  @override
+  String get scheduleSettingsTitle => 'Court hours settings';
+
+  @override
+  String get scheduleSettingsOpeningHours => 'Daily court opening hours';
+
+  @override
+  String get scheduleSettingsEndTime => 'End time';
+
+  @override
+  String get scheduleSettingsTimeInvalid =>
+      'End time must be after start time.';
+
+  @override
+  String get scheduleSettingsStepLabel => 'Time slot step';
+
+  @override
+  String scheduleSettingsStepChip(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get scheduleSettingsSaved => 'Court hours settings saved.';
+
+  @override
+  String scheduleConflictsTitle(int count) {
+    return 'Schedule conflict warning ($count matches)';
+  }
+
+  @override
+  String get scheduleConflictsDescription =>
+      'Athletes scheduled in back-to-back matches, or in overlapping matches on two courts.';
+
+  @override
+  String scheduleConflictsRow(String name, String court, String time) {
+    return 'Athlete \"$name\" is also scheduled on $court at $time';
+  }
+
+  @override
+  String get scheduleConflictOtherCourt => 'Another court';
+
+  @override
+  String get scheduleAiButton => 'AI scheduling';
+
+  @override
+  String get scheduleAiTitle => 'AI scheduling';
+
+  @override
+  String get scheduleAiCommandLabel => 'Scheduling command';
+
+  @override
+  String get scheduleAiCommandHint =>
+      'Example: round 1 from 8:00, 15 minutes per set, 5 minutes apart on courts 1-4';
+
+  @override
+  String get scheduleAiNoPlan =>
+      'AI could not place any match. Try another command or check the time window.';
+
+  @override
+  String get scheduleAiNeedsReview =>
+      'AI flagged the command for review. Check the draft carefully before applying.';
+
+  @override
+  String get scheduleAiUnavailable =>
+      'AI scheduling is not available on this server.';
+
+  @override
+  String get scheduleAiFailed =>
+      'Could not create the AI preview. Please try again.';
+
+  @override
+  String get tournamentCameraPanelTitle => 'Tournament cameras';
+
+  @override
+  String get tournamentCameraPanelSubtitle =>
+      'Add PUSH or PULL cameras and attach them to courts. Long-press a camera card and drop it on a court card to move it.';
+
+  @override
+  String get tournamentCameraAdd => 'Add camera';
+
+  @override
+  String get tournamentCameraEmpty => 'This tournament has no cameras yet.';
+
+  @override
+  String get tournamentCameraNoCourt => 'No court yet';
+
+  @override
+  String get tournamentCameraCourtsTitle => 'Courts';
+
+  @override
+  String get tournamentCameraCourtNoCameras => 'No camera on this court.';
+
+  @override
+  String get tournamentCameraAddTitle => 'Add camera';
+
+  @override
+  String get tournamentCameraEditTitle => 'Change camera court';
+
+  @override
+  String get tournamentCameraNameLabel => 'Camera name';
+
+  @override
+  String tournamentCameraNameInvalid(Object max, Object min) {
+    return 'The camera name must be $min to $max characters.';
+  }
+
+  @override
+  String get tournamentCameraModeLabel => 'Mode';
+
+  @override
+  String get tournamentCameraModePushHint =>
+      'PUSH: the camera pushes its stream to the server (RTMP).';
+
+  @override
+  String get tournamentCameraModePullHint =>
+      'PULL: paste a playback URL that is already live.';
+
+  @override
+  String get tournamentCameraUrlLabel => 'Playback URL (https)';
+
+  @override
+  String get tournamentCameraUrlInvalid =>
+      'Enter a valid playback URL starting with https://.';
+
+  @override
+  String get tournamentCameraCourtLabel => 'Court';
+
+  @override
+  String get tournamentCameraCourtNone => 'No court';
+
+  @override
+  String get tournamentCameraEditTooltip => 'Change court';
+
+  @override
+  String get tournamentCameraDeleteTooltip => 'Delete camera';
+
+  @override
+  String tournamentCameraDeleteConfirm(Object name) {
+    return 'Delete camera $name? It is archived and disappears from the list.';
+  }
+
+  @override
+  String get tournamentCameraActionFailed =>
+      'The camera action failed. Please try again.';
+
+  @override
+  String tournamentCameraCreated(Object name) {
+    return 'Camera $name added.';
+  }
+
+  @override
+  String tournamentCameraDeleted(Object name) {
+    return 'Camera $name deleted.';
+  }
+
+  @override
+  String tournamentCameraCourtChanged(Object court, Object name) {
+    return '$name moved to $court.';
+  }
+
+  @override
+  String get tournamentStreamKeyTitle => 'Stream key QR';
+
+  @override
+  String get tournamentStreamKeyTooltip => 'Show stream key QR';
+
+  @override
+  String get tournamentStreamKeyQrWarning =>
+      'The QR code is a secret: anyone who scans it can stream to this camera. Do not share it.';
+
+  @override
+  String get tournamentStreamKeyNone => 'This camera has no stream key yet.';
+
+  @override
+  String get tournamentStreamKeyForgotten =>
+      'The server no longer holds this camera\'s key. Issue again to get a new one.';
+
+  @override
+  String get tournamentStreamKeyIssue => 'Issue key';
+
+  @override
+  String get tournamentStreamKeyReissue => 'Issue key again';
+
+  @override
+  String get tournamentStreamKeyStreamName => 'Stream name';
+
+  @override
+  String get tournamentStreamKeyRename => 'Rename';
+
+  @override
+  String get tournamentStreamKeyRenameLocked =>
+      'The stream can only be renamed while the camera has no key.';
+
+  @override
+  String get tournamentStreamKeyRenameSave => 'Save name';
+
+  @override
+  String get tournamentStreamKeyRenameInvalid =>
+      'The stream name may only contain letters, digits, underscores and hyphens (up to 255 characters).';
+
+  @override
+  String get tournamentStreamKeyServerLabel => 'RTMP server';
+
+  @override
+  String get tournamentStreamKeyKeyLabel => 'Stream key';
+
+  @override
+  String get tournamentStreamKeyShow => 'Show key';
+
+  @override
+  String get tournamentStreamKeyHide => 'Hide key';
+
+  @override
+  String get tournamentStreamKeyCopyServer => 'Copy server';
+
+  @override
+  String get tournamentStreamKeyCopyKey => 'Copy key';
+
+  @override
+  String get tournamentStreamKeyCopied => 'Copied.';
+
+  @override
+  String get tournamentStreamKeyRotate => 'Rotate key';
+
+  @override
+  String get tournamentStreamKeyRotateConfirm =>
+      'A stream currently publishing with the old key is cut immediately. Rotate only if you are sure.';
+
+  @override
+  String get tournamentStreamKeyRotated =>
+      'Key rotated. Scan the new QR to publish again.';
 }

@@ -3,13 +3,19 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/camera_device_model.dart';
+import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/models/facebook_page_connection_model.dart';
 import 'package:app_quanly_giaidau/data/models/live_session_model.dart';
+import 'package:app_quanly_giaidau/domain/repositories/camera_admin_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/court_camera_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/live_session_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/livestream_pairing_qr_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -191,7 +197,15 @@ Future<AppLocalizations> _pumpSection(
 }) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [liveSessionRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        liveSessionRepositoryProvider.overrideWithValue(repository),
+        // The embedded camera panel reads these; keep it off the real network.
+        courtCameraRepositoryProvider.overrideWithValue(_EmptyCameraRepository()),
+        cameraAdminRepositoryProvider.overrideWithValue(_UnusedCameraAdmin()),
+        tournamentManagementRepositoryProvider.overrideWithValue(
+          _NoVenuesManagement(),
+        ),
+      ],
       child: MaterialApp(
         theme: AppTheme.lightTheme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -210,6 +224,30 @@ Future<AppLocalizations> _pumpSection(
   return AppLocalizations.of(
     tester.element(find.byType(TournamentManagementLivestreamSection)),
   )!;
+}
+
+/// Camera panel fakes: no cameras, no venues, and no writes expected.
+class _EmptyCameraRepository implements ICourtCameraRepository {
+  @override
+  Future<List<TournamentCameraModel>> listCameras(String tournamentId) async =>
+      const <TournamentCameraModel>[];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _UnusedCameraAdmin implements ICameraAdminRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _NoVenuesManagement implements TournamentManagementRepository {
+  @override
+  Future<List<Map<String, dynamic>>> getVenues(String id) async =>
+      const <Map<String, dynamic>>[];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

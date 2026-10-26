@@ -11,8 +11,13 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/schedule_fullscreen_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_conflicts.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_schedule_court_grid.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/add_athlete_sheet.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/ai_schedule_sheet.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/multi_match_schedule_sheet.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/schedule_conflicts_sheet.dart';
+import 'package:app_quanly_giaidau/features/organizer_ops/screens/schedule_settings_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_schedule.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
@@ -70,6 +75,17 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   List<MatchModel> _draftMatches = const [];
   int _draftSkipped = 0;
   ({int done, int total})? _draftProgress;
+
+  /// False sau khi route AI xếp lịch trả 404: ẩn nút AI trong phiên màn này.
+  bool _aiScheduleAvailable = true;
+
+  /// Số trận máy chủ tự dời trong lô xếp từ khay chờ đang chạy (task 4.2);
+  /// khay gọi xong một lô thì báo rồi xoá đếm.
+  int _trayMovedCount = 0;
+
+  /// Số trận khay chờ đã ghi thành công trong lô đang chạy: xong lô có ghi thì
+  /// kiểm tra cảnh báo VĐV trùng giờ (task 4.4).
+  int _trayWroteCount = 0;
 
   @override
   void initState() {
@@ -783,6 +799,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     required DateTime scheduledAt,
     required String? divisionId,
     required int minutesPerSet,
+    required int stepMinutes,
   }) async {
     final l10n = AppLocalizations.of(context);
     if (l10n == null) return;
@@ -831,6 +848,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         divisionId: divisionId,
       )),
     );
+    await _warnScheduleConflicts(
+      visible,
+      divisionId: divisionId,
+      stepMinutes: stepMinutes,
+    );
   }
 
   /// Có trận nào trên cùng sân chồng lấn khoảng [scheduledAt, +minutes) không.
@@ -872,6 +894,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     required List<MatchModel> waiting,
     required String? divisionId,
     required int minutesPerSet,
+    required int stepMinutes,
   }) async {
     final l10n = AppLocalizations.of(context);
     if (l10n == null) return;
@@ -957,6 +980,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         divisionId: divisionId,
       )),
     );
+    await _warnScheduleConflicts(
+      visible,
+      divisionId: divisionId,
+      stepMinutes: stepMinutes,
+    );
   }
 
   static String _courtNameOf(MatchModel match) {
@@ -968,6 +996,78 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   void _showScheduleMessage(ScaffoldMessengerState messenger, String message) {
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
+
+  /// Sau mỗi thao tác ghi lịch thành công: VĐV bị xếp trùng giờ hai nơi thì
+  /// hiện sheet cảnh báo danh sách xung đột (sân, giờ, VĐV trùng) — spec
+  /// MODIFIED "Thao tác ghi làm mới nguồn trận quản lý", task 4.4.
+  ///
+  /// Danh sách `visible` của lần build hiện tại không chứa vị trí vừa ghi nên
+  /// đọc lại nguồn trận quản lý (caller đã `ref.invalidate` trước đó; `.future`
+  /// chờ lần phát mới nhất) rồi mới tính xung đột; lỗi tải thì dùng danh sách
+  /// đang có. [stepMinutes] là bước ô cấu hình (thời lượng dự phòng của trận
+  /// thiếu `durationMinutes`).
+  Future<void> _warnScheduleConflicts(
+    List<MatchModel> visible, {
+    required String? divisionId,
+    required int stepMinutes,
+  }) async {
+    var latest = visible;
+    try {
+      latest = await ref.read(
+        managedMatchesWithDivisionProvider((
+          tournamentId: widget.tournamentId,
+          divisionId: divisionId,
+        )).future,
+      );
+    } catch (_) {
+      // Giữ danh sách đang có khi nguồn trận chưa tải lại được.
+    }
+    if (!mounted) return;
+    await ScheduleConflictsSheet.show(
+      context,
+      groups: scheduleConflictGroups(latest, defaultStepMinutes: stepMinutes),
+    );
+  }
+
+  /// Sheet cài đặt khung giờ sân (giờ mở/đóng + bước ô, task 4.3). Lưu xong
+  /// tải lại nguồn giải, chờ cấu hình mới về rồi dựng lại lưới theo bước mới;
+  /// giải chưa tải thì không mở. Dùng context của màn (guard `mounted` liên
+  /// quan) vì chạy qua await.
+  Future<void> _showScheduleSettingsSheet() async {
+    final tournament = ref
+        .read(tournamentProvider(widget.tournamentId))
+        .value;
+    if (tournament == null || !mounted) return;
+    final saved = await ScheduleSettingsSheet.show(
+      context,
+      tournament: tournament,
+    );
+    if (saved != true || !mounted) return;
+    ref.invalidate(tournamentProvider(widget.tournamentId));
+    try {
+      await ref.read(tournamentProvider(widget.tournamentId).future);
+    } catch (_) {
+      // Tải lại lỗi thì giữ cấu hình đang có.
+    }
+    if (!mounted) return;
+    // Lưới đọc cấu hình qua ref.read nên cần dựng lại màn sau khi nguồn đã có
+    // giá trị mới.
+    setState(() {});
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.scheduleSettingsSaved),
+        ),
+      );
+  }
+
+  /// Bước ô thời gian theo cấu hình giải hiện tại (task 4.3).
+  int _currentStepMinutes() => scheduleStepMinutesOf(
+    ref.read(tournamentProvider(widget.tournamentId)).value?.scheduleSettings ??
+        const <String, dynamic>{},
+  );
 
   /// Sân của giải cho các ô chọn sân. Trả về null (đã báo lỗi) nếu không tải
   /// được hoặc giải chưa có sân.
@@ -999,7 +1099,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     required List<MatchModel> visible,
     required String draggedId,
     required String targetId,
+    required String? divisionId,
     required int minutesPerSet,
+    required int stepMinutes,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
@@ -1086,6 +1188,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           ? outcome
           : '$outcome ${l10n.scheduleQuickServerMoved(moved)}',
     );
+    if (report.result == ScheduleSwapResult.swapped) {
+      await _warnScheduleConflicts(
+        visible,
+        divisionId: divisionId,
+        stepMinutes: stepMinutes,
+      );
+    }
   }
 
   /// Đặt cùng thời lượng cho các trận đã chọn trong vùng. Kiểm trùng cả lô
@@ -1095,7 +1204,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     required List<MatchModel> visible,
     required List<MatchModel> matches,
     required int minutes,
+    required String? divisionId,
     required int minutesPerSet,
+    required int stepMinutes,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
@@ -1144,6 +1255,11 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     if (!mounted) return;
     ref.invalidate(managedMatchesWithDivisionProvider);
     _showScheduleMessage(messenger, l10n.scheduleQuickBulkDone(done));
+    await _warnScheduleConflicts(
+      visible,
+      divisionId: divisionId,
+      stepMinutes: stepMinutes,
+    );
   }
 
   /// Dời cả nhóm trận đã chọn sang sân khác, giữ nguyên giờ. Kiểm trùng cả lô
@@ -1153,7 +1269,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     required List<MatchModel> visible,
     required List<MatchModel> matches,
     required ScheduleCourt court,
+    required String? divisionId,
     required int minutesPerSet,
+    required int stepMinutes,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final messenger = ScaffoldMessenger.of(context);
@@ -1217,109 +1335,150 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           ? summary
           : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
     );
+    await _warnScheduleConflicts(
+      visible,
+      divisionId: divisionId,
+      stepMinutes: stepMinutes,
+    );
   }
 
-  /// Ô trống trên lưới: chọn một trận chờ để xếp vào đúng sân và giờ đó.
+  /// Ô trống trên lưới: mở sheet chọn nhiều trận chờ để xếp nối tiếp từ ô đó
+  /// (task 4.1): từng trận có thời lượng riêng, ghi tuần tự từng trận, lỗi
+  /// giữa chừng dừng và báo "đã xếp i/N".
   Future<void> _showEmptyCellPicker({
     required BuildContext context,
     required List<MatchModel> visible,
     required String? divisionId,
     required int minutesPerSet,
+    required int stepMinutes,
     required String courtId,
     required String courtName,
     required DateTime at,
   }) async {
     final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.maybeOf(context);
     final waiting = [
       for (final match in visible)
         if (_isWaiting(match) && !isScheduleLocked(match)) match,
     ];
-    var query = '';
-    final picked = await showModalBottomSheet<MatchModel>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          final needle = query.trim().toLowerCase();
-          final shown = [
-            for (final match in waiting)
-              if (needle.isEmpty ||
-                  _pairLabel(match).toLowerCase().contains(needle))
-                match,
-          ];
-          return SafeArea(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                8,
-                16,
-                MediaQuery.viewInsetsOf(context).bottom + 16,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    l10n.scheduleQuickPickerTitle(
-                      courtName,
-                      _hhmm(at.hour * 60 + at.minute),
-                    ),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: l10n.scheduleQuickPickerSearch,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                    ),
-                    onChanged: (value) => setSheetState(() => query = value),
-                  ),
-                  const SizedBox(height: 8),
-                  if (shown.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Text(l10n.scheduleQuickPickerEmpty),
-                    )
-                  else
-                    Flexible(
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          for (final match in shown)
-                            ListTile(
-                              key: ValueKey('schedule-picker-${match.id}'),
-                              minVerticalPadding: 14,
-                              title: Text(
-                                _pairLabel(match),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () => Navigator.pop(sheetContext, match),
-                            ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-    if (picked == null || !context.mounted) return;
-    await _scheduleMatchDrop(
-      context: context,
-      visible: visible,
-      matchId: picked.id,
-      courtId: courtId,
+    var movedCount = 0;
+    var wroteCount = 0;
+    await MultiMatchScheduleSheet.show(
+      context,
       courtName: courtName,
-      scheduledAt: at,
-      divisionId: divisionId,
+      at: at,
+      waiting: waiting,
       minutesPerSet: minutesPerSet,
+      onWrite: (match, scheduledAt, durationMinutes) async {
+        final snapshot = await _writeSlot(
+          match.id,
+          ScheduleSlot(
+            courtId: courtId,
+            courtName: courtName,
+            scheduledAt: scheduledAt,
+          ),
+          durationMinutes: durationMinutes,
+        );
+        if (snapshot == null) return false;
+        wroteCount++;
+        if (_serverMoved(
+          snapshot,
+          courtId: courtId,
+          scheduledAt: scheduledAt,
+        )) {
+          movedCount++;
+        }
+        return true;
+      },
     );
+    if (!mounted) return;
+    if (movedCount > 0) {
+      // Sheet vừa báo "đã xếp i/N": thay snackbar đó bằng báo máy chủ dời.
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.scheduleQuickServerMoved(movedCount))),
+        );
+    }
+    ref.invalidate(
+      managedMatchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: divisionId,
+      )),
+    );
+    if (wroteCount > 0) {
+      await _warnScheduleConflicts(
+        visible,
+        divisionId: divisionId,
+        stepMinutes: stepMinutes,
+      );
+    }
+  }
+
+  /// Ghi một trận chọn từ khay chờ (task 4.2): khay tự chạy dây chuyền giờ,
+  /// tiến độ và huỷ giữa chừng; màn gọi chỉ cấp thao tác ghi và đếm máy chủ
+  /// tự dời để báo sau khi lô xong.
+  Future<bool> _scheduleWaitingWrite(
+    MatchModel match,
+    ScheduleCourt court,
+    DateTime scheduledAt,
+    int durationMinutes,
+  ) async {
+    final snapshot = await _writeSlot(
+      match.id,
+      ScheduleSlot(
+        courtId: court.id,
+        courtName: court.name,
+        scheduledAt: scheduledAt,
+      ),
+      durationMinutes: durationMinutes,
+    );
+    if (snapshot == null) return false;
+    _trayWroteCount++;
+    if (_serverMoved(snapshot, courtId: court.id, scheduledAt: scheduledAt)) {
+      _trayMovedCount++;
+    }
+    return true;
+  }
+
+  /// Khay chờ ghi xong một lô (dù xong hết, dừng giữa chừng hay bị huỷ): tải
+  /// lại nguồn trận quản lý, báo máy chủ đã dời nếu có, và đã ghi được trận
+  /// nào thì kiểm tra cảnh báo VĐV trùng giờ.
+  Future<void> _finishWaitingBatch({
+    required String? divisionId,
+    required int stepMinutes,
+  }) async {
+    // The grid may report a finished batch after this screen is disposed.
+    if (!mounted) return;
+    final moved = _trayMovedCount;
+    final wrote = _trayWroteCount;
+    _trayMovedCount = 0;
+    _trayWroteCount = 0;
+    ref.invalidate(
+      managedMatchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: divisionId,
+      )),
+    );
+    if (moved > 0) {
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.scheduleQuickServerMoved(moved),
+            ),
+          ),
+        );
+    }
+    if (wrote > 0 && mounted) {
+      await _warnScheduleConflicts(
+        const <MatchModel>[],
+        divisionId: divisionId,
+        stepMinutes: stepMinutes,
+      );
+    }
   }
 
   /// ⚡ Xếp tự động: chọn nội dung, sân, ngày, giờ bắt đầu và thời lượng, rồi
@@ -1344,6 +1503,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final startChoices = quickScheduleMinutes(
       startHour: startHour,
       endHour: endHour,
+      // Mốc giờ theo bước ô cấu hình (task 4.3).
+      stepMinutes: scheduleStepMinutesOf(scheduleSettings),
     );
     MatchModel? firstWaiting;
     for (final match in visible) {
@@ -1631,6 +1792,104 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     return (drafts: drafts, skipped: plan.skipped.length);
   }
 
+  /// "AI xếp lịch" (task 4.5): BTC gõ lệnh chữ, máy chủ trả kế hoạch, kế hoạch
+  /// hiện thành bản nháp trên lưới và chỉ ghi khi bấm Áp dụng như xếp tự động.
+  Future<void> _showAiScheduleSheet({
+    required BuildContext context,
+    required String? divisionId,
+    required Map<String, dynamic> scheduleSettings,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final courts = await _loadScheduleCourts(l10n, messenger);
+    if (courts == null || !context.mounted) return;
+
+    final result = await AiScheduleSheet.show(
+      context,
+      initialDay: _dayOnly(DateTime.now()),
+      onPreview: (command, day) => _previewAiSchedule(
+        command: command,
+        day: day,
+        courts: courts,
+        divisionId: divisionId,
+        scheduleSettings: scheduleSettings,
+        locale: l10n.localeName,
+      ),
+    );
+    if (result == null || !mounted) return;
+    if (result.unavailable) {
+      setState(() => _aiScheduleAvailable = false);
+      _showScheduleMessage(messenger, l10n.scheduleAiUnavailable);
+      return;
+    }
+    setState(() {
+      _draftMatches = result.drafts;
+      _draftSkipped = result.skipped;
+      _draftProgress = null;
+    });
+    if (result.needsReview) {
+      _showScheduleMessage(messenger, l10n.scheduleAiNeedsReview);
+    }
+  }
+
+  /// Gửi lệnh chữ cho AI rồi ghép kế hoạch với các trận đang chờ xếp. Trận đã
+  /// có lịch hoặc không còn chờ thì tính vào số trận bỏ qua. Không ghi.
+  Future<AiScheduleSheetResult> _previewAiSchedule({
+    required String command,
+    required DateTime day,
+    required List<ScheduleCourt> courts,
+    required String? divisionId,
+    required Map<String, dynamic> scheduleSettings,
+    required String locale,
+  }) async {
+    final dayStart = _dayOnly(day);
+    final aiPlan = await ref
+        .read(matchRepositoryProvider)
+        .previewScheduleWithAi(
+          widget.tournamentId,
+          command: command,
+          day: dayStart,
+          courtIds: [for (final court in courts) court.id],
+          divisionId: divisionId,
+          windowStart: dayStart.add(
+            Duration(hours: _settingHour(scheduleSettings['operatingStart'], 7)),
+          ),
+          windowEnd: dayStart.add(
+            Duration(hours: _settingHour(scheduleSettings['operatingEnd'], 22)),
+          ),
+          gridIncrementMinutes: scheduleStepMinutesOf(scheduleSettings),
+          locale: locale,
+        );
+    final matches = await ref.read(
+      managedMatchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: divisionId,
+      )).future,
+    );
+    final waiting = {
+      for (final match in matches)
+        if (_isWaiting(match) && !isScheduleLocked(match)) match.id: match,
+    };
+    final courtNames = {for (final court in courts) court.id: court.name};
+    final plan = aiPlan.plan;
+    final drafts = <MatchModel>[
+      for (final assignment in plan.assignments)
+        if (waiting[assignment.matchId] != null)
+          scheduleDraftOf(
+            waiting[assignment.matchId]!,
+            assignment: assignment,
+            courtName: courtNames[assignment.courtId] ?? '',
+            durationMinutes: plan.durationMinutes,
+          ),
+    ];
+    return AiScheduleSheetResult(
+      drafts: drafts,
+      skipped:
+          plan.skipped.length + (plan.assignments.length - drafts.length),
+      needsReview: aiPlan.needsReview,
+    );
+  }
+
   /// Ghi các bản nháp xếp tự động theo thứ tự. Gặp lỗi thì dừng, bỏ bản nháp và
   /// tải lại lịch để thấy đúng phần đã ghi.
   Future<void> _applyDraft({required BuildContext context}) async {
@@ -1689,6 +1948,13 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           ? summary
           : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
     );
+    if (done > 0) {
+      await _warnScheduleConflicts(
+        const <MatchModel>[],
+        divisionId: _selectedDivisionId,
+        stepMinutes: _currentStepMinutes(),
+      );
+    }
   }
 
   /// Ghi một ô lịch: [slot] null là gỡ trận khỏi lịch. Trả về lịch server đang
@@ -1873,6 +2139,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
               const <String, dynamic>{};
           final minutesPerSet =
               (scheduleSettings['minutesPerSet'] as num?)?.toInt() ?? 15;
+          final stepMinutes = scheduleStepMinutesOf(scheduleSettings);
           // Ba thao tác dùng chung cho lưới trong tab và lưới toàn màn hình, để
           // hai chỗ không lệch hành vi.
           void selectDivision(String value) {
@@ -1923,6 +2190,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             scheduledAt: scheduledAt,
             divisionId: divisionId,
             minutesPerSet: minutesPerSet,
+            stepMinutes: stepMinutes,
           );
 
           void bulkSchedule(
@@ -1935,6 +2203,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             waiting: waiting,
             divisionId: divisionId,
             minutesPerSet: minutesPerSet,
+            stepMinutes: stepMinutes,
           );
 
           void emptyCellTap(String courtId, String courtName, DateTime at) =>
@@ -1943,17 +2212,33 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 visible: visible,
                 divisionId: divisionId,
                 minutesPerSet: minutesPerSet,
+                stepMinutes: stepMinutes,
                 courtId: courtId,
                 courtName: courtName,
                 at: at,
               );
+
+          Future<bool> scheduleWaitingWrite(
+            MatchModel match,
+            ScheduleCourt court,
+            DateTime scheduledAt,
+            int durationMinutes,
+          ) =>
+              _scheduleWaitingWrite(match, court, scheduledAt, durationMinutes);
+
+          void waitingBatchFinished() => _finishWaitingBatch(
+            divisionId: divisionId,
+            stepMinutes: stepMinutes,
+          );
 
           void swapMatches(String draggedId, String targetId) => _swapMatches(
             context: context,
             visible: visible,
             draggedId: draggedId,
             targetId: targetId,
+            divisionId: divisionId,
             minutesPerSet: minutesPerSet,
+            stepMinutes: stepMinutes,
           );
 
           void bulkDuration(List<MatchModel> matches, int minutes) =>
@@ -1962,7 +2247,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 visible: visible,
                 matches: matches,
                 minutes: minutes,
+                divisionId: divisionId,
                 minutesPerSet: minutesPerSet,
+                stepMinutes: stepMinutes,
               );
 
           void bulkMoveCourt(List<MatchModel> matches, ScheduleCourt court) =>
@@ -1971,7 +2258,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 visible: visible,
                 matches: matches,
                 court: court,
+                divisionId: divisionId,
                 minutesPerSet: minutesPerSet,
+                stepMinutes: stepMinutes,
               );
 
           void openAutoSchedule() => _showAutoScheduleSheet(
@@ -1980,6 +2269,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             initialDivisionId: divisionId,
             scheduleSettings: scheduleSettings,
             visible: visible,
+          );
+
+          void openAiSchedule() => _showAiScheduleSheet(
+            context: context,
+            divisionId: divisionId,
+            scheduleSettings: scheduleSettings,
           );
 
           void applyDraft() => _applyDraft(context: context);
@@ -1999,6 +2294,19 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   selectedFilter,
                   onFilterChanged,
                 ),
+                if (!readOnly && _aiScheduleAvailable)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12, bottom: 4),
+                      child: OutlinedButton.icon(
+                        key: const ValueKey('schedule-ai-button'),
+                        onPressed: openAiSchedule,
+                        icon: const Icon(Icons.auto_awesome, size: 18),
+                        label: Text(l10n.scheduleAiButton),
+                      ),
+                    ),
+                  ),
                 TournamentScheduleCourtGrid(
                   tournamentId: widget.tournamentId,
                   matches: visible,
@@ -2007,8 +2315,17 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                   onTapMatch: readOnly ? null : openMatch,
                   onScheduleDrop: readOnly ? null : dropMatch,
                   onTapEmptyCell: readOnly ? null : emptyCellTap,
+                  onScheduleWaitingWrite: readOnly
+                      ? null
+                      : scheduleWaitingWrite,
+                  onWaitingBatchFinished: readOnly
+                      ? null
+                      : waitingBatchFinished,
                   onScheduleSwap: readOnly ? null : swapMatches,
                   onAutoSchedule: readOnly ? null : openAutoSchedule,
+                  onOpenScheduleSettings: readOnly
+                      ? null
+                      : _showScheduleSettingsSheet,
                   draftMatches: _draftMatches,
                   draftSkippedCount: _draftSkipped,
                   draftProgress: _draftProgress,
@@ -2028,10 +2345,19 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                         onScheduleDrop: readOnly ? null : dropMatch,
                         onBulkSchedule: readOnly ? null : bulkSchedule,
                         onTapEmptyCell: readOnly ? null : emptyCellTap,
+                        onScheduleWaitingWrite: readOnly
+                            ? null
+                            : scheduleWaitingWrite,
+                        onWaitingBatchFinished: readOnly
+                            ? null
+                            : waitingBatchFinished,
                         onScheduleSwap: readOnly ? null : swapMatches,
                         onBulkDuration: readOnly ? null : bulkDuration,
                         onBulkMoveCourt: readOnly ? null : bulkMoveCourt,
                         onTapMatch: readOnly ? null : openMatch,
+                        onOpenScheduleSettings: readOnly
+                            ? null
+                            : _showScheduleSettingsSheet,
                       ),
                     ),
                   ),
@@ -2575,6 +2901,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final startChoices = quickScheduleMinutes(
       startHour: _settingHour(settings['operatingStart'], 7),
       endHour: _settingHour(settings['operatingEnd'], 22),
+      // Mốc giờ theo bước ô cấu hình (task 4.3).
+      stepMinutes: scheduleStepMinutesOf(settings),
     );
     final current = match.scheduledTime?.toLocal();
     final initialRefereeId = match.refereeId;
@@ -2669,6 +2997,16 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                 messenger,
                 moved ? l10n.scheduleQuickServerMoved(1) : l10n.opsSaved,
               );
+              if (requested != null && mounted) {
+                // Chỉ cảnh báo trùng VĐV khi ghi xếp lịch, không cảnh báo khi
+                // gỡ lịch (không tạo xung đột mới). Dùng context của màn (context
+                // tham số bị builder của sheet shadow và vừa bị pop).
+                await _warnScheduleConflicts(
+                  visible,
+                  divisionId: divisionId,
+                  stepMinutes: _currentStepMinutes(),
+                );
+              }
             } catch (failure) {
               if (!sheetContext.mounted) return;
               setSheetState(() {

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/data/models/facebook_page_connection_model.da
 import 'package:app_quanly_giaidau/data/models/live_session_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/livestream_pairing_qr_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_camera_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
 import 'package:flutter/material.dart';
@@ -17,20 +18,18 @@ const _deviceNameMaxLength = 255;
 
 /// Livestream management that the mobile API is allowed to drive.
 ///
-/// Covers the safe web subset only: the community camera fleet (registering a
-/// reusable device, its pairing QR), the community Facebook Page connection
-/// (status, connect, re-check, disconnect) and the tournament's live sessions
+/// Covers the community camera fleet (registering a reusable device, its
+/// pairing QR), the community Facebook Page connection (status, connect,
+/// re-check, disconnect), the tournament cameras (add, delete, move between
+/// courts: [TournamentCameraPanel]) and the tournament's live sessions
 /// (status, end, re-check).
 ///
-/// Registering a community camera *device* is not one of the blocked routes:
-/// it sends a display name only, and the server assigns the id and every
-/// publish credential.
+/// Registering a community camera *device* sends a display name only, and the
+/// server assigns the id and every publish credential.
 ///
-/// Deliberately absent, because the backend security review blocks them until
-/// the routes stop returning secrets: camera/stream-key management
-/// (`listCameras`, `createCamera`, `deleteCamera`, `assign-camera`,
-/// `start`/`stop` match stream) and playback. No publish capability, stream key
-/// or camera credential is fetched, modelled or displayed here.
+/// Still absent: `assign-camera` and `start`/`stop` match stream. The camera
+/// panel never fetches, models or displays a stream key, publish URL or camera
+/// credential; only the Backend decides who may write (403 shows as an error).
 class TournamentManagementLivestreamSection extends ConsumerStatefulWidget {
   const TournamentManagementLivestreamSection({
     super.key,
@@ -347,6 +346,8 @@ class _TournamentManagementLivestreamSectionState
           const SizedBox(height: 16),
           _buildDevicesCard(l10n, communityId),
         ],
+        const SizedBox(height: 16),
+        TournamentCameraPanel(tournamentId: widget.tournamentId),
         const SizedBox(height: 16),
         _buildSessionsCard(l10n),
       ],

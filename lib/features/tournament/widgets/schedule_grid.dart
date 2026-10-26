@@ -59,11 +59,15 @@ class ScheduleGrid extends StatefulWidget {
   /// Phút mỗi set BTC cấu hình; dùng khi trận chưa có `durationMinutes`.
   final int minutesPerSet;
 
+  /// Phút mỗi ô của lưới (cấu hình giải, task 4.3): vẽ nhãn giờ, ô trống và
+  /// giờ khi thả trận theo bước này. Mặc định 15 — lưới sẵn có.
+  final int stepMinutes;
+
   /// Ngày đang xem. Dùng để tính giờ khi thả trận vào lưới.
   final DateTime? day;
 
-  /// Có giá trị thì lưới mở chế độ xếp lịch: mỗi ô 15 phút của mỗi sân nhận
-  /// thẻ trận được kéo thả. Null (mặc định) giữ nguyên lưới chỉ đọc.
+  /// Có giá trị thì lưới mở chế độ xếp lịch: mỗi ô theo [stepMinutes] của mỗi
+  /// sân nhận thẻ trận được kéo thả. Null (mặc định) giữ nguyên lưới chỉ đọc.
   final void Function(String matchId, String court, DateTime scheduledAt)?
   onDropMatch;
 
@@ -101,6 +105,7 @@ class ScheduleGrid extends StatefulWidget {
     this.slotHeight = 112,
     this.emphasizeTimeLabels = false,
     this.minutesPerSet = 15,
+    this.stepMinutes = 15,
     this.day,
     this.onDropMatch,
     this.onRangeSelected,
@@ -216,16 +221,18 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     super.dispose();
   }
 
-  /// Số ô 15 phút trong khung giờ vận hành.
-  int get _slotCount => (widget.endHour - widget.startHour) * 4;
+  /// Số ô theo bước [ScheduleGrid.stepMinutes] trong khung giờ vận hành.
+  int get _slotCount =>
+      ((widget.endHour - widget.startHour) * 60) ~/ widget.stepMinutes;
 
-  double get _pixelsPerMinute => _slotHeight / 15;
+  double get _pixelsPerMinute => _slotHeight / widget.stepMinutes;
 
-  /// Nhãn từng ô 15 phút: 00:00, 00:15, 00:30…
+  /// Nhãn từng ô theo bước: 00:00, 00:15, 00:30… (hoặc 00:10, 00:20… với
+  /// bước 10 phút).
   List<String> get _slotLabels => [
     for (var i = 0; i < _slotCount; i++)
       () {
-        final total = widget.startHour * 60 + i * 15;
+        final total = widget.startHour * 60 + i * widget.stepMinutes;
         final h = (total ~/ 60).toString().padLeft(2, '0');
         final m = (total % 60).toString().padLeft(2, '0');
         return '$h:$m';
@@ -542,7 +549,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
       child: Stack(
         children: [
-          // Lưới nền 15 phút.
+          // Lưới nền theo bước ô cấu hình.
           Column(
             children: [
               for (final label in _slotLabels)
@@ -577,8 +584,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Ô 15 phút trống của sân [court]: nhận thả trận để xếp lịch và nhận chạm để
-  /// mở danh sách trận chờ. Thẻ trận đặt phía trên nên ô này không nuốt cử chỉ.
+  /// Ô trống của sân [court] theo bước ô cấu hình: nhận thả trận để xếp lịch
+  /// và nhận chạm để mở danh sách trận chờ. Thẻ trận đặt phía trên nên ô này
+  /// không nuốt cử chỉ.
   Widget _emptySlot(
     String court,
     int index,
@@ -616,7 +624,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Giờ bắt đầu của ô 15 phút thứ [index] trong ngày đang xem.
+  /// Giờ bắt đầu của ô thứ [index] trong ngày đang xem, theo bước ô cấu hình.
   DateTime _slotStart(int index) {
     final day = widget.day ?? DateTime.now();
     return DateTime(
@@ -624,7 +632,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       day.month,
       day.day,
       widget.startHour,
-    ).add(Duration(minutes: index * 15));
+    ).add(Duration(minutes: index * widget.stepMinutes));
   }
 
   Widget _matchCard(

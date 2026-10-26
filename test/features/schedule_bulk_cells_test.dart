@@ -61,6 +61,13 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
   required int placedDuration,
   List<Map<String, dynamic>>? courts,
   bool expectEnabled = true,
+  int placedHour = 7,
+  Map<String, dynamic> settings = const {
+    'operatingStart': '07:00',
+    'operatingEnd': '08:00',
+    'minutesPerSet': 15,
+  },
+  void Function(List<MatchModel> matches, int minutes)? onBulkDuration,
 }) async {
   ({List<_Cell> cells, List<MatchModel> waiting})? captured;
 
@@ -81,19 +88,16 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
             child: TournamentScheduleCourtGrid(
               tournamentId: 't-1',
               matches: [
-                _placed(hour: 7, minute: 0, duration: placedDuration),
+                _placed(hour: placedHour, minute: 0, duration: placedDuration),
                 _waiting('w1'),
                 _waiting('w2'),
               ],
-              scheduleSettings: const {
-                'operatingStart': '07:00',
-                'operatingEnd': '08:00',
-                'minutesPerSet': 15,
-              },
+              scheduleSettings: settings,
               onTapMatch: (_) {},
               onScheduleDrop: (_, _, _, _) {},
               onBulkSchedule: (cells, waiting) =>
                   captured = (cells: cells, waiting: waiting),
+              onBulkDuration: onBulkDuration,
             ),
           ),
         ),
@@ -198,5 +202,74 @@ void main() {
     );
 
     expect(captured, isNull);
+  });
+
+  testWidgets('bulk schedule follows the grid step when it is 30 minutes', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // Step 30 from 07:00: slot 2 = 08:00 (occupied for 30 min), slot 3 = 08:30,
+    // slot 4 = 09:00.
+    final captured = await _selectRangeAndConfirm(
+      tester,
+      fromSlot: 2,
+      toSlot: 4,
+      placedDuration: 30,
+      placedHour: 8,
+      settings: const {
+        'operatingStart': '07:00',
+        'operatingEnd': '11:00',
+        'minutesPerSet': 15,
+        'stepMinutes': 30,
+      },
+    );
+
+    expect(captured, isNotNull);
+    final times = [
+      for (final cell in captured!.cells)
+        '${cell.at.hour}:${cell.at.minute.toString().padLeft(2, '0')}',
+    ];
+    expect(times, ['8:30', '9:00']);
+  });
+
+  testWidgets('bulk duration picks matches by the 30-minute step slot', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 2000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    List<MatchModel>? picked;
+    // Placed match at 08:00 sits in slot 2 when the step is 30 minutes.
+    await _selectRangeAndConfirm(
+      tester,
+      fromSlot: 2,
+      toSlot: 2,
+      placedDuration: 30,
+      placedHour: 8,
+      expectEnabled: false,
+      settings: const {
+        'operatingStart': '07:00',
+        'operatingEnd': '11:00',
+        'minutesPerSet': 15,
+        'stepMinutes': 30,
+      },
+      onBulkDuration: (matches, _) => picked = matches,
+    );
+    final durationButton = find.byKey(
+      const ValueKey('schedule-bulk-duration-button'),
+    );
+    expect(durationButton, findsOneWidget);
+    await tester.tap(durationButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('schedule-bulk-duration-45')));
+    await tester.pumpAndSettle();
+
+    expect(picked?.map((m) => m.id), ['m-placed']);
   });
 }

@@ -33,6 +33,21 @@ bool isScheduleLocked(MatchModel match) => match.isLive || match.isCompleted;
 /// Thời lượng (phút) chọn nhanh cho ô lịch: xếp nhanh, hàng loạt và tự động.
 const List<int> scheduleDurationOptions = [15, 30, 45, 60, 75, 90, 120];
 
+/// Bước ô thời gian cho phép của sheet cài đặt khung giờ (brief task 4.3).
+const List<int> scheduleStepOptions = [5, 10, 15, 30, 60];
+
+/// Bước ô mặc định của lưới App khi cấu hình giải không có giá trị hợp lệ.
+const int scheduleDefaultStepMinutes = 15;
+
+/// Đọc bước ô thời gian từ cấu hình giải: chỉ nhận một giá trị trong
+/// [scheduleStepOptions], khác thì về mặc định 15 phút (lưới sẵn có của App).
+int scheduleStepMinutesOf(Map<String, dynamic> settings) {
+  final value = (settings['stepMinutes'] as num?)?.toInt();
+  return scheduleStepOptions.contains(value)
+      ? value!
+      : scheduleDefaultStepMinutes;
+}
+
 /// Các mốc bắt đầu theo phút trong ngày, cách nhau [stepMinutes], nằm trong
 /// khung giờ hoạt động `[startHour, endHour)`.
 List<int> quickScheduleMinutes({

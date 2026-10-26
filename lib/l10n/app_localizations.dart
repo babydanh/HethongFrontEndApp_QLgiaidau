@@ -21580,6 +21580,66 @@ abstract class AppLocalizations {
   /// **'KetQua'**
   String get excelResultsFilePrefix;
 
+  /// No description provided for @excelRosterSheet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách VĐV'**
+  String get excelRosterSheet;
+
+  /// No description provided for @excelRosterTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'DANH SÁCH VĐV: {tournamentName}'**
+  String excelRosterTitle(String tournamentName);
+
+  /// No description provided for @excelRosterShare.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách VĐV {tournamentName}'**
+  String excelRosterShare(String tournamentName);
+
+  /// No description provided for @excelRosterFilePrefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'DanhSachVDV'**
+  String get excelRosterFilePrefix;
+
+  /// No description provided for @excelRosterColumnName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ tên'**
+  String get excelRosterColumnName;
+
+  /// No description provided for @excelRosterColumnContact.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên hệ'**
+  String get excelRosterColumnContact;
+
+  /// No description provided for @excelRosterColumnDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng mục'**
+  String get excelRosterColumnDivision;
+
+  /// No description provided for @excelRosterColumnSeed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Seed'**
+  String get excelRosterColumnSeed;
+
+  /// No description provided for @excelRosterColumnPayment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán'**
+  String get excelRosterColumnPayment;
+
+  /// No description provided for @exportParticipantsRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất danh sách VĐV'**
+  String get exportParticipantsRoster;
+
   /// No description provided for @excelScore1.
   ///
   /// In vi, this message translates to:
@@ -24946,6 +25006,114 @@ abstract class AppLocalizations {
   /// **'Cảnh báo: vẫn còn nội dung chưa có sơ đồ thi đấu. Khai mạc sẽ khoá đăng ký tất cả nội dung. Bạn vẫn có thể khai mạc giải.'**
   String get tournamentManagementStartTournamentMissingBracketConfirm;
 
+  /// No description provided for @lifecycleOpeningTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khai mạc giải?'**
+  String get lifecycleOpeningTitle;
+
+  /// No description provided for @lifecycleOpeningCloseHeading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký để khai mạc'**
+  String get lifecycleOpeningCloseHeading;
+
+  /// No description provided for @lifecycleOpeningCloseAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn hết'**
+  String get lifecycleOpeningCloseAll;
+
+  /// No description provided for @lifecycleOpeningStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khai mạc'**
+  String get lifecycleOpeningStart;
+
+  /// No description provided for @lifecycleOpeningOpenAnyway.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vẫn khai mạc'**
+  String get lifecycleOpeningOpenAnyway;
+
+  /// No description provided for @lifecycleOpeningForceWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa chọn hạng mục nào để đóng đăng ký. Khai mạc sẽ khoá đăng ký tất cả nội dung còn mở.'**
+  String get lifecycleOpeningForceWarning;
+
+  /// No description provided for @lifecycleOpeningWarningNoBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có sơ đồ thi đấu: {divisions}.'**
+  String lifecycleOpeningWarningNoBracket(String divisions);
+
+  /// No description provided for @lifecycleOpeningWarningPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có {count} lượt đăng ký đang chờ duyệt.'**
+  String lifecycleOpeningWarningPending(int count);
+
+  /// No description provided for @lifecycleEndTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất giải đấu'**
+  String get lifecycleEndTitle;
+
+  /// No description provided for @lifecycleEndWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy bảo đảm tất cả trận đang diễn ra đã được xử lý trước khi hoàn tất giải đấu.'**
+  String get lifecycleEndWarning;
+
+  /// No description provided for @lifecycleEndCheckMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đã hoàn tất: {completed}/{total}'**
+  String lifecycleEndCheckMatches(int completed, int total);
+
+  /// No description provided for @lifecycleEndCheckLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đang diễn ra còn lại: {live}'**
+  String lifecycleEndCheckLive(int live);
+
+  /// No description provided for @lifecycleEndLiveMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'{team1} vs {team2}'**
+  String lifecycleEndLiveMatch(String team1, String team2);
+
+  /// No description provided for @lifecycleEndNotPassed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đạt'**
+  String get lifecycleEndNotPassed;
+
+  /// No description provided for @lifecycleEndNoMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận đấu nào. Bạn vẫn có thể hoàn tất giải đấu này.'**
+  String get lifecycleEndNoMatches;
+
+  /// No description provided for @lifecycleEndLoadingMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách trận đấu…'**
+  String get lifecycleEndLoadingMatches;
+
+  /// No description provided for @lifecycleEndLoadMatchesError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.'**
+  String get lifecycleEndLoadMatchesError;
+
+  /// No description provided for @lifecycleEndConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất giải đấu'**
+  String get lifecycleEndConfirm;
+
   /// No description provided for @tournamentManagementCompleteTournament.
   ///
   /// In vi, this message translates to:
@@ -27634,17 +27802,89 @@ abstract class AppLocalizations {
   /// **'Xếp trận vào {court} lúc {time}'**
   String scheduleQuickPickerTitle(String court, String time);
 
-  /// No description provided for @scheduleQuickPickerSearch.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tìm theo tên đội'**
-  String get scheduleQuickPickerSearch;
-
   /// No description provided for @scheduleQuickPickerEmpty.
   ///
   /// In vi, this message translates to:
   /// **'Không còn trận chờ để xếp.'**
   String get scheduleQuickPickerEmpty;
+
+  /// No description provided for @scheduleMultiSheetDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tích chọn nhiều trận để xếp nối tiếp từ ô đã chọn, mỗi trận bắt đầu sau khi trận trước kết thúc.'**
+  String get scheduleMultiSheetDescription;
+
+  /// No description provided for @scheduleMultiRoundLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng đấu'**
+  String get scheduleMultiRoundLabel;
+
+  /// No description provided for @scheduleMultiAllRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả vòng ({count})'**
+  String scheduleMultiAllRounds(int count);
+
+  /// No description provided for @scheduleMultiSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm người chơi, tên đội hoặc vòng đấu...'**
+  String get scheduleMultiSearchHint;
+
+  /// No description provided for @scheduleMultiSelectVisible.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tất cả'**
+  String get scheduleMultiSelectVisible;
+
+  /// No description provided for @scheduleMultiDeselectVisible.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ chọn hết'**
+  String get scheduleMultiDeselectVisible;
+
+  /// No description provided for @scheduleMultiMinutesSuffix.
+  ///
+  /// In vi, this message translates to:
+  /// **'phút'**
+  String get scheduleMultiMinutesSuffix;
+
+  /// No description provided for @scheduleMultiDurationInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số phút từ 15 đến 240, theo bước 5 phút.'**
+  String get scheduleMultiDurationInvalid;
+
+  /// No description provided for @scheduleMultiSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp {count} trận'**
+  String scheduleMultiSubmit(int count);
+
+  /// No description provided for @scheduleMultiDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xếp {done}/{total} trận nối tiếp.'**
+  String scheduleMultiDone(int done, int total);
+
+  /// No description provided for @scheduleMultiPartial.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xếp {done}/{total} trận rồi dừng vì có trận chưa xếp được.'**
+  String scheduleMultiPartial(int done, int total);
+
+  /// No description provided for @scheduleTraySubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp {count} trận đã chọn vào sân'**
+  String scheduleTraySubmit(int count);
+
+  /// No description provided for @scheduleTrayCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xếp {done}/{total} trận rồi dừng theo yêu cầu huỷ.'**
+  String scheduleTrayCancelled(int done, int total);
 
   /// No description provided for @scheduleQuickSwapTitle.
   ///
@@ -27819,6 +28059,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'File không có dòng VĐV nào.'**
   String get rosterImportNoRows;
+
+  /// No description provided for @rosterImportCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung trong file chưa có trong giải'**
+  String get rosterImportCreateTitle;
+
+  /// No description provided for @rosterImportCreateHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn từng nội dung để tạo mới cho các dòng tương ứng, rồi bấm nút bên dưới. Bỏ chọn nội dung nào thì các dòng đó giữ nguyên cách kiểm tra cũ.'**
+  String get rosterImportCreateHint;
+
+  /// No description provided for @rosterImportCreateRow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo mới \"{name}\"'**
+  String rosterImportCreateRow(String name);
+
+  /// No description provided for @rosterImportCreateAndCheck.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo {count} nội dung & kiểm tra'**
+  String rosterImportCreateAndCheck(int count);
+
+  /// No description provided for @rosterImportSkipCreate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra trực tiếp'**
+  String get rosterImportSkipCreate;
+
+  /// No description provided for @rosterImportCreatingDivisions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo nội dung...'**
+  String get rosterImportCreatingDivisions;
+
+  /// No description provided for @rosterImportCreateDivisionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tạo được nội dung. Vui lòng thử lại.'**
+  String get rosterImportCreateDivisionFailed;
 
   /// No description provided for @rosterImportAutoApprove.
   ///
@@ -28639,6 +28921,2135 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã đủ {total} vòng'**
   String swissActionAllRoundsDone(int total);
+
+  /// Tiêu đề prompt đề nghị đóng đăng ký hạng mục đủ chỗ.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng mục đã đủ chỗ'**
+  String get divisionFullPromptTitle;
+
+  /// Giải thích prompt hạng mục đủ chỗ.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các hạng mục sau đã đủ VĐV và vẫn còn mở đăng ký. Đóng đăng ký để tránh nhận thêm, hoặc giữ mở nếu còn muốn nhận.'**
+  String get divisionFullPromptMessage;
+
+  /// Nút đóng đăng ký một hạng mục.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký'**
+  String get divisionFullPromptClose;
+
+  /// Nút giữ nguyên hạng mục đang mở.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ mở'**
+  String get divisionFullPromptKeepOpen;
+
+  /// Nút đóng đăng ký mọi hạng mục còn lại.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký ({count})'**
+  String divisionFullPromptCloseAll(int count);
+
+  /// Số VĐV đã đăng ký trên sức chứa.
+  ///
+  /// In vi, this message translates to:
+  /// **'{registered}/{capacity} VĐV'**
+  String divisionFullPromptCapacity(int registered, int capacity);
+
+  /// Tiêu đề sheet thao tác đăng ký theo nhóm hạng mục.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng/mở đăng ký theo hạng mục'**
+  String get divisionBulkTitle;
+
+  /// Chế độ đóng đăng ký.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng đăng ký'**
+  String get divisionBulkModeClose;
+
+  /// Chế độ mở lại đăng ký.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại đăng ký'**
+  String get divisionBulkModeOpen;
+
+  /// Nút chọn mọi hạng mục áp dụng.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn hết'**
+  String get divisionBulkSelectAll;
+
+  /// Trống ở chế độ đóng.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không còn hạng mục nào đang mở đăng ký.'**
+  String get divisionBulkEmptyClose;
+
+  /// Trống ở chế độ mở lại.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có hạng mục nào đang đóng đăng ký.'**
+  String get divisionBulkEmptyOpen;
+
+  /// Nút xác nhận đóng hàng loạt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng {count} hạng mục'**
+  String divisionBulkConfirmClose(int count);
+
+  /// Nút xác nhận mở lại hàng loạt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở lại {count} hạng mục'**
+  String divisionBulkConfirmOpen(int count);
+
+  /// Nhắc chọn hạn mới khi mở lại hạng mục quá hạn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có hạng mục đã quá hạn — chọn hạn đăng ký mới (ở tương lai) trước khi mở lại.'**
+  String get divisionBulkNewDeadline;
+
+  /// Báo lỗi thiếu hạn mới.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa chọn hạn đăng ký mới ở tương lai.'**
+  String get divisionBulkNewDeadlineMissing;
+
+  /// Nút mở bộ chọn hạn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn hạn đăng ký mới'**
+  String get divisionBulkPickDeadline;
+
+  /// Nút vào sheet đóng/mở đăng ký theo hạng mục.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký'**
+  String get divisionBulkOpenButton;
+
+  /// Nhãn hàng nút mức lệ phí nhanh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng/giảm nhanh:'**
+  String get financeFeeQuickAdjustLabel;
+
+  /// Nút đặt lệ phí về 0 (miễn phí).
+  ///
+  /// In vi, this message translates to:
+  /// **'0đ'**
+  String get financeFeeQuickFree;
+
+  /// Nút cộng nhanh thêm vào lệ phí.
+  ///
+  /// In vi, this message translates to:
+  /// **'+{amount}k'**
+  String financeFeeQuickAdd(int amount);
+
+  /// Dòng lệ phí thu trên mỗi VĐV trong bảng phân tích.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lệ phí thu / VĐV'**
+  String get financeFeeCollectedPerPlayer;
+
+  /// Hiển thị khi lệ phí bằng 0.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get financeFeeFreeLabel;
+
+  /// Dòng phí sàn trên mỗi VĐV trong bảng phân tích.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí sàn / dịch vụ nền tảng'**
+  String get financeFeePlatformFeePerPlayer;
+
+  /// Dòng phần BTC thực nhận trên mỗi VĐV sau khi trừ phí sàn.
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC thực nhận / VĐV'**
+  String get financeFeeOrganizerNetPerPlayer;
+
+  /// No description provided for @divisionEditorEditTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa nội dung thi đấu'**
+  String get divisionEditorEditTitle;
+
+  /// No description provided for @divisionEditorSaveChanges.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu thay đổi'**
+  String get divisionEditorSaveChanges;
+
+  /// No description provided for @divisionEditorTypeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại'**
+  String get divisionEditorTypeLabel;
+
+  /// No description provided for @divisionEditorFormatOpenSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn linh hoạt'**
+  String get divisionEditorFormatOpenSingles;
+
+  /// No description provided for @divisionEditorFormatOpenDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi linh hoạt'**
+  String get divisionEditorFormatOpenDoubles;
+
+  /// No description provided for @divisionEditorNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống sẽ dùng tên mặc định theo loại.'**
+  String get divisionEditorNameHint;
+
+  /// No description provided for @divisionEditorStandardRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật chuẩn'**
+  String get divisionEditorStandardRules;
+
+  /// No description provided for @divisionEditorLimitsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giới hạn và phí'**
+  String get divisionEditorLimitsTitle;
+
+  /// No description provided for @divisionEditorParticipantLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội tối đa'**
+  String get divisionEditorParticipantLimit;
+
+  /// No description provided for @divisionEditorMaxCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượng tối đa'**
+  String get divisionEditorMaxCount;
+
+  /// No description provided for @divisionEditorEloLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO riêng'**
+  String get divisionEditorEloLimit;
+
+  /// No description provided for @divisionEditorEloMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tối thiểu'**
+  String get divisionEditorEloMin;
+
+  /// No description provided for @divisionEditorEloMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tối đa'**
+  String get divisionEditorEloMax;
+
+  /// No description provided for @divisionEditorEloBlankHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống = không giới hạn'**
+  String get divisionEditorEloBlankHint;
+
+  /// No description provided for @divisionEditorEloRangeError.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.'**
+  String get divisionEditorEloRangeError;
+
+  /// No description provided for @divisionEditorEntryFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí riêng'**
+  String get divisionEditorEntryFee;
+
+  /// No description provided for @divisionEditorEntryFeeFollowsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo lệ phí chung của giải'**
+  String get divisionEditorEntryFeeFollowsHint;
+
+  /// No description provided for @divisionEditorEntryFeeCustomHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí riêng cho nội dung này'**
+  String get divisionEditorEntryFeeCustomHint;
+
+  /// No description provided for @divisionEditorEntryFeePlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số tiền'**
+  String get divisionEditorEntryFeePlaceholder;
+
+  /// No description provided for @divisionEditorRulesPaneTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình luật'**
+  String get divisionEditorRulesPaneTitle;
+
+  /// No description provided for @divisionEditorPickleballMode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ tính điểm'**
+  String get divisionEditorPickleballMode;
+
+  /// No description provided for @divisionEditorRallyScoring.
+  ///
+  /// In vi, this message translates to:
+  /// **'Rally Scoring'**
+  String get divisionEditorRallyScoring;
+
+  /// No description provided for @divisionEditorSideOutScoring.
+  ///
+  /// In vi, this message translates to:
+  /// **'Side-out Scoring'**
+  String get divisionEditorSideOutScoring;
+
+  /// No description provided for @divisionEditorPresets.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mẫu nhanh'**
+  String get divisionEditorPresets;
+
+  /// No description provided for @divisionEditorScoreTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số set và điểm'**
+  String get divisionEditorScoreTitle;
+
+  /// No description provided for @divisionEditorSetsToWin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số set chạm thắng'**
+  String get divisionEditorSetsToWin;
+
+  /// No description provided for @divisionEditorWinByTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng cách biệt 2 điểm'**
+  String get divisionEditorWinByTwo;
+
+  /// No description provided for @divisionEditorMaxDeucePoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm tối đa'**
+  String get divisionEditorMaxDeucePoints;
+
+  /// No description provided for @divisionEditorNoDeuceLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn'**
+  String get divisionEditorNoDeuceLimit;
+
+  /// No description provided for @divisionEditorSuperTiebreak.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loạt phụ (Super tie-break)'**
+  String get divisionEditorSuperTiebreak;
+
+  /// No description provided for @divisionEditorTiebreakSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Set loạt phụ'**
+  String get divisionEditorTiebreakSet;
+
+  /// No description provided for @divisionEditorTiebreakPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm chạm loạt phụ'**
+  String get divisionEditorTiebreakPoints;
+
+  /// No description provided for @divisionEditorRoundsToPlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượt đấu (Lượt đi / Lượt về)'**
+  String get divisionEditorRoundsToPlay;
+
+  /// No description provided for @divisionEditorStage1Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giai đoạn 1 · Vòng bảng'**
+  String get divisionEditorStage1Title;
+
+  /// No description provided for @divisionEditorNumGroups.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số bảng'**
+  String get divisionEditorNumGroups;
+
+  /// No description provided for @divisionEditorGroupStageRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số lượt vòng bảng'**
+  String get divisionEditorGroupStageRounds;
+
+  /// No description provided for @divisionEditorTeamsPerGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội mỗi bảng'**
+  String get divisionEditorTeamsPerGroup;
+
+  /// No description provided for @divisionEditorTeamsAdvancing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số đội đi tiếp'**
+  String get divisionEditorTeamsAdvancing;
+
+  /// No description provided for @divisionEditorConfiguredTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đội'**
+  String divisionEditorConfiguredTeams(Object count);
+
+  /// No description provided for @divisionEditorAdvanceSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{groups} bảng · top {advancing} → {total} đội'**
+  String divisionEditorAdvanceSummary(
+    Object advancing,
+    Object groups,
+    Object total,
+  );
+
+  /// No description provided for @divisionEditorStage2Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giai đoạn 2 · Knockout'**
+  String get divisionEditorStage2Title;
+
+  /// No description provided for @divisionEditorPlayoffFormat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức knockout'**
+  String get divisionEditorPlayoffFormat;
+
+  /// No description provided for @divisionEditorSeedingType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách xếp hạt giống'**
+  String get divisionEditorSeedingType;
+
+  /// No description provided for @divisionEditorSeededByElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp theo ELO'**
+  String get divisionEditorSeededByElo;
+
+  /// No description provided for @divisionEditorRandomSeeding.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp ngẫu nhiên'**
+  String get divisionEditorRandomSeeding;
+
+  /// No description provided for @divisionEditorPlayoffSingle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp đơn'**
+  String get divisionEditorPlayoffSingle;
+
+  /// No description provided for @divisionEditorPlayoffDouble.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp kép'**
+  String get divisionEditorPlayoffDouble;
+
+  /// No description provided for @divisionEditorSetUnitBadminton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mỗi set'**
+  String get divisionEditorSetUnitBadminton;
+
+  /// No description provided for @divisionEditorSetUnitTableTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mỗi set'**
+  String get divisionEditorSetUnitTableTennis;
+
+  /// No description provided for @divisionEditorSetUnitPickleballRally.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mục tiêu mỗi set'**
+  String get divisionEditorSetUnitPickleballRally;
+
+  /// No description provided for @divisionEditorSetUnitPickleballSideOut.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm mục tiêu mỗi game'**
+  String get divisionEditorSetUnitPickleballSideOut;
+
+  /// No description provided for @divisionEditorSetUnitTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game mỗi set'**
+  String get divisionEditorSetUnitTennis;
+
+  /// No description provided for @divisionEditorSetUnitFootball.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bàn thắng'**
+  String get divisionEditorSetUnitFootball;
+
+  /// No description provided for @divisionEditorBadmintonSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorBadmintonSet1;
+
+  /// No description provided for @divisionEditorBadmintonSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set'**
+  String get divisionEditorBadmintonSet2;
+
+  /// No description provided for @divisionEditorBadmintonSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set'**
+  String get divisionEditorBadmintonSet3;
+
+  /// No description provided for @divisionEditorTableTennisSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorTableTennisSet1;
+
+  /// No description provided for @divisionEditorTableTennisSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set (BO3)'**
+  String get divisionEditorTableTennisSet2;
+
+  /// No description provided for @divisionEditorTableTennisSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set (BO5)'**
+  String get divisionEditorTableTennisSet3;
+
+  /// No description provided for @divisionEditorTableTennisSet4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 4 set (BO7)'**
+  String get divisionEditorTableTennisSet4;
+
+  /// No description provided for @divisionEditorPickleballRallySet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorPickleballRallySet1;
+
+  /// No description provided for @divisionEditorPickleballRallySet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set'**
+  String get divisionEditorPickleballRallySet2;
+
+  /// No description provided for @divisionEditorPickleballRallySet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set'**
+  String get divisionEditorPickleballRallySet3;
+
+  /// No description provided for @divisionEditorPickleballSideOutSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game'**
+  String get divisionEditorPickleballSideOutSet1;
+
+  /// No description provided for @divisionEditorPickleballSideOutSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game'**
+  String get divisionEditorPickleballSideOutSet2;
+
+  /// No description provided for @divisionEditorPickleballSideOutSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 game'**
+  String get divisionEditorPickleballSideOutSet3;
+
+  /// No description provided for @divisionEditorTennisSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set'**
+  String get divisionEditorTennisSet1;
+
+  /// No description provided for @divisionEditorTennisSet2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set (BO3)'**
+  String get divisionEditorTennisSet2;
+
+  /// No description provided for @divisionEditorTennisSet3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set (BO5)'**
+  String get divisionEditorTennisSet3;
+
+  /// No description provided for @divisionEditorFootballSet1.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 trận'**
+  String get divisionEditorFootballSet1;
+
+  /// No description provided for @divisionEditorPresetBadmintonQuick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng đầu nhanh'**
+  String get divisionEditorPresetBadmintonQuick;
+
+  /// No description provided for @divisionEditorPresetBadmintonQuickDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh 1 set 21, phù hợp vòng loại hoặc giải đông VĐV.'**
+  String get divisionEditorPresetBadmintonQuickDesc;
+
+  /// No description provided for @divisionEditorPresetBadmintonStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn phong trào'**
+  String get divisionEditorPresetBadmintonStandard;
+
+  /// No description provided for @divisionEditorPresetBadmintonStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set 21, chạm 30 thắng luôn.'**
+  String get divisionEditorPresetBadmintonStandardDesc;
+
+  /// No description provided for @divisionEditorPresetBadmintonShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiết kiệm thời gian'**
+  String get divisionEditorPresetBadmintonShort;
+
+  /// No description provided for @divisionEditorPresetBadmintonShortDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set 15, dùng khi cần rút ngắn thời lượng.'**
+  String get divisionEditorPresetBadmintonShortDesc;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo3.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO3 chuẩn nhanh'**
+  String get divisionEditorPresetTableTennisBo3;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo3Desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set 11 điểm, hợp vòng bảng hoặc vòng đầu.'**
+  String get divisionEditorPresetTableTennisBo3Desc;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo5.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO5 loại trực tiếp'**
+  String get divisionEditorPresetTableTennisBo5;
+
+  /// No description provided for @divisionEditorPresetTableTennisBo5Desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 3 set 11 điểm, hợp bán kết hoặc chung kết.'**
+  String get divisionEditorPresetTableTennisBo5Desc;
+
+  /// No description provided for @divisionEditorPresetTableTennisSingle.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set chốt nhanh'**
+  String get divisionEditorPresetTableTennisSingle;
+
+  /// No description provided for @divisionEditorPresetTableTennisSingleDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một set 11 điểm để xoay vòng đấu thật nhanh.'**
+  String get divisionEditorPresetTableTennisSingleDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyQuick.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game 11'**
+  String get divisionEditorPresetPickleballRallyQuick;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyQuickDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một game 11 rally point, gọn cho vòng đầu.'**
+  String get divisionEditorPresetPickleballRallyQuickDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn rally'**
+  String get divisionEditorPresetPickleballRallyStandard;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game 11, dễ live score và dễ điều phối.'**
+  String get divisionEditorPresetPickleballRallyStandardDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyExtended.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game 15'**
+  String get divisionEditorPresetPickleballRallyExtended;
+
+  /// No description provided for @divisionEditorPresetPickleballRallyExtendedDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game 15 cho các trận sâu, ít biến động hơn.'**
+  String get divisionEditorPresetPickleballRallyExtendedDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn side-out'**
+  String get divisionEditorPresetPickleballSideoutStandard;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game 11, chỉ bên giao bóng mới ghi điểm.'**
+  String get divisionEditorPresetPickleballSideoutStandardDesc;
+
+  /// No description provided for @divisionEditorPresetPickleballSideout15.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game 15'**
+  String get divisionEditorPresetPickleballSideout15;
+
+  /// No description provided for @divisionEditorPresetPickleballSideout15Desc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 game 15, hợp trận kéo dài hơn nhưng vẫn giữ side-out.'**
+  String get divisionEditorPresetPickleballSideout15Desc;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutFinals.
+  ///
+  /// In vi, this message translates to:
+  /// **'Best of 3'**
+  String get divisionEditorPresetPickleballSideoutFinals;
+
+  /// No description provided for @divisionEditorPresetPickleballSideoutFinalsDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 game 11, hợp bán kết/chung kết có thời lượng tốt hơn.'**
+  String get divisionEditorPresetPickleballSideoutFinalsDesc;
+
+  /// No description provided for @divisionEditorPresetTennisProSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Pro set'**
+  String get divisionEditorPresetTennisProSet;
+
+  /// No description provided for @divisionEditorPresetTennisProSetDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set 8 game, hợp vòng bảng hoặc vòng tính thời gian chặt.'**
+  String get divisionEditorPresetTennisProSetDesc;
+
+  /// No description provided for @divisionEditorPresetTennisStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'BO3 chuẩn'**
+  String get divisionEditorPresetTennisStandard;
+
+  /// No description provided for @divisionEditorPresetTennisStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng 2 set, mỗi set 6 game, 6-6 tie-break 7.'**
+  String get divisionEditorPresetTennisStandardDesc;
+
+  /// No description provided for @divisionEditorPresetTennisShortSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Short set'**
+  String get divisionEditorPresetTennisShortSet;
+
+  /// No description provided for @divisionEditorPresetTennisShortSetDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'1 set 4 game, hợp giải phong trào hoặc nhiều trận liên tiếp.'**
+  String get divisionEditorPresetTennisShortSetDesc;
+
+  /// No description provided for @divisionEditorPresetFootballStandard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuẩn'**
+  String get divisionEditorPresetFootballStandard;
+
+  /// No description provided for @divisionEditorPresetFootballStandardDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'2 hiệp, mỗi hiệp 20 phút'**
+  String get divisionEditorPresetFootballStandardDesc;
+
+  /// No description provided for @stageRoundTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình vòng đấu'**
+  String get stageRoundTitle;
+
+  /// No description provided for @stageRoundMenuTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình từng vòng'**
+  String get stageRoundMenuTitle;
+
+  /// No description provided for @stageRoundSelectLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn vòng'**
+  String get stageRoundSelectLabel;
+
+  /// No description provided for @stageRoundSharedGroupStage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng dùng chung'**
+  String get stageRoundSharedGroupStage;
+
+  /// No description provided for @stageRoundLeg.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lượt {number}'**
+  String stageRoundLeg(int number);
+
+  /// No description provided for @stageRoundKnockoutOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {round}'**
+  String stageRoundKnockoutOf(int round);
+
+  /// No description provided for @stageRoundLiteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ Tự do (Lite) đang bật toàn giải'**
+  String get stageRoundLiteTitle;
+
+  /// No description provided for @stageRoundLiteDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trọng tài nhập điểm tự do, không bị giới hạn bởi luật thi đấu.'**
+  String get stageRoundLiteDescription;
+
+  /// No description provided for @stageRoundQuickPresets.
+  ///
+  /// In vi, this message translates to:
+  /// **'Preset nhanh cho vòng đấu'**
+  String get stageRoundQuickPresets;
+
+  /// No description provided for @stageRoundCourtLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm sân đấu'**
+  String get stageRoundCourtLabel;
+
+  /// No description provided for @stageRoundCourtPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập sân thi đấu riêng cho vòng này (để trống sẽ dùng địa điểm giải đấu)...'**
+  String get stageRoundCourtPlaceholder;
+
+  /// No description provided for @stageRoundDefaultTimeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ mặc định cho vòng này'**
+  String get stageRoundDefaultTimeLabel;
+
+  /// No description provided for @stageRoundNoTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đặt giờ'**
+  String get stageRoundNoTime;
+
+  /// No description provided for @stageRoundClearTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá giờ mặc định'**
+  String get stageRoundClearTime;
+
+  /// No description provided for @stageRoundNoteLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú điều phối vòng này'**
+  String get stageRoundNoteLabel;
+
+  /// No description provided for @stageRoundNotePlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: ưu tiên gọi đồng loạt ở sân trung tâm lúc 08:00'**
+  String get stageRoundNotePlaceholder;
+
+  /// No description provided for @stageRoundSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu cấu hình'**
+  String get stageRoundSave;
+
+  /// No description provided for @stageRoundEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng mục này không có vòng nào để cấu hình.'**
+  String get stageRoundEmpty;
+
+  /// No description provided for @stageRoundSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng này sẽ đánh: thắng {sets} {unit} • {points} {pointUnit}{margin}{tiebreak}'**
+  String stageRoundSummary(
+    int sets,
+    String unit,
+    int points,
+    String pointUnit,
+    String margin,
+    String tiebreak,
+  );
+
+  /// No description provided for @stageRoundUnitSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'set'**
+  String get stageRoundUnitSet;
+
+  /// No description provided for @stageRoundUnitGame.
+  ///
+  /// In vi, this message translates to:
+  /// **'game'**
+  String get stageRoundUnitGame;
+
+  /// No description provided for @stageRoundPoints.
+  ///
+  /// In vi, this message translates to:
+  /// **'điểm'**
+  String get stageRoundPoints;
+
+  /// No description provided for @stageRoundPointUnitTennis.
+  ///
+  /// In vi, this message translates to:
+  /// **'game/set'**
+  String get stageRoundPointUnitTennis;
+
+  /// No description provided for @stageRoundMarginWinByTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **' • hơn 2'**
+  String get stageRoundMarginWinByTwo;
+
+  /// No description provided for @stageRoundMarginTarget.
+  ///
+  /// In vi, this message translates to:
+  /// **' • chạm đích là chốt'**
+  String get stageRoundMarginTarget;
+
+  /// No description provided for @stageRoundSideOutSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ đội đang giao bóng mới ghi điểm.'**
+  String get stageRoundSideOutSummary;
+
+  /// No description provided for @participantFilterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get participantFilterAll;
+
+  /// No description provided for @participantFilterPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get participantFilterPending;
+
+  /// No description provided for @participantFilterPendingPartner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ đồng đội'**
+  String get participantFilterPendingPartner;
+
+  /// No description provided for @participantFilterApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get participantFilterApproved;
+
+  /// No description provided for @participantFilterUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thanh toán'**
+  String get participantFilterUnpaid;
+
+  /// No description provided for @participantFilterRejected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bị từ chối'**
+  String get participantFilterRejected;
+
+  /// No description provided for @participantFilterEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có hồ sơ nào ở trạng thái này.'**
+  String get participantFilterEmpty;
+
+  /// No description provided for @participantRowActions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác với {name}'**
+  String participantRowActions(String name);
+
+  /// No description provided for @participantUnpair.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tách cặp'**
+  String get participantUnpair;
+
+  /// No description provided for @participantUnpairConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tách cặp {name}? Hai VĐV về hàng chờ ghép; sơ đồ đã tạo cần tạo lại.'**
+  String participantUnpairConfirm(String name);
+
+  /// No description provided for @participantUnpaired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tách cặp. Hai VĐV đang chờ ghép lại.'**
+  String get participantUnpaired;
+
+  /// No description provided for @participantDetailContact.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên hệ'**
+  String get participantDetailContact;
+
+  /// No description provided for @participantDetailEditContacts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa liên hệ VĐV'**
+  String get participantDetailEditContacts;
+
+  /// No description provided for @participantDetailNoMembers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thành viên trong hồ sơ.'**
+  String get participantDetailNoMembers;
+
+  /// No description provided for @participantDetailHiddenEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email được ẩn/chưa cập nhật'**
+  String get participantDetailHiddenEmail;
+
+  /// No description provided for @participantDetailNoPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có SĐT'**
+  String get participantDetailNoPhone;
+
+  /// No description provided for @participantDetailGuestSlot.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV {slot}'**
+  String participantDetailGuestSlot(num slot);
+
+  /// No description provided for @participantDetailName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên'**
+  String get participantDetailName;
+
+  /// No description provided for @participantDetailEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get participantDetailEmail;
+
+  /// No description provided for @participantDetailPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT'**
+  String get participantDetailPhone;
+
+  /// No description provided for @participantDetailNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên'**
+  String get participantDetailNameRequired;
+
+  /// No description provided for @participantDetailEmailInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email chưa đúng'**
+  String get participantDetailEmailInvalid;
+
+  /// No description provided for @participantDetailEmailDuplicate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email bị trùng'**
+  String get participantDetailEmailDuplicate;
+
+  /// No description provided for @participantDetailPhoneTooLong.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT tối đa 20 ký tự'**
+  String get participantDetailPhoneTooLong;
+
+  /// No description provided for @participantDetailSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get participantDetailSave;
+
+  /// No description provided for @participantDetailNoteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú BTC'**
+  String get participantDetailNoteTitle;
+
+  /// No description provided for @participantDetailNoteHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú nội bộ'**
+  String get participantDetailNoteHint;
+
+  /// No description provided for @participantDetailNoteSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu ghi chú'**
+  String get participantDetailNoteSave;
+
+  /// No description provided for @participantDetailNoteSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu ghi chú.'**
+  String get participantDetailNoteSaved;
+
+  /// No description provided for @participantDetailFormAnswers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu trả lời form đăng ký'**
+  String get participantDetailFormAnswers;
+
+  /// No description provided for @participantDetailAnswerYes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có'**
+  String get participantDetailAnswerYes;
+
+  /// No description provided for @participantDetailAnswerNo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không'**
+  String get participantDetailAnswerNo;
+
+  /// No description provided for @participantDetailSeedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Seed'**
+  String get participantDetailSeedLabel;
+
+  /// No description provided for @participantDetailSeedSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán seed'**
+  String get participantDetailSeedSave;
+
+  /// No description provided for @participantDetailSeedSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật seed!'**
+  String get participantDetailSeedSaved;
+
+  /// No description provided for @participantDetailSeedInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Seed phải là số nguyên từ 1 trở lên.'**
+  String get participantDetailSeedInvalid;
+
+  /// No description provided for @participantDetailPairBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cặp'**
+  String get participantDetailPairBadge;
+
+  /// No description provided for @participantDetailSingleBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn'**
+  String get participantDetailSingleBadge;
+
+  /// No description provided for @participantDetailUnassignedDivision.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa phân nội dung'**
+  String get participantDetailUnassignedDivision;
+
+  /// No description provided for @participantDetailPayment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán'**
+  String get participantDetailPayment;
+
+  /// No description provided for @participantDetailPaymentRef.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã GD'**
+  String get participantDetailPaymentRef;
+
+  /// No description provided for @participantDetailPaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thanh toán'**
+  String get participantDetailPaid;
+
+  /// No description provided for @participantDetailUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thanh toán'**
+  String get participantDetailUnpaid;
+
+  /// No description provided for @participantDetailFreeEntry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get participantDetailFreeEntry;
+
+  /// No description provided for @participantDetailWildcard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặc cách'**
+  String get participantDetailWildcard;
+
+  /// No description provided for @participantDetailLockRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khóa roster'**
+  String get participantDetailLockRoster;
+
+  /// No description provided for @participantDetailUnlockRoster.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở khóa roster'**
+  String get participantDetailUnlockRoster;
+
+  /// No description provided for @participantDetailRosterLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã khóa roster đội bóng.'**
+  String get participantDetailRosterLocked;
+
+  /// No description provided for @participantDetailRosterUnlocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã mở khóa roster trước khi giải bắt đầu.'**
+  String get participantDetailRosterUnlocked;
+
+  /// No description provided for @participantDetailDeleteMock.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá VĐV ảo'**
+  String get participantDetailDeleteMock;
+
+  /// No description provided for @participantDetailDeleteMockConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xoá dữ liệu mock của \"{name}\" không?'**
+  String participantDetailDeleteMockConfirm(String name);
+
+  /// No description provided for @participantDetailMockDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá VĐV ảo.'**
+  String get participantDetailMockDeleted;
+
+  /// No description provided for @participantDetailEntrySaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu liên hệ.'**
+  String get participantDetailEntrySaved;
+
+  /// No description provided for @participantDetailRegistrationSource.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nguồn hồ sơ'**
+  String get participantDetailRegistrationSource;
+
+  /// No description provided for @participantSourceOrganizerDirect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban tổ chức thêm trực tiếp'**
+  String get participantSourceOrganizerDirect;
+
+  /// No description provided for @participantSourceManualEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập thủ công theo email'**
+  String get participantSourceManualEmail;
+
+  /// No description provided for @participantSourceExcel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ Excel'**
+  String get participantSourceExcel;
+
+  /// No description provided for @participantSourceAiExcel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ Excel (AI đọc)'**
+  String get participantSourceAiExcel;
+
+  /// No description provided for @participantSourceGoogleForm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập từ Google Form'**
+  String get participantSourceGoogleForm;
+
+  /// Nút mở sheet sinh VĐV ảo trong khối nút hạng mục của tab VĐV.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV ảo'**
+  String get mockParticipantsOpen;
+
+  /// Tiêu đề sheet VĐV ảo (Web mockDataTitle).
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng thử nghiệm dữ liệu ảo'**
+  String get mockSheetTitle;
+
+  /// No description provided for @mockSheetDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo VĐV ảo để thử nghiệm ghép cặp, bốc thăm và kiểm thử sơ đồ thi đấu bất kỳ lúc nào.'**
+  String get mockSheetDescription;
+
+  /// No description provided for @mockSheetNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tính năng này chỉ phục vụ thử nghiệm tạo nhánh, xếp lịch và bốc thăm. VĐV ảo có thể được dọn dẹp bất kỳ lúc nào mà không ảnh hưởng tới người đăng ký thật.'**
+  String get mockSheetNote;
+
+  /// No description provided for @mockDivisionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung thi đấu đang chọn'**
+  String get mockDivisionLabel;
+
+  /// No description provided for @mockDivisionSinglesBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐƠN (1 dòng = 1 VĐV)'**
+  String get mockDivisionSinglesBadge;
+
+  /// No description provided for @mockDivisionDoublesBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐÔI (2 dòng = 1 cặp)'**
+  String get mockDivisionDoublesBadge;
+
+  /// No description provided for @mockPairModeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ ghép cặp'**
+  String get mockPairModeLabel;
+
+  /// No description provided for @mockPairModeAuto.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm Đôi (Auto ghép)'**
+  String get mockPairModeAuto;
+
+  /// No description provided for @mockPairModeAutoHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cứ 2 dòng liên tiếp ghép thành 1 cặp hoàn chỉnh.'**
+  String get mockPairModeAutoHint;
+
+  /// No description provided for @mockPairModeIndividual.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm Đơn (BTC tự ghép)'**
+  String get mockPairModeIndividual;
+
+  /// No description provided for @mockPairModeIndividualHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sinh VĐV lẻ độc lập để BTC tự vào ghép cặp.'**
+  String get mockPairModeIndividualHint;
+
+  /// No description provided for @mockNamesLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách VĐV ảo'**
+  String get mockNamesLabel;
+
+  /// No description provided for @mockNamesPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi dòng là 1 tên VĐV.\nĐánh đôi: Cứ 2 dòng liên tiếp xếp 1 đội.\nVí dụ:\nVĐV A\nVĐV B'**
+  String get mockNamesPlaceholder;
+
+  /// No description provided for @mockGenerate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sinh VĐV ảo'**
+  String get mockGenerate;
+
+  /// No description provided for @mockGenerateIndividual.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sinh VĐV lẻ (Chờ ghép)'**
+  String get mockGenerateIndividual;
+
+  /// No description provided for @mockClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dọn dẹp'**
+  String get mockClear;
+
+  /// No description provided for @mockClearConfirmMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa toàn bộ dữ liệu người chơi thử nghiệm?'**
+  String get mockClearConfirmMessage;
+
+  /// Báo sau khi sinh VĐV ảo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sinh {count} người chơi ảo!'**
+  String mockSeedSuccess(int count);
+
+  /// Báo sau khi sinh VĐV lẻ chờ ghép.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo {count} VĐV lẻ (chờ BTC ghép cặp)!'**
+  String mockSeedIndividualSuccess(int count);
+
+  /// No description provided for @mockCleared.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã dọn dẹp!'**
+  String get mockCleared;
+
+  /// No description provided for @mockActionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác dữ liệu ảo thất bại.'**
+  String get mockActionFailed;
+
+  /// Nút mở sheet suất đặc cách trong khối nút hạng mục của tab VĐV.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặc cách'**
+  String get wildcardOpen;
+
+  /// No description provided for @wildcardSheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Suất đặc cách'**
+  String get wildcardSheetTitle;
+
+  /// No description provided for @wildcardSheetDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán trực tiếp khách mời, nhà tài trợ vào danh sách thi đấu. Bỏ qua mọi quy tắc giới hạn ELO.'**
+  String get wildcardSheetDescription;
+
+  /// No description provided for @wildcardDivisionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung thi đấu đang chọn'**
+  String get wildcardDivisionLabel;
+
+  /// No description provided for @wildcardContactLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email hoặc SĐT người chơi'**
+  String get wildcardContactLabel;
+
+  /// No description provided for @wildcardContactHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'partner@vndcsport.vn hoặc 09xxxx'**
+  String get wildcardContactHint;
+
+  /// No description provided for @wildcardPartnerLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng đội (Email hoặc SĐT)'**
+  String get wildcardPartnerLabel;
+
+  /// No description provided for @wildcardPartnerHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập email/số điện thoại đồng đội'**
+  String get wildcardPartnerHint;
+
+  /// No description provided for @wildcardTeamNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên đội thi đấu đặc cách'**
+  String get wildcardTeamNameLabel;
+
+  /// No description provided for @wildcardTeamNameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: Đội Khách Mời VIP'**
+  String get wildcardTeamNameHint;
+
+  /// No description provided for @wildcardAssign.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán suất đặc cách'**
+  String get wildcardAssign;
+
+  /// No description provided for @wildcardContactRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập email hoặc SĐT người chơi'**
+  String get wildcardContactRequired;
+
+  /// No description provided for @wildcardContactInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email không đúng định dạng'**
+  String get wildcardContactInvalid;
+
+  /// No description provided for @wildcardTeamNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên đội thi đấu đặc cách'**
+  String get wildcardTeamNameRequired;
+
+  /// No description provided for @wildcardDivisionRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn nội dung thi đấu trước'**
+  String get wildcardDivisionRequired;
+
+  /// No description provided for @wildcardAssignedToast.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gán suất đặc cách.'**
+  String get wildcardAssignedToast;
+
+  /// No description provided for @wildcardAssignFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán suất đặc cách thất bại.'**
+  String get wildcardAssignFailed;
+
+  /// Nút mở sheet ghép cặp trong khối nút hạng mục đôi của tab VĐV (Web pairNow).
+  ///
+  /// In vi, this message translates to:
+  /// **'BTC ghép đôi'**
+  String get pairingOpen;
+
+  /// No description provided for @pairingSheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn VĐV để ghép đôi'**
+  String get pairingSheetTitle;
+
+  /// Mô tả sheet ghép cặp, kèm tên hạng mục (Web pairingDialogDescription).
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn VĐV theo thứ tự: cứ hai người liên tiếp là một đôi — {division}'**
+  String pairingSheetDescription(String division);
+
+  /// No description provided for @pairingManualTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thủ công'**
+  String get pairingManualTab;
+
+  /// No description provided for @pairingAutoTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự động'**
+  String get pairingAutoTab;
+
+  /// No description provided for @pairingSearchLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm VĐV'**
+  String get pairingSearchLabel;
+
+  /// No description provided for @pairingSearchPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên VĐV...'**
+  String get pairingSearchPlaceholder;
+
+  /// No description provided for @pairingLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải danh sách VĐV...'**
+  String get pairingLoading;
+
+  /// No description provided for @pairingEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có VĐV nào đang chờ ghép.'**
+  String get pairingEmpty;
+
+  /// No description provided for @pairingNoSearchResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy VĐV phù hợp.'**
+  String get pairingNoSearchResults;
+
+  /// No description provided for @pairingSearchEmptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử từ khóa khác hoặc đóng sheet này.'**
+  String get pairingSearchEmptyHint;
+
+  /// No description provided for @pairingWaitingSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ ghép'**
+  String get pairingWaitingSubtitle;
+
+  /// Nhãn VĐV đã được xếp vào đôi thứ n.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi {n}'**
+  String pairingPairBadge(int n);
+
+  /// No description provided for @pairingWaitingBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ ghép'**
+  String get pairingWaitingBadge;
+
+  /// No description provided for @pairingOddHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV cuối cùng chưa có đôi, sẽ tiếp tục chờ ghép.'**
+  String get pairingOddHint;
+
+  /// No description provided for @pairingSelectionLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa 24 VĐV mỗi lần ghép.'**
+  String get pairingSelectionLimit;
+
+  /// Nhãn ô nhập tên cặp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên đôi {n} (không bắt buộc)'**
+  String pairingOptionalNameLabel(int n);
+
+  /// No description provided for @pairingOptionalNamePlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Để trống để dùng tên hai VĐV'**
+  String get pairingOptionalNamePlaceholder;
+
+  /// No description provided for @pairingShuffleButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp ngẫu nhiên'**
+  String get pairingShuffleButton;
+
+  /// Nút gửi batch ghép cặp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép {count} đôi'**
+  String pairingSubmitPairs(int count);
+
+  /// No description provided for @pairingSubmitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang ghép...'**
+  String get pairingSubmitting;
+
+  /// No description provided for @pairingAutoTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép đôi tự động'**
+  String get pairingAutoTitle;
+
+  /// No description provided for @pairingAutoDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn cách ghép cho nội dung đang xem.'**
+  String get pairingAutoDescription;
+
+  /// No description provided for @pairingStrategyRandomLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngẫu nhiên'**
+  String get pairingStrategyRandomLabel;
+
+  /// No description provided for @pairingStrategyRandomHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xáo trộn rồi ghép cặp, không xét trình độ.'**
+  String get pairingStrategyRandomHint;
+
+  /// No description provided for @pairingStrategyEloBalancedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cân bằng mạnh–yếu'**
+  String get pairingStrategyEloBalancedLabel;
+
+  /// No description provided for @pairingStrategyEloBalancedHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mạnh ghép yếu; chưa có điểm thì ghép ngẫu nhiên.'**
+  String get pairingStrategyEloBalancedHint;
+
+  /// No description provided for @pairingStrategySameLevelLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cùng trình'**
+  String get pairingStrategySameLevelLabel;
+
+  /// No description provided for @pairingStrategySameLevelHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép người có điểm gần nhau; chưa có điểm thì ghép ngẫu nhiên.'**
+  String get pairingStrategySameLevelHint;
+
+  /// No description provided for @pairingRandomConfirmAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu ghép'**
+  String get pairingRandomConfirmAction;
+
+  /// No description provided for @pairingRunning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang ghép...'**
+  String get pairingRunning;
+
+  /// Báo sau khi ghép xong (thủ công hoặc tự động).
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghép {count} cặp.'**
+  String pairingSuccess(int count);
+
+  /// Báo sau khi ghép tự động còn VĐV chưa có cặp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã ghép {count} cặp. Vẫn chờ ghép: {unpaired}'**
+  String pairingSuccessWithUnpaired(int count, int unpaired);
+
+  /// No description provided for @pairingNoPairsFormed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa ghép được cặp nào.'**
+  String get pairingNoPairsFormed;
+
+  /// No description provided for @pairingLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải danh sách VĐV chờ ghép thất bại.'**
+  String get pairingLoadFailed;
+
+  /// No description provided for @pairingActionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghép cặp thất bại.'**
+  String get pairingActionFailed;
+
+  /// Tiêu đề sheet cài đặt khung giờ sân (task 4.3).
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt khung giờ sân'**
+  String get scheduleSettingsTitle;
+
+  /// Tên mục giờ mở/đóng sân trong sheet cài đặt khung giờ.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khung giờ mở sân trong ngày'**
+  String get scheduleSettingsOpeningHours;
+
+  /// Nhãn ô chọn giờ đóng cửa sân (giờ bắt đầu tái dùng scheduleQuickStart).
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ kết thúc'**
+  String get scheduleSettingsEndTime;
+
+  /// Báo lỗi khi giờ đóng sân không sau giờ mở sân.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ kết thúc phải sau giờ bắt đầu.'**
+  String get scheduleSettingsTimeInvalid;
+
+  /// Tên mục chọn bước ô của lưới lịch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bước ô thời gian'**
+  String get scheduleSettingsStepLabel;
+
+  /// Nhãn chip chọn bước ô (5/10/15/30/60 phút).
+  ///
+  /// In vi, this message translates to:
+  /// **'{minutes} phút'**
+  String scheduleSettingsStepChip(int minutes);
+
+  /// Báo sau khi lưu cài đặt khung giờ thành công.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu cài đặt khung giờ.'**
+  String get scheduleSettingsSaved;
+
+  /// Tiêu đề sheet cảnh báo VĐV trùng giờ (task 4.4).
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảnh báo trùng lịch thi đấu ({count} trận)'**
+  String scheduleConflictsTitle(int count);
+
+  /// Mô tả dưới tiêu đề sheet cảnh báo (đúng câu Web courtBoard.conflictDescription).
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV bị xếp hai trận sát giờ hoặc trùng giờ ở hai sân.'**
+  String get scheduleConflictsDescription;
+
+  /// Một dòng cảnh báo: VĐV trùng cũng đang đấu ở sân khác lúc giờ khác (đúng cấu trúc Web).
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV \"{name}\" cũng đang có lịch đấu tại {court} lúc {time}'**
+  String scheduleConflictsRow(String name, String court, String time);
+
+  /// Nhãn thay tên sân khi trận trùng giờ chưa có tên sân (đúng Web: Sân khác).
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân khác'**
+  String get scheduleConflictOtherCourt;
+
+  /// Nút mở sheet AI xếp lịch bằng lệnh chữ trên lưới sân.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI xếp lịch'**
+  String get scheduleAiButton;
+
+  /// Tiêu đề sheet AI xếp lịch.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI xếp lịch'**
+  String get scheduleAiTitle;
+
+  /// Nhãn ô nhập lệnh chữ cho AI xếp lịch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lệnh xếp lịch'**
+  String get scheduleAiCommandLabel;
+
+  /// Gợi ý ô nhập lệnh AI xếp lịch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: vòng 1 từ 8h, 1 set 15 phút, cách nhau 5 phút trên sân 1-4'**
+  String get scheduleAiCommandHint;
+
+  /// Kế hoạch AI rỗng: không có trận nào để làm bản nháp.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI chưa xếp được trận nào. Hãy thử lệnh khác hoặc kiểm tra khung giờ.'**
+  String get scheduleAiNoPlan;
+
+  /// Thông báo khi AI đánh dấu needsReview.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI đánh dấu câu lệnh cần kiểm tra lại. Xem kỹ bản nháp trước khi áp dụng.'**
+  String get scheduleAiNeedsReview;
+
+  /// Route AI trả 404: mục AI bị ẩn trong phiên màn hiện tại.
+  ///
+  /// In vi, this message translates to:
+  /// **'AI xếp lịch chưa dùng được trên máy chủ này.'**
+  String get scheduleAiUnavailable;
+
+  /// Lỗi chung khi gọi AI xếp lịch mà máy chủ không trả thông điệp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tạo được bản xem trước từ AI. Hãy thử lại.'**
+  String get scheduleAiFailed;
+
+  /// No description provided for @tournamentCameraPanelTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera của giải'**
+  String get tournamentCameraPanelTitle;
+
+  /// No description provided for @tournamentCameraPanelSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm camera PUSH hoặc PULL, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.'**
+  String get tournamentCameraPanelSubtitle;
+
+  /// No description provided for @tournamentCameraAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm camera'**
+  String get tournamentCameraAdd;
+
+  /// No description provided for @tournamentCameraEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải chưa có camera.'**
+  String get tournamentCameraEmpty;
+
+  /// No description provided for @tournamentCameraNoCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa gắn sân'**
+  String get tournamentCameraNoCourt;
+
+  /// No description provided for @tournamentCameraCourtsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân'**
+  String get tournamentCameraCourtsTitle;
+
+  /// No description provided for @tournamentCameraCourtNoCameras.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có camera ở sân này.'**
+  String get tournamentCameraCourtNoCameras;
+
+  /// No description provided for @tournamentCameraAddTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm camera'**
+  String get tournamentCameraAddTitle;
+
+  /// No description provided for @tournamentCameraEditTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi sân camera'**
+  String get tournamentCameraEditTitle;
+
+  /// No description provided for @tournamentCameraNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên camera'**
+  String get tournamentCameraNameLabel;
+
+  /// No description provided for @tournamentCameraNameInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên camera dài từ {min} đến {max} ký tự.'**
+  String tournamentCameraNameInvalid(Object max, Object min);
+
+  /// No description provided for @tournamentCameraModeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ'**
+  String get tournamentCameraModeLabel;
+
+  /// No description provided for @tournamentCameraModePushHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'PUSH: camera đẩy luồng lên máy chủ (RTMP).'**
+  String get tournamentCameraModePushHint;
+
+  /// No description provided for @tournamentCameraModePullHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'PULL: dán URL phát đã có sẵn.'**
+  String get tournamentCameraModePullHint;
+
+  /// No description provided for @tournamentCameraUrlLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'URL phát (https)'**
+  String get tournamentCameraUrlLabel;
+
+  /// No description provided for @tournamentCameraUrlInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập URL phát hợp lệ, bắt đầu bằng https://.'**
+  String get tournamentCameraUrlInvalid;
+
+  /// No description provided for @tournamentCameraCourtLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân'**
+  String get tournamentCameraCourtLabel;
+
+  /// No description provided for @tournamentCameraCourtNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không gắn sân'**
+  String get tournamentCameraCourtNone;
+
+  /// No description provided for @tournamentCameraEditTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi sân'**
+  String get tournamentCameraEditTooltip;
+
+  /// No description provided for @tournamentCameraDeleteTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá camera'**
+  String get tournamentCameraDeleteTooltip;
+
+  /// No description provided for @tournamentCameraDeleteConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá camera {name}? Camera sẽ được lưu trữ và biến mất khỏi danh sách.'**
+  String tournamentCameraDeleteConfirm(Object name);
+
+  /// No description provided for @tournamentCameraActionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thực hiện được thao tác camera. Hãy thử lại.'**
+  String get tournamentCameraActionFailed;
+
+  /// No description provided for @tournamentCameraCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm camera {name}.'**
+  String tournamentCameraCreated(Object name);
+
+  /// No description provided for @tournamentCameraDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá camera {name}.'**
+  String tournamentCameraDeleted(Object name);
+
+  /// No description provided for @tournamentCameraCourtChanged.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gắn {name} vào {court}.'**
+  String tournamentCameraCourtChanged(Object court, Object name);
+
+  /// Tiêu đề sheet QR stream key của camera PUSH.
+  ///
+  /// In vi, this message translates to:
+  /// **'QR stream key'**
+  String get tournamentStreamKeyTitle;
+
+  /// Tooltip nút QR trên thẻ camera PUSH.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện QR stream key'**
+  String get tournamentStreamKeyTooltip;
+
+  /// Cảnh báo QR là bí mật.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR là bí mật: ai quét được đều phát stream vào camera này được. Không chia sẻ ra ngoài.'**
+  String get tournamentStreamKeyQrWarning;
+
+  /// Trạng thái camera chưa có key (cấp thủ công khi tự cấp lỗi).
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera này chưa có stream key.'**
+  String get tournamentStreamKeyNone;
+
+  /// Có streamKeyId nhưng không còn thông tin RTMP.
+  ///
+  /// In vi, this message translates to:
+  /// **'Máy chủ không còn giữ key của camera này. Cấp lại để nhận key mới.'**
+  String get tournamentStreamKeyForgotten;
+
+  /// Nút cấp key thủ công.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấp key'**
+  String get tournamentStreamKeyIssue;
+
+  /// Nút cấp lại key khi máy chủ đã quên key.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấp lại key'**
+  String get tournamentStreamKeyReissue;
+
+  /// Nhãn tên stream của camera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên stream'**
+  String get tournamentStreamKeyStreamName;
+
+  /// Nút bắt đầu đổi tên stream.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi tên'**
+  String get tournamentStreamKeyRename;
+
+  /// Giải thích nút đổi tên bị khoá.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ đổi tên được khi camera chưa có key.'**
+  String get tournamentStreamKeyRenameLocked;
+
+  /// Nút lưu tên stream mới.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu tên'**
+  String get tournamentStreamKeyRenameSave;
+
+  /// Lỗi kiểm tra tên stream phía app.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên stream chỉ gồm chữ không dấu, số, gạch dưới và gạch ngang (tối đa 255 ký tự).'**
+  String get tournamentStreamKeyRenameInvalid;
+
+  /// Nhãn dòng máy chủ RTMP.
+  ///
+  /// In vi, this message translates to:
+  /// **'Máy chủ RTMP'**
+  String get tournamentStreamKeyServerLabel;
+
+  /// Nhãn dòng stream key.
+  ///
+  /// In vi, this message translates to:
+  /// **'Stream key'**
+  String get tournamentStreamKeyKeyLabel;
+
+  /// Tooltip nút hiện stream key.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện key'**
+  String get tournamentStreamKeyShow;
+
+  /// Tooltip nút che stream key.
+  ///
+  /// In vi, this message translates to:
+  /// **'Che key'**
+  String get tournamentStreamKeyHide;
+
+  /// Tooltip nút sao chép máy chủ RTMP.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép máy chủ'**
+  String get tournamentStreamKeyCopyServer;
+
+  /// Tooltip nút sao chép stream key.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép key'**
+  String get tournamentStreamKeyCopyKey;
+
+  /// Thông báo sau khi sao chép.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép.'**
+  String get tournamentStreamKeyCopied;
+
+  /// Nút đổi (rotate) stream key.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi key'**
+  String get tournamentStreamKeyRotate;
+
+  /// Cảnh báo xác nhận rotate key.
+  ///
+  /// In vi, this message translates to:
+  /// **'Stream đang phát bằng key cũ sẽ bị ngắt ngay. Chỉ đổi key khi chắc chắn.'**
+  String get tournamentStreamKeyRotateConfirm;
+
+  /// Thông báo sau khi rotate thành công.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đổi key. Quét QR mới để phát lại.'**
+  String get tournamentStreamKeyRotated;
 }
 
 class _AppLocalizationsDelegate
