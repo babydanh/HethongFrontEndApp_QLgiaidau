@@ -63,6 +63,60 @@ void main() {
         '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
   }
 
+  Future<List<Map<String, dynamic>>> listCameras() async {
+    final r = await call(
+      'GET',
+      '/livestream/tournaments/${tournament.tournamentId}/cameras',
+    );
+    expect(r.ok, isTrue, reason: status('list cameras', r));
+    final data = r.data;
+    return data is List
+        ? data.whereType<Map>().map(Map<String, dynamic>.from).toList()
+        : <Map<String, dynamic>>[];
+  }
+
+  var cameraSeq = 0;
+
+  /// Creates a camera and registers cleanup. For PUSH, Backend saves the row and only
+  /// then builds publish info, which answers 503 when AQVISION_PUSH_* is not configured
+  /// (as on the cloud runner); in that case the id is read back from the camera list.
+  /// Never log the response body: it can carry a stream key / publish URL.
+  Future<({String id, ApiResponse response})> createCamera({
+    required String mode,
+    required String name,
+    Map<String, Object?> extra = const {},
+  }) async {
+    final uniqueName = '$name-${++cameraSeq}';
+    final r = await call(
+      'POST',
+      '/livestream/tournaments/${tournament.tournamentId}/cameras',
+      data: {'name': uniqueName, 'mode': mode, 'protocol': 'RTMP', ...extra},
+    );
+    final tolerated = r.ok || (mode == 'PUSH' && r.statusCode == 503);
+    expect(tolerated, isTrue, reason: status('create camera $mode', r));
+
+    final String id;
+    if (r.ok) {
+      final bodyId = asMap(r.data)['id'];
+      expect(
+        bodyId is String && bodyId.isNotEmpty,
+        isTrue,
+        reason: 'thiếu id camera',
+      );
+      expect(asMap(r.data)['mode'], mode);
+      id = bodyId as String;
+    } else {
+      final found = (await listCameras()).where((c) => c['name'] == uniqueName);
+      expect(found, hasLength(1), reason: '503 và camera không có trong list');
+      id = found.first['id'] as String;
+    }
+    addTearDown(() async {
+      final d = await call('DELETE', '/livestream/cameras/$id');
+      if (!d.ok) debugPrint(status('dọn camera', d));
+    });
+    return (id: id, response: r);
+  }
+
   group('2.1 hạng mục (create/update division)', () {
     Future<String> createDivision(String name) async {
       final r = await call(
@@ -221,48 +275,25 @@ void main() {
   });
 
   group('5.1 camera (CRUD)', () {
-    Future<String> createCamera({
-      required String mode,
-      Map<String, Object?> extra = const {},
-    }) async {
-      final r = await call(
-        'POST',
-        '/livestream/tournaments/${tournament.tournamentId}/cameras',
-        data: {
-          'name': '$tag-cam-${mode.toLowerCase()}',
-          'mode': mode,
-          'protocol': 'RTMP',
-          ...extra,
-        },
-      );
-      expect(r.ok, isTrue, reason: status('create camera $mode', r));
-      final body = asMap(r.data);
-      final id = body['id'];
-      expect(id is String && id.isNotEmpty, isTrue, reason: 'thiếu id camera');
-      expect(body['mode'], mode);
-      addTearDown(() async {
-        final d = await call('DELETE', '/livestream/cameras/$id');
-        if (!d.ok) debugPrint(status('dọn camera', d));
-      });
-      return id as String;
-    }
-
-    Future<List<Map<String, dynamic>>> listCameras() async {
-      final r = await call(
-        'GET',
-        '/livestream/tournaments/${tournament.tournamentId}/cameras',
-      );
-      expect(r.ok, isTrue, reason: status('list cameras', r));
-      final data = r.data;
-      return data is List
-          ? data.whereType<Map>().map(Map<String, dynamic>.from).toList()
-          : <Map<String, dynamic>>[];
-    }
-
     test(
       'BTC tạo camera PUSH và camera hiện trong danh sách, chưa gán sân',
       () async {
-        final id = await createCamera(mode: 'PUSH');
+        final created = await createCamera(mode: 'PUSH', name: '$tag-cam-push');
+        final id = created.id;
+        if (created.response.ok) {
+          // Publish info exists only when AQVISION_PUSH_* is configured.
+          final publish = asMap(asMap(created.response.data)['publish']);
+          expect(
+            text(publish['rtmpUrl']),
+            isNotEmpty,
+            reason: 'thiếu publish.rtmpUrl',
+          );
+          debugPrint('push-create: ${created.response.statusCode}');
+        } else {
+          debugPrint(
+            'push-create: 503 (AQVISION_PUSH_* chưa cấu hình), lấy từ list',
+          );
+        }
 
         final found = (await listCameras()).where((c) => c['id'] == id);
         expect(found, hasLength(1));
@@ -273,10 +304,11 @@ void main() {
     );
 
     test('BTC tạo camera PULL với URL phát https giả', () async {
-      final id = await createCamera(
+      final id = (await createCamera(
         mode: 'PULL',
+        name: '$tag-cam-pull',
         extra: {'playbackUrl': 'https://fake.invalid/live/$tag.m3u8'},
-      );
+      )).id;
 
       final found = (await listCameras()).firstWhere((c) => c['id'] == id);
       expect(text(found['playbackUrl']), isNotEmpty);
@@ -292,7 +324,7 @@ void main() {
     });
 
     test('gán sân: bỏ gán (null) OK, sân lạ 404, thiếu courtId 400', () async {
-      final id = await createCamera(mode: 'PUSH');
+      final id = (await createCamera(mode: 'PUSH', name: '$tag-cam-push')).id;
 
       final clear = await call(
         'PATCH',
@@ -318,7 +350,7 @@ void main() {
     });
 
     test('BTC xoá camera và camera biến mất khỏi danh sách', () async {
-      final id = await createCamera(mode: 'PUSH');
+      final id = (await createCamera(mode: 'PUSH', name: '$tag-cam-push')).id;
 
       final r = await call('DELETE', '/livestream/cameras/$id');
       expect(r.ok, isTrue, reason: status('delete camera', r));
@@ -336,20 +368,8 @@ void main() {
   });
 
   group('5.2 stream key (aqp-stream-key)', () {
-    Future<String> createPushCamera() async {
-      final r = await call(
-        'POST',
-        '/livestream/tournaments/${tournament.tournamentId}/cameras',
-        data: {'name': '$tag-cam-key', 'mode': 'PUSH', 'protocol': 'RTMP'},
-      );
-      expect(r.ok, isTrue, reason: status('create camera', r));
-      final id = asMap(r.data)['id'] as String;
-      addTearDown(() async {
-        final d = await call('DELETE', '/livestream/cameras/$id');
-        if (!d.ok) debugPrint(status('dọn camera', d));
-      });
-      return id;
-    }
+    Future<String> createPushCamera() async =>
+        (await createCamera(mode: 'PUSH', name: '$tag-cam-key')).id;
 
     String keyRoute(String id) => '/livestream/cameras/$id/aqp-stream-key';
 
@@ -389,10 +409,11 @@ void main() {
       );
       if (!issued.ok) {
         debugPrint(
-          'AQP chưa cấu hình (HTTP ${issued.statusCode}): bỏ qua rotate.',
+          'issue-key: ${issued.statusCode} (AQP chưa cấu hình), bỏ qua rotate',
         );
         return;
       }
+      debugPrint('issue-key: ${issued.statusCode}, kiểm rotate');
       final issuedBody = asMap(issued.data);
       final rtmp = asMap(issuedBody['rtmp']);
       expect(
