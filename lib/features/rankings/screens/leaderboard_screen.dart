@@ -32,6 +32,8 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   String _selectedCategory = 'all';
   String? _selectedGender = 'MALE';
+  // '' = all formats (no matchType sent); else SINGLES/DOUBLES/MIXED_DOUBLES.
+  String _matchType = '';
 
   @override
   void initState() {
@@ -49,10 +51,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     }
   }
 
+  bool get _isMixedDoubles => _matchType == 'MIXED_DOUBLES';
+
   RankingQuery get _rankingQuery => (
     categoryId: _selectedCategory,
-    matchType: '',
-    genderRestriction: _selectedGender,
+    matchType: _matchType,
+    genderRestriction: _isMixedDoubles ? null : _selectedGender,
     provinceCode: widget.provinceCode,
   );
 
@@ -105,8 +109,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 effectiveCategory.name.toLowerCase().contains('football');
             final query = (
               categoryId: effectiveCategoryId,
-              matchType: '',
-              genderRestriction: _selectedGender,
+              matchType: _matchType,
+              genderRestriction: _isMixedDoubles ? null : _selectedGender,
               provinceCode: widget.provinceCode,
             );
 
@@ -125,7 +129,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                         ? 20
                         : (100 + (widget.isFilterExpanded ? 46 : 0)),
                   ),
-                  if (!isFootball) _buildGenderFilter(colors),
+                  if (!isFootball) _buildFormatFilter(colors),
+                  if (!isFootball && !_isMixedDoubles) ...[
+                    const SizedBox(height: 8),
+                    _buildGenderFilter(colors),
+                  ],
                   const SizedBox(height: 12),
                   isFootball
                       ? footballRankingsAsync.when(
@@ -189,14 +197,41 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  // ─── Gender filter ────────────────────────────────────────────────────
+  // ─── Format + gender filters ──────────────────────────────────────────
+  Widget _buildFormatFilter(AppColorsExtension colors) {
+    final l10n = AppLocalizations.of(context)!;
+    return _buildChipRow(
+      colors,
+      options: [
+        ('', l10n.filterAll, null),
+        ('SINGLES', l10n.clubRankingSingles, null),
+        ('DOUBLES', l10n.clubRankingDoubles, null),
+        ('MIXED_DOUBLES', l10n.doublesMixed, null),
+      ],
+      selected: _matchType,
+      onSelect: (value) => setState(() => _matchType = value),
+    );
+  }
+
   Widget _buildGenderFilter(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    final options = [
-      ('MALE', l10n.clubRankingMale, Icons.male_rounded),
-      ('FEMALE', l10n.clubRankingFemale, Icons.female_rounded),
-    ];
+    return _buildChipRow(
+      colors,
+      options: [
+        ('MALE', l10n.clubRankingMale, Icons.male_rounded),
+        ('FEMALE', l10n.clubRankingFemale, Icons.female_rounded),
+      ],
+      selected: _selectedGender,
+      onSelect: (value) => setState(() => _selectedGender = value),
+    );
+  }
 
+  Widget _buildChipRow(
+    AppColorsExtension colors, {
+    required List<(String, String, IconData?)> options,
+    required String? selected,
+    required ValueChanged<String> onSelect,
+  }) {
     return SizedBox(
       height: 38,
       child: ListView.separated(
@@ -206,31 +241,34 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final option = options[index];
-          final selected = _selectedGender == option.$1;
-          final textColor = selected ? AppTheme.primary : colors.textMuted;
-          final iconColor = selected ? AppTheme.primary : colors.textMuted;
-          final borderColor = selected ? AppTheme.primary : colors.border;
+          final isSelected = selected == option.$1;
+          final textColor = isSelected ? AppTheme.primary : colors.textMuted;
+          final borderColor = isSelected ? AppTheme.primary : colors.border;
 
           return GestureDetector(
-            onTap: () => setState(() => _selectedGender = option.$1),
+            onTap: () => onSelect(option.$1),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: selected ? AppTheme.secondaryLight : colors.bgCard,
+                color: isSelected ? AppTheme.secondaryLight : colors.bgCard,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: borderColor, width: 1.2),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(option.$3, size: 18, color: iconColor),
-                  const SizedBox(width: 6),
+                  if (option.$3 != null) ...[
+                    Icon(option.$3, size: 18, color: textColor),
+                    const SizedBox(width: 6),
+                  ],
                   Text(
                     option.$2,
                     style: TextStyle(
                       color: textColor,
                       fontSize: 13,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                     ),
                   ),
                 ],
@@ -261,6 +299,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         : rankings.where((r) {
             final haystack = [
               r.fullName,
+              r.teamName ?? '',
+              ...r.players.map((p) => p.fullName),
               r.categoryName ?? '',
               r.tierName,
             ].join(' ').toLowerCase();

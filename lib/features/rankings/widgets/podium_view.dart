@@ -173,7 +173,7 @@ class _PodiumSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final name = ranking?.fullName ?? l10n.ranking_unranked;
+    final name = ranking?.displayName ?? l10n.ranking_unranked;
 
     return GestureDetector(
       onTap: onTap,
