@@ -4,18 +4,22 @@ import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
-const Map<String, String> _vietnameseLetters = {
-  'a': 'àáạảãâầấậẩẫăằắặẳẵ',
-  'e': 'èéẹẻẽêềếệểễ',
-  'i': 'ìíịỉĩ',
-  'o': 'òóọỏõôồốộổỗơờớợởỡ',
-  'u': 'ùúụủũưừứựửữ',
-  'y': 'ỳýỵỷỹ',
+// Vietnamese letters plus the Latin-1 accents Web folds through NFD
+// (ä å ç ë î ï ñ ö û ü ÿ); keep both sides in step.
+const Map<String, String> _accentedLetters = {
+  'a': 'àáạảãâầấậẩẫăằắặẳẵäå',
+  'c': 'ç',
+  'e': 'èéẹẻẽêềếệểễë',
+  'i': 'ìíịỉĩîï',
+  'n': 'ñ',
+  'o': 'òóọỏõôồốộổỗơờớợởỡö',
+  'u': 'ùúụủũưừứựửữûü',
+  'y': 'ỳýỵỷỹÿ',
   'd': 'đ',
 };
 
 final Map<int, String> _foldTable = {
-  for (final entry in _vietnameseLetters.entries)
+  for (final entry in _accentedLetters.entries)
     for (final rune in entry.value.runes) rune: entry.key,
 };
 final RegExp _combiningMarks = RegExp(r'[\u0300-\u036f]');
