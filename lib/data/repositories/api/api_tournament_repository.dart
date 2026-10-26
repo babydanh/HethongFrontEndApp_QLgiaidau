@@ -1413,6 +1413,7 @@ class ApiTournamentRepository implements ITournamentRepository {
       round: roundNumber,
       leg: leg,
       matchNumber: matchOrder,
+      matchCode: json['matchCode']?.toString(),
       team1Id:
           p1?['id']?.toString() ?? json['participant1Id']?.toString() ?? '',
       team1Name: team1Name,
