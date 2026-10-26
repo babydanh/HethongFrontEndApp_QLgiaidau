@@ -1,9 +1,9 @@
 ## Why
-App chỉ hiện "Trận N" (`matchNumber` lấy từ `matchOrder`), lặp lại giữa các vòng/nội dung. Backend (change cùng tên) sẽ trả `matchCode` (ví dụ `DN1K2T3`); App hiển thị mã đó kèm tên tắt hai bên, giống Web.
+App chỉ hiện "Trận N" (`matchNumber` lấy từ `matchOrder`), lặp lại giữa các vòng/nội dung. Backend (change cùng tên) trả `matchCode` hoàn chỉnh (ví dụ `DNTB-K1-T3`, không có `#`); App thêm `#` ở đầu khi hiển thị (`#DNTB-K1-T3`), giống Web. Tên VĐV không nằm trong mã.
 
 ## What Changes
 - Thêm `String? matchCode` vào entity `Match` và `TournamentWorkspaceMatch`, parse từ JSON (thiếu thì `null`).
-- Helper `formatMatchCode` + tên tắt (cùng quy tắc và cùng bộ test với Web): `matchCode` + chữ cái đầu hai từ cuối của mỗi tên, bỏ dấu, `Đ`→`D`, chữ hoa; đôi lấy VĐV thứ nhất; thiếu `matchCode` thì giữ "Trận N" cũ.
+- Helper `formatMatchCode(match, {l10n})` giữ chữ ký công khai: trả `#` + `matchCode`; thiếu `matchCode` thì giữ "Trận N" cũ. Bỏ phần ghép tên tắt VĐV (xoá `abbreviateNameForCode` nếu không còn nơi dùng) để các màn gọi `formatMatchCode`/`matchCodeOrNull` không phải sửa. Cùng quy tắc và cùng bộ test với Web.
 - Hiện mã ở: dòng bảng trận bracket, nhãn trận của `match_round_label`, màn Vận hành của ban tổ chức, lưới lịch, nhãn trận của workspace, xuất Excel; thẻ vòng/ma trận vòng bảng nếu App có (kiểm khi làm).
 - Không hiện: overlay livestream, trận câu lạc bộ.
 

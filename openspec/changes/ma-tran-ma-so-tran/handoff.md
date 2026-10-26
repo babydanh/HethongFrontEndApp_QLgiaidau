@@ -1,8 +1,9 @@
 # Handoff: mã trận (ma-tran-ma-so-tran)
-Cập nhật: 2026-10-26 23:00 · bởi: claude · nhánh: ma-tran · OpenSpec: ma-tran-ma-so-tran
+Cập nhật: 2026-10-27 · bởi: claude · nhánh: ma-tran · OpenSpec: ma-tran-ma-so-tran
 
 ## Mục tiêu
-Mỗi trận có mã `<mã nội dung><chữ nhánh><vòng>T<số trận>` (vd `DN1W2T3`) để gọi đúng một trận. Backend tính và trả `matchCode` (không thêm cột DB); Web/App ghép tên tắt 2 bên (chữ đầu 2 từ cuối). Overlay livestream KHÔNG hiện mã. Chi tiết: `proposal.md`, `design.md`, `specs/`.
+Mỗi trận có mã dạng `DNTB-K1-T3` (mã nội dung rút từ tên + chữ nhánh/vòng + số trận) để gọi đúng một trận. Backend tính và trả `matchCode` (không thêm cột DB, không có `#`); App thêm `#` lúc hiển thị (`#DNTB-K1-T3`), KHÔNG ghép tên tắt VĐV. Overlay livestream KHÔNG hiện mã. Chi tiết: `proposal.md`, `design.md`, `specs/`.
+(Bản đã làm xong trước đây dùng `DN1W2T3VATB`; định dạng mới đang chờ làm ở tasks mục 4.)
 
 ## Trạng thái
 - Xong: `matchCode` ở `MatchModel`/`TournamentAssignedMatch`, `lib/core/utils/match_code.dart`, hiển thị ở bracket row, ops, lưới lịch, Excel. Commit `2100a04d`…`016ce342`. `flutter test --no-pub` 4 file exit 0 (39 test), `flutter analyze --no-pub` exit 0. `flutter-reviewer` + `reviewer` GỘP ĐƯỢC.
@@ -24,7 +25,8 @@ Working tree có file sinh tự động (`generated_plugin_registrant.*`…) do 
 - Không chạy Playwright E2E và test Postgres trên máy này; chạy qua `cloud-test-runner` (cần nhánh đã push).
 
 ## Ràng buộc thay đổi lần này
-không đổi (đã so)
+- Định dạng mã đổi (người dùng chốt "2 + thêm dấu #"): bỏ tên tắt VĐV khỏi mã; `#` chỉ ở hiển thị. Ràng buộc "tên tắt Web/App đồng bộ" ở trên hết hiệu lực khi mục 4 xong.
+- Chữ ký `formatMatchCode(match, {l10n})`/`matchCodeOrNull` giữ nguyên để không sửa các màn gọi.
 
 ## Câu hỏi còn mở
 - Cho phép push nhánh `ma-tran` (3 repo) để chạy spec tích hợp Postgres (Backend 3.1) và E2E qua cloud không?
