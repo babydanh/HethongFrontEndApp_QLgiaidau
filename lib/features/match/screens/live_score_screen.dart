@@ -1807,6 +1807,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final roundLabel = MatchRoundLabel.formatRound(
       match: match,
       l10n: l10n,
+      includeMatchCode: false,
     ).trim();
     // Web: roundName || categoryName || tournamentName || 'MATCH INTRODUCTION'.
     // App không có categoryName nên lấy vòng đấu rồi tới tên giải.

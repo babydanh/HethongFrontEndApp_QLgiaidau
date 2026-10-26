@@ -1325,10 +1325,16 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final roundLabelOf = widget.roundLabelOf;
+    final matchCode = matchCodeOrNull(match);
+    String appendMatchCode(String label) =>
+        matchCode == null || label.endsWith('#$matchCode')
+        ? label
+        : '$label - #$matchCode';
     final title = roundLabelOf == null
-        ? matchCodeOrNull(match) ??
-              l10n.organizer_matchTitle(match.round, match.matchNumber)
-        : roundLabelOf(match);
+        ? matchCode == null
+              ? l10n.organizer_matchTitle(match.round, match.matchNumber)
+              : '#$matchCode'
+        : appendMatchCode(roundLabelOf(match));
     final showTotal =
         match.scoreHistory.isEmpty && (match.isLive || match.isCompleted);
     return Container(

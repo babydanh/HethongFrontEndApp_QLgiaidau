@@ -9,11 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 MatchModel _match({
   String? matchCode,
-  String team1Name = 'TBD',
-  String team2Name = 'TBD',
   List<ParticipantPlayer> team1Players = const [],
   List<ParticipantPlayer> team2Players = const [],
-  String? sportKey,
   String? clubMatchSessionId,
   bool isStandaloneMatch = false,
   int matchNumber = 7,
@@ -22,11 +19,10 @@ MatchModel _match({
   round: 1,
   matchNumber: matchNumber,
   matchCode: matchCode,
-  team1Name: team1Name,
-  team2Name: team2Name,
+  team1Name: 'TBD',
+  team2Name: 'TBD',
   team1Players: team1Players,
   team2Players: team2Players,
-  sportKey: sportKey,
   clubMatchSessionId: clubMatchSessionId,
   isStandaloneMatch: isStandaloneMatch,
   bracketPosition: BracketPosition(round: 1, position: matchNumber),
@@ -41,107 +37,33 @@ const _absent = Object();
 void main() {
   final vi = lookupAppLocalizations(const Locale('vi'));
 
-  group('abbreviateNameForCode (same vectors as Web)', () {
-    const vectors = <String?, String>{
-      'Nguyễn Văn An': 'VA',
-      'Trần Thị Bình': 'TB',
-      'Đặng Thị Mỹ Hạnh': 'MH',
-      'Hùng': 'H',
-      'Lê Văn': 'LV',
-      '  trần   thị  bình ': 'TB',
-      'Đỗ': 'D',
-      '': '',
-      null: '',
-      "O'Brien John": 'OJ',
-      'Éric Müller': 'EM',
-      'José Núñez Çelik': 'NC',
-      '   ': '',
-    };
-    vectors.forEach((input, expected) {
-      test('${input == null ? 'null' : '"$input"'} -> "$expected"', () {
-        expect(abbreviateNameForCode(input), expected);
-      });
-    });
-
-    test('decomposed (NFD) Vietnamese input folds like precomposed', () {
-      // "Đặng Thị" with combining marks: a + breve + dot below, i + dot below.
-      expect(abbreviateNameForCode('Đặng Thị'), 'DT');
-    });
-  });
-
   group('buildMatchCode', () {
-    test('both sides', () {
-      expect(
-        buildMatchCode('DN1W2T3', 'Nguyễn Văn An', 'Trần Thị Bình'),
-        'DN1W2T3VATB',
-      );
+    test('returns the trimmed backend code', () {
+      expect(buildMatchCode(' DNTB-K1-T3 '), 'DNTB-K1-T3');
     });
-    test('no side known', () {
-      expect(buildMatchCode('DN1W2T3', null, null), 'DN1W2T3');
-    });
-    test('only side 1', () {
-      expect(buildMatchCode('DN1W2T3', 'Nguyễn Văn An', null), 'DN1W2T3VA');
-    });
-    test('only side 2 (missing side is skipped)', () {
-      expect(buildMatchCode('DN1W2T3', null, 'Trần Thị Bình'), 'DN1W2T3TB');
+
+    test('returns null when backend code is missing or blank', () {
+      expect(buildMatchCode(null), isNull);
+      expect(buildMatchCode('  '), isNull);
     });
   });
 
   group('formatMatchCode', () {
-    test('singles take the first player of each side', () {
+    test('TC-FEAT-01: uses the backend code without athlete initials', () {
       final match = _match(
-        matchCode: 'DN1W2T3',
+        matchCode: 'DNTB-K1-T3',
         team1Players: [_player('Nguyễn Văn An')],
         team2Players: [_player('Trần Thị Bình')],
       );
-      expect(formatMatchCode(match, l10n: vi), 'DN1W2T3VATB');
+      expect(matchCodeOrNull(match), 'DNTB-K1-T3');
+      expect(formatMatchCode(match, l10n: vi), '#DNTB-K1-T3');
     });
 
-    test('doubles take only the first player of each pair', () {
-      final match = _match(
-        matchCode: 'DN1W2T3',
-        team1Players: [_player('Nguyễn Văn An'), _player('Lê Văn Cường', 2)],
-        team2Players: [_player('Trần Thị Bình'), _player('Đỗ', 2)],
-      );
-      expect(formatMatchCode(match, l10n: vi), 'DN1W2T3VATB');
-    });
-
-    test('TBD sides are skipped', () {
+    test('TC-FEAT-02: prefixes a doubles code before opponents are known', () {
       expect(
-        formatMatchCode(_match(matchCode: 'DN1W2T3'), l10n: vi),
-        'DN1W2T3',
+        formatMatchCode(_match(matchCode: 'DDNTB-K1-T3'), l10n: vi),
+        '#DDNTB-K1-T3',
       );
-      expect(
-        formatMatchCode(
-          _match(
-            matchCode: 'DN1W2T3',
-            team1Players: [_player('Nguyễn Văn An')],
-          ),
-          l10n: vi,
-        ),
-        'DN1W2T3VA',
-      );
-    });
-
-    test('team name is used when there are no players', () {
-      final match = _match(
-        matchCode: 'DN1W2T3',
-        team1Name: 'Phượng Hoàng',
-        team2Name: 'Sơn Ca',
-      );
-      expect(formatMatchCode(match, l10n: vi), 'DN1W2T3PHSC');
-    });
-
-    test('football always uses the team name, not a roster member', () {
-      final match = _match(
-        matchCode: 'DN1W2T3',
-        sportKey: 'football',
-        team1Name: 'Hà Nội FC',
-        team2Name: 'Sài Gòn',
-        team1Players: [_player('Nguyễn Văn An')],
-        team2Players: [_player('Trần Thị Bình')],
-      );
-      expect(formatMatchCode(match, l10n: vi), 'DN1W2T3NFSG');
     });
 
     test('missing or blank matchCode falls back to the old label', () {
@@ -157,13 +79,15 @@ void main() {
     test('club matches never show a code', () {
       expect(
         formatMatchCode(
-          _match(matchCode: 'DN1W2T3', clubMatchSessionId: 's1'),
+          _match(matchCode: 'DNTB-K1-T3', clubMatchSessionId: 's1'),
           l10n: vi,
         ),
         'Trận 7',
       );
       expect(
-        matchCodeOrNull(_match(matchCode: 'DN1W2T3', isStandaloneMatch: true)),
+        matchCodeOrNull(
+          _match(matchCode: 'DNTB-K1-T3', isStandaloneMatch: true),
+        ),
         isNull,
       );
     });
@@ -179,8 +103,8 @@ void main() {
 
     test('MatchModel.fromJson reads matchCode', () {
       expect(
-        MatchModel.fromJson(json(matchCode: 'DN1W2T3'), 'm1').matchCode,
-        'DN1W2T3',
+        MatchModel.fromJson(json(matchCode: 'DNTB-K1-T3'), 'm1').matchCode,
+        'DNTB-K1-T3',
       );
     });
 
@@ -193,8 +117,8 @@ void main() {
     });
 
     test('MatchModel copyWith keeps matchCode', () {
-      final match = _match(matchCode: 'DN1W2T3');
-      expect(match.copyWith(round: 2).matchCode, 'DN1W2T3');
+      final match = _match(matchCode: 'DNTB-K1-T3');
+      expect(match.copyWith(round: 2).matchCode, 'DNTB-K1-T3');
       expect(match.copyWith(matchCode: 'X1').matchCode, 'X1');
     });
 
@@ -210,10 +134,10 @@ void main() {
 
     test('TournamentAssignedMatch shows the code or the old label', () {
       final withCode = TournamentAssignedMatch.fromJson(
-        assignedJson(matchCode: 'DN1W2T3'),
+        assignedJson(matchCode: 'DDNTB-K1-T3'),
       );
-      expect(withCode.matchCode, 'DN1W2T3');
-      expect(withCode.localizedMatchLabel(vi), 'DN1W2T3VATB');
+      expect(withCode.matchCode, 'DDNTB-K1-T3');
+      expect(withCode.localizedMatchLabel(vi), '#DDNTB-K1-T3');
 
       final legacy = TournamentAssignedMatch.fromJson(assignedJson());
       expect(legacy.matchCode, isNull);

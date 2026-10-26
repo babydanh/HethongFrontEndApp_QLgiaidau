@@ -22,7 +22,41 @@ class _AuthenticatedAuthNotifier extends AuthNotifier {
 
 class _PreviewWorkspaceNotifier extends MyTournamentWorkspaceNotifier {
   @override
-  Future<TournamentWorkspace> build() async => TournamentWorkspace.empty;
+  Future<TournamentWorkspace> build() async => const TournamentWorkspace(
+    refereeMatches: [
+      TournamentAssignedMatch(
+        id: 'assigned-match-with-code',
+        tournamentId: 'fixture-tournament',
+        tournamentName: 'Spring Cup',
+        categoryName: 'Đôi nam trung bình',
+        stageName: 'Vòng bảng',
+        groupName: 'Bảng A',
+        roundNumber: 3,
+        matchOrder: 3,
+        matchCode: 'DNTB-K1-T3',
+        status: 'SCHEDULED',
+        scheduledAt: null,
+        courtName: '',
+        participant1Name: 'Cặp A',
+        participant2Name: 'Cặp B',
+      ),
+      TournamentAssignedMatch(
+        id: 'assigned-match-without-code',
+        tournamentId: 'fixture-tournament',
+        tournamentName: 'Spring Cup',
+        categoryName: 'Đôi nam trung bình',
+        stageName: 'Vòng bảng',
+        groupName: 'Bảng A',
+        roundNumber: 3,
+        matchOrder: 4,
+        status: 'SCHEDULED',
+        scheduledAt: null,
+        courtName: '',
+        participant1Name: 'Cặp C',
+        participant2Name: 'Cặp D',
+      ),
+    ],
+  );
 }
 
 ThemeData _lightPreviewTheme() {
@@ -50,7 +84,7 @@ ThemeData _lightPreviewTheme() {
 
 void main() {
   testWidgets(
-    'dashboard shows the highest-ELO typed football team without errors',
+    'TC-FEAT-12 dashboard shows the typed football team and assigned match codes',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -122,6 +156,10 @@ void main() {
       expect(find.text('1360 ELO'), findsOneWidget);
       expect(find.text('1460 ELO'), findsOneWidget);
       expect(find.text('Hoạt động theo môn'), findsOneWidget);
+      await tester.tap(find.text('Hoạt động'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('#DNTB-K1-T3'), findsOneWidget);
+      expect(find.textContaining('Trận 4'), findsOneWidget);
       expect(tester.takeException(), isNull);
       tester.view.physicalSize = const Size(360, 800);
       await tester.pump();
