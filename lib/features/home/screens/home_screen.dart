@@ -51,7 +51,7 @@ import 'package:app_quanly_giaidau/features/home/widgets/global_search_screen.da
 class HomeScreen extends ConsumerStatefulWidget {
   final int initialTab;
   final int initialSubTab;
-  const HomeScreen({super.key, this.initialTab = 0, this.initialSubTab = 0});
+  const HomeScreen({super.key, this.initialTab = 0, this.initialSubTab = 1});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -60,7 +60,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
-  int _exploreSubTabIndex = 0; // 0: CLB (default), 1: Social
+  int _exploreSubTabIndex = 1; // 0: CLB, 1: Social (default)
   // Animation controller for compacting/expanding header on scroll
   late final AnimationController _collapseAnimController;
   late final Animation<double> _collapseProgress;
