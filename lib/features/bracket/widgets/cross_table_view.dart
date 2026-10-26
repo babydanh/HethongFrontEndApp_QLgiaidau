@@ -316,7 +316,7 @@ class _GroupCrossTable extends StatelessWidget {
                   child: Text(
                     maxLeg > 1
                         ? l10n
-                              .crossTableLegTitle(title, currentLeg)
+                              .crossTableLegTitle(currentLeg, title)
                               .toUpperCase()
                         : title.toUpperCase(),
                     style: TextStyle(

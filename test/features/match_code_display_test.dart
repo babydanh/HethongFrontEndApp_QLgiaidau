@@ -12,6 +12,10 @@ MatchModel _match({
   int round = 1,
   String status = 'completed',
   String court = 'Sân 1',
+  String bracket = 'winners',
+  String? stageType,
+  String? groupName,
+  int? leg,
 }) => MatchModel(
   id: 'm1',
   round: round,
@@ -21,7 +25,10 @@ MatchModel _match({
   team2Name: 'Trần Thị Bình',
   status: status,
   court: court,
-  bracketPosition: BracketPosition(round: round, position: 3),
+  stageType: stageType,
+  groupName: groupName,
+  leg: leg,
+  bracketPosition: BracketPosition(bracket: bracket, round: round, position: 3),
   updatedAt: DateTime.utc(2026, 1, 1),
 );
 
@@ -54,14 +61,33 @@ Future<void> _pumpRow(WidgetTester tester, MatchModel match) async {
 
 void main() {
   group('MatchTableRow footer label', () {
-    testWidgets('shows round and match code, no overflow', (
-      tester,
-    ) async {
-      await _pumpRow(tester, _match(matchCode: 'DN12W10T12'));
+    testWidgets('shows round and match code, no overflow', (tester) async {
+      await _pumpRow(tester, _match(matchCode: 'DNTB-K1-T3'));
 
-      expect(find.text('Vòng 1/8 - DN12W10T12VATB'), findsOneWidget);
+      expect(find.text('Vòng 1/8 - #DNTB-K1-T3'), findsOneWidget);
       expect(find.textContaining('Trận 3'), findsNothing);
       expect(tester.takeException(), isNull);
+    });
+    testWidgets('TC-FEAT-03: shows code on a grand-final row', (tester) async {
+      await _pumpRow(
+        tester,
+        _match(matchCode: 'DNTB-K1-T3', bracket: 'grand_final'),
+      );
+
+      expect(find.textContaining('#DNTB-K1-T3'), findsOneWidget);
+    });
+
+    testWidgets('TC-FEAT-04: shows code on a group-stage row', (tester) async {
+      await _pumpRow(
+        tester,
+        _match(
+          matchCode: 'DNTB-K1-T3',
+          stageType: 'ROUND_ROBIN',
+          groupName: 'Bảng A',
+        ),
+      );
+
+      expect(find.text('Bảng A - Lượt 1 - #DNTB-K1-T3'), findsOneWidget);
     });
 
     testWidgets('keeps "Trận N" when matchCode is missing', (tester) async {
@@ -73,7 +99,11 @@ void main() {
   });
 
   group('ScheduleGrid footer without a round-label callback', () {
-    Future<void> pumpGrid(WidgetTester tester, MatchModel match) async {
+    Future<void> pumpGrid(
+      WidgetTester tester,
+      MatchModel match, {
+      String Function(MatchModel)? roundLabelOf,
+    }) async {
       tester.view.physicalSize = const Size(900, 1400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -87,21 +117,33 @@ void main() {
             endHour: 12,
             day: DateTime(2026, 3, 1),
             onTapMatch: (_) {},
+            roundLabelOf: roundLabelOf,
           ),
         ),
       );
       await tester.pumpAndSettle();
     }
 
-    MatchModel scheduled({String? matchCode}) =>
-        _match(matchCode: matchCode, status: 'scheduled').copyWith(
-          scheduledTime: DateTime(2026, 3, 1, 8),
-        );
+    MatchModel scheduled({String? matchCode}) => _match(
+      matchCode: matchCode,
+      status: 'scheduled',
+    ).copyWith(scheduledTime: DateTime(2026, 3, 1, 8));
 
     testWidgets('shows the match code', (tester) async {
-      await pumpGrid(tester, scheduled(matchCode: 'DN1W2T3'));
+      await pumpGrid(tester, scheduled(matchCode: 'DNTB-K1-T3'));
 
-      expect(find.text('DN1W2T3VATB'), findsOneWidget);
+      expect(find.text('#DNTB-K1-T3'), findsOneWidget);
+    });
+    testWidgets('TC-FEAT-05: appends the code to the supplied round label', (
+      tester,
+    ) async {
+      await pumpGrid(
+        tester,
+        scheduled(matchCode: 'DNTB-K1-T3'),
+        roundLabelOf: (_) => 'Vòng 1/8',
+      );
+
+      expect(find.text('Vòng 1/8 - #DNTB-K1-T3'), findsOneWidget);
     });
 
     testWidgets('keeps "Vòng • Trận N" without a code', (tester) async {
@@ -111,19 +153,92 @@ void main() {
     });
   });
 
-  group('MatchRoundLabel generic fallback', () {
+  group('MatchRoundLabel', () {
     final vi = lookupAppLocalizations(const Locale('vi'));
-    final noRound = _match(round: 0, matchCode: 'DN1W2T3');
+    final noRound = _match(round: 0, matchCode: 'DNTB-K1-T3');
 
     test('uses the match code when there is one', () {
-      expect(MatchRoundLabel.formatRound(match: noRound, l10n: vi), 'DN1W2T3VATB');
+      expect(
+        MatchRoundLabel.formatRound(match: noRound, l10n: vi),
+        '#DNTB-K1-T3',
+      );
     });
 
     test('keeps "Trận N" without a code', () {
       expect(
-        MatchRoundLabel.formatRound(match: noRound.copyWith(matchCode: ''), l10n: vi),
+        MatchRoundLabel.formatRound(
+          match: noRound.copyWith(matchCode: ''),
+          l10n: vi,
+        ),
         'Trận 3',
       );
     });
+
+    test('TC-FEAT-11: does not duplicate code in short losers fallback', () {
+      final label = MatchRoundLabel.formatRound(
+        match: _match(
+          round: 0,
+          matchCode: 'DNTB-K1-T3',
+          bracket: 'losers',
+        ),
+        short: true,
+        l10n: vi,
+      );
+
+      expect(label, '#DNTB-K1-T3 (NT)');
+    });
+
+    test(
+      'TC-FEAT-06: appends code to knockout, groups, Swiss, final and generic stage labels',
+      () {
+        final knockout = MatchRoundLabel.formatRound(
+          match: _match(round: 1, matchCode: 'DNTB-K1-T3'),
+          bracketSize: 16,
+          l10n: vi,
+        );
+        final group = MatchRoundLabel.formatRound(
+          match: _match(
+            round: 1,
+            matchCode: 'DNTB-K1-T3',
+            stageType: 'ROUND_ROBIN',
+            groupName: 'A',
+          ),
+          l10n: vi,
+        );
+        final swiss = MatchRoundLabel.formatRound(
+          match: _match(round: 2, matchCode: 'DNTB-K1-T3', stageType: 'SWISS'),
+          l10n: vi,
+        );
+        final finalLabel = MatchRoundLabel.formatRound(
+          match: _match(
+            round: 4,
+            matchCode: 'DNTB-K1-T3',
+            bracket: 'grand_final',
+          ),
+          l10n: vi,
+        );
+        final genericGroup = MatchRoundLabel.formatRound(
+          match: _match(
+            round: 1,
+            leg: 2,
+            matchCode: 'DNTB-K1-T3',
+            stageType: 'ROUND_ROBIN',
+          ),
+          l10n: vi,
+        );
+
+        expect(knockout, '${vi.matchTableRoundOf(8, 16)} - #DNTB-K1-T3');
+        expect(
+          group,
+          '${vi.matchRoundGroupLeg(vi.matchRoundGroupPrefix('A'), 1)} - #DNTB-K1-T3',
+        );
+        expect(swiss, '${vi.swissRoundLabel(2)} - #DNTB-K1-T3');
+        expect(finalLabel, '${vi.matchRoundGrandFinal} - #DNTB-K1-T3');
+        expect(
+          genericGroup,
+          '${vi.crossTableLegTitle(2, vi.bracketView_groupStage)} - #DNTB-K1-T3',
+        );
+      },
+    );
   });
 }

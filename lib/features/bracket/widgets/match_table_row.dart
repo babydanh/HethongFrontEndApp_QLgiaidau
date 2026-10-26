@@ -91,14 +91,18 @@ class MatchTableRow extends StatelessWidget {
     final isGroup = isGroupStageMatch(match);
     // Round + match code when the backend sent one, else the old "Trận N".
     final matchCode = matchCodeOrNull(match);
+    String appendMatchCode(String label) =>
+        matchCode == null || label.endsWith('#$matchCode')
+        ? label
+        : '$label - #$matchCode';
     String roundWithMatch(String round) => matchCode == null
         ? l10n.matchTableRoundMatch(round, match.matchNumber)
-        : '$round - $matchCode';
+        : appendMatchCode(round);
     final String roundLabel;
     if (branch == 'grand_final' || branch == 'grand_final_reset') {
-      roundLabel = l10n.matchTableGrandFinal;
+      roundLabel = appendMatchCode(l10n.matchTableGrandFinal);
     } else if (branch == 'losers') {
-      roundLabel = l10n.matchTableLosersRound(match.round);
+      roundLabel = appendMatchCode(l10n.matchTableLosersRound(match.round));
     } else if (isSwissMatch(match)) {
       roundLabel = roundWithMatch(l10n.swissRoundLabel(match.round));
     } else if (isGroup &&
@@ -108,7 +112,9 @@ class MatchTableRow extends StatelessWidget {
         match.groupName,
         l10n: l10n,
       );
-      roundLabel = l10n.crossTableLegTitle(groupDisplay, match.leg ?? 1);
+      roundLabel = appendMatchCode(
+        l10n.crossTableLegTitle(match.leg ?? 1, groupDisplay),
+      );
     } else {
       roundLabel = roundWithMatch(
         _getRoundName(match.round, totalRounds, l10n),

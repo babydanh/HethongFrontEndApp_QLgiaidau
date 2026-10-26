@@ -3782,14 +3782,23 @@ class _OpsMatchCard extends StatelessWidget {
     final groupName = match.groupName?.trim();
     final isRoundRobin = isGroupStageMatch(match);
     final matchCode = matchCodeOrNull(match);
-    final contextLabel = isRoundRobin
-        ? groupName?.isNotEmpty == true
-              ? l10n.crossTableLegTitle(
-                  MatchRoundLabel.formatStageOrGroupName(groupName, l10n: l10n),
-                  match.leg ?? 1,
-                )
-              : matchCode ?? '#${match.matchNumber}'
-        : matchCode ?? l10n.organizer_matchTitle(match.round, match.matchNumber);
+    final String contextLabel;
+    if (isRoundRobin && groupName?.isNotEmpty == true) {
+      final groupLabel = MatchRoundLabel.formatStageOrGroupName(
+        groupName,
+        l10n: l10n,
+      );
+      final roundLabel = l10n.crossTableLegTitle(match.leg ?? 1, groupLabel);
+      contextLabel = matchCode == null
+          ? roundLabel
+          : '$roundLabel - #$matchCode';
+    } else if (matchCode != null) {
+      contextLabel = '#$matchCode';
+    } else if (isRoundRobin) {
+      contextLabel = '#${match.matchNumber}';
+    } else {
+      contextLabel = l10n.organizer_matchTitle(match.round, match.matchNumber);
+    }
     final scheduledLabel = match.scheduledTime == null
         ? l10n.opsUnscheduled
         : '${MaterialLocalizations.of(context).formatFullDate(match.scheduledTime!.toLocal())} '

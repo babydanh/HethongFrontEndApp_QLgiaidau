@@ -1,33 +1,37 @@
-# Handoff: mã trận (ma-tran-ma-so-tran)
-Cập nhật: 2026-10-27 · bởi: claude · nhánh: ma-tran · OpenSpec: ma-tran-ma-so-tran
+# Handoff: mã trận (`ma-tran-ma-so-tran`)
+Cập nhật: 2026-10-26 · bởi: omp · nhánh: `omp/issue-53` · OpenSpec: `ma-tran-ma-so-tran`
 
 ## Mục tiêu
-Mỗi trận có mã dạng `DNTB-K1-T3` (mã nội dung rút từ tên + chữ nhánh/vòng + số trận) để gọi đúng một trận. Backend tính và trả `matchCode` (không thêm cột DB, không có `#`); App thêm `#` lúc hiển thị (`#DNTB-K1-T3`), KHÔNG ghép tên tắt VĐV. Overlay livestream KHÔNG hiện mã. Chi tiết: `proposal.md`, `design.md`, `specs/`.
-(Bản đã làm xong trước đây dùng `DN1W2T3VATB`; định dạng mới đang chờ làm ở tasks mục 4.)
+Backend trả `matchCode` thô; App chỉ thêm `#` lúc hiển thị, giữ fallback cũ khi thiếu mã và không hiện mã trong overlay livestream. Không đổi DTO, schema hay API.
 
 ## Trạng thái
-- Xong: `matchCode` ở `MatchModel`/`TournamentAssignedMatch`, `lib/core/utils/match_code.dart`, hiển thị ở bracket row, ops, lưới lịch, Excel. Commit `2100a04d`…`016ce342`. `flutter test --no-pub` 4 file exit 0 (39 test), `flutter analyze --no-pub` exit 0. `flutter-reviewer` + `reviewer` GỘP ĐƯỢC.
-- Đang dở: chưa đo thật ở 320dp (footer đã bọc `Flexible`) và chưa chạy `app-run.py status`.
-- Tiếp theo: xác nhận spec cho nhánh `grand_final`/`losers` và round-robin có groupName (đang không hiện mã).
+- Hoàn tất hiển thị mã ở bracket, nhãn vòng/trận, Vận hành, lưới lịch, workspace và Excel; dữ liệu/export vẫn giữ mã thô, overlay livestream không hiện mã.
+- Mọi lời gọi `crossTableLegTitle` dùng thứ tự `(leg, title)`; nhãn group Ops được chuẩn hóa trước khi dịch.
+- Tile trận workspace gọi `localizedMatchLabel(l10n)`, hiện `#DNTB-K1-T3` hoặc fallback `Trận N`; task 2.1 đã cập nhật.
+- Review App trước đó tìm thấy P2 về mã lặp và tên group chưa dịch; cả hai đã sửa. Review độc lập mới không thấy finding P0–P3.
+- OpenSpec strict validation hợp lệ. Task 3.1 và 4.2 còn mở vì thiếu `app-run.py status` và chưa hoàn tất toàn bộ cổng kiểm chứng.
+- Ripwire trên toàn bộ diff chọn 65 test files; đã có kết quả bộ 18 file (152 pass) và các test trọng điểm, chưa chạy phần còn lại. Batch 62 unit/widget test bị dừng theo quy định không chạy test nặng local; 2 `integration_test` cần `app-e2e`.
 
 ## Đã thử
-| Cách | Kết quả | Vì sao / bằng chứng |
+| Cách | Kết quả | Bằng chứng |
 |---|---|---|
-| Tên `José Núñez Çelik` | đỏ rồi xanh | trước sửa ra `NE` thay vì `NC`; thêm Latin-1 vào `_accentedLetters` |
-
-P3 còn ghi: `tournament_workspace.dart:108-115` `localizedMatchLabel` tách `' / '` và không màn nào gọi `matchLabel`; `match_table_row.dart:98-101` nhánh `grand_final`/`losers` và `organizer_ops_screen.dart:3784-3792` không hiện mã; `match_round_label.dart:324` chuỗi cứng "Trận ${match.matchNumber}" chưa l10n; `MatchModel.copyWith` không đặt về null (cố ý); thiếu widget test overflow 320dp/`textScaler` 1.3.
-Working tree có file sinh tự động (`generated_plugin_registrant.*`…) do flutter tooling, không phải của việc này, không `git add`.
+| `flutter test --no-pub test/features/public_bracket_view_test.dart --plain-name 'TC-FEAT-10'` | Đạt | 1 test pass sau khi fixture dùng null-aware entry |
+| `flutter test --no-pub test/features/match_code_display_test.dart --plain-name 'TC-FEAT-11'` | Đạt | 1 test pass; nhãn nhánh thua không lặp mã |
+| `flutter test --no-pub test/features/dashboard_screen_typed_football_summary_test.dart --plain-name 'TC-FEAT-12'` | Đạt | 1 test pass; test đỏ khi bỏ nhãn mã khỏi tile workspace |
+| Bộ 18 test file Ripwire-selected trước khi thêm tile workspace | Đạt | 152 test pass |
+| `flutter analyze --no-pub` trên 24 file Dart đã sửa | Chưa xanh | Exit 1 do hai diagnostic `use_null_aware_elements` có sẵn tại `test/features/public_bracket_view_test.dart:47-48`; entry `leg` mới đã dùng `'leg': ?leg` |
+| `pnpm dlx @fission-ai/openspec@1.14.2 validate ma-tran-ma-so-tran --strict` | Đạt | `Change 'ma-tran-ma-so-tran' is valid` |
+| `python ~/.omp/scripts/app-run.py status` | Không chạy được | File script không tồn tại trong môi trường Linux; chưa có trạng thái `errors` của app dùng chung |
+| `ripwire quality_delta` | Có cảnh báo cấu trúc | 51 dòng regression, 51 `preexisting-worse`, 18 gating; không có mục `defect-shape` trong kết quả |
 
 ## Ràng buộc đang có
-- Chưa push, chưa lên staging/main; người dùng chưa cho phép (nguồn: CLAUDE.md Git).
-- Backend gộp trước Web/App; không đổi trường cũ của DTO; trận câu lạc bộ/lẻ luôn `matchCode: null`; thiếu mã thì Web/App về "Trận #n"/"Trận N" cũ (nguồn: người dùng duyệt thiết kế).
-- Tên tắt: Web và App đồng bộ fold dấu Latin-1 + tiếng Việt; vector test chung (`Éric Müller`→EM, `José Núñez Çelik`→NC).
-- Không chạy Playwright E2E và test Postgres trên máy này; chạy qua `cloud-test-runner` (cần nhánh đã push).
+- Backend trả mã không có `#`; App chỉ thêm `#` khi hiển thị; trận CLB/lẻ vẫn không có mã.
+- Không đổi shape DTO, schema DB hoặc API; overlay livestream không hiển thị mã.
+- Không push Backend, `main` hoặc `staging`; không chạy `flutter run` hay cài App.
 
 ## Ràng buộc thay đổi lần này
-- Định dạng mã đổi (người dùng chốt "2 + thêm dấu #"): bỏ tên tắt VĐV khỏi mã; `#` chỉ ở hiển thị. Ràng buộc "tên tắt Web/App đồng bộ" ở trên hết hiệu lực khi mục 4 xong.
-- Chữ ký `formatMatchCode(match, {l10n})`/`matchCodeOrNull` giữ nguyên để không sửa các màn gọi.
+- Không đổi hợp đồng dữ liệu hay API; thêm mã và fallback vào tile workspace theo proposal.
+- Các task kiểm chứng chưa đạt đủ vẫn để `[ ]`, không đánh dấu hoàn tất giả.
 
 ## Câu hỏi còn mở
-- Cho phép push nhánh `ma-tran` (3 repo) để chạy spec tích hợp Postgres (Backend 3.1) và E2E qua cloud không?
-- Có cần chạy `node scripts/sync-api-clients.js` sau khi gộp Backend không `[SUY LUẬN]` (chưa kiểm)?
+- Cần môi trường có `~/.omp/scripts/app-run.py` để chạy `status`; task 3.1 và 4.2 giữ mở cho tới khi xác nhận app dùng chung và hoàn tất test ảnh hưởng. Cloud `app` target đã biết không tương thích Dart `^3.10.3` (Flutter 3.29.x chỉ có Dart 3.7.2).

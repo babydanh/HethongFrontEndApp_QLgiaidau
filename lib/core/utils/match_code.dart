@@ -1,80 +1,24 @@
 import 'dart:ui';
 
-import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
-// Vietnamese letters plus the Latin-1 accents Web folds through NFD
-// (ä å ç ë î ï ñ ö û ü ÿ); keep both sides in step.
-const Map<String, String> _accentedLetters = {
-  'a': 'àáạảãâầấậẩẫăằắặẳẵäå',
-  'c': 'ç',
-  'e': 'èéẹẻẽêềếệểễë',
-  'i': 'ìíịỉĩîï',
-  'n': 'ñ',
-  'o': 'òóọỏõôồốộổỗơờớợởỡö',
-  'u': 'ùúụủũưừứựửữûü',
-  'y': 'ỳýỵỷỹÿ',
-  'd': 'đ',
-};
-
-final Map<int, String> _foldTable = {
-  for (final entry in _accentedLetters.entries)
-    for (final rune in entry.value.runes) rune: entry.key,
-};
-final RegExp _combiningMarks = RegExp(r'[\u0300-\u036f]');
-final RegExp _notLetterOrSpace = RegExp(r'[^a-z\s]');
-final RegExp _spaces = RegExp(r'\s+');
-
-/// Initials of the last two words of [name], accent-free and upper case
-/// ("Nguyễn Văn An" -> "VA"). Same rule and test vectors as Web.
-String abbreviateNameForCode(String? name) {
-  if (name == null) return '';
-  final folded = name
-      .toLowerCase()
-      .replaceAll(_combiningMarks, '')
-      .runes
-      .map((rune) => _foldTable[rune] ?? String.fromCharCode(rune))
-      .join()
-      .replaceAll(_notLetterOrSpace, '');
-  final words = folded.split(_spaces).where((word) => word.isNotEmpty).toList();
-  final lastTwo = words.length > 2 ? words.sublist(words.length - 2) : words;
-  return lastTwo.map((word) => word[0]).join().toUpperCase();
+/// Returns the trimmed backend code, or null when it is missing or blank.
+String? buildMatchCode(String? code) {
+  final trimmed = code?.trim();
+  return trimmed == null || trimmed.isEmpty ? null : trimmed;
 }
 
-/// `<code><side 1 initials><side 2 initials>`; a side without a name is
-/// skipped. Null when [code] is missing or blank.
-String? buildMatchCode(String? code, String? side1, String? side2) {
-  final base = code?.trim() ?? '';
-  if (base.isEmpty) return null;
-  return '$base${abbreviateNameForCode(side1)}${abbreviateNameForCode(side2)}';
-}
-
-/// Name that stands for one side of [match]: the first player (doubles use
-/// their first member), or the team name for football and player-less sides.
-String? _sideNameForCode(MatchModel match, int side) {
-  if (!isFootballMatch(match)) {
-    final players = matchSidePlayers(match, side);
-    if (players.isNotEmpty) return players.first.fullName;
-  }
-  return matchSideTeamName(match, side);
-}
-
-/// Display code of [match], or null when the backend sent none. Club matches
-/// never show a code.
+/// Raw backend code for [match], or null for club and standalone matches.
 String? matchCodeOrNull(MatchModel match) {
   if (match.clubMatchSessionId != null || match.isStandaloneMatch) return null;
-  return buildMatchCode(
-    match.matchCode,
-    _sideNameForCode(match, 1),
-    _sideNameForCode(match, 2),
-  );
+  return buildMatchCode(match.matchCode);
 }
 
-/// Match code when present, otherwise the legacy "Trận N" label.
+/// Display label for [match]: `#<matchCode>`, or the legacy "Trận N" label.
 String formatMatchCode(MatchModel match, {AppLocalizations? l10n}) {
   final code = matchCodeOrNull(match);
-  if (code != null) return code;
+  if (code != null) return '#$code';
   final strings =
       l10n ?? lookupAppLocalizations(PlatformDispatcher.instance.locale);
   return strings.workspaceMatchLabel(match.matchNumber);

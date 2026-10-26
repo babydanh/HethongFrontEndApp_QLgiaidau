@@ -33,6 +33,7 @@ MatchModel _match(
   String nextMatchId = '',
   String? stageType,
   String? groupName,
+  int? leg,
 }) => MatchModel.fromJson({
   'id': id,
   'tournamentId': 't-1',
@@ -45,6 +46,7 @@ MatchModel _match(
   'bracketPosition': {'bracket': bracket, 'round': round, 'position': position},
   if (stageType != null) 'stageType': stageType,
   if (groupName != null) 'groupName': groupName,
+  'leg': ?leg,
 }, id);
 
 Widget _host(Widget child, {List<Override> overrides = const []}) =>
@@ -170,12 +172,16 @@ void main() {
     expect(find.byType(SingleElimDiagram), findsNothing);
   });
 
-  testWidgets('round robin keeps its cross table, not a knockout diagram', (
+  testWidgets('TC-FEAT-10 round-robin header labels the current leg', (
     tester,
   ) async {
     final matches = [
-      _match('r1', groupName: 'A', stageType: 'GROUP'),
-      _match('r2', position: 1, groupName: 'A', stageType: 'GROUP'),
+      _match('r1', groupName: 'A', stageType: 'GROUP', leg: 1),
+      _match('r2', position: 1, groupName: 'A', stageType: 'GROUP', leg: 2),
+    ];
+    const standings = [
+      Standing(id: 'a1', teamName: 'Đội A1', group: 'A', totalPoints: 0),
+      Standing(id: 'a2', teamName: 'Đội A2', group: 'A', totalPoints: 0),
     ];
     await tester.pumpWidget(
       _host(
@@ -188,7 +194,7 @@ void main() {
           standingsWithDivisionProvider((
             tournamentId: 't-1',
             divisionId: null,
-          )).overrideWith((ref) => Stream.value(const <Standing>[])),
+          )).overrideWith((ref) => Stream.value(standings)),
           matchesWithDivisionProvider((
             tournamentId: 't-1',
             divisionId: null,
@@ -196,9 +202,11 @@ void main() {
         ],
       ),
     );
+    await tester.pumpAndSettle();
     expect(find.text('Bảng'), findsNothing);
     expect(find.text('Playoff'), findsNothing);
     expect(find.byType(CrossTableView), findsOneWidget);
+    expect(find.text('A - LƯỢT 1'), findsOneWidget);
     expect(find.byType(SingleElimDiagram), findsNothing);
     expect(find.byType(DoubleElimDiagram), findsNothing);
   });

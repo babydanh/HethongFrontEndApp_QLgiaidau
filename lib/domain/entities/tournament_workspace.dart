@@ -105,14 +105,11 @@ class TournamentAssignedMatch {
     lookupAppLocalizations(PlatformDispatcher.instance.locale),
   );
 
-  String localizedMatchLabel(AppLocalizations l10n) =>
-      buildMatchCode(
-        matchCode,
-        // Doubles arrive as "A / B"; only the first player counts.
-        participant1Name?.split(' / ').first,
-        participant2Name?.split(' / ').first,
-      ) ??
-      l10n.workspaceMatchLabel(matchOrder);
+  String localizedMatchLabel(AppLocalizations l10n) {
+    final code = buildMatchCode(matchCode);
+    if (code == null) return l10n.workspaceMatchLabel(matchOrder);
+    return '#$code';
+  }
 
   String get participantLabel => localizedParticipantLabel(
     lookupAppLocalizations(PlatformDispatcher.instance.locale),
@@ -266,7 +263,9 @@ class TournamentWorkspace {
       ],
       refereeTournaments: [
         ...refereeTournaments,
-        ...next.refereeTournaments.where((i) => !refereeTournaments.contains(i)),
+        ...next.refereeTournaments.where(
+          (i) => !refereeTournaments.contains(i),
+        ),
       ],
       refereeMatches: [
         ...refereeMatches,
