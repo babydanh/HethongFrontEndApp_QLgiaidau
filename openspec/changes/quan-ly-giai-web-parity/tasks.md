@@ -32,7 +32,7 @@
 
 ## 2. Hạng mục & vòng đấu
 
-- [ ] 2.1 Sheet hạng mục đầy đủ (tạo/sửa): nhận dạng, thể thức, chuẩn/Lite, sức chứa + ELO min/max + phí riêng, luật theo môn (sets/points/winBy2/maxDeuce/superTiebreak), số lượt vòng tròn, vòng bảng + playoff + seeding, giữ SwissConfigEditor, preset theo môn (port `getSportRulePresets`); khoá kết cấu khi có bracket. Tiêu chí: TC-WP-02-01/02/03 + test API create/update division qua cloud.
+- [x] 2.1 Sheet hạng mục đầy đủ (tạo/sửa): nhận dạng, thể thức, chuẩn/Lite, sức chứa + ELO min/max + phí riêng, luật theo môn (sets/points/winBy2/maxDeuce/superTiebreak), số lượt vòng tròn, vòng bảng + playoff + seeding, giữ SwissConfigEditor, preset theo môn (port `getSportRulePresets`); khoá kết cấu khi có bracket. Tiêu chí: TC-WP-02-01/02/03 + test API create/update division qua cloud.
   - Files: `lib/features/tournament/screens/tournament_management_divisions_section.dart:151-335,385-723`, tạo `lib/features/tournament/widgets/division_editor_sheet.dart`, tạo `lib/features/tournament/utils/sport_rule_presets.dart`, repository, ARB, `test/features/division_editor_sheet_test.dart`
   - Giao: `createDivision/updateDivision` mở rộng payload · Nhận: thay dialog thêm/sửa/cấu hình hiện có
   - Chủ file chung: divisions_section (cùng 1.3, 1.4)
@@ -109,7 +109,7 @@
 
 ## 5. Livestream camera
 
-- [ ] 5.1 Camera CRUD: sheet thêm camera (tên, sân, PUSH/PULL + URL khi PULL), sửa/xoá có confirm, đổi sân qua chọn; kéo-thả camera vào thẻ sân. Tiêu chí: TC-WP-05-01/02/03 + test API cameras qua cloud.
+- [x] 5.1 Camera CRUD: sheet thêm camera (tên, sân, PUSH/PULL + URL khi PULL), sửa/xoá có confirm, đổi sân qua chọn; kéo-thả camera vào thẻ sân. Tiêu chí: TC-WP-05-01/02/03 + test API cameras qua cloud.
   - Files: `lib/features/tournament/screens/tournament_management_livestream_section.dart:18-33` (gỡ chặn), tạo `lib/features/tournament/widgets/camera_editor_sheet.dart`, repository (listCameras/createCamera/deleteCamera/assignCameraCourt), ARB, test
   - Giao: `listCameras/createCamera/deleteCamera/assignCameraCourt` · Nhận: khu camera trong màn Livestream
   - Chủ file chung: livestream_section (cùng 5.2)
