@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_register_bar.dart';
@@ -33,6 +35,15 @@ class _AdminAuthNotifier extends AuthNotifier {
   @override
   AuthState build() =>
       const AuthState(status: AuthStatus.authenticated, role: UserRole.admin);
+}
+
+class _FakeWorkspaceNotifier extends MyTournamentWorkspaceNotifier {
+  _FakeWorkspaceNotifier(this._workspace);
+
+  final TournamentWorkspace _workspace;
+
+  @override
+  Future<TournamentWorkspace> build() async => _workspace;
 }
 
 Tournament _tournament({
@@ -381,11 +392,13 @@ void main() {
     final router = _createRouter();
     addTearDown(router.dispose);
 
+    final tournament = _tournament(isSuperLite: true);
     await tester.pumpWidget(
       _scope(
-        tournament: _tournament(isSuperLite: true),
+        tournament: tournament,
         invite: null,
         authNotifier: _OrganizerAuthNotifier.new,
+        workspace: TournamentWorkspace(organizedTournaments: [tournament]),
         child: _app(router),
       ),
     );
@@ -412,11 +425,13 @@ void main() {
     final router = _createRouter();
     addTearDown(router.dispose);
 
+    final tournament = _tournament();
     await tester.pumpWidget(
       _scope(
-        tournament: _tournament(),
+        tournament: tournament,
         invite: null,
         authNotifier: _OrganizerAuthNotifier.new,
+        workspace: TournamentWorkspace(organizedTournaments: [tournament]),
         child: _app(router),
       ),
     );
@@ -484,7 +499,57 @@ void main() {
     );
   });
 
-  testWidgets('admin sees the management action', (tester) async {
+  testWidgets('co-organizer sees the management action', (tester) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    final tournament = _tournament();
+    await tester.pumpWidget(
+      _scope(
+        tournament: tournament,
+        invite: null,
+        workspace: TournamentWorkspace(coOrganizerTournaments: [tournament]),
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(
+      find.byTooltip(AppLocalizations.of(context)!.managementTitle),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('organizer role alone does not see the management action', (
+    tester,
+  ) async {
+    _setPhoneViewport(tester);
+    final router = _createRouter();
+    addTearDown(router.dispose);
+
+    await tester.pumpWidget(
+      _scope(
+        tournament: _tournament(),
+        invite: null,
+        authNotifier: _OrganizerAuthNotifier.new,
+        child: _app(router),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    final context = tester.element(find.byType(TournamentIntroScreen));
+    expect(
+      find.byTooltip(AppLocalizations.of(context)!.managementTitle),
+      findsNothing,
+    );
+  });
+
+  testWidgets('admin does not see the management action on a tournament they '
+      'do not run', (tester) async {
     _setPhoneViewport(tester);
     final router = _createRouter();
     addTearDown(router.dispose);
@@ -503,7 +568,7 @@ void main() {
     final context = tester.element(find.byType(TournamentIntroScreen));
     expect(
       find.byTooltip(AppLocalizations.of(context)!.managementTitle),
-      findsOneWidget,
+      findsNothing,
     );
   });
 }
@@ -560,9 +625,13 @@ ProviderScope _scope({
   AuthNotifier Function()? authNotifier,
   String profileId = 'viewer-1',
   List<Map<String, dynamic>> divisionData = const [],
+  TournamentWorkspace workspace = TournamentWorkspace.empty,
 }) => ProviderScope(
   overrides: [
     authProvider.overrideWith(authNotifier ?? _GuestAuthNotifier.new),
+    myTournamentWorkspaceProvider.overrideWith(
+      () => _FakeWorkspaceNotifier(workspace),
+    ),
     userProfileProvider.overrideWith(
       (ref) async => UserProfile(
         id: profileId,
