@@ -39,6 +39,16 @@ class BackendApiException implements Exception {
       'BackendApi $method $path -> HTTP ${statusCode ?? 'không có mã'}: $bodySnippet';
 }
 
+/// Kết quả thô của một lời gọi: mã HTTP và body đã bóc `data`. Không in, không ném theo mã.
+class ApiResponse {
+  const ApiResponse(this.statusCode, this.data);
+
+  final int statusCode;
+  final Object? data;
+
+  bool get ok => statusCode >= 200 && statusCode < 300;
+}
+
 class CreatedTournament {
   const CreatedTournament({
     required this.tournamentId,
@@ -389,6 +399,29 @@ class BackendApi {
         },
       },
     );
+  }
+
+  /// Gọi route bất kỳ và trả mã HTTP cùng `data` mà không ném theo mã. Dùng cho test API cần
+  /// khẳng định cả mã lỗi (400/403/404/503). Không in body: body có thể chứa khoá luồng.
+  Future<ApiResponse> request(
+    String method,
+    String path, {
+    String? token,
+    Object? data,
+  }) async {
+    try {
+      final response = await _dio.request<Object?>(
+        path,
+        data: data,
+        options: Options(
+          method: method,
+          headers: token == null ? null : {'Authorization': 'Bearer $token'},
+        ),
+      );
+      return ApiResponse(response.statusCode ?? 0, _unwrap(response.data));
+    } on DioException catch (e) {
+      throw _error(method, path, null, 'lỗi mạng: ${e.type.name}');
+    }
   }
 
   Future<Object?> _send(
