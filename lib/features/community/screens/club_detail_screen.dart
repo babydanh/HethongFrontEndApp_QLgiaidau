@@ -552,7 +552,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/home?tab=3&sub=0');
+      context.go('/home?tab=3');
     }
   }
 

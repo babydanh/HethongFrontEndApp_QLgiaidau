@@ -165,7 +165,7 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
             const _MenuAction(
               'Social & Kèo đấu',
               Icons.dynamic_feed_rounded,
-              '/home?tab=3&sub=1',
+              '/home?tab=3',
             ),
             _MenuAction(
               l10n.menuMessages,
@@ -192,7 +192,7 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
             const _MenuAction(
               'Social & Kèo đấu',
               Icons.dynamic_feed_rounded,
-              '/home?tab=3&sub=1',
+              '/home?tab=3',
             ),
             _MenuAction(l10n.profileLoginButton, Icons.login_rounded, '/login'),
             _MenuAction(

@@ -202,13 +202,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/home',
         builder: (context, state) {
           final tabStr = state.uri.queryParameters['tab'];
-          final subStr = state.uri.queryParameters['sub'];
           final initialTab = int.tryParse(tabStr ?? '') ?? 0;
-          final initialSubTab = int.tryParse(subStr ?? '') ?? 1;
-          return HomeScreen(
-            initialTab: initialTab,
-            initialSubTab: initialSubTab,
-          );
+          return HomeScreen(initialTab: initialTab);
         },
       ),
 
