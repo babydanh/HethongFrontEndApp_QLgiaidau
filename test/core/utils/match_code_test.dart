@@ -53,6 +53,8 @@ void main() {
       '': '',
       null: '',
       "O'Brien John": 'OJ',
+      'Éric Müller': 'EM',
+      'José Núñez Çelik': 'NC',
       '   ': '',
     };
     vectors.forEach((input, expected) {

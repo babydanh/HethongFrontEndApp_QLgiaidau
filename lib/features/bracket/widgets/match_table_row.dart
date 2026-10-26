@@ -606,14 +606,16 @@ class MatchTableRow extends StatelessWidget {
                     const SizedBox(width: 4),
 
                     // Round / Match Number
-                    Text(
-                      roundLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textMuted,
+                    Flexible(
+                      child: Text(
+                        roundLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textMuted,
+                        ),
                       ),
                     ),
                   ],
