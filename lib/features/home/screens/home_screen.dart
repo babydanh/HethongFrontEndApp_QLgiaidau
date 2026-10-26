@@ -342,6 +342,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Warm the sport list so the header filter menu is filled on first open.
+    ref.watch(categoriesProvider);
     final tournamentsAsync = _currentIndex == 0
         ? ref.watch(tournamentsProvider)
         : null;
