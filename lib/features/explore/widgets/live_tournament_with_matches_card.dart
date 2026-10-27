@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -412,12 +413,16 @@ class _LiveTournamentWithMatchesCardState
         ? match.currentLiveScore
         : SetScore(score1: match.score1, score2: match.score2);
 
-    final roundText = MatchRoundLabel.formatRound(
-      match: match,
-      allMatches: allMatches,
-      tournament: widget.tournament,
-      short: true,
-      l10n: l10n,
+    final roundText = _roundBadgeText(
+      MatchRoundLabel.formatRound(
+        match: match,
+        allMatches: allMatches,
+        tournament: widget.tournament,
+        short: true,
+        includeMatchCode: false,
+        l10n: l10n,
+      ),
+      match,
     );
 
     final courtText =
@@ -474,7 +479,7 @@ class _LiveTournamentWithMatchesCardState
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                roundText.toUpperCase(),
+                roundText,
                 style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
@@ -743,11 +748,15 @@ class _LiveTournamentWithMatchesCardState
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
-    final roundText = MatchRoundLabel.formatRound(
-      match: match,
-      tournament: widget.tournament,
-      short: true,
-      l10n: l10n,
+    final roundText = _roundBadgeText(
+      MatchRoundLabel.formatRound(
+        match: match,
+        tournament: widget.tournament,
+        short: true,
+        includeMatchCode: false,
+        l10n: l10n,
+      ),
+      match,
     );
 
     final courtText = TournamentLocationFormatter.matchShortCourt(
@@ -793,7 +802,7 @@ class _LiveTournamentWithMatchesCardState
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      roundText.toUpperCase(),
+                      roundText,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -957,12 +966,16 @@ class _LiveTournamentWithMatchesCardState
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
-    final roundText = MatchRoundLabel.formatRound(
-      match: match,
-      allMatches: allMatches,
-      tournament: widget.tournament,
-      short: true,
-      l10n: l10n,
+    final roundText = _roundBadgeText(
+      MatchRoundLabel.formatRound(
+        match: match,
+        allMatches: allMatches,
+        tournament: widget.tournament,
+        short: true,
+        includeMatchCode: false,
+        l10n: l10n,
+      ),
+      match,
     );
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1001,7 +1014,7 @@ class _LiveTournamentWithMatchesCardState
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                roundText.toUpperCase(),
+                roundText,
                 style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
@@ -1063,4 +1076,11 @@ class _LiveTournamentWithMatchesCardState
       ),
     );
   }
+}
+
+// Upper-cases only the round part; the match code keeps its own casing.
+String _roundBadgeText(String round, MatchModel match) {
+  final code = matchCodeOrNull(match);
+  final label = round.toUpperCase();
+  return code == null ? label : '$label - #$code';
 }
