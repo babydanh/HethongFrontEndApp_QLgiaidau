@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/court_schedule_cascade.dart';
@@ -204,9 +205,14 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
   );
 
   /// Nhãn vòng để nhóm lọc; không truyền allMatches để tránh suy ra tên vòng
-  /// loại trực tiếp từ số trận đang chờ.
+  /// loại trực tiếp từ số trận đang chờ. Không kèm mã trận vì mã riêng từng
+  /// trận sẽ tách mỗi trận thành một nhóm vòng.
   String _roundLabel(MatchModel match, AppLocalizations l10n) =>
-      MatchRoundLabel.formatRound(match: match, l10n: l10n);
+      MatchRoundLabel.formatRound(
+        match: match,
+        l10n: l10n,
+        includeMatchCode: false,
+      );
 
   /// ({nhãn vòng, số trận}) theo thứ tự xuất hiện trong danh sách chờ.
   List<(String, int)> get _rounds {
@@ -228,6 +234,9 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
           if (needle.isEmpty ||
               _normalizeSearch(_pairLabel(match)).contains(needle) ||
               _normalizeSearch(_roundLabel(match, l10n)).contains(needle) ||
+              _normalizeSearch(
+                formatMatchCode(match, l10n: l10n),
+              ).contains(needle) ||
               '#${match.matchNumber}'.contains(needle))
             match,
     ];
