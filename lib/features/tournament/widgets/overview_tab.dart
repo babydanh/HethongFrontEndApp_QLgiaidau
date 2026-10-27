@@ -25,6 +25,10 @@ class OverviewTab extends StatefulWidget {
   final VoidCallback? onEditSchedule;
   final VoidCallback? onEditRegistration;
   final VoidCallback? onEditFinance;
+
+  /// Manager-only: shows the founder row even when hidden, with an eye toggle.
+  /// Receives the new `hidden` value to persist.
+  final Future<void> Function(bool hidden)? onToggleFounderHidden;
   final List<SliverOverlapAbsorberHandle> overlapHandles;
 
   const OverviewTab({
@@ -43,6 +47,7 @@ class OverviewTab extends StatefulWidget {
     this.onEditSchedule,
     this.onEditRegistration,
     this.onEditFinance,
+    this.onToggleFounderHidden,
     this.overlapHandles = const [],
   });
 
@@ -54,6 +59,18 @@ class _OverviewTabState extends State<OverviewTab> {
   Timer? _countdownTimer;
   Duration _remainingTime = Duration.zero;
   String _countdownLabel = '';
+  bool _savingFounder = false;
+
+  Future<void> _toggleFounder(bool hidden) async {
+    final onToggle = widget.onToggleFounderHidden;
+    if (onToggle == null || _savingFounder) return;
+    setState(() => _savingFounder = true);
+    try {
+      await onToggle(hidden);
+    } finally {
+      if (mounted) setState(() => _savingFounder = false);
+    }
+  }
 
   @override
   void initState() {
@@ -849,8 +866,10 @@ class _OverviewTabState extends State<OverviewTab> {
                         ),
                       ],
                       // Keep organizer identity separate from the removed management notice.
-                      if (resolvedAvatar.isNotEmpty ||
-                          creatorName.isNotEmpty) ...[
+                      if ((t.showFounder ||
+                              widget.onToggleFounderHidden != null) &&
+                          (resolvedAvatar.isNotEmpty ||
+                              creatorName.isNotEmpty)) ...[
                         const SizedBox(height: 14),
                         _buildSectionHeader('BAN TỔ CHỨC GIẢI ĐẤU'),
                         const SizedBox(height: 8),
@@ -906,6 +925,22 @@ class _OverviewTabState extends State<OverviewTab> {
                                   ],
                                 ),
                               ),
+                              if (widget.onToggleFounderHidden != null)
+                                IconButton(
+                                  key: const ValueKey('tournament-founder-eye'),
+                                  tooltip: t.showFounder
+                                      ? 'Đang hiện công khai — bấm để ẩn'
+                                      : 'Đang ẩn — bấm để hiện công khai',
+                                  onPressed: _savingFounder
+                                      ? null
+                                      : () => _toggleFounder(t.showFounder),
+                                  icon: Icon(
+                                    t.showFounder
+                                        ? Icons.visibility_rounded
+                                        : Icons.visibility_off_rounded,
+                                    color: colors.textMuted,
+                                  ),
+                                ),
                             ],
                           ),
                         ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
@@ -43,34 +45,36 @@ Tournament _multiDivisionTournament({num entryFee = 200001}) =>
       ],
     }, 'tournament-1');
 
-Tournament _organizerTournament() => Tournament.fromJson({
-  'name': 'Organizer placement regression',
-  'sport': 'pickleball',
-  'category': {'name': 'Pickleball', 'slug': 'pickleball'},
-  'format': 'SINGLES',
-  'bracketType': 'single_elimination',
-  'status': 'in_progress',
-  'creator': {'id': 'creator-1', 'fullName': 'Organizer Name'},
-  'maxTeams': 16,
-  'venue': {
-    'name': 'Central Pickleball Hall',
-    'locationAddress': 'District 1, Ho Chi Minh City',
-  },
-  'city': 'Ho Chi Minh City',
-  'createdAt': '2026-01-01T00:00:00.000Z',
-  'updatedAt': '2026-01-01T00:00:00.000Z',
-  'registrationStartDate': '2026-09-01T00:00:00.000Z',
-  'registrationEndDate': '2026-09-29T00:00:00.000Z',
-  'startDate': '2026-10-01T00:00:00.000Z',
-  'divisions': [
-    {
-      'id': 'division-men',
-      'name': 'Regression Men Division',
-      'matchType': 'SINGLES',
-      'maxParticipants': 16,
-    },
-  ],
-}, 'tournament-2');
+Tournament _organizerTournament({Map<String, dynamic>? contactInfo}) =>
+    Tournament.fromJson({
+      'contactInfo': ?contactInfo,
+      'name': 'Organizer placement regression',
+      'sport': 'pickleball',
+      'category': {'name': 'Pickleball', 'slug': 'pickleball'},
+      'format': 'SINGLES',
+      'bracketType': 'single_elimination',
+      'status': 'in_progress',
+      'creator': {'id': 'creator-1', 'fullName': 'Organizer Name'},
+      'maxTeams': 16,
+      'venue': {
+        'name': 'Central Pickleball Hall',
+        'locationAddress': 'District 1, Ho Chi Minh City',
+      },
+      'city': 'Ho Chi Minh City',
+      'createdAt': '2026-01-01T00:00:00.000Z',
+      'updatedAt': '2026-01-01T00:00:00.000Z',
+      'registrationStartDate': '2026-09-01T00:00:00.000Z',
+      'registrationEndDate': '2026-09-29T00:00:00.000Z',
+      'startDate': '2026-10-01T00:00:00.000Z',
+      'divisions': [
+        {
+          'id': 'division-men',
+          'name': 'Regression Men Division',
+          'matchType': 'SINGLES',
+          'maxParticipants': 16,
+        },
+      ],
+    }, 'tournament-2');
 
 void main() {
   testWidgets(
@@ -146,7 +150,9 @@ void main() {
             locale: const Locale('vi'),
             home: Scaffold(
               body: OverviewTab(
-                tournament: _organizerTournament(),
+                tournament: _organizerTournament(
+                  contactInfo: {'hidden': false},
+                ),
                 teamCount: 0,
                 resolveImageUrl: (_) => '',
               ),
@@ -176,6 +182,130 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets('founder block is hidden by default like the Web detail page', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authProvider.overrideWith(_UnauthenticatedNotifier.new)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: OverviewTab(
+              tournament: _organizerTournament(),
+              teamCount: 0,
+              resolveImageUrl: (_) => '',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Organizer Name'), findsNothing);
+    expect(find.text('BAN TỔ CHỨC GIẢI ĐẤU'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+  Future<void> pumpFounderToggle(
+    WidgetTester tester, {
+    Map<String, dynamic>? contactInfo,
+    Future<void> Function(bool hidden)? onToggle,
+  }) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authProvider.overrideWith(_UnauthenticatedNotifier.new)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Scaffold(
+            body: OverviewTab(
+              tournament: _organizerTournament(contactInfo: contactInfo),
+              teamCount: 0,
+              resolveImageUrl: (_) => '',
+              onToggleFounderHidden: onToggle,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+  }
+
+  testWidgets('manager sees the hidden founder row with an eye-off toggle', (
+    tester,
+  ) async {
+    bool? requested;
+    await pumpFounderToggle(
+      tester,
+      onToggle: (hidden) async => requested = hidden,
+    );
+
+    expect(find.text('Organizer Name'), findsOneWidget);
+    expect(find.byIcon(Icons.visibility_off_rounded), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('tournament-founder-eye')));
+    await tester.pump();
+
+    expect(requested, isFalse);
+  });
+
+  testWidgets('manager toggle hides again when the founder is public', (
+    tester,
+  ) async {
+    bool? requested;
+    await pumpFounderToggle(
+      tester,
+      contactInfo: {'hidden': false},
+      onToggle: (hidden) async => requested = hidden,
+    );
+
+    expect(find.byIcon(Icons.visibility_rounded), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('tournament-founder-eye')));
+    await tester.pump();
+
+    expect(requested, isTrue);
+  });
+
+  testWidgets('founder toggle ignores a second tap while saving', (
+    tester,
+  ) async {
+    var calls = 0;
+    final saving = Completer<void>();
+    await pumpFounderToggle(
+      tester,
+      onToggle: (_) {
+        calls++;
+        return saving.future;
+      },
+    );
+
+    final eye = find.byKey(const ValueKey('tournament-founder-eye'));
+    await tester.tap(eye);
+    await tester.pump();
+    await tester.tap(eye);
+    await tester.pump();
+
+    expect(calls, 1);
+    saving.complete();
+    await tester.pump();
+  });
+
+  testWidgets('public viewer gets no founder toggle', (tester) async {
+    await pumpFounderToggle(tester, contactInfo: {'hidden': false});
+
+    expect(find.text('Organizer Name'), findsOneWidget);
+    expect(find.byKey(const ValueKey('tournament-founder-eye')), findsNothing);
+  });
+
   testWidgets('long countdown wraps without overflow on phone width', (
     tester,
   ) async {

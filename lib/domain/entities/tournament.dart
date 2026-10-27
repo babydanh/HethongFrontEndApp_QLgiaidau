@@ -160,6 +160,16 @@ class Tournament {
   bool get isClubTournament =>
       (communityId != null && communityId!.isNotEmpty) || isClubLite;
 
+  /// Whether the public pages may show the founder (creator) block. Mirrors the
+  /// Web `isFounderHidden`: hidden unless `contactInfo.hidden` is exactly
+  /// `false`, and never in MANUAL display mode (the contact block carries the
+  /// organizer name there).
+  bool get showFounder {
+    final info = contactInfo;
+    if (info == null || info['hidden'] != false) return false;
+    return info['displayMode']?.toString().toUpperCase() != 'MANUAL';
+  }
+
   factory Tournament.fromJson(Map<String, dynamic> json, String id) {
     // ─── Debug log ───
     // ignore: unused_local_variable

@@ -219,40 +219,46 @@ class _AboutTabState extends State<AboutTab> {
               children: [
                 // Organizer row
                 Row(
+                  // Keep the sport badge on the right when the founder is hidden
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    UserAvatarTap(
-                      userId: t.creatorId,
-                      name: creatorName,
-                      imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,
-                      size: 34,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'BAN TỔ CHỨC',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textMuted,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                          Text(
-                            creatorName,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w800,
-                              color: colors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                    if (t.showFounder) ...[
+                      UserAvatarTap(
+                        userId: t.creatorId,
+                        name: creatorName,
+                        imageUrl: resolvedAvatar.isEmpty
+                            ? null
+                            : resolvedAvatar,
+                        size: 34,
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'BAN TỔ CHỨC',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: colors.textMuted,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            Text(
+                              creatorName,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: colors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     _buildSportBadge(t.sport),
                   ],
                 ),
@@ -562,39 +568,44 @@ class _AboutTabState extends State<AboutTab> {
           const SizedBox(height: 14),
 
           // Creator details
-          Row(
-            children: [
-              UserAvatarTap(
-                userId: t.creatorId,
-                name: creatorName,
-                imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,
-                size: 40,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      creatorName,
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'Đơn vị tổ chức chuyên nghiệp',
-                      style: TextStyle(fontSize: 11.5, color: colors.textMuted),
-                    ),
-                  ],
+          if (t.showFounder) ...[
+            Row(
+              children: [
+                UserAvatarTap(
+                  userId: t.creatorId,
+                  name: creatorName,
+                  imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,
+                  size: 40,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
-          const SizedBox(height: 16),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        creatorName,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Đơn vị tổ chức chuyên nghiệp',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
+            const SizedBox(height: 16),
+          ],
 
           // Rich Description
           if (desc.isNotEmpty) ...[

@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
@@ -115,6 +116,30 @@ class _TournamentManagementHubScreenState
   }
 
   void _closeSection() => setState(() => _openedSection = null);
+
+  /// Persists founder visibility like the Web manage page. The server replaces
+  /// the whole `contactInfo` JSON, so the existing keys are sent back with it.
+  Future<void> _setFounderHidden(bool hidden) async {
+    final id = widget.tournament.id;
+    final messenger = ScaffoldMessenger.of(context);
+    final errorText = AppLocalizations.of(
+      context,
+    )!.tournamentManagementSaveError;
+    try {
+      await ref.read(tournamentManagementRepositoryProvider).updateTournament(
+        id,
+        {
+          'contactInfo': {...?widget.tournament.contactInfo, 'hidden': hidden},
+        },
+      );
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(errorText)));
+      return;
+    }
+    // The hub may have been closed while the request was in flight.
+    if (!mounted) return;
+    ref.invalidate(tournamentProvider(id));
+  }
 
   String _resolveImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
@@ -326,6 +351,7 @@ class _TournamentManagementHubScreenState
                     _openSection(TournamentManagementSection.registration),
                 onEditFinance: () =>
                     _openSection(TournamentManagementSection.finance),
+                onToggleFounderHidden: _setFounderHidden,
               ),
               CustomScrollView(
                 slivers: [

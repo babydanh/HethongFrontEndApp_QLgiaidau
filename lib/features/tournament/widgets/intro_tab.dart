@@ -89,7 +89,8 @@ class IntroTab extends StatelessWidget {
           ],
 
           // ─── THÔNG TIN BAN TỔ CHỨC / NGƯỜI SÁNG LẬP ───
-          if (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty) ...[
+          if (t.showFounder &&
+              (resolvedAvatar.isNotEmpty || creatorName.isNotEmpty)) ...[
             const SizedBox(height: 24),
             Divider(color: colors.border.withValues(alpha: 0.6), height: 1),
             const SizedBox(height: 16),
