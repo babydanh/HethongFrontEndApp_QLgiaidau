@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dar
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -331,6 +332,69 @@ void main() {
       expect(_tray, findsNothing);
       expect(find.byIcon(Icons.link_off_rounded), findsNothing);
       expect(find.text(l10n.bracketDiagramZoomHint), findsNothing);
+    });
+
+    testWidgets('giữ ngắn (~200ms) là kéo được, không cần nhấn giữ lâu', (
+      tester,
+    ) async {
+      final repo = await _pump(tester, _diagram(canEdit: true));
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(_slotKey('m1', 'participant1')),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await gesture.moveTo(tester.getCenter(_tray));
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(repo.calls.single, [
+        {'operation': 'UNASSIGN', 'matchId': 'm1', 'slot': 'participant1'},
+      ]);
+    });
+
+    testWidgets('chạm ngắn rồi nhả (dưới delay) không kích hoạt kéo', (
+      tester,
+    ) async {
+      final repo = await _pump(tester, _diagram(canEdit: true));
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(_slotKey('m1', 'participant1')),
+      );
+      await tester.pump(const Duration(milliseconds: 60));
+      await gesture.moveTo(tester.getCenter(_tray));
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(repo.calls, isEmpty);
+    });
+
+    testWidgets('chế độ sửa thẻ: bấm footer thẻ vẫn mở nhập điểm', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        BracketDiagramScreen(
+          tournamentId: _tournamentId,
+          divisionId: _divisionId,
+          bracketType: 'single_elimination',
+          initialMatches: _fixture(),
+          canEditBracket: true,
+          canScoreMatch: true,
+        ),
+      );
+      final l10n = lookupAppLocalizations(const Locale('vi'));
+
+      final scoreLabel = find.text(l10n.bracketScoreAction);
+      expect(scoreLabel, findsWidgets);
+      await tester.tap(scoreLabel.first);
+      // The card also listens for double-tap, so a single tap fires only
+      // after the double-tap window (~300ms) closes.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MatchScoreEntryChooser), findsOneWidget);
     });
 
     testWidgets(

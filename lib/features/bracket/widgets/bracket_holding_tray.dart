@@ -97,6 +97,7 @@ class _TrayChip extends StatelessWidget {
     return LongPressDraggable<BracketSlotDragData>(
       key: ValueKey('bracket-tray-chip-${participant.participantId}'),
       data: participant,
+      delay: bracketDragDelay,
       feedback: Material(color: Colors.transparent, child: chip()),
       childWhenDragging: chip(opacity: 0.35),
       child: chip(),

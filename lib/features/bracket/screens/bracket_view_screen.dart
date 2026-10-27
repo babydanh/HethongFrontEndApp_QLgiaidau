@@ -28,6 +28,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen
     show swissApiErrorText;
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_search_filter_bar.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
@@ -1035,74 +1036,66 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 160),
       children: [
-        // ── Diagram Access Banner (Swiss has no bracket diagram). In the hub
-        // tab only the compact full-screen button stays: it is the way into
-        // the diagram screen where organizers long-press / drag slots. ──
-        if (!isSwiss)
+        // ── Diagram Access Banner (Swiss has no bracket diagram). The hub tab
+        // has none: its diagram is already draggable and scores in place. ──
+        if (!isSwiss && !_isHubEmbedded)
           Container(
-            margin: EdgeInsets.only(bottom: _isHubEmbedded ? 8 : 12),
-            padding: _isHubEmbedded
-                ? EdgeInsets.zero
-                : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: _isHubEmbedded
-                ? null
-                : BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primary.withValues(alpha: 0.12),
-                        colors.bgCard,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.primary.withValues(alpha: 0.2),
-                    ),
-                  ),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primary.withValues(alpha: 0.12),
+                  colors.bgCard,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.2),
+              ),
+            ),
             child: Row(
               children: [
-                if (_isHubEmbedded)
-                  const Spacer()
-                else
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isGroupStageKnockout ||
-                                  bracketType == 'group_stage_knockout'
-                              ? l10n.bracketView_knockoutStage
-                              : isDoubleElimination ||
-                                    bracketType == 'double_elimination'
-                              ? l10n.bracketView_doubleEliminationMap
-                              : isRoundRobin || bracketType == 'round_robin'
-                              ? l10n.bracketView_roundRobinMap
-                              : l10n.bracketView_knockoutTitle,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textPrimary,
-                          ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isGroupStageKnockout ||
+                                bracketType == 'group_stage_knockout'
+                            ? l10n.bracketView_knockoutStage
+                            : isDoubleElimination ||
+                                  bracketType == 'double_elimination'
+                            ? l10n.bracketView_doubleEliminationMap
+                            : isRoundRobin || bracketType == 'round_robin'
+                            ? l10n.bracketView_roundRobinMap
+                            : l10n.bracketView_knockoutTitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
                         ),
-                        Text(
-                          isGroupStageKnockout ||
-                                  bracketType == 'group_stage_knockout'
-                              ? l10n.bracketView_knockoutDescription
-                              : isDoubleElimination ||
-                                    bracketType == 'double_elimination'
-                              ? l10n.bracketView_doubleEliminationDescription
-                              : isRoundRobin || bracketType == 'round_robin'
-                              ? l10n.bracketView_roundRobinDescription
-                              : l10n.bracketView_singleEliminationDescription,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: colors.textMuted,
-                          ),
+                      ),
+                      Text(
+                        isGroupStageKnockout ||
+                                bracketType == 'group_stage_knockout'
+                            ? l10n.bracketView_knockoutDescription
+                            : isDoubleElimination ||
+                                  bracketType == 'double_elimination'
+                            ? l10n.bracketView_doubleEliminationDescription
+                            : isRoundRobin || bracketType == 'round_robin'
+                            ? l10n.bracketView_roundRobinDescription
+                            : l10n.bracketView_singleEliminationDescription,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: colors.textMuted,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                ),
                 ElevatedButton.icon(
                   key: const Key('bracket-open-full-diagram'),
                   style: ElevatedButton.styleFrom(
@@ -1171,131 +1164,36 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           ),
 
         // ── Search & Filter Unified Bar ──
-        Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: _currentFilterState.hasActiveFilters
-                  ? AppTheme.primary
-                  : colors.border,
-              width: _currentFilterState.hasActiveFilters ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (val) {
-                    _debounceTimer?.cancel();
-                    _debounceTimer = Timer(
-                      const Duration(milliseconds: 250),
-                      () {
-                        if (mounted) {
-                          setState(
-                            () => _searchQuery = val.trim().toLowerCase(),
-                          );
-                        }
-                      },
-                    );
-                  },
-                  style: TextStyle(fontSize: 13, color: colors.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: l10n.bracketView_searchHint,
-                    hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      size: 18,
-                      color: colors.textMuted,
-                    ),
-                    suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: _searchController,
-                      builder: (context, value, _) {
-                        if (value.text.isEmpty) return const SizedBox.shrink();
-                        return IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 16),
-                          onPressed: () {
-                            _debounceTimer?.cancel();
-                            _searchController.clear();
-                            setState(() => _searchQuery = '');
-                          },
-                        );
-                      },
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 11,
-                    ),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              Container(height: 22, width: 1, color: colors.border),
-              // Unified Filter Button inside search bar
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _openFilterBottomSheet(
-                    context: context,
-                    isDoubleElimination: isDoubleElimination,
-                    isGroupStageKnockout: isGroupStageKnockout,
-                    isRoundRobin: isRoundRobin,
-                    liveCount: liveCount,
-                    scheduledCount: scheduledCount,
-                    completedCount: completedCount,
-                    availableGroups: availableGroups,
-                    availableLegs: availableLegs,
-                    availableRounds: availableRounds,
-                    effectiveTotalRounds: effectiveTotalRounds,
-                  ),
-                  borderRadius: const BorderRadius.horizontal(
-                    right: Radius.circular(10),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 9,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.tune_rounded,
-                          size: 18,
-                          color: _currentFilterState.hasActiveFilters
-                              ? AppTheme.primary
-                              : colors.textMuted,
-                        ),
-                        if (_currentFilterState.hasActiveFilters) ...[
-                          const SizedBox(width: 5),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 1.5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${_currentFilterState.activeCount}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        BracketSearchFilterBar(
+          controller: _searchController,
+          hint: l10n.bracketView_searchHint,
+          hasActiveFilters: _currentFilterState.hasActiveFilters,
+          activeCount: _currentFilterState.activeCount,
+          onChanged: (val) {
+            _debounceTimer?.cancel();
+            _debounceTimer = Timer(const Duration(milliseconds: 250), () {
+              if (mounted) {
+                setState(() => _searchQuery = val.trim().toLowerCase());
+              }
+            });
+          },
+          onClear: () {
+            _debounceTimer?.cancel();
+            _searchController.clear();
+            setState(() => _searchQuery = '');
+          },
+          onFilterTap: () => _openFilterBottomSheet(
+            context: context,
+            isDoubleElimination: isDoubleElimination,
+            isGroupStageKnockout: isGroupStageKnockout,
+            isRoundRobin: isRoundRobin,
+            liveCount: liveCount,
+            scheduledCount: scheduledCount,
+            completedCount: completedCount,
+            availableGroups: availableGroups,
+            availableLegs: availableLegs,
+            availableRounds: availableRounds,
+            effectiveTotalRounds: effectiveTotalRounds,
           ),
         ),
 

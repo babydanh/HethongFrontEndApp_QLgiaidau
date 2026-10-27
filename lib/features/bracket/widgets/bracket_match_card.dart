@@ -157,6 +157,7 @@ class BracketMatchCard extends StatelessWidget {
           ),
           child: LongPressDraggable<BracketSlotDragData>(
             data: dragData,
+            delay: bracketDragDelay,
             maxSimultaneousDrags: canDrag ? 1 : 0,
             feedback: Material(
               color: Colors.transparent,
@@ -330,67 +331,74 @@ class BracketMatchCard extends StatelessWidget {
                 eloDelta: t2EloDelta,
               ),
             ),
-            // ── Footer: status + action ──
-            Container(
-              height: 22,
-              decoration: BoxDecoration(
-                color: isGrandFinalWinner
-                    ? colors.warning.withValues(alpha: 0.15)
-                    : colors.bgSurface,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(11),
-                  bottomRight: Radius.circular(11),
+            // ── Footer: status + action (tappable even while editing slots) ──
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _onTap(context),
+              child: Container(
+                height: 22,
+                decoration: BoxDecoration(
+                  color: isGrandFinalWinner
+                      ? colors.warning.withValues(alpha: 0.15)
+                      : colors.bgSurface,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(11),
+                    bottomRight: Radius.circular(11),
+                  ),
                 ),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    statusLabel,
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
-                      color: statusColor,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  if ((isReferee || !isReadOnly) && match.isLive)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Text(
-                        l10n.bracketScoreAction,
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: colors.error,
-                        ),
-                      ),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Text(
-                        l10n.bracketViewAction,
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: isGrandFinalWinner
-                              ? colors.warning
-                              : colors.textMuted,
-                        ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w900,
+                        color: statusColor,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (canScoreMatch && match.hasTeams && !match.isBye ||
+                        (isReferee || !isReadOnly) && match.isLive)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Text(
+                          l10n.bracketScoreAction,
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: match.isLive
+                                ? colors.error
+                                : AppTheme.primary,
+                          ),
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Text(
+                          l10n.bracketViewAction,
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: isGrandFinalWinner
+                                ? colors.warning
+                                : colors.textMuted,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],

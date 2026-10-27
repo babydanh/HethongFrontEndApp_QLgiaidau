@@ -1,3 +1,7 @@
+/// Hold time before a bracket slot/chip lifts: short enough to feel like a
+/// drag, long enough that a horizontal swipe still scrolls the diagram.
+const bracketDragDelay = Duration(milliseconds: 140);
+
 class BracketSlotDragData {
   final String matchId;
   final String slot;
