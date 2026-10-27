@@ -1015,121 +1015,128 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 160),
       children: [
-        // ── Diagram Access Banner (Swiss has no bracket diagram) ──
-        if (!isSwiss)
-        Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.primary.withValues(alpha: 0.12), colors.bgCard],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        // ── Diagram Access Banner (Swiss has no bracket diagram; the hub tab
+        // already shows the diagram inline, so the banner is dropped there) ──
+        if (!isSwiss && !widget.isEmbedded)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primary.withValues(alpha: 0.12),
+                  colors.bgCard,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.2),
+              ),
             ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isGroupStageKnockout ||
-                              bracketType == 'group_stage_knockout'
-                          ? l10n.bracketView_knockoutStage
-                          : isDoubleElimination ||
-                                bracketType == 'double_elimination'
-                          ? l10n.bracketView_doubleEliminationMap
-                          : isRoundRobin || bracketType == 'round_robin'
-                          ? l10n.bracketView_roundRobinMap
-                          : l10n.bracketView_knockoutTitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: colors.textPrimary,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isGroupStageKnockout ||
+                                bracketType == 'group_stage_knockout'
+                            ? l10n.bracketView_knockoutStage
+                            : isDoubleElimination ||
+                                  bracketType == 'double_elimination'
+                            ? l10n.bracketView_doubleEliminationMap
+                            : isRoundRobin || bracketType == 'round_robin'
+                            ? l10n.bracketView_roundRobinMap
+                            : l10n.bracketView_knockoutTitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
+                        ),
                       ),
-                    ),
-                    Text(
-                      isGroupStageKnockout ||
-                              bracketType == 'group_stage_knockout'
-                          ? l10n.bracketView_knockoutDescription
-                          : isDoubleElimination ||
-                                bracketType == 'double_elimination'
-                          ? l10n.bracketView_doubleEliminationDescription
-                          : isRoundRobin || bracketType == 'round_robin'
-                          ? l10n.bracketView_roundRobinDescription
-                          : l10n.bracketView_singleEliminationDescription,
-                      style: TextStyle(fontSize: 10, color: colors.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  minimumSize: Size.zero,
-                ),
-                onPressed: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => BracketDiagramScreen(
-                        tournamentId: widget.tournamentId,
-                        divisionId: _activeDivisionId,
-                        bracketType: bracketType,
-                        initialMatches: matches,
-                        isReferee: isReferee,
-                        isReadOnly: isReadOnly,
-                        canEditBracket: widget.canEditBracket,
-                        canScoreMatch: canScoreMatch,
-                        isLite: widget.isLite || tournament?.isLite == true,
+                      Text(
+                        isGroupStageKnockout ||
+                                bracketType == 'group_stage_knockout'
+                            ? l10n.bracketView_knockoutDescription
+                            : isDoubleElimination ||
+                                  bracketType == 'double_elimination'
+                            ? l10n.bracketView_doubleEliminationDescription
+                            : isRoundRobin || bracketType == 'round_robin'
+                            ? l10n.bracketView_roundRobinDescription
+                            : l10n.bracketView_singleEliminationDescription,
+                        style: TextStyle(fontSize: 10, color: colors.textMuted),
                       ),
-                    ),
-                  );
-                  ref.invalidate(bracketMatchesProvider(widget.tournamentId));
-                  ref.invalidate(
-                    liteBracketMatchesProvider(widget.tournamentId),
-                  );
-                  ref.invalidate(matchesProvider(widget.tournamentId));
-                  final params = (
-                    tournamentId: widget.tournamentId,
-                    divisionId: _activeDivisionId,
-                  );
-                  ref.invalidate(bracketMatchesWithDivisionProvider(params));
-                  ref.invalidate(
-                    liteBracketMatchesWithDivisionProvider(params),
-                  );
-                  ref.invalidate(matchesWithDivisionProvider(params));
-                  ref.invalidate(managedMatchesWithDivisionProvider(params));
-                  if (mounted) setState(() {});
-                },
-                icon: const Icon(Icons.account_tree_rounded, size: 14),
-                label: Text(
-                  isGroupStageKnockout || bracketType == 'group_stage_knockout'
-                      ? l10n.bracketView_knockoutMap
-                      : isDoubleElimination ||
-                            bracketType == 'double_elimination'
-                      ? l10n.bracketView_doubleEliminationMap
-                      : isRoundRobin || bracketType == 'round_robin'
-                      ? l10n.bracketView_roundRobinMap
-                      : l10n.bracketView_knockoutMap,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    ],
                   ),
                 ),
-              ),
-            ],
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    minimumSize: Size.zero,
+                  ),
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => BracketDiagramScreen(
+                          tournamentId: widget.tournamentId,
+                          divisionId: _activeDivisionId,
+                          bracketType: bracketType,
+                          initialMatches: matches,
+                          isReferee: isReferee,
+                          isReadOnly: isReadOnly,
+                          canEditBracket: widget.canEditBracket,
+                          canScoreMatch: canScoreMatch,
+                          isLite: widget.isLite || tournament?.isLite == true,
+                        ),
+                      ),
+                    );
+                    ref.invalidate(bracketMatchesProvider(widget.tournamentId));
+                    ref.invalidate(
+                      liteBracketMatchesProvider(widget.tournamentId),
+                    );
+                    ref.invalidate(matchesProvider(widget.tournamentId));
+                    final params = (
+                      tournamentId: widget.tournamentId,
+                      divisionId: _activeDivisionId,
+                    );
+                    ref.invalidate(bracketMatchesWithDivisionProvider(params));
+                    ref.invalidate(
+                      liteBracketMatchesWithDivisionProvider(params),
+                    );
+                    ref.invalidate(matchesWithDivisionProvider(params));
+                    ref.invalidate(managedMatchesWithDivisionProvider(params));
+                    if (mounted) setState(() {});
+                  },
+                  icon: const Icon(Icons.account_tree_rounded, size: 14),
+                  label: Text(
+                    isGroupStageKnockout ||
+                            bracketType == 'group_stage_knockout'
+                        ? l10n.bracketView_knockoutMap
+                        : isDoubleElimination ||
+                              bracketType == 'double_elimination'
+                        ? l10n.bracketView_doubleEliminationMap
+                        : isRoundRobin || bracketType == 'round_robin'
+                        ? l10n.bracketView_roundRobinMap
+                        : l10n.bracketView_knockoutMap,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
 
         // ── Search & Filter Unified Bar ──
         Container(
@@ -1425,9 +1432,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           ),
         ],
         if (bracketMatches.isNotEmpty)
-          SizedBox(
-            height: 420,
-            child: isDoubleElimination
+          // Embedded in the hub: horizontal scroll only, height follows the
+          // canvas and the hub page owns vertical scrolling. A fixed 420 frame
+          // with pan/zoom fights the hub's own scroll view.
+          if (widget.isEmbedded)
+            isDoubleElimination
                 ? DoubleElimDiagram(
                     matches: bracketMatches,
                     tournamentId: widget.tournamentId,
@@ -1437,6 +1446,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     onDoubleTapMatch: widget.canEditBracket
                         ? _handleDoubleTapMatch
                         : null,
+                    scrollOnly: true,
                   )
                 : SingleElimDiagram(
                     matches: bracketMatches,
@@ -1447,8 +1457,33 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     onDoubleTapMatch: widget.canEditBracket
                         ? _handleDoubleTapMatch
                         : null,
-                  ),
-          ),
+                    scrollOnly: true,
+                  )
+          else
+            SizedBox(
+              height: 420,
+              child: isDoubleElimination
+                  ? DoubleElimDiagram(
+                      matches: bracketMatches,
+                      tournamentId: widget.tournamentId,
+                      isReferee: isReferee,
+                      isReadOnly: isReadOnly,
+                      canScoreMatch: canScoreMatch,
+                      onDoubleTapMatch: widget.canEditBracket
+                          ? _handleDoubleTapMatch
+                          : null,
+                    )
+                  : SingleElimDiagram(
+                      matches: bracketMatches,
+                      tournamentId: widget.tournamentId,
+                      isReferee: isReferee,
+                      isReadOnly: isReadOnly,
+                      canScoreMatch: canScoreMatch,
+                      onDoubleTapMatch: widget.canEditBracket
+                          ? _handleDoubleTapMatch
+                          : null,
+                    ),
+            ),
       ],
     );
   }
