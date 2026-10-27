@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -141,7 +142,6 @@ void main() {
       find.text(l10n.bracketView_singleEliminationDescription),
       findsNothing,
     );
-    expect(find.text(l10n.bracketView_knockoutMap), findsNothing);
     expect(find.byType(TextField), findsOneWidget);
     expect(find.byType(SingleElimDiagram), findsOneWidget);
   });
@@ -168,6 +168,28 @@ void main() {
       await tester.drag(diagram, const Offset(-200, 0));
       await tester.pumpAndSettle();
       expect(position.pixels, greaterThan(0));
+    },
+  );
+
+  testWidgets(
+    'nhúng trong hub: còn nút mở sơ đồ toàn màn hình, mở được màn kéo thả',
+    (tester) async {
+      await _pumpEmbedded(tester);
+      final openFull = find.byKey(const Key('bracket-open-full-diagram'));
+
+      expect(openFull, findsOneWidget);
+      await tester.ensureVisible(openFull);
+      await tester.tap(openFull);
+      await tester.pumpAndSettle();
+
+      final screen = find.byType(BracketDiagramScreen);
+      expect(screen, findsOneWidget);
+      // The management hub passes canEditBracket: true, so the full screen
+      // keeps the organizer's long-press drag and swap.
+      expect(
+        tester.widget<BracketDiagramScreen>(screen).canEditBracket,
+        isTrue,
+      );
     },
   );
 

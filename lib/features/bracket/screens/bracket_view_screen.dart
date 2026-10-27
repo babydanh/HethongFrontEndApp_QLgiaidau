@@ -1019,64 +1019,76 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             ),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 160),
       children: [
-        // ── Diagram Access Banner (Swiss has no bracket diagram; the hub tab
-        // already shows the diagram inline, so the banner is dropped there) ──
-        if (!isSwiss && !_isHubEmbedded)
+        // ── Diagram Access Banner (Swiss has no bracket diagram). In the hub
+        // tab only the compact full-screen button stays: it is the way into
+        // the diagram screen where organizers long-press / drag slots. ──
+        if (!isSwiss)
           Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primary.withValues(alpha: 0.12),
-                  colors.bgCard,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.primary.withValues(alpha: 0.2),
-              ),
-            ),
+            margin: EdgeInsets.only(bottom: _isHubEmbedded ? 8 : 12),
+            padding: _isHubEmbedded
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: _isHubEmbedded
+                ? null
+                : BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.primary.withValues(alpha: 0.12),
+                        colors.bgCard,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
             child: Row(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isGroupStageKnockout ||
-                                bracketType == 'group_stage_knockout'
-                            ? l10n.bracketView_knockoutStage
-                            : isDoubleElimination ||
-                                  bracketType == 'double_elimination'
-                            ? l10n.bracketView_doubleEliminationMap
-                            : isRoundRobin || bracketType == 'round_robin'
-                            ? l10n.bracketView_roundRobinMap
-                            : l10n.bracketView_knockoutTitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textPrimary,
+                if (_isHubEmbedded)
+                  const Spacer()
+                else
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isGroupStageKnockout ||
+                                  bracketType == 'group_stage_knockout'
+                              ? l10n.bracketView_knockoutStage
+                              : isDoubleElimination ||
+                                    bracketType == 'double_elimination'
+                              ? l10n.bracketView_doubleEliminationMap
+                              : isRoundRobin || bracketType == 'round_robin'
+                              ? l10n.bracketView_roundRobinMap
+                              : l10n.bracketView_knockoutTitle,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        isGroupStageKnockout ||
-                                bracketType == 'group_stage_knockout'
-                            ? l10n.bracketView_knockoutDescription
-                            : isDoubleElimination ||
-                                  bracketType == 'double_elimination'
-                            ? l10n.bracketView_doubleEliminationDescription
-                            : isRoundRobin || bracketType == 'round_robin'
-                            ? l10n.bracketView_roundRobinDescription
-                            : l10n.bracketView_singleEliminationDescription,
-                        style: TextStyle(fontSize: 10, color: colors.textMuted),
-                      ),
-                    ],
+                        Text(
+                          isGroupStageKnockout ||
+                                  bracketType == 'group_stage_knockout'
+                              ? l10n.bracketView_knockoutDescription
+                              : isDoubleElimination ||
+                                    bracketType == 'double_elimination'
+                              ? l10n.bracketView_doubleEliminationDescription
+                              : isRoundRobin || bracketType == 'round_robin'
+                              ? l10n.bracketView_roundRobinDescription
+                              : l10n.bracketView_singleEliminationDescription,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 ElevatedButton.icon(
+                  key: const Key('bracket-open-full-diagram'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
                     shape: RoundedRectangleBorder(
@@ -1680,8 +1692,7 @@ class SwissRoundActions extends ConsumerWidget {
   final int totalRounds;
 
   /// Called with `(stageId, nextRound, totalRounds)`.
-  final void Function(String stageId, int round, int totalRounds)
-  onOpenPairing;
+  final void Function(String stageId, int round, int totalRounds) onOpenPairing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
