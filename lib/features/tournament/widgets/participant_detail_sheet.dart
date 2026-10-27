@@ -776,11 +776,14 @@ class _ParticipantDetailSheetState
         children: [
           CircleAvatar(
             radius: 17,
-            backgroundColor: colors.bgElevated,
-            child: Icon(
-              Icons.person_outline_rounded,
-              size: 18,
-              color: colors.textSecondary,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+            child: Text(
+              guest.name.trim().isNotEmpty ? guest.name.trim()[0].toUpperCase() : '?',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.primary,
+              ),
             ),
           ),
           const SizedBox(width: 8),

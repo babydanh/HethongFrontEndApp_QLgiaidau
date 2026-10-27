@@ -82,6 +82,8 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   String? _busyParticipantId;
   String? _mutationError;
   ParticipantStatusFilter _filter = ParticipantStatusFilter.all;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -89,6 +91,18 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
     _participantsFuture = ref
         .read(tournamentRepositoryProvider)
         .getOrganizerParticipants(widget.tournament.id);
+    _searchController.addListener(() {
+      final q = _searchController.text.trim().toLowerCase();
+      if (q != _searchQuery) {
+        setState(() => _searchQuery = q);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _reload() {
@@ -125,17 +139,32 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   bool _matchesFilter(
     OrganizerOpsParticipant participant,
     ParticipantStatusFilter filter,
-  ) => switch (filter) {
-    ParticipantStatusFilter.all => true,
-    ParticipantStatusFilter.pending => _isPending(participant.teamStatus),
-    ParticipantStatusFilter.pendingPartner =>
-      participant.teamStatus.toUpperCase() == 'PENDING_PARTNER',
-    ParticipantStatusFilter.approved =>
-      participant.teamStatus.toUpperCase() == 'COMPLETE',
-    ParticipantStatusFilter.unpaid => !participant.isPaid,
-    ParticipantStatusFilter.rejected =>
-      participant.teamStatus.toUpperCase() == 'REJECTED',
-  };
+  ) {
+    final statusMatch = switch (filter) {
+      ParticipantStatusFilter.all => true,
+      ParticipantStatusFilter.pending => _isPending(participant.teamStatus),
+      ParticipantStatusFilter.pendingPartner =>
+        participant.teamStatus.toUpperCase() == 'PENDING_PARTNER',
+      ParticipantStatusFilter.approved =>
+        participant.teamStatus.toUpperCase() == 'COMPLETE',
+      ParticipantStatusFilter.unpaid => !participant.isPaid,
+      ParticipantStatusFilter.rejected =>
+        participant.teamStatus.toUpperCase() == 'REJECTED',
+    };
+    if (!statusMatch) return false;
+    if (_searchQuery.isEmpty) return true;
+
+    if (participant.teamName.toLowerCase().contains(_searchQuery)) return true;
+    for (final p in participant.players) {
+      if (p.fullName.toLowerCase().contains(_searchQuery)) return true;
+    }
+    for (final m in participant.members) {
+      if (m.fullName.toLowerCase().contains(_searchQuery)) return true;
+      if (m.email?.toLowerCase().contains(_searchQuery) == true) return true;
+      if (m.phoneNumber?.contains(_searchQuery) == true) return true;
+    }
+    return false;
+  }
 
   /// Mở sheet hồ sơ chi tiết (thay card mở rộng cũ).
   Future<void> _openDetail(OrganizerOpsParticipant participant) async {
@@ -238,23 +267,89 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             )
           else ...[
             if (!widget.embedded) const SizedBox(height: 12),
-            // Chips lọc trạng thái kèm số đếm (task 3.1).
+            // Thanh tìm kiếm gọn gàng & dropdown filter (giống Web)
             Padding(
-              padding: EdgeInsets.only(top: widget.embedded ? 4 : 0, bottom: 8),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              padding: EdgeInsets.only(top: widget.embedded ? 4 : 4, bottom: 8),
+              child: Row(
                 children: [
-                  for (final option in ParticipantStatusFilter.values)
-                    if (option != ParticipantStatusFilter.pendingPartner ||
-                        showPendingPartner)
-                      _FilterChip(
-                        key: ValueKey('participant-filter-${option.name}'),
-                        label: _filterLabel(l10n, option),
-                        count: counts[option]!,
-                        selected: _filter == option,
-                        onTap: () => setState(() => _filter = option),
+                  // Dropdown bộ lọc trạng thái (height 36px gọn gàng)
+                  Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: context.colors.bgSurface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: context.colors.border),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<ParticipantStatusFilter>(
+                        value: _filter,
+                        isDense: true,
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: context.colors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: context.colors.textPrimary,
+                        ),
+                        onChanged: (val) {
+                          if (val != null) setState(() => _filter = val);
+                        },
+                        items: [
+                          for (final option in ParticipantStatusFilter.values)
+                            if (option != ParticipantStatusFilter.pendingPartner || showPendingPartner)
+                              DropdownMenuItem(
+                                value: option,
+                                child: Text('${_filterLabel(l10n, option)} (${counts[option]})',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: _filter == option ? FontWeight.w800 : FontWeight.w600,
+                                    color: _filter == option ? AppTheme.primary : context.colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                        ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Ô tìm kiếm gọn gàng (height 36px)
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: TextField(
+                        controller: _searchController,
+                        style: TextStyle(fontSize: 13, color: context.colors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'TÃ¬m kiáº¿m...',
+                          hintStyle: TextStyle(fontSize: 12, color: context.colors.textMuted),
+                          prefixIcon: Icon(Icons.search_rounded, size: 18, color: context.colors.textSecondary),
+                          prefixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 16),
+                                  splashRadius: 16,
+                                  onPressed: () => _searchController.clear(),
+                                )
+                              : null,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                          filled: true,
+                          fillColor: context.colors.bgSurface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: context.colors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: context.colors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -827,74 +922,6 @@ class _CountChip extends StatelessWidget {
   );
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    super.key,
-    required this.label,
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
-  final String label;
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    // The pill keeps its look; only the tap target grows to 44 px.
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
-          child: Align(
-            widthFactor: 1,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppTheme.primary.withValues(alpha: 0.15)
-                    : null,
-                border: Border.all(
-                  color: selected ? AppTheme.primary : colors.border,
-                ),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: selected ? AppTheme.primary : colors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$count',
-                    style: TextStyle(
-                      color: selected ? AppTheme.primary : colors.textMuted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ParticipantCard extends StatelessWidget {
   const _ParticipantCard({
     required this.participant,
@@ -955,128 +982,238 @@ class _ParticipantCard extends StatelessWidget {
       ),
       _ => (l10n.tournamentManagementStatusOther, colors.textSecondary),
     };
-    final lead = participant.members.isEmpty ? null : participant.members.first;
-    final nameDisplay = resolveParticipantDisplay(
-      teamName: participant.teamName,
-      players: participant.players,
-    );
+
     final rowLabel = participantLabel(
       teamName: participant.teamName,
       players: participant.players,
     );
-    final nameStyle = TextStyle(
-      color: colors.textPrimary,
-      fontWeight: FontWeight.w700,
+    final display = resolveParticipantDisplay(
+      teamName: participant.teamName,
+      players: participant.players,
     );
-    final header = Row(
+    final players = participant.players;
+
+    return InkWell(
+      key: ValueKey('athlete-team-row-'),
+      onTap: onOpenDetail,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Dòng trên cùng: Tên đội (nếu là đội có tên) + Tag trạng thái + Cụm nút hành động compact
+            Row(
+              children: [
+                if (display.isTeam && participant.teamName.isNotEmpty) ...[
+                  Expanded(
+                    child: Text(
+                      participant.teamName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ] else ...[
+                  const Spacer(),
+                ],
+                // Badge trạng thái mỏng gọn
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    statusLabel,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                // Nút duyệt nhanh / từ chối nhanh / Menu tách cặp (compact buttons)
+                if (pending) ...[
+                  const SizedBox(width: 6),
+                  if (isBusy)
+                    const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else ...[
+                    // Nút duyệt gọn (Pill xanh)
+                    InkWell(
+                      onTap: onApprove,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                            const SizedBox(width: 3),
+                            Text(
+                              l10n.tournamentManagementApprove,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Nút từ chối gọn (Icon X)
+                    InkWell(
+                      onTap: onReject,
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: colors.error.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(Icons.close_rounded, size: 16, color: colors.error),
+                      ),
+                    ),
+                  ],
+                ],
+                // Menu tách cặp
+                if (_canUnpair)
+                  PopupMenuButton<String>(
+                    key: ValueKey('participant-row-menu-'),
+                    tooltip: l10n.participantRowActions(rowLabel),
+                    enabled: !isBusy,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(Icons.more_vert_rounded, size: 18, color: colors.textMuted),
+                    onSelected: (value) {
+                      if (value == 'unpair') onUnpair();
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        key: ValueKey('participant-unpair-'),
+                        value: 'unpair',
+                        child: Text(l10n.participantUnpair),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            // Phần danh sách VĐV: Tách thành từng hàng VĐV (2 hàng đối với cặp đôi)
+            if (players.isEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  l10n.matchNotDetermined,
+                  style: TextStyle(color: colors.textMuted, fontSize: 13),
+                ),
+              ),
+            ] else ...[
+              for (int idx = 0; idx < players.length; idx++) ...[
+                if (idx > 0) const SizedBox(height: 6),
+                _ParticipantPlayerRow(
+                  player: players[idx],
+                  member: participant.members.isNotEmpty && idx < participant.members.length
+                      ? participant.members[idx]
+                      : null,
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Hàng thông tin từng VĐV: Avatar tròn + Tên VĐV + Thông tin vai trò/khách
+class _ParticipantPlayerRow extends StatelessWidget {
+  const _ParticipantPlayerRow({
+    required this.player,
+    this.member,
+  });
+
+  final ParticipantPlayer player;
+  final OrganizerOpsMember? member;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final name = player.fullName.isNotEmpty ? player.fullName : (member?.fullName ?? '—');
+    final avatarUrl = player.avatarUrl ?? member?.avatarUrl;
+    final userId = player.userId ?? member?.userId;
+    final isGuest = player.isGuest || (userId == null || userId.isEmpty);
+
+    return Row(
       children: [
-        if (lead != null)
+        // Avatar logo đàng hoàng
+        if (!isGuest && userId.isNotEmpty)
           UserAvatarTap(
-            userId: lead.userId,
-            name: lead.fullName,
-            imageUrl: lead.avatarUrl,
-            size: 34,
+            userId: userId,
+            name: name,
+            imageUrl: avatarUrl,
+            size: 26,
           )
         else
-          const SizedBox(width: 34, height: 44),
-        const SizedBox(width: 8),
-        Expanded(
-          child: nameDisplay.isTeam
-              ? ParticipantLabel(
-                  teamName: participant.teamName,
-                  players: participant.players,
-                  style: nameStyle,
-                )
-              : Text(
-                  participant.players.isEmpty
-                      ? l10n.matchNotDetermined
-                      : participantLabel(
-                          teamName: null,
-                          players: participant.players,
-                        ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: nameStyle,
-                ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          statusLabel,
-          style: TextStyle(
-            color: statusColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        // Menu dòng: Tách cặp (task 3.3) — chỉ khi server cho phép.
-        if (_canUnpair)
-          PopupMenuButton<String>(
-            key: ValueKey('participant-row-menu-${participant.id}'),
-            tooltip: l10n.participantRowActions(rowLabel),
-            enabled: !isBusy,
-            icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
-            onSelected: (value) {
-              if (value == 'unpair') onUnpair();
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                key: ValueKey('participant-unpair-${participant.id}'),
-                value: 'unpair',
-                child: Text(l10n.participantUnpair),
+          CircleAvatar(
+            radius: 13,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+            child: Text(
+              name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.primary,
               ),
-            ],
+            ),
           ),
-      ],
-    );
-    return Column(
-      key: ValueKey('athlete-team-row-${participant.id}'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Semantics(
-          button: true,
-          label: participantLabel(
-            teamName: participant.teamName,
-            players: participant.players,
-          ),
-          child: InkWell(
-            onTap: onOpenDetail,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: header,
+        const SizedBox(width: 8),
+        // Tên VĐV
+        Expanded(
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
             ),
           ),
         ),
-        if (pending)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: isBusy ? null : onReject,
-                    child: Text(l10n.tournamentManagementReject),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: isBusy ? null : onApprove,
-                    child: isBusy
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.tournamentManagementApprove),
-                  ),
-                ),
-              ],
+        // Nhãn phụ: Khách / Dự bị nếu có
+        if (isGuest)
+          Container(
+            margin: const EdgeInsets.only(left: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+            decoration: BoxDecoration(
+              color: colors.bgElevated,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: colors.border),
+            ),
+            child: Text(
+              'Khách',
+              style: TextStyle(fontSize: 10, color: colors.textMuted, fontWeight: FontWeight.w600),
             ),
           ),
       ],
     );
   }
 }
-
 class _PersonRow extends StatelessWidget {
   const _PersonRow({
     required this.name,
