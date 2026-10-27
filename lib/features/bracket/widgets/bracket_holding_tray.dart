@@ -22,7 +22,9 @@ class BracketHoldingTray extends StatelessWidget {
     final colors = context.colors;
     return DragTarget<BracketSlotDragData>(
       onWillAcceptWithDetails: (details) =>
-          !details.data.isFromTray && details.data.hasParticipant,
+          !details.data.isFromTray &&
+          details.data.hasParticipant &&
+          !details.data.isLocked,
       onAcceptWithDetails: (details) => onSlotDropped(details.data),
       builder: (context, candidates, _) {
         final hovering = candidates.isNotEmpty;

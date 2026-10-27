@@ -97,13 +97,18 @@ class _BracketSlotEditingScopeState
     chip,
   ];
 
+  (String, String?) get _scope => (widget.tournamentId, widget.divisionId);
+
   Future<void> _handleSlotDrop(
     BracketSlotDragData source,
     BracketSlotDragData target,
   ) async {
     final operation = bracketSlotOperation(source, target);
     if (operation == null) return;
-    if (!await _send(operation) || !mounted) return;
+    final scope = _scope;
+    final accepted = await _send(operation);
+    // The division may have changed while the request was in flight.
+    if (!accepted || !mounted || _scope != scope) return;
     if (source.isFromTray) {
       // REPLACE pushes the previous occupant out of the slot into the tray.
       setState(() {
@@ -118,7 +123,9 @@ class _BracketSlotEditingScopeState
   }
 
   Future<void> _handleTrayDrop(BracketSlotDragData slot) async {
-    if (!await _send(bracketUnassignOperation(slot)) || !mounted) return;
+    final scope = _scope;
+    final accepted = await _send(bracketUnassignOperation(slot));
+    if (!accepted || !mounted || _scope != scope) return;
     setState(() => _tray = _trayWith(_asTrayChip(slot)));
     widget.onApplied();
   }

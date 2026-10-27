@@ -4,6 +4,9 @@ class BracketSlotDragData {
   final String? participantId;
   final bool isBye;
 
+  /// The slot's match is live or finished: the backend rejects every change.
+  final bool isLocked;
+
   /// Display name carried by a holding-tray chip (slots read it from the match).
   final String? label;
 
@@ -12,6 +15,7 @@ class BracketSlotDragData {
     required this.slot,
     this.participantId,
     this.isBye = false,
+    this.isLocked = false,
     this.label,
   });
 
@@ -21,7 +25,8 @@ class BracketSlotDragData {
     required String this.label,
   }) : matchId = '',
        slot = '',
-       isBye = false;
+       isBye = false,
+       isLocked = false;
 
   bool get isFromTray => matchId.isEmpty;
 
@@ -70,6 +75,7 @@ Map<String, String>? bracketSlotOperation(
   BracketSlotDragData target,
 ) {
   if (!source.hasParticipant || target.isBye || source == target) return null;
+  if (source.isLocked || target.isLocked) return null;
   if (source.isFromTray) {
     return {
       'operation': target.hasParticipant ? 'REPLACE' : 'ASSIGN',

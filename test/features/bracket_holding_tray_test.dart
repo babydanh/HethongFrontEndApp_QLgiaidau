@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -5,6 +7,7 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dar
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -31,6 +34,9 @@ class _FakeRepo implements ITournamentRepository {
   final calls = <List<Map<String, dynamic>>>[];
   Exception? failWith;
 
+  // When set, updateBracketSlots stays pending until the completer finishes.
+  Completer<void>? gate;
+
   @override
   Future<void> updateBracketSlots(
     String tournamentId, {
@@ -39,6 +45,7 @@ class _FakeRepo implements ITournamentRepository {
     bool isLite = false,
   }) async {
     calls.add(operations);
+    await gate?.future;
     final error = failWith;
     if (error != null) throw error;
   }
@@ -86,13 +93,14 @@ MatchModel _match(
   int position = 0,
   String team1Id = '',
   String team2Id = '',
+  String status = 'SCHEDULED',
 }) => MatchModel.fromJson({
   'id': id,
   'tournamentId': _tournamentId,
   'divisionId': _divisionId,
   'round': round,
   'matchNumber': position + 1,
-  'status': 'SCHEDULED',
+  'status': status,
   'team1Id': team1Id,
   'team2Id': team2Id,
   'team1Name': team1Id.isEmpty ? '' : 'Đội $team1Id',
@@ -107,8 +115,8 @@ MatchModel _match(
 }, id);
 
 // m1 is full (p1 vs p2), m2 has one free slot (p3 vs empty).
-List<MatchModel> _fixture() => [
-  _match('m1', round: 1, team1Id: 'p1', team2Id: 'p2'),
+List<MatchModel> _fixture({String m1Status = 'SCHEDULED'}) => [
+  _match('m1', round: 1, team1Id: 'p1', team2Id: 'p2', status: m1Status),
   _match('m2', round: 1, position: 1, team1Id: 'p3'),
   _match('m3', round: 2),
 ];
@@ -159,11 +167,14 @@ Future<_FakeRepo> _pump(
   return repo;
 }
 
-BracketDiagramScreen _diagram({required bool canEdit}) => BracketDiagramScreen(
+BracketDiagramScreen _diagram({
+  required bool canEdit,
+  String m1Status = 'SCHEDULED',
+}) => BracketDiagramScreen(
   tournamentId: _tournamentId,
   divisionId: _divisionId,
   bracketType: 'single_elimination',
-  initialMatches: _fixture(),
+  initialMatches: _fixture(m1Status: m1Status),
   canEditBracket: canEdit,
   isReadOnly: !canEdit,
 );
@@ -258,6 +269,23 @@ void main() {
         ),
         isNull,
       );
+    });
+
+    test('trận đang đấu hoặc đã xong (isLocked) -> không làm gì', () {
+      const locked = BracketSlotDragData(
+        matchId: 'm1',
+        slot: 'participant1',
+        participantId: 'p1',
+        isLocked: true,
+      );
+      final open = _slot('m2', 'participant1', 'p3');
+      const chip = BracketSlotDragData.tray(
+        participantId: 'p9',
+        label: 'Đội 9',
+      );
+      expect(bracketSlotOperation(locked, open), isNull);
+      expect(bracketSlotOperation(open, locked), isNull);
+      expect(bracketSlotOperation(chip, locked), isNull);
     });
   });
 
@@ -373,6 +401,22 @@ void main() {
       expect(_tray, findsNothing);
     });
 
+    testWidgets('quản lý, màn độc lập (khung 420): vẫn có khay và ô kéo thả', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        BracketViewScreen(
+          tournamentId: _tournamentId,
+          divisionId: _divisionId,
+          canEditBracket: true,
+        ),
+      );
+
+      expect(_tray, findsOneWidget);
+      expect(_slotKey('m1', 'participant1'), findsOneWidget);
+    });
+
     testWidgets('chip vẫn còn trong khay sau khi bảng nạp lại', (tester) async {
       final repo = await _pump(tester, embedded(canEdit: true));
       _reloadDelay = const Duration(milliseconds: 300);
@@ -392,6 +436,144 @@ void main() {
         find.byKey(const ValueKey('bracket-tray-chip-p1')),
         findsOneWidget,
       );
+    });
+  });
+
+  group('trận đang đấu hoặc đã xong bị khoá kéo thả', () {
+    for (final status in ['LIVE', 'COMPLETED']) {
+      testWidgets('$status: không kéo VĐV ra khay được', (tester) async {
+        final repo = await _pump(
+          tester,
+          _diagram(canEdit: true, m1Status: status),
+          matches: _fixture(m1Status: status),
+        );
+
+        await _longPressDrag(tester, _slotKey('m1', 'participant1'), _tray);
+
+        expect(repo.calls, isEmpty);
+        expect(
+          find.byKey(const ValueKey('bracket-tray-chip-p1')),
+          findsNothing,
+        );
+      });
+
+      testWidgets('$status: không thả VĐV khác vào trận đó được', (
+        tester,
+      ) async {
+        final repo = await _pump(
+          tester,
+          _diagram(canEdit: true, m1Status: status),
+          matches: _fixture(m1Status: status),
+        );
+
+        await _longPressDrag(
+          tester,
+          _slotKey('m2', 'participant1'),
+          _slotKey('m1', 'participant2'),
+        );
+
+        expect(repo.calls, isEmpty);
+      });
+    }
+  });
+
+  group('khay giữ tạm', () {
+    testWidgets('chip thả lên ô có người -> REPLACE, người cũ vào khay', (
+      tester,
+    ) async {
+      final repo = await _pump(tester, _diagram(canEdit: true));
+
+      await _longPressDrag(tester, _slotKey('m1', 'participant1'), _tray);
+      await _longPressDrag(
+        tester,
+        find.byKey(const ValueKey('bracket-tray-chip-p1')),
+        _slotKey('m2', 'participant1'),
+      );
+
+      expect(repo.calls.last, [
+        {
+          'operation': 'REPLACE',
+          'matchId': 'm2',
+          'slot': 'participant1',
+          'participantId': 'p1',
+        },
+      ]);
+      expect(find.byKey(const ValueKey('bracket-tray-chip-p1')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('bracket-tray-chip-p3')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('đang gửi thì thả thêm lần nữa bị bỏ qua', (tester) async {
+      final repo = await _pump(tester, _diagram(canEdit: true));
+      repo.gate = Completer<void>();
+
+      await _longPressDrag(tester, _slotKey('m1', 'participant1'), _tray);
+      await _longPressDrag(tester, _slotKey('m2', 'participant1'), _tray);
+      expect(repo.calls, hasLength(1));
+
+      repo.gate!.complete();
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('bracket-tray-chip-p1')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('bracket-tray-chip-p3')), findsNothing);
+    });
+
+    testWidgets('đổi division khi đang gửi -> bỏ kết quả, không refetch', (
+      tester,
+    ) async {
+      final division = ValueNotifier<String>(_divisionId);
+      addTearDown(division.dispose);
+      var applied = 0;
+      final repo = await _pump(
+        tester,
+        ValueListenableBuilder<String>(
+          valueListenable: division,
+          builder: (context, id, _) => BracketSlotEditingScope(
+            enabled: true,
+            tournamentId: _tournamentId,
+            divisionId: id,
+            onApplied: () => applied++,
+            builder: (context, tray, onSlotDrop) => Column(
+              children: [
+                tray!,
+                Draggable<BracketSlotDragData>(
+                  data: _slot('m1', 'participant1', 'p1'),
+                  feedback: const SizedBox(width: 40, height: 40),
+                  child: Container(
+                    key: const Key('source'),
+                    width: 80,
+                    height: 40,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      repo.gate = Completer<void>();
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(const Key('source'))),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.moveTo(tester.getCenter(_tray));
+      await tester.pump(const Duration(milliseconds: 100));
+      await gesture.up();
+      await tester.pump();
+      expect(repo.calls, hasLength(1));
+
+      division.value = 'division-b';
+      await tester.pump();
+      repo.gate!.complete();
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('bracket-tray-chip-p1')), findsNothing);
+      expect(applied, 0);
     });
   });
 

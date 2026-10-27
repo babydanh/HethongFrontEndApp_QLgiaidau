@@ -108,6 +108,7 @@ class BracketMatchCard extends StatelessWidget {
       slot: slot,
       participantId: participantId,
       isBye: isBye,
+      isLocked: !match.isScheduled,
       label: label,
     );
     final row = TeamRow(
@@ -127,14 +128,12 @@ class BracketMatchCard extends StatelessWidget {
     );
     if (!isSlotEditable || onSlotDrop == null || onSlotTap == null) return row;
     final isSelected = selectedSlot == dragData;
-    final canDrag = dragData.hasParticipant;
+    final canDrag = dragData.hasParticipant && !dragData.isLocked;
 
     return DragTarget<BracketSlotDragData>(
       key: ValueKey('bracket-slot-${match.id}-$slot'),
       onWillAcceptWithDetails: (details) =>
-          details.data != dragData &&
-          details.data.hasParticipant &&
-          !dragData.isBye,
+          bracketSlotOperation(details.data, dragData) != null,
       onAcceptWithDetails: (details) => onSlotDrop!(details.data, dragData),
       builder: (context, candidates, rejected) {
         final isDropTarget = candidates.isNotEmpty;
