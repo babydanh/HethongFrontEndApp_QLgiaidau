@@ -79,7 +79,6 @@ class _ParticipantDetailSheetState
   bool _busy = false;
   String? _error;
   late final TextEditingController _noteController;
-  late final TextEditingController _seedController;
   bool _rosterLocked = false;
 
   // Chỉnh sửa liên hệ: chỉ thành viên khách (không tài khoản) sửa được, giống
@@ -93,9 +92,6 @@ class _ParticipantDetailSheetState
   void initState() {
     super.initState();
     _noteController = TextEditingController(text: participantNote(participant));
-    _seedController = TextEditingController(
-      text: participant.seed?.toString() ?? '',
-    );
     _rosterLocked = participant.rosterLockedAt != null;
   }
 
@@ -109,7 +105,6 @@ class _ParticipantDetailSheetState
   @override
   void dispose() {
     _noteController.dispose();
-    _seedController.dispose();
     for (final field in _contactFields) {
       field.dispose();
     }
@@ -159,32 +154,6 @@ class _ParticipantDetailSheetState
         SnackBar(
           content: Text(
             AppLocalizations.of(context)!.participantDetailNoteSaved,
-          ),
-        ),
-      );
-    }
-  }
-
-  /// Gán seed nhanh (`PATCH /tournaments/:id/seeds`, một dòng).
-  Future<void> _saveSeed() async {
-    final l10n = AppLocalizations.of(context)!;
-    final seed = int.tryParse(_seedController.text.trim());
-    if (seed == null || seed < 1) {
-      setState(() => _error = l10n.participantDetailSeedInvalid);
-      return;
-    }
-    final saved = await _run(
-      () => ref
-          .read(tournamentManagementRepositoryProvider)
-          .updateTournamentSeeds(widget.tournamentId, [
-            {'participantId': participant.id, 'seed': seed},
-          ]),
-    );
-    if (saved && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.participantDetailSeedSaved,
           ),
         ),
       );
@@ -458,8 +427,6 @@ class _ParticipantDetailSheetState
             const SizedBox(height: 12),
             _formAnswersSection(context),
           ],
-          const SizedBox(height: 12),
-          _seedSection(context),
           if (_error != null) ...[
             const SizedBox(height: 8),
             Text(_error!, style: TextStyle(color: colors.error)),
@@ -541,29 +508,11 @@ class _ParticipantDetailSheetState
           ],
         ),
         const SizedBox(height: 6),
-        Text(
-          [
-            widget.pairFormat
-                ? l10n.participantDetailPairBadge
-                : l10n.participantDetailSingleBadge,
-            if (widget.divisionName?.isNotEmpty == true)
-              widget.divisionName!
-            else
-              l10n.participantDetailUnassignedDivision,
-            if (participant.registeredAt != null)
-              DateFormat('dd/MM/yyyy HH:mm').format(participant.registeredAt!),
-          ].join(' · '),
-          style: TextStyle(color: colors.textSecondary, fontSize: 12),
-        ),
-        // Dòng nguồn import: "Nguồn hồ sơ: Excel · file.xlsx" (Web hiện một
-        // dòng duy nhất, sourceFileName/SheetName/RowIndex chỉ để phục vụ dòng này).
-        if (_registrationSourceLine(l10n) case final sourceLine?) ...[
-          const SizedBox(height: 6),
+        if (participant.registeredAt != null)
           Text(
-            sourceLine,
+            DateFormat('dd/MM/yyyy HH:mm').format(participant.registeredAt!),
             style: TextStyle(color: colors.textSecondary, fontSize: 12),
           ),
-        ],
         // Thanh toán: chỉ hiện khi có lệ phí hoặc có giao dịch (như Web).
         if ((participant.entryFee ?? 0) > 0 || participant.payment != null) ...[
           const SizedBox(height: 8),
@@ -989,43 +938,6 @@ class _ParticipantDetailSheetState
       );
     }
     return Text(value, style: style);
-  }
-
-  Widget _seedSection(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Row(
-      children: [
-        Text(
-          l10n.participantDetailSeedLabel,
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 96,
-          child: TextField(
-            key: const ValueKey('participant-detail-seed'),
-            controller: _seedController,
-            enabled: !_busy,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              isDense: true,
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        OutlinedButton(
-          key: const ValueKey('participant-detail-seed-save'),
-          onPressed: _busy ? null : _saveSeed,
-          child: Text(l10n.participantDetailSeedSave),
-        ),
-      ],
-    );
   }
 }
 
