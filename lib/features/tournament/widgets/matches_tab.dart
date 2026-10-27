@@ -356,35 +356,30 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
   }
 
   Widget _buildSearchField(AppColorsExtension colors, AppLocalizations l10n) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 40),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.border),
-      ),
+    return SizedBox(
+      height: 36,
       child: TextField(
         controller: _searchCtrl,
         onChanged: (value) => setState(() => _searchQuery = value),
-        style: TextStyle(fontSize: 13.5, color: colors.textPrimary),
+        style: TextStyle(fontSize: 13, color: colors.textPrimary),
         decoration: InputDecoration(
           hintText: l10n.matchesSearchHint,
-          hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
+          hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
           prefixIcon: Icon(
             Icons.search_rounded,
-            size: 19,
-            color: colors.textMuted,
+            size: 18,
+            color: colors.textSecondary,
           ),
           prefixIconConstraints: const BoxConstraints(
-            minWidth: 40,
-            minHeight: 40,
+            minWidth: 32,
+            minHeight: 32,
           ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   tooltip: l10n.matchesSearchHint,
                   constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
+                    minWidth: 32,
+                    minHeight: 32,
                   ),
                   padding: EdgeInsets.zero,
                   icon: const Icon(Icons.close_rounded, size: 16),
@@ -394,13 +389,21 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                   },
                 )
               : null,
-          suffixIconConstraints: const BoxConstraints(
-            minWidth: 40,
-            minHeight: 40,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          filled: true,
+          fillColor: colors.bgSurface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: colors.border),
           ),
-          border: InputBorder.none,
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: colors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
+          ),
         ),
       ),
     );
@@ -432,14 +435,14 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                   () => _selectedScheduleDateKey = _scheduleDateKey(date),
                 ),
                 child: Container(
-                  constraints: const BoxConstraints(minHeight: 44),
+                  constraints: const BoxConstraints(minHeight: 32),
                   alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: _scheduleDateKey(date) == selectedKey
                         ? AppTheme.primary
-                        : colors.bgCard,
-                    borderRadius: BorderRadius.circular(20),
+                        : colors.bgSurface,
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _scheduleDateKey(date) == selectedKey
                           ? AppTheme.primary
@@ -452,7 +455,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
                       color: _scheduleDateKey(date) == selectedKey
                           ? Colors.white
                           : colors.textSecondary,
-                      fontSize: 12,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
