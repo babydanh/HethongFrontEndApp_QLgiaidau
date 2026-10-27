@@ -4,7 +4,8 @@ class BracketSlotDragData {
   final String? participantId;
   final bool isBye;
 
-  /// The slot's match is live or finished: the backend rejects every change.
+  /// The slot's match is live or finished (BYE matches excepted): locked in the
+  /// app, which skips the backend's identity-swap path on finished matches.
   final bool isLocked;
 
   /// Display name carried by a holding-tray chip (slots read it from the match).

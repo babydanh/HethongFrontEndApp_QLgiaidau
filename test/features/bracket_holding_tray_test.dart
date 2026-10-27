@@ -522,7 +522,52 @@ void main() {
           _slotKey('m1', 'participant2'),
         );
 
-        expect(repo.calls.single.single['operation'], 'SWAP');
+        expect(repo.calls.single, [
+          {
+            'operation': 'SWAP',
+            'fromMatchId': 'm2',
+            'fromSlot': 'participant1',
+            'toMatchId': 'm1',
+            'toSlot': 'participant2',
+          },
+        ]);
+      });
+
+      testWidgets('BYE thật (một người, ô kia trống) nhận VĐV khác -> MOVE', (
+        tester,
+      ) async {
+        final soloBye = [
+          _match(
+            'm1',
+            round: 1,
+            team1Id: 'p1',
+            status: 'COMPLETED',
+            isBye: true,
+          ),
+          _match('m2', round: 1, position: 1, team1Id: 'p3', team2Id: 'p4'),
+          _match('m3', round: 2),
+        ];
+        final repo = await _pump(
+          tester,
+          _diagram(canEdit: true, m1Status: 'COMPLETED', m1Bye: true),
+          matches: soloBye,
+        );
+
+        await _longPressDrag(
+          tester,
+          _slotKey('m2', 'participant1'),
+          _slotKey('m1', 'participant2'),
+        );
+
+        expect(repo.calls.single, [
+          {
+            'operation': 'MOVE',
+            'fromMatchId': 'm2',
+            'fromSlot': 'participant1',
+            'toMatchId': 'm1',
+            'toSlot': 'participant2',
+          },
+        ]);
       });
     },
   );
