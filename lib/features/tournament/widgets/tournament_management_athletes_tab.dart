@@ -375,57 +375,87 @@ class _DivisionRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              FilledButton.icon(
-                                onPressed: () => onAddAthlete(participants),
-                                icon: const Icon(
-                                  Icons.person_add_alt_1_rounded,
+                          padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            child: Row(
+                              children: [
+                                // Nút chính: Thêm VĐV (Filled pill gọn gàng)
+                                FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                  ),
+                                  onPressed: () => onAddAthlete(participants),
+                                  icon: const Icon(
+                                    Icons.person_add_alt_1_rounded,
+                                    size: 16,
+                                  ),
+                                  label: Text(l10n.opsAddAthlete, style: const TextStyle(fontSize: 12)),
                                 ),
-                                label: Text(l10n.opsAddAthlete),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey('athletes-import-excel'),
-                                onPressed: onImportExcel,
-                                icon: const Icon(Icons.upload_file_rounded),
-                                label: Text(l10n.rosterImportOpen),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey(
-                                  'athletes-download-template',
-                                ),
-                                onPressed: onDownloadTemplate,
-                                icon: const Icon(Icons.download_rounded),
-                                label: Text(l10n.rosterImportDownloadTemplate),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey('athletes-mock-data'),
-                                onPressed: onOpenMockParticipants,
-                                icon: const Icon(Icons.auto_awesome_rounded),
-                                label: Text(l10n.mockParticipantsOpen),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey('athletes-wildcard'),
-                                onPressed: onOpenWildcard,
-                                icon: const Icon(
-                                  Icons.workspace_premium_rounded,
-                                ),
-                                label: Text(l10n.wildcardOpen),
-                              ),
-                              // Web chỉ hiện nút ghép khi giải có nội dung
-                              // đôi (hasTournamentDoubles); App hiện theo
-                              // từng hạng mục đôi.
-                              if (division.isDoubles)
+                                const SizedBox(width: 6),
                                 OutlinedButton.icon(
-                                  key: const ValueKey('athletes-pairing'),
-                                  onPressed: onOpenPairing,
-                                  icon: const Icon(Icons.handshake_rounded),
-                                  label: Text(l10n.pairingOpen),
+                                  key: const ValueKey('athletes-import-excel'),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                  ),
+                                  onPressed: onImportExcel,
+                                  icon: const Icon(Icons.upload_file_rounded, size: 16),
+                                  label: Text(l10n.rosterImportOpen, style: const TextStyle(fontSize: 12)),
                                 ),
-                            ],
+                                const SizedBox(width: 6),
+                                OutlinedButton.icon(
+                                  key: const ValueKey('athletes-download-template'),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                  ),
+                                  onPressed: onDownloadTemplate,
+                                  icon: const Icon(Icons.download_rounded, size: 16),
+                                  label: Text(l10n.rosterImportDownloadTemplate, style: const TextStyle(fontSize: 12)),
+                                ),
+                                const SizedBox(width: 6),
+                                OutlinedButton.icon(
+                                  key: const ValueKey('athletes-mock-data'),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                  ),
+                                  onPressed: onOpenMockParticipants,
+                                  icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                                  label: Text(l10n.mockParticipantsOpen, style: const TextStyle(fontSize: 12)),
+                                ),
+                                const SizedBox(width: 6),
+                                OutlinedButton.icon(
+                                  key: const ValueKey('athletes-wildcard'),
+                                  style: OutlinedButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                  ),
+                                  onPressed: onOpenWildcard,
+                                  icon: const Icon(
+                                    Icons.workspace_premium_rounded,
+                                    size: 16,
+                                  ),
+                                  label: Text(l10n.wildcardOpen, style: const TextStyle(fontSize: 12)),
+                                ),
+                                if (division.isDoubles) ...[
+                                  const SizedBox(width: 6),
+                                  OutlinedButton.icon(
+                                    key: const ValueKey('athletes-pairing'),
+                                    style: OutlinedButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                    ),
+                                    onPressed: onOpenPairing,
+                                    icon: const Icon(Icons.handshake_rounded, size: 16),
+                                    label: Text(l10n.pairingOpen, style: const TextStyle(fontSize: 12)),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
                         TournamentManagementPeopleSection(
