@@ -1,5 +1,5 @@
 # Handoff: mã trận (`ma-tran-ma-so-tran`)
-Cập nhật: 2026-10-26 · bởi: omp · nhánh: `omp/issue-53` · OpenSpec: `ma-tran-ma-so-tran`
+Cập nhật: 2026-10-27 · bởi: omp · nhánh: `ma-tran` · OpenSpec: `ma-tran-ma-so-tran`
 
 ## Mục tiêu
 Backend trả `matchCode` thô; App chỉ thêm `#` lúc hiển thị, giữ fallback cũ khi thiếu mã và không hiện mã trong overlay livestream. Không đổi DTO, schema hay API.
@@ -35,3 +35,8 @@ Backend trả `matchCode` thô; App chỉ thêm `#` lúc hiển thị, giữ fal
 
 ## Câu hỏi còn mở
 - Cần môi trường có `~/.omp/scripts/app-run.py` để chạy `status`; task 3.1 và 4.2 giữ mở cho tới khi xác nhận app dùng chung và hoàn tất test ảnh hưởng. Cloud `app` target đã biết không tương thích Dart `^3.10.3` (Flutter 3.29.x chỉ có Dart 3.7.2).
+
+## Xác minh lại 2026-10-27 (main session)
+- `flutter test --no-pub` 6 file liên quan → 54 pass, exit 0. `flutter analyze --no-pub` các file đã sửa → exit 1 chỉ vì 3 diagnostic `info` có sẵn từ trước (`public_bracket_view_test.dart:47-48` giống hệt `origin/main`, `bracket_generation_summary.dart:1`), không do thay đổi này.
+- Agent đổi thứ tự đối số `crossTableLegTitle(leg, title)` ở 4 chỗ cho khớp chữ ký sinh ra từ l10n (code cũ trên main truyền ngược → hiện "1 - Lượt NhómA"). Đây là sửa lỗi có sẵn, nằm trong các file đã chạm.
+- Ràng buộc: không đổi (đã so).
