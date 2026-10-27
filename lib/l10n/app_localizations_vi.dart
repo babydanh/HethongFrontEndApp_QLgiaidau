@@ -11887,6 +11887,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bracketDiagramZoomHint => 'Kéo & thu phóng';
 
   @override
+  String get bracketTrayTitle => 'Chỗ giữ tạm';
+
+  @override
+  String get bracketTrayEmpty =>
+      'Kéo vận động viên/đội vào đây để giữ tạm khi sắp xếp lại sơ đồ.';
+
+  @override
   String get bracketDiagramEmptyTitle => 'Chưa có sơ đồ thi đấu';
 
   @override

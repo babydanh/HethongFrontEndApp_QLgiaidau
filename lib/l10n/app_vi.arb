@@ -4956,6 +4956,8 @@
   "excelScore1": "Điểm 1",
   "excelScore2": "Điểm 2",
   "bracketDiagramZoomHint": "Kéo & thu phóng",
+  "bracketTrayTitle": "Chỗ giữ tạm",
+  "bracketTrayEmpty": "Kéo vận động viên/đội vào đây để giữ tạm khi sắp xếp lại sơ đồ.",
   "bracketDiagramEmptyTitle": "Chưa có sơ đồ thi đấu",
   "bracketDiagramEmptyHint": "Hãy hoàn tất bốc thăm để tạo sơ đồ",
   "authCredentialsMissingResponse": "Không tìm thấy thông tin xác thực trong phản hồi",

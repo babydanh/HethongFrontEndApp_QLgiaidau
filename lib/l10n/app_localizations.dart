@@ -21658,6 +21658,18 @@ abstract class AppLocalizations {
   /// **'Kéo & thu phóng'**
   String get bracketDiagramZoomHint;
 
+  /// No description provided for @bracketTrayTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỗ giữ tạm'**
+  String get bracketTrayTitle;
+
+  /// No description provided for @bracketTrayEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo vận động viên/đội vào đây để giữ tạm khi sắp xếp lại sơ đồ.'**
+  String get bracketTrayEmpty;
+
   /// No description provided for @bracketDiagramEmptyTitle.
   ///
   /// In vi, this message translates to:

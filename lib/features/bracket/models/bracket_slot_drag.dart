@@ -4,12 +4,26 @@ class BracketSlotDragData {
   final String? participantId;
   final bool isBye;
 
+  /// Display name carried by a holding-tray chip (slots read it from the match).
+  final String? label;
+
   const BracketSlotDragData({
     required this.matchId,
     required this.slot,
     this.participantId,
     this.isBye = false,
+    this.label,
   });
+
+  /// A participant parked in the holding tray: it belongs to no match slot.
+  const BracketSlotDragData.tray({
+    required String this.participantId,
+    required String this.label,
+  }) : matchId = '',
+       slot = '',
+       isBye = false;
+
+  bool get isFromTray => matchId.isEmpty;
 
   /// Backend only accepts real tournament participant IDs in slot mutations.
   /// Empty/TBD/BYE are presentation placeholders and must not be dragged.
@@ -48,3 +62,33 @@ typedef BracketSlotDropCallback =
 
 typedef BracketSlotUnassignCallback =
     Future<void> Function(BracketSlotDragData slot);
+
+/// Backend operation for dropping [source] on [target], or null when the drop
+/// is a no-op (same slot, nothing to move, BYE target).
+Map<String, String>? bracketSlotOperation(
+  BracketSlotDragData source,
+  BracketSlotDragData target,
+) {
+  if (!source.hasParticipant || target.isBye || source == target) return null;
+  if (source.isFromTray) {
+    return {
+      'operation': target.hasParticipant ? 'REPLACE' : 'ASSIGN',
+      'matchId': target.matchId,
+      'slot': target.slot,
+      'participantId': source.participantId!,
+    };
+  }
+  return {
+    'operation': target.hasParticipant ? 'SWAP' : 'MOVE',
+    'fromMatchId': source.matchId,
+    'fromSlot': source.slot,
+    'toMatchId': target.matchId,
+    'toSlot': target.slot,
+  };
+}
+
+Map<String, String> bracketUnassignOperation(BracketSlotDragData slot) => {
+  'operation': 'UNASSIGN',
+  'matchId': slot.matchId,
+  'slot': slot.slot,
+};

@@ -24,7 +24,6 @@ class BracketMatchCard extends StatelessWidget {
   final BracketSlotDragData? selectedSlot;
   final ValueChanged<BracketSlotDragData>? onSlotTap;
   final BracketSlotDropCallback? onSlotDrop;
-  final BracketSlotUnassignCallback? onUnassignSlot;
   final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   const BracketMatchCard({
@@ -39,7 +38,6 @@ class BracketMatchCard extends StatelessWidget {
     this.selectedSlot,
     this.onSlotTap,
     this.onSlotDrop,
-    this.onUnassignSlot,
     this.onDoubleTapMatch,
   });
 
@@ -99,17 +97,19 @@ class BracketMatchCard extends StatelessWidget {
     required String participantId,
     String? eloDelta,
   }) {
+    final label = participantLabel(
+      teamName: teamName,
+      players: players,
+      teamOnly: isFootballMatch(match),
+      abbreviated: true,
+    );
     final dragData = BracketSlotDragData(
       matchId: match.id,
       slot: slot,
       participantId: participantId,
       isBye: isBye,
+      label: label,
     );
-    final canUnassign =
-        isSlotEditable &&
-        onUnassignSlot != null &&
-        dragData.hasParticipant &&
-        match.isScheduled;
     final row = TeamRow(
       teamName: teamName,
       players: players,
@@ -124,28 +124,13 @@ class BracketMatchCard extends StatelessWidget {
       isBye: isBye,
       isGrandFinalWinner: isGrandFinalWinner,
       eloDelta: eloDelta,
-      trailing: canUnassign
-          ? Tooltip(
-              message: AppLocalizations.of(context)!.lite_unassignBracket,
-              child: IconButton(
-                onPressed: () => onUnassignSlot!(dragData),
-                icon: const Icon(Icons.link_off_rounded, size: 14),
-                color: Theme.of(context).colorScheme.error,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(
-                  width: 22,
-                  height: 22,
-                ),
-                visualDensity: VisualDensity.compact,
-              ),
-            )
-          : null,
     );
     if (!isSlotEditable || onSlotDrop == null || onSlotTap == null) return row;
     final isSelected = selectedSlot == dragData;
     final canDrag = dragData.hasParticipant;
 
     return DragTarget<BracketSlotDragData>(
+      key: ValueKey('bracket-slot-${match.id}-$slot'),
       onWillAcceptWithDetails: (details) =>
           details.data != dragData &&
           details.data.hasParticipant &&
@@ -194,12 +179,7 @@ class BracketMatchCard extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        participantLabel(
-                          teamName: teamName,
-                          players: players,
-                          teamOnly: isFootballMatch(match),
-                          abbreviated: true,
-                        ),
+                        label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

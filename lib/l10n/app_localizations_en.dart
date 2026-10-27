@@ -11921,6 +11921,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketDiagramZoomHint => 'Pan & zoom';
 
   @override
+  String get bracketTrayTitle => 'Holding area';
+
+  @override
+  String get bracketTrayEmpty =>
+      'Drag a player/team here to hold them while rearranging the bracket.';
+
+  @override
   String get bracketDiagramEmptyTitle => 'No bracket diagram yet';
 
   @override

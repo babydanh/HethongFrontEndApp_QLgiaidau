@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/filter_chips.dart';
@@ -253,6 +254,21 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         ),
       );
     }
+  }
+
+  bool _resolveIsLite() =>
+      widget.isLite ||
+      ref.read(tournamentProvider(widget.tournamentId)).value?.isLite == true;
+
+  void _refreshBracketAfterEdit() {
+    ref.invalidate(bracketMatchesProvider(widget.tournamentId));
+    ref.invalidate(
+      bracketMatchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: _activeDivisionId,
+      )),
+    );
+    if (mounted) setState(() {});
   }
 
   String _formatBracketError(Object error) {
@@ -1448,58 +1464,60 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           ),
         ],
         if (bracketMatches.isNotEmpty)
-          // Embedded in the hub: horizontal scroll only, height follows the
-          // canvas and the hub page owns vertical scrolling. A fixed 420 frame
-          // with pan/zoom fights the hub's own scroll view.
-          if (_isHubEmbedded)
-            isDoubleElimination
-                ? DoubleElimDiagram(
-                    matches: bracketMatches,
-                    tournamentId: widget.tournamentId,
-                    isReferee: isReferee,
-                    isReadOnly: isReadOnly,
-                    canScoreMatch: canScoreMatch,
-                    onDoubleTapMatch: widget.canEditBracket
-                        ? _handleDoubleTapMatch
-                        : null,
-                    scrollOnly: true,
-                  )
-                : SingleElimDiagram(
-                    matches: bracketMatches,
-                    tournamentId: widget.tournamentId,
-                    isReferee: isReferee,
-                    isReadOnly: isReadOnly,
-                    canScoreMatch: canScoreMatch,
-                    onDoubleTapMatch: widget.canEditBracket
-                        ? _handleDoubleTapMatch
-                        : null,
-                    scrollOnly: true,
-                  )
-          else
-            SizedBox(
-              height: 420,
-              child: isDoubleElimination
+          BracketSlotEditingScope(
+            enabled: widget.canEditBracket,
+            tournamentId: widget.tournamentId,
+            divisionId: _activeDivisionId,
+            isLite: _resolveIsLite,
+            onApplied: _refreshBracketAfterEdit,
+            builder: (context, tray, onSlotDrop) {
+              // Embedded in the hub: horizontal scroll only, height follows the
+              // canvas and the hub page owns vertical scrolling. A fixed 420
+              // frame with pan/zoom fights the hub's own scroll view.
+              final scrollOnly = _isHubEmbedded;
+              final onDoubleTap = widget.canEditBracket
+                  ? _handleDoubleTapMatch
+                  : null;
+              final diagram = isDoubleElimination
                   ? DoubleElimDiagram(
                       matches: bracketMatches,
                       tournamentId: widget.tournamentId,
                       isReferee: isReferee,
                       isReadOnly: isReadOnly,
+                      isEditable: widget.canEditBracket,
                       canScoreMatch: canScoreMatch,
-                      onDoubleTapMatch: widget.canEditBracket
-                          ? _handleDoubleTapMatch
-                          : null,
+                      onSlotDrop: onSlotDrop,
+                      onDoubleTapMatch: onDoubleTap,
+                      scrollOnly: scrollOnly,
                     )
                   : SingleElimDiagram(
                       matches: bracketMatches,
                       tournamentId: widget.tournamentId,
                       isReferee: isReferee,
                       isReadOnly: isReadOnly,
+                      isEditable: widget.canEditBracket,
                       canScoreMatch: canScoreMatch,
-                      onDoubleTapMatch: widget.canEditBracket
-                          ? _handleDoubleTapMatch
-                          : null,
+                      onSlotDrop: onSlotDrop,
+                      onDoubleTapMatch: onDoubleTap,
+                      scrollOnly: scrollOnly,
+                    );
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (tray != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: tray,
                     ),
-            ),
+                  if (scrollOnly)
+                    diagram
+                  else
+                    SizedBox(height: 420, child: diagram),
+                ],
+              );
+            },
+          ),
       ],
     );
   }
