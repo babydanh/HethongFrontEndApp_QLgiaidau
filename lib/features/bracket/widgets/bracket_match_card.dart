@@ -108,7 +108,8 @@ class BracketMatchCard extends StatelessWidget {
       slot: slot,
       participantId: participantId,
       isBye: isBye,
-      isLocked: !match.isScheduled,
+      // Backend treats a BYE match as unplayed even though it is COMPLETED.
+      isLocked: !match.isScheduled && !match.isBye,
       label: label,
     );
     final row = TeamRow(

@@ -94,8 +94,10 @@ MatchModel _match(
   String team1Id = '',
   String team2Id = '',
   String status = 'SCHEDULED',
+  bool isBye = false,
 }) => MatchModel.fromJson({
   'id': id,
+  'isBye': isBye,
   'tournamentId': _tournamentId,
   'divisionId': _divisionId,
   'round': round,
@@ -115,8 +117,18 @@ MatchModel _match(
 }, id);
 
 // m1 is full (p1 vs p2), m2 has one free slot (p3 vs empty).
-List<MatchModel> _fixture({String m1Status = 'SCHEDULED'}) => [
-  _match('m1', round: 1, team1Id: 'p1', team2Id: 'p2', status: m1Status),
+List<MatchModel> _fixture({
+  String m1Status = 'SCHEDULED',
+  bool m1Bye = false,
+}) => [
+  _match(
+    'm1',
+    round: 1,
+    team1Id: 'p1',
+    team2Id: 'p2',
+    status: m1Status,
+    isBye: m1Bye,
+  ),
   _match('m2', round: 1, position: 1, team1Id: 'p3'),
   _match('m3', round: 2),
 ];
@@ -170,11 +182,12 @@ Future<_FakeRepo> _pump(
 BracketDiagramScreen _diagram({
   required bool canEdit,
   String m1Status = 'SCHEDULED',
+  bool m1Bye = false,
 }) => BracketDiagramScreen(
   tournamentId: _tournamentId,
   divisionId: _divisionId,
   bracketType: 'single_elimination',
-  initialMatches: _fixture(m1Status: m1Status),
+  initialMatches: _fixture(m1Status: m1Status, m1Bye: m1Bye),
   canEditBracket: canEdit,
   isReadOnly: !canEdit,
 );
@@ -476,6 +489,43 @@ void main() {
       });
     }
   });
+
+  group(
+    'trận BYE đã COMPLETED vẫn kéo thả được (Backend không coi là có kết quả)',
+    () {
+      testWidgets('kéo VĐV nhận BYE ra khay -> UNASSIGN', (tester) async {
+        final repo = await _pump(
+          tester,
+          _diagram(canEdit: true, m1Status: 'COMPLETED', m1Bye: true),
+          matches: _fixture(m1Status: 'COMPLETED', m1Bye: true),
+        );
+
+        await _longPressDrag(tester, _slotKey('m1', 'participant1'), _tray);
+
+        expect(repo.calls.single, [
+          {'operation': 'UNASSIGN', 'matchId': 'm1', 'slot': 'participant1'},
+        ]);
+      });
+
+      testWidgets('thả VĐV khác vào trận BYE đã COMPLETED -> SWAP', (
+        tester,
+      ) async {
+        final repo = await _pump(
+          tester,
+          _diagram(canEdit: true, m1Status: 'COMPLETED', m1Bye: true),
+          matches: _fixture(m1Status: 'COMPLETED', m1Bye: true),
+        );
+
+        await _longPressDrag(
+          tester,
+          _slotKey('m2', 'participant1'),
+          _slotKey('m1', 'participant2'),
+        );
+
+        expect(repo.calls.single.single['operation'], 'SWAP');
+      });
+    },
+  );
 
   group('khay giữ tạm', () {
     testWidgets('chip thả lên ô có người -> REPLACE, người cũ vào khay', (
