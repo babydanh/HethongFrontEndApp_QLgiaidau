@@ -223,6 +223,9 @@ void main() {
       expect(find.byKey(const ValueKey('schedule-picker-m-1')), findsOneWidget);
       expect(find.byKey(const ValueKey('schedule-picker-m-2')), findsOneWidget);
       expect(find.byKey(const ValueKey('schedule-picker-m-3')), findsNothing);
+      // The row title still shows each match's own code.
+      expect(find.text('Vòng 1 - #DNTB-R1-T1'), findsOneWidget);
+      expect(find.text('Vòng 1 - #DNTB-R1-T2'), findsOneWidget);
 
       await tester.tap(
         find.byKey(const ValueKey('schedule-multi-round-filter')),

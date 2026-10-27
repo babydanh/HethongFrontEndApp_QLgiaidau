@@ -511,7 +511,7 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      _roundLabel(match, l10n),
+                      MatchRoundLabel.formatRound(match: match, l10n: l10n),
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: colors.textPrimary,
