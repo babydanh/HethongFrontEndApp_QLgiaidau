@@ -64,6 +64,10 @@ class BracketViewScreen extends ConsumerStatefulWidget {
 }
 
 class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
+  /// Embedded in the hub's page scroll view. Lite embeds inside a bounded
+  /// `Expanded` with no outer scroll, so it keeps the fixed-height frame.
+  bool get _isHubEmbedded => widget.isEmbedded && !widget.isLite;
+
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
   int _selectedGroupTab = 0;
@@ -1017,7 +1021,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       children: [
         // ── Diagram Access Banner (Swiss has no bracket diagram; the hub tab
         // already shows the diagram inline, so the banner is dropped there) ──
-        if (!isSwiss && !widget.isEmbedded)
+        if (!isSwiss && !_isHubEmbedded)
           Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1435,7 +1439,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           // Embedded in the hub: horizontal scroll only, height follows the
           // canvas and the hub page owns vertical scrolling. A fixed 420 frame
           // with pan/zoom fights the hub's own scroll view.
-          if (widget.isEmbedded)
+          if (_isHubEmbedded)
             isDoubleElimination
                 ? DoubleElimDiagram(
                     matches: bracketMatches,

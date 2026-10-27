@@ -64,9 +64,24 @@ MatchModel _knockout(String id, {required int round, int position = 0}) =>
       },
     }, id);
 
-/// Mirrors the management hub: the embedded screen sits in a sliver inside
-/// the page's own vertical scroll view.
-Future<void> _pumpEmbedded(WidgetTester tester) async {
+/// Default mirrors the management hub: the embedded screen sits in a sliver
+/// inside the page's own vertical scroll view. [home] overrides the host.
+Widget _hubHost(Widget screen) => CustomScrollView(
+  key: const Key('hub-page-scroll'),
+  slivers: [SliverToBoxAdapter(child: screen)],
+);
+
+Finder _frame420(Finder diagram) => find.ancestor(
+  of: diagram,
+  matching: find.byWidgetPredicate((w) => w is SizedBox && w.height == 420),
+);
+
+Future<void> _pumpEmbedded(
+  WidgetTester tester, {
+  Widget Function(Widget screen)? host,
+  bool isEmbedded = true,
+  bool isLite = false,
+}) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -98,18 +113,14 @@ Future<void> _pumpEmbedded(WidgetTester tester) async {
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('vi'),
         home: Scaffold(
-          body: CustomScrollView(
-            key: const Key('hub-page-scroll'),
-            slivers: [
-              SliverToBoxAdapter(
-                child: BracketViewScreen(
-                  tournamentId: _tournamentId,
-                  divisionId: _divisionId,
-                  isEmbedded: true,
-                  canEditBracket: true,
-                ),
-              ),
-            ],
+          body: (host ?? _hubHost)(
+            BracketViewScreen(
+              tournamentId: _tournamentId,
+              divisionId: _divisionId,
+              isEmbedded: isEmbedded,
+              isLite: isLite,
+              canEditBracket: true,
+            ),
           ),
         ),
       ),
@@ -142,15 +153,7 @@ void main() {
       final diagram = find.byType(SingleElimDiagram);
 
       expect(tester.widget<SingleElimDiagram>(diagram).scrollOnly, isTrue);
-      expect(
-        find.ancestor(
-          of: diagram,
-          matching: find.byWidgetPredicate(
-            (w) => w is SizedBox && w.height == 420,
-          ),
-        ),
-        findsNothing,
-      );
+      expect(_frame420(diagram), findsNothing);
 
       final horizontal = find.descendant(
         of: diagram,
@@ -167,4 +170,33 @@ void main() {
       expect(position.pixels, greaterThan(0));
     },
   );
+
+  testWidgets('màn riêng (không nhúng): giữ banner và khung sơ đồ 420', (
+    tester,
+  ) async {
+    await _pumpEmbedded(tester, isEmbedded: false, host: (screen) => screen);
+    final l10n = lookupAppLocalizations(const Locale('vi'));
+    final diagram = find.byType(SingleElimDiagram);
+
+    expect(find.text(l10n.bracketView_knockoutTitle), findsWidgets);
+    expect(tester.widget<SingleElimDiagram>(diagram).scrollOnly, isFalse);
+    expect(_frame420(diagram), findsOneWidget);
+  });
+
+  testWidgets('Lite nhúng trong khung cao cố định: giữ banner và khung 420', (
+    tester,
+  ) async {
+    await _pumpEmbedded(
+      tester,
+      isLite: true,
+      host: (screen) => Column(children: [Expanded(child: screen)]),
+    );
+    final l10n = lookupAppLocalizations(const Locale('vi'));
+    final diagram = find.byType(SingleElimDiagram);
+
+    expect(find.text(l10n.bracketView_knockoutTitle), findsWidgets);
+    expect(tester.widget<SingleElimDiagram>(diagram).scrollOnly, isFalse);
+    expect(_frame420(diagram), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
