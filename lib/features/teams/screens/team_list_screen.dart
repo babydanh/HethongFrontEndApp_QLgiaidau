@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/providers/team_notifier.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TeamListScreen extends ConsumerWidget {
@@ -310,11 +311,10 @@ class _TeamListBodyState extends State<_TeamListBody> {
     _TeamFilter.pending => team.isPendingApproval,
   };
 
-  Widget _chip(String label, _TeamFilter value, int count) => ChoiceChip(
-    label: Text('$label $count'),
+  Widget _chip(String label, _TeamFilter value, int count) => LavishChipButton(
+    label: '$label $count',
     selected: _filter == value,
-    visualDensity: VisualDensity.compact,
-    onSelected: (_) => setState(() => _filter = value),
+    onPressed: () => setState(() => _filter = value),
   );
 
   @override
@@ -332,23 +332,33 @@ class _TeamListBodyState extends State<_TeamListBody> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
           child: TextField(
             onChanged: (value) => setState(() => _query = value),
             textInputAction: TextInputAction.search,
+            style: TextStyle(
+              fontSize: 13,
+              color: LavishColors.of(context).text,
+            ),
             decoration: InputDecoration(
               hintText: l10n.teamList_searchHint,
-              prefixIcon: const Icon(Icons.search_rounded),
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
               isDense: true,
-              border: const OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: LavishColors.of(context).chipLine,
+                  width: 1.5,
+                ),
+              ),
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
           child: Wrap(
-            spacing: 8,
-            runSpacing: 4,
+            spacing: 6,
+            runSpacing: 6,
             children: [
               _chip(l10n.teamList_filterAll, _TeamFilter.all, teams.length),
               _chip(
@@ -373,12 +383,7 @@ class _TeamListBodyState extends State<_TeamListBody> {
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.only(
-                    left: 16,
-                    top: 4,
-                    right: 16,
-                    bottom: 88,
-                  ),
+                  padding: const EdgeInsets.only(top: 4, bottom: 88),
                   itemCount: visible.length,
                   itemBuilder: (context, row) => TeamListTile(
                     team: teams[visible[row]],
@@ -439,31 +444,29 @@ class TeamListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
+    // Design 20: flat `.li` row, number box, names on two lines, pill, menu.
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: context.colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: context.colors.border),
+        border: Border(bottom: BorderSide(color: colors.rowLine)),
       ),
       child: Row(
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              color: colors.soft(LavishTone.accent),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(
-              child: Text(
-                '$index',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.primary,
-                ),
+            child: Text(
+              '$index',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: LavishColors.accent,
               ),
             ),
           ),
@@ -477,49 +480,34 @@ class TeamListTile extends ConsumerWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: context.colors.textPrimary,
+                    fontSize: 13,
+                    height: 1.3,
+                    fontWeight: FontWeight.w700,
+                    color: colors.text,
                   ),
                 ),
-                if (team.members.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                if (team.members.isNotEmpty)
                   Text(
                     team.members.join(', '),
                     style: TextStyle(
-                      fontSize: 13,
-                      color: context.colors.textSecondary,
+                      fontSize: 11.5,
+                      height: 1.3,
+                      color: colors.muted,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                ],
               ],
             ),
           ),
-          if (team.isApproved)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: context.colors.success.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                l10n.teamList_approved,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: context.colors.success,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          if (team.isApproved) ...[
+            const SizedBox(width: 8),
+            LavishPill(l10n.teamList_approved, tone: LavishTone.ok),
+          ],
           if (!isLocked)
             PopupMenuButton<String>(
-              icon: Icon(
-                Icons.more_vert,
-                size: 20,
-                color: context.colors.textMuted,
-              ),
+              icon: Icon(Icons.more_vert, size: 18, color: colors.faint),
+              padding: EdgeInsets.zero,
               color: context.colors.bgCard,
               onSelected: (value) {
                 if (value == 'edit') {
