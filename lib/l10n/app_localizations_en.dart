@@ -1403,6 +1403,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentFounder => 'Tournament Founder';
 
   @override
+  String get tournamentContactTitle => 'Contact';
+
+  @override
+  String get tournamentContactPhone => 'Phone';
+
+  @override
+  String get tournamentContactEmail => 'Email';
+
+  @override
+  String get tournamentContactHiddenHint => 'Hidden from viewers';
+
+  @override
   String get sectionAboutTournament => 'ABOUT TOURNAMENT';
 
   @override

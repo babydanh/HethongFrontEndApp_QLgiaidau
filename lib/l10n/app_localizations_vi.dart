@@ -1399,6 +1399,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentFounder => 'Người sáng lập giải đấu';
 
   @override
+  String get tournamentContactTitle => 'Liên hệ';
+
+  @override
+  String get tournamentContactPhone => 'Điện thoại';
+
+  @override
+  String get tournamentContactEmail => 'Email';
+
+  @override
+  String get tournamentContactHiddenHint => 'Đang ẩn với người xem';
+
+  @override
   String get sectionAboutTournament => 'GIỚI THIỆU GIẢI ĐẤU';
 
   @override

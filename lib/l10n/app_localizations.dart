@@ -2744,6 +2744,30 @@ abstract class AppLocalizations {
   /// **'Người sáng lập giải đấu'**
   String get tournamentFounder;
 
+  /// No description provided for @tournamentContactTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên hệ'**
+  String get tournamentContactTitle;
+
+  /// No description provided for @tournamentContactPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điện thoại'**
+  String get tournamentContactPhone;
+
+  /// No description provided for @tournamentContactEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get tournamentContactEmail;
+
+  /// No description provided for @tournamentContactHiddenHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang ẩn với người xem'**
+  String get tournamentContactHiddenHint;
+
   /// No description provided for @sectionAboutTournament.
   ///
   /// In vi, this message translates to:
