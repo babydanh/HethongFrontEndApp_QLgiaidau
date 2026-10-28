@@ -16229,6 +16229,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get financeFeeQuickAdjustLabel => 'Tăng/giảm nhanh:';
 
   @override
+  String get financeServerConfigGroup => 'Cấu hình từ máy chủ';
+
+  @override
+  String get financePayoutGroup => 'Thanh toán cho BTC';
+
+  @override
   String get financeFeeQuickFree => '0đ';
 
   @override
@@ -16290,6 +16296,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentReportHint => 'Chọn các sheet cần có trong file Excel.';
+
+  @override
+  String get tournamentReportFooter =>
+      'Xong sẽ mở khung chia sẻ để lưu hoặc gửi file.';
 
   @override
   String get tournamentReportSheetParticipants => 'Danh sách VĐV';

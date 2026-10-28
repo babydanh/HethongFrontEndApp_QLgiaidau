@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/platform_fee.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -57,32 +58,32 @@ class _PayoutAccessNotice extends StatelessWidget {
   final VoidCallback? onRetry;
 
   @override
-  Widget build(BuildContext context) => TournamentManagementSectionCard(
-    title: AppLocalizations.of(context)!.tournamentManagementPayoutRequest,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Icon(Icons.lock_outline_rounded, color: context.colors.textMuted),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+        LavishGroupHeader(l10n.financePayoutGroup),
+        LavishRow(
+          leading: const LavishIconBox(
+            tone: LavishTone.neutral,
+            child: Icon(Icons.lock_outline_rounded),
+          ),
+          title: message,
+          subtitleMaxLines: 3,
+          trailing: [
+            if (onRetry != null)
+              IconButton(
+                tooltip: l10n.tournamentManagementRetry,
+                visualDensity: VisualDensity.compact,
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+              ),
           ],
         ),
-        if (onRetry != null)
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(
-                AppLocalizations.of(context)!.tournamentManagementRetry,
-              ),
-            ),
-          ),
       ],
-    ),
-  );
+    );
+  }
 }
 
 class _TournamentFinanceContent extends ConsumerStatefulWidget {
@@ -151,13 +152,11 @@ class _TournamentFinanceContentState
     return Column(
       children: [
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              TournamentManagementSectionCard(
-                title: l10n.tournamentManagementFinance,
-                subtitle: l10n.tournamentManagementFinanceDescription,
-                child: FutureBuilder<Map<String, dynamic>>(
+          child: LavishSurface(
+            child: ListView(
+              padding: const EdgeInsets.only(bottom: 16),
+              children: [
+                FutureBuilder<Map<String, dynamic>>(
                   future: _feesFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -183,26 +182,23 @@ class _TournamentFinanceContentState
                     );
                   },
                 ),
-              ),
-              if (widget.canRequestPayout) ...[
-                const SizedBox(height: 16),
-                _PayoutRows(
-                  tournamentId: widget.tournament.id,
-                  payoutsFuture: _payoutsFuture,
-                  onRequested: () => setState(() {
-                    _payoutsFuture = ref
-                        .read(tournamentManagementRepositoryProvider)
-                        .getMyPayouts();
-                  }),
-                ),
-              ] else if (widget.payoutAccessMessage != null) ...[
-                const SizedBox(height: 16),
-                _PayoutAccessNotice(
-                  message: widget.payoutAccessMessage!,
-                  onRetry: widget.onRetryAccess,
-                ),
+                if (widget.canRequestPayout)
+                  _PayoutRows(
+                    tournamentId: widget.tournament.id,
+                    payoutsFuture: _payoutsFuture,
+                    onRequested: () => setState(() {
+                      _payoutsFuture = ref
+                          .read(tournamentManagementRepositoryProvider)
+                          .getMyPayouts();
+                    }),
+                  )
+                else if (widget.payoutAccessMessage != null)
+                  _PayoutAccessNotice(
+                    message: widget.payoutAccessMessage!,
+                    onRetry: widget.onRetryAccess,
+                  ),
               ],
-            ],
+            ),
           ),
         ),
         _buildSaveBar(l10n),
@@ -219,17 +215,17 @@ class _TournamentFinanceContentState
     builder: (context, snapshot) {
       final values = snapshot.data;
       if (values == null) return const SizedBox.shrink();
-      final colors = context.colors;
+      final colors = LavishColors.of(context);
       final canEdit = _canEditEntryFee(values, widget.tournament);
       return DecoratedBox(
         decoration: BoxDecoration(
-          color: colors.bgCard,
-          border: Border(top: BorderSide(color: colors.border)),
+          color: colors.surface,
+          border: Border(top: BorderSide(color: colors.line)),
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -237,7 +233,10 @@ class _TournamentFinanceContentState
                 if (_feeError) ...[
                   Text(
                     l10n.tournamentManagementSaveError,
-                    style: TextStyle(color: colors.error),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: LavishColors.bad,
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -245,28 +244,14 @@ class _TournamentFinanceContentState
                   listenable: _entryFeeController,
                   builder: (context, _) {
                     final dirty = _feeValueOf(_entryFeeController) != _savedFee;
-                    return FilledButton(
+                    return LavishButton(
+                      busy: _isSavingFee,
                       onPressed: canEdit && dirty && !_isSavingFee
                           ? _saveEntryFee
                           : null,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_isSavingFee)
-                            const SizedBox.square(
-                              dimension: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          else
-                            const Icon(Icons.save_outlined, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isSavingFee
-                                ? l10n.tournamentManagementSaving
-                                : l10n.financeFeeSave,
-                          ),
-                        ],
-                      ),
+                      label: _isSavingFee
+                          ? l10n.tournamentManagementSaving
+                          : l10n.financeFeeSave,
                     );
                   },
                 ),
@@ -386,28 +371,41 @@ class _FeeConfiguration extends StatelessWidget {
     );
     final allowEntryFees = values['allowEntryFees'] != false;
     final canEditEntryFee = _canEditEntryFee(values, tournament);
+    final colors = LavishColors.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          controller: controller,
-          enabled: canEditEntryFee && !isSaving,
-          keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            labelText: l10n.tournamentManagementEntryFee,
-            border: const OutlineInputBorder(),
-            prefixText: '₫ ',
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+          child: TextField(
+            controller: controller,
+            enabled: canEditEntryFee && !isSaving,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: colors.text,
+            ),
+            decoration: InputDecoration(
+              labelText: l10n.tournamentManagementEntryFee,
+              labelStyle: TextStyle(fontSize: 13, color: colors.muted),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colors.chipLine, width: 1.5),
+              ),
+              prefixText: '₫ ',
+            ),
           ),
         ),
-        if (!canEditEntryFee) ...[
-          const SizedBox(height: 8),
-          Text(
-            l10n.tournamentManagementEntryFeeDisabled,
-            style: Theme.of(context).textTheme.bodySmall,
+        if (!canEditEntryFee)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+            child: Text(
+              l10n.tournamentManagementEntryFeeDisabled,
+              style: TextStyle(fontSize: 12, color: colors.muted),
+            ),
           ),
-        ],
-        const SizedBox(height: 12),
         // Nút mức phí nhanh + bảng phân tích phí sàn, cập nhật tức thời theo
         // giá trị đang nhập trong ô (port modal "Quick Edit Entry Fee" của
         // Web; Web đọc tỷ lệ từ tournament.platformFeePercentage, App lấy tỷ
@@ -422,67 +420,65 @@ class _FeeConfiguration extends StatelessWidget {
             );
             final quickEnabled = canEditEntryFee && !isSaving;
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  l10n.financeFeeQuickAdjustLabel,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _QuickFeeButton(
-                      label: l10n.financeFeeQuickFree,
-                      highlighted: currentFee == 0,
-                      onPressed: quickEnabled
-                          ? () => controller.text = '0'
-                          : null,
-                    ),
-                    for (final amount in const [20000, 50000, 100000, 200000])
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
                       _QuickFeeButton(
-                        label: l10n.financeFeeQuickAdd(amount ~/ 1000),
+                        label: l10n.financeFeeQuickFree,
+                        highlighted: currentFee == 0,
                         onPressed: quickEnabled
-                            ? () => controller.text = (currentFee + amount)
-                                  .toString()
+                            ? () => controller.text = '0'
                             : null,
                       ),
-                  ],
+                      for (final amount in const [20000, 50000, 100000, 200000])
+                        _QuickFeeButton(
+                          label: l10n.financeFeeQuickAdd(amount ~/ 1000),
+                          onPressed: quickEnabled
+                              ? () => controller.text = (currentFee + amount)
+                                    .toString()
+                              : null,
+                        ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 12),
-                _FeeBreakdownPanel(breakdown: breakdown),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                  child: _FeeBreakdownPanel(breakdown: breakdown),
+                ),
               ],
             );
           },
         ),
-        const SizedBox(height: 12),
+        LavishGroupHeader(l10n.financeServerConfigGroup),
         _FeeLine(
           label: l10n.tournamentManagementPublishFee,
           value: publicationFee == null
               ? l10n.tournamentManagementNotSet
               : _vndFormat(context).format(publicationFee),
         ),
-        const SizedBox(height: 8),
         _FeeLine(
           label: l10n.tournamentManagementPlatformFeeRate,
           value: platformPercentage == null
               ? l10n.tournamentManagementNotSet
               : '${NumberFormat.decimalPattern(Localizations.localeOf(context).toString()).format(platformPercentage)}%',
         ),
-        const SizedBox(height: 8),
         _FeeLine(
           label: l10n.tournamentManagementEntryFeesAllowed,
           value: allowEntryFees
               ? l10n.tournamentManagementYes
               : l10n.tournamentManagementNo,
         ),
-        const SizedBox(height: 10),
-        Text(
-          l10n.tournamentManagementNoClientBalanceCalculation,
-          style: Theme.of(context).textTheme.bodySmall,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+          child: Text(
+            l10n.tournamentManagementNoClientBalanceCalculation,
+            style: TextStyle(fontSize: 12, color: colors.muted),
+          ),
         ),
       ],
     );
@@ -523,100 +519,64 @@ class _PayoutRows extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementPayoutRequest,
-      subtitle: l10n.tournamentManagementPayoutDescription,
-      child: Column(
-        children: [
-          _PayoutNavRow(
-            icon: Icons.payments_outlined,
-            title: l10n.tournamentManagementRequestPayout,
-            subtitle: l10n.tournamentManagementPayoutMinimum(_minPayoutAmount),
-            onTap: () => _openRequestSheet(context),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishGroupHeader(l10n.financePayoutGroup),
+        LavishRow(
+          leading: const LavishIconBox(
+            tone: LavishTone.ok,
+            child: Text('₫', style: TextStyle(fontWeight: FontWeight.w800)),
           ),
-          Divider(height: 1, color: context.colors.borderLight),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: payoutsFuture,
-            builder: (context, snapshot) {
-              final count = snapshot.data
-                  ?.where(
-                    (record) =>
-                        _payoutBelongsToTournament(record, tournamentId),
-                  )
-                  .length;
-              return _PayoutNavRow(
-                icon: Icons.receipt_long_outlined,
-                title: l10n.tournamentManagementPayoutHistory,
-                subtitle: count == null
-                    ? null
-                    : count == 0
-                    ? l10n.tournamentManagementPayoutHistoryEmpty
-                    : l10n.financePayoutHistoryCount(count),
-                onTap: () => showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  useSafeArea: true,
-                  showDragHandle: true,
-                  builder: (_) =>
-                      _PayoutHistorySheet(tournamentId: tournamentId),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+          title: l10n.tournamentManagementRequestPayout,
+          subtitle: l10n.tournamentManagementPayoutMinimum(_minPayoutAmount),
+          onTap: () => _openRequestSheet(context),
+          trailing: const [_RowChevron()],
+        ),
+        FutureBuilder<List<Map<String, dynamic>>>(
+          future: payoutsFuture,
+          builder: (context, snapshot) {
+            final count = snapshot.data
+                ?.where(
+                  (record) => _payoutBelongsToTournament(record, tournamentId),
+                )
+                .length;
+            return LavishRow(
+              leading: const LavishIconBox(
+                tone: LavishTone.neutral,
+                child: Icon(Icons.receipt_long_outlined),
+              ),
+              title: l10n.tournamentManagementPayoutHistory,
+              subtitle: count == null
+                  ? null
+                  : count == 0
+                  ? l10n.tournamentManagementPayoutHistoryEmpty
+                  : l10n.financePayoutHistoryCount(count),
+              onTap: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                showDragHandle: true,
+                builder: (_) => _PayoutHistorySheet(tournamentId: tournamentId),
+              ),
+              trailing: const [_RowChevron()],
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
-class _PayoutNavRow extends StatelessWidget {
-  const _PayoutNavRow({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.subtitle,
-  });
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final VoidCallback onTap;
+class _RowChevron extends StatelessWidget {
+  const _RowChevron();
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: colors.textMuted),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (subtitle != null)
-                    Text(
-                      subtitle!,
-                      style: TextStyle(color: colors.textMuted, fontSize: 12),
-                    ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Icon(
+    Icons.chevron_right_rounded,
+    size: 20,
+    color: LavishColors.of(context).faint,
+  );
 }
 
 /// Minimum payout amount (VND) enforced by the server and checked client side.
@@ -925,20 +885,11 @@ class _QuickFeeButton extends StatelessWidget {
   final bool highlighted;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 34),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        foregroundColor: highlighted ? colors.success : colors.textSecondary,
-        side: BorderSide(color: highlighted ? colors.success : colors.border),
-      ),
-      child: Text(label),
-    );
-  }
+  Widget build(BuildContext context) => LavishChipButton(
+    label: label,
+    selected: highlighted,
+    onPressed: onPressed,
+  );
 }
 
 /// Bảng phân tích phí sàn theo giá trị lệ phí đang nhập — port khối
@@ -952,7 +903,7 @@ class _FeeBreakdownPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     final locale = Localizations.localeOf(context).toString();
     final money = NumberFormat.currency(
       locale: locale,
@@ -960,30 +911,27 @@ class _FeeBreakdownPanel extends StatelessWidget {
       symbol: '₫',
       decimalDigits: 0,
     );
+    TextStyle muted() => TextStyle(fontSize: 13, color: colors.muted);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colors.chipBackground,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colors.borderLight),
+        color: colors.dark ? colors.rowLine : const Color(0xFFF2F4F7),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           _BreakdownRow(
-            label: Text(
-              l10n.financeFeeCollectedPerPlayer,
-              style: TextStyle(color: colors.textSecondary, fontSize: 12),
-            ),
+            label: Text(l10n.financeFeeCollectedPerPlayer, style: muted()),
             value: Text(
               breakdown.entryFee > 0
                   ? money.format(breakdown.entryFee)
                   : l10n.financeFeeFreeLabel,
               textAlign: TextAlign.end,
               style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -995,28 +943,14 @@ class _FeeBreakdownPanel extends StatelessWidget {
                 Flexible(
                   child: Text(
                     l10n.financeFeePlatformFeePerPlayer,
-                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                    style: muted(),
                   ),
                 ),
                 if (breakdown.percentage > 0) ...[
                   const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.borderLight,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      '${NumberFormat.decimalPattern(locale).format(breakdown.percentage)}%',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                  LavishPill(
+                    '${NumberFormat.decimalPattern(locale).format(breakdown.percentage)}%',
+                    tone: LavishTone.neutral,
                   ),
                 ],
               ],
@@ -1026,30 +960,30 @@ class _FeeBreakdownPanel extends StatelessWidget {
                   ? '-${money.format(breakdown.feePerPlayer)}'
                   : money.format(0),
               textAlign: TextAlign.end,
-              style: TextStyle(
-                color: colors.warning,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              style: const TextStyle(
+                color: LavishColors.warn,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          Divider(height: 16, color: colors.borderLight),
+          const SizedBox(height: 6),
           _BreakdownRow(
             label: Text(
               l10n.financeFeeOrganizerNetPerPlayer,
-              style: TextStyle(
-                color: colors.success,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+              style: const TextStyle(
+                color: Color(0xFF067647),
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
               ),
             ),
             value: Text(
               money.format(breakdown.organizerNet),
               textAlign: TextAlign.end,
-              style: TextStyle(
-                color: colors.success,
+              style: const TextStyle(
+                color: Color(0xFF067647),
                 fontSize: 13,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -1082,24 +1016,38 @@ class _FeeLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Row(
-      children: [
-        Expanded(
-          child: Text(label, style: TextStyle(color: colors.textSecondary)),
-        ),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontWeight: FontWeight.w600,
+    final colors = LavishColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.rowLine)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: colors.text,
+              ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: colors.text,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

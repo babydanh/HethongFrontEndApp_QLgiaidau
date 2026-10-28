@@ -16286,6 +16286,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeFeeQuickAdjustLabel => 'Quick adjust:';
 
   @override
+  String get financeServerConfigGroup => 'Server configuration';
+
+  @override
+  String get financePayoutGroup => 'Payouts to the organizer';
+
+  @override
   String get financeFeeQuickFree => '0đ';
 
   @override
@@ -16348,6 +16354,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentReportHint =>
       'Choose the sheets to include in the Excel file.';
+
+  @override
+  String get tournamentReportFooter =>
+      'When done, the share sheet opens so you can save or send the file.';
 
   @override
   String get tournamentReportSheetParticipants => 'Participants';

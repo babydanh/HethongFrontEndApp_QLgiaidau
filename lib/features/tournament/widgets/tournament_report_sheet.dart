@@ -1,5 +1,5 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -64,38 +64,38 @@ class _TournamentReportSheetState extends State<TournamentReportSheet> {
     }
   }
 
-  Widget _tile(String title, String subtitle, TournamentReportSection value) =>
-      CheckboxListTile(
-        value: _selected.contains(value),
-        onChanged: _isExporting ? null : (checked) => _toggle(value, checked),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        controlAffinity: ListTileControlAffinity.leading,
-        contentPadding: EdgeInsets.zero,
-      );
+  Widget _tile(String title, String subtitle, TournamentReportSection value) {
+    final checked = _selected.contains(value);
+    return LavishRow(
+      leading: _CheckCircle(checked: checked),
+      title: title,
+      subtitle: subtitle,
+      onTap: _isExporting ? null : () => _toggle(value, !checked),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
     return PopScope(
       canPop: !_isExporting,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.only(bottom: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.tournamentReportTitle,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                l10n.tournamentReportTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: colors.text,
+                ),
+              ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.tournamentReportHint,
-              style: TextStyle(color: context.colors.textSecondary),
-            ),
-            const SizedBox(height: 8),
             _tile(
               l10n.tournamentReportSheetParticipants,
               l10n.tournamentReportSheetParticipantsDesc,
@@ -106,33 +106,30 @@ class _TournamentReportSheetState extends State<TournamentReportSheet> {
               l10n.tournamentReportSheetMatchesDesc,
               TournamentReportSection.matches,
             ),
-            if (_failed) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.tournamentReportError,
-                style: TextStyle(color: context.colors.error),
+            if (_failed)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+                child: Text(
+                  l10n.tournamentReportError,
+                  style: const TextStyle(fontSize: 13, color: LavishColors.bad),
+                ),
               ),
-            ],
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _isExporting || _selected.isEmpty ? null : _export,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_isExporting)
-                    const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else
-                    const Icon(Icons.download_rounded, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    _isExporting
-                        ? l10n.tournamentReportExporting
-                        : l10n.tournamentReportExport(_selected.length),
-                  ),
-                ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+              child: LavishButton(
+                busy: _isExporting,
+                onPressed: _isExporting || _selected.isEmpty ? null : _export,
+                label: _isExporting
+                    ? l10n.tournamentReportExporting
+                    : l10n.tournamentReportExport(_selected.length),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+              child: Text(
+                l10n.tournamentReportFooter,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: colors.muted),
               ),
             ),
           ],
@@ -140,4 +137,28 @@ class _TournamentReportSheetState extends State<TournamentReportSheet> {
       ),
     );
   }
+}
+
+/// Design 21 tick: 26px green disc with a white check, or an empty ring.
+class _CheckCircle extends StatelessWidget {
+  const _CheckCircle({required this.checked});
+
+  final bool checked;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 26,
+    height: 26,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: checked ? LavishColors.ok : Colors.transparent,
+      border: Border.all(
+        color: checked ? LavishColors.ok : LavishColors.of(context).chipLine,
+        width: 1.5,
+      ),
+    ),
+    child: checked
+        ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
+        : null,
+  );
 }

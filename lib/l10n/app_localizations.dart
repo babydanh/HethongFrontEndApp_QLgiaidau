@@ -29294,6 +29294,18 @@ abstract class AppLocalizations {
   /// **'Tăng/giảm nhanh:'**
   String get financeFeeQuickAdjustLabel;
 
+  /// No description provided for @financeServerConfigGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu hình từ máy chủ'**
+  String get financeServerConfigGroup;
+
+  /// No description provided for @financePayoutGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán cho BTC'**
+  String get financePayoutGroup;
+
   /// Nút đặt lệ phí về 0 (miễn phí).
   ///
   /// In vi, this message translates to:
@@ -29407,6 +29419,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chọn các sheet cần có trong file Excel.'**
   String get tournamentReportHint;
+
+  /// No description provided for @tournamentReportFooter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong sẽ mở khung chia sẻ để lưu hoặc gửi file.'**
+  String get tournamentReportFooter;
 
   /// No description provided for @tournamentReportSheetParticipants.
   ///
