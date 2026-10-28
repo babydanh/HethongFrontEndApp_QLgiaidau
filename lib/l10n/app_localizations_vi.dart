@@ -15444,6 +15444,47 @@ class AppLocalizationsVi extends AppLocalizations {
   String get schedulePrint => 'In lịch';
 
   @override
+  String get searchFilterTooltip => 'Tìm kiếm';
+
+  @override
+  String get searchFilterClearText => 'Xoá chữ tìm';
+
+  @override
+  String get searchFilterClearAll => 'Xoá lọc';
+
+  @override
+  String searchFilterResultCount(int count) {
+    return '$count kết quả';
+  }
+
+  @override
+  String get scheduleSearchHint => 'Tìm trận, VĐV, đội…';
+
+  @override
+  String get scheduleFilterCourt => 'Sân';
+
+  @override
+  String get scheduleFilterStatus => 'Trạng thái';
+
+  @override
+  String get scheduleFilterConflict => 'Trùng lịch';
+
+  @override
+  String get scheduleFilterUnscheduled => 'Chưa xếp';
+
+  @override
+  String get athleteSearchHint => 'Tìm tên VĐV…';
+
+  @override
+  String get athleteFilterApproval => 'Duyệt';
+
+  @override
+  String get athleteFilterFee => 'Phí';
+
+  @override
+  String get athleteFeePaid => 'Đã thanh toán';
+
+  @override
   String get liveH2hMatchIntro => 'MATCH INTRODUCTION';
 
   @override

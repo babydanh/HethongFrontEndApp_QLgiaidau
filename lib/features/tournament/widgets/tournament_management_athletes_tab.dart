@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_sheet.dar
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/shared/widgets/search_filter_bar.dart';
 
 /// Tab VĐV của hub quản lý: mỗi nội dung thi đấu là một row, bấm để mở ra danh
 /// sách đội (kèm duyệt/từ chối đăng ký chờ) và nút thêm VĐV. Chỉ mở một row
@@ -187,9 +188,33 @@ class _TournamentManagementAthletesTabState
     }
   }
 
+  List<SearchFilterGroup> _searchGroups(AppLocalizations l10n) => [
+    SearchFilterGroup(
+      id: 'approval',
+      label: l10n.athleteFilterApproval,
+      options: [
+        (value: 'pending', label: l10n.participantFilterPending),
+        (value: 'pendingPartner', label: l10n.participantFilterPendingPartner),
+        (value: 'approved', label: l10n.participantFilterApproved),
+        (value: 'rejected', label: l10n.participantFilterRejected),
+      ],
+    ),
+    SearchFilterGroup(
+      id: 'fee',
+      label: l10n.athleteFilterFee,
+      options: [
+        (value: 'paid', label: l10n.athleteFeePaid),
+        (value: 'unpaid', label: l10n.participantFilterUnpaid),
+      ],
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final divisions = widget.tournament.divisions;
+    final l10n = AppLocalizations.of(context)!;
+    final searchKey = '${widget.tournament.id}:athletes';
+    final search = ref.watch(searchFilterProvider(searchKey));
     return FutureBuilder<List<OrganizerOpsParticipant>>(
       future: _participantsFuture,
       builder: (context, snapshot) {
@@ -209,19 +234,54 @@ class _TournamentManagementAthletesTabState
           );
         }
         final participants = snapshot.data ?? const <OrganizerOpsParticipant>[];
+        final matched = search.isActive
+            ? [
+                for (final item in participants)
+                  if (participantMatchesSearch(item, search)) item,
+              ]
+            : participants;
+        final matchedDivisionIds = {for (final item in matched) item.divisionId};
         // Không padding ngang: row nội dung sát mép, ngăn cách bằng đường kẻ.
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 4, 6, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.tournamentManagementTabAthletes,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    SearchFilterToggle(tabKey: searchKey),
+                  ],
+                ),
+              ),
+              SearchFilterBar(
+                tabKey: searchKey,
+                hint: l10n.athleteSearchHint,
+                groups: _searchGroups(l10n),
+                resultCount: matched.length,
+              ),
               for (final division in divisions)
+                if (!search.isActive || matchedDivisionIds.contains(division.id))
                 _DivisionRow(
                   division: division,
                   participants: participants
                       .where((item) => item.divisionId == division.id)
                       .toList(growable: false),
                   tournament: widget.tournament,
+                  searchKey: searchKey,
                   expanded: _expandedDivisionId == division.id,
                   duration: _expandDuration,
                   onToggle: () => _toggle(division.id),
@@ -245,6 +305,7 @@ class _DivisionRow extends StatelessWidget {
     required this.division,
     required this.participants,
     required this.tournament,
+    required this.searchKey,
     required this.expanded,
     required this.duration,
     required this.onToggle,
@@ -259,6 +320,7 @@ class _DivisionRow extends StatelessWidget {
   final TournamentDivision division;
   final List<OrganizerOpsParticipant> participants;
   final Tournament tournament;
+  final String searchKey;
   final bool expanded;
   final Duration duration;
   final VoidCallback onToggle;
@@ -431,6 +493,7 @@ class _DivisionRow extends StatelessWidget {
                         TournamentManagementPeopleSection(
                           tournament: tournament,
                           showRegistration: true,
+                          searchKey: searchKey,
                           divisionId: division.id,
                           divisionName: division.name,
                           embedded: true,

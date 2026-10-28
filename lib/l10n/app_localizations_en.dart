@@ -15498,6 +15498,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get schedulePrint => 'Print schedule';
 
   @override
+  String get searchFilterTooltip => 'Search';
+
+  @override
+  String get searchFilterClearText => 'Clear search text';
+
+  @override
+  String get searchFilterClearAll => 'Clear filters';
+
+  @override
+  String searchFilterResultCount(int count) {
+    return '$count results';
+  }
+
+  @override
+  String get scheduleSearchHint => 'Search matches, players, teams…';
+
+  @override
+  String get scheduleFilterCourt => 'Court';
+
+  @override
+  String get scheduleFilterStatus => 'Status';
+
+  @override
+  String get scheduleFilterConflict => 'Conflict';
+
+  @override
+  String get scheduleFilterUnscheduled => 'Unscheduled';
+
+  @override
+  String get athleteSearchHint => 'Search athlete name…';
+
+  @override
+  String get athleteFilterApproval => 'Approval';
+
+  @override
+  String get athleteFilterFee => 'Fee';
+
+  @override
+  String get athleteFeePaid => 'Paid';
+
+  @override
   String get liveH2hMatchIntro => 'MATCH INTRODUCTION';
 
   @override

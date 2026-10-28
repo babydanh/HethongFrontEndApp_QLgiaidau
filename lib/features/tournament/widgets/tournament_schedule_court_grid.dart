@@ -4,14 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_spacing.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 import 'package:app_quanly_giaidau/core/services/schedule_print_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/court_schedule_cascade.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_conflicts.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/shared/widgets/search_filter_bar.dart';
 
 /// Sân của giải: cần cả id để ghi lịch và tên để ghép vào cột lưới.
 typedef ScheduleCourt = ({String id, String name});
@@ -252,6 +255,75 @@ class _TournamentScheduleCourtGridState
   static DateTime _dayOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 
+  /// Search state key: text and filters are remembered per tournament.
+  String get _searchKey => '${widget.tournamentId}:schedule';
+
+  List<SearchFilterGroup> _searchGroups(
+    AppLocalizations l10n,
+    List<ScheduleCourt> courts,
+  ) => [
+    if (courts.length > 1)
+      SearchFilterGroup(
+        id: 'court',
+        label: l10n.scheduleFilterCourt,
+        options: [
+          for (final court in courts) (value: court.name, label: court.name),
+        ],
+      ),
+    if (widget.divisions.length > 1)
+      SearchFilterGroup(
+        id: 'division',
+        label: l10n.opsDivision,
+        options: [
+          for (final division in widget.divisions)
+            (value: division.id, label: division.name),
+        ],
+      ),
+    SearchFilterGroup(
+      id: 'status',
+      label: l10n.scheduleFilterStatus,
+      options: [
+        (value: 'conflict', label: l10n.scheduleFilterConflict),
+        (value: 'unscheduled', label: l10n.scheduleFilterUnscheduled),
+      ],
+    ),
+  ];
+
+  /// Ids of matches that satisfy the search text and every active filter.
+  Set<String> _matchedIds(SearchFilterState search) {
+    final status = search.selected['status'];
+    final conflictIds = status == 'conflict'
+        ? {
+            for (final group in scheduleConflictGroups(
+              widget.matches,
+              defaultStepMinutes: _stepMinutes,
+            ))
+              group.match.id,
+          }
+        : const <String>{};
+    bool matches(MatchModel match) {
+      final court = search.selected['court'];
+      if (court != null && scheduleCourtNameOf(match) != court) return false;
+      final division = search.selected['division'];
+      if (division != null && match.divisionId != division) return false;
+      if (status == 'conflict' && !conflictIds.contains(match.id)) return false;
+      if (status == 'unscheduled' && _isPlaced(match)) return false;
+      return searchTextMatches(search.query, [
+        match.team1Name,
+        match.team2Name,
+        matchSideLabel(match, 1),
+        matchSideLabel(match, 2),
+        '${match.matchNumber}',
+        match.id,
+      ]);
+    }
+
+    return {
+      for (final match in widget.matches)
+        if (matches(match)) match.id,
+    };
+  }
+
   /// Trận đã có sân và giờ thì nằm trên lưới; còn lại vào khay chờ xếp.
   bool _isPlaced(MatchModel match) =>
       match.scheduledTime != null && _courtOf(match).isNotEmpty;
@@ -366,6 +438,14 @@ class _TournamentScheduleCourtGridState
           for (final match in widget.matches)
             if (!_isPlaced(match) && !draftIds.contains(match.id)) match,
         ];
+        final search = ref.watch(searchFilterProvider(_searchKey));
+        final matchedIds = search.isActive ? _matchedIds(search) : null;
+        final trayWaiting = matchedIds == null
+            ? waiting
+            : [
+                for (final match in waiting)
+                  if (matchedIds.contains(match.id)) match,
+              ];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -396,6 +476,12 @@ class _TournamentScheduleCourtGridState
               placed.length,
               widget.matches.length,
             ),
+            SearchFilterBar(
+              tabKey: _searchKey,
+              hint: l10n.scheduleSearchHint,
+              groups: _searchGroups(l10n, allCourts),
+              resultCount: matchedIds?.length ?? widget.matches.length,
+            ),
             if (days.length > 1) _dayPicker(context, days, day),
             if (widget.draftMatches.isNotEmpty) _draftBar(context, l10n),
             if (visibleCourts.isEmpty)
@@ -412,6 +498,7 @@ class _TournamentScheduleCourtGridState
                 courts: visibleCourts,
                 matches: [...placed, ...drafts],
                 draftMatchIds: draftIds,
+                matchedMatchIds: matchedIds,
                 startHour: _startHour,
                 endHour: _endHour,
                 minutesPerSet: _minutesPerSet,
@@ -462,8 +549,8 @@ class _TournamentScheduleCourtGridState
                 day,
                 waiting,
               ),
-            if (widget.onScheduleDrop != null && waiting.isNotEmpty)
-              _waitingTray(context, l10n, waiting, day),
+            if (widget.onScheduleDrop != null && trayWaiting.isNotEmpty)
+              _waitingTray(context, l10n, trayWaiting, day),
           ],
         );
       },
@@ -879,27 +966,38 @@ class _TournamentScheduleCourtGridState
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: colors.border),
         ),
-        child: Row(
+        // Wraps instead of overflowing on narrow phones: the actions drop to a
+        // second line (and wrap again) when the row is too tight.
+        child: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          runSpacing: 4,
           children: [
           // Bộ đếm tiến độ xếp lịch, như thanh công cụ của web.
-          Icon(Icons.event_available_outlined, size: 16, color: colors.textMuted),
-          const SizedBox(width: 6),
-          Text(
-            '${l10n.opsMatches} $placedCount/$totalCount',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.event_available_outlined, size: 16, color: colors.textMuted),
+              const SizedBox(width: 6),
+              Text(
+                '${l10n.opsMatches} $placedCount/$totalCount',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                ),
+              ),
+            ],
           ),
-          const Spacer(),
+          Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
           if (widget.divisions.length > 1 &&
               widget.onDivisionSelected != null) ...[
-            Flexible(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 180),
-                child: _divisionDropdown(context),
-              ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 180),
+              child: _divisionDropdown(context),
             ),
             const SizedBox(width: AppSpacing.sm),
           ],
@@ -917,22 +1015,28 @@ class _TournamentScheduleCourtGridState
               side: BorderSide(color: colors.border),
             ),
           ),
-          IconButton(
-            key: const ValueKey('schedule-print-button'),
-            tooltip: l10n.schedulePrint,
-            onPressed: widget.onPrint ?? _printSchedule,
-            icon: Icon(Icons.print_outlined, color: colors.textMuted),
-          ),
-          IconButton(
-            key: const ValueKey('schedule-export-button'),
-            tooltip: l10n.exportData,
-            onPressed: _exporting ? null : _exportSchedule,
-            icon: _exporting
-                ? const SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(Icons.file_download_outlined, color: colors.textMuted),
+          SearchFilterToggle(tabKey: _searchKey),
+          PopupMenuButton<String>(
+            key: const ValueKey('schedule-more-button'),
+            tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+            icon: Icon(Icons.more_horiz_rounded, color: colors.textMuted),
+            onSelected: (action) {
+              if (action == 'print') (widget.onPrint ?? _printSchedule)();
+              if (action == 'export') _exportSchedule();
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                key: const ValueKey('schedule-print-button'),
+                value: 'print',
+                child: Text(l10n.schedulePrint),
+              ),
+              PopupMenuItem(
+                key: const ValueKey('schedule-export-button'),
+                value: 'export',
+                enabled: !_exporting,
+                child: Text(l10n.exportData),
+              ),
+            ],
           ),
           if (widget.onOpenScheduleSettings != null)
             IconButton(
@@ -953,6 +1057,8 @@ class _TournamentScheduleCourtGridState
               ),
             ),
           ],
+          ],
+          ),
           ],
         ),
       ),

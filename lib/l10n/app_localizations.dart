@@ -27982,6 +27982,84 @@ abstract class AppLocalizations {
   /// **'In lịch'**
   String get schedulePrint;
 
+  /// No description provided for @searchFilterTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm'**
+  String get searchFilterTooltip;
+
+  /// No description provided for @searchFilterClearText.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá chữ tìm'**
+  String get searchFilterClearText;
+
+  /// No description provided for @searchFilterClearAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá lọc'**
+  String get searchFilterClearAll;
+
+  /// No description provided for @searchFilterResultCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} kết quả'**
+  String searchFilterResultCount(int count);
+
+  /// No description provided for @scheduleSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm trận, VĐV, đội…'**
+  String get scheduleSearchHint;
+
+  /// No description provided for @scheduleFilterCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân'**
+  String get scheduleFilterCourt;
+
+  /// No description provided for @scheduleFilterStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái'**
+  String get scheduleFilterStatus;
+
+  /// No description provided for @scheduleFilterConflict.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trùng lịch'**
+  String get scheduleFilterConflict;
+
+  /// No description provided for @scheduleFilterUnscheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp'**
+  String get scheduleFilterUnscheduled;
+
+  /// No description provided for @athleteSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm tên VĐV…'**
+  String get athleteSearchHint;
+
+  /// No description provided for @athleteFilterApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt'**
+  String get athleteFilterApproval;
+
+  /// No description provided for @athleteFilterFee.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí'**
+  String get athleteFilterFee;
+
+  /// No description provided for @athleteFeePaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thanh toán'**
+  String get athleteFeePaid;
+
   /// No description provided for @liveH2hMatchIntro.
   ///
   /// In vi, this message translates to:

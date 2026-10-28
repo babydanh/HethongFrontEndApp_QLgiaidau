@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/shared/widgets/search_filter_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,6 +22,34 @@ enum ParticipantStatusFilter {
   rejected,
 }
 
+/// Whether [participant] passes the shared search bar of the VĐV tab: name
+/// text plus the approval (`teamStatus`) and fee (`isPaid`) filters.
+bool participantMatchesSearch(
+  OrganizerOpsParticipant participant,
+  SearchFilterState search,
+) {
+  final status = participant.teamStatus.toUpperCase();
+  final approvalOk = switch (search.selected['approval']) {
+    'pending' => status == 'PENDING' || status == 'PENDING_APPROVAL',
+    'pendingPartner' => status == 'PENDING_PARTNER',
+    'approved' => status == 'COMPLETE',
+    'rejected' => status == 'REJECTED',
+    _ => true,
+  };
+  final feeOk = switch (search.selected['fee']) {
+    'paid' => participant.isPaid,
+    'unpaid' => !participant.isPaid,
+    _ => true,
+  };
+  return approvalOk &&
+      feeOk &&
+      searchTextMatches(search.query, [
+        participant.teamName,
+        for (final member in participant.members) member.fullName,
+        for (final player in participant.players) player.fullName,
+      ]);
+}
+
 class TournamentManagementPeopleSection extends StatelessWidget {
   const TournamentManagementPeopleSection({
     super.key,
@@ -30,9 +59,14 @@ class TournamentManagementPeopleSection extends StatelessWidget {
     this.divisionName,
     this.embedded = false,
     this.pairFormat = false,
+    this.searchKey,
   });
   final Tournament tournament;
   final bool showRegistration;
+
+  /// Key of the shared search bar whose text and filters also narrow this
+  /// list. Null = no search bar drives it.
+  final String? searchKey;
 
   /// Chỉ hiện người tham gia của nội dung này. Null: toàn giải (hành vi cũ).
   final String? divisionId;
@@ -54,6 +88,7 @@ class TournamentManagementPeopleSection extends StatelessWidget {
           divisionName: divisionName,
           embedded: embedded,
           pairFormat: pairFormat,
+          searchKey: searchKey,
         )
       : _TournamentPermissions(tournamentId: tournament.id);
 }
@@ -65,12 +100,14 @@ class _RegistrationPeople extends ConsumerStatefulWidget {
     this.divisionName,
     this.embedded = false,
     this.pairFormat = false,
+    this.searchKey,
   });
   final Tournament tournament;
   final String? divisionId;
   final String? divisionName;
   final bool embedded;
   final bool pairFormat;
+  final String? searchKey;
 
   @override
   ConsumerState<_RegistrationPeople> createState() =>
@@ -219,8 +256,16 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             widget.pairFormat ||
             counts[ParticipantStatusFilter.pendingPartner]! > 0 ||
             _filter == ParticipantStatusFilter.pendingPartner;
+        final searchKey = widget.searchKey;
+        final search = searchKey == null
+            ? null
+            : ref.watch(searchFilterProvider(searchKey));
         final visible = participants
-            .where((item) => _matchesFilter(item, _filter))
+            .where(
+              (item) =>
+                  _matchesFilter(item, _filter) &&
+                  (search == null || participantMatchesSearch(item, search)),
+            )
             .toList(growable: false);
         final body = <Widget>[
           if (_mutationError != null) ...[

@@ -1660,10 +1660,17 @@ void main() {
       );
       expect(firstRow, findsOneWidget);
       final rowRect = tester.getRect(firstRow);
+      // The search toolbar row sits between the tab strip and the first row.
+      final toggleRect = tester.getRect(
+        find.byKey(const ValueKey('search-filter-toggle')),
+      );
 
-      final gap = rowRect.top - tabBarRect.bottom;
+      final gap = toggleRect.top - tabBarRect.bottom;
       expect(gap, greaterThanOrEqualTo(0.0));
       expect(gap, lessThanOrEqualTo(24.0));
+      final rowGap = rowRect.top - toggleRect.bottom;
+      expect(rowGap, greaterThanOrEqualTo(0.0));
+      expect(rowGap, lessThanOrEqualTo(24.0));
     },
   );
 

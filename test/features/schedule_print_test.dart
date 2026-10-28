@@ -84,6 +84,9 @@ void main() {
     final before = await _pump(tester);
     expect(before, 0);
 
+    // Print lives in the toolbar's more menu.
+    await tester.tap(find.byKey(const ValueKey('schedule-more-button')));
+    await tester.pumpAndSettle();
     final printButton = find.byKey(const ValueKey('schedule-print-button'));
     expect(printButton, findsOneWidget);
     expect(printButton.hitTestable(), findsOneWidget);
@@ -130,6 +133,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.tap(find.byKey(const ValueKey('schedule-more-button')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('schedule-print-button')));
     await tester.pumpAndSettle();
     expect(prints, 1);

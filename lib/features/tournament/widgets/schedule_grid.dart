@@ -84,6 +84,10 @@ class ScheduleGrid extends StatefulWidget {
   /// Các trận là bản nháp xếp tự động: vẽ khác biệt và không tương tác.
   final Set<String> draftMatchIds;
 
+  /// Kết quả tìm kiếm: trận có id trong tập này được viền nhấn, các trận còn
+  /// lại mờ đi nhưng giữ nguyên chỗ. Null = không đang tìm, mọi thẻ bình thường.
+  final Set<String>? matchedMatchIds;
+
   /// Kéo tay nắm ở cột giờ để đổi chiều cao hàng: lưới báo chiều cao mới, host
   /// giữ state (lưới không tự đổi). Null thì không hiện tay nắm.
   final ValueChanged<double>? onSlotHeightChanged;
@@ -113,6 +117,7 @@ class ScheduleGrid extends StatefulWidget {
     this.onTapEmptyCell,
     this.onDropOnMatch,
     this.draftMatchIds = const {},
+    this.matchedMatchIds,
     this.onSlotHeightChanged,
   });
 
@@ -688,6 +693,14 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
     );
 
+    final matched = widget.matchedMatchIds;
+    if (matched != null && !matched.contains(match.id)) {
+      card = Opacity(
+        key: ValueKey('schedule-card-dimmed-${match.id}'),
+        opacity: 0.22,
+        child: card,
+      );
+    }
     if (isDraft) {
       card = Opacity(
         opacity: 0.85,
@@ -894,13 +907,18 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   /// Chỉ viền chọn là phản hồi tương tác; LIVE được biểu thị bằng badge.
   _CardStyle _cardStyle(MatchModel match, AppColorsExtension colors) {
     final selected = match.id == widget.selectedMatchId;
+    final hit = widget.matchedMatchIds?.contains(match.id) ?? false;
     return (
       decoration: BoxDecoration(
         color: colors.bgCard,
         borderRadius: BorderRadius.circular(7),
         border: Border.all(
-          color: selected ? colors.warning : colors.border,
-          width: selected ? 2.0 : 1.0,
+          color: selected
+              ? colors.warning
+              : hit
+              ? AppTheme.primary
+              : colors.border,
+          width: selected || hit ? 2.0 : 1.0,
         ),
       ),
       headerBg: colors.bgSurface,
