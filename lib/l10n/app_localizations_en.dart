@@ -16214,7 +16214,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tournamentReportExport(int count) {
-    return 'Export $count sheets';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sheets',
+      one: '1 sheet',
+    );
+    return 'Export $_temp0';
   }
 
   @override

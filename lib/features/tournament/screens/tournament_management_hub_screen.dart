@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_she
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -561,6 +562,9 @@ class _TournamentManagementHubScreenState
           case 'export-participants':
             _exportParticipantsRoster();
             break;
+          case 'report':
+            TournamentReportSheet.show(context, onExport: _exportReport);
+            break;
           case 'end':
             _finalizeTournament();
             break;
@@ -614,6 +618,23 @@ class _TournamentManagementHubScreenState
                   _isExporting
                       ? l10n.exportingExcel
                       : l10n.exportParticipantsRoster,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'report',
+          enabled: !_isExporting,
+          child: Row(
+            children: [
+              Icon(Icons.summarize_outlined, color: AppTheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l10n.tournamentReportMenu,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -927,6 +948,38 @@ class _TournamentManagementHubScreenState
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  /// Whole-tournament Excel report (one file, one sheet per ticked section).
+  /// Throws on failure so the report sheet can keep its ticks for a retry.
+  Future<void> _exportReport(Set<TournamentReportSection> sections) async {
+    if (_isExporting) return;
+    final tournamentId = widget.tournament.id;
+    setState(() => _isExporting = true);
+    try {
+      final withParticipants = sections.contains(
+        TournamentReportSection.participants,
+      );
+      final withMatches = sections.contains(TournamentReportSection.matches);
+      await ExcelExportService.exportTournamentReport(
+        sheets: sections,
+        tournamentName: widget.tournament.name,
+        participants: withParticipants
+            ? await ref
+                  .read(tournamentRepositoryProvider)
+                  .getOrganizerParticipants(tournamentId)
+            : const [],
+        divisionNameById: {
+          for (final division in widget.tournament.divisions)
+            division.id: division.name,
+        },
+        matches: withMatches
+            ? await ref.read(matchesProvider(tournamentId).future)
+            : const [],
+      );
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }

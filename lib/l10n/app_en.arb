@@ -6482,7 +6482,7 @@
   "tournamentReportSheetParticipantsDesc": "Name, contact, division, status, payment",
   "tournamentReportSheetMatches": "Matches",
   "tournamentReportSheetMatchesDesc": "Round, pairing, score, status, referee",
-  "tournamentReportExport": "Export {count} sheets",
+  "tournamentReportExport": "Export {count, plural, =1{1 sheet} other{{count} sheets}}",
   "@tournamentReportExport": {"placeholders": {"count": {"type": "int"}}},
   "tournamentReportExporting": "Exporting…",
   "tournamentReportError": "Could not export the report. Your selection is kept, try again.",
