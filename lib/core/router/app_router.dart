@@ -20,7 +20,6 @@ import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/group_stage_assignment_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_detail_screen.dart';
@@ -328,13 +327,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: _swissPairingBuilder,
               ),
               GoRoute(
-                path: 'tokens',
-                builder: (context, state) {
-                  final id = state.pathParameters['id']!;
-                  return TokenManagementScreen(tournamentId: id);
-                },
-              ),
-              GoRoute(
                 path: 'match/:matchId',
                 builder: (context, state) {
                   final tournamentId = state.pathParameters['id']!;
@@ -458,16 +450,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
               ),
             ],
-          ),
-          GoRoute(
-            path: 'tokens',
-            builder: (context, state) {
-              final id = state.pathParameters['id']!;
-              return TokenManagementScreen(
-                tournamentId: id,
-                managementRouteBase: '/organizer/tournaments/$id/manage',
-              );
-            },
           ),
           GoRoute(
             path: 'draw',

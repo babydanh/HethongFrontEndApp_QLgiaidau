@@ -10,7 +10,6 @@ import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dar
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
@@ -60,7 +59,6 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection.finance,
     TournamentManagementSection.livestream,
     TournamentManagementSection.permissions,
-    TournamentManagementSection.tokens,
   ];
 
   late final TabController _tabController = TabController(
@@ -524,12 +522,6 @@ class _TournamentManagementHubScreenState
           isEmbedded: true,
           managementRouteBase: widget.actionRouteBase,
         );
-      case TournamentManagementSection.tokens:
-        return TokenManagementScreen(
-          tournamentId: tournament.id,
-          isEmbedded: true,
-          managementRouteBase: widget.actionRouteBase,
-        );
       default:
         return TournamentManagementSectionScreen(
           tournament: tournament,
@@ -821,12 +813,6 @@ class _TournamentManagementHubScreenState
       l10n.tournamentManagementPermissions,
       l10n.tournamentManagementPermissionsDescription,
       AppTheme.primary,
-    ),
-    TournamentManagementSection.tokens => _SectionDetails(
-      Icons.qr_code_rounded,
-      l10n.manageTokens,
-      l10n.manageTokensSubtitle,
-      AppTheme.adminColor,
     ),
     TournamentManagementSection.liveOperations => _SectionDetails(
       Icons.sports_score_rounded,

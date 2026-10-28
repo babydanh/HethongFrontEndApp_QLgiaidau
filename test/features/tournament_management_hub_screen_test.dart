@@ -766,7 +766,7 @@ void main() {
     expect(find.text(l10n.tournamentManagementFinance), findsOneWidget);
     expect(find.text(l10n.tournamentManagementLivestream), findsOneWidget);
     expect(find.text(l10n.tournamentManagementPermissions), findsOneWidget);
-    expect(find.text(l10n.manageTokens), findsOneWidget);
+    expect(find.text(l10n.manageTokens), findsNothing);
     expect(find.text(l10n.tournamentManagementSystemGroup), findsNothing);
 
     await tester.tap(find.byIcon(Icons.more_vert));
