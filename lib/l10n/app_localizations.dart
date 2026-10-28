@@ -29072,6 +29072,138 @@ abstract class AppLocalizations {
   /// **'BTC thực nhận / VĐV'**
   String get financeFeeOrganizerNetPerPlayer;
 
+  /// No description provided for @financeFeeSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu lệ phí'**
+  String get financeFeeSave;
+
+  /// No description provided for @financePayoutHistoryCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} yêu cầu'**
+  String financePayoutHistoryCount(int count);
+
+  /// No description provided for @financePayoutConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu thanh toán?'**
+  String get financePayoutConfirmTitle;
+
+  /// No description provided for @financePayoutConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi yêu cầu thanh toán {amount} đến máy chủ? Thông tin ngân hàng sẽ được xóa sau khi gửi thành công.'**
+  String financePayoutConfirmBody(String amount);
+
+  /// No description provided for @teamList_searchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm tên đội hoặc VĐV…'**
+  String get teamList_searchHint;
+
+  /// No description provided for @teamList_filterAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get teamList_filterAll;
+
+  /// No description provided for @teamList_filterApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã duyệt'**
+  String get teamList_filterApproved;
+
+  /// No description provided for @teamList_filterPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get teamList_filterPending;
+
+  /// No description provided for @teamList_noMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có đội phù hợp'**
+  String get teamList_noMatch;
+
+  /// No description provided for @teamList_edit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa'**
+  String get teamList_edit;
+
+  /// No description provided for @tournamentReportMenu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất báo cáo'**
+  String get tournamentReportMenu;
+
+  /// No description provided for @tournamentReportTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất báo cáo Excel'**
+  String get tournamentReportTitle;
+
+  /// No description provided for @tournamentReportHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn các sheet cần có trong file Excel.'**
+  String get tournamentReportHint;
+
+  /// No description provided for @tournamentReportSheetParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách VĐV'**
+  String get tournamentReportSheetParticipants;
+
+  /// No description provided for @tournamentReportSheetParticipantsDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên, liên hệ, hạng mục, trạng thái, thanh toán'**
+  String get tournamentReportSheetParticipantsDesc;
+
+  /// No description provided for @tournamentReportSheetMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận đấu'**
+  String get tournamentReportSheetMatches;
+
+  /// No description provided for @tournamentReportSheetMatchesDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng, cặp đấu, tỷ số, trạng thái, trọng tài'**
+  String get tournamentReportSheetMatchesDesc;
+
+  /// No description provided for @tournamentReportExport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất {count} sheet'**
+  String tournamentReportExport(int count);
+
+  /// No description provided for @tournamentReportExporting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang xuất…'**
+  String get tournamentReportExporting;
+
+  /// No description provided for @tournamentReportError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không xuất được báo cáo. Lựa chọn được giữ lại, hãy thử lại.'**
+  String get tournamentReportError;
+
+  /// No description provided for @excelReportFilePrefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'BaoCao'**
+  String get excelReportFilePrefix;
+
+  /// No description provided for @excelReportShare.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo giải đấu {tournamentName}'**
+  String excelReportShare(String tournamentName);
+
   /// No description provided for @divisionEditorEditTitle.
   ///
   /// In vi, this message translates to:
