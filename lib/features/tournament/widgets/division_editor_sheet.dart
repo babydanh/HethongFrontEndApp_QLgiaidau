@@ -639,13 +639,9 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SwitchListTile(
+          _toggleRow(
             key: const ValueKey('division-editor-standard-rules'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              l10n.divisionEditorStandardRules,
-              style: TextStyle(color: context.colors.textPrimary),
-            ),
+            title: l10n.divisionEditorStandardRules,
             value: !_isLiteMode,
             onChanged: _busy || widget.lockContent
                 ? null
@@ -830,18 +826,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CheckboxListTile(
+        _toggleRow(
           key: const ValueKey('division-editor-limit-switch'),
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(
-            l10n.divisionEditorParticipantLimit,
-            style: TextStyle(color: colors.textPrimary),
-          ),
+          title: l10n.divisionEditorParticipantLimit,
           value: _limitEnabled,
           onChanged: _busy
               ? null
-              : (value) => setState(() => _limitEnabled = value == true),
+              : (value) => setState(() => _limitEnabled = value),
         ),
         if (_limitEnabled)
           Padding(
@@ -864,18 +855,11 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
               ),
             ),
           ),
-        CheckboxListTile(
+        _toggleRow(
           key: const ValueKey('division-editor-elo-switch'),
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(
-            l10n.divisionEditorEloLimit,
-            style: TextStyle(color: colors.textPrimary),
-          ),
+          title: l10n.divisionEditorEloLimit,
           value: _eloEnabled,
-          onChanged: _busy
-              ? null
-              : (value) => setState(() => _eloEnabled = value == true),
+          onChanged: _busy ? null : (value) => setState(() => _eloEnabled = value),
         ),
         if (_eloEnabled)
           Padding(
@@ -1070,18 +1054,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           ),
         ],
       ),
-      CheckboxListTile(
+      _toggleRow(
         key: const ValueKey('division-editor-win-by-two'),
-        contentPadding: EdgeInsets.zero,
-        dense: true,
-        title: Text(
-          l10n.divisionEditorWinByTwo,
-          style: TextStyle(color: context.colors.textPrimary),
-        ),
+        title: l10n.divisionEditorWinByTwo,
         value: _winByTwo,
         onChanged: _busy || widget.lockContent
             ? null
-            : (value) => setState(() => _winByTwo = value == true),
+            : (value) => setState(() => _winByTwo = value),
       ),
       if (_winByTwo)
         SizedBox(
@@ -1108,19 +1087,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           ),
         ),
       if (_supportsTiebreak) ...[
-        CheckboxListTile(
+        _toggleRow(
           key: const ValueKey('division-editor-super-tiebreak'),
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(
-            l10n.divisionEditorSuperTiebreak,
-            style: TextStyle(color: context.colors.textPrimary),
-          ),
+          title: l10n.divisionEditorSuperTiebreak,
           value: _superTiebreakEnabled,
           onChanged: _busy || widget.lockContent
               ? null
-              : (value) =>
-                    setState(() => _superTiebreakEnabled = value == true),
+              : (value) => setState(() => _superTiebreakEnabled = value),
         ),
         if (_superTiebreakEnabled)
           Row(
@@ -1425,6 +1398,20 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
       TextEditingController(text: '$_teamsPerGroup');
   late final TextEditingController _teamsAdvancingController =
       TextEditingController(text: '$_teamsAdvancing');
+
+  /// Design `.li` row with the green switch on the right (replaces the
+  /// Material checkbox/switch tiles); the whole row toggles.
+  Widget _toggleRow({
+    required Key key,
+    required String title,
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+  }) => LavishRow(
+    key: key,
+    title: title,
+    onTap: onChanged == null ? null : () => onChanged(!value),
+    trailing: [LavishSwitch(value: value, onChanged: onChanged)],
+  );
 
   Widget _numberField({
     required String key,
