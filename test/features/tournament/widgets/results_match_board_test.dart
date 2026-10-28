@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_match_summary_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
@@ -11,6 +13,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _tid = 'tour-1';
+
+class _NoVenues extends Fake implements TournamentManagementRepository {
+  @override
+  Future<List<Map<String, dynamic>>> getVenues(String id) async => const [];
+}
 
 MatchModel _match(
   String id, {
@@ -57,6 +64,7 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         matchesProvider(_tid).overrideWith((ref) => Stream.value(matches)),
+        tournamentManagementRepositoryProvider.overrideWithValue(_NoVenues()),
       ],
       child: MaterialApp(
         theme: AppTheme.lightTheme,
@@ -218,5 +226,52 @@ void main() {
     ]);
 
     expect(_row('nested'), findsOneWidget);
+  });
+
+  testWidgets('organiser sees a schedule button on pending rows only', (
+    tester,
+  ) async {
+    await _pump(tester, [
+      _match('todo', round: 1, number: 1),
+      _match(
+        'done',
+        round: 1,
+        number: 2,
+        status: 'COMPLETED',
+        completedAt: DateTime(2026, 1, 1, 9),
+      ),
+    ], canManage: true);
+
+    expect(
+      find.descendant(
+        of: _row('todo'),
+        matching: find.byIcon(Icons.event_outlined),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: _row('done'),
+        matching: find.byIcon(Icons.event_outlined),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('a viewer never sees the schedule button', (tester) async {
+    await _pump(tester, [_match('todo', round: 1, number: 1)]);
+    expect(find.byIcon(Icons.event_outlined), findsNothing);
+  });
+
+  testWidgets('schedule button opens the schedule dialog, not the chooser', (
+    tester,
+  ) async {
+    await _pump(tester, [_match('todo', round: 1, number: 1)], canManage: true);
+
+    await tester.tap(find.byIcon(Icons.event_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Xếp lịch trận'), findsOneWidget);
+    expect(find.byType(MatchScoreEntryChooser), findsNothing);
   });
 }

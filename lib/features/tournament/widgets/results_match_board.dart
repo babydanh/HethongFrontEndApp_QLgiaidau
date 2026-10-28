@@ -5,8 +5,10 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/match_schedule_dialog.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_match_summary_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -63,6 +65,26 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
 
   VoidCallback? _scoreAction(MatchModel match) =>
       widget.canManage && canEnterScore(match) ? () => _openScore(match) : null;
+
+  Future<void> _openSchedule(MatchModel match) async {
+    final saved = await showMatchScheduleDialog(
+      context,
+      tournamentId: widget.tournamentId,
+      match: match,
+    );
+    if (saved != true || !mounted) return;
+    ref.invalidate(
+      widget.isLite
+          ? liteBracketMatchesProvider(widget.tournamentId)
+          : matchesProvider(widget.tournamentId),
+    );
+  }
+
+  /// Organisers can schedule any real match that is not live or closed.
+  VoidCallback? _scheduleAction(MatchModel match) =>
+      widget.canManage && !match.isBye && !isScheduleLocked(match)
+      ? () => _openSchedule(match)
+      : null;
 
   @override
   Widget build(BuildContext context) {
@@ -220,6 +242,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     key: ValueKey('results-row-${match.id}'),
     match: match,
     onTap: _scoreAction(match),
+    onSchedule: _scheduleAction(match),
   );
 }
 
@@ -317,9 +340,17 @@ class _GroupHeader extends StatelessWidget {
 }
 
 class _MatchRow extends StatelessWidget {
-  const _MatchRow({super.key, required this.match, required this.onTap});
+  const _MatchRow({
+    super.key,
+    required this.match,
+    required this.onTap,
+    this.onSchedule,
+  });
 
   final MatchModel match;
+
+  /// Null hides the schedule button (viewers, live or closed matches).
+  final VoidCallback? onSchedule;
 
   /// Null for rows nobody can score (viewers, closed or incomplete matches).
   final VoidCallback? onTap;
@@ -350,6 +381,18 @@ class _MatchRow extends StatelessWidget {
                     ),
             ),
             if (closed && match.hasTeams) _scores(colors),
+            if (onSchedule != null)
+              IconButton(
+                onPressed: onSchedule,
+                tooltip: l10n.matchSchedule_title,
+                icon: Icon(
+                  Icons.event_outlined,
+                  size: 18,
+                  color: colors.textMuted,
+                ),
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              ),
           ],
         ),
       ),

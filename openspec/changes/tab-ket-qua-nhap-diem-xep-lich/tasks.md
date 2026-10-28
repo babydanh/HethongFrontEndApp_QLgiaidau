@@ -39,7 +39,7 @@
 
 ## 5. Hộp xếp lịch một trận
 
-- [ ] 5.1 Widget test đỏ rồi tạo `match_schedule_dialog.dart` (sân, ngày giờ, thời lượng, Lưu, Bỏ lịch; `_saving` chặn bấm đúp; `on DioException`; kiểm `mounted`). Tiêu chí: `flutter test --no-pub test/features/bracket/widgets/match_schedule_dialog_test.dart` → exit 0 (đỏ trước; có ca bấm đúp chỉ gửi 1 yêu cầu, ca lỗi giữ dữ liệu nhập, ca bỏ lịch)
+- [x] 5.1 Widget test đỏ rồi tạo `match_schedule_dialog.dart` (sân, ngày giờ, thời lượng, Lưu, Bỏ lịch; `_saving` chặn bấm đúp; `on DioException`; kiểm `mounted`). Tiêu chí: `flutter test --no-pub test/features/bracket/widgets/match_schedule_dialog_test.dart` → exit 0 (đỏ trước; có ca bấm đúp chỉ gửi 1 yêu cầu, ca lỗi giữ dữ liệu nhập, ca bỏ lịch)
   - Files: tạo `lib/features/bracket/widgets/match_schedule_dialog.dart`; test `test/features/bracket/widgets/match_schedule_dialog_test.dart`
   - Giao: `Future<bool?> showMatchScheduleDialog(BuildContext, {required String tournamentId, required MatchModel match})` (true khi đã lưu) · Nhận: `MatchRepository.updateSchedule(tournamentId, matchId, {courtName, courtAddress, courtId, scheduledAt, durationMinutes, clear})`, `scheduleDurationOptions`, `isScheduleLocked`, 2.1
   - Chủ file chung: 5.1 sở hữu `match_schedule_dialog.dart`
@@ -47,7 +47,7 @@
 
 ## 6. Nút Xếp lịch và nhập điểm ở Bracket, Lịch, bảng trận
 
-- [ ] 6.1 Thêm callback `onSchedule` vào thẻ Bracket và hàng bảng trận; nối hộp xếp lịch và `MatchScoreEntryChooser` dùng chung `canEnterScore`; invalidate provider trận sau khi lưu. Tiêu chí: `flutter test --no-pub test/features/bracket` → exit 0 và `flutter analyze --no-pub lib/features/bracket` → exit 0
+- [ ] 6.1 (Đã làm: nút Xếp lịch ở hàng bảng trận tab Kết quả, `ResultsMatchBoard._scheduleAction`, mở hộp 5.1 rồi invalidate provider trận. Còn lại, hoãn đến khi `bang-dau-gon-search-so-do` và `ma-tran` lên main để khỏi xung đột: `onSchedule` ở `bracket_match_card.dart`, `match_table_row.dart`, tab Lịch) Thêm callback `onSchedule` vào thẻ Bracket và hàng bảng trận; nối hộp xếp lịch và `MatchScoreEntryChooser` dùng chung `canEnterScore`; invalidate provider trận sau khi lưu. Tiêu chí: `flutter test --no-pub test/features/bracket` → exit 0 và `flutter analyze --no-pub lib/features/bracket` → exit 0
   - Files: sửa `lib/features/bracket/widgets/bracket_match_card.dart`, `lib/features/bracket/widgets/match_table_row.dart:162`, `lib/features/bracket/screens/bracket_view_screen.dart` (~259 làm mới, 395–494 quyền nhập điểm), `lib/features/tournament/widgets/results_match_board.dart` (nối nút Xếp lịch, giữ bởi 4.1: chỉ thêm sau khi 4.1 xong), tab Lịch (`matches_tab.dart`); test cạnh các file trên
   - Giao: `onSchedule: VoidCallback?` (null khi không phải BTC hoặc `isScheduleLocked`) · Nhận: 1.1, 4.1, 5.1
   - Chủ file chung: 6.1 chỉ thêm tham số/callback ở các file Bracket (giữ diff nhỏ để rebase với `bang-dau-gon-search-so-do`, `ma-tran`)
