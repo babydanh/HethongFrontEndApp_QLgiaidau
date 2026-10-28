@@ -243,21 +243,11 @@ class TeamListScreen extends ConsumerWidget {
               ),
             );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.only(
-              left: 16,
-              top: 16,
-              right: 16,
-              bottom: 88,
-            ),
-            itemCount: teams.length,
-            itemBuilder: (context, index) => TeamListTile(
-              team: teams[index],
-              index: index + 1,
-              isLocked: isLocked,
-              tournamentId: tournamentId,
-              managementRouteBase: _managementRouteBase,
-            ),
+          return _TeamListBody(
+            teams: teams,
+            isLocked: isLocked,
+            tournamentId: tournamentId,
+            managementRouteBase: _managementRouteBase,
           );
         },
         loading: () => const Center(
@@ -283,6 +273,127 @@ class TeamListScreen extends ConsumerWidget {
   }
 }
 
+enum _TeamFilter { all, approved, pending }
+
+/// Search box + status chips (with counts) + the team rows.
+class _TeamListBody extends StatefulWidget {
+  const _TeamListBody({
+    required this.teams,
+    required this.isLocked,
+    required this.tournamentId,
+    required this.managementRouteBase,
+  });
+
+  final List<Team> teams;
+  final bool isLocked;
+  final String tournamentId;
+  final String managementRouteBase;
+
+  @override
+  State<_TeamListBody> createState() => _TeamListBodyState();
+}
+
+class _TeamListBodyState extends State<_TeamListBody> {
+  String _query = '';
+  _TeamFilter _filter = _TeamFilter.all;
+
+  bool _matchesQuery(Team team) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return true;
+    return team.name.toLowerCase().contains(query) ||
+        team.members.any((member) => member.toLowerCase().contains(query));
+  }
+
+  bool _matchesFilter(Team team) => switch (_filter) {
+    _TeamFilter.all => true,
+    _TeamFilter.approved => team.isApproved,
+    _TeamFilter.pending => team.isPendingApproval,
+  };
+
+  Widget _chip(String label, _TeamFilter value, int count) => ChoiceChip(
+    label: Text('$label $count'),
+    selected: _filter == value,
+    visualDensity: VisualDensity.compact,
+    onSelected: (_) => setState(() => _filter = value),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final teams = widget.teams;
+    final approvedCount = teams.where((team) => team.isApproved).length;
+    final pendingCount = teams.where((team) => team.isPendingApproval).length;
+    // Keep the original position as the row number so it stays stable while
+    // searching or filtering.
+    final visible = [
+      for (var i = 0; i < teams.length; i++)
+        if (_matchesQuery(teams[i]) && _matchesFilter(teams[i])) i,
+    ];
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: TextField(
+            onChanged: (value) => setState(() => _query = value),
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: l10n.teamList_searchHint,
+              prefixIcon: const Icon(Icons.search_rounded),
+              isDense: true,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              _chip(l10n.teamList_filterAll, _TeamFilter.all, teams.length),
+              _chip(
+                l10n.teamList_filterApproved,
+                _TeamFilter.approved,
+                approvedCount,
+              ),
+              _chip(
+                l10n.teamList_filterPending,
+                _TeamFilter.pending,
+                pendingCount,
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: visible.isEmpty
+              ? Center(
+                  child: Text(
+                    l10n.teamList_noMatch,
+                    style: TextStyle(color: context.colors.textSecondary),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    top: 4,
+                    right: 16,
+                    bottom: 88,
+                  ),
+                  itemCount: visible.length,
+                  itemBuilder: (context, row) => TeamListTile(
+                    team: teams[visible[row]],
+                    index: visible[row] + 1,
+                    isLocked: widget.isLocked,
+                    tournamentId: widget.tournamentId,
+                    managementRouteBase: widget.managementRouteBase,
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+}
+
 class TeamListTile extends ConsumerWidget {
   final Team team;
   final int index;
@@ -298,12 +409,39 @@ class TeamListTile extends ConsumerWidget {
     required this.tournamentId,
     this.managementRouteBase,
   });
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
+    final confirm = await showConfirmDialog(
+      context: context,
+      title: l10n.teamList_deleteTitle,
+      content: l10n.teamList_deleteContent(team.name),
+      confirmText: l10n.teamList_deleteConfirm,
+    );
+    if (confirm != true) return;
+    try {
+      await ref.read(teamServiceProvider(tournamentId)).deleteTeam(team.id);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.teamList_deleteError(e.toString())),
+            backgroundColor: context.colors.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: context.colors.bgCard,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -312,17 +450,17 @@ class TeamListTile extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
               child: Text(
                 '$index',
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.primary,
                 ),
@@ -336,6 +474,8 @@ class TeamListTile extends ConsumerWidget {
               children: [
                 Text(
                   team.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -343,14 +483,14 @@ class TeamListTile extends ConsumerWidget {
                   ),
                 ),
                 if (team.members.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     team.members.join(', '),
                     style: TextStyle(
                       fontSize: 13,
                       color: context.colors.textSecondary,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -373,54 +513,35 @@ class TeamListTile extends ConsumerWidget {
                 ),
               ),
             ),
-          if (!isLocked) ...[
-            IconButton(
+          if (!isLocked)
+            PopupMenuButton<String>(
               icon: Icon(
-                Icons.edit_outlined,
+                Icons.more_vert,
                 size: 20,
                 color: context.colors.textMuted,
               ),
-              onPressed: () {
-                context.push(
-                  '${managementRouteBase ?? '/admin/tournament/$tournamentId'}/teams/edit',
-                  extra: team,
-                );
-              },
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.delete_outline,
-                size: 20,
-                color: context.colors.error,
-              ),
-              onPressed: () async {
-                final confirm = await showConfirmDialog(
-                  context: context,
-                  title: l10n.teamList_deleteTitle,
-                  content: l10n.teamList_deleteContent(team.name),
-                  confirmText: l10n.teamList_deleteConfirm,
-                );
-                if (confirm == true) {
-                  try {
-                    await ref
-                        .read(teamServiceProvider(tournamentId))
-                        .deleteTeam(team.id);
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.teamList_deleteError(e.toString()),
-                          ),
-                          backgroundColor: context.colors.error,
-                        ),
-                      );
-                    }
-                  }
+              color: context.colors.bgCard,
+              onSelected: (value) {
+                if (value == 'edit') {
+                  context.push(
+                    '${managementRouteBase ?? '/admin/tournament/$tournamentId'}/teams/edit',
+                    extra: team,
+                  );
+                } else if (value == 'delete') {
+                  _confirmDelete(context, ref, l10n);
                 }
               },
+              itemBuilder: (context) => [
+                PopupMenuItem(value: 'edit', child: Text(l10n.teamList_edit)),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(
+                    l10n.teamList_deleteConfirm,
+                    style: TextStyle(color: context.colors.error),
+                  ),
+                ),
+              ],
             ),
-          ],
         ],
       ),
     );

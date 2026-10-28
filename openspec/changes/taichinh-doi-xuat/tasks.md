@@ -5,7 +5,7 @@
 
 ## 2. Màn 20 Quản lý đội / VĐV
 
-- [ ] 2.1 Ô tìm, chip lọc có số, tên 2 dòng, hàng gọn, menu ⋮ mỗi đội. Tiêu chí: `flutter test --no-pub test/features/team_list_screen_test.dart` → exit 0
+- [x] 2.1 Ô tìm, chip lọc có số, tên 2 dòng, hàng gọn, menu ⋮ mỗi đội. Tiêu chí: `flutter test --no-pub test/features/team_list_screen_test.dart` → exit 0
   - Files: sửa `lib/features/teams/screens/team_list_screen.dart`, `lib/l10n/app_vi.arb`, `lib/l10n/app_en.arb`; test `test/features/team_list_screen_test.dart`
 
 ## 3. Màn 21 Xuất báo cáo
