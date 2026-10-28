@@ -22768,6 +22768,108 @@ abstract class AppLocalizations {
   /// **'Nhập URL phát của camera.'**
   String get tournamentManagementCameraUrlRequired;
 
+  /// No description provided for @tournamentManagementCourtCameraAttached.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gắn camera'**
+  String get tournamentManagementCourtCameraAttached;
+
+  /// No description provided for @tournamentManagementCourtCameraNotAttached.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa gắn camera'**
+  String get tournamentManagementCourtCameraNotAttached;
+
+  /// No description provided for @tournamentManagementCourtCameraEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa camera'**
+  String get tournamentManagementCourtCameraEdit;
+
+  /// No description provided for @tournamentManagementCourtActions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác sân'**
+  String get tournamentManagementCourtActions;
+
+  /// No description provided for @tournamentManagementCameraShowUrl.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện'**
+  String get tournamentManagementCameraShowUrl;
+
+  /// No description provided for @tournamentManagementCameraHideUrl.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn'**
+  String get tournamentManagementCameraHideUrl;
+
+  /// No description provided for @tournamentManagementCameraDetach.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ camera'**
+  String get tournamentManagementCameraDetach;
+
+  /// No description provided for @tournamentManagementDiscardTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ thay đổi?'**
+  String get tournamentManagementDiscardTitle;
+
+  /// No description provided for @tournamentManagementDiscardMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có thay đổi chưa lưu. Thoát mà không lưu?'**
+  String get tournamentManagementDiscardMessage;
+
+  /// No description provided for @tournamentManagementDiscardConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ thay đổi'**
+  String get tournamentManagementDiscardConfirm;
+
+  /// No description provided for @manageInfoGroupGeneral.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chung'**
+  String get manageInfoGroupGeneral;
+
+  /// No description provided for @manageInfoGroupIdentity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận diện'**
+  String get manageInfoGroupIdentity;
+
+  /// No description provided for @manageInfoGroupPrizes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải thưởng'**
+  String get manageInfoGroupPrizes;
+
+  /// No description provided for @manageInfoGroupContact.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên hệ'**
+  String get manageInfoGroupContact;
+
+  /// No description provided for @manageInfoPrizeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng nhất, nhì, ba'**
+  String get manageInfoPrizeLabel;
+
+  /// No description provided for @manageInfoSaveChanges.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu thay đổi'**
+  String get manageInfoSaveChanges;
+
+  /// No description provided for @tournamentManagementCourtCameraSheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera · {court}'**
+  String tournamentManagementCourtCameraSheetTitle(Object court);
+
   /// No description provided for @tournamentManagementCameraUrlSaved.
   ///
   /// In vi, this message translates to:

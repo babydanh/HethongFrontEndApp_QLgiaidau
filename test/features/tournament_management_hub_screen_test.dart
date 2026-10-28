@@ -904,9 +904,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.tournamentManagementName), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
       expect(find.text(l10n.tournamentManagementDescription), findsOneWidget);
-      expect(find.text(l10n.tournamentManagementBrandAssets), findsOneWidget);
+      for (final group in [
+        l10n.manageInfoGroupGeneral,
+        l10n.manageInfoGroupIdentity,
+        l10n.manageInfoGroupPrizes,
+        l10n.manageInfoGroupContact,
+      ]) {
+        expect(find.text(group), findsOneWidget);
+      }
+      // Branding is collapsed by default; opening it reveals the image tiles.
+      await tester.tap(find.text(l10n.manageInfoGroupIdentity));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.tournamentManagementLogo), findsOneWidget);
       expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
       expect(find.text(l10n.tournamentManagementPublic), findsNothing);
       expect(tester.takeException(), isNull);
@@ -1573,6 +1583,44 @@ void main() {
       find.text(l10n.manageSettingsInfoSection).hitTestable(),
       findsOneWidget,
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('leaving the information page with unsaved edits asks first', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      _app(
+        _tournament('in_progress'),
+        managementRepository: _EmptyTournamentManagementRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await _openSettings(tester);
+    await tester.tap(find.text(l10n.manageSettingsInfoSection).first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Edited name');
+    await tester.pump();
+
+    // Back asks; "Cancel" keeps the page and the edit.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementDiscardTitle), findsOneWidget);
+    await tester.tap(find.text(l10n.tournamentManagementCancel));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementName), findsOneWidget);
+
+    // Confirming the discard closes the page.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.tournamentManagementDiscardConfirm));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementName), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

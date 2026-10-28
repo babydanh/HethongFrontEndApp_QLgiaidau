@@ -46,6 +46,7 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     required this.section,
     required this.opsWorkspaceRoute,
     required this.actionRouteBase,
+    this.unsavedChanges,
   });
 
   final Tournament tournament;
@@ -53,18 +54,18 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   final String opsWorkspaceRoute;
   final String actionRouteBase;
 
+  /// Set to true while the information page holds edits that are not saved,
+  /// so the hub can ask before leaving the page.
+  final ValueNotifier<bool>? unsavedChanges;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) => _content(context, ref);
 
   Widget _content(BuildContext context, WidgetRef ref) => switch (section) {
-    TournamentManagementSection.information => _SettingsPage(
-      children: [
-        _TournamentSettingsForm(
-          tournament: tournament,
-          group: _SettingsGroup.information,
-        ),
-        TournamentManagementBrandsSection(tournament: tournament),
-      ],
+    TournamentManagementSection.information => _TournamentSettingsForm(
+      tournament: tournament,
+      group: _SettingsGroup.information,
+      unsavedChanges: unsavedChanges,
     ),
     TournamentManagementSection.schedule => _SettingsPage(
       children: [
@@ -130,7 +131,7 @@ class _SettingsPage extends StatelessWidget {
   );
 }
 
-/// Thanh dưới cố định của trang Đăng ký: đường kẻ mảnh phía trên, có SafeArea đáy.
+/// Thanh dưới cố định của trang Thông tin và Đăng ký: đường kẻ mảnh phía trên, có SafeArea đáy.
 class _StickySaveBar extends StatelessWidget {
   const _StickySaveBar({required this.error, required this.button});
 
@@ -166,18 +167,65 @@ class _StickySaveBar extends StatelessWidget {
   }
 }
 
-/// Hai nhóm cài đặt. Mỗi nhóm có form và nút Lưu riêng.
+/// Hai nhóm cài đặt. Mỗi nhóm có form và nút Lưu riêng (dính đáy).
 enum _SettingsGroup { information, registration }
+
+/// Editable values of the information page, compared by value for dirty checks.
+typedef _InfoValues = ({
+  String name,
+  String description,
+  bool hideCardText,
+  String prize,
+  String phone,
+  String email,
+});
+
+/// One collapsible group of the information page.
+class _InfoGroup extends StatelessWidget {
+  const _InfoGroup({
+    required this.title,
+    required this.children,
+    this.initiallyExpanded = false,
+  });
+
+  final String title;
+  final List<Widget> children;
+  final bool initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    clipBehavior: Clip.antiAlias,
+    child: Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        title: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        initiallyExpanded: initiallyExpanded,
+        maintainState: true,
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    ),
+  );
+}
 
 /// Form của một nhóm cài đặt. Chỉ gửi các trường thuộc nhóm đó.
 class _TournamentSettingsForm extends ConsumerStatefulWidget {
   const _TournamentSettingsForm({
     required this.tournament,
     required this.group,
+    this.unsavedChanges,
   });
 
   final Tournament tournament;
   final _SettingsGroup group;
+  final ValueNotifier<bool>? unsavedChanges;
 
   @override
   ConsumerState<_TournamentSettingsForm> createState() =>
@@ -193,6 +241,13 @@ class _TournamentSettingsFormState
   // Mô tả lưu dạng HTML (Editor.js của web xuất ra HTML). Dùng state thay vì
   // TextEditingController vì RichTextField là WebView, không nhận controller.
   late String _description = widget.tournament.description;
+  late String _prize = widget.tournament.prizeDescription ?? '';
+  late final TextEditingController _phoneController = TextEditingController(
+    text: _contactText('phone'),
+  );
+  late final TextEditingController _emailController = TextEditingController(
+    text: _contactText('email'),
+  );
   late String _visibility = _savedVisibility;
   late String _registrationMode = _savedRegistrationMode;
   late String _pairingMode = _savedPairingMode;
@@ -204,6 +259,48 @@ class _TournamentSettingsFormState
   late DateTime? _registrationEndDate = widget.tournament.registrationEndDate;
   bool _isSaving = false;
   String? _errorMessage;
+
+  /// Values last saved (or loaded) for the information page; edits are
+  /// "unsaved" while [_current] differs from it.
+  late _InfoValues _baseline = _current;
+
+  _InfoValues get _current => (
+    name: _nameController.text.trim(),
+    description: _description.trim(),
+    hideCardText: _hideFeaturedCardText,
+    prize: _prize.trim(),
+    phone: _phoneController.text.trim(),
+    email: _emailController.text.trim(),
+  );
+
+  bool get _isInformation => widget.group == _SettingsGroup.information;
+
+  bool get _dirty => _isInformation && _current != _baseline;
+
+  /// Email is not part of the contact block in MANUAL display mode (Web rule).
+  bool get _contactIsManual =>
+      widget.tournament.contactInfo?['displayMode']?.toString().toUpperCase() ==
+      'MANUAL';
+
+  String _contactText(String key) {
+    final value = widget.tournament.contactInfo?[key];
+    return value is String ? value.trim() : '';
+  }
+
+  void _syncDirty() {
+    widget.unsavedChanges?.value = _dirty;
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_isInformation) return;
+    _baseline = _current;
+    _nameController.addListener(_syncDirty);
+    _phoneController.addListener(_syncDirty);
+    _emailController.addListener(_syncDirty);
+  }
 
   String get _savedVisibility =>
       widget.tournament.visibility.toUpperCase() == 'PRIVATE'
@@ -280,53 +377,111 @@ class _TournamentSettingsFormState
   @override
   void dispose() {
     _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    if (_dirty) widget.unsavedChanges?.value = false;
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final card = TournamentManagementSectionCard(
-      title: _title(l10n),
-      subtitle: _groupDescription(l10n),
-      showHeader: false,
-      child: Column(
-        children: [
-          ..._fields(context, l10n),
-          if (!_hasStickySave) ...[
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 12),
-              _InlineError(text: _errorMessage!),
-            ],
-            const SizedBox(height: 16),
-            Align(alignment: Alignment.centerRight, child: _saveButton(l10n)),
-          ],
-        ],
-      ),
-    );
-    if (!_hasStickySave) return card;
-    // Trang Đăng ký: nút Lưu dính đáy, nằm ngoài ListView nên không bị cuộn.
+    final body = _isInformation
+        ? _informationGroups(context, l10n)
+        : TournamentManagementSectionCard(
+            title: _title(l10n),
+            subtitle: _groupDescription(l10n),
+            showHeader: false,
+            child: Column(children: _fields(context, l10n)),
+          );
+    // Nút Lưu dính đáy, nằm ngoài ListView nên không bị cuộn.
     return Column(
       children: [
         Expanded(
-          child: ListView(padding: const EdgeInsets.all(16), children: [card]),
+          child: ListView(padding: const EdgeInsets.all(16), children: [body]),
         ),
         _StickySaveBar(
           error: _errorMessage,
           button: _saveButton(
             l10n,
-            style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+            style: FilledButton.styleFrom(
+              minimumSize: Size(_isInformation ? double.infinity : 0, 44),
+            ),
           ),
         ),
       ],
     );
   }
 
-  bool get _hasStickySave => widget.group == _SettingsGroup.registration;
+  /// Bốn nhóm như Web; mỗi nhóm thu gọn/mở được, chỉ nhóm Chung mở sẵn.
+  Widget _informationGroups(BuildContext context, AppLocalizations l10n) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _InfoGroup(
+            title: l10n.manageInfoGroupGeneral,
+            initiallyExpanded: true,
+            children: _generalFields(l10n),
+          ),
+          const SizedBox(height: 12),
+          _InfoGroup(
+            title: l10n.manageInfoGroupIdentity,
+            children: [
+              TournamentManagementBrandsSection(tournament: widget.tournament),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _InfoGroup(
+            title: l10n.manageInfoGroupPrizes,
+            children: [
+              RichTextField(
+                value: _prize,
+                label: l10n.manageInfoPrizeLabel,
+                onChanged: (html) {
+                  if (html == _prize) return;
+                  _prize = html;
+                  _syncDirty();
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _InfoGroup(
+            title: l10n.manageInfoGroupContact,
+            children: _contactFields(l10n),
+          ),
+        ],
+      );
+
+  List<Widget> _contactFields(AppLocalizations l10n) => [
+    TextField(
+      key: const ValueKey('info-contact-phone'),
+      controller: _phoneController,
+      keyboardType: TextInputType.phone,
+      decoration: InputDecoration(
+        labelText: l10n.contactPhone,
+        border: const OutlineInputBorder(),
+      ),
+    ),
+    if (!_contactIsManual) ...[
+      const SizedBox(height: 12),
+      TextField(
+        key: const ValueKey('info-contact-email'),
+        controller: _emailController,
+        keyboardType: TextInputType.emailAddress,
+        decoration: InputDecoration(
+          labelText: l10n.contactEmail,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+    ],
+  ];
 
   Widget _saveButton(AppLocalizations l10n, {ButtonStyle? style}) =>
       FilledButton.icon(
-        onPressed: _isSaving || _locked ? null : _save,
+        onPressed: _isSaving || _locked || (_isInformation && !_dirty)
+            ? null
+            : _save,
         style: style,
         icon: _isSaving
             ? const SizedBox.square(
@@ -337,6 +492,8 @@ class _TournamentSettingsFormState
         label: Text(
           _isSaving
               ? l10n.tournamentManagementSaving
+              : _isInformation
+              ? l10n.manageInfoSaveChanges
               : l10n.tournamentManagementSave,
         ),
       );
@@ -352,11 +509,7 @@ class _TournamentSettingsFormState
       l10n.manageSettingsRegistrationSectionDescription,
   };
 
-  List<Widget> _fields(
-    BuildContext context,
-    AppLocalizations l10n,
-  ) => switch (widget.group) {
-    _SettingsGroup.information => [
+  List<Widget> _generalFields(AppLocalizations l10n) => [
       TextField(
         controller: _nameController,
         textInputAction: TextInputAction.next,
@@ -374,7 +527,9 @@ class _TournamentSettingsFormState
         onChanged: (html) {
           // Editor báo về cả lúc vừa sẵn sàng (giá trị chuẩn hoá) nên
           // chỉ setState khi thực sự khác.
-          if (html != _description) setState(() => _description = html);
+          if (html == _description) return;
+          _description = html;
+          _syncDirty();
         },
       ),
       const SizedBox(height: 12),
@@ -388,10 +543,14 @@ class _TournamentSettingsFormState
         ),
         onChanged: _isSaving
             ? null
-            : (value) => setState(() => _hideFeaturedCardText = value),
+            : (value) {
+                _hideFeaturedCardText = value;
+                _syncDirty();
+              },
       ),
-    ],
-    _SettingsGroup.registration => [
+  ];
+
+  List<Widget> _fields(BuildContext context, AppLocalizations l10n) => [
       if (_locked)
         _hint(context, l10n.tournamentManagementRegistrationLockedHint)
       else if (_closed)
@@ -518,8 +677,7 @@ class _TournamentSettingsFormState
         const SizedBox(height: 8),
         const LinearProgressIndicator(),
       ],
-    ],
-  };
+  ];
 
   Widget _hint(BuildContext context, String text) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
@@ -642,6 +800,14 @@ class _TournamentSettingsFormState
           ...saved.tournamentConfig,
           'hideFeaturedCardText': _hideFeaturedCardText,
         };
+        final current = _current;
+        if (current.prize != _baseline.prize) {
+          payload['prizeDescription'] = current.prize;
+        }
+        if (current.phone != _baseline.phone ||
+            current.email != _baseline.email) {
+          payload['contactInfo'] = _contactPayload(current);
+        }
       case _SettingsGroup.registration:
         _addDateUpdate(
           payload,
@@ -674,6 +840,17 @@ class _TournamentSettingsFormState
         }
     }
     return payload;
+  }
+
+  /// The server replaces the whole `contactInfo` JSON, so every other key
+  /// (hidden, displayMode, custom fields) is sent back untouched.
+  Map<String, dynamic> _contactPayload(_InfoValues current) {
+    final info = <String, dynamic>{...?widget.tournament.contactInfo};
+    void put(String key, String value) =>
+        value.isEmpty ? info.remove(key) : info[key] = value;
+    put('phone', current.phone);
+    if (!_contactIsManual) put('email', current.email);
+    return info;
   }
 
   Widget _dateField(
@@ -762,6 +939,10 @@ class _TournamentSettingsFormState
           .update(widget.tournament.id, _payload());
       if (!mounted) return;
       ref.invalidate(tournamentProvider(widget.tournament.id));
+      if (_isInformation) {
+        _baseline = _current;
+        widget.unsavedChanges?.value = false;
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));

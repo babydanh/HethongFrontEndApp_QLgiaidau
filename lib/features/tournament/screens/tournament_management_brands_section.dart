@@ -47,125 +47,111 @@ class _TournamentManagementBrandsSectionState
     });
   }
 
+  /// Content of the "Branding" group on the information page. Image picks are
+  /// sent to the server straight away (not with the page's save button).
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final errorText = _error == null
+        ? null
+        : Text(
+            l10n.tournamentManagementSaveError,
+            style: TextStyle(color: colors.error),
+          );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TournamentManagementSectionCard(
-          title: l10n.tournamentManagementBrandAssets,
-          subtitle: l10n.tournamentManagementBrandAssetsDescription,
-          child: Column(
-            children: [
-              _BrandImageTile(
-                label: l10n.tournamentManagementLogo,
-                url: _logoUrl,
-                icon: Icons.emoji_events_outlined,
-                isBusy: _isBusy,
-                actionLabel: l10n.tournamentManagementUploadLogo,
-                onUpload: () => _uploadBrandImage(isLogo: true),
-              ),
-              const SizedBox(height: 12),
-              _BrandImageTile(
-                label: l10n.tournamentManagementBanner,
-                url: _bannerUrl,
-                icon: Icons.panorama_outlined,
-                isBusy: _isBusy,
-                actionLabel: l10n.tournamentManagementUploadBanner,
-                onUpload: () => _uploadBrandImage(isLogo: false),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  l10n.tournamentManagementSaveError,
-                  style: TextStyle(color: colors.error),
-                ),
-              ],
-            ],
-          ),
+        _BrandImageTile(
+          label: l10n.tournamentManagementLogo,
+          url: _logoUrl,
+          icon: Icons.emoji_events_outlined,
+          isBusy: _isBusy,
+          actionLabel: l10n.tournamentManagementUploadLogo,
+          onUpload: () => _uploadBrandImage(isLogo: true),
         ),
-        const SizedBox(height: 16),
-        TournamentManagementSectionCard(
-          title: l10n.tournamentManagementGallery,
-          subtitle: l10n.tournamentManagementGalleryDescription,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed: _isBusy ? null : _addGalleryImage,
-                  icon: _isBusy
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add_photo_alternate_outlined),
-                  label: Text(l10n.tournamentManagementAddImage),
-                ),
+        const SizedBox(height: 12),
+        _BrandImageTile(
+          label: l10n.tournamentManagementBanner,
+          url: _bannerUrl,
+          icon: Icons.panorama_outlined,
+          isBusy: _isBusy,
+          actionLabel: l10n.tournamentManagementUploadBanner,
+          onUpload: () => _uploadBrandImage(isLogo: false),
+        ),
+        if (errorText != null) ...[const SizedBox(height: 12), errorText],
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.tournamentManagementGallery,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  l10n.tournamentManagementSaveError,
-                  style: TextStyle(color: colors.error),
-                ),
-              ],
-              const SizedBox(height: 12),
-              FutureBuilder<List<String>>(
-                future: _galleryFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (snapshot.hasError)
-                    return TournamentManagementError(
-                      error: snapshot.error,
-                      onRetry: _reload,
-                    );
-                  final images = snapshot.data ?? const <String>[];
-                  if (images.isEmpty)
-                    return TournamentManagementEmpty(
-                      title: l10n.tournamentManagementGalleryEmpty,
-                      subtitle:
-                          l10n.tournamentManagementGalleryEmptyDescription,
-                      icon: Icons.photo_library_outlined,
-                    );
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final columns = constraints.maxWidth >= 700
-                          ? 4
-                          : constraints.maxWidth >= 430
-                          ? 3
-                          : 2;
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: columns,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 1.05,
-                        ),
-                        itemCount: images.length,
-                        itemBuilder: (context, index) => _GalleryImageTile(
-                          url: images[index],
-                          onRemove: _isBusy
-                              ? null
-                              : () => _removeGalleryImage(index),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+            FilledButton.icon(
+              onPressed: _isBusy ? null : _addGalleryImage,
+              icon: _isBusy
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_photo_alternate_outlined),
+              label: Text(l10n.tournamentManagementAddImage),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        FutureBuilder<List<String>>(
+          future: _galleryFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return TournamentManagementError(
+                error: snapshot.error,
+                onRetry: _reload,
+              );
+            }
+            final images = snapshot.data ?? const <String>[];
+            if (images.isEmpty) {
+              return TournamentManagementEmpty(
+                title: l10n.tournamentManagementGalleryEmpty,
+                subtitle: l10n.tournamentManagementGalleryEmptyDescription,
+                icon: Icons.photo_library_outlined,
+              );
+            }
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 700
+                    ? 4
+                    : constraints.maxWidth >= 430
+                    ? 3
+                    : 2;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.05,
+                  ),
+                  itemCount: images.length,
+                  itemBuilder: (context, index) => _GalleryImageTile(
+                    url: images[index],
+                    onRemove: _isBusy ? null : () => _removeGalleryImage(index),
+                  ),
+                );
+              },
+            );
+          },
         ),
       ],
     );

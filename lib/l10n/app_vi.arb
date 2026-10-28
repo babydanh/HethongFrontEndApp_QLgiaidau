@@ -5213,6 +5213,28 @@
   "tournamentManagementCameraReady": "Camera đã sẵn sàng",
   "tournamentManagementCameraNotReady": "Chưa có URL camera",
   "tournamentManagementCameraUrlRequired": "Nhập URL phát của camera.",
+  "tournamentManagementCourtCameraAttached": "Đã gắn camera",
+  "tournamentManagementCourtCameraNotAttached": "Chưa gắn camera",
+  "tournamentManagementCourtCameraEdit": "Sửa camera",
+  "tournamentManagementCourtActions": "Thao tác sân",
+  "tournamentManagementCameraShowUrl": "Hiện",
+  "tournamentManagementCameraHideUrl": "Ẩn",
+  "tournamentManagementCameraDetach": "Gỡ camera",
+  "tournamentManagementDiscardTitle": "Bỏ thay đổi?",
+  "tournamentManagementDiscardMessage": "Bạn có thay đổi chưa lưu. Thoát mà không lưu?",
+  "tournamentManagementDiscardConfirm": "Bỏ thay đổi",
+  "manageInfoGroupGeneral": "Chung",
+  "manageInfoGroupIdentity": "Nhận diện",
+  "manageInfoGroupPrizes": "Giải thưởng",
+  "manageInfoGroupContact": "Liên hệ",
+  "manageInfoPrizeLabel": "Hạng nhất, nhì, ba",
+  "manageInfoSaveChanges": "Lưu thay đổi",
+  "tournamentManagementCourtCameraSheetTitle": "Camera · {court}",
+  "@tournamentManagementCourtCameraSheetTitle": {
+    "placeholders": {
+      "court": {}
+    }
+  },
   "tournamentManagementCameraUrlSaved": "Đã lưu URL camera.",
   "tournamentManagementCameraUrlCleared": "Đã xoá URL camera.",
   "tournamentManagementCameraUrlSaveFailed": "Không lưu được URL camera.",

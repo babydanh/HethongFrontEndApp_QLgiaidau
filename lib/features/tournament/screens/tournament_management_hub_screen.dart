@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
@@ -76,6 +77,9 @@ class _TournamentManagementHubScreenState
   TournamentManagementSection _selectedSection =
       TournamentManagementSection.information;
   TournamentManagementSection? _openedSection;
+
+  /// True while the open section page holds edits that are not saved yet.
+  final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
   bool _isTabBarPinned = false;
   bool _isExporting = false;
@@ -85,6 +89,7 @@ class _TournamentManagementHubScreenState
   void dispose() {
     _tabController.dispose();
     _scrollController.dispose();
+    _unsavedChanges.dispose();
     _tabStripOverlapHandle.dispose();
     super.dispose();
   }
@@ -116,7 +121,22 @@ class _TournamentManagementHubScreenState
     if (isTablet) _tabController.animateTo(_HubTab.settings.index);
   }
 
-  void _closeSection() => setState(() => _openedSection = null);
+  /// Leaving a page with unsaved edits asks first; otherwise closes at once.
+  Future<void> _closeSection() async {
+    if (_unsavedChanges.value) {
+      final l10n = AppLocalizations.of(context)!;
+      final discard = await confirmTournamentManagementAction(
+        context,
+        title: l10n.tournamentManagementDiscardTitle,
+        message: l10n.tournamentManagementDiscardMessage,
+        confirmLabel: l10n.tournamentManagementDiscardConfirm,
+        destructive: true,
+      );
+      if (!discard || !mounted) return;
+      _unsavedChanges.value = false;
+    }
+    setState(() => _openedSection = null);
+  }
 
   /// Persists founder visibility like the Web manage page. The server replaces
   /// the whole `contactInfo` JSON, so the existing keys are sent back with it.
@@ -543,6 +563,7 @@ class _TournamentManagementHubScreenState
           section: _selectedSection,
           opsWorkspaceRoute: widget.opsWorkspaceRoute,
           actionRouteBase: widget.actionRouteBase,
+          unsavedChanges: _unsavedChanges,
         );
     }
   }

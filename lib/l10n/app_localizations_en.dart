@@ -12555,6 +12555,60 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a camera playback URL.';
 
   @override
+  String get tournamentManagementCourtCameraAttached => 'Camera attached';
+
+  @override
+  String get tournamentManagementCourtCameraNotAttached => 'No camera attached';
+
+  @override
+  String get tournamentManagementCourtCameraEdit => 'Edit camera';
+
+  @override
+  String get tournamentManagementCourtActions => 'Court actions';
+
+  @override
+  String get tournamentManagementCameraShowUrl => 'Show';
+
+  @override
+  String get tournamentManagementCameraHideUrl => 'Hide';
+
+  @override
+  String get tournamentManagementCameraDetach => 'Remove camera';
+
+  @override
+  String get tournamentManagementDiscardTitle => 'Discard changes?';
+
+  @override
+  String get tournamentManagementDiscardMessage =>
+      'You have unsaved changes. Leave without saving?';
+
+  @override
+  String get tournamentManagementDiscardConfirm => 'Discard';
+
+  @override
+  String get manageInfoGroupGeneral => 'General';
+
+  @override
+  String get manageInfoGroupIdentity => 'Branding';
+
+  @override
+  String get manageInfoGroupPrizes => 'Prizes';
+
+  @override
+  String get manageInfoGroupContact => 'Contact';
+
+  @override
+  String get manageInfoPrizeLabel => '1st, 2nd and 3rd place';
+
+  @override
+  String get manageInfoSaveChanges => 'Save changes';
+
+  @override
+  String tournamentManagementCourtCameraSheetTitle(Object court) {
+    return 'Camera · $court';
+  }
+
+  @override
   String get tournamentManagementCameraUrlSaved => 'Camera URL saved.';
 
   @override

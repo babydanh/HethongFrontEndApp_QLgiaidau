@@ -5166,6 +5166,28 @@
   "tournamentManagementCameraReady": "Camera ready",
   "tournamentManagementCameraNotReady": "No camera URL",
   "tournamentManagementCameraUrlRequired": "Enter a camera playback URL.",
+  "tournamentManagementCourtCameraAttached": "Camera attached",
+  "tournamentManagementCourtCameraNotAttached": "No camera attached",
+  "tournamentManagementCourtCameraEdit": "Edit camera",
+  "tournamentManagementCourtActions": "Court actions",
+  "tournamentManagementCameraShowUrl": "Show",
+  "tournamentManagementCameraHideUrl": "Hide",
+  "tournamentManagementCameraDetach": "Remove camera",
+  "tournamentManagementDiscardTitle": "Discard changes?",
+  "tournamentManagementDiscardMessage": "You have unsaved changes. Leave without saving?",
+  "tournamentManagementDiscardConfirm": "Discard",
+  "manageInfoGroupGeneral": "General",
+  "manageInfoGroupIdentity": "Branding",
+  "manageInfoGroupPrizes": "Prizes",
+  "manageInfoGroupContact": "Contact",
+  "manageInfoPrizeLabel": "1st, 2nd and 3rd place",
+  "manageInfoSaveChanges": "Save changes",
+  "tournamentManagementCourtCameraSheetTitle": "Camera · {court}",
+  "@tournamentManagementCourtCameraSheetTitle": {
+    "placeholders": {
+      "court": {}
+    }
+  },
   "tournamentManagementCameraUrlSaved": "Camera URL saved.",
   "tournamentManagementCameraUrlCleared": "Camera URL removed.",
   "tournamentManagementCameraUrlSaveFailed": "Could not save the camera URL.",
