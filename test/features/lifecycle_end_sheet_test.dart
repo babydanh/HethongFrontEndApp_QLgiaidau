@@ -285,9 +285,15 @@ void main() {
         findsOneWidget,
       );
     }
-    expect(find.text(l10n.lifecycleEndPrizesTitle), findsOneWidget);
+    expect(
+      find.text(l10n.lifecycleEndPrizesTitle.toUpperCase()),
+      findsOneWidget,
+    );
     expect(find.text('Winner takes a trophy'), findsOneWidget);
-    expect(find.text(l10n.lifecycleEndConditionsTitle), findsOneWidget);
+    expect(
+      find.text(l10n.lifecycleEndConditionsTitle.toUpperCase()),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('lifecycle-end-blocked-reason')),
       findsNothing,

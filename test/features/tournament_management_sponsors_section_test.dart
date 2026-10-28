@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -108,7 +109,7 @@ void main() {
     ]);
     final l10n = await _pump(tester, repository);
 
-    await tester.tap(find.byTooltip(l10n.tournamentManagementEdit));
+    await tester.tap(find.byKey(const ValueKey('sponsor-row-1')));
     await tester.pumpAndSettle();
 
     expect(
@@ -138,13 +139,20 @@ void main() {
     final l10n = await _pump(tester, repository);
 
     expect(find.text('P'), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementSponsorTierGold), findsOneWidget);
+    expect(
+      find.text(
+        l10n.tournamentManagementSponsorTierRank(
+          l10n.tournamentManagementSponsorTierGold,
+        ),
+      ),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('sponsor-switch-1')), findsOneWidget);
     expect(find.byKey(const ValueKey('sponsor-handle-1')), findsOneWidget);
     expect(find.text(l10n.tournamentManagementSponsorHint), findsOneWidget);
     expect(find.text(l10n.tournamentManagementAddSponsorShort), findsOneWidget);
 
-    await tester.tap(find.byTooltip(l10n.tournamentManagementEdit));
+    await tester.tap(find.byKey(const ValueKey('sponsor-row-1')));
     await tester.pumpAndSettle();
     expect(find.text(l10n.tournamentManagementDisplayOrder), findsNothing);
   });
@@ -230,10 +238,13 @@ void main() {
     final repository = _SponsorRepository([_sponsor('1', status: 'ARCHIVED')]);
     final l10n = await _pump(tester, repository);
 
-    expect(find.text(l10n.tournamentManagementSponsorArchived), findsOneWidget);
+    expect(
+      find.textContaining(l10n.tournamentManagementSponsorArchived),
+      findsOneWidget,
+    );
     expect(
       tester
-          .widget<Switch>(find.byKey(const ValueKey('sponsor-switch-1')))
+          .widget<LavishSwitch>(find.byKey(const ValueKey('sponsor-switch-1')))
           .onChanged,
       isNull,
     );

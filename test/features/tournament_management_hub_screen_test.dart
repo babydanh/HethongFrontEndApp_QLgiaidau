@@ -645,7 +645,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('lifecycle-end-cancel')));
+    await tester.tap(
+      find.byKey(const ValueKey('tournament-manage-sheet-close')),
+    );
     await tester.pumpAndSettle();
     expect(lifecycleRepository.completedIds, isEmpty);
     await tester.tap(find.byIcon(Icons.more_vert));

@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -84,44 +85,46 @@ class _TournamentManagementSponsorsSectionState
       return TournamentManagementError(error: _loadError, onRetry: _retry);
     }
     if (items == null) return const Center(child: CircularProgressIndicator());
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildTopBar(context, items),
-        if (_mutationFailed) _buildMutationError(context),
-        if (items.isEmpty) _buildEmpty(context) else ..._buildBody(items),
-      ],
+    return LavishSurface(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          _buildTopBar(context, items),
+          if (_mutationFailed) _buildMutationError(context),
+          if (items.isEmpty) _buildEmpty(context) else ..._buildBody(items),
+        ],
+      ),
     );
   }
 
+  /// Design `.bar` right action: "+ Add" in the accent colour, 14px / 800.
   Widget _buildTopBar(BuildContext context, List<TournamentSponsor> items) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          child: items.isEmpty
-              ? const SizedBox.shrink()
-              : Text(
-                  l10n.tournamentManagementSponsorCount(items.length),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-        ),
-        FilledButton.icon(
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 6, 6, 0),
+        child: TextButton.icon(
           onPressed: _isBusy ? null : () => _openEditor(items),
-          icon: const Icon(Icons.add_rounded),
+          style: TextButton.styleFrom(
+            foregroundColor: LavishColors.accent,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          icon: const Icon(Icons.add_rounded, size: 18),
           label: Text(l10n.tournamentManagementAddSponsorShort),
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildMutationError(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 12),
+    padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
     child: Text(
       AppLocalizations.of(context)!.tournamentManagementActionError,
-      style: TextStyle(color: context.colors.error),
+      style: const TextStyle(fontSize: 13, color: LavishColors.bad),
     ),
   );
 
@@ -136,9 +139,7 @@ class _TournamentManagementSponsorsSectionState
 
   List<Widget> _buildBody(List<TournamentSponsor> items) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
     return [
-      const SizedBox(height: 12),
       ReorderableListView(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -150,19 +151,26 @@ class _TournamentManagementSponsorsSectionState
             _buildRow(items, index),
         ],
       ),
-      const SizedBox(height: 4),
-      _PreviewRow(onTap: () => _openPreview(items)),
-      const SizedBox(height: 12),
-      Text(
-        l10n.tournamentManagementSponsorHint,
-        style: TextStyle(color: colors.textMuted, fontSize: 12),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+        child: LavishButton(
+          kind: LavishButtonKind.outline,
+          label: l10n.tournamentManagementSponsorPreview,
+          onPressed: () => _openPreview(items),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+        child: Text(
+          l10n.tournamentManagementSponsorHint,
+          style: TextStyle(fontSize: 13, color: LavishColors.of(context).muted),
+        ),
       ),
     ];
   }
 
   Widget _buildRow(List<TournamentSponsor> items, int index) {
     final sponsor = items[index];
-    final colors = context.colors;
     return Dismissible(
       key: ValueKey('sponsor-row-${sponsor.id}'),
       direction: sponsor.isArchived || _isBusy
@@ -177,12 +185,8 @@ class _TournamentManagementSponsorsSectionState
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: colors.error.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(Icons.archive_outlined, color: colors.error),
+        color: LavishColors.of(context).soft(LavishTone.bad),
+        child: const Icon(Icons.archive_outlined, color: LavishColors.bad),
       ),
       child: _SponsorRow(
         sponsor: sponsor,
@@ -215,12 +219,11 @@ class _TournamentManagementSponsorsSectionState
   }
 
   Future<void> _setPublic(TournamentSponsor sponsor, bool value) => _mutate(
-    () => ref
-        .read(tournamentManagementRepositoryProvider)
-        .updateSponsor(widget.tournamentId, sponsor.id, {
-          'status': value ? 'PUBLISHED' : 'DRAFT',
-          'isPublic': value,
-        }),
+    () => ref.read(tournamentManagementRepositoryProvider).updateSponsor(
+      widget.tournamentId,
+      sponsor.id,
+      {'status': value ? 'PUBLISHED' : 'DRAFT', 'isPublic': value},
+    ),
   );
 
   void _openPreview(List<TournamentSponsor> items) {
@@ -254,9 +257,7 @@ class _TournamentManagementSponsorsSectionState
           sponsor: sponsor,
           nextOrder: nextOrder,
           onSave: (payload) async {
-            final repository = ref.read(
-              tournamentManagementRepositoryProvider,
-            );
+            final repository = ref.read(tournamentManagementRepositoryProvider);
             if (sponsor == null) {
               await repository.createSponsor(widget.tournamentId, payload);
             } else {
@@ -549,8 +550,23 @@ String _sponsorTierLabel(AppLocalizations l10n, String tier) =>
       _ => l10n.tournamentManagementSponsorTierInKind,
     };
 
-/// One sponsor line: drag handle, avatar, name, tier, archived label, public
-/// switch and edit. Archiving is a swipe on the wrapping `Dismissible`.
+/// Rank wording of the design ("Hạng Vàng"). The title and in-kind tiers are
+/// not ranks, so they keep their own label.
+String _sponsorTierRank(AppLocalizations l10n, String tier) {
+  final label = _sponsorTierLabel(l10n, tier);
+  return switch (tier.toUpperCase()) {
+    'DIAMOND' ||
+    'GOLD' ||
+    'SILVER' ||
+    'BRONZE' => l10n.tournamentManagementSponsorTierRank(label),
+    _ => label,
+  };
+}
+
+/// Design screen 12 `.li`: drag handle, letter avatar, name + rank, public
+/// switch. Tapping the row edits it; archiving is a swipe on the wrapping
+/// `Dismissible`. (The backend has no MVP flag, so the design's MVP badge is
+/// not drawn.)
 class _SponsorRow extends StatelessWidget {
   const _SponsorRow({
     required this.sponsor,
@@ -567,119 +583,73 @@ class _SponsorRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
+    final rank = _sponsorTierRank(l10n, sponsor.tier);
+    return LavishRow(
+      background: colors.surface,
+      onTap: isBusy ? null : onEdit,
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           ReorderableDragStartListener(
             key: ValueKey('sponsor-handle-${sponsor.id}'),
             index: index,
             child: Tooltip(
               message: l10n.tournamentManagementSponsorDragHandle,
-              child: Padding(
-                padding: const EdgeInsets.all(6),
-                child: Icon(Icons.drag_indicator, color: colors.textMuted),
-              ),
+              child: Icon(Icons.drag_indicator, size: 18, color: colors.faint),
             ),
           ),
+          const SizedBox(width: 11),
           _SponsorAvatar(sponsor: sponsor),
-          const SizedBox(width: 10),
-          Expanded(child: _buildInfo(context, l10n)),
-          Switch(
-            key: ValueKey('sponsor-switch-${sponsor.id}'),
-            value: sponsor.isShownPublicly,
-            onChanged: sponsor.isArchived || isBusy ? null : onTogglePublic,
-          ),
-          IconButton(
-            onPressed: isBusy ? null : onEdit,
-            tooltip: l10n.tournamentManagementEdit,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.edit_outlined),
-          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInfo(BuildContext context, AppLocalizations l10n) {
-    final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          sponsor.displayName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Wrap(
-          spacing: 6,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(
-              _sponsorTierLabel(l10n, sponsor.tier),
-              style: TextStyle(color: colors.textSecondary, fontSize: 12),
-            ),
-            if (sponsor.isArchived)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: colors.bgElevated,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  l10n.tournamentManagementSponsorArchived,
-                  style: TextStyle(
-                    color: colors.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-          ],
+      title: sponsor.displayName,
+      subtitle: sponsor.isArchived
+          ? '$rank · ${l10n.tournamentManagementSponsorArchived}'
+          : rank,
+      trailing: [
+        LavishSwitch(
+          key: ValueKey('sponsor-switch-${sponsor.id}'),
+          value: sponsor.isShownPublicly,
+          onChanged: sponsor.isArchived || isBusy ? null : onTogglePublic,
         ),
       ],
     );
   }
 }
 
-/// Letter avatar; the logo is drawn over it once it has loaded.
+/// Design `.av` (36px, 10px radius, light-blue letter tile); the logo is drawn
+/// over it once it has loaded.
 class _SponsorAvatar extends StatelessWidget {
   const _SponsorAvatar({required this.sponsor});
   final TournamentSponsor sponsor;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     final name = sponsor.displayName.trim();
     final letter = Container(
-      color: colors.bgElevated,
+      color: colors.dark
+          ? colors.soft(LavishTone.accent)
+          : const Color(0xFFD1E9FF),
       alignment: Alignment.center,
       child: Text(
-        name.isEmpty ? '?' : String.fromCharCode(name.runes.first).toUpperCase(),
+        name.isEmpty
+            ? '?'
+            : String.fromCharCode(name.runes.first).toUpperCase(),
         style: TextStyle(
-          color: colors.textSecondary,
+          color: colors.dark ? LavishColors.accent : const Color(0xFF1570EF),
           fontWeight: FontWeight.w800,
-          fontSize: 16,
+          fontSize: 13,
         ),
       ),
     );
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(10),
       child: SizedBox(
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         child: sponsor.logoUrl.isEmpty
             ? letter
             : Image.network(
@@ -689,45 +659,6 @@ class _SponsorAvatar extends StatelessWidget {
                     progress == null ? child : letter,
                 errorBuilder: (context, error, stack) => letter,
               ),
-      ),
-    );
-  }
-}
-
-class _PreviewRow extends StatelessWidget {
-  const _PreviewRow({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.visibility_outlined, color: colors.textSecondary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                AppLocalizations.of(
-                  context,
-                )!.tournamentManagementSponsorPreview,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-          ],
-        ),
       ),
     );
   }

@@ -17,6 +17,7 @@ class TournamentManageSheet extends StatelessWidget {
     this.actions,
     this.busy = false,
     this.heightFactor = 0.92,
+    this.bodyPadding = const EdgeInsets.fromLTRB(20, 8, 20, 16),
   }) : assert(heightFactor > 0 && heightFactor <= 1);
 
   /// Tiêu đề sheet.
@@ -39,6 +40,9 @@ class TournamentManageSheet extends StatelessWidget {
 
   /// Tỉ lệ chiều cao sheet so với màn hình.
   final double heightFactor;
+
+  /// Padding quanh thân cuộn (mặc định 20 hai bên).
+  final EdgeInsets bodyPadding;
 
   /// Mở sheet một dòng theo quy ước app: full-height control, drag handle
   /// (khi không busy), tối rộng 640, bo góc trên. Trả về kết quả `T?` khi
@@ -108,7 +112,7 @@ class TournamentManageSheet extends StatelessWidget {
                         Expanded(
                           child: SingleChildScrollView(
                             key: const ValueKey('tournament-manage-sheet-body'),
-                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                            padding: bodyPadding,
                             child: child,
                           ),
                         ),

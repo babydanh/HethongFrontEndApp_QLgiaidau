@@ -1,7 +1,7 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +55,9 @@ class _ResultsReconfirmCardState extends ConsumerState<ResultsReconfirmCard> {
       if (mounted) setState(() => _busy = false);
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -68,30 +70,31 @@ class _ResultsReconfirmCardState extends ConsumerState<ResultsReconfirmCard> {
       return const SizedBox.shrink();
     }
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 0),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colors.warning.withValues(alpha: 0.1),
+        color: colors.soft(LavishTone.warn),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.warning.withValues(alpha: 0.4)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
             l10n.lifecycleResultsReconfirmNeeded,
             style: TextStyle(
-              color: colors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: colors.pillText(LavishTone.warn),
             ),
           ),
-          const SizedBox(height: 8),
-          FilledButton(
-            key: const ValueKey('results-reconfirm-action'),
-            onPressed: _busy ? null : _confirm,
-            child: Text(l10n.lifecycleResultsReconfirmAction),
+          const SizedBox(height: 10),
+          LavishButton(
+            buttonKey: const ValueKey('results-reconfirm-action'),
+            label: l10n.lifecycleResultsReconfirmAction,
+            busy: _busy,
+            onPressed: _confirm,
           ),
         ],
       ),

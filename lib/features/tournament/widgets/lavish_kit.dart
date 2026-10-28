@@ -355,8 +355,11 @@ class LavishButton extends StatelessWidget {
     this.kind = LavishButtonKind.primary,
     this.icon,
     this.busy = false,
+    this.buttonKey,
   });
 
+  /// Key of the inner Material button (the widget key stays on the wrapper).
+  final Key? buttonKey;
   final String label;
   final VoidCallback? onPressed;
   final LavishButtonKind kind;
@@ -391,6 +394,7 @@ class LavishButton extends StatelessWidget {
     );
     if (kind == LavishButtonKind.primary) {
       return FilledButton(
+        key: buttonKey,
         onPressed: busy ? null : onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: LavishColors.accent,
@@ -410,6 +414,7 @@ class LavishButton extends StatelessWidget {
         ? LavishColors.bad
         : LavishColors.accent;
     return OutlinedButton(
+      key: buttonKey,
       onPressed: busy ? null : onPressed,
       style: OutlinedButton.styleFrom(
         backgroundColor: c.surface,
