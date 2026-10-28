@@ -884,12 +884,16 @@ class _TournamentScheduleCourtGridState
           // Bộ đếm tiến độ xếp lịch, như thanh công cụ của web.
           Icon(Icons.event_available_outlined, size: 16, color: colors.textMuted),
           const SizedBox(width: 6),
-          Text(
-            '${l10n.opsMatches} $placedCount/$totalCount',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
+          Flexible(
+            child: Text(
+              '${l10n.opsMatches} $placedCount/$totalCount',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+              ),
             ),
           ),
           const Spacer(),

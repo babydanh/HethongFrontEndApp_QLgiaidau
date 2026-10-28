@@ -98,6 +98,9 @@ void main() {
     final shooter = XemShooter(tester, binding);
 
     Future<void> openEndSheet(List<MatchModel> matches) async {
+      // Tear down the previous screen so its open sheet does not block the
+      // menu tap of the next one.
+      await tester.pumpWidget(const SizedBox.shrink());
       await shooter.pump(
         xemApp(
           overrides: [
