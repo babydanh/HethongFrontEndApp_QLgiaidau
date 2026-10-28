@@ -26,6 +26,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -616,6 +617,11 @@ void main() {
           matchesProvider(
             'tournament-1',
           ).overrideWith((ref) => Stream.value(<MatchModel>[])),
+          // The completed tournament reads the results snapshot (reconfirm card).
+          tournamentResultProvider((
+            tournamentId: 'tournament-1',
+            divisionId: null,
+          )).overrideWith((ref) => Stream.value(const {'awards': []})),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
@@ -648,6 +654,14 @@ void main() {
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('lifecycle-end-confirm')));
+    await tester.pumpAndSettle();
+    // The confirm button first asks for confirmation (states the consequence).
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text(l10n.lifecycleEndConfirm),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(lifecycleRepository.completedIds, ['tournament-1']);

@@ -13786,7 +13786,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get lifecycleEndTitle => 'Hoàn tất giải đấu';
+  String get lifecycleEndTitle => 'Xác nhận kết quả giải';
 
   @override
   String get lifecycleEndWarning =>
@@ -13822,7 +13822,45 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.';
 
   @override
-  String get lifecycleEndConfirm => 'Hoàn tất giải đấu';
+  String get lifecycleEndConditionsTitle => 'Điều kiện xác nhận';
+
+  @override
+  String get lifecycleEndPrizesTitle => 'Giải thưởng';
+
+  @override
+  String get lifecycleEndPodiumEmpty => 'Chưa xác định';
+
+  @override
+  String lifecycleEndBlockedReason(int live) {
+    return 'Chưa thể xác nhận: còn $live trận đang diễn ra.';
+  }
+
+  @override
+  String get lifecycleEndConfirmDialogTitle => 'Xác nhận kết quả giải?';
+
+  @override
+  String get lifecycleEndConfirmDialogMessage =>
+      'Giải sẽ chuyển sang trạng thái đã kết thúc và kết quả trở thành chính thức, hiển thị công khai. Ứng dụng không có thao tác mở lại giải sau khi xác nhận.';
+
+  @override
+  String get lifecycleResultsReconfirmNeeded =>
+      'Sơ đồ đã được sửa sau khi giải kết thúc. Hãy chốt lại kết quả giải.';
+
+  @override
+  String get lifecycleResultsReconfirmDialogTitle => 'Chốt lại kết quả giải?';
+
+  @override
+  String get lifecycleResultsReconfirmAction => 'Chốt lại kết quả';
+
+  @override
+  String get lifecycleResultsReconfirmDialogMessage =>
+      'Kết quả hiện tại của giải sẽ được chốt lại. Thao tác này không thay đổi sơ đồ.';
+
+  @override
+  String get lifecycleResultsReconfirmed => 'Đã chốt lại kết quả giải đấu.';
+
+  @override
+  String get lifecycleEndConfirm => 'Xác nhận kết quả';
 
   @override
   String get tournamentManagementCompleteTournament => 'Kết thúc giải';

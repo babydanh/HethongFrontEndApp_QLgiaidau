@@ -17,9 +17,9 @@
 
 ## 3. Màn 7 — Xác nhận kết quả giải
 
-- [ ] 3.1 Repository: `confirmTournamentResults(id)` gọi `POST /tournaments/:id/results/confirm`. Tiêu chí: `flutter test --no-pub test/tournament_management_repository_api_test.dart` → exit 0
+- [x] 3.1 Repository: `confirmTournamentResults(id)` gọi `POST /tournaments/:id/results/confirm`. Tiêu chí: `flutter test --no-pub test/tournament_management_repository_api_test.dart` → exit 0
   - Files: sửa `lib/domain/repositories/tournament_management_repository.dart`, `lib/data/repositories/api/api_tournament_management_repository.dart`; test `test/tournament_management_repository_api_test.dart`
-- [ ] 3.2 Sheet hoàn tất giải: podium hạng 1-3, khối giải thưởng, điều kiện, dòng đỏ khi bị chặn, hộp xác nhận nêu hậu quả. Tiêu chí: `flutter test --no-pub test/features/lifecycle_end_sheet_test.dart` → exit 0
+- [x] 3.2 Sheet hoàn tất giải: podium hạng 1-3, khối giải thưởng, điều kiện, dòng đỏ khi bị chặn, hộp xác nhận nêu hậu quả. Tiêu chí: `flutter test --no-pub test/features/lifecycle_end_sheet_test.dart` → exit 0
   - Files: sửa `lib/features/tournament/widgets/lifecycle_end_sheet.dart`, ARB; test `test/features/lifecycle_end_sheet_test.dart`
-- [ ] 3.3 Thẻ chốt lại kết quả (khi COMPLETED và `needsReconfirm`) ở hub quản lý. Tiêu chí: `flutter test --no-pub test/features/tournament_management_hub_screen_test.dart` → exit 0
-  - Files: sửa `lib/features/tournament/screens/tournament_management_hub_screen.dart`, ARB; test `test/features/tournament_management_hub_screen_test.dart`
+- [x] 3.3 Thẻ chốt lại kết quả (khi COMPLETED và `needsReconfirm`) ở hub quản lý. Tiêu chí: `flutter test --no-pub test/features/results_reconfirm_card_test.dart test/features/tournament_management_hub_screen_test.dart` → exit 0
+  - Files: tạo `lib/features/tournament/widgets/results_reconfirm_card.dart`; sửa `lib/features/tournament/screens/tournament_management_hub_screen.dart`, ARB; test `test/features/results_reconfirm_card_test.dart`, `test/features/tournament_management_hub_screen_test.dart`

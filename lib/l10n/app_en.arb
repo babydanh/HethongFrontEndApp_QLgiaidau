@@ -5538,7 +5538,7 @@
       "count": {"type": "int"}
     }
   },
-  "lifecycleEndTitle": "Complete tournament",
+  "lifecycleEndTitle": "Confirm tournament results",
   "lifecycleEndWarning": "Make sure all live matches are resolved before completing the tournament.",
   "lifecycleEndCheckMatches": "Completed matches: {completed}/{total}",
   "@lifecycleEndCheckMatches": {
@@ -5564,7 +5564,23 @@
   "lifecycleEndNoMatches": "There are no matches yet. You can still complete this tournament.",
   "lifecycleEndLoadingMatches": "Loading matches…",
   "lifecycleEndLoadMatchesError": "Could not load the match list. Close this and try again.",
-  "lifecycleEndConfirm": "Complete tournament",
+  "lifecycleEndConditionsTitle": "Conditions to confirm",
+  "lifecycleEndPrizesTitle": "Prizes",
+  "lifecycleEndPodiumEmpty": "Not decided",
+  "lifecycleEndBlockedReason": "Cannot confirm yet: {live} matches are still live.",
+  "@lifecycleEndBlockedReason": {
+    "placeholders": {
+      "live": { "type": "int" }
+    }
+  },
+  "lifecycleEndConfirmDialogTitle": "Confirm the tournament results?",
+  "lifecycleEndConfirmDialogMessage": "The tournament will be marked as completed and its results become official and public. The app has no action to reopen the tournament once confirmed.",
+  "lifecycleResultsReconfirmNeeded": "The bracket was edited after the tournament ended. Confirm the results again.",
+  "lifecycleResultsReconfirmDialogTitle": "Confirm the results again?",
+  "lifecycleResultsReconfirmAction": "Confirm results again",
+  "lifecycleResultsReconfirmDialogMessage": "The current results of the tournament will be confirmed again. The bracket is not changed.",
+  "lifecycleResultsReconfirmed": "Tournament results confirmed again.",
+  "lifecycleEndConfirm": "Confirm results",
   "tournamentManagementCompleteTournament": "End tournament",
   "tournamentManagementCompleteTournamentConfirm": "Are you sure you want to end this tournament?",
   "tournamentManagementLiveOperations": "Live operations",

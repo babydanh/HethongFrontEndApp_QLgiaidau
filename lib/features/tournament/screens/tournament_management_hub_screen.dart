@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/token_management_
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_reconfirm_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
@@ -304,6 +305,12 @@ class _TournamentManagementHubScreenState
                 _openSection(TournamentManagementSection.finance),
             onOpenAthletes: () =>
                 _tabController.animateTo(_HubTab.athletes.index),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: ResultsReconfirmCard(
+            tournamentId: tournament.id,
+            status: tournament.status,
           ),
         ),
         SliverOverlapAbsorber(

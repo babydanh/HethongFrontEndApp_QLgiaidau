@@ -5633,7 +5633,7 @@
       "count": {"type": "int"}
     }
   },
-  "lifecycleEndTitle": "Hoàn tất giải đấu",
+  "lifecycleEndTitle": "Xác nhận kết quả giải",
   "lifecycleEndWarning": "Hãy bảo đảm tất cả trận đang diễn ra đã được xử lý trước khi hoàn tất giải đấu.",
   "lifecycleEndCheckMatches": "Trận đã hoàn tất: {completed}/{total}",
   "@lifecycleEndCheckMatches": {
@@ -5659,7 +5659,23 @@
   "lifecycleEndNoMatches": "Chưa có trận đấu nào. Bạn vẫn có thể hoàn tất giải đấu này.",
   "lifecycleEndLoadingMatches": "Đang tải danh sách trận đấu…",
   "lifecycleEndLoadMatchesError": "Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.",
-  "lifecycleEndConfirm": "Hoàn tất giải đấu",
+  "lifecycleEndConditionsTitle": "Điều kiện xác nhận",
+  "lifecycleEndPrizesTitle": "Giải thưởng",
+  "lifecycleEndPodiumEmpty": "Chưa xác định",
+  "lifecycleEndBlockedReason": "Chưa thể xác nhận: còn {live} trận đang diễn ra.",
+  "@lifecycleEndBlockedReason": {
+    "placeholders": {
+      "live": { "type": "int" }
+    }
+  },
+  "lifecycleEndConfirmDialogTitle": "Xác nhận kết quả giải?",
+  "lifecycleEndConfirmDialogMessage": "Giải sẽ chuyển sang trạng thái đã kết thúc và kết quả trở thành chính thức, hiển thị công khai. Ứng dụng không có thao tác mở lại giải sau khi xác nhận.",
+  "lifecycleResultsReconfirmNeeded": "Sơ đồ đã được sửa sau khi giải kết thúc. Hãy chốt lại kết quả giải.",
+  "lifecycleResultsReconfirmDialogTitle": "Chốt lại kết quả giải?",
+  "lifecycleResultsReconfirmAction": "Chốt lại kết quả",
+  "lifecycleResultsReconfirmDialogMessage": "Kết quả hiện tại của giải sẽ được chốt lại. Thao tác này không thay đổi sơ đồ.",
+  "lifecycleResultsReconfirmed": "Đã chốt lại kết quả giải đấu.",
+  "lifecycleEndConfirm": "Xác nhận kết quả",
   "tournamentManagementCompleteTournament": "Kết thúc giải",
   "tournamentManagementCompleteTournamentConfirm": "Bạn có chắc muốn kết thúc giải đấu này?",
   "tournamentManagementLiveOperations": "Vận hành trực tiếp",

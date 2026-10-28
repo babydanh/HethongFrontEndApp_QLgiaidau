@@ -25057,7 +25057,7 @@ abstract class AppLocalizations {
   /// No description provided for @lifecycleEndTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Hoàn tất giải đấu'**
+  /// **'Xác nhận kết quả giải'**
   String get lifecycleEndTitle;
 
   /// No description provided for @lifecycleEndWarning.
@@ -25108,10 +25108,76 @@ abstract class AppLocalizations {
   /// **'Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.'**
   String get lifecycleEndLoadMatchesError;
 
+  /// No description provided for @lifecycleEndConditionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điều kiện xác nhận'**
+  String get lifecycleEndConditionsTitle;
+
+  /// No description provided for @lifecycleEndPrizesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải thưởng'**
+  String get lifecycleEndPrizesTitle;
+
+  /// No description provided for @lifecycleEndPodiumEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xác định'**
+  String get lifecycleEndPodiumEmpty;
+
+  /// No description provided for @lifecycleEndBlockedReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thể xác nhận: còn {live} trận đang diễn ra.'**
+  String lifecycleEndBlockedReason(int live);
+
+  /// No description provided for @lifecycleEndConfirmDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận kết quả giải?'**
+  String get lifecycleEndConfirmDialogTitle;
+
+  /// No description provided for @lifecycleEndConfirmDialogMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải sẽ chuyển sang trạng thái đã kết thúc và kết quả trở thành chính thức, hiển thị công khai. Ứng dụng không có thao tác mở lại giải sau khi xác nhận.'**
+  String get lifecycleEndConfirmDialogMessage;
+
+  /// No description provided for @lifecycleResultsReconfirmNeeded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sơ đồ đã được sửa sau khi giải kết thúc. Hãy chốt lại kết quả giải.'**
+  String get lifecycleResultsReconfirmNeeded;
+
+  /// No description provided for @lifecycleResultsReconfirmDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt lại kết quả giải?'**
+  String get lifecycleResultsReconfirmDialogTitle;
+
+  /// No description provided for @lifecycleResultsReconfirmAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt lại kết quả'**
+  String get lifecycleResultsReconfirmAction;
+
+  /// No description provided for @lifecycleResultsReconfirmDialogMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả hiện tại của giải sẽ được chốt lại. Thao tác này không thay đổi sơ đồ.'**
+  String get lifecycleResultsReconfirmDialogMessage;
+
+  /// No description provided for @lifecycleResultsReconfirmed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chốt lại kết quả giải đấu.'**
+  String get lifecycleResultsReconfirmed;
+
   /// No description provided for @lifecycleEndConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Hoàn tất giải đấu'**
+  /// **'Xác nhận kết quả'**
   String get lifecycleEndConfirm;
 
   /// No description provided for @tournamentManagementCompleteTournament.

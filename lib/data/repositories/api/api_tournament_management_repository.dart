@@ -649,6 +649,11 @@ class ApiTournamentManagementRepository
       _map(await _dio.post('/tournaments/$id/complete'));
 
   @override
+  Future<void> confirmTournamentResults(String id) async {
+    await _dio.post('/tournaments/$id/results/confirm');
+  }
+
+  @override
   Future<Map<String, dynamic>> publishTournament(String id) async =>
       _map(await _dio.post('/tournaments/$id/publish'));
 

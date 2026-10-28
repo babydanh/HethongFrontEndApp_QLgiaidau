@@ -1562,6 +1562,21 @@ void main() {
       ]);
     });
 
+    test('confirming results posts the results/confirm route once', () async {
+      backend.onPost('/tournaments/$tournamentId/results/confirm', {
+        'success': true,
+      });
+
+      await repository.confirmTournamentResults(tournamentId);
+
+      expect(backend.requests, hasLength(1));
+      expect(backend.requests.single.method, 'POST');
+      expect(
+        backend.requests.single.path,
+        '/tournaments/$tournamentId/results/confirm',
+      );
+    });
+
     test('reopen sends a new deadline only when one is given', () async {
       backend.onPost('/tournaments/$tournamentId/reopen-registration', {
         'status': 'REGISTRATION_OPEN',

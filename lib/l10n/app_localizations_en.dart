@@ -13831,7 +13831,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get lifecycleEndTitle => 'Complete tournament';
+  String get lifecycleEndTitle => 'Confirm tournament results';
 
   @override
   String get lifecycleEndWarning =>
@@ -13867,7 +13867,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not load the match list. Close this and try again.';
 
   @override
-  String get lifecycleEndConfirm => 'Complete tournament';
+  String get lifecycleEndConditionsTitle => 'Conditions to confirm';
+
+  @override
+  String get lifecycleEndPrizesTitle => 'Prizes';
+
+  @override
+  String get lifecycleEndPodiumEmpty => 'Not decided';
+
+  @override
+  String lifecycleEndBlockedReason(int live) {
+    return 'Cannot confirm yet: $live matches are still live.';
+  }
+
+  @override
+  String get lifecycleEndConfirmDialogTitle =>
+      'Confirm the tournament results?';
+
+  @override
+  String get lifecycleEndConfirmDialogMessage =>
+      'The tournament will be marked as completed and its results become official and public. The app has no action to reopen the tournament once confirmed.';
+
+  @override
+  String get lifecycleResultsReconfirmNeeded =>
+      'The bracket was edited after the tournament ended. Confirm the results again.';
+
+  @override
+  String get lifecycleResultsReconfirmDialogTitle =>
+      'Confirm the results again?';
+
+  @override
+  String get lifecycleResultsReconfirmAction => 'Confirm results again';
+
+  @override
+  String get lifecycleResultsReconfirmDialogMessage =>
+      'The current results of the tournament will be confirmed again. The bracket is not changed.';
+
+  @override
+  String get lifecycleResultsReconfirmed =>
+      'Tournament results confirmed again.';
+
+  @override
+  String get lifecycleEndConfirm => 'Confirm results';
 
   @override
   String get tournamentManagementCompleteTournament => 'End tournament';

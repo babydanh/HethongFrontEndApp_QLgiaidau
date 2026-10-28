@@ -3,9 +3,11 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -83,8 +85,9 @@ class TournamentEndChecklist {
 /// "trận đã hoàn tất X/Y" và "trận đang diễn ra còn lại", liệt kê từng trận
 /// LIVE kèm hạng mục chặn; còn trận LIVE thì nút kết thúc bị khoá (Web cũng
 /// chỉ chặn vì trận LIVE, trận chưa xong thì vẫn được kết thúc). Xác nhận gọi
-/// `POST /tournaments/:id/complete`; lỗi server hiển thị nguyên văn trong
-/// sheet. Phân quyền do backend chốt — organizer/co-organizer cũng mở được.
+/// `POST /tournaments/:id/complete` sau một hộp xác nhận nêu hậu quả; lỗi
+/// server hiển thị nguyên văn trong sheet. Đầu sheet có bục podium hạng 1-3
+/// (từ `GET /tournaments/:id/results`) và mô tả giải thưởng. Phân quyền do backend chốt — organizer/co-organizer cũng mở được.
 ///
 /// Stateful và bọc khung [TournamentManageSheet] trong `build` để `busy` đổi
 /// được bên trong sheet (giữ pattern `LifecycleOpeningSheet`).
@@ -120,6 +123,22 @@ class _LifecycleEndSheetState extends ConsumerState<LifecycleEndSheet> {
   bool _busy = false;
 
   String? _actionError;
+
+  /// The confirm button never completes on its own: the dialog states what
+  /// the tournament becomes first.
+  Future<void> _askThenConfirm() async {
+    if (_busy) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.lifecycleEndConfirmDialogTitle,
+      message: l10n.lifecycleEndConfirmDialogMessage,
+      confirmLabel: l10n.lifecycleEndConfirm,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    await _confirm();
+  }
 
   Future<void> _confirm() async {
     if (_busy) return;
@@ -157,13 +176,23 @@ class _LifecycleEndSheetState extends ConsumerState<LifecycleEndSheet> {
         ? null
         : TournamentEndChecklist.of(matches, widget.tournament.divisions);
     final blocked = checklist?.hasLiveMatches ?? true;
+    // A failed or pending results read just leaves the podium slots empty.
+    final results = ref
+        .watch(
+          tournamentResultProvider((
+            tournamentId: widget.tournament.id,
+            divisionId: null,
+          )),
+        )
+        .asData
+        ?.value;
     return TournamentManageSheet(
       title: l10n.lifecycleEndTitle,
       busy: _busy,
       actions: [
         FilledButton(
           key: const ValueKey('lifecycle-end-confirm'),
-          onPressed: (_busy || blocked) ? null : _confirm,
+          onPressed: (_busy || blocked) ? null : _askThenConfirm,
           child: Text(l10n.lifecycleEndConfirm),
         ),
         TextButton(
@@ -177,6 +206,7 @@ class _LifecycleEndSheetState extends ConsumerState<LifecycleEndSheet> {
         l10n,
         checklist: checklist,
         loadFailed: loadFailed,
+        podium: podiumTeamNames(results?['awards']),
       ),
     );
   }
@@ -186,11 +216,24 @@ class _LifecycleEndSheetState extends ConsumerState<LifecycleEndSheet> {
     AppLocalizations l10n, {
     required TournamentEndChecklist? checklist,
     required bool loadFailed,
+    required Map<int, String> podium,
   }) {
     final hasMatches = checklist?.hasMatches ?? false;
+    final prize = plainPrizeText(widget.tournament.prizeDescription);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _ResultsPodium(names: podium),
+        if (prize.isNotEmpty) _PrizeBlock(text: prize),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            l10n.lifecycleEndConditionsTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
         _EndWarning(text: l10n.lifecycleEndWarning),
         if (checklist != null) ...[
           _EndCheckRow(
@@ -227,6 +270,18 @@ class _LifecycleEndSheetState extends ConsumerState<LifecycleEndSheet> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 checklist.blockingDivisionNames.join(', '),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: context.colors.error,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          if (checklist.hasLiveMatches)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                l10n.lifecycleEndBlockedReason(checklist.liveMatches),
+                key: const ValueKey('lifecycle-end-blocked-reason'),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: context.colors.error,
                   fontWeight: FontWeight.w700,
@@ -415,6 +470,148 @@ class _EndError extends StatelessWidget {
         border: Border.all(color: colors.error.withValues(alpha: 0.35)),
       ),
       child: Text(text, style: TextStyle(color: colors.error)),
+    );
+  }
+}
+
+/// Team names of ranks 1 to 3 from the `awards` of the official results; a
+/// slot without a team is simply absent.
+Map<int, String> podiumTeamNames(Object? rawAwards) {
+  final names = <int, String>{};
+  if (rawAwards is! List) return names;
+  for (final award in rawAwards.whereType<Map<dynamic, dynamic>>()) {
+    final rank = (award['rank'] as num?)?.toInt() ?? 0;
+    final participant = award['participant'];
+    final team = participant is Map ? participant['teamName']?.toString() : null;
+    if (rank >= 1 && rank <= 3 && team != null && team.trim().isNotEmpty) {
+      names[rank] = team.trim();
+    }
+  }
+  return names;
+}
+
+/// The prize description is stored as rich text; the sheet shows it flat.
+String plainPrizeText(String? html) => (html ?? '')
+    .replaceAll(RegExp(r'<[^>]*>'), ' ')
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim();
+
+/// Podium of the three first ranks: silver, gold, bronze from left to right.
+class _ResultsPodium extends StatelessWidget {
+  const _ResultsPodium({required this.names});
+
+  final Map<int, String> names;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          for (final rank in const [2, 1, 3])
+            Expanded(
+              child: _PodiumSlot(rank: rank, name: names[rank]),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PodiumSlot extends StatelessWidget {
+  const _PodiumSlot({required this.rank, required this.name});
+
+  final int rank;
+  final String? name;
+
+  static const _medal = {
+    1: Color(0xFFF5B301),
+    2: Color(0xFF9AA5B1),
+    3: Color(0xFFCD7F32),
+  };
+  static const _stepHeight = {1: 56.0, 2: 40.0, 3: 28.0};
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final tone = _medal[rank] ?? colors.textMuted;
+    return Column(
+      key: ValueKey('lifecycle-end-podium-$rank'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.emoji_events_rounded, color: tone, size: 28),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Text(
+            name ?? l10n.lifecycleEndPodiumEmpty,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: name == null ? colors.textMuted : colors.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Container(
+          height: _stepHeight[rank],
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: tone.withValues(alpha: 0.18),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            border: Border.all(color: tone.withValues(alpha: 0.5)),
+          ),
+          child: Text(
+            '$rank',
+            style: TextStyle(color: tone, fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Read-only prize description (edited in the information tab).
+class _PrizeBlock extends StatelessWidget {
+  const _PrizeBlock({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.bgSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppLocalizations.of(context)!.lifecycleEndPrizesTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            text,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colors.textSecondary),
+          ),
+        ],
+      ),
     );
   }
 }

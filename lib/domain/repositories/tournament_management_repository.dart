@@ -254,6 +254,10 @@ extension TournamentSettingsRepositoryAccess on TournamentManagementRepository {
 abstract interface class TournamentLifecycleRepository {
   Future<Map<String, dynamic>> startTournament(String id);
   Future<Map<String, dynamic>> completeTournament(String id);
+
+  /// `POST /tournaments/:id/results/confirm`: the organizer confirms the
+  /// results again after the bracket was edited (clears `needsReconfirm`).
+  Future<void> confirmTournamentResults(String id);
 }
 
 extension TournamentLifecycleRepositoryAccess
@@ -263,4 +267,7 @@ extension TournamentLifecycleRepositoryAccess
 
   Future<Map<String, dynamic>> completeTournament(String id) =>
       (this as TournamentLifecycleRepository).completeTournament(id);
+
+  Future<void> confirmTournamentResults(String id) =>
+      (this as TournamentLifecycleRepository).confirmTournamentResults(id);
 }
