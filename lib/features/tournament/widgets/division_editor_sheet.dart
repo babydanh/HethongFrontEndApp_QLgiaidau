@@ -5,6 +5,8 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_accordion.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/format_illustration_dialog.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/swiss_config_editor.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -12,6 +14,7 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 // ─── Nhận dạng: 7 lựa chọn định dạng của Web (match-format-options.ts) ───
 
@@ -329,6 +332,17 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
 
   bool _busy = false;
   bool _eloInvalid = false;
+
+  /// Id of the one open accordion section (`basic` opens first).
+  String _openSection = 'basic';
+
+  /// Rebuilds the body (and the one-line summaries) while typing.
+  late final Listenable _summaryInputs = Listenable.merge([
+    _max,
+    _minElo,
+    _maxElo,
+    _fee,
+  ]);
   String? _errorText;
 
   @override
@@ -483,66 +497,193 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           child: Text(l10n.tournamentManagementCancel),
         ),
       ],
-      child: _buildBody(context, l10n),
+      child: ListenableBuilder(
+        listenable: _summaryInputs,
+        builder: (context, _) => _buildBody(context, l10n),
+      ),
     );
   }
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      _buildIdentity(l10n),
-      const SizedBox(height: 8),
-      SwitchListTile(
-        key: const ValueKey('division-editor-standard-rules'),
-        contentPadding: EdgeInsets.zero,
-        title: Text(
-          l10n.divisionEditorStandardRules,
-          style: TextStyle(color: context.colors.textPrimary),
+  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
+    final hasStage =
+        _bracketType == 'ROUND_ROBIN' ||
+        _bracketType == 'GROUP_STAGE_KNOCKOUT' ||
+        _bracketType == 'SWISS';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.lockContent)
+          Container(
+            key: const ValueKey('division-editor-locked-notice'),
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 18,
+                  color: context.colors.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.divisionEditorLockedNotice,
+                    style: TextStyle(color: context.colors.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (_errorText != null)
+          Padding(
+            key: const ValueKey('division-editor-error'),
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              _errorText!,
+              style: TextStyle(color: context.colors.error),
+            ),
+          ),
+        _section(
+          id: 'basic',
+          title: l10n.divisionEditorAccBasic,
+          summary: _basicSummary(l10n),
+          child: _buildIdentity(l10n),
         ),
-        value: !_isLiteMode,
-        onChanged: _busy || widget.lockContent
-            ? null
-            : (value) => setState(() => _isLiteMode = !value),
-      ),
-      _buildLimits(l10n),
-      const SizedBox(height: 12),
-      if (_errorText != null)
-        Padding(
-          key: const ValueKey('division-editor-error'),
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Text(
-            _errorText!,
-            style: TextStyle(color: context.colors.error),
+        _section(
+          id: 'rules',
+          title: l10n.divisionEditorAccRules,
+          summary: _isLiteMode
+              ? l10n.divisionEditorAccRulesLite
+              : l10n.divisionEditorAccRulesStrict(_pointsPerSet, _setsToWin),
+          locked: widget.lockContent,
+          child: _buildRulesSection(context, l10n),
+        ),
+        _section(
+          id: 'elo',
+          title: l10n.divisionEditorAccElo,
+          summary: _eloSummary(l10n),
+          child: _buildLimits(l10n),
+        ),
+        if (hasStage)
+          _section(
+            id: 'stage',
+            title: _bracketLabel(l10n, _bracketType),
+            summary: _stageSummary(l10n),
+            locked: widget.lockContent && _bracketType != 'SWISS',
+            child: _buildStageSection(l10n),
+          ),
+        DivisionEditorAccordionSection(
+          id: 'illustration',
+          title: l10n.divisionEditorAccIllustration,
+          summary: '',
+          expanded: false,
+          onToggle: () => showFormatIllustrationDialog(
+            context,
+            bracketType: _bracketType,
+            formatName: _bracketLabel(l10n, _bracketType),
           ),
         ),
-      // Khối luật chỉ mở khi tắt Lite hoặc thể thức có cấu hình riêng
-      // (đối chiếu `rulesPaneOpen` của Web; Lite giữ nguyên cấu hình mặc định).
-      if (!_isLiteMode ||
-          _bracketType == 'ROUND_ROBIN' ||
-          _bracketType == 'GROUP_STAGE_KNOCKOUT' ||
-          _bracketType == 'SWISS') ...[
-        Text(
-          l10n.divisionEditorRulesPaneTitle,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: context.colors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (!_isLiteMode) _buildStrictRules(l10n),
-        if (_bracketType == 'ROUND_ROBIN') _buildRoundRobin(l10n),
-        if (_bracketType == 'GROUP_STAGE_KNOCKOUT') _buildGroupStage(l10n),
-        if (_bracketType == 'SWISS')
-          SwissConfigEditor(
-            value: _swiss,
-            teamCount: _effectiveTeamCount,
-            minPlayedRounds: widget.swissMinPlayedRounds,
-            enabled: !_busy,
-            onChanged: (value) => _swiss = value,
-          ),
       ],
-    ],
+    );
+  }
+
+  Widget _section({
+    required String id,
+    required String title,
+    required String summary,
+    required Widget child,
+    bool locked = false,
+  }) => DivisionEditorAccordionSection(
+    id: id,
+    title: title,
+    summary: summary,
+    locked: locked,
+    expanded: _openSection == id,
+    onToggle: () => setState(() => _openSection = id),
+    child: child,
   );
+
+  Widget _buildRulesSection(BuildContext context, AppLocalizations l10n) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SwitchListTile(
+            key: const ValueKey('division-editor-standard-rules'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              l10n.divisionEditorStandardRules,
+              style: TextStyle(color: context.colors.textPrimary),
+            ),
+            value: !_isLiteMode,
+            onChanged: _busy || widget.lockContent
+                ? null
+                : (value) => setState(() => _isLiteMode = !value),
+          ),
+          if (!_isLiteMode) _buildStrictRules(l10n),
+        ],
+      );
+
+  Widget _buildStageSection(AppLocalizations l10n) => switch (_bracketType) {
+    'ROUND_ROBIN' => _buildRoundRobin(l10n),
+    'GROUP_STAGE_KNOCKOUT' => _buildGroupStage(l10n),
+    _ => SwissConfigEditor(
+      value: _swiss,
+      teamCount: _effectiveTeamCount,
+      minPlayedRounds: widget.swissMinPlayedRounds,
+      enabled: !_busy,
+      onChanged: (value) => _swiss = value,
+    ),
+  };
+
+  // ─── Tóm tắt một dòng của từng mục ───
+
+  /// Capacity text shared by the basic and ELO summaries.
+  String _capacityText(AppLocalizations l10n) {
+    final parsed = _parseField(_max);
+    return _limitEnabled && parsed != null && parsed > 0
+        ? l10n.divisionEditorAccTeams(parsed)
+        : l10n.divisionEditorAccNoLimit;
+  }
+
+  String _basicSummary(AppLocalizations l10n) {
+    final fee = divisionFeePayload(_fee.text, widget.tournament.entryFee);
+    final amount = fee.entryFeeOverrideEnabled
+        ? (fee.entryFee ?? 0)
+        : (widget.tournament.entryFee ?? 0);
+    final feeText = amount <= 0
+        ? l10n.divisionEditorAccFree
+        : '${NumberFormat.decimalPattern('vi').format(amount)}đ';
+    return [
+      _bracketLabel(l10n, _bracketType),
+      _capacityText(l10n),
+      feeText,
+    ].join(' · ');
+  }
+
+  String _eloSummary(AppLocalizations l10n) {
+    final minElo = _eloEnabled ? _parseField(_minElo) : null;
+    final maxElo = _eloEnabled ? _parseField(_maxElo) : null;
+    final limit = _capacityText(l10n);
+    if (minElo == null && maxElo == null) {
+      return l10n.divisionEditorAccEloNone(limit);
+    }
+    return l10n.divisionEditorAccEloRange(limit, maxElo ?? '∞', minElo ?? 0);
+  }
+
+  String _stageSummary(AppLocalizations l10n) => switch (_bracketType) {
+    'ROUND_ROBIN' => l10n.divisionEditorAccRounds(_rrRounds),
+    'GROUP_STAGE_KNOCKOUT' => l10n.divisionEditorAccGroups(
+      _teamsAdvancing,
+      _numGroups,
+    ),
+    _ => l10n.divisionEditorAccSwissRounds(_swiss.totalRounds),
+  };
 
   // ─── Nhận dạng ───
 
@@ -655,11 +796,6 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l10n.divisionEditorLimitsTitle,
-          style: _sectionTitleStyle(context),
-        ),
-        const SizedBox(height: 4),
         CheckboxListTile(
           key: const ValueKey('division-editor-limit-switch'),
           contentPadding: EdgeInsets.zero,
@@ -1308,7 +1444,10 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     final invalidElo =
         _eloEnabled && minElo != null && maxElo != null && minElo > maxElo;
     if (invalidElo) {
-      setState(() => _eloInvalid = invalidElo);
+      setState(() {
+        _eloInvalid = invalidElo;
+        _openSection = 'elo';
+      });
       return;
     }
     setState(() {

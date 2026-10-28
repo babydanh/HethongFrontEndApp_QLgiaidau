@@ -29192,6 +29192,162 @@ abstract class AppLocalizations {
   /// **'Cấu hình luật'**
   String get divisionEditorRulesPaneTitle;
 
+  /// No description provided for @divisionEditorAccBasic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cơ bản'**
+  String get divisionEditorAccBasic;
+
+  /// No description provided for @divisionEditorAccRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật vòng'**
+  String get divisionEditorAccRules;
+
+  /// No description provided for @divisionEditorAccElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ràng buộc ELO'**
+  String get divisionEditorAccElo;
+
+  /// No description provided for @divisionEditorAccIllustration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem minh hoạ thể thức'**
+  String get divisionEditorAccIllustration;
+
+  /// No description provided for @divisionEditorAccTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đội'**
+  String divisionEditorAccTeams(Object count);
+
+  /// No description provided for @divisionEditorAccNoLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn'**
+  String get divisionEditorAccNoLimit;
+
+  /// No description provided for @divisionEditorAccFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get divisionEditorAccFree;
+
+  /// No description provided for @divisionEditorAccRulesLite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật nhanh (mặc định)'**
+  String get divisionEditorAccRulesLite;
+
+  /// No description provided for @divisionEditorAccRulesStrict.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng {sets} ván · {points} điểm'**
+  String divisionEditorAccRulesStrict(Object points, Object sets);
+
+  /// No description provided for @divisionEditorAccEloRange.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO {min} – {max} · {limit}'**
+  String divisionEditorAccEloRange(Object limit, Object max, Object min);
+
+  /// No description provided for @divisionEditorAccEloNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn ELO · {limit}'**
+  String divisionEditorAccEloNone(Object limit);
+
+  /// No description provided for @divisionEditorAccGroups.
+  ///
+  /// In vi, this message translates to:
+  /// **'{groups} bảng · {advancing} đội đi tiếp'**
+  String divisionEditorAccGroups(Object advancing, Object groups);
+
+  /// No description provided for @divisionEditorAccRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} lượt'**
+  String divisionEditorAccRounds(Object count);
+
+  /// No description provided for @divisionEditorAccSwissRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} vòng'**
+  String divisionEditorAccSwissRounds(Object count);
+
+  /// No description provided for @divisionEditorLockedNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này đã có sơ đồ thi đấu nên không đổi được thể thức và luật vòng. Vẫn sửa được những mục còn mở.'**
+  String get divisionEditorLockedNotice;
+
+  /// No description provided for @formatIllustrationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Minh hoạ: {name}'**
+  String formatIllustrationTitle(Object name);
+
+  /// No description provided for @formatIllustrationSingleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua một trận là bị loại, người thắng đi tiếp đến chung kết.'**
+  String get formatIllustrationSingleEliminationDescription;
+
+  /// No description provided for @formatIllustrationSingleEliminationSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 8 người bốc thăm vào sơ đồ: tứ kết 4 cặp, người thắng vào bán kết rồi chung kết, không có trận tranh hạng ba.'**
+  String get formatIllustrationSingleEliminationSummary;
+
+  /// No description provided for @formatIllustrationRoundRobinDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi người gặp tất cả người còn lại, nhiều điểm nhất xếp đầu.'**
+  String get formatIllustrationRoundRobinDescription;
+
+  /// No description provided for @formatIllustrationRoundRobinSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 5 người đấu 10 trận: mỗi lượt 2 trận, một người nghỉ. Thắng 3 điểm, hoà 1, thua 0 (mặc định); ai nhiều điểm nhất đứng đầu.'**
+  String get formatIllustrationRoundRobinSummary;
+
+  /// No description provided for @formatIllustrationDoubleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua lần đầu xuống nhánh thua, thua lần hai mới bị loại.'**
+  String get formatIllustrationDoubleEliminationDescription;
+
+  /// No description provided for @formatIllustrationDoubleEliminationSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 4 người. Thua lần đầu ở nhánh thắng thì xuống nhánh thua; thua lần hai thì bị loại. Người thắng chung kết nhánh thắng gặp người thắng chung kết nhánh thua ở chung kết tổng (một trận, không đá lại).'**
+  String get formatIllustrationDoubleEliminationSummary;
+
+  /// No description provided for @formatIllustrationGroupStageDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đấu vòng tròn trong bảng, những người đứng đầu mỗi bảng vào loại trực tiếp.'**
+  String get formatIllustrationGroupStageDescription;
+
+  /// No description provided for @formatIllustrationGroupStageSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 8 người chia 2 bảng. Mỗi bảng đấu vòng tròn, 2 người đầu vào bán kết chéo (A1 gặp B2, B1 gặp A2), rồi chung kết. Số người đi tiếp do BTC đặt.'**
+  String get formatIllustrationGroupStageSummary;
+
+  /// No description provided for @formatIllustrationSwissDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi vòng ghép người cùng điểm, không gặp lại, không ai bị loại.'**
+  String get formatIllustrationSwissDescription;
+
+  /// No description provided for @formatIllustrationSwissSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 8 người, 3 vòng. Vòng 1 ghép theo hạt giống: 1 gặp 5, 2 gặp 6, 3 gặp 7, 4 gặp 8. Từ vòng 2, người cùng điểm gặp nhau và không gặp lại đối thủ cũ. Bằng điểm thì xét tổng điểm các đối thủ đã gặp.'**
+  String get formatIllustrationSwissSummary;
+
   /// No description provided for @divisionEditorPickleballMode.
   ///
   /// In vi, this message translates to:

@@ -16163,6 +16163,111 @@ class AppLocalizationsVi extends AppLocalizations {
   String get divisionEditorRulesPaneTitle => 'Cấu hình luật';
 
   @override
+  String get divisionEditorAccBasic => 'Cơ bản';
+
+  @override
+  String get divisionEditorAccRules => 'Luật vòng';
+
+  @override
+  String get divisionEditorAccElo => 'Ràng buộc ELO';
+
+  @override
+  String get divisionEditorAccIllustration => 'Xem minh hoạ thể thức';
+
+  @override
+  String divisionEditorAccTeams(Object count) {
+    return '$count đội';
+  }
+
+  @override
+  String get divisionEditorAccNoLimit => 'Không giới hạn';
+
+  @override
+  String get divisionEditorAccFree => 'Miễn phí';
+
+  @override
+  String get divisionEditorAccRulesLite => 'Luật nhanh (mặc định)';
+
+  @override
+  String divisionEditorAccRulesStrict(Object points, Object sets) {
+    return 'Thắng $sets ván · $points điểm';
+  }
+
+  @override
+  String divisionEditorAccEloRange(Object limit, Object max, Object min) {
+    return 'ELO $min – $max · $limit';
+  }
+
+  @override
+  String divisionEditorAccEloNone(Object limit) {
+    return 'Không giới hạn ELO · $limit';
+  }
+
+  @override
+  String divisionEditorAccGroups(Object advancing, Object groups) {
+    return '$groups bảng · $advancing đội đi tiếp';
+  }
+
+  @override
+  String divisionEditorAccRounds(Object count) {
+    return '$count lượt';
+  }
+
+  @override
+  String divisionEditorAccSwissRounds(Object count) {
+    return '$count vòng';
+  }
+
+  @override
+  String get divisionEditorLockedNotice =>
+      'Nội dung này đã có sơ đồ thi đấu nên không đổi được thể thức và luật vòng. Vẫn sửa được những mục còn mở.';
+
+  @override
+  String formatIllustrationTitle(Object name) {
+    return 'Minh hoạ: $name';
+  }
+
+  @override
+  String get formatIllustrationSingleEliminationDescription =>
+      'Thua một trận là bị loại, người thắng đi tiếp đến chung kết.';
+
+  @override
+  String get formatIllustrationSingleEliminationSummary =>
+      'Ví dụ 8 người bốc thăm vào sơ đồ: tứ kết 4 cặp, người thắng vào bán kết rồi chung kết, không có trận tranh hạng ba.';
+
+  @override
+  String get formatIllustrationRoundRobinDescription =>
+      'Mỗi người gặp tất cả người còn lại, nhiều điểm nhất xếp đầu.';
+
+  @override
+  String get formatIllustrationRoundRobinSummary =>
+      'Ví dụ 5 người đấu 10 trận: mỗi lượt 2 trận, một người nghỉ. Thắng 3 điểm, hoà 1, thua 0 (mặc định); ai nhiều điểm nhất đứng đầu.';
+
+  @override
+  String get formatIllustrationDoubleEliminationDescription =>
+      'Thua lần đầu xuống nhánh thua, thua lần hai mới bị loại.';
+
+  @override
+  String get formatIllustrationDoubleEliminationSummary =>
+      'Ví dụ 4 người. Thua lần đầu ở nhánh thắng thì xuống nhánh thua; thua lần hai thì bị loại. Người thắng chung kết nhánh thắng gặp người thắng chung kết nhánh thua ở chung kết tổng (một trận, không đá lại).';
+
+  @override
+  String get formatIllustrationGroupStageDescription =>
+      'Đấu vòng tròn trong bảng, những người đứng đầu mỗi bảng vào loại trực tiếp.';
+
+  @override
+  String get formatIllustrationGroupStageSummary =>
+      'Ví dụ 8 người chia 2 bảng. Mỗi bảng đấu vòng tròn, 2 người đầu vào bán kết chéo (A1 gặp B2, B1 gặp A2), rồi chung kết. Số người đi tiếp do BTC đặt.';
+
+  @override
+  String get formatIllustrationSwissDescription =>
+      'Mỗi vòng ghép người cùng điểm, không gặp lại, không ai bị loại.';
+
+  @override
+  String get formatIllustrationSwissSummary =>
+      'Ví dụ 8 người, 3 vòng. Vòng 1 ghép theo hạt giống: 1 gặp 5, 2 gặp 6, 3 gặp 7, 4 gặp 8. Từ vòng 2, người cùng điểm gặp nhau và không gặp lại đối thủ cũ. Bằng điểm thì xét tổng điểm các đối thủ đã gặp.';
+
+  @override
   String get divisionEditorPickleballMode => 'Chế độ tính điểm';
 
   @override
