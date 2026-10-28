@@ -284,6 +284,8 @@ void main() {
     );
 
     // Mở không gian toàn màn hình rồi chọn vùng và xác nhận ở đó.
+    await tester.tap(find.byKey(const ValueKey('schedule-more-menu')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-grid-fullscreen')));
     await tester.pumpAndSettle();
     expect(find.byType(ScheduleFullscreenScreen), findsOneWidget);
@@ -327,9 +329,9 @@ void main() {
     await _pump(tester);
     expect(find.byType(ScheduleFullscreenScreen), findsNothing);
 
-    final button = find.byKey(const ValueKey('court-grid-fullscreen'));
-    await tester.ensureVisible(button);
-    await tester.tap(button);
+    await tester.tap(find.byKey(const ValueKey('schedule-more-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('court-grid-fullscreen')));
     await tester.pumpAndSettle();
 
     // Không gian toàn màn hình là màn riêng, có lưới bên trong.
