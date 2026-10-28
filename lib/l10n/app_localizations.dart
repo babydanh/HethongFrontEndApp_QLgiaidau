@@ -31050,6 +31050,78 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã đổi key. Quét QR mới để phát lại.'**
   String get tournamentStreamKeyRotated;
+
+  /// No description provided for @resultsBoard_round.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng'**
+  String get resultsBoard_round;
+
+  /// No description provided for @resultsBoard_roundOption.
+  ///
+  /// In vi, this message translates to:
+  /// **'{label} · {pending} chờ'**
+  String resultsBoard_roundOption(String label, int pending);
+
+  /// No description provided for @resultsBoard_finished.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xong'**
+  String get resultsBoard_finished;
+
+  /// No description provided for @resultsBoard_upcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp tới'**
+  String get resultsBoard_upcoming;
+
+  /// No description provided for @resultsBoard_untimed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có giờ · {round} · {count}'**
+  String resultsBoard_untimed(String round, int count);
+
+  /// No description provided for @resultsBoard_empty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận nào ở hạng mục này'**
+  String get resultsBoard_empty;
+
+  /// No description provided for @resultsBoard_waitingTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ đối thủ'**
+  String get resultsBoard_waitingTeams;
+
+  /// No description provided for @resultsBoard_schedule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp lịch'**
+  String get resultsBoard_schedule;
+
+  /// No description provided for @resultsBoard_enterScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập điểm'**
+  String get resultsBoard_enterScore;
+
+  /// No description provided for @matchSchedule_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp lịch trận'**
+  String get matchSchedule_title;
+
+  /// No description provided for @matchSchedule_save.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get matchSchedule_save;
+
+  /// No description provided for @matchSchedule_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lưu được lịch. Kiểm tra mạng rồi thử lại.'**
+  String get matchSchedule_error;
 }
 
 class _AppLocalizationsDelegate
