@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -169,7 +170,14 @@ void main() {
     final l10n = _l10n(tester);
 
     final toggle = find.byKey(const ValueKey('hide-featured-card-text'));
-    expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+    expect(
+      tester
+          .widget<LavishSwitch>(
+            find.descendant(of: toggle, matching: find.byType(LavishSwitch)),
+          )
+          .value,
+      isTrue,
+    );
     await tester.ensureVisible(toggle);
     await tester.pumpAndSettle();
     await tester.tap(toggle);

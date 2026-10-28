@@ -5182,6 +5182,8 @@
   "manageInfoGroupContact": "Contact",
   "manageInfoGroupCollapse": "Collapse",
   "manageInfoGroupExpand": "Open",
+  "tournamentManagementImageUploaded": "Uploaded",
+  "tournamentManagementImageMissing": "None yet",
   "manageInfoPrizeLabel": "1st, 2nd and 3rd place",
   "manageInfoSaveChanges": "Save changes",
   "tournamentManagementCourtCameraSheetTitle": "Camera · {court}",

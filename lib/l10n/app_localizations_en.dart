@@ -12604,6 +12604,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageInfoGroupExpand => 'Open';
 
   @override
+  String get tournamentManagementImageUploaded => 'Uploaded';
+
+  @override
+  String get tournamentManagementImageMissing => 'None yet';
+
+  @override
   String get manageInfoPrizeLabel => '1st, 2nd and 3rd place';
 
   @override

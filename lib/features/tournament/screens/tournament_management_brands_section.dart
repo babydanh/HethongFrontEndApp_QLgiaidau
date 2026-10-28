@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,7 +71,6 @@ class _TournamentManagementBrandsSectionState
           actionLabel: l10n.tournamentManagementUploadLogo,
           onUpload: () => _uploadBrandImage(isLogo: true),
         ),
-        const SizedBox(height: 12),
         _BrandImageTile(
           label: l10n.tournamentManagementBanner,
           url: _bannerUrl,
@@ -264,6 +264,8 @@ class _TournamentManagementBrandsSectionState
   }
 }
 
+/// Design 16 `.li` row: thumbnail (or icon box), label, "Đã tải lên / Chưa có"
+/// and an upload arrow; the whole row opens the picker.
 class _BrandImageTile extends StatelessWidget {
   const _BrandImageTile({
     required this.label,
@@ -282,48 +284,36 @@ class _BrandImageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: 76,
-              height: 64,
-              child: url?.trim().isNotEmpty == true
-                  ? Image.network(
-                      resolveTournamentManagementImageUrl(url!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) =>
-                          Icon(icon, color: colors.textMuted, size: 30),
-                    )
-                  : Icon(icon, color: colors.textMuted, size: 30),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
+    final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
+    final hasImage = url?.trim().isNotEmpty == true;
+    return LavishRow(
+      leading: hasImage
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 34,
+                height: 34,
+                child: Image.network(
+                  resolveTournamentManagementImageUrl(url!),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) =>
+                      LavishIconBox(child: Icon(icon)),
+                ),
               ),
-            ),
-          ),
-          IconButton(
-            onPressed: isBusy ? null : onUpload,
-            tooltip: actionLabel,
-            icon: const Icon(Icons.upload_rounded),
-          ),
-        ],
-      ),
+            )
+          : LavishIconBox(child: Icon(icon)),
+      title: label,
+      subtitle: hasImage
+          ? l10n.tournamentManagementImageUploaded
+          : l10n.tournamentManagementImageMissing,
+      onTap: isBusy ? null : onUpload,
+      trailing: [
+        Tooltip(
+          message: actionLabel,
+          child: Icon(Icons.upload_rounded, size: 20, color: colors.faint),
+        ),
+      ],
     );
   }
 }

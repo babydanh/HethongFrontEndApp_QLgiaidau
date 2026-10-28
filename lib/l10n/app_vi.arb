@@ -5229,6 +5229,8 @@
   "manageInfoGroupContact": "Liên hệ",
   "manageInfoGroupCollapse": "Thu gọn",
   "manageInfoGroupExpand": "Mở",
+  "tournamentManagementImageUploaded": "Đã tải lên",
+  "tournamentManagementImageMissing": "Chưa có",
   "manageInfoPrizeLabel": "Hạng nhất, nhì, ba",
   "manageInfoSaveChanges": "Lưu thay đổi",
   "tournamentManagementCourtCameraSheetTitle": "Camera · {court}",

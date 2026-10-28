@@ -479,7 +479,7 @@ class _TournamentSettingsFormState
       keyboardType: TextInputType.phone,
       decoration: InputDecoration(
         labelText: l10n.contactPhone,
-        border: const OutlineInputBorder(),
+        border: _fieldBorder(context),
       ),
     ),
     if (!_contactIsManual) ...[
@@ -490,7 +490,7 @@ class _TournamentSettingsFormState
         keyboardType: TextInputType.emailAddress,
         decoration: InputDecoration(
           labelText: l10n.contactEmail,
-          border: const OutlineInputBorder(),
+          border: _fieldBorder(context),
         ),
       ),
     ],
@@ -527,13 +527,27 @@ class _TournamentSettingsFormState
       l10n.manageSettingsRegistrationSectionDescription,
   };
 
+  void _setHideCardText(bool value) {
+    _hideFeaturedCardText = value;
+    _syncDirty();
+  }
+
+  /// Design `.field`: 12dp radius, 1.5dp neutral border.
+  OutlineInputBorder _fieldBorder(BuildContext context) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(
+      color: LavishColors.of(context).chipLine,
+      width: 1.5,
+    ),
+  );
+
   List<Widget> _generalFields(AppLocalizations l10n) => [
       TextField(
         controller: _nameController,
         textInputAction: TextInputAction.next,
         decoration: InputDecoration(
           labelText: l10n.tournamentManagementName,
-          border: const OutlineInputBorder(),
+          border: _fieldBorder(context),
         ),
       ),
       const SizedBox(height: 12),
@@ -551,20 +565,18 @@ class _TournamentSettingsFormState
         },
       ),
       const SizedBox(height: 12),
-      SwitchListTile(
+      // Design 16: `.li` row with the green switch on the right.
+      LavishRow(
         key: const ValueKey('hide-featured-card-text'),
-        contentPadding: EdgeInsets.zero,
-        value: _hideFeaturedCardText,
-        title: Text(l10n.tournamentManagementHideFeaturedCardText),
-        subtitle: Text(
-          l10n.tournamentManagementHideFeaturedCardTextDescription,
-        ),
-        onChanged: _isSaving
-            ? null
-            : (value) {
-                _hideFeaturedCardText = value;
-                _syncDirty();
-              },
+        title: l10n.tournamentManagementHideFeaturedCardText,
+        subtitle: l10n.tournamentManagementHideFeaturedCardTextDescription,
+        onTap: _isSaving ? null : () => _setHideCardText(!_hideFeaturedCardText),
+        trailing: [
+          LavishSwitch(
+            value: _hideFeaturedCardText,
+            onChanged: _isSaving ? null : _setHideCardText,
+          ),
+        ],
       ),
   ];
 

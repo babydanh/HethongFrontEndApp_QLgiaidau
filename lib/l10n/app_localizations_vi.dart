@@ -12564,6 +12564,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get manageInfoGroupExpand => 'Mở';
 
   @override
+  String get tournamentManagementImageUploaded => 'Đã tải lên';
+
+  @override
+  String get tournamentManagementImageMissing => 'Chưa có';
+
+  @override
   String get manageInfoPrizeLabel => 'Hạng nhất, nhì, ba';
 
   @override

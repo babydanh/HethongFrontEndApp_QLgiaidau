@@ -22864,6 +22864,18 @@ abstract class AppLocalizations {
   /// **'Mở'**
   String get manageInfoGroupExpand;
 
+  /// No description provided for @tournamentManagementImageUploaded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tải lên'**
+  String get tournamentManagementImageUploaded;
+
+  /// No description provided for @tournamentManagementImageMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có'**
+  String get tournamentManagementImageMissing;
+
   /// No description provided for @manageInfoPrizeLabel.
   ///
   /// In vi, this message translates to:
