@@ -999,7 +999,42 @@ class _ParticipantCard extends StatelessWidget {
     );
     final nameStyle = TextStyle(
       color: colors.textPrimary,
+      fontSize: 13,
       fontWeight: FontWeight.w700,
+    );
+    // Design 2: status and payment sit on one line under the name.
+    final showPayment = (participant.entryFee ?? 0) > 0;
+    final subtitle = Row(
+      children: [
+        Text(
+          statusLabel,
+          style: TextStyle(
+            color: statusColor,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        if (showPayment) ...[
+          Text(
+            ' · ',
+            style: TextStyle(color: colors.textMuted, fontSize: 11.5),
+          ),
+          Flexible(
+            child: Text(
+              participant.isPaid
+                  ? l10n.participantDetailPaid
+                  : l10n.participantDetailUnpaid,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: participant.isPaid ? colors.success : colors.error,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
     final header = Row(
       children: [
@@ -1008,37 +1043,34 @@ class _ParticipantCard extends StatelessWidget {
             userId: lead.userId,
             name: lead.fullName,
             imageUrl: lead.avatarUrl,
-            size: 34,
+            size: 38,
           )
         else
-          const SizedBox(width: 34, height: 44),
+          const SizedBox(width: 38, height: 44),
         const SizedBox(width: 8),
         Expanded(
-          child: nameDisplay.isTeam
-              ? ParticipantLabel(
-                  teamName: participant.teamName,
-                  players: participant.players,
-                  style: nameStyle,
-                )
-              : Text(
-                  participant.players.isEmpty
-                      ? l10n.matchNotDetermined
-                      : participantLabel(
-                          teamName: null,
-                          players: participant.players,
-                        ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: nameStyle,
-                ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          statusLabel,
-          style: TextStyle(
-            color: statusColor,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              nameDisplay.isTeam
+                  ? ParticipantLabel(
+                      teamName: participant.teamName,
+                      players: participant.players,
+                      style: nameStyle,
+                    )
+                  : Text(
+                      participant.players.isEmpty
+                          ? l10n.matchNotDetermined
+                          : participantLabel(
+                              teamName: null,
+                              players: participant.players,
+                            ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: nameStyle,
+                    ),
+              subtitle,
+            ],
           ),
         ),
         // Menu dòng: Tách cặp (task 3.3) — chỉ khi server cho phép.
