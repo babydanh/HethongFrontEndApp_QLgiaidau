@@ -5458,6 +5458,10 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "tournamentManagementChooseDate": "Choose date",
+  "tournamentManagementDateLimitRegistrationStartMax": "no later than the deadline {date}",
+  "tournamentManagementDateLimitDeadlineMin": "after registration opens {date}",
+  "tournamentManagementDateLimitOpeningMin": "not before the deadline {date}",
+  "tournamentManagementDateLimitClosingMin": "not before the opening date {date}",
   "tournamentManagementDefaultVenue": "Default",
   "tournamentManagementDelete": "Delete",
   "tournamentManagementDeleteDivision": "Delete division",

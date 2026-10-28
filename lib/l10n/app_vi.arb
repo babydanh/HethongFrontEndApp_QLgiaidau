@@ -5553,6 +5553,22 @@
     "placeholders": { "count": { "type": "int" } }
   },
   "tournamentManagementChooseDate": "Chọn ngày",
+  "tournamentManagementDateLimitRegistrationStartMax": "không sau hạn chót {date}",
+  "@tournamentManagementDateLimitRegistrationStartMax": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "tournamentManagementDateLimitDeadlineMin": "sau ngày mở đăng ký {date}",
+  "@tournamentManagementDateLimitDeadlineMin": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "tournamentManagementDateLimitOpeningMin": "không trước hạn chót {date}",
+  "@tournamentManagementDateLimitOpeningMin": {
+    "placeholders": { "date": { "type": "String" } }
+  },
+  "tournamentManagementDateLimitClosingMin": "không trước ngày khai mạc {date}",
+  "@tournamentManagementDateLimitClosingMin": {
+    "placeholders": { "date": { "type": "String" } }
+  },
   "tournamentManagementDefaultVenue": "Mặc định",
   "tournamentManagementDelete": "Xóa",
   "tournamentManagementDeleteDivision": "Xóa nội dung",
