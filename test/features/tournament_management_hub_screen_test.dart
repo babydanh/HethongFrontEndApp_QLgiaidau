@@ -2090,9 +2090,6 @@ void main() {
       tester,
     ) async {
       await pumpAthletes(tester);
-      final l10n = AppLocalizations.of(
-        tester.element(find.byType(TournamentManagementHubScreen)),
-      )!;
 
       await tester.ensureVisible(rowMixed);
       await tester.tap(rowMixed);
@@ -2263,9 +2260,6 @@ void main() {
       tester,
     ) async {
       await openMixed(tester);
-      final l10n = AppLocalizations.of(
-        tester.element(find.byType(TournamentManagementHubScreen)),
-      )!;
       final row = find.byKey(const ValueKey('athlete-team-row-p-2'));
 
       // Chưa mở đội vẫn thấy ✓ / ✕ ngay trên dòng.

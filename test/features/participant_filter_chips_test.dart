@@ -1,5 +1,3 @@
-import 'dart:ui' show Tristate;
-
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
