@@ -16268,6 +16268,107 @@ class AppLocalizationsVi extends AppLocalizations {
       'Ví dụ 8 người, 3 vòng. Vòng 1 ghép theo hạt giống: 1 gặp 5, 2 gặp 6, 3 gặp 7, 4 gặp 8. Từ vòng 2, người cùng điểm gặp nhau và không gặp lại đối thủ cũ. Bằng điểm thì xét tổng điểm các đối thủ đã gặp.';
 
   @override
+  String get registrationFormTitle => 'Form đăng ký';
+
+  @override
+  String get registrationFormSave => 'Lưu';
+
+  @override
+  String get registrationFormSystemName => 'Họ và tên';
+
+  @override
+  String get registrationFormSystemPhone => 'Số điện thoại';
+
+  @override
+  String get registrationFormSystemHint => 'Bắt buộc · lấy từ hồ sơ tài khoản';
+
+  @override
+  String get registrationFormRequired => 'Bắt buộc';
+
+  @override
+  String get registrationFormOptional => 'Tuỳ chọn';
+
+  @override
+  String get registrationFormAdd => 'Thêm câu hỏi';
+
+  @override
+  String get registrationFormTypeLabel => 'Loại câu hỏi';
+
+  @override
+  String get registrationFormTypeText => 'Văn bản';
+
+  @override
+  String get registrationFormTypeNumber => 'Số';
+
+  @override
+  String get registrationFormTypeSelect => 'Chọn một';
+
+  @override
+  String get registrationFormTypeMultiSelect => 'Chọn nhiều';
+
+  @override
+  String get registrationFormTypeTextarea => 'Văn bản dài';
+
+  @override
+  String get registrationFormTypeEmail => 'Email';
+
+  @override
+  String get registrationFormTypePhone => 'Số điện thoại';
+
+  @override
+  String get registrationFormTypeCheckbox => 'Xác nhận / đồng ý';
+
+  @override
+  String get registrationFormTypeFile => 'Tệp hoặc hình ảnh';
+
+  @override
+  String get registrationFormNewQuestion => 'Câu hỏi mới';
+
+  @override
+  String get registrationFormUnnamed => '(Chưa đặt tên)';
+
+  @override
+  String get registrationFormQuestionName => 'Tên câu hỏi';
+
+  @override
+  String get registrationFormOptionsLabel =>
+      'Các lựa chọn, mỗi dòng một lựa chọn';
+
+  @override
+  String get registrationFormRequiredAnswer => 'Bắt buộc trả lời';
+
+  @override
+  String get registrationFormDone => 'Xong';
+
+  @override
+  String get registrationFormDragHint => 'Kéo để đổi thứ tự';
+
+  @override
+  String get registrationFormDeleteTitle => 'Xóa câu hỏi?';
+
+  @override
+  String registrationFormDeleteConfirm(Object label) {
+    return 'Xóa câu hỏi “$label” khỏi form?';
+  }
+
+  @override
+  String registrationFormDeleteAnswered(Object label) {
+    return 'Đã có VĐV trả lời câu hỏi “$label”. Xóa câu hỏi thì các câu trả lời đó sẽ mất.';
+  }
+
+  @override
+  String get registrationFormErrorMissingLabel => 'Mỗi câu hỏi phải có tên.';
+
+  @override
+  String registrationFormErrorChoice(Object label) {
+    return 'Câu hỏi “$label” cần ít nhất 2 lựa chọn khác nhau.';
+  }
+
+  @override
+  String get registrationFormLocked =>
+      'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.';
+
+  @override
   String get divisionEditorPickleballMode => 'Chế độ tính điểm';
 
   @override

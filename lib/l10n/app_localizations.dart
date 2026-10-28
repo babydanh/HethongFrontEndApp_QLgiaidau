@@ -29348,6 +29348,192 @@ abstract class AppLocalizations {
   /// **'Ví dụ 8 người, 3 vòng. Vòng 1 ghép theo hạt giống: 1 gặp 5, 2 gặp 6, 3 gặp 7, 4 gặp 8. Từ vòng 2, người cùng điểm gặp nhau và không gặp lại đối thủ cũ. Bằng điểm thì xét tổng điểm các đối thủ đã gặp.'**
   String get formatIllustrationSwissSummary;
 
+  /// No description provided for @registrationFormTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Form đăng ký'**
+  String get registrationFormTitle;
+
+  /// No description provided for @registrationFormSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get registrationFormSave;
+
+  /// No description provided for @registrationFormSystemName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ và tên'**
+  String get registrationFormSystemName;
+
+  /// No description provided for @registrationFormSystemPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại'**
+  String get registrationFormSystemPhone;
+
+  /// No description provided for @registrationFormSystemHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt buộc · lấy từ hồ sơ tài khoản'**
+  String get registrationFormSystemHint;
+
+  /// No description provided for @registrationFormRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt buộc'**
+  String get registrationFormRequired;
+
+  /// No description provided for @registrationFormOptional.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuỳ chọn'**
+  String get registrationFormOptional;
+
+  /// No description provided for @registrationFormAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm câu hỏi'**
+  String get registrationFormAdd;
+
+  /// No description provided for @registrationFormTypeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại câu hỏi'**
+  String get registrationFormTypeLabel;
+
+  /// No description provided for @registrationFormTypeText.
+  ///
+  /// In vi, this message translates to:
+  /// **'Văn bản'**
+  String get registrationFormTypeText;
+
+  /// No description provided for @registrationFormTypeNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số'**
+  String get registrationFormTypeNumber;
+
+  /// No description provided for @registrationFormTypeSelect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn một'**
+  String get registrationFormTypeSelect;
+
+  /// No description provided for @registrationFormTypeMultiSelect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn nhiều'**
+  String get registrationFormTypeMultiSelect;
+
+  /// No description provided for @registrationFormTypeTextarea.
+  ///
+  /// In vi, this message translates to:
+  /// **'Văn bản dài'**
+  String get registrationFormTypeTextarea;
+
+  /// No description provided for @registrationFormTypeEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get registrationFormTypeEmail;
+
+  /// No description provided for @registrationFormTypePhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại'**
+  String get registrationFormTypePhone;
+
+  /// No description provided for @registrationFormTypeCheckbox.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận / đồng ý'**
+  String get registrationFormTypeCheckbox;
+
+  /// No description provided for @registrationFormTypeFile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tệp hoặc hình ảnh'**
+  String get registrationFormTypeFile;
+
+  /// No description provided for @registrationFormNewQuestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi mới'**
+  String get registrationFormNewQuestion;
+
+  /// No description provided for @registrationFormUnnamed.
+  ///
+  /// In vi, this message translates to:
+  /// **'(Chưa đặt tên)'**
+  String get registrationFormUnnamed;
+
+  /// No description provided for @registrationFormQuestionName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên câu hỏi'**
+  String get registrationFormQuestionName;
+
+  /// No description provided for @registrationFormOptionsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các lựa chọn, mỗi dòng một lựa chọn'**
+  String get registrationFormOptionsLabel;
+
+  /// No description provided for @registrationFormRequiredAnswer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt buộc trả lời'**
+  String get registrationFormRequiredAnswer;
+
+  /// No description provided for @registrationFormDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get registrationFormDone;
+
+  /// No description provided for @registrationFormDragHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo để đổi thứ tự'**
+  String get registrationFormDragHint;
+
+  /// No description provided for @registrationFormDeleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa câu hỏi?'**
+  String get registrationFormDeleteTitle;
+
+  /// No description provided for @registrationFormDeleteConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa câu hỏi “{label}” khỏi form?'**
+  String registrationFormDeleteConfirm(Object label);
+
+  /// No description provided for @registrationFormDeleteAnswered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có VĐV trả lời câu hỏi “{label}”. Xóa câu hỏi thì các câu trả lời đó sẽ mất.'**
+  String registrationFormDeleteAnswered(Object label);
+
+  /// No description provided for @registrationFormErrorMissingLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi câu hỏi phải có tên.'**
+  String get registrationFormErrorMissingLabel;
+
+  /// No description provided for @registrationFormErrorChoice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi “{label}” cần ít nhất 2 lựa chọn khác nhau.'**
+  String registrationFormErrorChoice(Object label);
+
+  /// No description provided for @registrationFormLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.'**
+  String get registrationFormLocked;
+
   /// No description provided for @divisionEditorPickleballMode.
   ///
   /// In vi, this message translates to:

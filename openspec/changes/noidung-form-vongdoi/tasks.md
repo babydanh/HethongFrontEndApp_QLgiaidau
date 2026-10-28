@@ -6,7 +6,7 @@
 
 ## 2. Màn 9 - Form đăng ký
 
-- [ ] 2.1 Model + màn soạn form + lối vào từ mục Người tham gia
+- [x] 2.1 Model + màn soạn form + lối vào từ mục Người tham gia
   - Files: lib/features/tournament/widgets/registration_form_editor.dart, lib/features/tournament/screens/tournament_management_people_section.dart, lib/l10n/app_vi.arb, lib/l10n/app_en.arb, test/features/registration_form_editor_test.dart
   - Tiêu chí: `flutter test --no-pub test/features/registration_form_editor_test.dart` exit 0
 

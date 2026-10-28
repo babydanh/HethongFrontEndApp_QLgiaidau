@@ -16322,6 +16322,108 @@ class AppLocalizationsEn extends AppLocalizations {
       'Example with 8 players over 3 rounds. Round 1 pairs by seed: 1 vs 5, 2 vs 6, 3 vs 7, 4 vs 8. From round 2, players on equal points meet and never replay an opponent. Ties are broken by the total points of the opponents faced.';
 
   @override
+  String get registrationFormTitle => 'Registration form';
+
+  @override
+  String get registrationFormSave => 'Save';
+
+  @override
+  String get registrationFormSystemName => 'Full name';
+
+  @override
+  String get registrationFormSystemPhone => 'Phone number';
+
+  @override
+  String get registrationFormSystemHint =>
+      'Required · taken from the account profile';
+
+  @override
+  String get registrationFormRequired => 'Required';
+
+  @override
+  String get registrationFormOptional => 'Optional';
+
+  @override
+  String get registrationFormAdd => 'Add question';
+
+  @override
+  String get registrationFormTypeLabel => 'Question type';
+
+  @override
+  String get registrationFormTypeText => 'Text';
+
+  @override
+  String get registrationFormTypeNumber => 'Number';
+
+  @override
+  String get registrationFormTypeSelect => 'Choose one';
+
+  @override
+  String get registrationFormTypeMultiSelect => 'Choose many';
+
+  @override
+  String get registrationFormTypeTextarea => 'Long text';
+
+  @override
+  String get registrationFormTypeEmail => 'Email';
+
+  @override
+  String get registrationFormTypePhone => 'Phone number';
+
+  @override
+  String get registrationFormTypeCheckbox => 'Confirmation / consent';
+
+  @override
+  String get registrationFormTypeFile => 'File or image';
+
+  @override
+  String get registrationFormNewQuestion => 'New question';
+
+  @override
+  String get registrationFormUnnamed => '(Unnamed)';
+
+  @override
+  String get registrationFormQuestionName => 'Question title';
+
+  @override
+  String get registrationFormOptionsLabel => 'Options, one per line';
+
+  @override
+  String get registrationFormRequiredAnswer => 'Answer required';
+
+  @override
+  String get registrationFormDone => 'Done';
+
+  @override
+  String get registrationFormDragHint => 'Drag to reorder';
+
+  @override
+  String get registrationFormDeleteTitle => 'Delete question?';
+
+  @override
+  String registrationFormDeleteConfirm(Object label) {
+    return 'Remove the question “$label” from the form?';
+  }
+
+  @override
+  String registrationFormDeleteAnswered(Object label) {
+    return 'Players have already answered “$label”. Deleting the question will lose those answers.';
+  }
+
+  @override
+  String get registrationFormErrorMissingLabel =>
+      'Every question needs a title.';
+
+  @override
+  String registrationFormErrorChoice(Object label) {
+    return 'The question “$label” needs at least 2 different options.';
+  }
+
+  @override
+  String get registrationFormLocked =>
+      'The form is locked because registration is closed or the tournament has started.';
+
+  @override
   String get divisionEditorPickleballMode => 'Scoring mode';
 
   @override
