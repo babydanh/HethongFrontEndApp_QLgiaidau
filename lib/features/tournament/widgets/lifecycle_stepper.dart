@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,8 +72,8 @@ String lifecycleMoney(BuildContext context, num amount) =>
       decimalDigits: 0,
     ).format(amount);
 
-/// Five-step bar: steps up to the current one are filled, the current one is
-/// marked with `lifecycle-step-current`.
+/// Five-step pill bar (design `.stp`): done steps green, the current one in
+/// the accent colour (`lifecycle-step-current`), the rest grey.
 class LifecycleStepBar extends StatelessWidget {
   const LifecycleStepBar({super.key, required this.status});
 
@@ -91,121 +92,77 @@ class LifecycleStepBar extends StatelessWidget {
       l10n.lifecycleStepRunning,
       l10n.lifecycleStepDone,
     ];
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (var i = 0; i < labels.length; i++)
-          Expanded(
-            child: _Step(
-              label: labels[i],
-              hasLeftLine: i > 0,
-              hasRightLine: i < labels.length - 1,
-              leftReached: i <= current,
-              rightReached: i + 1 <= current,
-              reached: i <= current,
-              current: i == current,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Expanded(
+              child: _Step(
+                label: labels[i],
+                done: i < current,
+                current: i == current,
+              ),
             ),
-          ),
-      ],
+          ],
+        ],
+      ),
     );
   }
 }
 
-/// One equal-width step: circle with half connectors on both sides, label
-/// below (ellipsized so five steps always fit a narrow screen).
+/// One equal-width pill; the label scales down so five fit a 320dp screen.
 class _Step extends StatelessWidget {
-  const _Step({
-    required this.label,
-    required this.hasLeftLine,
-    required this.hasRightLine,
-    required this.leftReached,
-    required this.rightReached,
-    required this.reached,
-    required this.current,
-  });
+  const _Step({required this.label, required this.done, required this.current});
 
   final String label;
-  final bool hasLeftLine;
-  final bool hasRightLine;
-  final bool leftReached;
-  final bool rightReached;
-  final bool reached;
+  final bool done;
   final bool current;
-
-  Widget _line(BuildContext context, bool show, bool filled) => Expanded(
-    child: show
-        ? Divider(
-            height: 2,
-            thickness: 2,
-            color: filled ? AppTheme.primary : context.colors.border,
-          )
-        : const SizedBox.shrink(),
-  );
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Column(
+    final colors = LavishColors.of(context);
+    final tone = done ? LavishTone.ok : LavishTone.neutral;
+    return Container(
       key: current ? const ValueKey('lifecycle-step-current') : null,
-      children: [
-        Row(
-          children: [
-            _line(context, hasLeftLine, leftReached),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: reached ? AppTheme.primary : Colors.transparent,
-                border: Border.all(
-                  color: reached ? AppTheme.primary : colors.border,
-                  width: 2,
-                ),
-              ),
-              child: reached && !current
-                  ? const Icon(
-                      Icons.check_rounded,
-                      size: 14,
-                      color: Colors.white,
-                    )
-                  : null,
-            ),
-            _line(context, hasRightLine, rightReached),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
+      decoration: BoxDecoration(
+        color: current ? LavishColors.accent : colors.soft(tone),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
           label,
           maxLines: 1,
-          softWrap: false,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: current ? FontWeight.w700 : FontWeight.w500,
-            color: current ? colors.textPrimary : colors.textSecondary,
+            fontSize: 10.5,
+            fontWeight: FontWeight.w800,
+            color: current
+                ? Colors.white
+                : done
+                ? colors.pillText(LavishTone.ok)
+                : colors.faint,
           ),
         ),
-      ],
+      ),
     );
   }
 }
 
-/// "Full N/N teams" notice with a close-registration action; "remind later"
-/// only hides it until this widget is rebuilt from scratch.
+/// "Full N/N teams" notice (design `.li` with a warning box and a reminder
+/// pill). Closing registration is the card's one primary button right below;
+/// tapping the pill only hides this notice until the widget is rebuilt.
 class LifecycleCapacityBanner extends StatefulWidget {
   const LifecycleCapacityBanner({
     super.key,
     required this.occupied,
     required this.max,
-    required this.onClose,
-    required this.closeLabel,
   });
 
   final int occupied;
   final int max;
-  final VoidCallback onClose;
-  final String closeLabel;
 
   @override
   State<LifecycleCapacityBanner> createState() =>
@@ -219,50 +176,21 @@ class _LifecycleCapacityBannerState extends State<LifecycleCapacityBanner> {
   Widget build(BuildContext context) {
     if (_dismissed) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.info_outline_rounded, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l10n.lifecycleFullTitle(widget.max, widget.occupied),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.lifecycleFullHint,
-            style: TextStyle(color: colors.textSecondary, fontSize: 12.5),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              FilledButton(
-                key: const ValueKey('lifecycle-full-close'),
-                onPressed: widget.onClose,
-                child: Text(widget.closeLabel),
-              ),
-              TextButton(
-                key: const ValueKey('lifecycle-full-remind'),
-                onPressed: () => setState(() => _dismissed = true),
-                child: Text(l10n.lifecycleRemindLater),
-              ),
-            ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: LavishRow(
+        leading: const LavishIconBox(
+          tone: LavishTone.warn,
+          child: Text('!', style: TextStyle(fontWeight: FontWeight.w800)),
+        ),
+        title: l10n.lifecycleFullTitle(widget.max, widget.occupied),
+        subtitle: l10n.lifecycleFullHint,
+        trailing: [
+          InkWell(
+            key: const ValueKey('lifecycle-full-remind'),
+            borderRadius: BorderRadius.circular(999),
+            onTap: () => setState(() => _dismissed = true),
+            child: LavishPill(l10n.lifecycleRemindLater, tone: LavishTone.warn),
           ),
         ],
       ),

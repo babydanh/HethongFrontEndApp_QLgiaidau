@@ -1173,7 +1173,8 @@ void main() {
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
 
-    expect(find.text(l10n.tournamentManagementLifecycle), findsOneWidget);
+    // The lifecycle block has no card title any more: the step bar leads it.
+    expect(find.byKey(const ValueKey('lifecycle-step-current')), findsOneWidget);
     expect(find.text(l10n.tournamentManagementPublish), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegenerateInvite), findsNothing);
     expect(tester.takeException(), isNull);

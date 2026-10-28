@@ -148,6 +148,7 @@ class LavishRow extends StatelessWidget {
     this.trailing = const <Widget>[],
     this.onTap,
     this.background,
+    this.subtitleMaxLines = 2,
   });
 
   final String title;
@@ -156,6 +157,7 @@ class LavishRow extends StatelessWidget {
   final List<Widget> trailing;
   final VoidCallback? onTap;
   final Color? background;
+  final int subtitleMaxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +192,7 @@ class LavishRow extends StatelessWidget {
                     if (subtitle != null)
                       Text(
                         subtitle!,
-                        maxLines: 2,
+                        maxLines: subtitleMaxLines,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11.5,
@@ -306,11 +308,15 @@ class LavishChipButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.chevron = false,
+    this.selected = false,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool chevron;
+
+  /// `.chip.on`: filled with the accent colour, white label.
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -318,9 +324,9 @@ class LavishChipButton extends StatelessWidget {
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
-        foregroundColor: c.text,
-        backgroundColor: c.surface,
-        side: BorderSide(color: c.chipLine),
+        foregroundColor: selected ? Colors.white : c.text,
+        backgroundColor: selected ? LavishColors.accent : c.surface,
+        side: BorderSide(color: selected ? LavishColors.accent : c.chipLine),
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
         minimumSize: Size.zero,

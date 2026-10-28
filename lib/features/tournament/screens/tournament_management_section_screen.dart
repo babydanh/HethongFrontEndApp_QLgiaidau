@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_venues_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -1108,37 +1109,28 @@ class _TournamentLifecycleCardState
     final primary = switch (status) {
       AppConstants.statusDraft => _lifecycleButton(
         l10n.tournamentManagementPublish,
-        Icons.public_rounded,
         () => _runAction(
           () => ref
               .read(tournamentManagementRepositoryProvider)
               .publishTournament(id),
           l10n.tournamentManagementPublishConfirm,
         ),
-        blockedReason: publishFee > 0
-            ? l10n.lifecyclePublishFeeBlocked(
-                lifecycleMoney(context, publishFee),
-              )
-            : null,
+        blocked: publishFee > 0,
       ),
       AppConstants.statusUpcoming => _lifecycleButton(
         l10n.tournamentManagementOpenRegistrationNow,
-        Icons.lock_open_rounded,
         () => _reopen(id, l10n.tournamentManagementOpenRegistrationConfirm),
       ),
       AppConstants.statusRegistration => _lifecycleButton(
         l10n.tournamentManagementCloseRegistration,
-        Icons.lock_outline_rounded,
         () => _closeRegistration(id, l10n),
       ),
       AppConstants.statusRegistrationClosed => _lifecycleButton(
         l10n.tournamentManagementStartTournament,
-        Icons.play_arrow_rounded,
         () => _startTournament(id, hasDivisionWithoutBracket),
       ),
       AppConstants.statusInProgress => _lifecycleButton(
         l10n.tournamentManagementCompleteTournament,
-        Icons.check_circle_outline_rounded,
         () => _runAction(
           () => ref
               .read(tournamentManagementRepositoryProvider)
@@ -1152,49 +1144,67 @@ class _TournamentLifecycleCardState
     if (primary == null && lifecycleStepIndex(status) == null) {
       return const SizedBox.shrink();
     }
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementLifecycle,
-      subtitle: l10n.tournamentManagementLifecycleDescription,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          LifecycleStepBar(status: status),
-          const SizedBox(height: 12),
-          if (fullCapacity != null) ...[
-            LifecycleCapacityBanner(
-              occupied: fullCapacity.occupied,
-              max: fullCapacity.max,
-              closeLabel: l10n.tournamentManagementCloseRegistration,
-              onClose: _isActing ? () {} : () => _closeRegistration(id, l10n),
-            ),
-            const SizedBox(height: 8),
-          ],
-          ?primary,
-          // Đã đóng hết: vẫn cần lối mở lại cả giải; chỉ là nút chữ, không phải nút chính.
-          if (status == AppConstants.statusRegistrationClosed)
-            TextButton(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LifecycleStepBar(status: status),
+        if (fullCapacity != null)
+          LifecycleCapacityBanner(
+            occupied: fullCapacity.occupied,
+            max: fullCapacity.max,
+          ),
+        ?primary,
+        // Đã đóng hết: vẫn cần lối mở lại cả giải; chỉ là nút viền, không phải nút chính.
+        if (status == AppConstants.statusRegistrationClosed)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+            child: LavishButton(
+              kind: LavishButtonKind.outline,
+              label: l10n.tournamentManagementReopenRegistration,
               onPressed: _isActing
                   ? null
                   : () => _reopen(id, l10n.tournamentManagementReopenConfirm),
-              child: Text(l10n.tournamentManagementReopenRegistration),
             ),
-          if (_isActing) ...[
-            const SizedBox(height: 8),
-            const LinearProgressIndicator(),
-          ],
-          if (_actionError case final error?) ...[
-            const SizedBox(height: 8),
-            _InlineError(text: error),
-          ],
-          if (primary != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              l10n.tournamentManagementServerAuthorizationNote,
-              style: Theme.of(context).textTheme.bodySmall,
+          ),
+        // The fee is configured by the Backend and paid on the Web: the App
+        // only states the status and why publishing is locked.
+        if (publishFee > 0) ...[
+          LavishGroupHeader(l10n.lifecyclePublishFeeGroup),
+          LavishRow(
+            key: const ValueKey('lifecycle-publish-blocked'),
+            leading: const LavishIconBox(
+              tone: LavishTone.bad,
+              child: Text('₫', style: TextStyle(fontWeight: FontWeight.w800)),
             ),
-          ],
+            title: l10n.lifecyclePublishFeeUnpaid,
+            subtitle: l10n.lifecyclePublishFeeBlocked(
+              lifecycleMoney(context, publishFee),
+            ),
+            subtitleMaxLines: 6,
+          ),
         ],
-      ),
+        if (_isActing)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(14, 8, 14, 0),
+            child: LinearProgressIndicator(),
+          ),
+        if (_actionError case final error?)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+            child: _InlineError(text: error),
+          ),
+        if (primary != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+            child: Text(
+              l10n.tournamentManagementServerAuthorizationNote,
+              style: TextStyle(
+                fontSize: 12,
+                color: LavishColors.of(context).muted,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1285,35 +1295,16 @@ class _TournamentLifecycleCardState
     ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));
   }
 
-  /// [blockedReason] non-null disables the button and shows why.
+  /// The one next-step button (design `.btn`); [blocked] greys it out.
   Widget _lifecycleButton(
     String label,
-    IconData icon,
     VoidCallback onPressed, {
-    String? blockedReason,
+    bool blocked = false,
   }) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: _isActing || blockedReason != null ? null : onPressed,
-            icon: Icon(icon),
-            label: Text(label, textAlign: TextAlign.center),
-          ),
-        ),
-        if (blockedReason != null)
-          Padding(
-            key: const ValueKey('lifecycle-publish-blocked'),
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              blockedReason,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-      ],
+    padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+    child: LavishButton(
+      label: label,
+      onPressed: _isActing || blocked ? null : onPressed,
     ),
   );
 }

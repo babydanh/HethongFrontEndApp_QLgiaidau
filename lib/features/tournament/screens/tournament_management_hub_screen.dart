@@ -485,9 +485,14 @@ class _TournamentManagementHubScreenState
               ),
               const SizedBox(height: 12),
               _buildOtherSectionsGroup(context, isTablet: isTablet),
-              const SizedBox(height: 12),
-              TournamentLifecycleCard(tournament: widget.tournament),
             ],
+          ),
+        ),
+        // Full width: the lifecycle block carries its own 14dp gutters.
+        SliverPadding(
+          padding: const EdgeInsets.only(bottom: 24),
+          sliver: SliverToBoxAdapter(
+            child: TournamentLifecycleCard(tournament: widget.tournament),
           ),
         ),
       ],

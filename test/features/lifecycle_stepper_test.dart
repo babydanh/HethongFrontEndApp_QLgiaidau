@@ -155,7 +155,7 @@ void main() {
       _wrap(const LifecycleStepBar(status: AppConstants.statusRegistration)),
     );
 
-    for (final label in ['Nháp', 'Công bố', 'Mở ĐK', 'Đang đấu', 'Kết thúc']) {
+    for (final label in ['Nháp', 'Xuất bản', 'Mở ĐK', 'Đang đấu', 'Kết thúc']) {
       expect(find.text(label), findsOneWidget);
     }
     expect(
@@ -168,7 +168,7 @@ void main() {
   });
 
   testWidgets(
-    'giải mở đăng ký: một nút kế tiếp là Chốt đăng ký, có thanh bước',
+    'giải mở đăng ký: một nút kế tiếp là Đóng đăng ký, có thanh bước',
     (tester) async {
       _tallView(tester);
       await tester.pumpWidget(
@@ -182,7 +182,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LifecycleStepBar), findsOneWidget);
-      expect(find.text('Chốt đăng ký'), findsOneWidget);
+      expect(find.text('Đóng đăng ký'), findsOneWidget);
       expect(find.text('Công bố giải đấu'), findsNothing);
     },
   );
@@ -210,7 +210,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Đã đủ 16/16 đội'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('lifecycle-full-close')));
+    // The banner has no button of its own: the one primary button closes.
+    await tester.tap(find.text('Đóng đăng ký'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Xác nhận'));
     await tester.pumpAndSettle();
@@ -242,7 +243,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('lifecycle-full-close')), findsNothing);
+    expect(find.text('Đã đủ 16/16 đội'), findsNothing);
   });
 
   testWidgets('nháp còn phí công bố: nút Công bố bị khoá kèm lý do và số phí', (
@@ -255,10 +256,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final button = tester.widget<OutlinedButton>(
+    final button = tester.widget<FilledButton>(
       find.ancestor(
         of: find.text('Công bố giải đấu'),
-        matching: find.byType(OutlinedButton),
+        matching: find.byType(FilledButton),
       ),
     );
     expect(button.onPressed, isNull);
@@ -279,10 +280,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final button = tester.widget<OutlinedButton>(
+      final button = tester.widget<FilledButton>(
         find.ancestor(
           of: find.text('Công bố giải đấu'),
-          matching: find.byType(OutlinedButton),
+          matching: find.byType(FilledButton),
         ),
       );
       expect(button.onPressed, isNotNull);

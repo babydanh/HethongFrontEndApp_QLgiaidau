@@ -1,8 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -134,6 +134,9 @@ class _RegistrationFormEditorScreenState
   bool _busy = false;
   String? _error;
 
+  /// Type of the next question, picked with the chips under the add button.
+  String _newType = registrationFormCreatableTypes.first;
+
   /// Same lock as the Web builder: closed registration or a started event.
   bool get _locked {
     final status = widget.tournament.status;
@@ -240,50 +243,63 @@ class _RegistrationFormEditorScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     return Scaffold(
+      backgroundColor: colors.surface,
       appBar: AppBar(
+        backgroundColor: colors.surface,
+        foregroundColor: colors.text,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: colors.text,
+        ),
         title: Text(l10n.registrationFormTitle),
         actions: [
           TextButton(
             key: const ValueKey('registration-form-save'),
             onPressed: _busy || _locked ? null : _save,
+            style: TextButton.styleFrom(
+              foregroundColor: LavishColors.accent,
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             child: Text(l10n.registrationFormSave),
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
           if (_locked)
             Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
               child: Text(
                 l10n.registrationFormLocked,
-                style: TextStyle(color: colors.textSecondary),
+                style: TextStyle(fontSize: 13, color: colors.muted),
               ),
             ),
           if (_error != null)
             Padding(
               key: const ValueKey('registration-form-error'),
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(_error!, style: TextStyle(color: colors.error)),
+              padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+              child: Text(
+                _error!,
+                style: const TextStyle(fontSize: 13, color: LavishColors.bad),
+              ),
             ),
           IgnorePointer(
             ignoring: _locked || _busy,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _systemRow(
-                  'name',
-                  l10n.registrationFormSystemName,
-                  l10n.registrationFormSystemHint,
-                ),
-                _systemRow(
-                  'phone',
-                  l10n.registrationFormSystemPhone,
-                  l10n.registrationFormSystemHint,
-                ),
+                _systemRow('name', l10n.registrationFormSystemName, l10n),
+                _systemRow('phone', l10n.registrationFormSystemPhone, l10n),
                 ReorderableListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -292,32 +308,32 @@ class _RegistrationFormEditorScreenState
                   onReorderItem: _reorder,
                   itemBuilder: (context, index) => _fieldRow(l10n, index),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.registrationFormAdd,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                  child: LavishButton(
+                    buttonKey: const ValueKey('registration-add-button'),
+                    kind: LavishButtonKind.outline,
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: l10n.registrationFormAdd,
+                    onPressed: () => _addField(_newType),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.registrationFormTypeLabel,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final type in registrationFormCreatableTypes)
-                      ActionChip(
-                        key: ValueKey('registration-add-$type'),
-                        avatar: const Icon(Icons.add_rounded, size: 18),
-                        label: Text(_typeLabel(l10n, type)),
-                        onPressed: () => _addField(type),
-                      ),
-                  ],
+                LavishGroupHeader(l10n.registrationFormTypeLabel),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final type in registrationFormCreatableTypes)
+                        LavishChipButton(
+                          key: ValueKey('registration-add-$type'),
+                          label: _typeLabel(l10n, type),
+                          selected: _newType == type,
+                          onPressed: () => setState(() => _newType = type),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -332,15 +348,23 @@ class _RegistrationFormEditorScreenState
     setState(() => _fields.insert(newIndex, _fields.removeAt(oldIndex)));
   }
 
-  Widget _systemRow(String id, String title, String hint) => Card(
-    key: ValueKey('registration-form-system-$id'),
-    margin: const EdgeInsets.only(bottom: 8),
-    child: ListTile(
-      leading: const Icon(Icons.lock_outline_rounded),
-      title: Text(title),
-      subtitle: Text(hint),
-    ),
-  );
+  /// Name and phone: always required, never movable or deletable, so the drag
+  /// glyph is drawn dim without a handle behind it.
+  Widget _systemRow(String id, String title, AppLocalizations l10n) {
+    final colors = LavishColors.of(context);
+    return LavishRow(
+      key: ValueKey('registration-form-system-$id'),
+      leading: Icon(
+        Icons.drag_indicator_rounded,
+        size: 18,
+        color: colors.faint,
+      ),
+      title: title,
+      trailing: [
+        LavishPill(l10n.registrationFormRequired, tone: LavishTone.bad),
+      ],
+    );
+  }
 
   Widget _fieldRow(AppLocalizations l10n, int index) {
     final field = _fields[index];
@@ -351,6 +375,7 @@ class _RegistrationFormEditorScreenState
     final subtitle = options.isEmpty
         ? typeText
         : '$typeText: ${options.join(', ')}';
+    final required = field['required'] == true;
     return Dismissible(
       key: ValueKey('registration-field-$id'),
       direction: DismissDirection.endToStart,
@@ -359,38 +384,34 @@ class _RegistrationFormEditorScreenState
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: context.colors.error,
-          borderRadius: BorderRadius.circular(12),
-        ),
+        color: LavishColors.bad,
         child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
       ),
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: ListTile(
-          onTap: () => _editField(index),
-          leading: ReorderableDragStartListener(
-            key: ValueKey('registration-field-handle-$id'),
-            index: index,
-            child: Tooltip(
-              message: l10n.registrationFormDragHint,
-              child: const Icon(Icons.drag_indicator_rounded),
+      child: LavishRow(
+        background: LavishColors.of(context).surface,
+        onTap: () => _editField(index),
+        leading: ReorderableDragStartListener(
+          key: ValueKey('registration-field-handle-$id'),
+          index: index,
+          child: Tooltip(
+            message: l10n.registrationFormDragHint,
+            child: Icon(
+              Icons.drag_indicator_rounded,
+              size: 18,
+              color: LavishColors.of(context).faint,
             ),
           ),
-          title: Text(_displayLabel(l10n, field)),
-          subtitle: Text(
-            subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: Text(
-            field['required'] == true
+        ),
+        title: _displayLabel(l10n, field),
+        subtitle: subtitle,
+        trailing: [
+          LavishPill(
+            required
                 ? l10n.registrationFormRequired
                 : l10n.registrationFormOptional,
-            style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
+            tone: required ? LavishTone.bad : LavishTone.neutral,
           ),
-        ),
+        ],
       ),
     );
   }

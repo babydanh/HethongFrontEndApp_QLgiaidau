@@ -13973,7 +13973,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementLoadError => 'Không thể tải mục này.';
 
   @override
-  String get tournamentManagementCloseRegistration => 'Chốt đăng ký';
+  String get tournamentManagementCloseRegistration => 'Đóng đăng ký';
 
   @override
   String get tournamentManagementCloseRegistrationConfirm =>
@@ -16591,7 +16591,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get lifecycleStepDraft => 'Nháp';
 
   @override
-  String get lifecycleStepPublish => 'Công bố';
+  String get lifecycleStepPublish => 'Xuất bản';
 
   @override
   String get lifecycleStepOpen => 'Mở ĐK';
@@ -16612,6 +16612,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lifecycleRemindLater => 'Nhắc sau';
+
+  @override
+  String get lifecyclePublishFeeGroup => 'Phí xuất bản';
+
+  @override
+  String get lifecyclePublishFeeUnpaid => 'Chưa thanh toán';
 
   @override
   String lifecyclePublishFeeBlocked(Object amount) {

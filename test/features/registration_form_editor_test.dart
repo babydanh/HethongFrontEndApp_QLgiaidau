@@ -281,7 +281,10 @@ void main() {
     final repo = _Repo();
     await tester.pumpWidget(_app(repo, _tournament()));
 
+    // The chip only picks the type; the add button then opens the editor.
     await tester.tap(find.byKey(const ValueKey('registration-add-SELECT')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('registration-add-button')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('registration-editor-label')),

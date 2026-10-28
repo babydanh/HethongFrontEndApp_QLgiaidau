@@ -16680,6 +16680,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lifecycleRemindLater => 'Remind later';
 
   @override
+  String get lifecyclePublishFeeGroup => 'Publish fee';
+
+  @override
+  String get lifecyclePublishFeeUnpaid => 'Not paid';
+
+  @override
   String lifecyclePublishFeeBlocked(Object amount) {
     return 'The publish fee of $amount must be paid before publishing. This payment step is not in the App yet, please pay on the Web.';
   }

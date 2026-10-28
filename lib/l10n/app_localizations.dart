@@ -25375,7 +25375,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementCloseRegistration.
   ///
   /// In vi, this message translates to:
-  /// **'Chốt đăng ký'**
+  /// **'Đóng đăng ký'**
   String get tournamentManagementCloseRegistration;
 
   /// No description provided for @tournamentManagementCloseRegistrationConfirm.
@@ -29921,7 +29921,7 @@ abstract class AppLocalizations {
   /// No description provided for @lifecycleStepPublish.
   ///
   /// In vi, this message translates to:
-  /// **'Công bố'**
+  /// **'Xuất bản'**
   String get lifecycleStepPublish;
 
   /// No description provided for @lifecycleStepOpen.
@@ -29959,6 +29959,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Nhắc sau'**
   String get lifecycleRemindLater;
+
+  /// No description provided for @lifecyclePublishFeeGroup.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phí xuất bản'**
+  String get lifecyclePublishFeeGroup;
+
+  /// No description provided for @lifecyclePublishFeeUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thanh toán'**
+  String get lifecyclePublishFeeUnpaid;
 
   /// No description provided for @lifecyclePublishFeeBlocked.
   ///
