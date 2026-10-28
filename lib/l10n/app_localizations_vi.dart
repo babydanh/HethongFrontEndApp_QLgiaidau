@@ -14146,6 +14146,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRefereeInvited => 'Đã mời';
 
   @override
+  String get tournamentManagementInviteByEmail => 'Mời qua email';
+
+  @override
+  String get tournamentManagementInviteEmail => 'Email người được mời';
+
+  @override
+  String get tournamentManagementInviteEmailInvalid => 'Email không hợp lệ.';
+
+  @override
+  String tournamentManagementInvitedCount(int count) {
+    return 'Đã mời · $count';
+  }
+
+  @override
+  String get tournamentManagementResend => 'Gửi lại';
+
+  @override
+  String tournamentManagementResendConfirm(String name) {
+    return 'Gửi lại lời mời cho $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteResent => 'Đã gửi lại lời mời.';
+
+  @override
+  String get tournamentManagementRevoke => 'Thu hồi';
+
+  @override
+  String tournamentManagementRevokeConfirm(String name) {
+    return 'Thu hồi lời mời của $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteRevoked => 'Đã thu hồi lời mời.';
+
+  @override
   String get tournamentManagementRefereeRemoved => 'Đã xóa trọng tài.';
 
   @override

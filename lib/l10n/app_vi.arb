@@ -5765,6 +5765,25 @@
   "tournamentManagementRefereeEmail": "Email trọng tài",
   "tournamentManagementRefereeInviteSent": "Đã gửi lời mời trọng tài.",
   "tournamentManagementRefereeInvited": "Đã mời",
+  "tournamentManagementInviteByEmail": "Mời qua email",
+  "tournamentManagementInviteEmail": "Email người được mời",
+  "tournamentManagementInviteEmailInvalid": "Email không hợp lệ.",
+  "tournamentManagementInvitedCount": "Đã mời · {count}",
+  "@tournamentManagementInvitedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "tournamentManagementResend": "Gửi lại",
+  "tournamentManagementResendConfirm": "Gửi lại lời mời cho {name}?",
+  "@tournamentManagementResendConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "tournamentManagementRefereeInviteResent": "Đã gửi lại lời mời.",
+  "tournamentManagementRevoke": "Thu hồi",
+  "tournamentManagementRevokeConfirm": "Thu hồi lời mời của {name}?",
+  "@tournamentManagementRevokeConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "tournamentManagementRefereeInviteRevoked": "Đã thu hồi lời mời.",
   "tournamentManagementRefereeRemoved": "Đã xóa trọng tài.",
   "tournamentManagementReferees": "Trọng tài",
   "tournamentManagementRefereesDescription": "Mời trọng tài bằng email và quản lý phân công trong giải đấu.",
