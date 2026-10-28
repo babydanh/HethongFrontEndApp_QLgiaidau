@@ -1063,9 +1063,18 @@ mixin _TournamentActionMixin<T extends ConsumerStatefulWidget>
 /// Vòng đời giải: mỗi lúc một nút theo việc tiếp theo (công bố, mở đăng ký,
 /// chốt đăng ký, khai mạc, kết thúc). Không thao tác nào áp dụng thì ẩn.
 class TournamentLifecycleCard extends ConsumerStatefulWidget {
-  const TournamentLifecycleCard({super.key, required this.tournament});
+  const TournamentLifecycleCard({
+    super.key,
+    required this.tournament,
+    this.onShare,
+    this.onDelete,
+  });
 
   final Tournament tournament;
+
+  /// Rows of the "Khác" group; the group is hidden when both are null.
+  final VoidCallback? onShare;
+  final VoidCallback? onDelete;
 
   @override
   ConsumerState<TournamentLifecycleCard> createState() =>
@@ -1212,6 +1221,30 @@ class _TournamentLifecycleCardState
               ),
             ),
           ),
+        if (widget.onShare != null || widget.onDelete != null) ...[
+          LavishGroupHeader(l10n.manageSettingsOtherSection),
+          if (widget.onShare != null)
+            LavishRow(
+              key: const ValueKey('lifecycle-share'),
+              leading: const LavishIconBox(
+                tone: LavishTone.neutral,
+                child: Icon(Icons.share_outlined),
+              ),
+              title: l10n.share,
+              onTap: widget.onShare,
+            ),
+          if (widget.onDelete != null)
+            LavishRow(
+              key: const ValueKey('lifecycle-delete'),
+              leading: const LavishIconBox(
+                tone: LavishTone.bad,
+                child: Icon(Icons.delete_outline_rounded),
+              ),
+              title: l10n.deleteTournament,
+              titleColor: LavishColors.bad,
+              onTap: _isActing ? null : widget.onDelete,
+            ),
+        ],
       ],
     );
   }

@@ -412,8 +412,7 @@ void main() {
     await _openSettings(tester);
     expect(find.text(l10n.tournamentManagementSetupGroup), findsOneWidget);
     expect(find.text(l10n.manageSettingsInfoSection), findsOneWidget);
-    expect(find.text(l10n.manageSettingsOtherSection), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementSystemGroup), findsNothing);
+    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -772,11 +771,8 @@ void main() {
     expect(find.text(l10n.tournamentManagementRegistration), findsOneWidget);
     expect(find.text(l10n.manageSettingsCompetitionSection), findsOneWidget);
 
-    // Khác đóng sẵn: các mục bên trong chưa nằm trong cây hiển thị.
-    expect(find.text(l10n.manageSettingsOtherSection), findsOneWidget);
-    expect(find.text(l10n.manageTeams), findsNothing);
-    await tester.tap(find.text(l10n.manageSettingsOtherSection));
-    await tester.pumpAndSettle();
+    // Nhóm Hệ thống luôn mở: các mục nằm sẵn trong danh sách.
+    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
     expect(find.text(l10n.manageTeams), findsOneWidget);
     expect(find.text(l10n.manageDraw), findsOneWidget);
     expect(find.text(l10n.tournamentManagementSponsors), findsOneWidget);
@@ -784,14 +780,13 @@ void main() {
     expect(find.text(l10n.tournamentManagementLivestream), findsOneWidget);
     expect(find.text(l10n.tournamentManagementPermissions), findsOneWidget);
     expect(find.text(l10n.manageTokens), findsNothing);
-    expect(find.text(l10n.tournamentManagementSystemGroup), findsNothing);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     expect(find.text(l10n.endTournament), findsOneWidget);
     expect(find.text(l10n.exportData), findsOneWidget);
     expect(find.text(l10n.exportParticipantsRoster), findsOneWidget);
-    expect(find.text(l10n.deleteTournament), findsOneWidget);
+    expect(find.text(l10n.deleteTournament), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -1068,8 +1063,6 @@ void main() {
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
-    await tester.tap(find.text(l10n.manageSettingsOtherSection));
-    await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.tournamentManagementFinance));
     await tester.pumpAndSettle();
     final financeTitleInAppBar = find.descendant(
@@ -1080,7 +1073,7 @@ void main() {
 
     await tester.tap(find.byTooltip(l10n.tournamentManagementBack));
     await tester.pumpAndSettle();
-    expect(find.text(l10n.manageSettingsOtherSection), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
     expect(financeTitleInAppBar, findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -1116,8 +1109,6 @@ void main() {
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
-    await tester.tap(find.text(l10n.manageSettingsOtherSection));
-    await tester.pumpAndSettle();
     final liveOperations = find.text(l10n.tournamentManagementLiveOperations);
     await tester.ensureVisible(liveOperations);
     await tester.tap(liveOperations);

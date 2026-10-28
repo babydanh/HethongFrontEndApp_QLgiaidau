@@ -224,6 +224,33 @@ void main() {
     expect(find.text('Đã đủ 16/16 đội'), findsNothing);
   });
 
+  testWidgets('nhóm Khác: chia sẻ và xoá giải gọi đúng callback, ẩn khi không truyền', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(TournamentLifecycleCard(tournament: _tournament())),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('lifecycle-share')), findsNothing);
+    expect(find.byKey(const ValueKey('lifecycle-delete')), findsNothing);
+
+    var shared = 0;
+    var deleted = 0;
+    await tester.pumpWidget(
+      _wrap(
+        TournamentLifecycleCard(
+          tournament: _tournament(),
+          onShare: () => shared++,
+          onDelete: () => deleted++,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lifecycle-share')));
+    await tester.tap(find.byKey(const ValueKey('lifecycle-delete')));
+    expect((shared, deleted), (1, 1));
+  });
+
   testWidgets('chưa đủ đội: không có cảnh báo', (tester) async {
     _tallView(tester);
     await tester.pumpWidget(
