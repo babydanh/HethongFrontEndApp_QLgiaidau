@@ -38,7 +38,6 @@ enum TournamentManagementSection {
   finance,
   livestream,
   permissions,
-  tokens,
   liveOperations,
 }
 
@@ -108,10 +107,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     TournamentManagementSection.draw => _ExistingOperationsDestination(
       route: '$actionRouteBase/draw',
       icon: Icons.casino_rounded,
-    ),
-    TournamentManagementSection.tokens => _ExistingOperationsDestination(
-      route: '$actionRouteBase/tokens',
-      icon: Icons.qr_code_rounded,
     ),
   };
 }

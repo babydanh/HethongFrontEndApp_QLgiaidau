@@ -14323,6 +14323,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRefereeInvited => 'Invited';
 
   @override
+  String get tournamentManagementInviteByEmail => 'Invite by email';
+
+  @override
+  String get tournamentManagementInviteEmail => 'Invitee email';
+
+  @override
+  String get tournamentManagementInviteEmailInvalid => 'Invalid email.';
+
+  @override
+  String tournamentManagementInvitedCount(int count) {
+    return 'Invited · $count';
+  }
+
+  @override
+  String get tournamentManagementResend => 'Resend';
+
+  @override
+  String tournamentManagementResendConfirm(String name) {
+    return 'Resend the invitation to $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteResent => 'Invitation resent.';
+
+  @override
+  String get tournamentManagementRevoke => 'Revoke';
+
+  @override
+  String tournamentManagementRevokeConfirm(String name) {
+    return 'Revoke the invitation for $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteRevoked => 'Invitation revoked.';
+
+  @override
   String get tournamentManagementRefereeRemoved => 'Referee removed.';
 
   @override

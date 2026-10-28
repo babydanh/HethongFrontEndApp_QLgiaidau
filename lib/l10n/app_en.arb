@@ -5692,6 +5692,25 @@
   "tournamentManagementRefereeEmail": "Referee email",
   "tournamentManagementRefereeInviteSent": "Referee invitation sent.",
   "tournamentManagementRefereeInvited": "Invited",
+  "tournamentManagementInviteByEmail": "Invite by email",
+  "tournamentManagementInviteEmail": "Invitee email",
+  "tournamentManagementInviteEmailInvalid": "Invalid email.",
+  "tournamentManagementInvitedCount": "Invited · {count}",
+  "@tournamentManagementInvitedCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "tournamentManagementResend": "Resend",
+  "tournamentManagementResendConfirm": "Resend the invitation to {name}?",
+  "@tournamentManagementResendConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "tournamentManagementRefereeInviteResent": "Invitation resent.",
+  "tournamentManagementRevoke": "Revoke",
+  "tournamentManagementRevokeConfirm": "Revoke the invitation for {name}?",
+  "@tournamentManagementRevokeConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "tournamentManagementRefereeInviteRevoked": "Invitation revoked.",
   "tournamentManagementRefereeRemoved": "Referee removed.",
   "tournamentManagementReferees": "Referees",
   "tournamentManagementRefereesDescription": "Invite referees by email and manage their tournament assignment.",

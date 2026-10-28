@@ -25894,6 +25894,66 @@ abstract class AppLocalizations {
   /// **'Đã mời'**
   String get tournamentManagementRefereeInvited;
 
+  /// No description provided for @tournamentManagementInviteByEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời qua email'**
+  String get tournamentManagementInviteByEmail;
+
+  /// No description provided for @tournamentManagementInviteEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email người được mời'**
+  String get tournamentManagementInviteEmail;
+
+  /// No description provided for @tournamentManagementInviteEmailInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email không hợp lệ.'**
+  String get tournamentManagementInviteEmailInvalid;
+
+  /// No description provided for @tournamentManagementInvitedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã mời · {count}'**
+  String tournamentManagementInvitedCount(int count);
+
+  /// No description provided for @tournamentManagementResend.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi lại'**
+  String get tournamentManagementResend;
+
+  /// No description provided for @tournamentManagementResendConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi lại lời mời cho {name}?'**
+  String tournamentManagementResendConfirm(String name);
+
+  /// No description provided for @tournamentManagementRefereeInviteResent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi lại lời mời.'**
+  String get tournamentManagementRefereeInviteResent;
+
+  /// No description provided for @tournamentManagementRevoke.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu hồi'**
+  String get tournamentManagementRevoke;
+
+  /// No description provided for @tournamentManagementRevokeConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu hồi lời mời của {name}?'**
+  String tournamentManagementRevokeConfirm(String name);
+
+  /// No description provided for @tournamentManagementRefereeInviteRevoked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thu hồi lời mời.'**
+  String get tournamentManagementRefereeInviteRevoked;
+
   /// No description provided for @tournamentManagementRefereeRemoved.
   ///
   /// In vi, this message translates to:

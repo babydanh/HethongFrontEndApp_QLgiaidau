@@ -125,14 +125,6 @@ final registerTournamentProvider =
           .timeout(const Duration(seconds: 8));
     });
 
-final presenceCountProvider =
-    StreamProvider.family<int, ({String tournamentId, String role})>((
-      ref,
-      params,
-    ) {
-      return Stream.value(0);
-    });
-
 final teamsProvider = StreamProvider.family<List<Team>, String>((
   ref,
   tournamentId,
