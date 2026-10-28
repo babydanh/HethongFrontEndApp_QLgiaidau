@@ -369,12 +369,22 @@ class _CameraRow extends StatelessWidget {
         ),
         // Only a PUSH camera has a stream key; a PULL one is just a URL.
         if (camera.mode == 'PUSH')
-          LavishIconBox(
+          // 40dp touch target around the design's 30dp box.
+          GestureDetector(
             key: ValueKey('camera-stream-key-${camera.id}'),
-            size: 30,
-            tooltip: l10n.tournamentStreamKeyTooltip,
+            behavior: HitTestBehavior.opaque,
             onTap: enabled ? onStreamKey : null,
-            child: const Icon(Icons.qr_code_2_rounded),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: LavishIconBox(
+                  size: 30,
+                  tooltip: l10n.tournamentStreamKeyTooltip,
+                  child: const Icon(Icons.qr_code_2_rounded),
+                ),
+              ),
+            ),
           ),
       ],
     );
