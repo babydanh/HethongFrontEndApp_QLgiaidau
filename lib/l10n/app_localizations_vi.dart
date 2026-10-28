@@ -17727,4 +17727,45 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentStreamKeyRotated =>
       'Đã đổi key. Quét QR mới để phát lại.';
+
+  @override
+  String get resultsBoard_round => 'Vòng';
+
+  @override
+  String resultsBoard_roundOption(String label, int pending) {
+    return '$label · $pending chờ';
+  }
+
+  @override
+  String get resultsBoard_finished => 'Đã xong';
+
+  @override
+  String get resultsBoard_upcoming => 'Sắp tới';
+
+  @override
+  String resultsBoard_untimed(String round, int count) {
+    return 'Chưa có giờ · $round · $count';
+  }
+
+  @override
+  String get resultsBoard_empty => 'Chưa có trận nào ở hạng mục này';
+
+  @override
+  String get resultsBoard_waitingTeams => 'Chờ đối thủ';
+
+  @override
+  String get resultsBoard_schedule => 'Xếp lịch';
+
+  @override
+  String get resultsBoard_enterScore => 'Nhập điểm';
+
+  @override
+  String get matchSchedule_title => 'Xếp lịch trận';
+
+  @override
+  String get matchSchedule_save => 'Lưu';
+
+  @override
+  String get matchSchedule_error =>
+      'Không lưu được lịch. Kiểm tra mạng rồi thử lại.';
 }

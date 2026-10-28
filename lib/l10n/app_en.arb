@@ -7076,5 +7076,19 @@
   "tournamentStreamKeyRotateConfirm": "A stream currently publishing with the old key is cut immediately. Rotate only if you are sure.",
   "@tournamentStreamKeyRotateConfirm": {"description": "Confirmation warning for rotating the key."},
   "tournamentStreamKeyRotated": "Key rotated. Scan the new QR to publish again.",
-  "@tournamentStreamKeyRotated": {"description": "Notice after a successful rotate."}
+  "@tournamentStreamKeyRotated": {"description": "Notice after a successful rotate."},
+  "resultsBoard_round": "Round",
+  "resultsBoard_roundOption": "{label} · {pending} pending",
+  "@resultsBoard_roundOption": {"placeholders": {"label": {"type": "String"}, "pending": {"type": "int"}}},
+  "resultsBoard_finished": "Finished",
+  "resultsBoard_upcoming": "Upcoming",
+  "resultsBoard_untimed": "No time yet · {round} · {count}",
+  "@resultsBoard_untimed": {"placeholders": {"round": {"type": "String"}, "count": {"type": "int"}}},
+  "resultsBoard_empty": "No matches in this division yet",
+  "resultsBoard_waitingTeams": "Waiting for opponent",
+  "resultsBoard_schedule": "Schedule",
+  "resultsBoard_enterScore": "Enter score",
+  "matchSchedule_title": "Schedule match",
+  "matchSchedule_save": "Save",
+  "matchSchedule_error": "Could not save the schedule. Check your connection and try again."
 }

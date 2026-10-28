@@ -17800,4 +17800,45 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentStreamKeyRotated =>
       'Key rotated. Scan the new QR to publish again.';
+
+  @override
+  String get resultsBoard_round => 'Round';
+
+  @override
+  String resultsBoard_roundOption(String label, int pending) {
+    return '$label · $pending pending';
+  }
+
+  @override
+  String get resultsBoard_finished => 'Finished';
+
+  @override
+  String get resultsBoard_upcoming => 'Upcoming';
+
+  @override
+  String resultsBoard_untimed(String round, int count) {
+    return 'No time yet · $round · $count';
+  }
+
+  @override
+  String get resultsBoard_empty => 'No matches in this division yet';
+
+  @override
+  String get resultsBoard_waitingTeams => 'Waiting for opponent';
+
+  @override
+  String get resultsBoard_schedule => 'Schedule';
+
+  @override
+  String get resultsBoard_enterScore => 'Enter score';
+
+  @override
+  String get matchSchedule_title => 'Schedule match';
+
+  @override
+  String get matchSchedule_save => 'Save';
+
+  @override
+  String get matchSchedule_error =>
+      'Could not save the schedule. Check your connection and try again.';
 }

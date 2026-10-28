@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_views.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/intro_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
@@ -629,10 +630,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament.sport.toLowerCase() == 'bóng đá';
 
     final allMatches = matchesAsync.value ?? const <MatchModel>[];
-    final liveMatches = allMatches.where((m) {
-      final s = m.status.toLowerCase();
-      return s == 'in_progress' || s == 'live' || s == 'ongoing';
-    }).toList();
+    final liveMatches = allMatches.where(isLiveMatch).toList();
 
     final completedMatches = allMatches.where((m) {
       if (m.isBye || m.isByeMatch || m.isFullByeMatch) return false;
@@ -706,6 +704,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           tournamentId: widget.tournamentId,
           divisions: tournament.divisions,
           selectedDivisionId: _selectedDivisionId,
+          canManage: canManage,
           onSelectDivision: (div) {
             setState(() {
               _selectedDivisionId = div.id;
@@ -717,8 +716,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       );
     }
 
-    // 2. Tab [🏆 Kết quả] CHỈ HIỆN KHI ĐÃ CÓ KẾT QUẢ / TRẬN ĐẤU HOÀN THÀNH
-    if (hasResults) {
+    // 2. Tab [🏆 Kết quả]: người xem chỉ thấy khi đã có kết quả; Ban tổ chức luôn thấy
+    if (hasResults || canManage) {
       tabHeaders.add(
         const Tab(
           height: 28,
@@ -745,6 +744,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       selectedDivisionId: _selectedDivisionId,
                       selectedDivision: _selectedDivision,
                       matchType: selectedMatchType,
+                      isLite: tournament.isLite,
+                      canManage: canManage,
                     ),
                   ),
                 ],
@@ -755,6 +756,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 selectedDivisionId: _selectedDivisionId,
                 selectedDivision: _selectedDivision,
                 matchType: selectedMatchType,
+                isLite: tournament.isLite,
+                canManage: canManage,
               ),
       );
     }

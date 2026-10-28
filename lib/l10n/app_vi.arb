@@ -7104,5 +7104,19 @@
   "tournamentStreamKeyRotateConfirm": "Stream đang phát bằng key cũ sẽ bị ngắt ngay. Chỉ đổi key khi chắc chắn.",
   "@tournamentStreamKeyRotateConfirm": {"description": "Cảnh báo xác nhận rotate key."},
   "tournamentStreamKeyRotated": "Đã đổi key. Quét QR mới để phát lại.",
-  "@tournamentStreamKeyRotated": {"description": "Thông báo sau khi rotate thành công."}
+  "@tournamentStreamKeyRotated": {"description": "Thông báo sau khi rotate thành công."},
+  "resultsBoard_round": "Vòng",
+  "resultsBoard_roundOption": "{label} · {pending} chờ",
+  "@resultsBoard_roundOption": {"placeholders": {"label": {"type": "String"}, "pending": {"type": "int"}}},
+  "resultsBoard_finished": "Đã xong",
+  "resultsBoard_upcoming": "Sắp tới",
+  "resultsBoard_untimed": "Chưa có giờ · {round} · {count}",
+  "@resultsBoard_untimed": {"placeholders": {"round": {"type": "String"}, "count": {"type": "int"}}},
+  "resultsBoard_empty": "Chưa có trận nào ở hạng mục này",
+  "resultsBoard_waitingTeams": "Chờ đối thủ",
+  "resultsBoard_schedule": "Xếp lịch",
+  "resultsBoard_enterScore": "Nhập điểm",
+  "matchSchedule_title": "Xếp lịch trận",
+  "matchSchedule_save": "Lưu",
+  "matchSchedule_error": "Không lưu được lịch. Kiểm tra mạng rồi thử lại."
 }

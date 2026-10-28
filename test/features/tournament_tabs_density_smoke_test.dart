@@ -150,7 +150,9 @@ Future<void> _openTab(WidgetTester tester, String label) async {
       tabBar,
       Offset(tabRect.left < viewport.left ? 300 : -300, 0),
     );
-    await tester.pumpAndSettle();
+    // The Kết quả tab now shows live cards whose red dot pulses forever, so
+    // pumpAndSettle would never return; a fixed wait covers the tab bar scroll.
+    await tester.pump(const Duration(milliseconds: 400));
   }
   await tester.tap(tab);
   await tester.pump();
