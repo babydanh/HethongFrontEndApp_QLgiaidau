@@ -16243,6 +16243,83 @@ class AppLocalizationsVi extends AppLocalizations {
   String get financeFeeOrganizerNetPerPlayer => 'BTC thực nhận / VĐV';
 
   @override
+  String get financeFeeSave => 'Lưu lệ phí';
+
+  @override
+  String financePayoutHistoryCount(int count) {
+    return '$count yêu cầu';
+  }
+
+  @override
+  String get financePayoutConfirmTitle => 'Gửi yêu cầu thanh toán?';
+
+  @override
+  String financePayoutConfirmBody(String amount) {
+    return 'Gửi yêu cầu thanh toán $amount đến máy chủ? Thông tin ngân hàng sẽ được xóa sau khi gửi thành công.';
+  }
+
+  @override
+  String get teamList_searchHint => 'Tìm tên đội hoặc VĐV…';
+
+  @override
+  String get teamList_filterAll => 'Tất cả';
+
+  @override
+  String get teamList_filterApproved => 'Đã duyệt';
+
+  @override
+  String get teamList_filterPending => 'Chờ duyệt';
+
+  @override
+  String get teamList_noMatch => 'Không có đội phù hợp';
+
+  @override
+  String get teamList_edit => 'Sửa';
+
+  @override
+  String get tournamentReportMenu => 'Xuất báo cáo';
+
+  @override
+  String get tournamentReportTitle => 'Xuất báo cáo Excel';
+
+  @override
+  String get tournamentReportHint => 'Chọn các sheet cần có trong file Excel.';
+
+  @override
+  String get tournamentReportSheetParticipants => 'Danh sách VĐV';
+
+  @override
+  String get tournamentReportSheetParticipantsDesc =>
+      'Tên, liên hệ, hạng mục, trạng thái, thanh toán';
+
+  @override
+  String get tournamentReportSheetMatches => 'Trận đấu';
+
+  @override
+  String get tournamentReportSheetMatchesDesc =>
+      'Vòng, cặp đấu, tỷ số, trạng thái, trọng tài';
+
+  @override
+  String tournamentReportExport(int count) {
+    return 'Xuất $count sheet';
+  }
+
+  @override
+  String get tournamentReportExporting => 'Đang xuất…';
+
+  @override
+  String get tournamentReportError =>
+      'Không xuất được báo cáo. Lựa chọn được giữ lại, hãy thử lại.';
+
+  @override
+  String get excelReportFilePrefix => 'BaoCao';
+
+  @override
+  String excelReportShare(String tournamentName) {
+    return 'Báo cáo giải đấu $tournamentName';
+  }
+
+  @override
   String get divisionEditorEditTitle => 'Chỉnh sửa nội dung thi đấu';
 
   @override

@@ -16300,6 +16300,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeFeeOrganizerNetPerPlayer => 'Organizer receives / player';
 
   @override
+  String get financeFeeSave => 'Save fee';
+
+  @override
+  String financePayoutHistoryCount(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String get financePayoutConfirmTitle => 'Send payout request?';
+
+  @override
+  String financePayoutConfirmBody(String amount) {
+    return 'Send a payout request of $amount to the server? Bank details are deleted after a successful submission.';
+  }
+
+  @override
+  String get teamList_searchHint => 'Search team or player name…';
+
+  @override
+  String get teamList_filterAll => 'All';
+
+  @override
+  String get teamList_filterApproved => 'Approved';
+
+  @override
+  String get teamList_filterPending => 'Pending';
+
+  @override
+  String get teamList_noMatch => 'No matching team';
+
+  @override
+  String get teamList_edit => 'Edit';
+
+  @override
+  String get tournamentReportMenu => 'Export report';
+
+  @override
+  String get tournamentReportTitle => 'Export Excel report';
+
+  @override
+  String get tournamentReportHint =>
+      'Choose the sheets to include in the Excel file.';
+
+  @override
+  String get tournamentReportSheetParticipants => 'Participants';
+
+  @override
+  String get tournamentReportSheetParticipantsDesc =>
+      'Name, contact, division, status, payment';
+
+  @override
+  String get tournamentReportSheetMatches => 'Matches';
+
+  @override
+  String get tournamentReportSheetMatchesDesc =>
+      'Round, pairing, score, status, referee';
+
+  @override
+  String tournamentReportExport(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sheets',
+      one: '1 sheet',
+    );
+    return 'Export $_temp0';
+  }
+
+  @override
+  String get tournamentReportExporting => 'Exporting…';
+
+  @override
+  String get tournamentReportError =>
+      'Could not export the report. Your selection is kept, try again.';
+
+  @override
+  String get excelReportFilePrefix => 'Report';
+
+  @override
+  String excelReportShare(String tournamentName) {
+    return 'Tournament report $tournamentName';
+  }
+
+  @override
   String get divisionEditorEditTitle => 'Edit division';
 
   @override

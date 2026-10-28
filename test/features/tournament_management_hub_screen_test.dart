@@ -21,6 +21,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -812,6 +813,23 @@ void main() {
       find.widgetWithText(PopupMenuItem<String>, l10n.exportParticipantsRoster),
       findsOneWidget,
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('overflow menu opens the report sheet', (tester) async {
+    tester.view.physicalSize = const Size(390, 1500);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(_app(_tournament('in_progress')));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.tournamentReportMenu));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TournamentReportSheet), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
