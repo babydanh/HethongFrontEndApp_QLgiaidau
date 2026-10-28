@@ -4,7 +4,6 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
-import 'package:app_quanly_giaidau/features/tournament/utils/schedule_conflicts.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
@@ -122,7 +121,6 @@ class ScheduleGrid extends StatefulWidget {
 }
 
 class _ScheduleGridState extends State<ScheduleGrid> {
-  Set<String> _conflictIds = const {};
   /// Default is 112dp: the smallest 15-minute slot that still holds a doubles
   /// card (see `_minimumHeightFor`). `BASE_PIXELS_PER_MINUTE` remains the web
   /// grid's separate layout scale.
@@ -250,14 +248,6 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     if (widget.courts.isEmpty) return const SizedBox.shrink();
-    // Same participant on two courts at overlapping times: drawn red.
-    _conflictIds = {
-      for (final group in scheduleConflictGroups(
-        widget.matches,
-        defaultStepMinutes: widget.stepMinutes,
-      ))
-        group.match.id,
-    };
     final courtLayouts = [
       for (final court in widget.courts) _buildCourtLayout(court),
     ];
@@ -900,31 +890,17 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return renderedMinutes > duration ? renderedMinutes : duration;
   }
 
-  /// Design 4: a block is tinted with its division colour and turns red when
-  /// its participant is booked on another court at the same time. Only the
-  /// body tint and border change; header/footer stay neutral. Selection keeps
-  /// its own border and LIVE its badge.
+  /// Thân/header/footer trung tính, không mã hoá trạng thái bằng màu.
+  /// Chỉ viền chọn là phản hồi tương tác; LIVE được biểu thị bằng badge.
   _CardStyle _cardStyle(MatchModel match, AppColorsExtension colors) {
     final selected = match.id == widget.selectedMatchId;
-    final conflict = _conflictIds.contains(match.id);
-    final tint = conflict ? colors.error : _divisionColorFor(match);
-    final border = selected
-        ? colors.warning
-        : conflict
-        ? colors.error
-        : (tint?.withValues(alpha: 0.55) ?? colors.border);
     return (
       decoration: BoxDecoration(
-        color: tint == null
-            ? colors.bgCard
-            : Color.alphaBlend(
-                tint.withValues(alpha: conflict ? 0.14 : 0.10),
-                colors.bgCard,
-              ),
+        color: colors.bgCard,
         borderRadius: BorderRadius.circular(7),
         border: Border.all(
-          color: border,
-          width: selected || conflict ? 2.0 : 1.0,
+          color: selected ? colors.warning : colors.border,
+          width: selected ? 2.0 : 1.0,
         ),
       ),
       headerBg: colors.bgSurface,

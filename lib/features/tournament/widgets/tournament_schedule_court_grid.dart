@@ -393,9 +393,10 @@ class _TournamentScheduleCourtGridState
               l10n,
               allCourts,
               selectedCourts,
-              days,
-              day,
+              placed.length,
+              widget.matches.length,
             ),
+            if (days.length > 1) _dayPicker(context, days, day),
             if (widget.draftMatches.isNotEmpty) _draftBar(context, l10n),
             if (visibleCourts.isEmpty)
               Padding(
@@ -854,31 +855,16 @@ class _TournamentScheduleCourtGridState
     }
   }
 
-  /// Design 4: one row. Day arrows + date on the left; division picker, print
-  /// and a ⋯ menu (courts, Excel export, time slots, fullscreen) on the right.
   Widget _toolbar(
     BuildContext context,
     AppLocalizations l10n,
     List<ScheduleCourt> allCourts,
     Set<String> selectedCourts,
-    List<DateTime> days,
-    DateTime? day,
+    int placedCount,
+    int totalCount,
   ) {
     final colors = context.colors;
-    final index = day == null ? -1 : days.indexOf(day);
-    final hasPrev = index > 0;
-    final hasNext = index >= 0 && index < days.length - 1;
-    Widget dayArrow(Key key, IconData icon, bool enabled, int step) =>
-        IconButton(
-          key: key,
-          padding: EdgeInsets.zero,
-          visualDensity: VisualDensity.compact,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 36),
-          onPressed: enabled
-              ? () => setState(() => _day = days[index + step])
-              : null,
-          icon: Icon(icon, size: 22, color: colors.textPrimary),
-        );
+    final visibleCount = selectedCourts.length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
@@ -886,40 +872,55 @@ class _TournamentScheduleCourtGridState
         AppSpacing.sm,
         0,
       ),
-      child: Row(
-        children: [
-          dayArrow(
-            const ValueKey('schedule-day-prev'),
-            Icons.chevron_left_rounded,
-            hasPrev,
-            -1,
-          ),
-          if (day != null)
-            Text(
-              '${day.day.toString().padLeft(2, '0')}/'
-              '${day.month.toString().padLeft(2, '0')}',
-              key: const ValueKey('schedule-day-label'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+          // Bộ đếm tiến độ xếp lịch, như thanh công cụ của web.
+          Icon(Icons.event_available_outlined, size: 16, color: colors.textMuted),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              '${l10n.opsMatches} $placedCount/$totalCount',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
+                color: colors.textSecondary,
               ),
             ),
-          dayArrow(
-            const ValueKey('schedule-day-next'),
-            Icons.chevron_right_rounded,
-            hasNext,
-            1,
           ),
           const Spacer(),
           if (widget.divisions.length > 1 &&
-              widget.onDivisionSelected != null)
+              widget.onDivisionSelected != null) ...[
             Flexible(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 150),
+                constraints: const BoxConstraints(maxWidth: 180),
                 child: _divisionDropdown(context),
               ),
             ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
+          OutlinedButton.icon(
+            key: const ValueKey('court-picker-button'),
+            onPressed: () => _openCourtPicker(context, allCourts, selectedCourts),
+            icon: const Icon(Icons.grid_view_rounded, size: 16),
+            label: Text(
+              '${l10n.tournamentManagementVenues} $visibleCount/${allCourts.length}',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 34),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              side: BorderSide(color: colors.border),
+            ),
+          ),
           IconButton(
             key: const ValueKey('schedule-print-button'),
             padding: EdgeInsets.zero,
@@ -929,65 +930,48 @@ class _TournamentScheduleCourtGridState
             onPressed: widget.onPrint ?? _printSchedule,
             icon: Icon(Icons.print_outlined, color: colors.textMuted),
           ),
-          _moreMenu(context, l10n, allCourts, selectedCourts),
-        ],
+          IconButton(
+            key: const ValueKey('schedule-export-button'),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+            tooltip: l10n.exportData,
+            onPressed: _exporting ? null : _exportSchedule,
+            icon: _exporting
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Icons.file_download_outlined, color: colors.textMuted),
+          ),
+          if (widget.onOpenScheduleSettings != null)
+            IconButton(
+              key: const ValueKey('schedule-settings-button'),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+              tooltip: l10n.scheduleSettingsTitle,
+              onPressed: widget.onOpenScheduleSettings,
+              icon: Icon(Icons.schedule_rounded, color: colors.textMuted),
+            ),
+          if (widget.onOpenFullscreen != null) ...[
+            const SizedBox(width: 4),
+            IconButton(
+              key: const ValueKey('court-grid-fullscreen'),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+              tooltip: l10n.tabSchedule,
+              onPressed: widget.onOpenFullscreen,
+              icon: Icon(
+                Icons.open_in_full_rounded,
+                color: colors.textMuted,
+              ),
+            ),
+          ],
+          ],
+        ),
       ),
-    );
-  }
-
-  /// The ⋯ menu keeps the old actions under their old keys.
-  Widget _moreMenu(
-    BuildContext context,
-    AppLocalizations l10n,
-    List<ScheduleCourt> allCourts,
-    Set<String> selectedCourts,
-  ) {
-    final colors = context.colors;
-    return PopupMenuButton<String>(
-      key: const ValueKey('schedule-more-menu'),
-      padding: EdgeInsets.zero,
-      tooltip: l10n.club_moreOptions,
-      icon: Icon(Icons.more_horiz_rounded, color: colors.textMuted),
-      onSelected: (value) {
-        switch (value) {
-          case 'courts':
-            _openCourtPicker(context, allCourts, selectedCourts);
-          case 'export':
-            if (!_exporting) _exportSchedule();
-          case 'settings':
-            widget.onOpenScheduleSettings?.call();
-          case 'fullscreen':
-            widget.onOpenFullscreen?.call();
-        }
-      },
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          key: const ValueKey('court-picker-button'),
-          value: 'courts',
-          child: Text(
-            '${l10n.tournamentManagementVenues} '
-            '${selectedCourts.length}/${allCourts.length}',
-          ),
-        ),
-        PopupMenuItem(
-          key: const ValueKey('schedule-export-button'),
-          value: 'export',
-          enabled: !_exporting,
-          child: Text(l10n.exportData),
-        ),
-        if (widget.onOpenScheduleSettings != null)
-          PopupMenuItem(
-            key: const ValueKey('schedule-settings-button'),
-            value: 'settings',
-            child: Text(l10n.scheduleSettingsTitle),
-          ),
-        if (widget.onOpenFullscreen != null)
-          PopupMenuItem(
-            key: const ValueKey('court-grid-fullscreen'),
-            value: 'fullscreen',
-            child: Text(l10n.tabSchedule),
-          ),
-      ],
     );
   }
 
@@ -1095,6 +1079,35 @@ class _TournamentScheduleCourtGridState
     );
     if (!mounted) return;
     setState(() => _selectedCourts = working);
+  }
+
+  Widget _dayPicker(
+    BuildContext context,
+    List<DateTime> days,
+    DateTime? selected,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        0,
+      ),
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.xs,
+        children: [
+          for (final day in days)
+            ChoiceChip(
+              key: ValueKey('schedule-day-${day.day}-${day.month}'),
+              label: Text('${day.day}/${day.month}'),
+              selected: selected == day,
+              onSelected: (_) => setState(() => _day = day),
+              selectedColor: AppTheme.primary.withValues(alpha: 0.18),
+            ),
+        ],
+      ),
+    );
   }
 
   /// Khay trận chưa xếp: chip kéo-thả lên lưới như cũ; khi có

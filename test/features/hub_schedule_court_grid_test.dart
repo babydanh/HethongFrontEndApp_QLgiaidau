@@ -1,7 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_schedule_court_grid.dart';
@@ -121,10 +120,6 @@ void main() {
     );
     expect(find.byTooltip('Sân 3'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('schedule-more-menu')));
-
-    await tester.pumpAndSettle();
-
     await tester.tap(find.byKey(const ValueKey('court-picker-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-item-Sân 3')));
@@ -148,10 +143,6 @@ void main() {
       ],
     );
 
-    await tester.tap(find.byKey(const ValueKey('schedule-more-menu')));
-
-    await tester.pumpAndSettle();
-
     await tester.tap(find.byKey(const ValueKey('court-picker-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-item-Sân 3')));
@@ -160,10 +151,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Đội m3 A'), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('schedule-more-menu')));
-
-    await tester.pumpAndSettle();
-
     await tester.tap(find.byKey(const ValueKey('court-picker-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-item-Sân 3')));
@@ -171,52 +158,6 @@ void main() {
     await tester.tapAt(const Offset(5, 5));
     await tester.pumpAndSettle();
     expect(find.text('Đội m3 A'), findsOneWidget);
-  });
-
-  testWidgets('same participant on two courts at once is drawn red', (
-    tester,
-  ) async {
-    MatchModel clash(String id, String courtId, String courtName, String t1) =>
-        MatchModel(
-          id: id,
-          round: 1,
-          matchNumber: 1,
-          team1Id: t1,
-          team2Id: 'other-$id',
-          team1Name: 'Đội $id A',
-          team2Name: 'Đội $id B',
-          status: 'scheduled',
-          courtId: courtId,
-          courtName: courtName,
-          scheduledTime: DateTime(2026, 10, 24, 9),
-          bracketPosition: const BracketPosition(round: 1, position: 0),
-          updatedAt: DateTime.utc(2026),
-        );
-    await _pump(
-      tester,
-      repository: _VenuesRepository(),
-      matches: [
-        clash('c1', 'court-1', 'Sân 1', 'shared'),
-        clash('c2', 'court-2', 'Sân 2', 'shared'),
-        clash('c3', 'court-3', 'Sân 3', 'solo'),
-      ],
-    );
-
-    double borderWidth(String id) {
-      final box = tester.widget<Container>(
-        find
-            .descendant(
-              of: find.byKey(ValueKey('schedule-match-$id')),
-              matching: find.byType(Container),
-            )
-            .first,
-      );
-      return ((box.decoration! as BoxDecoration).border! as Border).top.width;
-    }
-
-    expect(borderWidth('c1'), 2.0);
-    expect(borderWidth('c2'), 2.0);
-    expect(borderWidth('c3'), 1.0);
   });
 
   testWidgets('no courts yet shows the venues empty message, not a grid', (
