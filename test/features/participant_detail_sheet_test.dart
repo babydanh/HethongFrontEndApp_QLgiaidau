@@ -195,13 +195,12 @@ void main() {
     await tester.pumpAndSettle();
 
     final sheet = find.byType(ParticipantDetailSheet);
-    // Trạng thái chờ duyệt + chưa thanh toán + badge cặp + hạng mục.
+    // Trạng thái chờ duyệt + chưa thanh toán.
     expect(
       find.descendant(of: sheet, matching: find.text('Chờ duyệt')),
       findsOneWidget,
     );
     expect(find.text('Chưa thanh toán'), findsOneWidget);
-    expect(find.text('Cặp · Đôi Nam Nữ'), findsOneWidget);
     // Lệ phí hiển thị kiểu vi-VN (150000 -> 150.000₫, như Web toLocaleString('vi-VN')).
     expect(find.textContaining('150.000'), findsOneWidget);
     // Câu trả lời form: key humanize, bool dịch Có, tệp đính kèm hiện tên file.
@@ -260,59 +259,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repo.feePaid, [('p-1', true)]);
-  });
-
-  testWidgets('TC-WP-03-02: dòng nguồn import theo Web (nhãn + tên file)', (
-    tester,
-  ) async {
-    final repo = _RecordingManagementRepository();
-    final imported = OrganizerOpsParticipant(
-      id: 'p-excel',
-      teamName: 'Đội Nhập Từ File',
-      teamStatus: 'COMPLETE',
-      isPaid: true,
-      members: const [],
-      customResponses: {
-        'importedFrom': 'EXCEL',
-        'sourceFileName': 'danh-sach.xlsx',
-      },
-    );
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          tournamentManagementRepositoryProvider.overrideWithValue(repo),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.darkTheme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('vi'),
-          home: Scaffold(
-            body: Builder(
-              builder: (context) => Center(
-                child: TextButton(
-                  onPressed: () => ParticipantDetailSheet.show(
-                    context,
-                    tournamentId: 't1',
-                    participant: imported,
-                    tournamentStatus: 'IN_PROGRESS',
-                  ),
-                  child: const Text('Mở sheet'),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('Mở sheet'));
-    await tester.pumpAndSettle();
-
-    // Một dòng nguồn duy nhất: "Nguồn hồ sơ · Nhập từ Excel · danh-sach.xlsx".
-    expect(
-      find.text('Nguồn hồ sơ · Nhập từ Excel · danh-sach.xlsx'),
-      findsOneWidget,
-    );
   });
 
   testWidgets('TC-WP-03-02: nút footer không khoá theo trạng thái giải (Web)', (
@@ -517,49 +463,6 @@ void main() {
 
     expect(repo.rosterLocks, hasLength(1));
     expect(repo.rosterLocks.first, ('p-fb', true));
-  });
-
-  testWidgets('TC-WP-03-02: gán seed nhanh gửi PATCH /tournaments/:id/seeds', (
-    tester,
-  ) async {
-    final repo = _RecordingManagementRepository();
-    await tester.pumpWidget(_app(repo));
-    await tester.tap(find.byKey(const ValueKey('open-sheet')));
-    await tester.pumpAndSettle();
-
-    await tester.enterText(
-      find.byKey(const ValueKey('participant-detail-seed')),
-      '3',
-    );
-    // Mục seed nằm cuối thân cuộn của sheet: phải cuộn tới nút trước khi bấm.
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('participant-detail-seed-save')),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(const ValueKey('participant-detail-seed-save')),
-    );
-    await tester.pumpAndSettle();
-
-    expect(repo.seeds, [
-      {'participantId': 'p-1', 'seed': 3},
-    ]);
-
-    // Seed không hợp lệ: báo lỗi tại chỗ, không gửi API.
-    await tester.enterText(
-      find.byKey(const ValueKey('participant-detail-seed')),
-      'abc',
-    );
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('participant-detail-seed-save')),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(const ValueKey('participant-detail-seed-save')),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Seed phải là số nguyên từ 1 trở lên.'), findsOneWidget);
-    expect(repo.seeds, hasLength(1));
   });
 
   testWidgets('TC-WP-03-02: sửa liên hệ khách gửi PATCH entry đúng payload', (

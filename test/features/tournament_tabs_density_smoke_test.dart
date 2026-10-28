@@ -404,7 +404,9 @@ void main() {
     expect(find.text('Champion Alpha'), findsWidgets);
 
     await _openTab(tester, 'Danh sách đội');
-    expect(find.text('Player Alpha / Player Beta'), findsOneWidget);
+    // The team card lists each player on its own row.
+    expect(find.text('Player Alpha'), findsOneWidget);
+    expect(find.text('Player Beta'), findsOneWidget);
 
     await _openTab(tester, 'Lịch thi đấu');
     // Cả hai trận fixture đều chưa có giờ/sân: lịch công khai để trống.

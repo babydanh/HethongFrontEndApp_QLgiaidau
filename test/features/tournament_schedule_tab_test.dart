@@ -617,7 +617,7 @@ void main() {
         find.text('Câu lạc bộ Pickleball Thành phố Hồ Chí Minh'),
       );
       expect(teamName.overflow, TextOverflow.ellipsis);
-      expect(teamName.style?.fontWeight, FontWeight.w700);
+      expect(teamName.style?.fontWeight, FontWeight.w600);
 
       final card = find.byKey(ValueKey('schedule-match-${match.id}'));
       final cardRight = tester.getRect(card).right;

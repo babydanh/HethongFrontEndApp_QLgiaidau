@@ -273,10 +273,12 @@ class _TeamsTabState extends State<TeamsTab> {
                         ),
                       );
                     }
-                    for (final team in teamsInDiv) {
+                    for (var tIdx = 0; tIdx < teamsInDiv.length; tIdx++) {
+                      final team = teamsInDiv[tIdx];
                       items.add(
                         TournamentTeamCard(
                           team: team,
+                          index: tIdx + 1,
                           isTeamSport: widget.isTeamSport,
                           showSeed: _showsSeedFor(team),
                           isDoublesDivision: widget.isDoublesDivision,

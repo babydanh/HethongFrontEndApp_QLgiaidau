@@ -1881,7 +1881,6 @@ void main() {
       final tabBarRect = tester.getRect(find.byType(TabBar).first);
       final iconFinder = find.byIcon(Icons.category_outlined);
       expect(iconFinder, findsOneWidget);
-      final iconRect = tester.getRect(iconFinder);
       final cardFinder = find
           .ancestor(of: iconFinder, matching: find.byType(Container))
           .first;
@@ -2063,7 +2062,10 @@ void main() {
         find.byKey(const ValueKey('athletes-import-excel')),
         findsOneWidget,
       );
-      expect(find.byKey(const ValueKey('athletes-more')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('athletes-download-template')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('tapping Excel import opens the roster import sheet', (
@@ -2359,11 +2361,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Nút VĐV ảo mở đúng sheet ảo, chưa sinh gì.
-      final moreButton = find.byKey(const ValueKey('athletes-more'));
-      await tester.ensureVisible(moreButton);
-      await tester.tap(moreButton);
+      final mockButton = find.byKey(const ValueKey('athletes-mock-data'));
+      await tester.ensureVisible(mockButton);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('athletes-mock-data')));
+      await tester.tap(mockButton);
       await tester.pumpAndSettle();
       expect(find.byType(MockParticipantsSheet), findsOneWidget);
       expect(management.seededMockNames, isEmpty);
@@ -2373,9 +2374,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Nút đặc cách mở đúng sheet đặc cách.
-      await tester.tap(moreButton);
+      final wildcardButton = find.byKey(const ValueKey('athletes-wildcard'));
+      await tester.ensureVisible(wildcardButton);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('athletes-wildcard')));
+      await tester.tap(wildcardButton);
       await tester.pumpAndSettle();
       expect(find.byType(WildcardSheet), findsOneWidget);
       expect(management.reservedSlotContacts, isEmpty);

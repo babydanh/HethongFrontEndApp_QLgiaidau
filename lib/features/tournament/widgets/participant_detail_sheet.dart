@@ -87,7 +87,6 @@ class _ParticipantDetailSheetState
   bool _busy = false;
   String? _error;
   late final TextEditingController _noteController;
-  late final TextEditingController _seedController;
   bool _rosterLocked = false;
   late bool _present = participant.isPresent;
   late bool _paid = participant.isPaid;
@@ -105,9 +104,6 @@ class _ParticipantDetailSheetState
   void initState() {
     super.initState();
     _noteController = TextEditingController(text: participantNote(participant));
-    _seedController = TextEditingController(
-      text: participant.seed?.toString() ?? '',
-    );
     _rosterLocked = participant.rosterLockedAt != null;
     // An existing note stays visible; an empty one hides behind its row.
     _noteOpen = _noteController.text.trim().isNotEmpty;
@@ -123,7 +119,6 @@ class _ParticipantDetailSheetState
   @override
   void dispose() {
     _noteController.dispose();
-    _seedController.dispose();
     for (final field in _contactFields) {
       field.dispose();
     }
@@ -173,32 +168,6 @@ class _ParticipantDetailSheetState
         SnackBar(
           content: Text(
             AppLocalizations.of(context)!.participantDetailNoteSaved,
-          ),
-        ),
-      );
-    }
-  }
-
-  /// Gán seed nhanh (`PATCH /tournaments/:id/seeds`, một dòng).
-  Future<void> _saveSeed() async {
-    final l10n = AppLocalizations.of(context)!;
-    final seed = int.tryParse(_seedController.text.trim());
-    if (seed == null || seed < 1) {
-      setState(() => _error = l10n.participantDetailSeedInvalid);
-      return;
-    }
-    final saved = await _run(
-      () => ref
-          .read(tournamentManagementRepositoryProvider)
-          .updateTournamentSeeds(widget.tournamentId, [
-            {'participantId': participant.id, 'seed': seed},
-          ]),
-    );
-    if (saved && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.participantDetailSeedSaved,
           ),
         ),
       );
@@ -512,8 +481,6 @@ class _ParticipantDetailSheetState
             const SizedBox(height: 12),
             _formAnswersSection(context),
           ],
-          const SizedBox(height: 12),
-          _seedSection(context),
           if (_error != null) ...[
             const SizedBox(height: 8),
             Text(_error!, style: TextStyle(color: colors.error)),
@@ -672,29 +639,11 @@ class _ParticipantDetailSheetState
           ],
         ),
         const SizedBox(height: 6),
-        Text(
-          [
-            widget.pairFormat
-                ? l10n.participantDetailPairBadge
-                : l10n.participantDetailSingleBadge,
-            if (widget.divisionName?.isNotEmpty == true)
-              widget.divisionName!
-            else
-              l10n.participantDetailUnassignedDivision,
-            if (participant.registeredAt != null)
-              DateFormat('dd/MM/yyyy HH:mm').format(participant.registeredAt!),
-          ].join(' · '),
-          style: TextStyle(color: colors.textSecondary, fontSize: 12),
-        ),
-        // Dòng nguồn import: "Nguồn hồ sơ: Excel · file.xlsx" (Web hiện một
-        // dòng duy nhất, sourceFileName/SheetName/RowIndex chỉ để phục vụ dòng này).
-        if (_registrationSourceLine(l10n) case final sourceLine?) ...[
-          const SizedBox(height: 6),
+        if (participant.registeredAt != null)
           Text(
-            sourceLine,
+            DateFormat('dd/MM/yyyy HH:mm').format(participant.registeredAt!),
             style: TextStyle(color: colors.textSecondary, fontSize: 12),
           ),
-        ],
         // Thanh toán: chỉ hiện khi có lệ phí hoặc có giao dịch (như Web).
         // Số tiền nằm ở hàng "Đã đóng phí"; dòng này chỉ còn mã giao dịch/ngày.
         if (participant.payment != null) ...[
@@ -719,36 +668,6 @@ class _ParticipantDetailSheetState
   DateTime? get _paymentPaidAt {
     final raw = participant.payment?['paidAt'];
     return raw is String ? DateTime.tryParse(raw) : null;
-  }
-
-  /// Một dòng nguồn như Web (`selectedSourceLine`): nhãn nguồn đã biết hoặc
-  /// key humanize, nối tên file nếu có. Null khi hồ sơ tự đăng ký.
-  String? _registrationSourceLine(AppLocalizations l10n) {
-    final source = participant.customResponses['importedFrom']
-        ?.toString()
-        .trim();
-    final fileName = participant.customResponses['sourceFileName']
-        ?.toString()
-        .trim();
-    if ((source == null || source.isEmpty) &&
-        (fileName == null || fileName.isEmpty)) {
-      return null;
-    }
-    final label = source == null || source.isEmpty
-        ? null
-        : switch (source) {
-            'ORGANIZER_DIRECT' => l10n.participantSourceOrganizerDirect,
-            'MANUAL_EMAIL' => l10n.participantSourceManualEmail,
-            'EXCEL' => l10n.participantSourceExcel,
-            'AI_EXCEL' => l10n.participantSourceAiExcel,
-            'GOOGLE_FORM' => l10n.participantSourceGoogleForm,
-            _ => _humanizeResponseKey(source),
-          };
-    return [
-      l10n.participantDetailRegistrationSource,
-      ?label,
-      if (fileName != null && fileName.isNotEmpty) fileName,
-    ].join(' · ');
   }
 
   /// Maps the registration status onto the Lavish pill tone.
@@ -914,11 +833,14 @@ class _ParticipantDetailSheetState
         children: [
           CircleAvatar(
             radius: 17,
-            backgroundColor: colors.bgElevated,
-            child: Icon(
-              Icons.person_outline_rounded,
-              size: 18,
-              color: colors.textSecondary,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
+            child: Text(
+              guest.name.trim().isNotEmpty ? guest.name.trim()[0].toUpperCase() : '?',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.primary,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -1124,43 +1046,6 @@ class _ParticipantDetailSheetState
       );
     }
     return Text(value, style: style);
-  }
-
-  Widget _seedSection(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Row(
-      children: [
-        Text(
-          l10n.participantDetailSeedLabel,
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 96,
-          child: TextField(
-            key: const ValueKey('participant-detail-seed'),
-            controller: _seedController,
-            enabled: !_busy,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              isDense: true,
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        OutlinedButton(
-          key: const ValueKey('participant-detail-seed-save'),
-          onPressed: _busy ? null : _saveSeed,
-          child: Text(l10n.participantDetailSeedSave),
-        ),
-      ],
-    );
   }
 }
 

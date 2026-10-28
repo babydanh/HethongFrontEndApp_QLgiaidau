@@ -1149,18 +1149,97 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       match,
       side == 1 ? match.team1Id : match.team2Id,
     );
-    return Flexible(
-      child: ParticipantLabel(
-        teamName: matchSideTeamName(match, side),
-        players: matchSidePlayers(match, side),
-        teamOnly: isFootballMatch(match),
-        compact: true,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: isWinner ? FontWeight.w800 : FontWeight.w700,
-          color: style.fg,
+    final teamName = matchSideTeamName(match, side);
+    final players = matchSidePlayers(match, side);
+    final isFootball = isFootballMatch(match);
+
+    final display = resolveParticipantDisplay(
+      teamName: teamName,
+      players: players,
+      teamOnly: isFootball,
+    );
+
+    final textStyle = TextStyle(
+      fontSize: 10.5,
+      fontWeight: isWinner ? FontWeight.w800 : FontWeight.w600,
+      color: style.fg,
+    );
+
+    // Nếu là đội có tên (bóng đá hoặc tên đội đặt riêng): hiển thị 1 dòng tên đội
+    if (display.isTeam) {
+      return Flexible(
+        child: Text(
+          display.teamName!,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: textStyle,
         ),
-      ),
+      );
+    }
+
+    if (players.isEmpty) {
+      return Flexible(
+        child: Text(
+          AppLocalizations.of(context)!.matchNotDetermined,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: textStyle.copyWith(color: context.colors.textMuted),
+        ),
+      );
+    }
+
+    // Đôi (2 người): Tách thành 2 dòng trên dưới gọn gàng kèm avatar
+    if (players.length >= 2) {
+      return Flexible(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _playerMiniRow(players[0], textStyle),
+            const SizedBox(height: 1.5),
+            _playerMiniRow(players[1], textStyle),
+          ],
+        ),
+      );
+    }
+
+    // Đơn (1 người)
+    return Flexible(
+      child: _playerMiniRow(players[0], textStyle),
+    );
+  }
+
+  Widget _playerMiniRow(ParticipantPlayer player, TextStyle textStyle) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CircleAvatar(
+          radius: 6.5,
+          backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+          backgroundImage: player.avatarUrl != null && player.avatarUrl!.isNotEmpty
+              ? NetworkImage(player.avatarUrl!)
+              : null,
+          child: (player.avatarUrl == null || player.avatarUrl!.isEmpty)
+              ? Text(
+                  player.fullName.isNotEmpty ? player.fullName[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontSize: 7.5,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primary,
+                  ),
+                )
+              : null,
+        ),
+        const SizedBox(width: 3.5),
+        Flexible(
+          child: Text(
+            abbreviateName(player.fullName),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textStyle,
+          ),
+        ),
+      ],
     );
   }
 
