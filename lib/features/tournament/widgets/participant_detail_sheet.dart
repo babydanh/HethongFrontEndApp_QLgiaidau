@@ -27,6 +27,7 @@ class ParticipantDetailSheet extends ConsumerStatefulWidget {
     this.divisionName,
     this.pairFormat = false,
     this.onRefresh,
+    this.onPresenceChanged,
   });
 
   final String tournamentId;
@@ -43,6 +44,10 @@ class ParticipantDetailSheet extends ConsumerStatefulWidget {
   /// Làm mới danh sách VĐV ở nơi mở sheet (gọi sau mỗi thao tác ghi thành công).
   final Future<void> Function()? onRefresh;
 
+  /// Called after the server accepted a check-in flip, so counters held by
+  /// the opener (the "Có mặt x/y" header) can follow.
+  final void Function(bool present)? onPresenceChanged;
+
   static Future<void> show(
     BuildContext context, {
     required String tournamentId,
@@ -51,6 +56,7 @@ class ParticipantDetailSheet extends ConsumerStatefulWidget {
     String? divisionName,
     bool pairFormat = false,
     Future<void> Function()? onRefresh,
+    void Function(bool present)? onPresenceChanged,
   }) => showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -63,6 +69,7 @@ class ParticipantDetailSheet extends ConsumerStatefulWidget {
       divisionName: divisionName,
       pairFormat: pairFormat,
       onRefresh: onRefresh,
+      onPresenceChanged: onPresenceChanged,
     ),
   );
 
@@ -231,7 +238,9 @@ class _ParticipantDetailSheetState
           .read(tournamentManagementRepositoryProvider)
           .setParticipantPresent(widget.tournamentId, participant.id, value),
     );
-    if (saved && mounted) setState(() => _present = value);
+    if (!saved) return;
+    widget.onPresenceChanged?.call(value);
+    if (mounted) setState(() => _present = value);
   }
 
   /// Fee switch: always asks first (clearing it can open a refund request).

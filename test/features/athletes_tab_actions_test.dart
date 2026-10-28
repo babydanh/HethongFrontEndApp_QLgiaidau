@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -311,6 +312,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repo.generates, [(PairingStrategy.eloBalanced, 'div-d')]);
+  });
+
+  testWidgets('check-in switched in the profile sheet updates the header', (
+    tester,
+  ) async {
+    final repo = _ManagementRepository();
+    await _pumpTab(tester, repo);
+    final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)))!;
+    expect(find.text('${l10n.athletesPresentCount} 0/3'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('athlete-division-row-div-d')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('athlete-team-row-p-ok')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('participant-detail-checkin')),
+        matching: find.byType(LavishSwitch),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.presence, [('p-ok', true)]);
+    expect(find.text('${l10n.athletesPresentCount} 1/3'), findsOneWidget);
   });
 
   testWidgets('singles division has neither pairing nor auto-pair boxes', (

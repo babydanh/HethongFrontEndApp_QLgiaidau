@@ -229,6 +229,8 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
       onRefresh: () async {
         if (mounted) _reload();
       },
+      onPresenceChanged: (present) =>
+          widget.onPresenceChanged?.call(participant.id, present),
     );
   }
 
