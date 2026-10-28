@@ -293,8 +293,6 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('athlete-division-row-div-d')));
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byKey(const ValueKey('athletes-auto-pair')));
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('athletes-auto-pair')));
     await tester.pumpAndSettle();
     expect(repo.generates, isEmpty);
@@ -304,8 +302,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.generates, isEmpty);
 
-    await tester.ensureVisible(find.byKey(const ValueKey('athletes-auto-pair')));
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('athletes-auto-pair')));
     await tester.pumpAndSettle();
     await tester.tap(

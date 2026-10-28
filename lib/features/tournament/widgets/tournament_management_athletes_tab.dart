@@ -448,7 +448,7 @@ class _DivisionRow extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
                           child: _AthleteActionRow(
                             showPairing: division.isDoubles,
                             waitingPartner: waitingPartner,
@@ -519,103 +519,200 @@ class _AthleteActionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const gap = SizedBox(width: 6);
-    final compact = const EdgeInsets.symmetric(horizontal: 10);
-    const labelStyle = TextStyle(fontSize: 12);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
+    const gap = SizedBox(width: 4);
+    return Row(
+      children: [
+        Expanded(
+          child: _ActionBox(
+            boxKey: const ValueKey('athletes-import-excel'),
+            icon: Icons.upload_file_rounded,
+            label: l10n.rosterImportOpen,
+            onTap: onImportExcel,
+          ),
+        ),
+        if (showPairing) ...[
+          gap,
+          Expanded(
+            child: _ActionBox(
+              boxKey: const ValueKey('athletes-pairing'),
+              icon: Icons.handshake_rounded,
+              label: l10n.pairingOpen,
+              onTap: onOpenPairing,
+              badge: waitingPartner,
+            ),
+          ),
+          gap,
+          Expanded(
+            child: _ActionBox(
+              boxKey: const ValueKey('athletes-auto-pair'),
+              icon: Icons.shuffle_rounded,
+              label: l10n.athletesAutoPair,
+              onTap: onAutoPair,
+            ),
+          ),
+        ],
+        gap,
+        Expanded(
+          child: _ActionBox(
+            icon: Icons.person_add_alt_1_rounded,
+            label: l10n.opsAddAthlete,
+            onTap: onAddAthlete,
+            primary: true,
+          ),
+        ),
+        gap,
+        Expanded(
+          child: PopupMenuButton<String>(
+            key: const ValueKey('athletes-more'),
+            padding: EdgeInsets.zero,
+            tooltip: l10n.club_moreOptions,
+            onSelected: (value) => switch (value) {
+              'wildcard' => onOpenWildcard(),
+              'template' => onDownloadTemplate(),
+              _ => onOpenMockParticipants(),
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                key: const ValueKey('athletes-wildcard'),
+                value: 'wildcard',
+                child: Text(l10n.wildcardOpen),
+              ),
+              PopupMenuItem(
+                key: const ValueKey('athletes-download-template'),
+                value: 'template',
+                child: Text(l10n.rosterImportDownloadTemplate),
+              ),
+              PopupMenuItem(
+                key: const ValueKey('athletes-mock-data'),
+                value: 'mock',
+                child: Text(l10n.mockParticipantsOpen),
+              ),
+            ],
+            child: _ActionBoxFace(
+              icon: Icons.more_vert,
+              label: l10n.manageSettingsOtherSection,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionBox extends StatelessWidget {
+  const _ActionBox({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.boxKey,
+    this.primary = false,
+    this.badge,
+  });
+
+  final Key? boxKey;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool primary;
+
+  /// Small count in the top-right corner (null: none).
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      key: boxKey,
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: _ActionBoxFace(
+        icon: icon,
+        label: label,
+        primary: primary,
+        badge: badge,
+      ),
+    );
+  }
+}
+
+class _ActionBoxFace extends StatelessWidget {
+  const _ActionBoxFace({
+    required this.icon,
+    required this.label,
+    this.primary = false,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool primary;
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = LavishColors.of(context);
+    final fg = primary ? Colors.white : colors.text;
+    return Container(
+      height: 46,
+      decoration: BoxDecoration(
+        color: primary ? LavishColors.accent : colors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: primary ? LavishColors.accent : colors.chipLine,
+        ),
+      ),
+      child: Stack(
         children: [
-          FilledButton.icon(
-            key: const ValueKey('athletes-add'),
-            style: FilledButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: compact,
+          Positioned.fill(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: primary ? Colors.white : LavishColors.accent,
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: fg,
+                  ),
+                ),
+              ],
             ),
-            onPressed: onAddAthlete,
-            icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
-            label: Text(l10n.opsAddAthlete, style: labelStyle),
           ),
-          gap,
-          OutlinedButton.icon(
-            key: const ValueKey('athletes-import-excel'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: compact,
-            ),
-            onPressed: onImportExcel,
-            icon: const Icon(Icons.upload_file_rounded, size: 16),
-            label: Text(l10n.rosterImportOpen, style: labelStyle),
-          ),
-          gap,
-          OutlinedButton.icon(
-            key: const ValueKey('athletes-download-template'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: compact,
-            ),
-            onPressed: onDownloadTemplate,
-            icon: const Icon(Icons.download_rounded, size: 16),
-            label: Text(l10n.rosterImportDownloadTemplate, style: labelStyle),
-          ),
-          gap,
-          OutlinedButton.icon(
-            key: const ValueKey('athletes-mock-data'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: compact,
-            ),
-            onPressed: onOpenMockParticipants,
-            icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-            label: Text(l10n.mockParticipantsOpen, style: labelStyle),
-          ),
-          gap,
-          OutlinedButton.icon(
-            key: const ValueKey('athletes-wildcard'),
-            style: OutlinedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: compact,
-            ),
-            onPressed: onOpenWildcard,
-            icon: const Icon(Icons.workspace_premium_rounded, size: 16),
-            label: Text(l10n.wildcardOpen, style: labelStyle),
-          ),
-          if (showPairing) ...[
-            gap,
-            OutlinedButton.icon(
-              key: const ValueKey('athletes-pairing'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: compact,
-              ),
-              onPressed: onOpenPairing,
-              icon: const Icon(Icons.handshake_rounded, size: 16),
-              label: Text(
-                waitingPartner > 0
-                    ? '${l10n.pairingOpen} ($waitingPartner)'
-                    : l10n.pairingOpen,
-                style: labelStyle,
+          if (badge != null)
+            Positioned(
+              top: 2,
+              right: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0ECFF),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$badge',
+                  style: const TextStyle(
+                    fontSize: 9,
+                    height: 14 / 9,
+                    fontWeight: FontWeight.w700,
+                    color: LavishColors.accent,
+                  ),
+                ),
               ),
             ),
-            gap,
-            OutlinedButton.icon(
-              key: const ValueKey('athletes-auto-pair'),
-              style: OutlinedButton.styleFrom(
-                visualDensity: VisualDensity.compact,
-                padding: compact,
-              ),
-              onPressed: onAutoPair,
-              icon: const Icon(Icons.shuffle_rounded, size: 16),
-              label: Text(l10n.athletesAutoPair, style: labelStyle),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
+/// Three-way strategy choice for "Tự ghép"; pops the chosen strategy only when
+/// the organizer confirms.
 class _AutoPairDialog extends StatefulWidget {
   const _AutoPairDialog();
 

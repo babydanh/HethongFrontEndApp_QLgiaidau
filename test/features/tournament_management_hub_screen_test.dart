@@ -2062,10 +2062,7 @@ void main() {
         find.byKey(const ValueKey('athletes-import-excel')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(const ValueKey('athletes-download-template')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('athletes-more')), findsOneWidget);
     });
 
     testWidgets('tapping Excel import opens the roster import sheet', (
@@ -2361,10 +2358,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Nút VĐV ảo mở đúng sheet ảo, chưa sinh gì.
-      final mockButton = find.byKey(const ValueKey('athletes-mock-data'));
-      await tester.ensureVisible(mockButton);
+      final moreButton = find.byKey(const ValueKey('athletes-more'));
+      await tester.ensureVisible(moreButton);
+      await tester.tap(moreButton);
       await tester.pumpAndSettle();
-      await tester.tap(mockButton);
+      await tester.tap(find.byKey(const ValueKey('athletes-mock-data')));
       await tester.pumpAndSettle();
       expect(find.byType(MockParticipantsSheet), findsOneWidget);
       expect(management.seededMockNames, isEmpty);
@@ -2374,10 +2372,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Nút đặc cách mở đúng sheet đặc cách.
-      final wildcardButton = find.byKey(const ValueKey('athletes-wildcard'));
-      await tester.ensureVisible(wildcardButton);
+      await tester.tap(moreButton);
       await tester.pumpAndSettle();
-      await tester.tap(wildcardButton);
+      await tester.tap(find.byKey(const ValueKey('athletes-wildcard')));
       await tester.pumpAndSettle();
       expect(find.byType(WildcardSheet), findsOneWidget);
       expect(management.reservedSlotContacts, isEmpty);

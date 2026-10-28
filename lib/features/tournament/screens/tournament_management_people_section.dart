@@ -95,8 +95,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   String? _busyParticipantId;
   String? _mutationError;
   ParticipantStatusFilter _filter = ParticipantStatusFilter.all;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
+  String _query = '';
 
   /// Check-in flips that the server accepted (or are in flight); they win over
   /// the loaded list until the next reload.
@@ -118,18 +117,6 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
     _participantsFuture = ref
         .read(tournamentRepositoryProvider)
         .getOrganizerParticipants(widget.tournament.id);
-    _searchController.addListener(() {
-      final q = _searchController.text.trim().toLowerCase();
-      if (q != _searchQuery) {
-        setState(() => _searchQuery = q);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   void _reload() {
@@ -167,31 +154,28 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   bool _matchesFilter(
     OrganizerOpsParticipant participant,
     ParticipantStatusFilter filter,
-  ) {
-    final statusMatch = switch (filter) {
-      ParticipantStatusFilter.all => true,
-      ParticipantStatusFilter.pending => _isPending(participant.teamStatus),
-      ParticipantStatusFilter.pendingPartner =>
-        participant.teamStatus.toUpperCase() == 'PENDING_PARTNER',
-      ParticipantStatusFilter.approved =>
-        participant.teamStatus.toUpperCase() == 'COMPLETE',
-      ParticipantStatusFilter.unpaid => !participant.isPaid,
-      ParticipantStatusFilter.rejected =>
-        participant.teamStatus.toUpperCase() == 'REJECTED',
-    };
-    if (!statusMatch) return false;
-    if (_searchQuery.isEmpty) return true;
+  ) => switch (filter) {
+    ParticipantStatusFilter.all => true,
+    ParticipantStatusFilter.pending => _isPending(participant.teamStatus),
+    ParticipantStatusFilter.pendingPartner =>
+      participant.teamStatus.toUpperCase() == 'PENDING_PARTNER',
+    ParticipantStatusFilter.approved =>
+      participant.teamStatus.toUpperCase() == 'COMPLETE',
+    ParticipantStatusFilter.unpaid => !participant.isPaid,
+    ParticipantStatusFilter.rejected =>
+      participant.teamStatus.toUpperCase() == 'REJECTED',
+  };
 
-    if (participant.teamName.toLowerCase().contains(_searchQuery)) return true;
-    for (final p in participant.players) {
-      if (p.fullName.toLowerCase().contains(_searchQuery)) return true;
-    }
-    for (final m in participant.members) {
-      if (m.fullName.toLowerCase().contains(_searchQuery)) return true;
-      if (m.email?.toLowerCase().contains(_searchQuery) == true) return true;
-      if (m.phoneNumber?.contains(_searchQuery) == true) return true;
-    }
-    return false;
+  /// Client-side search over the team name and every player/member name.
+  bool _matchesSearch(OrganizerOpsParticipant participant) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return true;
+    final haystack = [
+      participant.teamName,
+      for (final player in participant.players) player.fullName,
+      for (final member in participant.members) member.fullName,
+    ].join(' ').toLowerCase();
+    return haystack.contains(query);
   }
 
   /// One tap flips the check-in. The circle changes at once; a failure puts it
@@ -313,15 +297,13 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
     return FutureBuilder<List<OrganizerOpsParticipant>>(
       future: _participantsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting)
           return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
+        if (snapshot.hasError)
           return TournamentManagementError(
             error: snapshot.error,
             onRetry: _reload,
           );
-        }
         final all = snapshot.data ?? const <OrganizerOpsParticipant>[];
         final divisionId = widget.divisionId;
         final participants = divisionId == null
@@ -341,7 +323,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             _filter == ParticipantStatusFilter.pendingPartner;
         final visible = participants
             .where(
-              (item) => _matchesFilter(item, _filter),
+              (item) => _matchesFilter(item, _filter) && _matchesSearch(item),
             )
             .toList(growable: false);
         final body = <Widget>[
@@ -368,115 +350,9 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
               ),
               child: Row(
                 children: [
-                  // Compact status dropdown (36px) like the Web.
-                  Container(
-                    height: 36,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: context.colors.bgSurface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: context.colors.border),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<ParticipantStatusFilter>(
-                        key: const ValueKey('participant-filter-menu'),
-                        value: _filter,
-                        isDense: true,
-                        icon: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 18,
-                          color: context.colors.textSecondary,
-                        ),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: context.colors.textPrimary,
-                        ),
-                        onChanged: (val) {
-                          if (val != null) setState(() => _filter = val);
-                        },
-                        items: [
-                          for (final option in ParticipantStatusFilter.values)
-                            if (option != ParticipantStatusFilter.pendingPartner ||
-                                showPendingPartner)
-                              DropdownMenuItem(
-                                key: ValueKey('participant-filter-${option.name}'),
-                                value: option,
-                                child: Text(
-                                  '${_filterLabel(l10n, option)} (${counts[option]})',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: _filter == option
-                                        ? FontWeight.w800
-                                        : FontWeight.w600,
-                                    color: _filter == option
-                                        ? AppTheme.primary
-                                        : context.colors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _filterMenu(l10n, counts, showPendingPartner),
                   const SizedBox(width: 8),
-                  // Compact search field (36px).
-                  Expanded(
-                    child: SizedBox(
-                      height: 36,
-                      child: TextField(
-                        key: const ValueKey('participant-search'),
-                        controller: _searchController,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.colors.textPrimary,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: l10n.athletesSearchHint,
-                          hintStyle: TextStyle(
-                            fontSize: 12,
-                            color: context.colors.textMuted,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search_rounded,
-                            size: 18,
-                            color: context.colors.textSecondary,
-                          ),
-                          prefixIconConstraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 16),
-                                  splashRadius: 16,
-                                  onPressed: _searchController.clear,
-                                )
-                              : null,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                          ),
-                          filled: true,
-                          fillColor: context.colors.bgSurface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: context.colors.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: context.colors.border),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(
-                              color: AppTheme.primary,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: _searchField(l10n)),
                 ],
               ),
             ),
@@ -558,6 +434,66 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
           ],
         );
       },
+    );
+  }
+
+  Widget _filterMenu(
+    AppLocalizations l10n,
+    Map<ParticipantStatusFilter, int> counts,
+    bool showPendingPartner,
+  ) {
+    return PopupMenuButton<ParticipantStatusFilter>(
+      key: const ValueKey('participant-filter-menu'),
+      padding: EdgeInsets.zero,
+      initialValue: _filter,
+      onSelected: (option) => setState(() => _filter = option),
+      itemBuilder: (_) => [
+        for (final option in ParticipantStatusFilter.values)
+          if (option != ParticipantStatusFilter.pendingPartner ||
+              showPendingPartner)
+            PopupMenuItem(
+              key: ValueKey('participant-filter-${option.name}'),
+              value: option,
+              child: Text('${_filterLabel(l10n, option)} (${counts[option]})'),
+            ),
+      ],
+      // The menu owns the tap; the chip is only its face.
+      child: IgnorePointer(
+        child: LavishChipButton(
+          label: '${_filterLabel(l10n, _filter)} (${counts[_filter]})',
+          chevron: true,
+          onPressed: () {},
+        ),
+      ),
+    );
+  }
+
+  Widget _searchField(AppLocalizations l10n) {
+    final colors = LavishColors.of(context);
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: colors.chipLine, width: 1.5),
+    );
+    return TextField(
+      key: const ValueKey('participant-search'),
+      onChanged: (value) => setState(() => _query = value),
+      style: const TextStyle(fontSize: 13),
+      decoration: InputDecoration(
+        hintText: l10n.athletesSearchHint,
+        hintStyle: TextStyle(fontSize: 13, color: colors.muted),
+        prefixIcon: Icon(Icons.search_rounded, size: 18, color: colors.muted),
+        prefixIconConstraints: const BoxConstraints(minWidth: 36),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+        border: border,
+        enabledBorder: border,
+        focusedBorder: border.copyWith(
+          borderSide: const BorderSide(
+            color: LavishColors.accent,
+            width: 1.5,
+          ),
+        ),
+      ),
     );
   }
 
@@ -1107,320 +1043,228 @@ class _ParticipantCard extends StatelessWidget {
     final colors = context.colors;
     final status = participant.teamStatus.toUpperCase();
     final pending = const {'PENDING', 'PENDING_APPROVAL'}.contains(status);
-    final (statusLabel, statusColor) = switch (status) {
-      'PENDING' || 'PENDING_APPROVAL' => (
-        l10n.tournamentManagementParticipantPending,
-        colors.warning,
-      ),
-      'PENDING_PARTNER' => (
-        l10n.tournamentManagementParticipantPendingPartner,
-        colors.warning,
-      ),
-      'COMPLETE' => (
-        l10n.tournamentManagementParticipantApproved,
-        colors.success,
-      ),
-      'REJECTED' => (
-        l10n.tournamentManagementParticipantRejected,
-        colors.error,
-      ),
-      'KICKED' => (
-        l10n.tournamentManagementParticipantRemoved,
-        colors.textMuted,
-      ),
-      _ => (l10n.tournamentManagementStatusOther, colors.textSecondary),
+    final statusLabel = switch (status) {
+      'PENDING' || 'PENDING_APPROVAL' => l10n.tournamentManagementParticipantPending,
+      'PENDING_PARTNER' => l10n.tournamentManagementParticipantPendingPartner,
+      'COMPLETE' => l10n.tournamentManagementParticipantApproved,
+      'REJECTED' => l10n.tournamentManagementParticipantRejected,
+      'KICKED' => l10n.tournamentManagementParticipantRemoved,
+      _ => l10n.tournamentManagementStatusOther,
     };
-
+    final lead = participant.members.isEmpty ? null : participant.members.first;
+    final nameDisplay = resolveParticipantDisplay(
+      teamName: participant.teamName,
+      players: participant.players,
+    );
     final rowLabel = participantLabel(
       teamName: participant.teamName,
       players: participant.players,
     );
-    final display = resolveParticipantDisplay(
-      teamName: participant.teamName,
-      players: participant.players,
+    final nameStyle = TextStyle(
+      color: colors.textPrimary,
+      fontSize: 13,
+      fontWeight: FontWeight.w700,
     );
-    final players = participant.players;
-
-    return InkWell(
-      key: ValueKey('athlete-team-row-${participant.id}'),
-      onTap: onOpenDetail,
-      borderRadius: BorderRadius.circular(10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Dòng trên cùng: Tên đội (nếu là đội có tên) + Tag trạng thái + Cụm nút hành động compact
-            Row(
-              children: [
-                if (display.isTeam && participant.teamName.isNotEmpty) ...[
-                  Expanded(
-                    child: Text(
-                      participant.teamName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ] else ...[
-                  const Spacer(),
-                ],
-                // Badge trạng thái mỏng gọn
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                // Nút duyệt nhanh / từ chối nhanh / Menu tách cặp (compact buttons)
-                if (pending) ...[
-                  const SizedBox(width: 6),
-                  if (isBusy)
-                    const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else ...[
-                    // Nút duyệt gọn (Pill xanh)
-                    InkWell(
-                      key: ValueKey('participant-approve-${participant.id}'),
-                      onTap: onApprove,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.check_rounded, size: 14, color: Colors.white),
-                            const SizedBox(width: 3),
-                            Text(
-                              l10n.tournamentManagementApprove,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    // Nút từ chối gọn (Icon X)
-                    InkWell(
-                      key: ValueKey('participant-reject-${participant.id}'),
-                      onTap: onReject,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: colors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Icon(Icons.close_rounded, size: 16, color: colors.error),
-                      ),
-                    ),
-                  ],
-                ],
-                if (status == 'COMPLETE' && showPresence)
-                  _PresenceCircle(
-                    id: participant.id,
-                    isPresent: isPresent,
-                    onTap: onTogglePresence,
-                  ),
-                // Menu tách cặp
-                if (_canUnpair)
-                  PopupMenuButton<String>(
-                    key: ValueKey('participant-row-menu-${participant.id}'),
-                    tooltip: l10n.participantRowActions(rowLabel),
-                    enabled: !isBusy,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    icon: Icon(Icons.more_vert_rounded, size: 18, color: colors.textMuted),
-                    onSelected: (value) {
-                      if (value == 'unpair') onUnpair();
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem<String>(
-                        key: ValueKey('participant-unpair-${participant.id}'),
-                        value: 'unpair',
-                        child: Text(l10n.participantUnpair),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            // Phần danh sách VĐV: Tách thành từng hàng VĐV (2 hàng đối với cặp đôi)
-            if (players.isEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  l10n.matchNotDetermined,
-                  style: TextStyle(color: colors.textMuted, fontSize: 13),
-                ),
-              ),
-            ] else ...[
-              for (int idx = 0; idx < players.length; idx++) ...[
-                if (idx > 0) const SizedBox(height: 6),
-                _ParticipantPlayerRow(
-                  player: players[idx],
-                  member: participant.members.isNotEmpty && idx < participant.members.length
-                      ? participant.members[idx]
-                      : null,
-                ),
-              ],
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Hàng thông tin từng VĐV: Avatar tròn + Tên VĐV + Thông tin vai trò/khách
-class _ParticipantPlayerRow extends StatelessWidget {
-  const _ParticipantPlayerRow({
-    required this.player,
-    this.member,
-  });
-
-  final ParticipantPlayer player;
-  final OrganizerOpsMember? member;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final name = player.fullName.isNotEmpty ? player.fullName : (member?.fullName ?? '—');
-    final avatarUrl = player.avatarUrl ?? member?.avatarUrl;
-    final userId = player.userId ?? member?.userId;
-    final isGuest = player.isGuest || (userId == null || userId.isEmpty);
-
-    return Row(
+    final header = Row(
       children: [
-        // Avatar logo đàng hoàng
-        if (!isGuest && userId.isNotEmpty)
+        if (lead != null)
           UserAvatarTap(
-            userId: userId,
-            name: name,
-            imageUrl: avatarUrl,
-            size: 26,
+            userId: lead.userId,
+            name: lead.fullName,
+            imageUrl: lead.avatarUrl,
+            size: 36,
           )
         else
-          CircleAvatar(
-            radius: 13,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.12),
-            child: Text(
-              name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?',
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.primary,
-              ),
-            ),
-          ),
-        const SizedBox(width: 8),
-        // Tên VĐV
+          const SizedBox(width: 36, height: 44),
+        const SizedBox(width: 11),
         Expanded(
-          child: Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: colors.textPrimary,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              nameDisplay.isTeam
+                  ? ParticipantLabel(
+                      teamName: participant.teamName,
+                      players: participant.players,
+                      style: nameStyle,
+                    )
+                  : Text(
+                      participant.players.isEmpty
+                          ? l10n.matchNotDetermined
+                          : participantLabel(
+                              teamName: null,
+                              players: participant.players,
+                            ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: nameStyle,
+                    ),
+              _subtitle(context, l10n, status, statusLabel),
+            ],
           ),
         ),
-        // Nhãn phụ: Khách / Dự bị nếu có
-        if (isGuest)
-          Container(
-            margin: const EdgeInsets.only(left: 6),
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-            decoration: BoxDecoration(
-              color: colors.bgElevated,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: colors.border),
-            ),
-            child: Text(
-              AppLocalizations.of(context)!.userGuestFallback,
-              style: TextStyle(fontSize: 10, color: colors.textMuted, fontWeight: FontWeight.w600),
-            ),
+        const SizedBox(width: 8),
+        ..._trailing(context, l10n, status, pending),
+        // Menu dòng: Tách cặp (task 3.3) — chỉ khi server cho phép.
+        if (_canUnpair)
+          PopupMenuButton<String>(
+            key: ValueKey('participant-row-menu-${participant.id}'),
+            tooltip: l10n.participantRowActions(rowLabel),
+            enabled: !isBusy,
+            icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
+            onSelected: (value) {
+              if (value == 'unpair') onUnpair();
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                key: ValueKey('participant-unpair-${participant.id}'),
+                value: 'unpair',
+                child: Text(l10n.participantUnpair),
+              ),
+            ],
           ),
       ],
     );
-  }
-}
-
-/// Check-in circle (main's design): 26dp circle inside a 40dp touch target.
-class _PresenceCircle extends StatelessWidget {
-  const _PresenceCircle({
-    required this.id,
-    required this.isPresent,
-    required this.onTap,
-  });
-  final String id;
-  final bool isPresent;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final lavish = LavishColors.of(context);
-    return Semantics(
-      button: true,
-      checked: isPresent,
-      label: l10n.participantDetailCheckIn,
-      child: GestureDetector(
-        key: ValueKey('participant-checkin-$id'),
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox(
-          width: 40,
-          height: 40,
-          child: Center(
-            child: Container(
-              width: 26,
-              height: 26,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isPresent ? LavishColors.ok : null,
-                border: Border.all(
-                  color: isPresent ? LavishColors.ok : lavish.chipLine,
-                  width: 2,
-                ),
-              ),
-              child: isPresent
-                  ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
-                  : null,
+    return Column(
+      key: ValueKey('athlete-team-row-${participant.id}'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          button: true,
+          label: rowLabel,
+          child: InkWell(
+            onTap: onOpenDetail,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: header,
             ),
           ),
         ),
-      ),
+      ],
     );
   }
-}
 
+  /// "Đã duyệt · Đã đóng phí": the fee part is bold green / red; a free entry
+  /// shows plain text.
+  Widget _subtitle(
+    BuildContext context,
+    AppLocalizations l10n,
+    String status,
+    String statusLabel,
+  ) {
+    final colors = context.colors;
+    final lavish = LavishColors.of(context);
+    final muted = TextStyle(
+      color: status == 'REJECTED' ? colors.error : colors.textSecondary,
+      fontSize: 11.5,
+      fontWeight: FontWeight.w500,
+    );
+    final hasFee = (participant.entryFee ?? 0) > 0;
+    final fee = hasFee
+        ? Text(
+            participant.isPaid
+                ? l10n.participantDetailFeePaid
+                : l10n.athleteFeeUnpaid,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: lavish.pillText(
+                participant.isPaid ? LavishTone.ok : LavishTone.bad,
+              ),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
+          )
+        : (status == 'COMPLETE'
+              ? Text(l10n.participantDetailFreeEntry, style: muted)
+              : null);
+    return Row(
+      children: [
+        Text(statusLabel, style: muted),
+        if (fee != null) ...[
+          Text(' · ', style: muted),
+          Flexible(child: fee),
+        ],
+      ],
+    );
+  }
+
+  /// Right side of the row: ✓/✕ while waiting for approval, the check-in
+  /// circle once approved, a yellow pill while waiting for a partner.
+  List<Widget> _trailing(
+    BuildContext context,
+    AppLocalizations l10n,
+    String status,
+    bool pending,
+  ) {
+    if (pending) {
+      return [
+        LavishIconBox(
+          key: ValueKey('participant-approve-${participant.id}'),
+          size: 30,
+          tone: LavishTone.ok,
+          tooltip: l10n.tournamentManagementApprove,
+          onTap: isBusy ? null : onApprove,
+          child: const Icon(Icons.check_rounded),
+        ),
+        const SizedBox(width: 8),
+        LavishIconBox(
+          key: ValueKey('participant-reject-${participant.id}'),
+          size: 30,
+          tone: LavishTone.bad,
+          tooltip: l10n.tournamentManagementReject,
+          onTap: isBusy ? null : onReject,
+          child: const Icon(Icons.close_rounded),
+        ),
+      ];
+    }
+    if (status == 'PENDING_PARTNER') {
+      return [LavishPill(l10n.athleteWaitingPill, tone: LavishTone.warn)];
+    }
+    if (status == 'COMPLETE' && showPresence) {
+      final lavish = LavishColors.of(context);
+      return [
+        Semantics(
+          button: true,
+          checked: isPresent,
+          label: l10n.participantDetailCheckIn,
+          child: GestureDetector(
+            key: ValueKey('participant-checkin-${participant.id}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: onTogglePresence,
+            // 40dp touch target around the design's 26dp circle.
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isPresent ? LavishColors.ok : null,
+                    border: Border.all(
+                      color: isPresent ? LavishColors.ok : lavish.chipLine,
+                      width: 2,
+                    ),
+                  ),
+                  child: isPresent
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        )
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+    return const [];
+  }
+}
 
 /// Initial on the design's blue-soft circle (`.av`), used when the row has no
 /// user id to load an avatar for.

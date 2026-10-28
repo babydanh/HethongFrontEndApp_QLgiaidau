@@ -123,8 +123,7 @@ Future<void> _openMenu(WidgetTester tester) async {
 
 /// Count shown after the label of a menu item, e.g. `Tất cả (5)` -> `5`.
 String _menuCount(WidgetTester tester, String name) {
-  // The selected item is also drawn inside the closed button: take the open list's copy.
-  final item = find.byKey(ValueKey('participant-filter-$name')).last;
+  final item = find.byKey(ValueKey('participant-filter-$name'));
   final text = tester
       .widget<Text>(find.descendant(of: item, matching: find.byType(Text)))
       .data!;
@@ -168,7 +167,7 @@ void main() {
     final repo = await _pump(tester);
 
     await _openMenu(tester);
-    await tester.tap(find.byKey(const ValueKey('participant-filter-pending')).last);
+    await tester.tap(find.byKey(const ValueKey('participant-filter-pending')));
     await tester.pumpAndSettle();
 
     // Chỉ hồ sơ chờ duyệt còn lại; các trạng thái khác biến mất khỏi danh sách.
@@ -181,7 +180,7 @@ void main() {
     expect(repo.calls, 1);
 
     await _openMenu(tester);
-    await tester.tap(find.byKey(const ValueKey('participant-filter-all')).last);
+    await tester.tap(find.byKey(const ValueKey('participant-filter-all')));
     await tester.pumpAndSettle();
     for (final id in ['p-1', 'p-2', 'p-3', 'p-4', 'p-5']) {
       expect(find.byKey(ValueKey('athlete-team-row-$id')), findsOneWidget);
@@ -194,7 +193,7 @@ void main() {
     await _pump(tester);
 
     await _openMenu(tester);
-    await tester.tap(find.byKey(const ValueKey('participant-filter-unpaid')).last);
+    await tester.tap(find.byKey(const ValueKey('participant-filter-unpaid')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('athlete-team-row-p-2')), findsOneWidget);
