@@ -13668,6 +13668,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementChooseDate => 'Choose date';
 
   @override
+  String tournamentManagementDateLimitRegistrationStartMax(String date) {
+    return 'no later than the deadline $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitDeadlineMin(String date) {
+    return 'after registration opens $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitOpeningMin(String date) {
+    return 'not before the deadline $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitClosingMin(String date) {
+    return 'not before the opening date $date';
+  }
+
+  @override
   String get tournamentManagementDefaultVenue => 'Default';
 
   @override

@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_finance_section.dart';
@@ -17,12 +18,14 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 enum TournamentManagementSection {
   information,
@@ -214,6 +217,9 @@ class _InfoGroup extends StatelessWidget {
     ),
   );
 }
+
+/// Date fields of the registration group that can carry an order error.
+enum _RegistrationField { opens, deadline, opening, closing }
 
 /// Form của một nhóm cài đặt. Chỉ gửi các trường thuộc nhóm đó.
 class _TournamentSettingsForm extends ConsumerStatefulWidget {
@@ -477,9 +483,17 @@ class _TournamentSettingsFormState
     ],
   ];
 
+  bool _hasOrderErrors(AppLocalizations l10n) =>
+      widget.group == _SettingsGroup.registration &&
+      _registrationOrderErrors(l10n).isNotEmpty;
+
   Widget _saveButton(AppLocalizations l10n, {ButtonStyle? style}) =>
       FilledButton.icon(
-        onPressed: _isSaving || _locked || (_isInformation && !_dirty)
+        onPressed:
+            _isSaving ||
+                _locked ||
+                _hasOrderErrors(l10n) ||
+                (_isInformation && !_dirty)
             ? null
             : _save,
         style: style,
@@ -561,44 +575,75 @@ class _TournamentSettingsFormState
         label: l10n.tournamentManagementRegistrationStarts,
         value: _registrationStartDate,
         enabled: _settingsEditable,
+        error: _registrationOrderErrors(l10n)[_RegistrationField.opens],
         onTap: () => _pickDate(
           _registrationStartDate,
           (value) => setState(() => _registrationStartDate = value),
+          subtitle: _pickerSubtitle(
+            l10n.tournamentManagementRegistrationStarts,
+            _registrationEndDate,
+            l10n.tournamentManagementDateLimitRegistrationStartMax,
+          ),
+          maxDate: _registrationEndDate,
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 12),
       _dateField(
         context,
         buttonKey: const ValueKey('registration-deadline'),
         label: l10n.tournamentManagementRegistrationEnds,
         value: _registrationEndDate,
         enabled: _deadlineEditable,
+        error: _registrationOrderErrors(l10n)[_RegistrationField.deadline],
         onTap: () => _pickDate(
           _registrationEndDate,
           (value) => setState(() => _registrationEndDate = value),
+          subtitle: _pickerSubtitle(
+            l10n.tournamentManagementRegistrationEnds,
+            _registrationStartDate,
+            l10n.tournamentManagementDateLimitDeadlineMin,
+          ),
+          minDate: _laterOf(_registrationStartDate, DateTime.now()),
+          endOfDayChip: true,
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 12),
       _dateField(
         context,
         buttonKey: const ValueKey('tournament-opening'),
         label: l10n.tournamentManagementStartDate,
         value: _startDate,
         enabled: _settingsEditable,
+        error: _registrationOrderErrors(l10n)[_RegistrationField.opening],
         onTap: () => _pickDate(
           _startDate,
           (value) => setState(() => _startDate = value),
+          subtitle: _pickerSubtitle(
+            l10n.tournamentManagementStartDate,
+            _registrationEndDate,
+            l10n.tournamentManagementDateLimitOpeningMin,
+          ),
+          minDate: _registrationEndDate,
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 12),
       _dateField(
         context,
         buttonKey: const ValueKey('tournament-closing'),
         label: l10n.tournamentManagementEndDate,
         value: _endDate,
         enabled: _settingsEditable,
-        onTap: () =>
-            _pickDate(_endDate, (value) => setState(() => _endDate = value)),
+        error: _registrationOrderErrors(l10n)[_RegistrationField.closing],
+        onTap: () => _pickDate(
+          _endDate,
+          (value) => setState(() => _endDate = value),
+          subtitle: _pickerSubtitle(
+            l10n.tournamentManagementEndDate,
+            _startDate,
+            l10n.tournamentManagementDateLimitClosingMin,
+          ),
+          minDate: _startDate,
+        ),
       ),
       const Divider(height: 32),
       SwitchListTile(
@@ -761,28 +806,43 @@ class _TournamentSettingsFormState
     _SettingsGroup.registration => _registrationError(l10n),
   };
 
-  String? _registrationError(AppLocalizations l10n) {
+  /// Order errors per field, in the same order as the Web rules; empty while
+  /// the registration is locked (nothing is editable then).
+  Map<_RegistrationField, String> _registrationOrderErrors(
+    AppLocalizations l10n,
+  ) {
+    if (_locked) return const {};
     final registrationStart = _registrationStartDate;
     final registrationEnd = _registrationEndDate;
     final start = _startDate;
     final end = _endDate;
+    final errors = <_RegistrationField, String>{};
     if (registrationStart != null &&
         registrationEnd != null &&
         !_isAfterDateTime(registrationEnd, registrationStart)) {
-      return l10n.tournamentManagementRegistrationEndAfterStart;
-    }
-    if (registrationEnd != null &&
+      errors[_RegistrationField.deadline] =
+          l10n.tournamentManagementRegistrationEndAfterStart;
+    } else if (registrationEnd != null &&
         !_isAfterDateTime(registrationEnd, DateTime.now())) {
-      return l10n.tournamentManagementRegistrationDeadlineInFuture;
+      errors[_RegistrationField.deadline] =
+          l10n.tournamentManagementRegistrationDeadlineInFuture;
     }
     if (start != null &&
         registrationEnd != null &&
         _isBeforeDateTime(start, registrationEnd)) {
-      return l10n.tournamentManagementStartAfterRegistration;
+      errors[_RegistrationField.opening] =
+          l10n.tournamentManagementStartAfterRegistration;
     }
     if (start != null && end != null && _isBeforeDateTime(end, start)) {
-      return l10n.tournamentManagementEndAfterStart;
+      errors[_RegistrationField.closing] =
+          l10n.tournamentManagementEndAfterStart;
     }
+    return errors;
+  }
+
+  String? _registrationError(AppLocalizations l10n) {
+    final orderErrors = _registrationOrderErrors(l10n);
+    if (orderErrors.isNotEmpty) return orderErrors.values.first;
     if (_closed && !_locked && !_deadlineExtended) {
       return l10n.tournamentManagementClosedDeadlineExtensionOnly;
     }
@@ -860,65 +920,47 @@ class _TournamentSettingsFormState
     required DateTime? value,
     required bool enabled,
     required VoidCallback onTap,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    final localValue = value?.toLocal();
-    final dateLabel = localValue == null
-        ? l10n.tournamentManagementChooseDate
-        : '${MaterialLocalizations.of(context).formatMediumDate(localValue)}, ${TimeOfDay.fromDateTime(localValue).format(context)}';
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 3,
-          child: OutlinedButton.icon(
-            key: buttonKey,
-            onPressed: enabled ? onTap : null,
-            icon: const Icon(Icons.calendar_today_outlined, size: 17),
-            label: Text(
-              dateLabel,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.start,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+    String? error,
+  }) => DateTimeField(
+    buttonKey: buttonKey,
+    label: label,
+    placeholder: AppLocalizations.of(context)!.tournamentManagementChooseDate,
+    value: value,
+    onTap: enabled ? onTap : null,
+    errorText: error,
+  );
+
+  /// "Label · limit" for the popup subtitle; just the label without a bound.
+  String _pickerSubtitle(
+    String label,
+    DateTime? bound,
+    String Function(String date) limit,
+  ) => bound == null
+      ? label
+      : '$label · ${limit(DateFormat('dd/MM/yyyy HH:mm').format(bound.toLocal()))}';
+
+  DateTime _laterOf(DateTime? first, DateTime second) =>
+      first != null && first.isAfter(second) ? first : second;
 
   Future<void> _pickDate(
     DateTime? current,
-    ValueChanged<DateTime> onSelected,
-  ) async {
-    final currentLocal = current?.toLocal();
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: currentLocal ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
+    ValueChanged<DateTime> onSelected, {
+    required String subtitle,
+    DateTime? minDate,
+    DateTime? maxDate,
+    bool endOfDayChip = false,
+  }) async {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final picked = await SocialDateTimePickerSheet.show(
+      context,
+      current?.toLocal() ?? _laterOf(minDate?.toLocal(), today),
+      subtitle: subtitle,
+      minDate: minDate?.toLocal(),
+      maxDate: maxDate?.toLocal(),
+      showEndOfDayChip: endOfDayChip,
     );
-    if (pickedDate == null || !mounted) return;
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: currentLocal == null
-          ? const TimeOfDay(hour: 0, minute: 0)
-          : TimeOfDay.fromDateTime(currentLocal),
-    );
-    if (pickedTime == null || !mounted) return;
-    onSelected(
-      DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
-      ),
-    );
+    if (picked == null || !mounted) return;
+    onSelected(picked);
   }
 
   Future<void> _save() async {

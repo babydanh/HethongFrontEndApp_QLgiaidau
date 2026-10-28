@@ -24778,6 +24778,30 @@ abstract class AppLocalizations {
   /// **'Chọn ngày'**
   String get tournamentManagementChooseDate;
 
+  /// No description provided for @tournamentManagementDateLimitRegistrationStartMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'không sau hạn chót {date}'**
+  String tournamentManagementDateLimitRegistrationStartMax(String date);
+
+  /// No description provided for @tournamentManagementDateLimitDeadlineMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'sau ngày mở đăng ký {date}'**
+  String tournamentManagementDateLimitDeadlineMin(String date);
+
+  /// No description provided for @tournamentManagementDateLimitOpeningMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'không trước hạn chót {date}'**
+  String tournamentManagementDateLimitOpeningMin(String date);
+
+  /// No description provided for @tournamentManagementDateLimitClosingMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'không trước ngày khai mạc {date}'**
+  String tournamentManagementDateLimitClosingMin(String date);
+
   /// No description provided for @tournamentManagementDefaultVenue.
   ///
   /// In vi, this message translates to:

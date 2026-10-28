@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/widgets/stage_round_config_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -187,35 +188,30 @@ Future<void> _selectRound(WidgetTester tester, String name) async {
   await tester.pumpAndSettle();
 }
 
-/// Đặt giờ mặc định qua picker thật: ngày 2 của tháng hiện tại, [hour]:30
-/// (time picker mở ở chế độ nhập — cùng initialEntryMode của sheet).
-Future<void> _pickTime(WidgetTester tester, int hour) async {
+/// Đặt giờ mặc định qua popup cuộn dùng chung: nhảy ba bánh xe tới [target]
+/// (ngày tính từ đầu năm ngoái, phút từ lưới bước 5 cộng phút ban đầu).
+Future<void> _pickTime(
+  WidgetTester tester,
+  DateTime target, {
+  required int initialMinute,
+}) async {
   await tester.tap(find.byKey(const ValueKey('stage-round-pick-time')));
   await tester.pumpAndSettle();
-  await tester.tap(
-    find.descendant(
-      of: find.byType(CalendarDatePicker),
-      matching: find.text('2'),
-    ),
+  final wheels = tester
+      .widgetList<CupertinoPicker>(find.byType(CupertinoPicker))
+      .toList();
+  final firstDate = DateTime(DateTime.now().year - 1);
+  final minutes = <int>{
+    for (var minute = 0; minute < 60; minute += 5) minute,
+    initialMinute,
+  }.toList()..sort();
+  wheels[0].scrollController!.jumpToItem(
+    DateUtils.dateOnly(target).difference(firstDate).inDays,
   );
+  wheels[1].scrollController!.jumpToItem(target.hour);
+  wheels[2].scrollController!.jumpToItem(minutes.indexOf(target.minute));
   await tester.pumpAndSettle();
-  await tester.tap(
-    find.descendant(of: find.byType(Dialog), matching: find.text('OK')),
-  );
-  await tester.pumpAndSettle();
-  final fields = find.descendant(
-    of: find.byType(Dialog),
-    matching: find.byType(TextField),
-  );
-  await tester.enterText(fields.first, '$hour');
-  // "Next" trên bàn phím commit giờ (onEditingComplete của picker).
-  await tester.testTextInput.receiveAction(TextInputAction.next);
-  await tester.pumpAndSettle();
-  await tester.enterText(fields.last, '30');
-  await tester.pumpAndSettle();
-  await tester.tap(
-    find.descendant(of: find.byType(Dialog), matching: find.text('OK')),
-  );
+  await tester.tap(find.widgetWithText(TextButton, 'Xác nhận'));
   await tester.pumpAndSettle();
 }
 
@@ -281,7 +277,14 @@ void main() {
 
       // Hai vòng của sơ đồ 4 đội: bán kết (vòng 1) và chung kết (vòng 2).
       await _selectRound(tester, 'Chung kết');
-      await _pickTime(tester, 8);
+      // Picker mở ở tháng của giờ sẵn có của vòng (fixture 2026-06-01 giờ
+      // địa phương) — chọn ngày 2 trong tháng đó.
+      final initialLocal = DateTime.parse('2026-06-01T02:00:00.000Z').toLocal();
+      await _pickTime(
+        tester,
+        DateTime(initialLocal.year, initialLocal.month, 2, 8, 30),
+        initialMinute: initialLocal.minute,
+      );
       await tester.tap(find.byKey(const ValueKey('stage-round-save')));
       await tester.pumpAndSettle();
 
@@ -289,9 +292,6 @@ void main() {
       expect(patch.stageId, 'stage-1');
       final roundConfig = patch.roundConfig;
       final rounds = roundConfig['rounds'] as Map<String, dynamic>;
-      // Picker mở ở tháng của giờ sẵn có của vòng (fixture 2026-06-01 giờ
-      // địa phương) — chọn ngày 2 trong tháng đó.
-      final initialLocal = DateTime.parse('2026-06-01T02:00:00.000Z').toLocal();
       final expectedTime = DateTime(
         initialLocal.year,
         initialLocal.month,
@@ -451,12 +451,16 @@ void main() {
         find.byKey(const ValueKey('stage-round-note')),
         'gọi đồng loạt 8h',
       );
-      await _pickTime(tester, 9);
+      final now = DateTime.now();
+      await _pickTime(
+        tester,
+        DateTime(now.year, now.month, 2, 9, 30),
+        initialMinute: now.minute,
+      );
       await tester.tap(find.byKey(const ValueKey('stage-round-save')));
       await tester.pumpAndSettle();
 
       final roundConfig = stage.stagePatches.single.roundConfig;
-      final now = DateTime.now();
       expect(
         roundConfig['scheduled_date'],
         DateTime(now.year, now.month, 2, 9, 30).toUtc().toIso8601String(),

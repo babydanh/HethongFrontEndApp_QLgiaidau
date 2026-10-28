@@ -13622,6 +13622,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementChooseDate => 'Chọn ngày';
 
   @override
+  String tournamentManagementDateLimitRegistrationStartMax(String date) {
+    return 'không sau hạn chót $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitDeadlineMin(String date) {
+    return 'sau ngày mở đăng ký $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitOpeningMin(String date) {
+    return 'không trước hạn chót $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitClosingMin(String date) {
+    return 'không trước ngày khai mạc $date';
+  }
+
+  @override
   String get tournamentManagementDefaultVenue => 'Mặc định';
 
   @override

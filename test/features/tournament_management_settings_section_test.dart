@@ -458,11 +458,9 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('registration-deadline')));
     await tester.tap(find.byKey(const ValueKey('registration-deadline')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('15').first);
+    await tester.tap(find.text('23:59'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
+    await tester.tap(find.text(l10n.socialPlaceConfirm));
     await tester.pumpAndSettle();
     await _tapSave(tester, l10n);
 
@@ -470,11 +468,114 @@ void main() {
     final extended = DateTime.parse(
       repository.updatedPayload!['registrationEndDate'] as String,
     ).toLocal();
-    expect(extended.day, 15);
-    expect(
-      extended.hour,
-      DateTime.parse('2099-01-01T10:30:00Z').toLocal().hour,
+    final saved = DateTime.parse('2099-01-01T10:30:00Z').toLocal();
+    expect(extended, DateTime(saved.year, saved.month, saved.day, 23, 59));
+  });
+
+  testWidgets('an order error is shown under the wrong field and blocks save', (
+    tester,
+  ) async {
+    final repository = await _pumpSection(
+      tester,
+      TournamentManagementSection.registration,
+      overrides: const <String, dynamic>{
+        'registrationStartDate': '2098-01-01T00:00:00Z',
+        'registrationEndDate': '2099-01-01T00:00:00Z',
+        'startDate': '2099-06-01T00:00:00Z',
+        'endDate': '2099-05-01T00:00:00Z',
+      },
     );
+    final l10n = _l10n(tester);
+
+    // Shown without pressing save, exactly once, below the closing field.
+    final error = find.text(l10n.tournamentManagementEndAfterStart);
+    expect(error, findsOneWidget);
+    expect(
+      tester.getTopLeft(error).dy,
+      greaterThan(
+        tester.getBottomLeft(find.byKey(const ValueKey('tournament-closing'))).dy,
+      ),
+    );
+    expect(find.text(l10n.tournamentManagementStartAfterRegistration), findsNothing);
+    expect(
+      tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementSave),
+      ).onPressed,
+      isNull,
+    );
+    expect(repository.updatedPayload, isNull);
+  });
+
+  testWidgets('a valid order shows no error and keeps save enabled', (
+    tester,
+  ) async {
+    await _pumpSection(
+      tester,
+      TournamentManagementSection.registration,
+      overrides: const <String, dynamic>{
+        'registrationStartDate': '2098-01-01T00:00:00Z',
+        'registrationEndDate': '2099-01-01T00:00:00Z',
+        'startDate': '2099-06-01T00:00:00Z',
+        'endDate': '2099-07-01T00:00:00Z',
+      },
+    );
+    final l10n = _l10n(tester);
+
+    for (final message in [
+      l10n.tournamentManagementRegistrationEndAfterStart,
+      l10n.tournamentManagementRegistrationDeadlineInFuture,
+      l10n.tournamentManagementStartAfterRegistration,
+      l10n.tournamentManagementEndAfterStart,
+    ]) {
+      expect(find.text(message), findsNothing);
+    }
+    expect(
+      tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementSave),
+      ).onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('a field opens the scroll popup with its limit and the 23:59 chip only on the deadline', (
+    tester,
+  ) async {
+    await _pumpSection(
+      tester,
+      TournamentManagementSection.registration,
+      overrides: const <String, dynamic>{
+        'registrationStartDate': '2098-01-01T00:00:00Z',
+        'registrationEndDate': '2099-01-01T00:00:00Z',
+        'startDate': '2099-06-01T00:00:00Z',
+        'endDate': '2099-07-01T00:00:00Z',
+      },
+    );
+    final l10n = _l10n(tester);
+    final deadline = DateTime.parse('2099-01-01T00:00:00Z').toLocal();
+    final deadlineText =
+        '${deadline.day.toString().padLeft(2, '0')}/'
+        '${deadline.month.toString().padLeft(2, '0')}/${deadline.year} '
+        '${deadline.hour.toString().padLeft(2, '0')}:'
+        '${deadline.minute.toString().padLeft(2, '0')}';
+
+    await tester.ensureVisible(find.byKey(const ValueKey('tournament-opening')));
+    await tester.tap(find.byKey(const ValueKey('tournament-opening')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        '${l10n.tournamentManagementStartDate} · '
+        '${l10n.tournamentManagementDateLimitOpeningMin(deadlineText)}',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('23:59'), findsNothing);
+    await tester.tap(find.text(l10n.socialPlaceCancel));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const ValueKey('registration-deadline')));
+    await tester.tap(find.byKey(const ValueKey('registration-deadline')));
+    await tester.pumpAndSettle();
+    expect(find.text('23:59'), findsOneWidget);
   });
 
   testWidgets('locked registration disables every control and the save button', (
