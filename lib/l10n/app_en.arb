@@ -5808,6 +5808,14 @@
   "tournamentManagementSponsorTierInKind": "In kind",
   "tournamentManagementSponsorTierSilver": "Silver",
   "tournamentManagementSponsorTierTitle": "Title",
+  "tournamentManagementSponsorTierRank": "{tier} tier",
+  "@tournamentManagementSponsorTierRank": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "tournamentManagementSponsorWebsite": "Website",
   "tournamentManagementSponsors": "Sponsors",
   "tournamentManagementSponsorsDescription": "Add, edit or archive tournament sponsors.",
@@ -5898,33 +5906,15 @@
   "tournamentManagementHideFeaturedCardTextDescription": "Keep the featured tournament banner headline off public tournament cards.",
   "tournamentManagementForbidden": "You do not have permission to access this management section.",
   "tournamentManagementLivestreamDevices": "Camera devices",
-  "tournamentManagementLivestreamDevicesDescription": "Reusable community camera devices. Issue a pairing QR so a device can register itself.",
   "tournamentManagementLivestreamDevicesEmpty": "No camera devices yet",
   "tournamentManagementLivestreamDevicesUnavailable": "This tournament is not linked to a community, so camera devices cannot be managed.",
   "tournamentManagementLivestreamCreatePairingQr": "Create pairing QR",
   "tournamentManagementLivestreamPairingQrTitle": "Camera pairing QR",
   "tournamentManagementLivestreamPairingQrHint": "Single-use and short-lived. Scan it in person; never share or copy it.",
   "tournamentManagementLivestreamPairingQrFailed": "Could not create a pairing code.",
-  "tournamentManagementLivestreamFacebookSubtitle": "Connect a Facebook Page to run livestreams.",
-  "tournamentManagementLivestreamFacebookNotConnected": "No Facebook Page connected.",
-  "tournamentManagementLivestreamFacebookConnect": "Connect Page",
-  "tournamentManagementLivestreamFacebookRevalidate": "Re-check",
-  "tournamentManagementLivestreamFacebookDisconnect": "Disconnect",
-  "tournamentManagementLivestreamFacebookConnectFailed": "Could not open the browser to connect a Facebook Page.",
-  "tournamentManagementLivestreamFacebookActive": "Active",
-  "tournamentManagementLivestreamFacebookDisconnected": "Disconnected",
-  "tournamentManagementLivestreamFacebookLastChecked": "Last checked: {time}",
-  "@tournamentManagementLivestreamFacebookLastChecked": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "tournamentManagementLivestreamSessions": "Livestream sessions",
-  "tournamentManagementLivestreamSessionsDescription": "Monitor the livestream sessions of this tournament.",
   "tournamentManagementLivestreamSessionsEmpty": "No livestream sessions yet.",
-  "tournamentManagementLivestreamStopSession": "End session",
+  "tournamentManagementLivestreamStopSession": "Stop streaming",
   "tournamentManagementLivestreamStopSessionConfirm": "End this livestream session?",
   "tournamentManagementLivestreamRecheckStatus": "Re-check status",
   "tournamentManagementLivestreamRecheckStatusHint": "Re-checks the provider status only; it does not republish the stream.",
@@ -6995,7 +6985,7 @@
   "tournamentCameraEmpty": "This tournament has no cameras yet.",
   "tournamentCameraNoCourt": "No court yet",
   "tournamentCameraCourtsTitle": "Courts",
-  "tournamentCameraCourtNoCameras": "No camera on this court.",
+  "tournamentCameraCourtNoCameras": "No camera",
   "tournamentCameraAddTitle": "Add camera",
   "tournamentCameraEditTitle": "Change camera court",
   "tournamentCameraNameLabel": "Camera name",

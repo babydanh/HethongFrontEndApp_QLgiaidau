@@ -26446,6 +26446,12 @@ abstract class AppLocalizations {
   /// **'Nhà tài trợ danh xưng'**
   String get tournamentManagementSponsorTierTitle;
 
+  /// No description provided for @tournamentManagementSponsorTierRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng {tier}'**
+  String tournamentManagementSponsorTierRank(String tier);
+
   /// No description provided for @tournamentManagementSponsorWebsite.
   ///
   /// In vi, this message translates to:
@@ -26956,12 +26962,6 @@ abstract class AppLocalizations {
   /// **'Thiết bị camera'**
   String get tournamentManagementLivestreamDevices;
 
-  /// No description provided for @tournamentManagementLivestreamDevicesDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Thiết bị camera dùng lại của cộng đồng. Tạo mã QR ghép nối để thiết bị tự đăng nhập.'**
-  String get tournamentManagementLivestreamDevicesDescription;
-
   /// No description provided for @tournamentManagementLivestreamDevicesEmpty.
   ///
   /// In vi, this message translates to:
@@ -26998,71 +26998,11 @@ abstract class AppLocalizations {
   /// **'Không thể tạo mã ghép nối.'**
   String get tournamentManagementLivestreamPairingQrFailed;
 
-  /// No description provided for @tournamentManagementLivestreamFacebookSubtitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Kết nối Fanpage để vận hành phát trực tiếp.'**
-  String get tournamentManagementLivestreamFacebookSubtitle;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookNotConnected.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa kết nối Fanpage.'**
-  String get tournamentManagementLivestreamFacebookNotConnected;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookConnect.
-  ///
-  /// In vi, this message translates to:
-  /// **'Kết nối Fanpage'**
-  String get tournamentManagementLivestreamFacebookConnect;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookRevalidate.
-  ///
-  /// In vi, this message translates to:
-  /// **'Kiểm tra lại'**
-  String get tournamentManagementLivestreamFacebookRevalidate;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookDisconnect.
-  ///
-  /// In vi, this message translates to:
-  /// **'Ngắt kết nối'**
-  String get tournamentManagementLivestreamFacebookDisconnect;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookConnectFailed.
-  ///
-  /// In vi, this message translates to:
-  /// **'Không thể mở trình duyệt để kết nối Fanpage.'**
-  String get tournamentManagementLivestreamFacebookConnectFailed;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookActive.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang hoạt động'**
-  String get tournamentManagementLivestreamFacebookActive;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookDisconnected.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã ngắt kết nối'**
-  String get tournamentManagementLivestreamFacebookDisconnected;
-
-  /// No description provided for @tournamentManagementLivestreamFacebookLastChecked.
-  ///
-  /// In vi, this message translates to:
-  /// **'Kiểm tra gần nhất: {time}'**
-  String tournamentManagementLivestreamFacebookLastChecked(String time);
-
   /// No description provided for @tournamentManagementLivestreamSessions.
   ///
   /// In vi, this message translates to:
   /// **'Phiên phát trực tiếp'**
   String get tournamentManagementLivestreamSessions;
-
-  /// No description provided for @tournamentManagementLivestreamSessionsDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Theo dõi trạng thái phiên phát trực tiếp của giải đấu.'**
-  String get tournamentManagementLivestreamSessionsDescription;
 
   /// No description provided for @tournamentManagementLivestreamSessionsEmpty.
   ///
@@ -27073,7 +27013,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementLivestreamStopSession.
   ///
   /// In vi, this message translates to:
-  /// **'Kết thúc phiên'**
+  /// **'Dừng phát'**
   String get tournamentManagementLivestreamStopSession;
 
   /// No description provided for @tournamentManagementLivestreamStopSessionConfirm.
@@ -31654,7 +31594,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentCameraCourtNoCameras.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có camera ở sân này.'**
+  /// **'Chưa có camera'**
   String get tournamentCameraCourtNoCameras;
 
   /// No description provided for @tournamentCameraAddTitle.

@@ -14632,6 +14632,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementSponsorTierTitle => 'Title';
 
   @override
+  String tournamentManagementSponsorTierRank(String tier) {
+    return '$tier tier';
+  }
+
+  @override
   String get tournamentManagementSponsorWebsite => 'Website';
 
   @override
@@ -14908,10 +14913,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementLivestreamDevices => 'Camera devices';
 
   @override
-  String get tournamentManagementLivestreamDevicesDescription =>
-      'Reusable community camera devices. Issue a pairing QR so a device can register itself.';
-
-  @override
   String get tournamentManagementLivestreamDevicesEmpty =>
       'No camera devices yet';
 
@@ -14936,51 +14937,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not create a pairing code.';
 
   @override
-  String get tournamentManagementLivestreamFacebookSubtitle =>
-      'Connect a Facebook Page to run livestreams.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookNotConnected =>
-      'No Facebook Page connected.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnect => 'Connect Page';
-
-  @override
-  String get tournamentManagementLivestreamFacebookRevalidate => 'Re-check';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnect => 'Disconnect';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnectFailed =>
-      'Could not open the browser to connect a Facebook Page.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookActive => 'Active';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnected =>
-      'Disconnected';
-
-  @override
-  String tournamentManagementLivestreamFacebookLastChecked(String time) {
-    return 'Last checked: $time';
-  }
-
-  @override
   String get tournamentManagementLivestreamSessions => 'Livestream sessions';
-
-  @override
-  String get tournamentManagementLivestreamSessionsDescription =>
-      'Monitor the livestream sessions of this tournament.';
 
   @override
   String get tournamentManagementLivestreamSessionsEmpty =>
       'No livestream sessions yet.';
 
   @override
-  String get tournamentManagementLivestreamStopSession => 'End session';
+  String get tournamentManagementLivestreamStopSession => 'Stop streaming';
 
   @override
   String get tournamentManagementLivestreamStopSessionConfirm =>
@@ -17627,7 +17591,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraCourtsTitle => 'Courts';
 
   @override
-  String get tournamentCameraCourtNoCameras => 'No camera on this court.';
+  String get tournamentCameraCourtNoCameras => 'No camera';
 
   @override
   String get tournamentCameraAddTitle => 'Add camera';

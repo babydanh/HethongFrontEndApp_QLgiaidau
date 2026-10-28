@@ -14576,6 +14576,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementSponsorTierTitle => 'Nhà tài trợ danh xưng';
 
   @override
+  String tournamentManagementSponsorTierRank(String tier) {
+    return 'Hạng $tier';
+  }
+
+  @override
   String get tournamentManagementSponsorWebsite => 'Trang web';
 
   @override
@@ -14851,10 +14856,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementLivestreamDevices => 'Thiết bị camera';
 
   @override
-  String get tournamentManagementLivestreamDevicesDescription =>
-      'Thiết bị camera dùng lại của cộng đồng. Tạo mã QR ghép nối để thiết bị tự đăng nhập.';
-
-  @override
   String get tournamentManagementLivestreamDevicesEmpty =>
       'Chưa có thiết bị camera';
 
@@ -14878,51 +14879,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể tạo mã ghép nối.';
 
   @override
-  String get tournamentManagementLivestreamFacebookSubtitle =>
-      'Kết nối Fanpage để vận hành phát trực tiếp.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookNotConnected =>
-      'Chưa kết nối Fanpage.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnect => 'Kết nối Fanpage';
-
-  @override
-  String get tournamentManagementLivestreamFacebookRevalidate => 'Kiểm tra lại';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnect => 'Ngắt kết nối';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnectFailed =>
-      'Không thể mở trình duyệt để kết nối Fanpage.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookActive => 'Đang hoạt động';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnected =>
-      'Đã ngắt kết nối';
-
-  @override
-  String tournamentManagementLivestreamFacebookLastChecked(String time) {
-    return 'Kiểm tra gần nhất: $time';
-  }
-
-  @override
   String get tournamentManagementLivestreamSessions => 'Phiên phát trực tiếp';
-
-  @override
-  String get tournamentManagementLivestreamSessionsDescription =>
-      'Theo dõi trạng thái phiên phát trực tiếp của giải đấu.';
 
   @override
   String get tournamentManagementLivestreamSessionsEmpty =>
       'Chưa có phiên phát trực tiếp.';
 
   @override
-  String get tournamentManagementLivestreamStopSession => 'Kết thúc phiên';
+  String get tournamentManagementLivestreamStopSession => 'Dừng phát';
 
   @override
   String get tournamentManagementLivestreamStopSessionConfirm =>
@@ -17555,7 +17519,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCameraCourtsTitle => 'Sân';
 
   @override
-  String get tournamentCameraCourtNoCameras => 'Chưa có camera ở sân này.';
+  String get tournamentCameraCourtNoCameras => 'Chưa có camera';
 
   @override
   String get tournamentCameraAddTitle => 'Thêm camera';

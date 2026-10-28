@@ -210,6 +210,15 @@ Future<AppLocalizations> _pump(
   )!;
 }
 
+/// Design screen 11: deleting goes through the row tap (menu), not a button on
+/// the row.
+Future<void> _openDelete(WidgetTester tester, String id) async {
+  await tester.tap(_card(id));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(ValueKey('camera-delete-$id')));
+  await tester.pumpAndSettle();
+}
+
 Finder _card(String id) => find.byKey(ValueKey('camera-card-$id'));
 Finder _courtCard(String id) => find.byKey(ValueKey('camera-court-$id'));
 
@@ -250,7 +259,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.descendant(of: card, matching: find.text('PUSH')),
+      find.descendant(of: card, matching: find.textContaining('PUSH')),
       findsOneWidget,
     );
     expect(
@@ -276,8 +285,7 @@ void main() {
       ..failWith = 'Camera is live on a match';
     final l10n = await _pump(tester, server);
 
-    await tester.tap(find.byKey(const ValueKey('camera-delete-cam-1')));
-    await tester.pumpAndSettle();
+    await _openDelete(tester, 'cam-1');
     await tester.tap(
       find.widgetWithText(FilledButton, l10n.tournamentManagementDelete),
     );
@@ -294,8 +302,7 @@ void main() {
     final server = _FakeCameraServer(const [_phone]);
     final l10n = await _pump(tester, server);
 
-    await tester.tap(find.byKey(const ValueKey('camera-delete-cam-1')));
-    await tester.pumpAndSettle();
+    await _openDelete(tester, 'cam-1');
     await tester.tap(
       find.widgetWithText(TextButton, l10n.tournamentManagementCancel),
     );
@@ -311,8 +318,7 @@ void main() {
     final server = _FakeCameraServer(const [_phone]);
     final l10n = await _pump(tester, server);
 
-    await tester.tap(find.byKey(const ValueKey('camera-delete-cam-1')));
-    await tester.pumpAndSettle();
+    await _openDelete(tester, 'cam-1');
     await tester.tap(
       find.widgetWithText(FilledButton, l10n.tournamentManagementDelete),
     );
@@ -372,7 +378,10 @@ void main() {
     final server = _FakeCameraServer(const [_phone, _livePhone, _pullCamera]);
     final l10n = await _pump(tester, server);
 
-    expect(find.text(l10n.tournamentCameraListTitle(3)), findsOneWidget);
+    expect(
+      find.text(l10n.tournamentCameraListTitle(3).toUpperCase()),
+      findsOneWidget,
+    );
     expect(
       find.descendant(
         of: _card('cam-3'),
@@ -390,7 +399,7 @@ void main() {
     expect(
       find.descendant(
         of: _card('cam-2'),
-        matching: find.text(l10n.tournamentCameraNoCourt),
+        matching: find.textContaining(l10n.tournamentCameraNoCourt),
       ),
       findsOneWidget,
     );
@@ -491,11 +500,19 @@ void main() {
     final server = _FakeCameraServer(const [_phone]);
     await _pump(tester, server, readOnly: true);
 
-    final add = find.byKey(const ValueKey('camera-panel-add'));
-    expect(tester.widget<ButtonStyleButton>(add).onPressed, isNull);
-    final delete = find.byKey(const ValueKey('camera-delete-cam-1'));
-    expect(tester.widget<IconButton>(delete).onPressed, isNull);
-    final assign = find.byKey(const ValueKey('camera-court-assign-court-3'));
-    expect(tester.widget<ButtonStyleButton>(assign).onPressed, isNull);
+    final add = find.descendant(
+      of: find.byKey(const ValueKey('camera-panel-add')),
+      matching: find.byType(OutlinedButton),
+    );
+    expect(tester.widget<OutlinedButton>(add).onPressed, isNull);
+    // The row menu (delete) does not open on a read-only tournament.
+    await tester.tap(_card('cam-1'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('camera-delete-cam-1')), findsNothing);
+    final assign = find.descendant(
+      of: find.byKey(const ValueKey('camera-court-assign-court-3')),
+      matching: find.byType(OutlinedButton),
+    );
+    expect(tester.widget<OutlinedButton>(assign).onPressed, isNull);
   });
 }

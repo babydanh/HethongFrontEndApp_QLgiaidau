@@ -5939,6 +5939,14 @@
   "tournamentManagementSponsorTierInKind": "Hiện vật",
   "tournamentManagementSponsorTierSilver": "Bạc",
   "tournamentManagementSponsorTierTitle": "Nhà tài trợ danh xưng",
+  "tournamentManagementSponsorTierRank": "Hạng {tier}",
+  "@tournamentManagementSponsorTierRank": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
   "tournamentManagementSponsorWebsite": "Trang web",
   "tournamentManagementSponsors": "Nhà tài trợ",
   "tournamentManagementSponsorsDescription": "Thêm, chỉnh sửa hoặc lưu trữ nhà tài trợ giải đấu.",
@@ -6029,33 +6037,15 @@
   "tournamentManagementHideFeaturedCardTextDescription": "Ẩn dòng tiêu đề trên biểu ngữ nổi bật ở thẻ giải đấu công khai.",
   "tournamentManagementForbidden": "Bạn không có quyền truy cập mục quản lý giải đấu này.",
   "tournamentManagementLivestreamDevices": "Thiết bị camera",
-  "tournamentManagementLivestreamDevicesDescription": "Thiết bị camera dùng lại của cộng đồng. Tạo mã QR ghép nối để thiết bị tự đăng nhập.",
   "tournamentManagementLivestreamDevicesEmpty": "Chưa có thiết bị camera",
   "tournamentManagementLivestreamDevicesUnavailable": "Giải đấu chưa thuộc cộng đồng nào nên chưa thể quản lý thiết bị camera.",
   "tournamentManagementLivestreamCreatePairingQr": "Tạo mã ghép nối",
   "tournamentManagementLivestreamPairingQrTitle": "Mã ghép nối camera",
   "tournamentManagementLivestreamPairingQrHint": "Mã dùng một lần và tự hết hạn. Chỉ quét trực tiếp, không chia sẻ mã này.",
   "tournamentManagementLivestreamPairingQrFailed": "Không thể tạo mã ghép nối.",
-  "tournamentManagementLivestreamFacebookSubtitle": "Kết nối Fanpage để vận hành phát trực tiếp.",
-  "tournamentManagementLivestreamFacebookNotConnected": "Chưa kết nối Fanpage.",
-  "tournamentManagementLivestreamFacebookConnect": "Kết nối Fanpage",
-  "tournamentManagementLivestreamFacebookRevalidate": "Kiểm tra lại",
-  "tournamentManagementLivestreamFacebookDisconnect": "Ngắt kết nối",
-  "tournamentManagementLivestreamFacebookConnectFailed": "Không thể mở trình duyệt để kết nối Fanpage.",
-  "tournamentManagementLivestreamFacebookActive": "Đang hoạt động",
-  "tournamentManagementLivestreamFacebookDisconnected": "Đã ngắt kết nối",
-  "tournamentManagementLivestreamFacebookLastChecked": "Kiểm tra gần nhất: {time}",
-  "@tournamentManagementLivestreamFacebookLastChecked": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "tournamentManagementLivestreamSessions": "Phiên phát trực tiếp",
-  "tournamentManagementLivestreamSessionsDescription": "Theo dõi trạng thái phiên phát trực tiếp của giải đấu.",
   "tournamentManagementLivestreamSessionsEmpty": "Chưa có phiên phát trực tiếp.",
-  "tournamentManagementLivestreamStopSession": "Kết thúc phiên",
+  "tournamentManagementLivestreamStopSession": "Dừng phát",
   "tournamentManagementLivestreamStopSessionConfirm": "Kết thúc phiên phát trực tiếp này?",
   "tournamentManagementLivestreamRecheckStatus": "Kiểm tra lại trạng thái",
   "tournamentManagementLivestreamRecheckStatusHint": "Chỉ kiểm tra lại trạng thái với nhà cung cấp, không phát lại luồng.",
@@ -7023,7 +7013,7 @@
   "tournamentCameraEmpty": "Giải chưa có camera.",
   "tournamentCameraNoCourt": "Chưa gắn sân",
   "tournamentCameraCourtsTitle": "Sân",
-  "tournamentCameraCourtNoCameras": "Chưa có camera ở sân này.",
+  "tournamentCameraCourtNoCameras": "Chưa có camera",
   "tournamentCameraAddTitle": "Thêm camera",
   "tournamentCameraEditTitle": "Đổi sân camera",
   "tournamentCameraNameLabel": "Tên camera",

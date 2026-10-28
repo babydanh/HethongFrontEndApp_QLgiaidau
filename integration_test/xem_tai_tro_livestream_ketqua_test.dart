@@ -2,7 +2,6 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/camera_device_model.dart';
 import 'package:app_quanly_giaidau/data/models/camera_live_status_model.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
-import 'package:app_quanly_giaidau/data/models/facebook_page_connection_model.dart';
 import 'package:app_quanly_giaidau/data/models/live_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -250,11 +249,6 @@ class _LiveRepository implements ILiveSessionRepository {
       title: 'Court 1 semi-final',
     ),
   ];
-
-  @override
-  Future<FacebookPageConnectionModel?> getFacebookConnection(
-    String communityId,
-  ) async => null;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

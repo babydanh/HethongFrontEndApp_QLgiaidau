@@ -1,34 +1,30 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/camera_device_model.dart';
-import 'package:app_quanly_giaidau/data/models/facebook_page_connection_model.dart';
 import 'package:app_quanly_giaidau/data/models/live_session_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/livestream_pairing_qr_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_camera_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Backend DTO bounds for `CameraDeviceModel.name`. A name outside them is
 /// rejected by the server, so it is refused here instead of being sent.
 const _deviceNameMinLength = 2;
 const _deviceNameMaxLength = 255;
 
-/// Livestream management that the mobile API is allowed to drive.
-///
-/// Covers the community camera fleet (registering a reusable device, its
-/// pairing QR), the community Facebook Page connection (status, connect,
-/// re-check, disconnect), the tournament cameras (add, delete, move between
-/// courts: [TournamentCameraPanel]) and the tournament's live sessions
-/// (status, end, re-check).
+/// Livestream management that the mobile API is allowed to drive, laid out as
+/// the Lavish design (screen 11): cameras and courts first
+/// ([TournamentCameraPanel]), then the tournament's live sessions (status,
+/// re-check, stop), then the community's reusable camera devices (collapsed
+/// until opened: register a device, its pairing QR).
 ///
 /// Registering a community camera *device* sends a display name only, and the
 /// server assigns the id and every publish credential.
 ///
-/// Still absent: `assign-camera` and `start`/`stop` match stream. The camera
-/// panel never fetches, models or displays a stream key, publish URL or camera
+/// Still absent: starting a match stream (`start`). The camera panel never
+/// fetches, models or displays a stream key, publish URL or camera
 /// credential; only the Backend decides who may write (403 shows as an error).
 class TournamentManagementLivestreamSection extends ConsumerStatefulWidget {
   const TournamentManagementLivestreamSection({
@@ -39,7 +35,7 @@ class TournamentManagementLivestreamSection extends ConsumerStatefulWidget {
 
   final String tournamentId;
 
-  /// Community that owns the camera fleet and the Facebook Page connection.
+  /// Community that owns the camera fleet.
   ///
   /// `null` (tournament not linked to a community) means every community-scoped
   /// call is skipped instead of guessed: the backend guards those routes by
@@ -53,124 +49,23 @@ class TournamentManagementLivestreamSection extends ConsumerStatefulWidget {
 }
 
 class _TournamentManagementLivestreamSectionState
-    extends ConsumerState<TournamentManagementLivestreamSection>
-    with WidgetsBindingObserver {
+    extends ConsumerState<TournamentManagementLivestreamSection> {
   final Set<String> _busySessionIds = <String>{};
   final Set<String> _busyDeviceIds = <String>{};
-  String? _facebookActionError;
-  bool _facebookBusy = false;
   final TextEditingController _deviceNameController = TextEditingController();
   bool _creatingDevice = false;
+  bool _devicesExpanded = false;
   String? _deviceNameError;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _deviceNameController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) return;
-    // The Facebook Page connection is completed in a browser, so coming back
-    // to the app is the one moment a fresh status is worth re-polling.
-    _refreshFacebookConnection();
   }
 
   String? get _communityId {
     final trimmed = widget.communityId?.trim();
     return trimmed == null || trimmed.isEmpty ? null : trimmed;
-  }
-
-  void _refreshFacebookConnection() {
-    final communityId = _communityId;
-    if (communityId == null || !mounted) return;
-    ref.invalidate(facebookPageConnectionProvider(communityId));
-  }
-
-  Future<void> _connectFacebookPage() async {
-    final communityId = _communityId;
-    if (communityId == null) return;
-    setState(() {
-      _facebookBusy = true;
-      _facebookActionError = null;
-    });
-    try {
-      // The OAuth URL carries an encrypted state nonce, so it goes straight to
-      // the platform browser and is never stored, logged or shared. Failures
-      // are reported with a fixed message rather than the error text, which
-      // could echo the URL.
-      final authorizationUrl = await ref
-          .read(liveSessionRepositoryProvider)
-          .createFacebookOAuthUrl(communityId);
-      final uri = Uri.tryParse(authorizationUrl);
-      if (uri == null || !uri.hasScheme) {
-        throw StateError('Facebook OAuth start returned an unusable URL.');
-      }
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        throw StateError('Facebook OAuth URL could not be opened.');
-      }
-    } on Object {
-      if (mounted) {
-        setState(() {
-          _facebookActionError = AppLocalizations.of(
-            context,
-          )!.tournamentManagementLivestreamFacebookConnectFailed;
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _facebookBusy = false);
-    }
-  }
-
-  Future<void> _runFacebookAction(Future<Object?> Function() action) async {
-    final l10n = AppLocalizations.of(context);
-    if (l10n == null) return;
-    setState(() {
-      _facebookBusy = true;
-      _facebookActionError = null;
-    });
-    try {
-      await action();
-    } on Object {
-      if (mounted) {
-        setState(
-          () => _facebookActionError = l10n.tournamentManagementActionError,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _facebookBusy = false;
-          _refreshFacebookConnection();
-        });
-      }
-    }
-  }
-
-  Future<void> _revalidateFacebookPage(String connectionId) {
-    return _runFacebookAction(
-      () => ref
-          .read(liveSessionRepositoryProvider)
-          .validateFacebookConnection(connectionId),
-    );
-  }
-
-  Future<void> _disconnectFacebookPage() {
-    final communityId = _communityId;
-    if (communityId == null) return Future<void>.value();
-    return _runFacebookAction(
-      () => ref
-          .read(liveSessionRepositoryProvider)
-          .disconnectFacebookConnection(communityId),
-    );
   }
 
   Future<void> _createPairingQr(CameraDeviceModel device) async {
@@ -329,146 +224,152 @@ class _TournamentManagementLivestreamSectionState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final communityId = _communityId;
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (communityId == null)
-          TournamentManagementSectionCard(
-            title: l10n.tournamentManagementLivestream,
-            subtitle: l10n.tournamentManagementLivestreamDescription,
-            child: TournamentManagementEmpty(
-              title: l10n.tournamentManagementLivestreamDevicesUnavailable,
-              icon: Icons.link_off_rounded,
-            ),
-          )
-        else ...[
-          _buildFacebookCard(l10n, communityId),
-          const SizedBox(height: 16),
-          _buildDevicesCard(l10n, communityId),
+    return LavishSurface(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          TournamentCameraPanel(tournamentId: widget.tournamentId),
+          _buildSessions(l10n),
+          if (communityId == null)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TournamentManagementEmpty(
+                title: l10n.tournamentManagementLivestreamDevicesUnavailable,
+                icon: Icons.link_off_rounded,
+              ),
+            )
+          else
+            _buildDevices(l10n, communityId),
         ],
-        const SizedBox(height: 16),
-        TournamentCameraPanel(tournamentId: widget.tournamentId),
-        const SizedBox(height: 16),
-        _buildSessionsCard(l10n),
+      ),
+    );
+  }
+
+  Widget _buildSessions(AppLocalizations l10n) {
+    final sessions = ref.watch(
+      tournamentLiveSessionsProvider(widget.tournamentId),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishGroupHeader(l10n.tournamentManagementLivestreamSessions),
+        sessions.when(
+          skipLoadingOnRefresh: true,
+          loading: () => const _InlineSpinner(),
+          error: (error, _) => TournamentManagementError(
+            onRetry: _refreshSessions,
+            error: error,
+          ),
+          data: (items) {
+            if (items.isEmpty) {
+              return _MutedLine(
+                l10n.tournamentManagementLivestreamSessionsEmpty,
+              );
+            }
+            return Column(
+              children: [
+                for (final session in items)
+                  _LiveSessionTile(
+                    session: session,
+                    busy: _busySessionIds.contains(session.id),
+                    statusLabel: _liveSessionStatusLabel(l10n, session.status),
+                    onRecheckStatus: () => _recheckSessionStatus(session),
+                    onStop: () => _stopSession(session),
+                  ),
+              ],
+            );
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildFacebookCard(AppLocalizations l10n, String communityId) {
-    final connection = ref.watch(facebookPageConnectionProvider(communityId));
-    return TournamentManagementSectionCard(
-      title: l10n.contactFacebook,
-      subtitle: l10n.tournamentManagementLivestreamFacebookSubtitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          connection.when(
-            skipLoadingOnRefresh: true,
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            error: (error, _) => TournamentManagementError(
-              onRetry: () => _refreshFacebookConnection(),
-              error: error,
-            ),
-            data: (value) => value == null
-                ? TournamentManagementEmpty(
-                    title:
-                        l10n.tournamentManagementLivestreamFacebookNotConnected,
-                    icon: Icons.facebook_rounded,
-                    action: FilledButton.icon(
-                      onPressed: _facebookBusy ? null : _connectFacebookPage,
-                      icon: const Icon(Icons.open_in_new_rounded),
-                      label: Text(
-                        l10n.tournamentManagementLivestreamFacebookConnect,
-                      ),
-                    ),
-                  )
-                : _FacebookConnectionBody(
-                    connection: value,
-                    busy: _facebookBusy,
-                    onRevalidate: () => _revalidateFacebookPage(value.id),
-                    onConnect: _connectFacebookPage,
-                    onDisconnect: _disconnectFacebookPage,
-                  ),
-          ),
-          if (_facebookActionError != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _facebookActionError!,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: context.colors.error),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDevicesCard(AppLocalizations l10n, String communityId) {
+  Widget _buildDevices(AppLocalizations l10n, String communityId) {
     final devices = ref.watch(cameraDevicesProvider(communityId));
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementLivestreamDevices,
-      subtitle: l10n.tournamentManagementLivestreamDevicesDescription,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Deliberately outside the `data:` branch: a community that has no
-          // device yet must still be able to register the first one.
-          _buildCreateDeviceForm(l10n, communityId),
-          const SizedBox(height: 16),
+    final count = devices.asData?.value.length;
+    final title = count == null
+        ? l10n.tournamentManagementLivestreamDevices
+        : '${l10n.tournamentManagementLivestreamDevices} · $count';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          key: const ValueKey('livestream-devices-toggle'),
+          onTap: () => setState(() => _devicesExpanded = !_devicesExpanded),
+          child: LavishGroupHeader(
+            title,
+            trailing: Icon(
+              _devicesExpanded
+                  ? Icons.expand_less_rounded
+                  : Icons.expand_more_rounded,
+              size: 18,
+              color: LavishColors.of(context).muted,
+            ),
+          ),
+        ),
+        // Deliberately outside the `data:` branch: a community that has no
+        // device yet must still be able to register the first one.
+        if (_devicesExpanded) _buildCreateDeviceForm(l10n, communityId),
+        // A failure stays on screen while the provider silently retries, so
+        // a 403 never flickers into a spinner.
+        if (devices.hasError)
+          TournamentManagementError(
+            onRetry: _refreshCameraDevices,
+            error: devices.error,
+          )
+        else
           devices.when(
             skipLoadingOnRefresh: true,
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-            error: (error, _) => TournamentManagementError(
-              onRetry: _refreshCameraDevices,
-              error: error,
-            ),
+            loading: () => _devicesExpanded
+                ? const _InlineSpinner()
+                : const SizedBox.shrink(),
+            error: (error, _) => const SizedBox.shrink(),
             data: (items) {
+              if (!_devicesExpanded) return const SizedBox.shrink();
               if (items.isEmpty) {
-                return TournamentManagementEmpty(
-                  title: l10n.tournamentManagementLivestreamDevicesEmpty,
-                  icon: Icons.videocam_off_outlined,
+                return _MutedLine(
+                  l10n.tournamentManagementLivestreamDevicesEmpty,
                 );
               }
               return Column(
                 children: [
-                  for (var index = 0; index < items.length; index++) ...[
-                    if (index > 0) const Divider(height: 1),
-                    _CameraDeviceTile(
-                      device: items[index],
-                      busy: _busyDeviceIds.contains(items[index].id),
-                      onCreatePairingQr: () => _createPairingQr(items[index]),
-                      statusLabel: _cameraDeviceStatusLabel(
-                        l10n,
-                        items[index].status,
+                  for (final device in items)
+                    LavishRow(
+                      leading: const LavishIconBox(
+                        child: Icon(Icons.smartphone_rounded),
                       ),
+                      title: device.name,
+                      subtitle: _cameraDeviceStatusLabel(l10n, device.status),
+                      trailing: [
+                        LavishChipButton(
+                          label: l10n
+                              .tournamentManagementLivestreamCreatePairingQr,
+                          onPressed: _busyDeviceIds.contains(device.id)
+                              ? null
+                              : () => _createPairingQr(device),
+                        ),
+                      ],
                     ),
-                  ],
                 ],
               );
             },
           ),
-        ],
-      ),
+      ],
     );
   }
 
   Widget _buildCreateDeviceForm(AppLocalizations l10n, String communityId) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: TextField(
+    final colors = LavishColors.of(context);
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: colors.chipLine, width: 1.5),
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
             controller: _deviceNameController,
             enabled: !_creatingDevice,
             onChanged: _onDeviceNameChanged,
@@ -476,210 +377,26 @@ class _TournamentManagementLivestreamSectionState
             onSubmitted: _creatingDevice
                 ? null
                 : (_) => _createDevice(communityId),
+            style: TextStyle(fontSize: 13, color: colors.text),
             decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 11,
+              ),
               labelText: l10n.tournamentManagementLivestreamDeviceNameLabel,
               hintText: l10n.tournamentManagementLivestreamDeviceNameHint,
               errorText: _deviceNameError,
-              border: const OutlineInputBorder(),
+              border: border,
+              enabledBorder: border,
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: FilledButton.icon(
-            onPressed: _creatingDevice
-                ? null
-                : () => _createDevice(communityId),
-            icon: const Icon(Icons.videocam_outlined),
-            label: Text(l10n.tournamentManagementLivestreamCreateDevice),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSessionsCard(AppLocalizations l10n) {
-    final sessions = ref.watch(
-      tournamentLiveSessionsProvider(widget.tournamentId),
-    );
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementLivestreamSessions,
-      subtitle: l10n.tournamentManagementLivestreamSessionsDescription,
-      child: sessions.when(
-        skipLoadingOnRefresh: true,
-        loading: () => const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        error: (error, _) =>
-            TournamentManagementError(onRetry: _refreshSessions, error: error),
-        data: (items) {
-          if (items.isEmpty) {
-            return TournamentManagementEmpty(
-              title: l10n.tournamentManagementLivestreamSessionsEmpty,
-              icon: Icons.podcasts_outlined,
-            );
-          }
-          return Column(
-            children: [
-              for (var index = 0; index < items.length; index++) ...[
-                if (index > 0) const Divider(height: 1),
-                _LiveSessionTile(
-                  session: items[index],
-                  busy: _busySessionIds.contains(items[index].id),
-                  statusLabel: _liveSessionStatusLabel(
-                    l10n,
-                    items[index].status,
-                  ),
-                  onRecheckStatus: () => _recheckSessionStatus(items[index]),
-                  onStop: () => _stopSession(items[index]),
-                ),
-              ],
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _FacebookConnectionBody extends StatelessWidget {
-  const _FacebookConnectionBody({
-    required this.connection,
-    required this.busy,
-    required this.onRevalidate,
-    required this.onConnect,
-    required this.onDisconnect,
-  });
-
-  final FacebookPageConnectionModel connection;
-  final bool busy;
-  final VoidCallback onRevalidate;
-  final VoidCallback onConnect;
-  final VoidCallback onDisconnect;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final lastChecked = connection.lastValidatedAt;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                connection.pageName,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-            const SizedBox(width: 8),
-            _StatusPill(
-              label: _facebookStatusLabel(l10n, connection.status),
-              color: connection.isActive ? colors.success : colors.textMuted,
-            ),
-          ],
-        ),
-        if (lastChecked != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            l10n.tournamentManagementLivestreamFacebookLastChecked(
-              _formatTimestamp(context, lastChecked),
-            ),
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colors.textMuted),
-          ),
-        ],
-        // Re-check and unlink only make sense for a live authorization, so a
-        // connection the backend still reports in any other state is a dead
-        // end. The empty state's connect action is offered here as well: it
-        // hands the repository's OAuth URL straight to the platform browser
-        // and never shows, stores or logs it.
-        if (connection.isActive)
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: busy ? null : onRevalidate,
-                icon: const Icon(Icons.refresh_rounded),
-                label: Text(
-                  l10n.tournamentManagementLivestreamFacebookRevalidate,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: busy ? null : onDisconnect,
-                icon: const Icon(Icons.link_off_rounded),
-                label: Text(
-                  l10n.tournamentManagementLivestreamFacebookDisconnect,
-                ),
-              ),
-            ],
-          )
-        else
-          FilledButton.icon(
-            onPressed: busy ? null : onConnect,
-            icon: const Icon(Icons.open_in_new_rounded),
-            label: Text(l10n.tournamentManagementLivestreamFacebookConnect),
-          ),
-      ],
-    );
-  }
-}
-
-class _CameraDeviceTile extends StatelessWidget {
-  const _CameraDeviceTile({
-    required this.device,
-    required this.busy,
-    required this.onCreatePairingQr,
-    required this.statusLabel,
-  });
-
-  final CameraDeviceModel device;
-  final bool busy;
-  final VoidCallback onCreatePairingQr;
-  final String statusLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  device.name,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  statusLabel,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: colors.textMuted),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: busy ? null : onCreatePairingQr,
-            icon: const Icon(Icons.qr_code_2_rounded),
-            label: Text(l10n.tournamentManagementLivestreamCreatePairingQr),
+          const SizedBox(height: 10),
+          LavishButton(
+            label: l10n.tournamentManagementLivestreamCreateDevice,
+            icon: const Icon(Icons.videocam_outlined, size: 16),
+            busy: _creatingDevice,
+            onPressed: () => _createDevice(communityId),
           ),
         ],
       ),
@@ -687,6 +404,8 @@ class _CameraDeviceTile extends StatelessWidget {
   }
 }
 
+/// One live session: `.li` row with the status pill, then the actions it
+/// supports (re-check, stop) as design buttons.
 class _LiveSessionTile extends StatelessWidget {
   const _LiveSessionTile({
     required this.session,
@@ -719,105 +438,94 @@ class _LiveSessionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
     final title = (session.title?.trim().isNotEmpty ?? false)
         ? session.title!
         : session.matchId;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _StatusPill(
-                label: statusLabel,
-                color: _sessionStatusColor(colors, session.status),
-              ),
-            ],
-          ),
-          if (supportsStatusRecheck(session.status) ||
-              supportsStop(session.status)) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+    final recheck = supportsStatusRecheck(session.status);
+    final stop = supportsStop(session.status);
+    return Column(
+      key: ValueKey('live-session-${session.id}'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishRow(
+          title: title,
+          trailing: [
+            LavishPill(statusLabel, tone: _sessionStatusTone(session.status)),
+          ],
+        ),
+        if (recheck || stop)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+            child: Row(
               children: [
-                if (supportsStatusRecheck(session.status))
-                  Tooltip(
-                    message:
-                        l10n.tournamentManagementLivestreamRecheckStatusHint,
-                    child: OutlinedButton.icon(
-                      onPressed: busy ? null : onRecheckStatus,
-                      icon: const Icon(Icons.sync_rounded),
-                      label: Text(
-                        l10n.tournamentManagementLivestreamRecheckStatus,
+                if (stop)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: LavishButton(
+                        kind: LavishButtonKind.danger,
+                        label: l10n.tournamentManagementLivestreamStopSession,
+                        onPressed: busy ? null : onStop,
                       ),
                     ),
                   ),
-                if (supportsStop(session.status))
-                  TextButton.icon(
-                    onPressed: busy ? null : onStop,
-                    icon: const Icon(Icons.stop_circle_outlined),
-                    label: Text(l10n.tournamentManagementLivestreamStopSession),
+                if (stop && recheck) const SizedBox(width: 10),
+                if (recheck)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Tooltip(
+                        message: l10n
+                            .tournamentManagementLivestreamRecheckStatusHint,
+                        child: LavishButton(
+                          kind: LavishButtonKind.outline,
+                          label:
+                              l10n.tournamentManagementLivestreamRecheckStatus,
+                          onPressed: busy ? null : onRecheckStatus,
+                        ),
+                      ),
+                    ),
                   ),
               ],
             ),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label, required this.color});
-
-  final String label;
-  final Color color;
+class _InlineSpinner extends StatelessWidget {
+  const _InlineSpinner();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const Padding(
+    padding: EdgeInsets.all(24),
+    child: Center(child: CircularProgressIndicator()),
+  );
 }
 
-String _formatTimestamp(BuildContext context, DateTime value) {
-  final localizations = MaterialLocalizations.of(context);
-  final local = value.toLocal();
-  return '${localizations.formatMediumDate(local)} '
-      '${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(local))}';
+class _MutedLine extends StatelessWidget {
+  const _MutedLine(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+    child: Text(
+      text,
+      style: TextStyle(fontSize: 13, color: LavishColors.of(context).muted),
+    ),
+  );
 }
 
-Color _sessionStatusColor(
-  AppColorsExtension colors,
-  LiveSessionStatus status,
-) => switch (status) {
-  LiveSessionStatus.live => colors.success,
+LavishTone _sessionStatusTone(LiveSessionStatus status) => switch (status) {
+  LiveSessionStatus.live => LavishTone.ok,
   LiveSessionStatus.starting ||
   LiveSessionStatus.reconnecting ||
-  LiveSessionStatus.stopping => colors.warning,
-  LiveSessionStatus.failed => colors.error,
-  _ => colors.textMuted,
+  LiveSessionStatus.stopping => LavishTone.warn,
+  LiveSessionStatus.failed => LavishTone.bad,
+  _ => LavishTone.neutral,
 };
 
 String _liveSessionStatusLabel(
@@ -851,18 +559,4 @@ String _cameraDeviceStatusLabel(
   CameraDeviceStatus.revoked =>
     l10n.tournamentManagementLivestreamDeviceRevoked,
   CameraDeviceStatus.unknown => l10n.tournamentManagementLivestreamStatusOther,
-};
-
-String _facebookStatusLabel(
-  AppLocalizations l10n,
-  FacebookPageConnectionStatus status,
-) => switch (status) {
-  FacebookPageConnectionStatus.active =>
-    l10n.tournamentManagementLivestreamFacebookActive,
-  FacebookPageConnectionStatus.disconnected =>
-    l10n.tournamentManagementLivestreamFacebookDisconnected,
-  FacebookPageConnectionStatus.revoked =>
-    l10n.tournamentManagementLivestreamDeviceRevoked,
-  FacebookPageConnectionStatus.unknown =>
-    l10n.tournamentManagementLivestreamStatusOther,
 };
