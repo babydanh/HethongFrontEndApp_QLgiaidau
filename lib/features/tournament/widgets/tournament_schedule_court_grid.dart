@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -289,26 +291,64 @@ class _TournamentScheduleCourtGridState
     ),
   ];
 
+  // Memo of the last search result, keyed by the matches list and the search.
+  List<MatchModel>? _memoMatches;
+  SearchFilterState? _memoSearch;
+  Set<String>? _memoIds;
+  List<MatchModel>? _conflictMatches;
+  int? _conflictStep;
+  Set<String>? _conflictIds;
+
+  /// Ids of matches in a scheduling conflict, recomputed only when the matches
+  /// or the grid step change.
+  Set<String> _conflictIdsOfMatches() {
+    final cached = _conflictIds;
+    if (cached != null &&
+        identical(_conflictMatches, widget.matches) &&
+        _conflictStep == _stepMinutes) {
+      return cached;
+    }
+    final ids = {
+      for (final group in scheduleConflictGroups(
+        widget.matches,
+        defaultStepMinutes: _stepMinutes,
+      ))
+        group.match.id,
+    };
+    _conflictMatches = widget.matches;
+    _conflictStep = _stepMinutes;
+    return _conflictIds = ids;
+  }
+
+  static bool _sameSearch(SearchFilterState a, SearchFilterState b) =>
+      a.query == b.query &&
+      a.selected.length == b.selected.length &&
+      a.selected.entries.every((e) => b.selected[e.key] == e.value);
+
   /// Ids of matches that satisfy the search text and every active filter.
+  /// [search] must already be pruned to the offered filter values.
   Set<String> _matchedIds(SearchFilterState search) {
+    final cached = _memoIds;
+    final memo = _memoSearch;
+    if (cached != null &&
+        memo != null &&
+        identical(_memoMatches, widget.matches) &&
+        _sameSearch(memo, search)) {
+      return cached;
+    }
     final status = search.selected['status'];
+    final court = search.selected['court'];
+    final division = search.selected['division'];
     final conflictIds = status == 'conflict'
-        ? {
-            for (final group in scheduleConflictGroups(
-              widget.matches,
-              defaultStepMinutes: _stepMinutes,
-            ))
-              group.match.id,
-          }
+        ? _conflictIdsOfMatches()
         : const <String>{};
+    final needle = foldSearchText(search.query);
     bool matches(MatchModel match) {
-      final court = search.selected['court'];
       if (court != null && scheduleCourtNameOf(match) != court) return false;
-      final division = search.selected['division'];
       if (division != null && match.divisionId != division) return false;
       if (status == 'conflict' && !conflictIds.contains(match.id)) return false;
       if (status == 'unscheduled' && _isPlaced(match)) return false;
-      return searchTextMatches(search.query, [
+      return searchTextMatches(needle, [
         match.team1Name,
         match.team2Name,
         matchSideLabel(match, 1),
@@ -318,10 +358,13 @@ class _TournamentScheduleCourtGridState
       ]);
     }
 
-    return {
+    final ids = {
       for (final match in widget.matches)
         if (matches(match)) match.id,
     };
+    _memoMatches = widget.matches;
+    _memoSearch = search;
+    return _memoIds = ids;
   }
 
   /// Trận đã có sân và giờ thì nằm trên lưới; còn lại vào khay chờ xếp.
@@ -438,7 +481,10 @@ class _TournamentScheduleCourtGridState
           for (final match in widget.matches)
             if (!_isPlaced(match) && !draftIds.contains(match.id)) match,
         ];
-        final search = ref.watch(searchFilterProvider(_searchKey));
+        final searchGroups = _searchGroups(l10n, allCourts);
+        final search = ref
+            .watch(searchFilterProvider(_searchKey))
+            .pruned(searchGroups);
         final matchedIds = search.isActive ? _matchedIds(search) : null;
         final trayWaiting = matchedIds == null
             ? waiting
@@ -446,6 +492,21 @@ class _TournamentScheduleCourtGridState
                 for (final match in waiting)
                   if (matchedIds.contains(match.id)) match,
               ];
+        // Count only what is on screen (this day, shown courts, the tray) and
+        // report the rest separately.
+        final shownCourts = visibleCourts.toSet();
+        final shownCount =
+            trayWaiting.length +
+            placed
+                .where(
+                  (match) =>
+                      (matchedIds == null || matchedIds.contains(match.id)) &&
+                      shownCourts.contains(_courtOf(match)),
+                )
+                .length;
+        final hiddenCount = matchedIds == null
+            ? 0
+            : (matchedIds.length - shownCount).clamp(0, matchedIds.length);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -479,8 +540,9 @@ class _TournamentScheduleCourtGridState
             SearchFilterBar(
               tabKey: _searchKey,
               hint: l10n.scheduleSearchHint,
-              groups: _searchGroups(l10n, allCourts),
-              resultCount: matchedIds?.length ?? widget.matches.length,
+              groups: searchGroups,
+              resultCount: shownCount,
+              hiddenCount: hiddenCount,
             ),
             if (days.length > 1) _dayPicker(context, days, day),
             if (widget.draftMatches.isNotEmpty) _draftBar(context, l10n),
@@ -547,7 +609,7 @@ class _TournamentScheduleCourtGridState
                 placed,
                 drafts,
                 day,
-                waiting,
+                trayWaiting,
               ),
             if (widget.onScheduleDrop != null && trayWaiting.isNotEmpty)
               _waitingTray(context, l10n, trayWaiting, day),
@@ -973,92 +1035,102 @@ class _TournamentScheduleCourtGridState
           crossAxisAlignment: WrapCrossAlignment.center,
           runSpacing: 4,
           children: [
-          // Bộ đếm tiến độ xếp lịch, như thanh công cụ của web.
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.event_available_outlined, size: 16, color: colors.textMuted),
-              const SizedBox(width: 6),
-              Text(
-                '${l10n.opsMatches} $placedCount/$totalCount',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textSecondary,
+            // Scheduling progress counter, as in the web toolbar.
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.event_available_outlined,
+                  size: 16,
+                  color: colors.textMuted,
                 ),
-              ),
-            ],
-          ),
-          Wrap(
-          alignment: WrapAlignment.end,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-          if (widget.divisions.length > 1 &&
-              widget.onDivisionSelected != null) ...[
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 180),
-              child: _divisionDropdown(context),
+                const SizedBox(width: 6),
+                Text(
+                  '${l10n.opsMatches} $placedCount/$totalCount',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          OutlinedButton.icon(
-            key: const ValueKey('court-picker-button'),
-            onPressed: () => _openCourtPicker(context, allCourts, selectedCourts),
-            icon: const Icon(Icons.grid_view_rounded, size: 16),
-            label: Text(
-              '${l10n.tournamentManagementVenues} $visibleCount/${allCourts.length}',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (widget.divisions.length > 1 &&
+                    widget.onDivisionSelected != null) ...[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 180),
+                    child: _divisionDropdown(context),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                OutlinedButton.icon(
+                  key: const ValueKey('court-picker-button'),
+                  onPressed: () =>
+                      _openCourtPicker(context, allCourts, selectedCourts),
+                  icon: const Icon(Icons.grid_view_rounded, size: 16),
+                  label: Text(
+                    '${l10n.tournamentManagementVenues} $visibleCount/${allCourts.length}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 34),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    side: BorderSide(color: colors.border),
+                  ),
+                ),
+                SearchFilterToggle(tabKey: _searchKey),
+                PopupMenuButton<String>(
+                  key: const ValueKey('schedule-more-button'),
+                  tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+                  icon: Icon(Icons.more_horiz_rounded, color: colors.textMuted),
+                  onSelected: (action) {
+                    if (action == 'print') {
+                      unawaited((widget.onPrint ?? _printSchedule)());
+                    }
+                    if (action == 'export') unawaited(_exportSchedule());
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      key: const ValueKey('schedule-print-button'),
+                      value: 'print',
+                      child: Text(l10n.schedulePrint),
+                    ),
+                    PopupMenuItem(
+                      key: const ValueKey('schedule-export-button'),
+                      value: 'export',
+                      enabled: !_exporting,
+                      child: Text(l10n.exportData),
+                    ),
+                  ],
+                ),
+                if (widget.onOpenScheduleSettings != null)
+                  IconButton(
+                    key: const ValueKey('schedule-settings-button'),
+                    tooltip: l10n.scheduleSettingsTitle,
+                    onPressed: widget.onOpenScheduleSettings,
+                    icon: Icon(Icons.schedule_rounded, color: colors.textMuted),
+                  ),
+                if (widget.onOpenFullscreen != null) ...[
+                  const SizedBox(width: 4),
+                  IconButton(
+                    key: const ValueKey('court-grid-fullscreen'),
+                    tooltip: l10n.tabSchedule,
+                    onPressed: widget.onOpenFullscreen,
+                    icon: Icon(
+                      Icons.open_in_full_rounded,
+                      color: colors.textMuted,
+                    ),
+                  ),
+                ],
+              ],
             ),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(0, 34),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              side: BorderSide(color: colors.border),
-            ),
-          ),
-          SearchFilterToggle(tabKey: _searchKey),
-          PopupMenuButton<String>(
-            key: const ValueKey('schedule-more-button'),
-            tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-            icon: Icon(Icons.more_horiz_rounded, color: colors.textMuted),
-            onSelected: (action) {
-              if (action == 'print') (widget.onPrint ?? _printSchedule)();
-              if (action == 'export') _exportSchedule();
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                key: const ValueKey('schedule-print-button'),
-                value: 'print',
-                child: Text(l10n.schedulePrint),
-              ),
-              PopupMenuItem(
-                key: const ValueKey('schedule-export-button'),
-                value: 'export',
-                enabled: !_exporting,
-                child: Text(l10n.exportData),
-              ),
-            ],
-          ),
-          if (widget.onOpenScheduleSettings != null)
-            IconButton(
-              key: const ValueKey('schedule-settings-button'),
-              tooltip: l10n.scheduleSettingsTitle,
-              onPressed: widget.onOpenScheduleSettings,
-              icon: Icon(Icons.schedule_rounded, color: colors.textMuted),
-            ),
-          if (widget.onOpenFullscreen != null) ...[
-            const SizedBox(width: 4),
-            IconButton(
-              key: const ValueKey('court-grid-fullscreen'),
-              tooltip: l10n.tabSchedule,
-              onPressed: widget.onOpenFullscreen,
-              icon: Icon(
-                Icons.open_in_full_rounded,
-                color: colors.textMuted,
-              ),
-            ),
-          ],
-          ],
-          ),
           ],
         ),
       ),

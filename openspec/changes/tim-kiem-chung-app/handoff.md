@@ -12,11 +12,15 @@ Một icon tìm kiếm trong hàng công cụ của các tab danh sách BTC; b�
 - Toolbar lưới Lịch cũ là `Row` cố định, tràn 343px ở 320dp (có từ trước). Đổi sang `Wrap` lồng nhau -> hết tràn, test 320dp xanh.
 - Dùng `dart format` cả file lưới -> kéo theo 260 dòng đổi định dạng ngoài phạm vi; đã hoàn tác bằng cách áp lại sửa từ HEAD, không format.
 - Lịch: 🖨 và Xuất Excel chuyển vào menu ⋯ (`schedule-more-button`); test cũ `schedule_print_test.dart` sửa theo (bấm ⋯ trước).
+- Review độc lập đòi sửa: thanh tìm VĐV ra ngoài `FutureBuilder` (reload không tháo thanh); `AnimatedOpacity` luôn có mặt thay `Opacity` bọc từng thẻ; số kết quả Lịch đếm theo phần đang hiển thị kèm dòng "ở ngày hoặc sân đang ẩn"; memo kết quả tìm và danh sách trùng lịch; fold từ khoá một lần; a11y (tooltip kèm số điều kiện, chip cao tối thiểu 40dp).
+- Cách test reload VĐV: tab không có hook để gọi `_reload` từ ngoài, nên test giữ future ở trạng thái chờ (cùng trạng thái `waiting` của reload) và kiểm toolbar/thanh/chữ/focus còn nguyên sau khi future xong.
 - VĐV: lọc ẩn các hàng nội dung không có VĐV khớp; hàng mở ra chỉ liệt kê VĐV khớp (bộ lọc chip trạng thái cũ vẫn chạy song song).
 
 ## Ràng buộc đang có
-- ARB: thêm 13 key vào `app_vi.arb` / `app_en.arb` (chèn sau `schedulePrint`, không ở cuối file để tránh xung đột với nhánh khác), đã chạy `flutter gen-l10n`.
-- `PopScope` của thanh tìm chặn Back khi thanh mở (đóng thanh trước). Tab khác trong `TabBarView` vẫn giữ PopScope của thanh đang mở [SUY LUẬN]: Back ở tab khác có thể đóng thanh ẩn trước.
+- ARB: thêm 17 key vào `app_vi.arb` / `app_en.arb` (chèn sau `schedulePrint`, không ở cuối file để tránh xung đột với nhánh khác), đã chạy `flutter gen-l10n`.
+- `PopScope` của thanh tìm chỉ chặn Back khi thanh đang hiển thị (`TickerMode` bật và route là route hiện tại); thanh bị che (hub dùng `IndexedStack`) không nuốt Back. Có test.
+- State tìm kiếm là `autoDispose` + `ref.keepAlive()` với 10 phút ân hạn (`_keepAliveGrace`): sống qua đổi tab và reload danh sách, rồi tự giải phóng khi rời màn. Vẫn còn `open` được nhớ trong 10 phút đó (không tự lấy focus khi quay lại).
+- Bộ lọc có giá trị không còn trong danh sách (đổi sân/nội dung) bị bỏ qua và dọn khỏi state (`SearchFilterState.pruned`).
 - Khoá state: `'<tournamentId>:schedule'` và `'<tournamentId>:athletes'`.
 
 ## Ràng buộc thay đổi lần này

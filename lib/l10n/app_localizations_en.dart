@@ -15512,6 +15512,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String searchFilterElsewhere(int count) {
+    return '$count more results on other days or hidden courts';
+  }
+
+  @override
+  String searchFilterActiveCount(int count) {
+    return '$count active filters';
+  }
+
+  @override
   String get scheduleSearchHint => 'Search matches, players, teams…';
 
   @override

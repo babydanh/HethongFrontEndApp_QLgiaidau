@@ -28006,6 +28006,18 @@ abstract class AppLocalizations {
   /// **'{count} kết quả'**
   String searchFilterResultCount(int count);
 
+  /// No description provided for @searchFilterElsewhere.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} kết quả ở ngày hoặc sân đang ẩn'**
+  String searchFilterElsewhere(int count);
+
+  /// No description provided for @searchFilterActiveCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} điều kiện lọc'**
+  String searchFilterActiveCount(int count);
+
   /// No description provided for @scheduleSearchHint.
   ///
   /// In vi, this message translates to:

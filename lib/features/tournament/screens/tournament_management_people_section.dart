@@ -22,32 +22,37 @@ enum ParticipantStatusFilter {
   rejected,
 }
 
-/// Whether [participant] passes the shared search bar of the VĐV tab: name
-/// text plus the approval (`teamStatus`) and fee (`isPaid`) filters.
-bool participantMatchesSearch(
-  OrganizerOpsParticipant participant,
+/// Builds the predicate of the VĐV tab search bar: name text plus the approval
+/// (`teamStatus`) and fee (`isPaid`) filters. The query is folded once here, not
+/// once per participant.
+bool Function(OrganizerOpsParticipant) participantSearchMatcher(
   SearchFilterState search,
 ) {
-  final status = participant.teamStatus.toUpperCase();
-  final approvalOk = switch (search.selected['approval']) {
-    'pending' => status == 'PENDING' || status == 'PENDING_APPROVAL',
-    'pendingPartner' => status == 'PENDING_PARTNER',
-    'approved' => status == 'COMPLETE',
-    'rejected' => status == 'REJECTED',
-    _ => true,
+  final needle = foldSearchText(search.query);
+  final approval = search.selected['approval'];
+  final fee = search.selected['fee'];
+  return (participant) {
+    final status = participant.teamStatus.toUpperCase();
+    final approvalOk = switch (approval) {
+      'pending' => status == 'PENDING' || status == 'PENDING_APPROVAL',
+      'pendingPartner' => status == 'PENDING_PARTNER',
+      'approved' => status == 'COMPLETE',
+      'rejected' => status == 'REJECTED',
+      _ => true,
+    };
+    final feeOk = switch (fee) {
+      'paid' => participant.isPaid,
+      'unpaid' => !participant.isPaid,
+      _ => true,
+    };
+    return approvalOk &&
+        feeOk &&
+        searchTextMatches(needle, [
+          participant.teamName,
+          for (final member in participant.members) member.fullName,
+          for (final player in participant.players) player.fullName,
+        ]);
   };
-  final feeOk = switch (search.selected['fee']) {
-    'paid' => participant.isPaid,
-    'unpaid' => !participant.isPaid,
-    _ => true,
-  };
-  return approvalOk &&
-      feeOk &&
-      searchTextMatches(search.query, [
-        participant.teamName,
-        for (final member in participant.members) member.fullName,
-        for (final player in participant.players) player.fullName,
-      ]);
 }
 
 class TournamentManagementPeopleSection extends StatelessWidget {
@@ -260,11 +265,14 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
         final search = searchKey == null
             ? null
             : ref.watch(searchFilterProvider(searchKey));
+        final matches = search == null || !search.isActive
+            ? null
+            : participantSearchMatcher(search);
         final visible = participants
             .where(
               (item) =>
                   _matchesFilter(item, _filter) &&
-                  (search == null || participantMatchesSearch(item, search)),
+                  (matches == null || matches(item)),
             )
             .toList(growable: false);
         final body = <Widget>[

@@ -18,41 +18,59 @@ const _groups = [
   ),
 ];
 
-Widget _host({String tabKey = 'a', int count = 3, double textScale = 1}) {
-  return ProviderScope(
-    child: MaterialApp(
-      theme: AppTheme.lightTheme,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('vi'),
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(
-          context,
-        ).copyWith(textScaler: TextScaler.linear(textScale)),
-        child: child!,
-      ),
-      home: Scaffold(
-        body: Column(
-          children: [
-            Row(children: [SearchFilterToggle(tabKey: tabKey)]),
-            SearchFilterBar(
-              tabKey: tabKey,
-              hint: 'Tìm trận',
-              groups: _groups,
-              resultCount: count,
-            ),
-          ],
-        ),
-      ),
+Widget _body({
+  String tabKey = 'a',
+  int count = 3,
+  int hidden = 0,
+  List<SearchFilterGroup> groups = _groups,
+}) => Column(
+  children: [
+    Row(children: [SearchFilterToggle(tabKey: tabKey)]),
+    SearchFilterBar(
+      tabKey: tabKey,
+      hint: 'Tìm trận',
+      groups: groups,
+      resultCount: count,
+      hiddenCount: hidden,
     ),
-  );
-}
+  ],
+);
+
+Widget _app(Widget home, {double textScale = 1}) => MaterialApp(
+  theme: AppTheme.lightTheme,
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  locale: const Locale('vi'),
+  builder: (context, child) => MediaQuery(
+    data: MediaQuery.of(
+      context,
+    ).copyWith(textScaler: TextScaler.linear(textScale)),
+    child: child!,
+  ),
+  home: home,
+);
+
+Widget _host({
+  String tabKey = 'a',
+  int count = 3,
+  int hidden = 0,
+  double textScale = 1,
+  List<SearchFilterGroup> groups = _groups,
+}) => ProviderScope(
+  child: _app(
+    Scaffold(
+      body: _body(tabKey: tabKey, count: count, hidden: hidden, groups: groups),
+    ),
+    textScale: textScale,
+  ),
+);
 
 ProviderContainer _container(WidgetTester tester) =>
     ProviderScope.containerOf(tester.element(find.byType(Scaffold)));
 
 const _toggle = ValueKey('search-filter-toggle');
 const _input = ValueKey('search-filter-input');
+const _clearAll = ValueKey('search-filter-clear-all');
 
 void main() {
   testWidgets('toggle opens the bar with a focused input and closes it again', (
@@ -70,6 +88,43 @@ void main() {
     await tester.tap(find.byKey(_toggle));
     await tester.pumpAndSettle();
     expect(find.byKey(_input), findsNothing);
+  });
+
+  testWidgets('a bar that is mounted already open does not grab focus', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    container.read(searchFilterProvider('a').notifier).setOpen(true);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: _app(Scaffold(body: _body())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final field = tester.widget<TextField>(find.byKey(_input));
+    expect(field.focusNode?.hasFocus, isFalse);
+    // The keep-alive timer is cancelled when the container goes away.
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+  });
+
+  testWidgets('state survives unmounting and remounting the widgets', (
+    tester,
+  ) async {
+    final container = ProviderContainer();
+    Widget mount() => UncontrolledProviderScope(
+      container: container,
+      child: _app(Scaffold(body: _body())),
+    );
+    await tester.pumpWidget(mount());
+    container.read(searchFilterProvider('a').notifier).setQuery('keep');
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(mount());
+    expect(container.read(searchFilterProvider('a')).query, 'keep');
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
   });
 
   testWidgets('typing updates the query after the debounce', (tester) async {
@@ -116,7 +171,7 @@ void main() {
     await tester.tap(find.byKey(_toggle));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('search-filter-clear-all')));
+    await tester.tap(find.byKey(_clearAll));
     await tester.pumpAndSettle();
     final a = container.read(searchFilterProvider('a'));
     expect(a.query, '');
@@ -125,35 +180,153 @@ void main() {
     expect(container.read(searchFilterProvider('b')).query, 'keep');
   });
 
+  testWidgets('clear all drops text typed but not yet pushed by the debounce', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host());
+    final container = _container(tester);
+    container.read(searchFilterProvider('a').notifier).setFilter('court', 's1');
+    await tester.tap(find.byKey(_toggle));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(_input), 'abc');
+    await tester.tap(find.byKey(_clearAll));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(container.read(searchFilterProvider('a')).query, '');
+    expect(tester.widget<TextField>(find.byKey(_input)).controller?.text, '');
+  });
+
   testWidgets('zero results shows 0 and the clear action', (tester) async {
     await tester.pumpWidget(_host(count: 0));
     _container(tester).read(searchFilterProvider('a').notifier).setQuery('zz');
     await tester.tap(find.byKey(_toggle));
     await tester.pumpAndSettle();
     expect(find.text('0 kết quả'), findsOneWidget);
-    expect(find.byKey(const ValueKey('search-filter-clear-all')), findsOneWidget);
+    expect(find.byKey(_clearAll), findsOneWidget);
+  });
+
+  testWidgets('hidden results are reported on their own line', (tester) async {
+    await tester.pumpWidget(_host(count: 2, hidden: 3));
+    await tester.tap(find.byKey(_toggle));
+    await tester.pumpAndSettle();
+    expect(find.text('2 kết quả'), findsOneWidget);
+    expect(find.text('3 kết quả ở ngày hoặc sân đang ẩn'), findsOneWidget);
+  });
+
+  testWidgets('a filter value no longer offered is ignored and cleaned up', (
+    tester,
+  ) async {
+    // The court group is gone (e.g. only one court left): its old value must
+    // not keep filtering invisibly or count in the badge.
+    await tester.pumpWidget(_host(groups: [_groups[1]]));
+    final container = _container(tester);
+    container.read(searchFilterProvider('a').notifier).setFilter('court', 'X');
+    container.read(searchFilterProvider('a').notifier).setOpen(true);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(_clearAll), findsNothing);
+    expect(container.read(searchFilterProvider('a')).selected, isEmpty);
+    expect(container.read(searchFilterProvider('a')).activeCount, 0);
+  });
+
+  test('pruned() drops groups and values that are not offered', () {
+    const state = SearchFilterState(
+      selected: {'court': 'X', 'status': 'x', 'gone': 'y'},
+    );
+    expect(state.pruned(_groups).selected, {'status': 'x'});
+  });
+
+  testWidgets('Back closes the visible bar but ignores a covered one', (
+    tester,
+  ) async {
+    final covered = ValueNotifier(false);
+    await tester.pumpWidget(
+      ProviderScope(child: _app(const Scaffold(body: SizedBox.expand()))),
+    );
+    final navigator = Navigator.of(tester.element(find.byType(Scaffold)));
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => ValueListenableBuilder<bool>(
+          valueListenable: covered,
+          builder: (_, isCovered, _) => TickerMode(
+            enabled: !isCovered,
+            child: Scaffold(key: const ValueKey('page'), body: _body()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byKey(const ValueKey('page'))),
+    );
+
+    // Visible bar: Back closes the bar, the page stays.
+    container.read(searchFilterProvider('a').notifier).setOpen(true);
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(container.read(searchFilterProvider('a')).open, isFalse);
+    expect(find.byKey(const ValueKey('page')), findsOneWidget);
+
+    // Covered bar (hidden tab): Back leaves the page, the bar is untouched.
+    container.read(searchFilterProvider('a').notifier).setOpen(true);
+    covered.value = true;
+    await tester.pumpAndSettle();
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('page')), findsNothing);
+    expect(container.read(searchFilterProvider('a')).open, isTrue);
+  });
+
+  testWidgets('toggle exposes open state and the filter count to a11y', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_host());
+    final container = _container(tester);
+    container.read(searchFilterProvider('a').notifier).setFilter('court', 's1');
+    await tester.tap(find.byKey(_toggle));
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<IconButton>(find.byKey(_toggle));
+    expect(button.isSelected, isTrue);
+    expect(button.tooltip, contains('1 điều kiện lọc'));
+  });
+
+  testWidgets('chips and close button are at least 40dp tall', (tester) async {
+    await tester.pumpWidget(_host());
+    await tester.tap(find.byKey(_toggle));
+    await tester.pumpAndSettle();
+    final chip = tester.getSize(
+      find.byKey(const ValueKey('search-filter-group-court')),
+    );
+    expect(chip.height, greaterThanOrEqualTo(40));
+    final close = tester.getSize(
+      find.byKey(const ValueKey('search-filter-close')),
+    );
+    expect(close.shortestSide, greaterThanOrEqualTo(40));
   });
 
   testWidgets('no overflow at 320dp with text scale 1.3', (tester) async {
     tester.view.physicalSize = const Size(320, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(_host(textScale: 1.3));
+    await tester.pumpWidget(_host(textScale: 1.3, hidden: 4));
     final container = _container(tester);
     container.read(searchFilterProvider('a').notifier).setQuery('Nguyễn');
     container.read(searchFilterProvider('a').notifier).setFilter('court', 's1');
-    container
-        .read(searchFilterProvider('a').notifier)
-        .setFilter('status', 'u');
+    container.read(searchFilterProvider('a').notifier).setFilter('status', 'u');
     await tester.tap(find.byKey(_toggle));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
   test('searchTextMatches ignores case and Vietnamese diacritics', () {
-    expect(searchTextMatches('nguyen dinh', ['Nguyễn Đình Hải']), isTrue);
-    expect(searchTextMatches('ĐÌNH', ['nguyen dinh']), isTrue);
-    expect(searchTextMatches('', ['anything']), isTrue);
-    expect(searchTextMatches('zzz', ['Nguyễn']), isFalse);
+    expect(
+      searchTextMatches(foldSearchText('nguyen dinh'), ['Nguyễn Đình Hải']),
+      isTrue,
+    );
+    expect(searchTextMatches(foldSearchText('ĐÌNH'), ['nguyen dinh']), isTrue);
+    expect(searchTextMatches(foldSearchText(''), ['anything']), isTrue);
+    expect(searchTextMatches(foldSearchText('zzz'), ['Nguyễn']), isFalse);
   });
 }

@@ -15458,6 +15458,16 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String searchFilterElsewhere(int count) {
+    return '$count kết quả ở ngày hoặc sân đang ẩn';
+  }
+
+  @override
+  String searchFilterActiveCount(int count) {
+    return '$count điều kiện lọc';
+  }
+
+  @override
   String get scheduleSearchHint => 'Tìm trận, VĐV, đội…';
 
   @override

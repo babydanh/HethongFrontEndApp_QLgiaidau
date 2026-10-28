@@ -37,6 +37,10 @@ class _TournamentManagementAthletesTabState
   late Future<List<OrganizerOpsParticipant>> _participantsFuture;
   String? _expandedDivisionId;
 
+  /// Last loaded list, kept across reloads so the search bar (which lives
+  /// outside the FutureBuilder) can keep counting while a reload is running.
+  List<OrganizerOpsParticipant> _loaded = const [];
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +49,11 @@ class _TournamentManagementAthletesTabState
 
   Future<List<OrganizerOpsParticipant>> _load() => ref
       .read(tournamentRepositoryProvider)
-      .getOrganizerParticipants(widget.tournament.id);
+      .getOrganizerParticipants(widget.tournament.id)
+      .then((list) {
+        if (mounted) setState(() => _loaded = list);
+        return list;
+      });
 
   void _reload() => setState(() => _participantsFuture = _load());
 
@@ -211,10 +219,56 @@ class _TournamentManagementAthletesTabState
 
   @override
   Widget build(BuildContext context) {
-    final divisions = widget.tournament.divisions;
     final l10n = AppLocalizations.of(context)!;
     final searchKey = '${widget.tournament.id}:athletes';
-    final search = ref.watch(searchFilterProvider(searchKey));
+    final groups = _searchGroups(l10n);
+    final search = ref.watch(searchFilterProvider(searchKey)).pruned(groups);
+    final matches = search.isActive ? participantSearchMatcher(search) : null;
+    final matched = matches == null
+        ? _loaded
+        : [
+            for (final item in _loaded)
+              if (matches(item)) item,
+          ];
+    // The toolbar and search bar stay outside the FutureBuilder: a reload (add,
+    // import, pairing) must not tear them down or reset the keyboard.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 4, 6, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.tournamentManagementTabAthletes,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              SearchFilterToggle(tabKey: searchKey),
+            ],
+          ),
+        ),
+        SearchFilterBar(
+          tabKey: searchKey,
+          hint: l10n.athleteSearchHint,
+          groups: groups,
+          resultCount: matched.length,
+        ),
+        _buildList(search.isActive, {for (final item in matched) item.divisionId}),
+      ],
+    );
+  }
+
+  Widget _buildList(bool searching, Set<String?> matchedDivisionIds) {
+    final divisions = widget.tournament.divisions;
+    final searchKey = '${widget.tournament.id}:athletes';
     return FutureBuilder<List<OrganizerOpsParticipant>>(
       future: _participantsFuture,
       builder: (context, snapshot) {
@@ -234,64 +288,32 @@ class _TournamentManagementAthletesTabState
           );
         }
         final participants = snapshot.data ?? const <OrganizerOpsParticipant>[];
-        final matched = search.isActive
-            ? [
-                for (final item in participants)
-                  if (participantMatchesSearch(item, search)) item,
-              ]
-            : participants;
-        final matchedDivisionIds = {for (final item in matched) item.divisionId};
         // Không padding ngang: row nội dung sát mép, ngăn cách bằng đường kẻ.
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 4, 6, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.tournamentManagementTabAthletes,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    SearchFilterToggle(tabKey: searchKey),
-                  ],
-                ),
-              ),
-              SearchFilterBar(
-                tabKey: searchKey,
-                hint: l10n.athleteSearchHint,
-                groups: _searchGroups(l10n),
-                resultCount: matched.length,
-              ),
               for (final division in divisions)
-                if (!search.isActive || matchedDivisionIds.contains(division.id))
-                _DivisionRow(
-                  division: division,
-                  participants: participants
-                      .where((item) => item.divisionId == division.id)
-                      .toList(growable: false),
-                  tournament: widget.tournament,
-                  searchKey: searchKey,
-                  expanded: _expandedDivisionId == division.id,
-                  duration: _expandDuration,
-                  onToggle: () => _toggle(division.id),
-                  onAddAthlete: (list) => _addAthlete(division, list),
-                  onImportExcel: () => _importRoster(division),
-                  onDownloadTemplate: _downloadTemplate,
-                  onOpenMockParticipants: () => _openMockParticipants(division),
-                  onOpenWildcard: () => _openWildcard(division),
-                  onOpenPairing: () => _openPairing(division),
-                ),
+                if (!searching || matchedDivisionIds.contains(division.id))
+                  _DivisionRow(
+                    division: division,
+                    participants: participants
+                        .where((item) => item.divisionId == division.id)
+                        .toList(growable: false),
+                    tournament: widget.tournament,
+                    searchKey: searchKey,
+                    expanded: _expandedDivisionId == division.id,
+                    duration: _expandDuration,
+                    onToggle: () => _toggle(division.id),
+                    onAddAthlete: (list) => _addAthlete(division, list),
+                    onImportExcel: () => _importRoster(division),
+                    onDownloadTemplate: _downloadTemplate,
+                    onOpenMockParticipants: () =>
+                        _openMockParticipants(division),
+                    onOpenWildcard: () => _openWildcard(division),
+                    onOpenPairing: () => _openPairing(division),
+                  ),
             ],
           ),
         );

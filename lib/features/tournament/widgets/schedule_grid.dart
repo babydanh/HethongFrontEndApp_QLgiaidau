@@ -693,14 +693,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       ),
     );
 
-    final matched = widget.matchedMatchIds;
-    if (matched != null && !matched.contains(match.id)) {
-      card = Opacity(
-        key: ValueKey('schedule-card-dimmed-${match.id}'),
-        opacity: 0.22,
-        child: card,
-      );
-    }
+    // Always present so the tree keeps its shape (no remount, no saveLayer at
+    // full opacity) when a card starts or stops matching a search.
+    final dimmed = widget.matchedMatchIds?.contains(match.id) == false;
+    card = AnimatedOpacity(
+      key: ValueKey('schedule-card-opacity-${match.id}'),
+      opacity: dimmed ? 0.22 : 1,
+      duration: const Duration(milliseconds: 150),
+      child: card,
+    );
     if (isDraft) {
       card = Opacity(
         opacity: 0.85,

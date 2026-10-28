@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
@@ -43,6 +45,23 @@ class _Repository implements ITournamentRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Repository whose list stays pending until the test completes it: the same
+/// state the tab shows while a reload (add, import, pairing) is running.
+class _SlowRepository implements ITournamentRepository {
+  _SlowRepository(this.completer);
+
+  final Completer<List<OrganizerOpsParticipant>> completer;
+
+  @override
+  Future<List<OrganizerOpsParticipant>> getOrganizerParticipants(
+    String tournamentId, {
+    String? divisionId,
+  }) => completer.future;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 final _tournament = Tournament.fromJson({
   'name': 'Cup',
   'sport': 'pickleball',
@@ -63,13 +82,22 @@ const _key = 'tournament-1:athletes';
 final _row1 = find.byKey(const ValueKey('athlete-division-row-d1'));
 final _row2 = find.byKey(const ValueKey('athlete-division-row-d2'));
 
-Future<ProviderContainer> _pump(WidgetTester tester, {double width = 390}) async {
+Future<ProviderContainer> _pump(
+  WidgetTester tester, {
+  double width = 390,
+  ITournamentRepository? repository,
+  bool settle = true,
+}) async {
   tester.view.physicalSize = Size(width, 1400);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [tournamentRepositoryProvider.overrideWithValue(_Repository())],
+      overrides: [
+        tournamentRepositoryProvider.overrideWithValue(
+          repository ?? _Repository(),
+        ),
+      ],
       child: MaterialApp(
         theme: AppTheme.lightTheme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -83,7 +111,11 @@ Future<ProviderContainer> _pump(WidgetTester tester, {double width = 390}) async
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
   return ProviderScope.containerOf(tester.element(find.byType(Scaffold)));
 }
 
@@ -99,7 +131,10 @@ void main() {
       find.byKey(const ValueKey('search-filter-group-approval')),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('search-filter-group-fee')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('search-filter-group-fee')),
+      findsOneWidget,
+    );
     expect(find.text('4 kết quả'), findsOneWidget);
     expect(_row1, findsOneWidget);
     expect(_row2, findsOneWidget);
@@ -170,5 +205,41 @@ void main() {
       ..setOpen(true);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('toolbar and bar survive the list loading and reloading', (
+    tester,
+  ) async {
+    final completer = Completer<List<OrganizerOpsParticipant>>();
+    await _pump(tester, repository: _SlowRepository(completer), settle: false);
+    const toggle = ValueKey('search-filter-toggle');
+    const input = ValueKey('search-filter-input');
+    // The list is still loading but the toolbar is already there.
+    expect(find.byKey(toggle), findsOneWidget);
+    await tester.tap(find.byKey(toggle));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(find.byKey(input), 'nguyen');
+    await tester.pump(const Duration(milliseconds: 300));
+    final before = tester.widget<TextField>(find.byKey(input)).focusNode;
+    expect(before?.hasFocus, isTrue);
+    before?.unfocus();
+    await tester.pump();
+
+    completer.complete(_participants);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(toggle), findsOneWidget);
+    expect(find.byKey(input), findsOneWidget);
+    expect(
+      tester.widget<TextField>(find.byKey(input)).controller?.text,
+      'nguyen',
+    );
+    // The bar was not rebuilt, so it did not grab focus again.
+    expect(
+      tester.widget<TextField>(find.byKey(input)).focusNode?.hasFocus,
+      isFalse,
+    );
+    expect(_row1, findsOneWidget);
+    expect(_row2, findsNothing);
   });
 }
