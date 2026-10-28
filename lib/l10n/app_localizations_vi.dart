@@ -17103,6 +17103,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get participantDetailNoteTitle => 'Ghi chú BTC';
 
   @override
+  String get participantDetailNoteRowHint => 'Chỉ BTC thấy';
+
+  @override
+  String get participantDetailCheckIn => 'Check-in';
+
+  @override
+  String get participantDetailFeePaid => 'Đã đóng phí';
+
+  @override
+  String get participantDetailFeePaidConfirm =>
+      'Xác nhận đã nhận lệ phí của VĐV này?';
+
+  @override
+  String get participantDetailFeeUnpaidConfirm =>
+      'Bỏ đánh dấu đã đóng phí cho VĐV này? Hệ thống có thể tạo yêu cầu hoàn tiền nếu lệ phí đã thu qua hệ thống.';
+
+  @override
   String get participantDetailNoteHint => 'Ghi chú nội bộ';
 
   @override

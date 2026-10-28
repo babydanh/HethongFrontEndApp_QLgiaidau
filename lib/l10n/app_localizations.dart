@@ -30847,6 +30847,36 @@ abstract class AppLocalizations {
   /// **'Ghi chú BTC'**
   String get participantDetailNoteTitle;
 
+  /// No description provided for @participantDetailNoteRowHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ BTC thấy'**
+  String get participantDetailNoteRowHint;
+
+  /// No description provided for @participantDetailCheckIn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Check-in'**
+  String get participantDetailCheckIn;
+
+  /// No description provided for @participantDetailFeePaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng phí'**
+  String get participantDetailFeePaid;
+
+  /// No description provided for @participantDetailFeePaidConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận đã nhận lệ phí của VĐV này?'**
+  String get participantDetailFeePaidConfirm;
+
+  /// No description provided for @participantDetailFeeUnpaidConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ đánh dấu đã đóng phí cho VĐV này? Hệ thống có thể tạo yêu cầu hoàn tiền nếu lệ phí đã thu qua hệ thống.'**
+  String get participantDetailFeeUnpaidConfirm;
+
   /// No description provided for @participantDetailNoteHint.
   ///
   /// In vi, this message translates to:

@@ -449,6 +449,30 @@ class ApiTournamentManagementRepository
   }
 
   @override
+  Future<void> setParticipantPresent(
+    String id,
+    String participantId,
+    bool present,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/presence',
+      data: {'present': present},
+    );
+  }
+
+  @override
+  Future<void> setParticipantFeePaid(
+    String id,
+    String participantId,
+    bool paid,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/fee-payment',
+      data: {'paid': paid},
+    );
+  }
+
+  @override
   Future<void> updateOrganizerEntry(
     String id,
     String participantId,

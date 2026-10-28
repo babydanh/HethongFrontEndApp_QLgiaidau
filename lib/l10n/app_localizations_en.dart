@@ -17172,6 +17172,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get participantDetailNoteTitle => 'Organizer note';
 
   @override
+  String get participantDetailNoteRowHint => 'Organizers only';
+
+  @override
+  String get participantDetailCheckIn => 'Check-in';
+
+  @override
+  String get participantDetailFeePaid => 'Fee paid';
+
+  @override
+  String get participantDetailFeePaidConfirm =>
+      'Confirm the entry fee was received from this athlete?';
+
+  @override
+  String get participantDetailFeeUnpaidConfirm =>
+      'Clear the fee-paid mark for this athlete? A refund request may be opened if the fee was collected through the system.';
+
+  @override
   String get participantDetailNoteHint => 'Internal note';
 
   @override

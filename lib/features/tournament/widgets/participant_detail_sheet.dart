@@ -82,6 +82,10 @@ class _ParticipantDetailSheetState
   late final TextEditingController _noteController;
   late final TextEditingController _seedController;
   bool _rosterLocked = false;
+  late bool _present = participant.isPresent;
+  late bool _paid = participant.isPaid;
+  late bool _noteOpen;
+  bool _phoneShown = false;
 
   // Chỉnh sửa liên hệ: chỉ thành viên khách (không tài khoản) sửa được, giống
   // Web `ParticipantContactEditor` (tài khoản đã liên kết là chỉ đọc).
@@ -98,6 +102,8 @@ class _ParticipantDetailSheetState
       text: participant.seed?.toString() ?? '',
     );
     _rosterLocked = participant.rosterLockedAt != null;
+    // An existing note stays visible; an empty one hides behind its row.
+    _noteOpen = _noteController.text.trim().isNotEmpty;
   }
 
   OrganizerOpsParticipant get participant => widget.participant;
@@ -216,6 +222,38 @@ class _ParticipantDetailSheetState
           .updateParticipantStatus(widget.tournamentId, participant.id, status),
       closeOnSuccess: true,
     );
+  }
+
+  /// Check-in switch: one PATCH, the row flips only after the server accepts.
+  Future<void> _setPresent(bool value) async {
+    final saved = await _run(
+      () => ref
+          .read(tournamentManagementRepositoryProvider)
+          .setParticipantPresent(widget.tournamentId, participant.id, value),
+    );
+    if (saved && mounted) setState(() => _present = value);
+  }
+
+  /// Fee switch: always asks first (clearing it can open a refund request).
+  Future<void> _setFeePaid(bool value) async {
+    if (_busy) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.participantDetailFeePaid,
+      message: value
+          ? l10n.participantDetailFeePaidConfirm
+          : l10n.participantDetailFeeUnpaidConfirm,
+      confirmLabel: l10n.participantDetailFeePaid,
+      destructive: !value,
+    );
+    if (!confirmed || !mounted || _busy) return;
+    final saved = await _run(
+      () => ref
+          .read(tournamentManagementRepositoryProvider)
+          .setParticipantFeePaid(widget.tournamentId, participant.id, value),
+    );
+    if (saved && mounted) setState(() => _paid = value);
   }
 
   /// Khoá/mở roster đội bóng, sheet vẫn mở và nút đổi nhãn ngay.
@@ -447,11 +485,17 @@ class _ParticipantDetailSheetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _profileHeader(context),
+          const SizedBox(height: 12),
+          _switchRows(context),
+          if (_noteOpen) ...[
+            const SizedBox(height: 12),
+            _noteSection(context),
+          ],
+          const SizedBox(height: 12),
           _header(context),
           const SizedBox(height: 12),
           _contactSection(context),
-          const SizedBox(height: 12),
-          _noteSection(context),
           if (participantFormAnswers(
             participant.customResponses,
             l10n,
@@ -470,11 +514,134 @@ class _ParticipantDetailSheetState
     );
   }
 
-  Widget _header(BuildContext context) {
+  /// Design 3 header: avatar, masked phone (tap to reveal), division, status.
+  Widget _profileHeader(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final status = participant.teamStatus.toUpperCase();
     final (statusLabel, _) = _statusStyle(l10n, colors, status);
+    // A pair already shows one avatar per member in the contact block below.
+    final lead = participant.members.length == 1
+        ? participant.members.first
+        : null;
+    final phone = participant.members
+        .map((member) => member.phoneNumber?.trim() ?? '')
+        .firstWhere((value) => value.isNotEmpty, orElse: () => '');
+    final divisionName = widget.divisionName;
+    final subtitle = [
+      if (phone.isNotEmpty) _phoneShown ? phone : _maskPhone(phone),
+      if (divisionName != null && divisionName.isNotEmpty) divisionName,
+    ].join(' · ');
+    return Row(
+      key: const ValueKey('participant-detail-profile'),
+      children: [
+        if (lead != null)
+          UserAvatarTap(
+            userId: lead.userId,
+            name: lead.fullName,
+            imageUrl: lead.avatarUrl,
+            size: 44,
+          ),
+        if (lead != null) const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            key: const ValueKey('participant-detail-phone'),
+            behavior: HitTestBehavior.opaque,
+            onTap: phone.isEmpty
+                ? null
+                : () => setState(() => _phoneShown = !_phoneShown),
+            child: Text(
+              subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        LavishPill(statusLabel, tone: _statusTone(status)),
+      ],
+    );
+  }
+
+  /// `0901123123` -> `0901 *** 123`; short values are fully hidden.
+  String _maskPhone(String phone) => phone.length < 8
+      ? '***'
+      : '${phone.substring(0, 4)} *** ${phone.substring(phone.length - 3)}';
+
+  /// Design 3 rows: check-in, fee paid and the internal note (opens its editor).
+  Widget _switchRows(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
+    final fee = participant.entryFee ?? 0;
+    final showFee = fee > 0 || _paid || participant.payment != null;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(border: Border.all(color: colors.rowLine)),
+        child: Column(
+          children: [
+            LavishRow(
+              key: const ValueKey('participant-detail-checkin'),
+              leading: const LavishIconBox(
+                tone: LavishTone.ok,
+                child: Icon(Icons.check_rounded),
+              ),
+              title: l10n.participantDetailCheckIn,
+              trailing: [
+                LavishSwitch(
+                  value: _present,
+                  onChanged: _busy ? null : _setPresent,
+                ),
+              ],
+            ),
+            if (showFee)
+              LavishRow(
+                key: const ValueKey('participant-detail-fee-paid'),
+                leading: const LavishIconBox(
+                  tone: LavishTone.warn,
+                  child: Icon(Icons.payments_outlined),
+                ),
+                title: l10n.participantDetailFeePaid,
+                subtitle: fee > 0
+                    ? '${l10n.participantDetailPayment} '
+                          '${NumberFormat.decimalPattern('vi_VN').format(fee.round())}\u20ab'
+                    : null,
+                trailing: [
+                  LavishSwitch(
+                    value: _paid,
+                    onChanged: _busy ? null : _setFeePaid,
+                  ),
+                ],
+              ),
+            LavishRow(
+              key: const ValueKey('participant-detail-note-row'),
+              leading: const LavishIconBox(
+                tone: LavishTone.neutral,
+                child: Icon(Icons.edit_outlined),
+              ),
+              title: l10n.participantDetailNoteTitle,
+              subtitle: l10n.participantDetailNoteRowHint,
+              onTap: () => setState(() => _noteOpen = !_noteOpen),
+              trailing: [
+                Icon(
+                  _noteOpen
+                      ? Icons.expand_more_rounded
+                      : Icons.chevron_right_rounded,
+                  size: 18,
+                  color: colors.faint,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _header(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
     final free = participant.entryFee == null || participant.entryFee! <= 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,7 +650,6 @@ class _ParticipantDetailSheetState
           spacing: 6,
           runSpacing: 6,
           children: [
-            LavishPill(statusLabel, tone: _statusTone(status)),
             LavishPill(
               participant.isPaid
                   ? (free
@@ -521,13 +687,12 @@ class _ParticipantDetailSheetState
           ),
         ],
         // Thanh toán: chỉ hiện khi có lệ phí hoặc có giao dịch (như Web).
-        if ((participant.entryFee ?? 0) > 0 || participant.payment != null) ...[
+        // Số tiền nằm ở hàng "Đã đóng phí"; dòng này chỉ còn mã giao dịch/ngày.
+        if (participant.payment != null) ...[
           const SizedBox(height: 8),
           Text(
             [
               l10n.participantDetailPayment,
-              if ((participant.entryFee ?? 0) > 0)
-                '${NumberFormat.decimalPattern('vi_VN').format(participant.entryFee!.round())}₫',
               if (participant.payment?['transactionReference'] != null)
                 '${l10n.participantDetailPaymentRef}: '
                     '${participant.payment!['transactionReference']}',
