@@ -39,6 +39,25 @@ Future<void> settle(WidgetTester tester) async {
   }
 }
 
+/// First vertical scrollable on screen (the page body in these tests).
+final _pageScrollable = find
+    .byWidgetPredicate(
+      (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+    )
+    .first;
+
+/// Scrolls the page by [dy] logical pixels (positive = further down).
+Future<void> scrollBy(WidgetTester tester, double dy) async {
+  await tester.drag(_pageScrollable, Offset(0, -dy));
+  await settle(tester);
+}
+
+/// Scrolls the page until [target] is visible.
+Future<void> scrollTo(WidgetTester tester, Finder target) async {
+  await tester.scrollUntilVisible(target, 200, scrollable: _pageScrollable);
+  await settle(tester);
+}
+
 /// Pumps [app], then takes named screenshots with [snap]. The surface is
 /// converted to an image once, lazily, on the first [snap] of the test.
 class XemShooter {

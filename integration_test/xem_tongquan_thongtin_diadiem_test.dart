@@ -40,6 +40,8 @@ void main() {
         ),
       ),
     );
+    await shooter.snap('tong-quan-dau');
+    await scrollBy(tester, 900);
     await shooter.snap('tong-quan-lien-he');
   });
 
@@ -71,8 +73,10 @@ void main() {
     final l10n = AppLocalizations.of(
       tester.element(find.byType(TournamentManagementSectionScreen)),
     )!;
+    await scrollTo(tester, find.text(l10n.manageInfoGroupContact));
     await tester.tap(find.text(l10n.manageInfoGroupContact));
     await settle(tester);
+    await scrollBy(tester, 300);
     await shooter.snap('thong-tin-giai-nhom-lien-he');
   });
 

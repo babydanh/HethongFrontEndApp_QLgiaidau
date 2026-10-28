@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_management_rep
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_livestream_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_sponsors_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_camera_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
@@ -77,6 +78,11 @@ void main() {
       ),
     );
     await shooter.snap('livestream-camera');
+
+    await scrollTo(tester, find.byType(TournamentCameraPanel));
+    await shooter.snap('livestream-khoi-camera');
+    await scrollBy(tester, 420);
+    await shooter.snap('livestream-khoi-san');
   });
 
   testWidgets('xem: sheet xac nhan ket qua giai', (tester) async {
