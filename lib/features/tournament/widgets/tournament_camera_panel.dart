@@ -1,11 +1,10 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_editor_sheet.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/stream_key_qr_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -167,36 +166,43 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
     );
   }
 
-  Future<void> _openEdit(
-    TournamentCameraModel camera,
-    List<TournamentCourtRef> courts,
-  ) {
-    final messenger = ScaffoldMessenger.of(context);
+  /// The QR carries the stream key, so it is never one tap away: the
+  /// organizer confirms first and only then is the sheet (and its key request)
+  /// opened.
+  Future<void> _openStreamKey(TournamentCameraModel camera) async {
     final l10n = AppLocalizations.of(context)!;
-    return CameraEditorSheet.show(
+    final confirmed = await confirmTournamentManagementAction(
       context,
-      courts: courts,
-      camera: camera,
-      onSubmit: (value) async {
-        if (value.courtId == camera.courtId) return;
-        await ref
-            .read(cameraAdminRepositoryProvider)
-            .assignCameraCourt(camera.id, value.courtId);
-        await _refresh();
-        messenger
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.tournamentCameraCourtChanged(
-                  camera.name,
-                  _courtName(courts, value.courtId),
-                ),
-              ),
-            ),
-          );
-      },
+      title: l10n.tournamentStreamKeyConfirmTitle,
+      message: l10n.tournamentStreamKeyConfirmMessage,
+      confirmLabel: l10n.tournamentStreamKeyConfirmAction,
     );
+    if (!confirmed || !mounted) return;
+    await StreamKeyQrSheet.show(context, camera: camera);
+  }
+
+  /// Chip picker for one court. A `null` camera in the result means "remove
+  /// the camera(s) of this court"; a dismissed sheet returns nothing.
+  Future<void> _pickCamera(
+    TournamentCourtRef court,
+    List<TournamentCameraModel> cameras,
+    List<TournamentCourtRef> courts,
+  ) async {
+    final picked = await showModalBottomSheet<(TournamentCameraModel?,)>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _CameraPickSheet(court: court, cameras: cameras),
+    );
+    if (picked == null || !mounted) return;
+    final camera = picked.$1;
+    if (camera != null) {
+      await _moveToCourt(camera, court.id, courts);
+      return;
+    }
+    for (final current in cameras.where((item) => item.courtId == court.id)) {
+      if (!mounted) return;
+      await _moveToCourt(current, null, courts);
+    }
   }
 
   Future<void> _confirmDelete(TournamentCameraModel camera) async {
@@ -216,27 +222,46 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
     if (deleted && mounted) _toast(l10n.tournamentCameraDeleted(camera.name));
   }
 
+  /// Row tap: the only secondary action of a camera is deleting it, which the
+  /// design keeps off the row itself (the row carries the status and the QR).
+  Future<void> _openCameraMenu(TournamentCameraModel camera) async {
+    final l10n = AppLocalizations.of(context)!;
+    final delete = await showModalBottomSheet<bool>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: ListTile(
+          key: ValueKey('camera-delete-${camera.id}'),
+          leading: const Icon(
+            Icons.delete_outline_rounded,
+            color: LavishColors.bad,
+          ),
+          title: Text(l10n.tournamentCameraDeleteTooltip),
+          subtitle: Text(camera.name),
+          onTap: () => Navigator.pop(sheetContext, true),
+        ),
+      ),
+    );
+    if (delete != true || !mounted) return;
+    await _confirmDelete(camera);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentCameraPanelTitle,
-      subtitle: l10n.tournamentCameraPanelSubtitle,
-      child: FutureBuilder<List<TournamentCourtRef>>(
-        future: _courtsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return TournamentManagementError(
-              error: snapshot.error,
-              onRetry: () => setState(() => _courtsFuture = _loadCourts()),
-            );
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return _buildBody(l10n, snapshot.data!);
-        },
-      ),
+    return FutureBuilder<List<TournamentCourtRef>>(
+      future: _courtsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return TournamentManagementError(
+            error: snapshot.error,
+            onRetry: () => setState(() => _courtsFuture = _loadCourts()),
+          );
+        }
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return _buildBody(l10n, snapshot.data!);
+      },
     );
   }
 
@@ -249,46 +274,42 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
       data: (cameras) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: FilledButton.icon(
-              key: const ValueKey('camera-panel-add'),
-              onPressed: widget.readOnly ? null : () => _openAdd(courts),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(l10n.tournamentCameraAdd),
-            ),
-          ),
-          const SizedBox(height: 12),
+          LavishGroupHeader(l10n.tournamentCameraListTitle(cameras.length)),
           if (cameras.isEmpty)
-            Text(
-              l10n.tournamentCameraEmpty,
-              style: TextStyle(color: context.colors.textSecondary),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+              child: Text(
+                l10n.tournamentCameraEmpty,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: LavishColors.of(context).muted,
+                ),
+              ),
             ),
-          for (final camera in cameras) ...[
-            _CameraCard(
+          for (final camera in cameras)
+            _CameraRow(
               camera: camera,
               courtName: camera.courtId == null
                   ? l10n.tournamentCameraNoCourt
                   : _courtName(courts, camera.courtId),
               enabled: !widget.readOnly && !_busyCameraIds.contains(camera.id),
-              onEdit: () => _openEdit(camera, courts),
-              onDelete: () => _confirmDelete(camera),
-              onStreamKey: () => StreamKeyQrSheet.show(context, camera: camera),
+              onMenu: () => _openCameraMenu(camera),
+              onStreamKey: () => _openStreamKey(camera),
             ),
-            const SizedBox(height: 8),
-          ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+            child: LavishButton(
+              key: const ValueKey('camera-panel-add'),
+              kind: LavishButtonKind.outline,
+              icon: const Icon(Icons.add_rounded, size: 16),
+              label: l10n.tournamentCameraAdd,
+              onPressed: widget.readOnly ? null : () => _openAdd(courts),
+            ),
+          ),
           if (courts.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              l10n.tournamentCameraCourtsTitle,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: context.colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final court in courts) ...[
-              _CourtCard(
+            LavishGroupHeader(l10n.tournamentCameraCourtsTitle),
+            for (final court in courts)
+              _CourtRow(
                 court: court,
                 cameras: [
                   for (final camera in cameras)
@@ -296,9 +317,10 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
                 ],
                 acceptDrops: !widget.readOnly,
                 onDrop: (camera) => _moveToCourt(camera, court.id, courts),
+                onPick: widget.readOnly
+                    ? null
+                    : () => _pickCamera(court, cameras, courts),
               ),
-              const SizedBox(height: 8),
-            ],
           ],
         ],
       ),
@@ -306,13 +328,14 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
   }
 }
 
-class _CameraCard extends StatelessWidget {
-  const _CameraCard({
+/// Design `.li` camera row: icon box, name, "MODE · court", status pill and
+/// the stream-key QR box. Long-press drags it onto a court row.
+class _CameraRow extends StatelessWidget {
+  const _CameraRow({
     required this.camera,
     required this.courtName,
     required this.enabled,
-    required this.onEdit,
-    required this.onDelete,
+    required this.onMenu,
     required this.onStreamKey,
   });
 
@@ -321,92 +344,49 @@ class _CameraCard extends StatelessWidget {
 
   /// False for a read-only tournament or while a write is in flight.
   final bool enabled;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback onMenu;
   final VoidCallback onStreamKey;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final card = Container(
+    final live = camera.status == 'LIVE';
+    final row = LavishRow(
       key: ValueKey('camera-card-${camera.id}'),
-      padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        border: Border.all(color: colors.border),
-        borderRadius: BorderRadius.circular(12),
+      leading: LavishIconBox(
+        tone: live ? LavishTone.bad : LavishTone.accent,
+        child: const Icon(Icons.videocam_rounded),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  camera.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
+      title: camera.name,
+      subtitle: camera.mode.isEmpty ? courtName : '${camera.mode} · $courtName',
+      onTap: enabled ? onMenu : null,
+      trailing: [
+        LavishPill(
+          live
+              ? l10n.tournamentManagementLivestreamStatusLive
+              : l10n.tournamentCameraStatusIdle,
+          tone: live ? LavishTone.ok : LavishTone.neutral,
+        ),
+        // Only a PUSH camera has a stream key; a PULL one is just a URL.
+        if (camera.mode == 'PUSH')
+          // 40dp touch target around the design's 30dp box.
+          GestureDetector(
+            key: ValueKey('camera-stream-key-${camera.id}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: enabled ? onStreamKey : null,
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: LavishIconBox(
+                  size: 30,
+                  tooltip: l10n.tournamentStreamKeyTooltip,
+                  child: const Icon(Icons.qr_code_2_rounded),
                 ),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    _Badge(label: camera.mode, color: colors.info),
-                    if (camera.status == 'LIVE')
-                      _Badge(
-                        label: l10n.tournamentManagementLivestreamStatusLive,
-                        color: colors.error,
-                      ),
-                    Text(
-                      courtName,
-                      style: TextStyle(color: colors.textSecondary),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // Only a PUSH camera has a stream key; a PULL one is just a URL.
-          if (camera.mode == 'PUSH')
-            IconButton(
-              key: ValueKey('camera-stream-key-${camera.id}'),
-              tooltip: l10n.tournamentStreamKeyTooltip,
-              constraints: const BoxConstraints(
-                minWidth: kMinTouchTarget,
-                minHeight: kMinTouchTarget,
               ),
-              onPressed: enabled ? onStreamKey : null,
-              icon: const Icon(Icons.qr_code_2_rounded),
             ),
-          IconButton(
-            key: ValueKey('camera-edit-${camera.id}'),
-            tooltip: l10n.tournamentCameraEditTooltip,
-            constraints: const BoxConstraints(
-              minWidth: kMinTouchTarget,
-              minHeight: kMinTouchTarget,
-            ),
-            onPressed: enabled ? onEdit : null,
-            icon: const Icon(Icons.swap_horiz_rounded),
           ),
-          IconButton(
-            key: ValueKey('camera-delete-${camera.id}'),
-            tooltip: l10n.tournamentCameraDeleteTooltip,
-            constraints: const BoxConstraints(
-              minWidth: kMinTouchTarget,
-              minHeight: kMinTouchTarget,
-            ),
-            onPressed: enabled ? onDelete : null,
-            icon: Icon(Icons.delete_outline_rounded, color: colors.error),
-          ),
-        ],
-      ),
+      ],
     );
     return LongPressDraggable<TournamentCameraModel>(
       data: camera,
@@ -416,18 +396,21 @@ class _CameraCard extends StatelessWidget {
         color: Colors.transparent,
         child: Chip(label: Text(camera.name)),
       ),
-      childWhenDragging: Opacity(opacity: 0.4, child: card),
-      child: card,
+      childWhenDragging: Opacity(opacity: 0.4, child: row),
+      child: row,
     );
   }
 }
 
-class _CourtCard extends StatelessWidget {
-  const _CourtCard({
+/// Design `.li` court row: court name, its camera(s) and the assign chip. A
+/// camera row dropped on it moves the camera here.
+class _CourtRow extends StatelessWidget {
+  const _CourtRow({
     required this.court,
     required this.cameras,
     required this.acceptDrops,
     required this.onDrop,
+    required this.onPick,
   });
 
   final TournamentCourtRef court;
@@ -435,76 +418,92 @@ class _CourtCard extends StatelessWidget {
   final bool acceptDrops;
   final void Function(TournamentCameraModel camera) onDrop;
 
+  /// Opens the camera picker; null (read-only tournament) disables the chip.
+  final VoidCallback? onPick;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
     return DragTarget<TournamentCameraModel>(
       key: ValueKey('camera-court-${court.id}'),
       onWillAcceptWithDetails: (details) =>
           acceptDrops && details.data.courtId != court.id,
       onAcceptWithDetails: (details) => onDrop(details.data),
-      builder: (context, candidates, _) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: candidates.isEmpty
-              ? colors.bgCard
-              : colors.info.withValues(alpha: 0.12),
-          border: Border.all(
-            color: candidates.isEmpty ? colors.border : colors.info,
+      builder: (context, candidates, _) => LavishRow(
+        background: candidates.isEmpty
+            ? null
+            : LavishColors.of(context).soft(LavishTone.accent),
+        title: court.name.isEmpty ? court.id : court.name,
+        subtitle: cameras.isEmpty
+            ? l10n.tournamentCameraCourtNoCameras
+            : cameras.map((camera) => camera.name).join(', '),
+        trailing: [
+          LavishChipButton(
+            key: ValueKey('camera-court-assign-${court.id}'),
+            chevron: true,
+            onPressed: onPick,
+            label: cameras.isEmpty
+                ? l10n.tournamentCameraAssign
+                : l10n.tournamentCameraChange,
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              court.name.isEmpty ? court.id : court.name,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
-              ),
-            ),
-            if (court.venueName.isNotEmpty)
-              Text(
-                court.venueName,
-                style: TextStyle(color: colors.textMuted, fontSize: 12),
-              ),
-            const SizedBox(height: 4),
-            if (cameras.isEmpty)
-              Text(
-                l10n.tournamentCameraCourtNoCameras,
-                style: TextStyle(color: colors.textSecondary),
-              ),
-            for (final camera in cameras)
-              Text(camera.name, style: TextStyle(color: colors.textPrimary)),
-          ],
-        ),
+        ],
       ),
     );
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label, required this.color});
+/// Chip picker of one court: tap a camera to assign it, or "remove" to take
+/// the court's camera away. Pops a one-field record so that "no camera" (null)
+/// is told apart from a dismissed sheet.
+class _CameraPickSheet extends StatelessWidget {
+  const _CameraPickSheet({required this.court, required this.cameras});
 
-  final String label;
-  final Color color;
+  final TournamentCourtRef court;
+  final List<TournamentCameraModel> cameras;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.14),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Text(
-      label,
-      style: TextStyle(
-        color: color,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final hasCamera = cameras.any((camera) => camera.courtId == court.id);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.tournamentCameraPickTitle(
+                court.name.isEmpty ? court.id : court.name,
+              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final camera in cameras)
+                  ChoiceChip(
+                    key: ValueKey('camera-pick-${camera.id}'),
+                    label: Text(camera.name),
+                    selected: camera.courtId == court.id,
+                    onSelected: (_) => Navigator.pop(context, (camera,)),
+                  ),
+                if (hasCamera)
+                  ActionChip(
+                    key: const ValueKey('camera-pick-none'),
+                    avatar: const Icon(Icons.link_off_rounded, size: 18),
+                    label: Text(l10n.tournamentCameraPickNone),
+                    onPressed: () => Navigator.pop(context, (null,)),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
+import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_accordion.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/live_match_summary_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 
@@ -15,6 +18,9 @@ class LiveTab extends StatefulWidget {
   final String? selectedDivisionId;
   final ValueChanged<TournamentDivision>? onSelectDivision;
 
+  /// Organisers get a score-entry button on each card.
+  final bool canManage;
+
   const LiveTab({
     super.key,
     required this.liveMatches,
@@ -22,6 +28,7 @@ class LiveTab extends StatefulWidget {
     this.divisions = const [],
     this.selectedDivisionId,
     this.onSelectDivision,
+    this.canManage = false,
   });
 
   @override
@@ -52,14 +59,42 @@ class _LiveTabState extends State<LiveTab> {
     }
   }
 
-  List<MatchModel> _liveMatchesOf(TournamentDivision division) =>
-      widget.liveMatches.where((m) {
-        final mDiv =
-            m.divisionId ??
-            m.scoreDetails?['division_id']?.toString() ??
-            m.tournamentConfig?['division_id']?.toString();
-        return mDiv != null && mDiv.isNotEmpty && mDiv == division.id;
-      }).toList();
+  List<MatchModel> _liveMatchesOf(TournamentDivision division) => widget
+      .liveMatches
+      .where((m) => matchDivisionId(m) == division.id)
+      .toList();
+
+  /// Live matches that belong to none of the listed divisions. They are still
+  /// shown so the tab count always equals the number of cards.
+  List<MatchModel> get _unassignedMatches {
+    final ids = widget.divisions.map((d) => d.id).toSet();
+    return widget.liveMatches
+        .where((m) => !ids.contains(matchDivisionId(m)))
+        .toList();
+  }
+
+  Widget _card(MatchModel match) {
+    final tournamentId = widget.tournamentId ?? match.tournamentId ?? '';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: LiveMatchSummaryCard(
+        match: match,
+        roundLabel: MatchRoundLabel.formatRound(
+          match: match,
+          short: true,
+          l10n: AppLocalizations.of(context)!,
+        ),
+        onTap: () => _openMatch(match),
+        onScore: widget.canManage && canEnterScore(match)
+            ? () => MatchScoreEntryChooser.show(
+                context,
+                match: match,
+                tournamentId: tournamentId,
+              )
+            : null,
+      ),
+    );
+  }
 
   void _openMatch(MatchModel match) {
     context.push(
@@ -116,12 +151,7 @@ class _LiveTabState extends State<LiveTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final match in matches)
-            LiveMatchCardV2(
-              match: match,
-              isLive: true,
-              onTap: () => _openMatch(match),
-            ),
+          for (final match in matches) _card(match),
           if (matches.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -217,6 +247,11 @@ class _LiveTabState extends State<LiveTab> {
               widget.onSelectDivision?.call(div);
             },
           ),
+          for (final match in _unassignedMatches)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _card(match),
+            ),
         ],
       );
     }
@@ -226,21 +261,7 @@ class _LiveTabState extends State<LiveTab> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 140),
       itemCount: widget.liveMatches.length,
-      itemBuilder: (context, index) {
-        final match = widget.liveMatches[index];
-        return LiveMatchCardV2(
-          match: match,
-          isLive: true,
-          onTap: () {
-            context.push(
-              NavigationHelper.getLiveMatchRoute(
-                widget.tournamentId ?? match.tournamentId ?? '',
-                match.id,
-              ),
-            );
-          },
-        );
-      },
+      itemBuilder: (context, index) => _card(widget.liveMatches[index]),
     );
   }
 }

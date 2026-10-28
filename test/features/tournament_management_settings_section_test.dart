@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
@@ -5,6 +7,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +28,10 @@ class _SettingsRepository implements ITournamentRepository {
   final Tournament tournament;
   final Object? updateError;
   Map<String, dynamic>? updatedPayload;
+  int updateCalls = 0;
+
+  /// When set, `update` waits on it so tests can observe the saving state.
+  Completer<void>? updateGate;
 
   @override
   Future<Tournament?> getById(String id, {String? inviteCode}) async =>
@@ -32,6 +39,8 @@ class _SettingsRepository implements ITournamentRepository {
 
   @override
   Future<void> update(String id, Map<String, dynamic> data) async {
+    updateCalls++;
+    await updateGate?.future;
     if (updateError != null) throw updateError!;
     updatedPayload = data;
   }
@@ -86,9 +95,12 @@ Future<_SettingsRepository> _pumpSection(
   Map<String, dynamic> overrides = const <String, dynamic>{},
   _ManagementRepository? managementRepository,
   Object? updateError,
+  ValueNotifier<bool>? unsavedChanges,
+  Completer<void>? updateGate,
 }) async {
   final tournament = _tournament(overrides);
-  final repository = _SettingsRepository(tournament, updateError: updateError);
+  final repository = _SettingsRepository(tournament, updateError: updateError)
+    ..updateGate = updateGate;
   tester.view.physicalSize = const Size(390, 1400);
   tester.view.devicePixelRatio = 1;
   await tester.pumpWidget(
@@ -112,6 +124,7 @@ Future<_SettingsRepository> _pumpSection(
             section: section,
             opsWorkspaceRoute: '/organizer/ops/tournament-1',
             actionRouteBase: '/organizer/tournaments/tournament-1/manage',
+            unsavedChanges: unsavedChanges,
           ),
         ),
       ),
@@ -134,6 +147,18 @@ Future<void> _tapSave(WidgetTester tester, AppLocalizations l10n) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _tapSaveChanges(WidgetTester tester, AppLocalizations l10n) async {
+  await tester.tap(
+    find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
+  );
+  await tester.pumpAndSettle();
+}
+
+FilledButton _saveChangesButton(WidgetTester tester, AppLocalizations l10n) =>
+    tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
+    );
+
 void main() {
   testWidgets('information saves name, description and config only', (
     tester,
@@ -145,12 +170,19 @@ void main() {
     final l10n = _l10n(tester);
 
     final toggle = find.byKey(const ValueKey('hide-featured-card-text'));
-    expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+    expect(
+      tester
+          .widget<LavishSwitch>(
+            find.descendant(of: toggle, matching: find.byType(LavishSwitch)),
+          )
+          .value,
+      isTrue,
+    );
     await tester.ensureVisible(toggle);
     await tester.pumpAndSettle();
     await tester.tap(toggle);
     await tester.pump();
-    await _tapSave(tester, l10n);
+    await _tapSaveChanges(tester, l10n);
 
     expect(
       repository.updatedPayload?.keys,
@@ -434,11 +466,9 @@ void main() {
     await tester.ensureVisible(find.byKey(const ValueKey('registration-deadline')));
     await tester.tap(find.byKey(const ValueKey('registration-deadline')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('15').first);
+    await tester.tap(find.text('23:59'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('OK'));
+    await tester.tap(find.text(l10n.socialPlaceConfirm));
     await tester.pumpAndSettle();
     await _tapSave(tester, l10n);
 
@@ -446,11 +476,114 @@ void main() {
     final extended = DateTime.parse(
       repository.updatedPayload!['registrationEndDate'] as String,
     ).toLocal();
-    expect(extended.day, 15);
-    expect(
-      extended.hour,
-      DateTime.parse('2099-01-01T10:30:00Z').toLocal().hour,
+    final saved = DateTime.parse('2099-01-01T10:30:00Z').toLocal();
+    expect(extended, DateTime(saved.year, saved.month, saved.day, 23, 59));
+  });
+
+  testWidgets('an order error is shown under the wrong field and blocks save', (
+    tester,
+  ) async {
+    final repository = await _pumpSection(
+      tester,
+      TournamentManagementSection.registration,
+      overrides: const <String, dynamic>{
+        'registrationStartDate': '2098-01-01T00:00:00Z',
+        'registrationEndDate': '2099-01-01T00:00:00Z',
+        'startDate': '2099-06-01T00:00:00Z',
+        'endDate': '2099-05-01T00:00:00Z',
+      },
     );
+    final l10n = _l10n(tester);
+
+    // Shown without pressing save, exactly once, below the closing field.
+    final error = find.text(l10n.tournamentManagementEndAfterStart);
+    expect(error, findsOneWidget);
+    expect(
+      tester.getTopLeft(error).dy,
+      greaterThan(
+        tester.getBottomLeft(find.byKey(const ValueKey('tournament-closing'))).dy,
+      ),
+    );
+    expect(find.text(l10n.tournamentManagementStartAfterRegistration), findsNothing);
+    expect(
+      tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementSave),
+      ).onPressed,
+      isNull,
+    );
+    expect(repository.updatedPayload, isNull);
+  });
+
+  testWidgets('a valid order shows no error and keeps save enabled', (
+    tester,
+  ) async {
+    await _pumpSection(
+      tester,
+      TournamentManagementSection.registration,
+      overrides: const <String, dynamic>{
+        'registrationStartDate': '2098-01-01T00:00:00Z',
+        'registrationEndDate': '2099-01-01T00:00:00Z',
+        'startDate': '2099-06-01T00:00:00Z',
+        'endDate': '2099-07-01T00:00:00Z',
+      },
+    );
+    final l10n = _l10n(tester);
+
+    for (final message in [
+      l10n.tournamentManagementRegistrationEndAfterStart,
+      l10n.tournamentManagementRegistrationDeadlineInFuture,
+      l10n.tournamentManagementStartAfterRegistration,
+      l10n.tournamentManagementEndAfterStart,
+    ]) {
+      expect(find.text(message), findsNothing);
+    }
+    expect(
+      tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, l10n.tournamentManagementSave),
+      ).onPressed,
+      isNotNull,
+    );
+  });
+
+  testWidgets('a field opens the scroll popup with its limit and the 23:59 chip only on the deadline', (
+    tester,
+  ) async {
+    await _pumpSection(
+      tester,
+      TournamentManagementSection.registration,
+      overrides: const <String, dynamic>{
+        'registrationStartDate': '2098-01-01T00:00:00Z',
+        'registrationEndDate': '2099-01-01T00:00:00Z',
+        'startDate': '2099-06-01T00:00:00Z',
+        'endDate': '2099-07-01T00:00:00Z',
+      },
+    );
+    final l10n = _l10n(tester);
+    final deadline = DateTime.parse('2099-01-01T00:00:00Z').toLocal();
+    final deadlineText =
+        '${deadline.day.toString().padLeft(2, '0')}/'
+        '${deadline.month.toString().padLeft(2, '0')}/${deadline.year} '
+        '${deadline.hour.toString().padLeft(2, '0')}:'
+        '${deadline.minute.toString().padLeft(2, '0')}';
+
+    await tester.ensureVisible(find.byKey(const ValueKey('tournament-opening')));
+    await tester.tap(find.byKey(const ValueKey('tournament-opening')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        '${l10n.tournamentManagementStartDate} · '
+        '${l10n.tournamentManagementDateLimitOpeningMin(deadlineText)}',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('23:59'), findsNothing);
+    await tester.tap(find.text(l10n.socialPlaceCancel));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const ValueKey('registration-deadline')));
+    await tester.tap(find.byKey(const ValueKey('registration-deadline')));
+    await tester.pumpAndSettle();
+    expect(find.text('23:59'), findsOneWidget);
   });
 
   testWidgets('locked registration disables every control and the save button', (
@@ -536,5 +669,121 @@ void main() {
 
     expect(tester.getBottomLeft(saveButton).dy, lessThanOrEqualTo(1400 - 500));
     expect(tester.takeException(), isNull);
+  });
+
+  group('information page', () {
+    testWidgets('has four groups and exactly one save button, disabled until edited', (
+      tester,
+    ) async {
+      await _pumpSection(tester, TournamentManagementSection.information);
+      final l10n = _l10n(tester);
+
+      for (final title in [
+        l10n.manageInfoGroupGeneral,
+        l10n.manageInfoGroupIdentity,
+        l10n.manageInfoGroupPrizes,
+        l10n.manageInfoGroupContact,
+      ]) {
+        expect(find.text(title.toUpperCase()), findsOneWidget);
+      }
+      expect(find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
+          findsOneWidget);
+      expect(find.widgetWithText(FilledButton, l10n.tournamentManagementSave),
+          findsNothing);
+      expect(_saveChangesButton(tester, l10n).onPressed, isNull);
+
+      await tester.enterText(find.byType(TextField).first, 'New name');
+      await tester.pump();
+      expect(_saveChangesButton(tester, l10n).onPressed, isNotNull);
+
+      await tester.enterText(find.byType(TextField).first, 'City Pickleball Cup');
+      await tester.pump();
+      expect(_saveChangesButton(tester, l10n).onPressed, isNull);
+    });
+
+    testWidgets('a second tap while saving does not send a second update', (
+      tester,
+    ) async {
+      final gate = Completer<void>();
+      final repository = await _pumpSection(
+        tester,
+        TournamentManagementSection.information,
+        updateGate: gate,
+      );
+      final l10n = _l10n(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'New name');
+      await tester.pump();
+      final button = find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges);
+      await tester.tap(button);
+      await tester.pump();
+      // While saving the label becomes "Saving" and the button is disabled.
+      final saving = find.widgetWithText(
+        FilledButton,
+        l10n.tournamentManagementSaving,
+      );
+      expect(tester.widget<FilledButton>(saving).onPressed, isNull);
+      await tester.tap(saving, warnIfMissed: false);
+      await tester.pump();
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(repository.updateCalls, 1);
+    });
+
+    testWidgets('saving contact details merges into the saved contact info', (
+      tester,
+    ) async {
+      final repository = await _pumpSection(
+        tester,
+        TournamentManagementSection.information,
+        overrides: const <String, dynamic>{
+          'contactInfo': {'hidden': false, 'phone': '0900000000'},
+        },
+      );
+      final l10n = _l10n(tester);
+
+      await tester.tap(find.text(l10n.manageInfoGroupContact.toUpperCase()));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('info-contact-phone')),
+        '0911111111',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('info-contact-email')),
+        'host@example.test',
+      );
+      await tester.pump();
+      await _tapSaveChanges(tester, l10n);
+
+      expect(repository.updatedPayload?['contactInfo'], {
+        'hidden': false,
+        'phone': '0911111111',
+        'email': 'host@example.test',
+      });
+      expect(repository.updatedPayload?.containsKey('prizeDescription'), isFalse);
+    });
+
+    testWidgets('unsaved flag follows edits and clears after a successful save', (
+      tester,
+    ) async {
+      final flag = ValueNotifier<bool>(false);
+      addTearDown(flag.dispose);
+      await _pumpSection(
+        tester,
+        TournamentManagementSection.information,
+        unsavedChanges: flag,
+      );
+      final l10n = _l10n(tester);
+      expect(flag.value, isFalse);
+
+      await tester.enterText(find.byType(TextField).first, 'New name');
+      await tester.pump();
+      expect(flag.value, isTrue);
+
+      await _tapSaveChanges(tester, l10n);
+      expect(flag.value, isFalse);
+      expect(_saveChangesButton(tester, l10n).onPressed, isNull);
+    });
   });
 }

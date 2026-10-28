@@ -5,12 +5,14 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/roster_template_service.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
+import 'package:app_quanly_giaidau/domain/entities/pairing.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/add_athlete_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/mock_participants_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -36,6 +38,10 @@ class _TournamentManagementAthletesTabState
   late Future<List<OrganizerOpsParticipant>> _participantsFuture;
   String? _expandedDivisionId;
 
+  /// Check-in flips reported by the rows, so the header count stays in step.
+  final Map<String, bool> _presence = {};
+  bool _autoPairing = false;
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +52,10 @@ class _TournamentManagementAthletesTabState
       .read(tournamentRepositoryProvider)
       .getOrganizerParticipants(widget.tournament.id);
 
-  void _reload() => setState(() => _participantsFuture = _load());
+  void _reload() => setState(() {
+    _presence.clear();
+    _participantsFuture = _load();
+  });
 
   void _toggle(String divisionId) => setState(
     () => _expandedDivisionId = _expandedDivisionId == divisionId
@@ -170,6 +179,49 @@ class _TournamentManagementAthletesTabState
     );
   }
 
+  /// "Tự ghép": pick one of the three strategies, confirm, then one POST for
+  /// the open division only. Double taps are ignored while it runs.
+  Future<void> _autoPair(TournamentDivision division) async {
+    if (_autoPairing) return;
+    final strategy = await showDialog<PairingStrategy>(
+      context: context,
+      builder: (_) => const _AutoPairDialog(),
+    );
+    if (strategy == null || !mounted || _autoPairing) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    setState(() => _autoPairing = true);
+    try {
+      final result = await ref
+          .read(tournamentManagementRepositoryProvider)
+          .pairGenerate(
+            widget.tournament.id,
+            strategy: strategy,
+            divisionId: division.id,
+          );
+      if (!mounted) return;
+      ref.invalidate(tournamentDivisionsProvider(widget.tournament.id));
+      _reload();
+      final text = result.pairedCount == 0
+          ? l10n.pairingNoPairsFormed
+          : result.unpairedCount > 0
+          ? l10n.pairingSuccessWithUnpaired(
+              result.pairedCount,
+              result.unpairedCount,
+            )
+          : l10n.pairingSuccess(result.pairedCount);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(text)));
+    } catch (_) {
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.pairingActionFailed)));
+    } finally {
+      if (mounted) setState(() => _autoPairing = false);
+    }
+  }
+
   /// Tải file mẫu xlsx đúng ngôn ngữ đang dùng. Lỗi hiện thông báo thay vì văng ra ngoài.
   Future<void> _downloadTemplate() async {
     final l10n = AppLocalizations.of(context)!;
@@ -231,6 +283,10 @@ class _TournamentManagementAthletesTabState
                   onOpenMockParticipants: () => _openMockParticipants(division),
                   onOpenWildcard: () => _openWildcard(division),
                   onOpenPairing: () => _openPairing(division),
+                  onAutoPair: () => _autoPair(division),
+                  presence: _presence,
+                  onPresenceChanged: (id, present) =>
+                      setState(() => _presence[id] = present),
                 ),
             ],
           ),
@@ -254,6 +310,9 @@ class _DivisionRow extends StatelessWidget {
     required this.onOpenMockParticipants,
     required this.onOpenWildcard,
     required this.onOpenPairing,
+    required this.onAutoPair,
+    required this.presence,
+    required this.onPresenceChanged,
   });
 
   final TournamentDivision division;
@@ -268,6 +327,9 @@ class _DivisionRow extends StatelessWidget {
   final VoidCallback onOpenMockParticipants;
   final VoidCallback onOpenWildcard;
   final VoidCallback onOpenPairing;
+  final VoidCallback onAutoPair;
+  final Map<String, bool> presence;
+  final void Function(String participantId, bool present) onPresenceChanged;
 
   bool _isPending(OrganizerOpsParticipant item) => const {
     'PENDING',
@@ -281,6 +343,12 @@ class _DivisionRow extends StatelessWidget {
     final max = division.maxParticipants;
     final count = participants.length;
     final pending = participants.where(_isPending).length;
+    final present = participants
+        .where((item) => presence[item.id] ?? item.isPresent)
+        .length;
+    final waitingPartner = participants
+        .where((item) => item.teamStatus.toUpperCase() == 'PENDING_PARTNER')
+        .length;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: expanded ? colors.bgSurface : null,
@@ -304,26 +372,31 @@ class _DivisionRow extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        division.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            division.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            '${l10n.athletesPresentCount} $present/$count',
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      max != null && max > 0 ? '$count/$max' : '$count',
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    LavishPill(max != null && max > 0 ? '$count/$max' : '$count'),
                     if (pending > 0) ...[
                       const SizedBox(width: 8),
                       Tooltip(
@@ -376,56 +449,16 @@ class _DivisionRow extends StatelessWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              FilledButton.icon(
-                                onPressed: () => onAddAthlete(participants),
-                                icon: const Icon(
-                                  Icons.person_add_alt_1_rounded,
-                                ),
-                                label: Text(l10n.opsAddAthlete),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey('athletes-import-excel'),
-                                onPressed: onImportExcel,
-                                icon: const Icon(Icons.upload_file_rounded),
-                                label: Text(l10n.rosterImportOpen),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey(
-                                  'athletes-download-template',
-                                ),
-                                onPressed: onDownloadTemplate,
-                                icon: const Icon(Icons.download_rounded),
-                                label: Text(l10n.rosterImportDownloadTemplate),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey('athletes-mock-data'),
-                                onPressed: onOpenMockParticipants,
-                                icon: const Icon(Icons.auto_awesome_rounded),
-                                label: Text(l10n.mockParticipantsOpen),
-                              ),
-                              OutlinedButton.icon(
-                                key: const ValueKey('athletes-wildcard'),
-                                onPressed: onOpenWildcard,
-                                icon: const Icon(
-                                  Icons.workspace_premium_rounded,
-                                ),
-                                label: Text(l10n.wildcardOpen),
-                              ),
-                              // Web chỉ hiện nút ghép khi giải có nội dung
-                              // đôi (hasTournamentDoubles); App hiện theo
-                              // từng hạng mục đôi.
-                              if (division.isDoubles)
-                                OutlinedButton.icon(
-                                  key: const ValueKey('athletes-pairing'),
-                                  onPressed: onOpenPairing,
-                                  icon: const Icon(Icons.handshake_rounded),
-                                  label: Text(l10n.pairingOpen),
-                                ),
-                            ],
+                          child: _AthleteActionRow(
+                            showPairing: division.isDoubles,
+                            waitingPartner: waitingPartner,
+                            onImportExcel: onImportExcel,
+                            onOpenPairing: onOpenPairing,
+                            onAutoPair: onAutoPair,
+                            onAddAthlete: () => onAddAthlete(participants),
+                            onDownloadTemplate: onDownloadTemplate,
+                            onOpenWildcard: onOpenWildcard,
+                            onOpenMockParticipants: onOpenMockParticipants,
                           ),
                         ),
                         TournamentManagementPeopleSection(
@@ -434,6 +467,7 @@ class _DivisionRow extends StatelessWidget {
                           divisionId: division.id,
                           divisionName: division.name,
                           embedded: true,
+                          onPresenceChanged: onPresenceChanged,
                           // Như web: nội dung đôi hoặc môn đồng đội (teamSize).
                           pairFormat:
                               tournament.teamSize != null ||
@@ -449,6 +483,304 @@ class _DivisionRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+
+/// Design 2b: one row of equal boxes, icon above a one-line label; the main
+/// action (add athlete) is filled and the rarely used ones sit in the more box.
+class _AthleteActionRow extends StatelessWidget {
+  const _AthleteActionRow({
+    required this.showPairing,
+    required this.waitingPartner,
+    required this.onImportExcel,
+    required this.onOpenPairing,
+    required this.onAutoPair,
+    required this.onAddAthlete,
+    required this.onDownloadTemplate,
+    required this.onOpenWildcard,
+    required this.onOpenMockParticipants,
+  });
+
+  /// Pairing (manual + auto) only applies to doubles divisions.
+  final bool showPairing;
+
+  /// Athletes still waiting for a partner (badge on the pairing box).
+  final int waitingPartner;
+  final VoidCallback onImportExcel;
+  final VoidCallback onOpenPairing;
+  final VoidCallback onAutoPair;
+  final VoidCallback onAddAthlete;
+  final VoidCallback onDownloadTemplate;
+  final VoidCallback onOpenWildcard;
+  final VoidCallback onOpenMockParticipants;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    const gap = SizedBox(width: 4);
+    return Row(
+      children: [
+        Expanded(
+          child: _ActionBox(
+            boxKey: const ValueKey('athletes-import-excel'),
+            icon: Icons.upload_file_rounded,
+            label: l10n.rosterImportOpen,
+            onTap: onImportExcel,
+          ),
+        ),
+        if (showPairing) ...[
+          gap,
+          Expanded(
+            child: _ActionBox(
+              boxKey: const ValueKey('athletes-pairing'),
+              icon: Icons.handshake_rounded,
+              label: l10n.pairingOpen,
+              onTap: onOpenPairing,
+              badge: waitingPartner,
+            ),
+          ),
+          gap,
+          Expanded(
+            child: _ActionBox(
+              boxKey: const ValueKey('athletes-auto-pair'),
+              icon: Icons.shuffle_rounded,
+              label: l10n.athletesAutoPair,
+              onTap: onAutoPair,
+            ),
+          ),
+        ],
+        gap,
+        Expanded(
+          child: _ActionBox(
+            icon: Icons.person_add_alt_1_rounded,
+            label: l10n.opsAddAthlete,
+            onTap: onAddAthlete,
+            primary: true,
+          ),
+        ),
+        gap,
+        Expanded(
+          child: PopupMenuButton<String>(
+            key: const ValueKey('athletes-more'),
+            padding: EdgeInsets.zero,
+            tooltip: l10n.club_moreOptions,
+            onSelected: (value) => switch (value) {
+              'wildcard' => onOpenWildcard(),
+              'template' => onDownloadTemplate(),
+              _ => onOpenMockParticipants(),
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                key: const ValueKey('athletes-wildcard'),
+                value: 'wildcard',
+                child: Text(l10n.wildcardOpen),
+              ),
+              PopupMenuItem(
+                key: const ValueKey('athletes-download-template'),
+                value: 'template',
+                child: Text(l10n.rosterImportDownloadTemplate),
+              ),
+              PopupMenuItem(
+                key: const ValueKey('athletes-mock-data'),
+                value: 'mock',
+                child: Text(l10n.mockParticipantsOpen),
+              ),
+            ],
+            child: _ActionBoxFace(
+              icon: Icons.more_vert,
+              label: l10n.manageSettingsOtherSection,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionBox extends StatelessWidget {
+  const _ActionBox({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.boxKey,
+    this.primary = false,
+    this.badge,
+  });
+
+  final Key? boxKey;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool primary;
+
+  /// Small count in the top-right corner (null: none).
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      key: boxKey,
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: _ActionBoxFace(
+        icon: icon,
+        label: label,
+        primary: primary,
+        badge: badge,
+      ),
+    );
+  }
+}
+
+class _ActionBoxFace extends StatelessWidget {
+  const _ActionBoxFace({
+    required this.icon,
+    required this.label,
+    this.primary = false,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool primary;
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = LavishColors.of(context);
+    final fg = primary ? Colors.white : colors.text;
+    return Container(
+      height: 46,
+      decoration: BoxDecoration(
+        color: primary ? LavishColors.accent : colors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: primary ? LavishColors.accent : colors.chipLine,
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: primary ? Colors.white : LavishColors.accent,
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: fg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (badge != null)
+            Positioned(
+              top: 2,
+              right: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0ECFF),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '$badge',
+                  style: const TextStyle(
+                    fontSize: 9,
+                    height: 14 / 9,
+                    fontWeight: FontWeight.w700,
+                    color: LavishColors.accent,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Three-way strategy choice for "Tự ghép"; pops the chosen strategy only when
+/// the organizer confirms.
+class _AutoPairDialog extends StatefulWidget {
+  const _AutoPairDialog();
+
+  @override
+  State<_AutoPairDialog> createState() => _AutoPairDialogState();
+}
+
+class _AutoPairDialogState extends State<_AutoPairDialog> {
+  PairingStrategy _strategy = PairingStrategy.random;
+
+  (String, String) _text(AppLocalizations l10n, PairingStrategy strategy) =>
+      switch (strategy) {
+        PairingStrategy.random => (
+          l10n.pairingStrategyRandomLabel,
+          l10n.pairingStrategyRandomHint,
+        ),
+        PairingStrategy.eloBalanced => (
+          l10n.pairingStrategyEloBalancedLabel,
+          l10n.pairingStrategyEloBalancedHint,
+        ),
+        PairingStrategy.sameLevel => (
+          l10n.pairingStrategySameLevelLabel,
+          l10n.pairingStrategySameLevelHint,
+        ),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.pairingAutoTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.pairingAutoDescription),
+            const SizedBox(height: 8),
+            for (final strategy in PairingStrategy.values)
+              ListTile(
+                key: ValueKey('auto-pair-strategy-${strategy.name}'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                leading: Icon(
+                  _strategy == strategy
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: _strategy == strategy ? LavishColors.accent : null,
+                ),
+                title: Text(_text(l10n, strategy).$1),
+                subtitle: Text(_text(l10n, strategy).$2),
+                onTap: () => setState(() => _strategy = strategy),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          key: const ValueKey('auto-pair-cancel'),
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          key: const ValueKey('auto-pair-confirm'),
+          onPressed: () => Navigator.of(context).pop(_strategy),
+          child: Text(l10n.pairingRandomConfirmAction),
+        ),
+      ],
     );
   }
 }

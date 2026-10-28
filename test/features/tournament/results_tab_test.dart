@@ -55,6 +55,27 @@ Tournament _completedTournament() => Tournament(
   ],
 );
 
+Tournament _inProgressTournament() {
+  final done = _completedTournament();
+  return Tournament(
+    id: done.id,
+    name: done.name,
+    sport: done.sport,
+    format: done.format,
+    bracketType: done.bracketType,
+    status: 'in_progress',
+    visibility: done.visibility,
+    adminToken: '',
+    refereeToken: '',
+    viewerToken: '',
+    creatorId: done.creatorId,
+    maxTeams: done.maxTeams,
+    createdAt: done.createdAt,
+    updatedAt: done.updatedAt,
+    divisions: done.divisions,
+  );
+}
+
 void main() {
   testWidgets('thẻ giải hiện tên đội, hai thành viên và avatar', (
     tester,
@@ -137,6 +158,24 @@ void main() {
     );
   });
 
+  testWidgets('người xem không thấy tab Kết quả khi giải chưa có kết quả', (
+    tester,
+  ) async {
+    await _pumpIntro(tester, tournament: _inProgressTournament());
+
+    expect(find.widgetWithText(Tab, 'Kết quả'), findsNothing);
+  });
+
+  testWidgets('Ban tổ chức luôn thấy tab Kết quả', (tester) async {
+    await _pumpIntro(
+      tester,
+      tournament: _inProgressTournament(),
+      userId: 'fixture-owner',
+    );
+
+    expect(find.widgetWithText(Tab, 'Kết quả'), findsOneWidget);
+  });
+
   testWidgets('hạng mục rỗng không hiện bục hoặc thẻ thứ hạng', (tester) async {
     await _pumpResults(tester, {'awards': <dynamic>[]});
 
@@ -159,9 +198,13 @@ Future<void> _pumpResults(
           tournamentId: _tournamentId,
           divisionId: _divisionId,
         )).overrideWith((ref) => Stream.value(result)),
+        matchesProvider.overrideWith((ref, id) => Stream.value(const [])),
       ],
       child: MaterialApp(
         theme: AppTheme.lightTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('vi'),
         home: const Scaffold(
           body: ResultsTab(
             tournamentId: _tournamentId,
@@ -176,13 +219,17 @@ Future<void> _pumpResults(
   await tester.pumpAndSettle();
 }
 
-Future<void> _pumpIntro(WidgetTester tester) async {
+Future<void> _pumpIntro(
+  WidgetTester tester, {
+  Tournament? tournament,
+  String userId = '',
+}) async {
   _phone(tester);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         tournamentIntroWithInviteProvider.overrideWith(
-          (ref, params) async => _completedTournament(),
+          (ref, params) async => tournament ?? _completedTournament(),
         ),
         tournamentDivisionsProvider.overrideWith((ref, id) async => const []),
         introTeamsProvider.overrideWith((ref, id) async => const <Team>[]),
@@ -199,7 +246,7 @@ Future<void> _pumpIntro(WidgetTester tester) async {
         ),
         authProvider.overrideWith(_GuestAuthNotifier.new),
         userProfileProvider.overrideWith(
-          (ref) async => const UserProfile(id: '', fullName: 'Guest'),
+          (ref) async => UserProfile(id: userId, fullName: 'Guest'),
         ),
       ],
       child: MaterialApp(

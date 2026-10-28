@@ -5,20 +5,46 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class SocialDateTimePickerSheet extends StatefulWidget {
-  const SocialDateTimePickerSheet({super.key, required this.initialDateTime});
+  const SocialDateTimePickerSheet({
+    super.key,
+    required this.initialDateTime,
+    this.subtitle,
+    this.minDate,
+    this.maxDate,
+    this.showEndOfDayChip = false,
+  });
 
   final DateTime initialDateTime;
 
+  /// Line under the title naming the milestone being picked and its limit.
+  final String? subtitle;
+
+  /// Inclusive day bounds; days outside are dimmed and cannot be confirmed.
+  final DateTime? minDate;
+  final DateTime? maxDate;
+
+  /// Adds a "23:59" chip next to Confirm for deadline-style times.
+  final bool showEndOfDayChip;
+
   static Future<DateTime?> show(
     BuildContext context,
-    DateTime initialDateTime,
-  ) {
+    DateTime initialDateTime, {
+    String? subtitle,
+    DateTime? minDate,
+    DateTime? maxDate,
+    bool showEndOfDayChip = false,
+  }) {
     return showModalBottomSheet<DateTime>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-          SocialDateTimePickerSheet(initialDateTime: initialDateTime),
+      builder: (_) => SocialDateTimePickerSheet(
+        initialDateTime: initialDateTime,
+        subtitle: subtitle,
+        minDate: minDate,
+        maxDate: maxDate,
+        showEndOfDayChip: showEndOfDayChip,
+      ),
     );
   }
 
@@ -43,10 +69,18 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
     super.initState();
     final today = DateUtils.dateOnly(DateTime.now());
     final initialDate = DateUtils.dateOnly(widget.initialDateTime);
-    _firstDate = initialDate.isBefore(today) ? initialDate : today;
-    final lastDate = initialDate.isAfter(today.add(const Duration(days: 365)))
-        ? initialDate
-        : today.add(const Duration(days: 365));
+    final minDay = _minDay;
+    _firstDate = [
+      initialDate,
+      today,
+      ?minDay,
+    ].reduce((a, b) => a.isBefore(b) ? a : b);
+    final maxDay = _maxDay;
+    final lastDate = [
+      initialDate,
+      today.add(const Duration(days: 365)),
+      ?maxDay,
+    ].reduce((a, b) => a.isAfter(b) ? a : b);
     _dates = List.generate(
       lastDate.difference(_firstDate).inDays + 1,
       (index) => _firstDate.add(Duration(days: index)),
@@ -57,6 +91,7 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
     _minutes = [
       ...{
         for (var minute = 0; minute < 60; minute += 5) minute,
+        if (widget.showEndOfDayChip) 59,
         _selectedMinute,
       },
     ]..sort();
@@ -66,6 +101,35 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
     _hourController = FixedExtentScrollController(initialItem: _selectedHour);
     _minuteController = FixedExtentScrollController(
       initialItem: _minutes.indexOf(_selectedMinute),
+    );
+  }
+
+  DateTime? get _minDay =>
+      widget.minDate == null ? null : DateUtils.dateOnly(widget.minDate!);
+
+  DateTime? get _maxDay =>
+      widget.maxDate == null ? null : DateUtils.dateOnly(widget.maxDate!);
+
+  bool _inRange(DateTime day) {
+    final minDay = _minDay;
+    final maxDay = _maxDay;
+    return (minDay == null || !day.isBefore(minDay)) &&
+        (maxDay == null || !day.isAfter(maxDay));
+  }
+
+  void _pickEndOfDay() {
+    _selectedHour = 23;
+    _selectedMinute = 59;
+    const duration = Duration(milliseconds: 250);
+    _hourController.animateToItem(
+      23,
+      duration: duration,
+      curve: Curves.easeOut,
+    );
+    _minuteController.animateToItem(
+      _minutes.indexOf(59),
+      duration: duration,
+      curve: Curves.easeOut,
     );
   }
 
@@ -94,6 +158,7 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
       required int count,
       required String Function(int) label,
       required ValueChanged<int> onChanged,
+      bool Function(int)? dimmed,
     }) {
       return CupertinoPicker.builder(
         scrollController: controller,
@@ -112,7 +177,11 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
             label(index),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: pickerStyle,
+            style: dimmed != null && dimmed(index)
+                ? pickerStyle.copyWith(
+                    color: colors.textMuted.withValues(alpha: 0.5),
+                  )
+                : pickerStyle,
           ),
         ),
       );
@@ -138,6 +207,13 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
                 fontWeight: FontWeight.w700,
               ),
             ),
+            if (widget.subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                widget.subtitle!,
+                style: TextStyle(color: colors.textSecondary, fontSize: 13),
+              ),
+            ],
             const SizedBox(height: 20),
             SizedBox(
               height: 220,
@@ -154,7 +230,9 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
                               'EEE dd/MM',
                               locale,
                             ).format(_dates[index]),
-                      onChanged: (index) => _selectedDate = _dates[index],
+                      dimmed: (index) => !_inRange(_dates[index]),
+                      onChanged: (index) =>
+                          setState(() => _selectedDate = _dates[index]),
                     ),
                   ),
                   Expanded(
@@ -186,17 +264,24 @@ class _SocialDateTimePickerSheetState extends State<SocialDateTimePickerSheet> {
                     child: Text(l10n.socialPlaceCancel),
                   ),
                 ),
+                if (widget.showEndOfDayChip)
+                  ActionChip(
+                    label: const Text('23:59'),
+                    onPressed: _pickEndOfDay,
+                  ),
                 Expanded(
                   child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(
-                      DateTime(
-                        _selectedDate.year,
-                        _selectedDate.month,
-                        _selectedDate.day,
-                        _selectedHour,
-                        _selectedMinute,
-                      ),
-                    ),
+                    onPressed: _inRange(_selectedDate)
+                        ? () => Navigator.of(context).pop(
+                            DateTime(
+                              _selectedDate.year,
+                              _selectedDate.month,
+                              _selectedDate.day,
+                              _selectedHour,
+                              _selectedMinute,
+                            ),
+                          )
+                        : null,
                     child: Text(l10n.socialPlaceConfirm),
                   ),
                 ),

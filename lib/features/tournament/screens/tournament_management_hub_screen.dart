@@ -1,8 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
-import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
@@ -10,12 +10,16 @@ import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dar
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_reconfirm_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -60,7 +64,6 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection.finance,
     TournamentManagementSection.livestream,
     TournamentManagementSection.permissions,
-    TournamentManagementSection.tokens,
   ];
 
   late final TabController _tabController = TabController(
@@ -75,6 +78,9 @@ class _TournamentManagementHubScreenState
   TournamentManagementSection _selectedSection =
       TournamentManagementSection.information;
   TournamentManagementSection? _openedSection;
+
+  /// True while the open section page holds edits that are not saved yet.
+  final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
   bool _isTabBarPinned = false;
   bool _isExporting = false;
@@ -84,6 +90,7 @@ class _TournamentManagementHubScreenState
   void dispose() {
     _tabController.dispose();
     _scrollController.dispose();
+    _unsavedChanges.dispose();
     _tabStripOverlapHandle.dispose();
     super.dispose();
   }
@@ -115,7 +122,22 @@ class _TournamentManagementHubScreenState
     if (isTablet) _tabController.animateTo(_HubTab.settings.index);
   }
 
-  void _closeSection() => setState(() => _openedSection = null);
+  /// Leaving a page with unsaved edits asks first; otherwise closes at once.
+  Future<void> _closeSection() async {
+    if (_unsavedChanges.value) {
+      final l10n = AppLocalizations.of(context)!;
+      final discard = await confirmTournamentManagementAction(
+        context,
+        title: l10n.tournamentManagementDiscardTitle,
+        message: l10n.tournamentManagementDiscardMessage,
+        confirmLabel: l10n.tournamentManagementDiscardConfirm,
+        destructive: true,
+      );
+      if (!discard || !mounted) return;
+      _unsavedChanges.value = false;
+    }
+    setState(() => _openedSection = null);
+  }
 
   /// Persists founder visibility like the Web manage page. The server replaces
   /// the whole `contactInfo` JSON, so the existing keys are sent back with it.
@@ -306,6 +328,12 @@ class _TournamentManagementHubScreenState
                 _tabController.animateTo(_HubTab.athletes.index),
           ),
         ),
+        SliverToBoxAdapter(
+          child: ResultsReconfirmCard(
+            tournamentId: tournament.id,
+            status: tournament.status,
+          ),
+        ),
         SliverOverlapAbsorber(
           handle: _tabStripOverlapHandle,
           sliver: SliverPersistentHeader(
@@ -446,66 +474,29 @@ class _TournamentManagementHubScreenState
         ...overlapHandles.map(
           (handle) => SliverOverlapInjector(handle: handle),
         ),
+        // Design 1: two flat groups, "THIẾT LẬP" and "HỆ THỐNG".
+        SliverList.list(
+          children: [
+            LavishGroupHeader(l10n.tournamentManagementSetupGroup),
+            for (final section in _setupSections)
+              _buildSectionAction(context, l10n, isTablet, section),
+            LavishGroupHeader(l10n.tournamentManagementSystemGroup),
+            for (final section in _otherSections)
+              _buildSectionAction(context, l10n, isTablet, section),
+          ],
+        ),
+        // Full width: the lifecycle block carries its own 14dp gutters.
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          sliver: SliverList.list(
-            children: [
-              _buildSectionGroup(
-                context,
-                isTablet: isTablet,
-                title: l10n.tournamentManagementSetupGroup,
-                icon: Icons.tune_rounded,
-                sections: _setupSections,
-              ),
-              const SizedBox(height: 12),
-              _buildOtherSectionsGroup(context, isTablet: isTablet),
-              const SizedBox(height: 12),
-              TournamentLifecycleCard(tournament: widget.tournament),
-            ],
+          padding: const EdgeInsets.only(bottom: 24),
+          sliver: SliverToBoxAdapter(
+            child: TournamentLifecycleCard(
+              tournament: widget.tournament,
+              onShare: _shareTournament,
+              onDelete: _deleteTournament,
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildOtherSectionsGroup(
-    BuildContext context, {
-    required bool isTablet,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: colors.border),
-        child: ExpansionTile(
-          leading: const Icon(
-            Icons.more_horiz_rounded,
-            color: AppTheme.primary,
-          ),
-          title: Text(
-            l10n.manageSettingsOtherSection,
-            style: TextStyle(
-              color: colors.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-            ),
-          ),
-          children: [
-            for (var index = 0; index < _otherSections.length; index++) ...[
-              _buildSectionAction(
-                context,
-                l10n,
-                isTablet,
-                _otherSections[index],
-              ),
-              if (index != _otherSections.length - 1)
-                Divider(height: 1, indent: 50, color: colors.border),
-            ],
-          ],
-        ),
-      ),
     );
   }
 
@@ -524,18 +515,13 @@ class _TournamentManagementHubScreenState
           isEmbedded: true,
           managementRouteBase: widget.actionRouteBase,
         );
-      case TournamentManagementSection.tokens:
-        return TokenManagementScreen(
-          tournamentId: tournament.id,
-          isEmbedded: true,
-          managementRouteBase: widget.actionRouteBase,
-        );
       default:
         return TournamentManagementSectionScreen(
           tournament: tournament,
           section: _selectedSection,
           opsWorkspaceRoute: widget.opsWorkspaceRoute,
           actionRouteBase: widget.actionRouteBase,
+          unsavedChanges: _unsavedChanges,
         );
     }
   }
@@ -560,6 +546,9 @@ class _TournamentManagementHubScreenState
             break;
           case 'export-participants':
             _exportParticipantsRoster();
+            break;
+          case 'report':
+            TournamentReportSheet.show(context, onExport: _exportReport);
             break;
           case 'end':
             _finalizeTournament();
@@ -614,6 +603,23 @@ class _TournamentManagementHubScreenState
                   _isExporting
                       ? l10n.exportingExcel
                       : l10n.exportParticipantsRoster,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'report',
+          enabled: !_isExporting,
+          child: Row(
+            children: [
+              Icon(Icons.summarize_outlined, color: AppTheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  l10n.tournamentReportMenu,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -682,48 +688,6 @@ class _TournamentManagementHubScreenState
     );
   }
 
-  Widget _buildSectionGroup(
-    BuildContext context, {
-    required bool isTablet,
-    required String title,
-    required IconData icon,
-    required List<TournamentManagementSection> sections,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
-            child: Row(
-              children: [
-                Icon(icon, color: AppTheme.primary, size: 19),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          for (var index = 0; index < sections.length; index++) ...[
-            _buildSectionAction(context, l10n, isTablet, sections[index]),
-            if (index != sections.length - 1)
-              Divider(height: 1, indent: 50, color: colors.border),
-          ],
-        ],
-      ),
-    );
-  }
-
   Widget _buildSectionAction(
     BuildContext context,
     AppLocalizations l10n,
@@ -731,32 +695,45 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection section,
   ) {
     final details = _sectionDetails(l10n, section);
-    return Tooltip(
-      message: details.subtitle,
-      child: Material(
-        color: Colors.transparent,
-        child: ListTile(
-          dense: true,
-          selected: isTablet && _selectedSection == section,
-          selectedTileColor: context.colors.bgSurface,
-          leading: Icon(details.icon, color: details.color),
-          title: Text(
-            details.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: const Icon(Icons.chevron_right_rounded, size: 20),
-          onTap: () {
-            if (isTablet) {
-              setState(() => _selectedSection = section);
-            } else {
-              _openSection(section);
-            }
-          },
-        ),
+    return LavishRow(
+      leading: LavishIconBox(
+        tone: _sectionTone(section),
+        child: Icon(details.icon),
       ),
+      title: details.title,
+      subtitle: details.subtitle,
+      background: isTablet && _selectedSection == section
+          ? LavishColors.of(context).soft(LavishTone.accent)
+          : null,
+      trailing: [
+        Icon(
+          Icons.chevron_right_rounded,
+          size: 20,
+          color: LavishColors.of(context).faint,
+        ),
+      ],
+      onTap: () {
+        if (isTablet) {
+          setState(() => _selectedSection = section);
+        } else {
+          _openSection(section);
+        }
+      },
     );
   }
+
+  /// Icon-box colour per section (design 1: blue setup, yellow permissions,
+  /// green money/sponsors, red livestream).
+  LavishTone _sectionTone(TournamentManagementSection section) =>
+      switch (section) {
+        TournamentManagementSection.permissions => LavishTone.warn,
+        TournamentManagementSection.sponsors ||
+        TournamentManagementSection.finance => LavishTone.ok,
+        TournamentManagementSection.livestream => LavishTone.bad,
+        TournamentManagementSection.liveOperations ||
+        TournamentManagementSection.draw => LavishTone.neutral,
+        _ => LavishTone.accent,
+      };
 
   _SectionDetails _sectionDetails(
     AppLocalizations l10n,
@@ -821,12 +798,6 @@ class _TournamentManagementHubScreenState
       l10n.tournamentManagementPermissions,
       l10n.tournamentManagementPermissionsDescription,
       AppTheme.primary,
-    ),
-    TournamentManagementSection.tokens => _SectionDetails(
-      Icons.qr_code_rounded,
-      l10n.manageTokens,
-      l10n.manageTokensSubtitle,
-      AppTheme.adminColor,
     ),
     TournamentManagementSection.liveOperations => _SectionDetails(
       Icons.sports_score_rounded,
@@ -932,16 +903,68 @@ class _TournamentManagementHubScreenState
     }
   }
 
+  /// Whole-tournament Excel report (one file, one sheet per ticked section).
+  /// Throws on failure so the report sheet can keep its ticks for a retry.
+  Future<void> _exportReport(Set<TournamentReportSection> sections) async {
+    if (_isExporting) return;
+    final tournamentId = widget.tournament.id;
+    setState(() => _isExporting = true);
+    try {
+      final withParticipants = sections.contains(
+        TournamentReportSection.participants,
+      );
+      final withMatches = sections.contains(TournamentReportSection.matches);
+      await ExcelExportService.exportTournamentReport(
+        sheets: sections,
+        tournamentName: widget.tournament.name,
+        participants: withParticipants
+            ? await ref
+                  .read(tournamentRepositoryProvider)
+                  .getOrganizerParticipants(tournamentId)
+            : const [],
+        divisionNameById: {
+          for (final division in widget.tournament.divisions)
+            division.id: division.name,
+        },
+        matches: withMatches
+            ? await ref.read(matchesProvider(tournamentId).future)
+            : const [],
+      );
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  /// Same link and card as the tournament intro screen's share button.
+  void _shareTournament() {
+    final l10n = AppLocalizations.of(context)!;
+    final tournament = widget.tournament;
+    final inviteCode = tournament.inviteCode;
+    final shareUrl =
+        tournament.isClubLite && inviteCode != null && inviteCode.isNotEmpty
+        ? 'https://sporto.asia/lite/tournaments/join/${Uri.encodeComponent(inviteCode)}'
+        : 'https://sporto.asia/tournaments/${tournament.id}';
+    AppShareModal.show(
+      context: context,
+      title: tournament.name,
+      subtitle:
+          '${tournament.locationAddress ?? l10n.vietnam} • ${tournament.category ?? tournament.sport}',
+      webUrl: shareUrl,
+      imageUrl: tournament.logoUrl ?? tournament.bannerUrl,
+      badgeText: tournament.isClubLite
+          ? l10n.liteTournament
+          : l10n.advancedTournament,
+    );
+  }
+
   Future<void> _deleteTournament() async {
     if (_isDeleting) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirm = await showConfirmDialog(
-      context: context,
-      title: l10n.deleteTournamentTitle,
-      content: l10n.deleteTournamentContent,
-      confirmText: l10n.delete,
+    final confirm = await showDeleteTournamentDialog(
+      context,
+      tournamentName: widget.tournament.name,
     );
-    if (confirm != true || !mounted) return;
+    if (!confirm || !mounted) return;
     setState(() => _isDeleting = true);
     final success = await ref
         .read(tournamentActionProvider.notifier)

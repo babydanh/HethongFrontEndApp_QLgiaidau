@@ -884,12 +884,16 @@ class _TournamentScheduleCourtGridState
           // Bộ đếm tiến độ xếp lịch, như thanh công cụ của web.
           Icon(Icons.event_available_outlined, size: 16, color: colors.textMuted),
           const SizedBox(width: 6),
-          Text(
-            '${l10n.opsMatches} $placedCount/$totalCount',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: colors.textSecondary,
+          Flexible(
+            child: Text(
+              '${l10n.opsMatches} $placedCount/$totalCount',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: colors.textSecondary,
+              ),
             ),
           ),
           const Spacer(),
@@ -919,12 +923,18 @@ class _TournamentScheduleCourtGridState
           ),
           IconButton(
             key: const ValueKey('schedule-print-button'),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
             tooltip: l10n.schedulePrint,
             onPressed: widget.onPrint ?? _printSchedule,
             icon: Icon(Icons.print_outlined, color: colors.textMuted),
           ),
           IconButton(
             key: const ValueKey('schedule-export-button'),
+            padding: EdgeInsets.zero,
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
             tooltip: l10n.exportData,
             onPressed: _exporting ? null : _exportSchedule,
             icon: _exporting
@@ -937,6 +947,9 @@ class _TournamentScheduleCourtGridState
           if (widget.onOpenScheduleSettings != null)
             IconButton(
               key: const ValueKey('schedule-settings-button'),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
               tooltip: l10n.scheduleSettingsTitle,
               onPressed: widget.onOpenScheduleSettings,
               icon: Icon(Icons.schedule_rounded, color: colors.textMuted),
@@ -945,6 +958,9 @@ class _TournamentScheduleCourtGridState
             const SizedBox(width: 4),
             IconButton(
               key: const ValueKey('court-grid-fullscreen'),
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
               tooltip: l10n.tabSchedule,
               onPressed: widget.onOpenFullscreen,
               icon: Icon(

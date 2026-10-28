@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
 class ResultsTab extends ConsumerWidget {
@@ -10,12 +11,20 @@ class ResultsTab extends ConsumerWidget {
   final String? selectedDivision;
   final String? matchType;
 
+  /// Lite tournaments read their matches from the bracket projection.
+  final bool isLite;
+
+  /// Organisers can open score entry from the match board.
+  final bool canManage;
+
   const ResultsTab({
     super.key,
     required this.tournamentId,
     this.selectedDivisionId,
     this.selectedDivision,
     this.matchType,
+    this.isLite = false,
+    this.canManage = false,
   });
 
   @override
@@ -28,13 +37,14 @@ class ResultsTab extends ConsumerWidget {
       )),
     );
 
-    return resultAsync.when(
+    final awards = resultAsync.when(
       data: (data) {
         final rawAwards = data['awards'];
         if (rawAwards is! List || rawAwards.isEmpty) {
-          return Center(
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -91,87 +101,87 @@ class ResultsTab extends ConsumerWidget {
           }
         }
 
-        return SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 140),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 2, bottom: 10),
-                child: Row(
-                  children: [
-                    Text(
-                      'DANH SÁCH TRAO THƯỞNG',
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 2, bottom: 10),
+              child: Row(
+                children: [
+                  Text(
+                    'DANH SÁCH TRAO THƯỞNG',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textMuted,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.bgSurface,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: colors.border.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    child: Text(
+                      '${(gold != null ? 1 : 0) + (silver != null ? 1 : 0) + bronzes.length + others.length}',
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textMuted,
-                        letterSpacing: 0.6,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 1.5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.bgSurface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: colors.border.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      child: Text(
-                        '${(gold != null ? 1 : 0) + (silver != null ? 1 : 0) + bronzes.length + others.length}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-              if (gold != null) ...[
-                _buildAwardCard(context, gold, 1, 'QUÁN QUÂN'),
-                const SizedBox(height: 6),
-              ],
-              if (silver != null) ...[
-                _buildAwardCard(context, silver, 2, 'Á QUÂN'),
-                const SizedBox(height: 6),
-              ],
-              for (int i = 0; i < bronzes.length; i++) ...[
-                _buildAwardCard(
-                  context,
-                  bronzes[i],
-                  3,
-                  bronzes.length > 1 ? 'ĐỒNG HẠNG 3' : 'HẠNG 3',
-                ),
-                const SizedBox(height: 6),
-              ],
-              for (final other in others) ...[
-                _buildAwardCard(
-                  context,
-                  other,
-                  (other['rank'] as num?)?.toInt() ?? 0,
-                  'HẠNG ${(other['rank'] as num?)?.toInt() ?? 0}',
-                ),
-                const SizedBox(height: 6),
-              ],
+            if (gold != null) ...[
+              _buildAwardCard(context, gold, 1, 'QUÁN QUÂN'),
+              const SizedBox(height: 6),
             ],
-          ),
+            if (silver != null) ...[
+              _buildAwardCard(context, silver, 2, 'Á QUÂN'),
+              const SizedBox(height: 6),
+            ],
+            for (int i = 0; i < bronzes.length; i++) ...[
+              _buildAwardCard(
+                context,
+                bronzes[i],
+                3,
+                bronzes.length > 1 ? 'ĐỒNG HẠNG 3' : 'HẠNG 3',
+              ),
+              const SizedBox(height: 6),
+            ],
+            for (final other in others) ...[
+              _buildAwardCard(
+                context,
+                other,
+                (other['rank'] as num?)?.toInt() ?? 0,
+                'HẠNG ${(other['rank'] as num?)?.toInt() ?? 0}',
+              ),
+              const SizedBox(height: 6),
+            ],
+          ],
         );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: AppTheme.primary),
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
       ),
-      error: (e, _) => Center(
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
@@ -201,6 +211,24 @@ class ResultsTab extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 140),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ResultsMatchBoard(
+            tournamentId: tournamentId,
+            isLite: isLite,
+            divisionId: selectedDivisionId,
+            canManage: canManage,
+          ),
+          const SizedBox(height: 16),
+          awards,
+        ],
       ),
     );
   }

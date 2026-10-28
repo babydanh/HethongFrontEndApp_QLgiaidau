@@ -56,6 +56,7 @@ class OrganizerOpsParticipant {
     this.canOrganizerEdit = false,
     this.rosterLockedAt,
     this.isWildcard = false,
+    this.isPresent = false,
     this.teamInviteToken,
     this.payment,
   });
@@ -85,6 +86,9 @@ class OrganizerOpsParticipant {
 
   final DateTime? rosterLockedAt;
   final bool isWildcard;
+
+  /// Organizer's day-of-event check-in mark (a note only, gates nothing).
+  final bool isPresent;
   final String? teamInviteToken;
 
   /// Thanh toán thô (amount/status/transactionReference/paidAt…).
@@ -143,6 +147,7 @@ class OrganizerOpsParticipant {
           ? DateTime.tryParse(rawRosterLock)
           : null,
       isWildcard: json['isWildcard'] == true || json['is_wildcard'] == true,
+      isPresent: json['isPresent'] == true,
       teamInviteToken: _textOrNull(json['teamInviteToken']),
       payment: rawPayment is Map ? Map<String, dynamic>.from(rawPayment) : null,
     );

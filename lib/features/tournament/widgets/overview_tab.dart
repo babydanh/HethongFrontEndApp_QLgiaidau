@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/tournament_contact.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class OverviewTab extends StatefulWidget {
@@ -206,6 +207,10 @@ class _OverviewTabState extends State<OverviewTab> {
     final colors = context.colors;
     final resolvedAvatar = widget.resolveImageUrl(t.creatorAvatarUrl);
     final creatorName = (t.creatorFullName ?? '').trim();
+    final contact = visibleContact(
+      t.contactInfo,
+      isManager: widget.onToggleFounderHidden != null,
+    );
     final isClubLite = t.isClubLite;
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final sportKey = t.sport.trim().toLowerCase();
@@ -945,6 +950,14 @@ class _OverviewTabState extends State<OverviewTab> {
                           ),
                         ),
                       ],
+                      if (contact != null) ...[
+                        const SizedBox(height: 14),
+                        _buildSectionHeader(
+                          l10n.tournamentContactTitle.toUpperCase(),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildContactRows(contact, l10n),
+                      ],
                     ],
                   ),
                 ),
@@ -1011,6 +1024,64 @@ class _OverviewTabState extends State<OverviewTab> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildContactRows(TournamentContact contact, AppLocalizations l10n) {
+    final colors = context.colors;
+    Widget row(IconData icon, String label, String value) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: colors.textMuted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: SelectableText.rich(
+              TextSpan(
+                children: [
+                  if (label.isNotEmpty)
+                    TextSpan(
+                      text: '$label: ',
+                      style: TextStyle(color: colors.textMuted),
+                    ),
+                  TextSpan(
+                    text: value,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (contact.organizerName.isNotEmpty)
+          row(Icons.person_outline_rounded, '', contact.organizerName),
+        if (contact.phone.isNotEmpty)
+          row(Icons.phone_outlined, l10n.tournamentContactPhone, contact.phone),
+        if (contact.email.isNotEmpty)
+          row(
+            Icons.mail_outline_rounded,
+            l10n.tournamentContactEmail,
+            contact.email,
+          ),
+        if (contact.hiddenFromViewers)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
+            child: Text(
+              l10n.tournamentContactHiddenHint,
+              style: TextStyle(fontSize: 11, color: colors.textMuted),
+            ),
+          ),
       ],
     );
   }

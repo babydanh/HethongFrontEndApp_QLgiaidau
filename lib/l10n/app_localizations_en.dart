@@ -1403,6 +1403,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentFounder => 'Tournament Founder';
 
   @override
+  String get tournamentContactTitle => 'Contact';
+
+  @override
+  String get tournamentContactPhone => 'Phone';
+
+  @override
+  String get tournamentContactEmail => 'Email';
+
+  @override
+  String get tournamentContactHiddenHint => 'Hidden from viewers';
+
+  @override
   String get sectionAboutTournament => 'ABOUT TOURNAMENT';
 
   @override
@@ -12543,6 +12555,72 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a camera playback URL.';
 
   @override
+  String get tournamentManagementCourtCameraAttached => 'Camera attached';
+
+  @override
+  String get tournamentManagementCourtCameraNotAttached => 'No camera attached';
+
+  @override
+  String get tournamentManagementCourtCameraEdit => 'Edit camera';
+
+  @override
+  String get tournamentManagementCourtActions => 'Court actions';
+
+  @override
+  String get tournamentManagementCameraShowUrl => 'Show';
+
+  @override
+  String get tournamentManagementCameraHideUrl => 'Hide';
+
+  @override
+  String get tournamentManagementCameraDetach => 'Remove camera';
+
+  @override
+  String get tournamentManagementDiscardTitle => 'Discard changes?';
+
+  @override
+  String get tournamentManagementDiscardMessage =>
+      'You have unsaved changes. Leave without saving?';
+
+  @override
+  String get tournamentManagementDiscardConfirm => 'Discard';
+
+  @override
+  String get manageInfoGroupGeneral => 'General';
+
+  @override
+  String get manageInfoGroupIdentity => 'Branding';
+
+  @override
+  String get manageInfoGroupPrizes => 'Prizes';
+
+  @override
+  String get manageInfoGroupContact => 'Contact';
+
+  @override
+  String get manageInfoGroupCollapse => 'Collapse';
+
+  @override
+  String get manageInfoGroupExpand => 'Open';
+
+  @override
+  String get tournamentManagementImageUploaded => 'Uploaded';
+
+  @override
+  String get tournamentManagementImageMissing => 'None yet';
+
+  @override
+  String get manageInfoPrizeLabel => '1st, 2nd and 3rd place';
+
+  @override
+  String get manageInfoSaveChanges => 'Save changes';
+
+  @override
+  String tournamentManagementCourtCameraSheetTitle(Object court) {
+    return 'Camera · $court';
+  }
+
+  @override
   String get tournamentManagementCameraUrlSaved => 'Camera URL saved.';
 
   @override
@@ -13602,6 +13680,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementChooseDate => 'Choose date';
 
   @override
+  String tournamentManagementDateLimitRegistrationStartMax(String date) {
+    return 'no later than the deadline $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitDeadlineMin(String date) {
+    return 'after registration opens $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitOpeningMin(String date) {
+    return 'not before the deadline $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitClosingMin(String date) {
+    return 'not before the opening date $date';
+  }
+
+  @override
   String get tournamentManagementDefaultVenue => 'Default';
 
   @override
@@ -13831,7 +13929,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get lifecycleEndTitle => 'Complete tournament';
+  String get lifecycleEndTitle => 'Confirm tournament results';
 
   @override
   String get lifecycleEndWarning =>
@@ -13867,7 +13965,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not load the match list. Close this and try again.';
 
   @override
-  String get lifecycleEndConfirm => 'Complete tournament';
+  String get lifecycleEndConditionsTitle => 'Conditions to confirm';
+
+  @override
+  String get lifecycleEndPrizesTitle => 'Prizes';
+
+  @override
+  String get lifecycleEndPodiumEmpty => 'Not decided';
+
+  @override
+  String lifecycleEndBlockedReason(int live) {
+    return 'Cannot confirm yet: $live matches are still live.';
+  }
+
+  @override
+  String get lifecycleEndConfirmDialogTitle =>
+      'Confirm the tournament results?';
+
+  @override
+  String get lifecycleEndConfirmDialogMessage =>
+      'The tournament will be marked as completed and its results become official and public. The app has no action to reopen the tournament once confirmed.';
+
+  @override
+  String get lifecycleResultsReconfirmNeeded =>
+      'The bracket was edited after the tournament ended. Confirm the results again.';
+
+  @override
+  String get lifecycleResultsReconfirmDialogTitle =>
+      'Confirm the results again?';
+
+  @override
+  String get lifecycleResultsReconfirmAction => 'Confirm results again';
+
+  @override
+  String get lifecycleResultsReconfirmDialogMessage =>
+      'The current results of the tournament will be confirmed again. The bracket is not changed.';
+
+  @override
+  String get lifecycleResultsReconfirmed =>
+      'Tournament results confirmed again.';
+
+  @override
+  String get lifecycleEndConfirm => 'Confirm results';
 
   @override
   String get tournamentManagementCompleteTournament => 'End tournament';
@@ -14196,6 +14335,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRefereeInvited => 'Invited';
 
   @override
+  String get tournamentManagementInviteByEmail => 'Invite by email';
+
+  @override
+  String get tournamentManagementInviteEmail => 'Invitee email';
+
+  @override
+  String get tournamentManagementInviteEmailInvalid => 'Invalid email.';
+
+  @override
+  String tournamentManagementInvitedCount(int count) {
+    return 'Invited · $count';
+  }
+
+  @override
+  String get tournamentManagementResend => 'Resend';
+
+  @override
+  String tournamentManagementResendConfirm(String name) {
+    return 'Resend the invitation to $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteResent => 'Invitation resent.';
+
+  @override
+  String get tournamentManagementRevoke => 'Revoke';
+
+  @override
+  String tournamentManagementRevokeConfirm(String name) {
+    return 'Revoke the invitation for $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteRevoked => 'Invitation revoked.';
+
+  @override
   String get tournamentManagementRefereeRemoved => 'Referee removed.';
 
   @override
@@ -14372,7 +14547,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRoleOther => 'Other role';
 
   @override
-  String get tournamentManagementRoleSpectator => 'Viewer';
+  String get tournamentManagementRoleSpectator => 'Spectator';
 
   @override
   String get tournamentManagementSave => 'Save';
@@ -14469,6 +14644,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementSponsorTierTitle => 'Title';
 
   @override
+  String tournamentManagementSponsorTierRank(String tier) {
+    return '$tier tier';
+  }
+
+  @override
   String get tournamentManagementSponsorWebsite => 'Website';
 
   @override
@@ -14484,6 +14664,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentManagementSponsorsEmptyDescription =>
       'Add a sponsor to show tournament partners.';
+
+  @override
+  String get tournamentManagementAddSponsorShort => 'Add';
+
+  @override
+  String get tournamentManagementSponsorPreview => 'Preview public page';
+
+  @override
+  String get tournamentManagementSponsorHint =>
+      'Switch = shown publicly. Swipe left to archive.';
+
+  @override
+  String get tournamentManagementSponsorDragHandle => 'Drag to reorder';
+
+  @override
+  String tournamentManagementSponsorCount(int count) {
+    return '$count sponsors';
+  }
 
   @override
   String get tournamentManagementStaff => 'Staff';
@@ -14727,10 +14925,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementLivestreamDevices => 'Camera devices';
 
   @override
-  String get tournamentManagementLivestreamDevicesDescription =>
-      'Reusable community camera devices. Issue a pairing QR so a device can register itself.';
-
-  @override
   String get tournamentManagementLivestreamDevicesEmpty =>
       'No camera devices yet';
 
@@ -14755,51 +14949,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not create a pairing code.';
 
   @override
-  String get tournamentManagementLivestreamFacebookSubtitle =>
-      'Connect a Facebook Page to run livestreams.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookNotConnected =>
-      'No Facebook Page connected.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnect => 'Connect Page';
-
-  @override
-  String get tournamentManagementLivestreamFacebookRevalidate => 'Re-check';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnect => 'Disconnect';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnectFailed =>
-      'Could not open the browser to connect a Facebook Page.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookActive => 'Active';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnected =>
-      'Disconnected';
-
-  @override
-  String tournamentManagementLivestreamFacebookLastChecked(String time) {
-    return 'Last checked: $time';
-  }
-
-  @override
   String get tournamentManagementLivestreamSessions => 'Livestream sessions';
-
-  @override
-  String get tournamentManagementLivestreamSessionsDescription =>
-      'Monitor the livestream sessions of this tournament.';
 
   @override
   String get tournamentManagementLivestreamSessionsEmpty =>
       'No livestream sessions yet.';
 
   @override
-  String get tournamentManagementLivestreamStopSession => 'End session';
+  String get tournamentManagementLivestreamStopSession => 'Stop streaming';
 
   @override
   String get tournamentManagementLivestreamStopSessionConfirm =>
@@ -16135,6 +16292,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get financeFeeQuickAdjustLabel => 'Quick adjust:';
 
   @override
+  String get financeServerConfigGroup => 'Server configuration';
+
+  @override
+  String get financePayoutGroup => 'Payouts to the organizer';
+
+  @override
   String get financeFeeQuickFree => '0đ';
 
   @override
@@ -16153,6 +16316,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get financeFeeOrganizerNetPerPlayer => 'Organizer receives / player';
+
+  @override
+  String get financeFeeSave => 'Save fee';
+
+  @override
+  String financePayoutHistoryCount(int count) {
+    return '$count requests';
+  }
+
+  @override
+  String get financePayoutConfirmTitle => 'Send payout request?';
+
+  @override
+  String financePayoutConfirmBody(String amount) {
+    return 'Send a payout request of $amount to the server? Bank details are deleted after a successful submission.';
+  }
+
+  @override
+  String get teamList_searchHint => 'Search team or player name…';
+
+  @override
+  String get teamList_filterAll => 'All';
+
+  @override
+  String get teamList_filterApproved => 'Approved';
+
+  @override
+  String get teamList_filterPending => 'Pending';
+
+  @override
+  String get teamList_noMatch => 'No matching team';
+
+  @override
+  String get teamList_edit => 'Edit';
+
+  @override
+  String get tournamentReportMenu => 'Export report';
+
+  @override
+  String get tournamentReportTitle => 'Export Excel report';
+
+  @override
+  String get tournamentReportHint =>
+      'Choose the sheets to include in the Excel file.';
+
+  @override
+  String get tournamentReportFooter =>
+      'When done, the share sheet opens so you can save or send the file.';
+
+  @override
+  String get tournamentReportSheetParticipants => 'Participants';
+
+  @override
+  String get tournamentReportSheetParticipantsDesc =>
+      'Name, contact, division, status, payment';
+
+  @override
+  String get tournamentReportSheetMatches => 'Matches';
+
+  @override
+  String get tournamentReportSheetMatchesDesc =>
+      'Round, pairing, score, status, referee';
+
+  @override
+  String tournamentReportExport(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sheets',
+      one: '1 sheet',
+    );
+    return 'Export $_temp0';
+  }
+
+  @override
+  String get tournamentReportExporting => 'Exporting…';
+
+  @override
+  String get tournamentReportError =>
+      'Could not export the report. Your selection is kept, try again.';
+
+  @override
+  String get excelReportFilePrefix => 'Report';
+
+  @override
+  String excelReportShare(String tournamentName) {
+    return 'Tournament report $tournamentName';
+  }
 
   @override
   String get divisionEditorEditTitle => 'Edit division';
@@ -16215,6 +16466,259 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get divisionEditorRulesPaneTitle => 'Rules setup';
+
+  @override
+  String get divisionEditorAccBasic => 'Basics';
+
+  @override
+  String get divisionEditorAccRules => 'Round rules';
+
+  @override
+  String get divisionEditorAccElo => 'ELO limits';
+
+  @override
+  String get divisionEditorAccIllustration => 'See format illustration';
+
+  @override
+  String divisionEditorAccTeams(Object count) {
+    return '$count teams';
+  }
+
+  @override
+  String get divisionEditorAccNoLimit => 'No limit';
+
+  @override
+  String get divisionEditorAccFree => 'Free';
+
+  @override
+  String get divisionEditorAccRulesLite => 'Quick rules (default)';
+
+  @override
+  String divisionEditorAccRulesStrict(Object points, Object sets) {
+    return 'Win $sets sets · $points points';
+  }
+
+  @override
+  String divisionEditorAccEloRange(Object limit, Object max, Object min) {
+    return 'ELO $min – $max · $limit';
+  }
+
+  @override
+  String divisionEditorAccEloNone(Object limit) {
+    return 'No ELO limit · $limit';
+  }
+
+  @override
+  String divisionEditorAccGroups(Object advancing, Object groups) {
+    return '$groups groups · $advancing advance';
+  }
+
+  @override
+  String divisionEditorAccRounds(Object count) {
+    return '$count rounds';
+  }
+
+  @override
+  String divisionEditorAccSwissRounds(Object count) {
+    return '$count rounds';
+  }
+
+  @override
+  String get divisionEditorLockedNotice =>
+      'This division already has a bracket, so its format and round rules can no longer change. The sections that are still open can be edited.';
+
+  @override
+  String formatIllustrationTitle(Object name) {
+    return 'Illustration: $name';
+  }
+
+  @override
+  String get formatIllustrationSingleEliminationDescription =>
+      'Lose once and you are out; winners advance to the final.';
+
+  @override
+  String get formatIllustrationSingleEliminationSummary =>
+      'Example with 8 players drawn into a bracket: 4 quarterfinal pairs, winners go to the semifinals and then the final, no third-place match.';
+
+  @override
+  String get formatIllustrationRoundRobinDescription =>
+      'Everyone plays everyone else; the most points ranks first.';
+
+  @override
+  String get formatIllustrationRoundRobinSummary =>
+      'Example with 5 players and 10 matches: 2 matches per round, one player rests. A win is 3 points, a draw 1, a loss 0 (default); the most points ranks first.';
+
+  @override
+  String get formatIllustrationDoubleEliminationDescription =>
+      'The first loss drops you to the lower bracket; a second loss knocks you out.';
+
+  @override
+  String get formatIllustrationDoubleEliminationSummary =>
+      'Example with 4 players. A first loss in the upper bracket drops you to the lower bracket; a second loss eliminates you. The upper-bracket winner meets the lower-bracket winner in the grand final (one match, no replay).';
+
+  @override
+  String get formatIllustrationGroupStageDescription =>
+      'Round robin inside each group, the top players of each group go to the knockout.';
+
+  @override
+  String get formatIllustrationGroupStageSummary =>
+      'Example with 8 players in 2 groups. Each group plays a round robin, the top 2 reach crossed semifinals (A1 vs B2, B1 vs A2), then the final. The organizer sets how many advance.';
+
+  @override
+  String get formatIllustrationSwissDescription =>
+      'Each round pairs players on equal points, no rematches, nobody is eliminated.';
+
+  @override
+  String get formatIllustrationSwissSummary =>
+      'Example with 8 players over 3 rounds. Round 1 pairs by seed: 1 vs 5, 2 vs 6, 3 vs 7, 4 vs 8. From round 2, players on equal points meet and never replay an opponent. Ties are broken by the total points of the opponents faced.';
+
+  @override
+  String get registrationFormTitle => 'Registration form';
+
+  @override
+  String get registrationFormSave => 'Save';
+
+  @override
+  String get registrationFormSystemName => 'Full name';
+
+  @override
+  String get registrationFormSystemPhone => 'Phone number';
+
+  @override
+  String get registrationFormSystemHint =>
+      'Required · taken from the account profile';
+
+  @override
+  String get registrationFormRequired => 'Required';
+
+  @override
+  String get registrationFormOptional => 'Optional';
+
+  @override
+  String get registrationFormAdd => 'Add question';
+
+  @override
+  String get registrationFormTypeLabel => 'Question type';
+
+  @override
+  String get registrationFormTypeText => 'Text';
+
+  @override
+  String get registrationFormTypeNumber => 'Number';
+
+  @override
+  String get registrationFormTypeSelect => 'Choose one';
+
+  @override
+  String get registrationFormTypeMultiSelect => 'Choose many';
+
+  @override
+  String get registrationFormTypeTextarea => 'Long text';
+
+  @override
+  String get registrationFormTypeEmail => 'Email';
+
+  @override
+  String get registrationFormTypePhone => 'Phone number';
+
+  @override
+  String get registrationFormTypeCheckbox => 'Confirmation / consent';
+
+  @override
+  String get registrationFormTypeFile => 'File or image';
+
+  @override
+  String get registrationFormNewQuestion => 'New question';
+
+  @override
+  String get registrationFormUnnamed => '(Unnamed)';
+
+  @override
+  String get registrationFormQuestionName => 'Question title';
+
+  @override
+  String get registrationFormOptionsLabel => 'Options, one per line';
+
+  @override
+  String get registrationFormRequiredAnswer => 'Answer required';
+
+  @override
+  String get registrationFormDone => 'Done';
+
+  @override
+  String get registrationFormDragHint => 'Drag to reorder';
+
+  @override
+  String get registrationFormDeleteTitle => 'Delete question?';
+
+  @override
+  String registrationFormDeleteConfirm(Object label) {
+    return 'Remove the question “$label” from the form?';
+  }
+
+  @override
+  String registrationFormDeleteAnswered(Object label) {
+    return 'Players have already answered “$label”. Deleting the question will lose those answers.';
+  }
+
+  @override
+  String get registrationFormErrorMissingLabel =>
+      'Every question needs a title.';
+
+  @override
+  String registrationFormErrorChoice(Object label) {
+    return 'The question “$label” needs at least 2 different options.';
+  }
+
+  @override
+  String get registrationFormLocked =>
+      'The form is locked because registration is closed or the tournament has started.';
+
+  @override
+  String get lifecycleStepDraft => 'Draft';
+
+  @override
+  String get lifecycleStepPublish => 'Publish';
+
+  @override
+  String get lifecycleStepOpen => 'Reg. open';
+
+  @override
+  String get lifecycleStepRunning => 'Playing';
+
+  @override
+  String get lifecycleStepDone => 'Finished';
+
+  @override
+  String lifecycleFullTitle(Object max, Object occupied) {
+    return 'Full: $occupied/$max teams';
+  }
+
+  @override
+  String get lifecycleFullHint =>
+      'Consider closing registration to lock the list.';
+
+  @override
+  String get lifecycleRemindLater => 'Remind later';
+
+  @override
+  String get lifecyclePublishFeeGroup => 'Publish fee';
+
+  @override
+  String get lifecyclePublishFeeUnpaid => 'Not paid';
+
+  @override
+  String lifecyclePublishFeeBlocked(Object amount) {
+    return 'The publish fee of $amount must be paid before publishing. This payment step is not in the App yet, please pay on the Web.';
+  }
+
+  @override
+  String lifecycleDeleteTypePrompt(Object name) {
+    return 'Type the tournament name “$name” to confirm deletion.';
+  }
+
+  @override
+  String get lifecycleDeleteNameLabel => 'Tournament name';
 
   @override
   String get divisionEditorPickleballMode => 'Scoring mode';
@@ -16668,6 +17172,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get participantDetailNoteTitle => 'Organizer note';
 
   @override
+  String get participantDetailNoteRowHint => 'Organizers only';
+
+  @override
+  String get participantDetailCheckIn => 'Check-in';
+
+  @override
+  String get participantDetailFeePaid => 'Fee paid';
+
+  @override
+  String get athletesAutoPair => 'Auto pair';
+
+  @override
+  String get athletesPresentCount => 'Present';
+
+  @override
+  String get athletesSearchHint => 'Search…';
+
+  @override
+  String get athleteFeeUnpaid => 'Fee unpaid';
+
+  @override
+  String get athletePresenceMarked => 'Checked in.';
+
+  @override
+  String get athletePresenceCleared => 'Check-in removed.';
+
+  @override
+  String get athletePresenceFailed => 'Could not update check-in. Try again.';
+
+  @override
+  String get athleteWaitingPill => 'Waiting';
+
+  @override
+  String get participantDetailFeePaidConfirm =>
+      'Confirm the entry fee was received from this athlete?';
+
+  @override
+  String get participantDetailFeeUnpaidConfirm =>
+      'Clear the fee-paid mark for this athlete? A refund request may be opened if the fee was collected through the system.';
+
+  @override
   String get participantDetailNoteHint => 'Internal note';
 
   @override
@@ -17115,7 +17660,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentCameraCourtsTitle => 'Courts';
 
   @override
-  String get tournamentCameraCourtNoCameras => 'No camera on this court.';
+  String get tournamentCameraCourtNoCameras => 'No camera';
 
   @override
   String get tournamentCameraAddTitle => 'Add camera';
@@ -17184,6 +17729,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String tournamentCameraCourtChanged(Object court, Object name) {
     return '$name moved to $court.';
   }
+
+  @override
+  String tournamentCameraListTitle(int count) {
+    return 'Cameras · $count';
+  }
+
+  @override
+  String get tournamentCameraStatusIdle => 'Idle';
+
+  @override
+  String get tournamentCameraAssign => 'Assign camera';
+
+  @override
+  String get tournamentCameraChange => 'Change camera';
+
+  @override
+  String tournamentCameraPickTitle(String court) {
+    return 'Pick a camera for $court';
+  }
+
+  @override
+  String get tournamentCameraPickNone => 'Remove camera';
+
+  @override
+  String get tournamentStreamKeyConfirmTitle => 'Show the stream key QR?';
+
+  @override
+  String get tournamentStreamKeyConfirmMessage =>
+      'The QR carries the camera\'s stream key. Open it only to set up a streaming device and do not share it.';
+
+  @override
+  String get tournamentStreamKeyConfirmAction => 'Show QR';
 
   @override
   String get tournamentStreamKeyTitle => 'Stream key QR';
@@ -17256,4 +17833,54 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tournamentStreamKeyRotated =>
       'Key rotated. Scan the new QR to publish again.';
+
+  @override
+  String get resultsBoard_round => 'Round';
+
+  @override
+  String resultsBoard_roundOption(String label, int pending) {
+    return '$label · $pending pending';
+  }
+
+  @override
+  String get resultsBoard_finished => 'Finished';
+
+  @override
+  String get resultsBoard_upcoming => 'Upcoming';
+
+  @override
+  String get resultsBoard_pendingScore => 'Awaiting score';
+
+  @override
+  String get resultsBoard_unscheduled => 'Not scheduled';
+
+  @override
+  String get resultsBoard_doneBadge => 'Done';
+
+  @override
+  String resultsBoard_untimed(String round, int count) {
+    return 'No time yet · $round · $count';
+  }
+
+  @override
+  String get resultsBoard_empty => 'No matches in this division yet';
+
+  @override
+  String get resultsBoard_waitingTeams => 'Waiting for opponent';
+
+  @override
+  String get resultsBoard_schedule => 'Schedule';
+
+  @override
+  String get resultsBoard_enterScore => 'Enter score';
+
+  @override
+  String get matchSchedule_title => 'Schedule match';
+
+  @override
+  String get matchSchedule_save => 'Save';
+
+  @override
+  String get matchSchedule_error =>
+      'Could not save the schedule. Check your connection and try again.';
 }

@@ -21,11 +21,13 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -410,8 +412,7 @@ void main() {
     await _openSettings(tester);
     expect(find.text(l10n.tournamentManagementSetupGroup), findsOneWidget);
     expect(find.text(l10n.manageSettingsInfoSection), findsOneWidget);
-    expect(find.text(l10n.manageSettingsOtherSection), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementSystemGroup), findsNothing);
+    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -616,6 +617,11 @@ void main() {
           matchesProvider(
             'tournament-1',
           ).overrideWith((ref) => Stream.value(<MatchModel>[])),
+          // The completed tournament reads the results snapshot (reconfirm card).
+          tournamentResultProvider((
+            tournamentId: 'tournament-1',
+            divisionId: null,
+          )).overrideWith((ref) => Stream.value(const {'awards': []})),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
@@ -638,7 +644,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('lifecycle-end-cancel')));
+    await tester.tap(
+      find.byKey(const ValueKey('tournament-manage-sheet-close')),
+    );
     await tester.pumpAndSettle();
     expect(lifecycleRepository.completedIds, isEmpty);
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -648,6 +656,14 @@ void main() {
     await tester.tap(find.text(l10n.endTournament));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('lifecycle-end-confirm')));
+    await tester.pumpAndSettle();
+    // The confirm button first asks for confirmation (states the consequence).
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text(l10n.lifecycleEndConfirm),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(lifecycleRepository.completedIds, ['tournament-1']);
@@ -755,26 +771,22 @@ void main() {
     expect(find.text(l10n.tournamentManagementRegistration), findsOneWidget);
     expect(find.text(l10n.manageSettingsCompetitionSection), findsOneWidget);
 
-    // Khác đóng sẵn: các mục bên trong chưa nằm trong cây hiển thị.
-    expect(find.text(l10n.manageSettingsOtherSection), findsOneWidget);
-    expect(find.text(l10n.manageTeams), findsNothing);
-    await tester.tap(find.text(l10n.manageSettingsOtherSection));
-    await tester.pumpAndSettle();
+    // Nhóm Hệ thống luôn mở: các mục nằm sẵn trong danh sách.
+    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
     expect(find.text(l10n.manageTeams), findsOneWidget);
     expect(find.text(l10n.manageDraw), findsOneWidget);
     expect(find.text(l10n.tournamentManagementSponsors), findsOneWidget);
     expect(find.text(l10n.tournamentManagementFinance), findsOneWidget);
     expect(find.text(l10n.tournamentManagementLivestream), findsOneWidget);
     expect(find.text(l10n.tournamentManagementPermissions), findsOneWidget);
-    expect(find.text(l10n.manageTokens), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementSystemGroup), findsNothing);
+    expect(find.text(l10n.manageTokens), findsNothing);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     expect(find.text(l10n.endTournament), findsOneWidget);
     expect(find.text(l10n.exportData), findsOneWidget);
     expect(find.text(l10n.exportParticipantsRoster), findsOneWidget);
-    expect(find.text(l10n.deleteTournament), findsOneWidget);
+    expect(find.text(l10n.deleteTournament), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -798,6 +810,23 @@ void main() {
       find.widgetWithText(PopupMenuItem<String>, l10n.exportParticipantsRoster),
       findsOneWidget,
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('overflow menu opens the report sheet', (tester) async {
+    tester.view.physicalSize = const Size(390, 1500);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(_app(_tournament('in_progress')));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.tournamentReportMenu));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TournamentReportSheet), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -890,9 +919,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.tournamentManagementName), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
       expect(find.text(l10n.tournamentManagementDescription), findsOneWidget);
-      expect(find.text(l10n.tournamentManagementBrandAssets), findsOneWidget);
+      for (final group in [
+        l10n.manageInfoGroupGeneral,
+        l10n.manageInfoGroupIdentity,
+        l10n.manageInfoGroupPrizes,
+        l10n.manageInfoGroupContact,
+      ]) {
+        expect(find.text(group.toUpperCase()), findsOneWidget);
+      }
+      // Branding is collapsed by default; opening it reveals the image tiles.
+      await tester.tap(find.text(l10n.manageInfoGroupIdentity.toUpperCase()));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.tournamentManagementLogo), findsOneWidget);
       expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
       expect(find.text(l10n.tournamentManagementPublic), findsNothing);
       expect(tester.takeException(), isNull);
@@ -920,7 +959,8 @@ void main() {
       await tester.tap(find.text(l10n.manageSettingsVenueSection).first);
       await tester.pumpAndSettle();
 
-      expect(find.text(l10n.tournamentManagementVenues), findsOneWidget);
+      // The venues page has no card title any more: the add button leads it.
+      expect(find.text(l10n.tournamentManagementAddVenue), findsOneWidget);
       expect(find.text(l10n.tournamentManagementStartDate), findsNothing);
       expect(find.text(l10n.tournamentManagementEndDate), findsNothing);
       expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
@@ -1023,8 +1063,6 @@ void main() {
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
-    await tester.tap(find.text(l10n.manageSettingsOtherSection));
-    await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.tournamentManagementFinance));
     await tester.pumpAndSettle();
     final financeTitleInAppBar = find.descendant(
@@ -1035,7 +1073,7 @@ void main() {
 
     await tester.tap(find.byTooltip(l10n.tournamentManagementBack));
     await tester.pumpAndSettle();
-    expect(find.text(l10n.manageSettingsOtherSection), findsOneWidget);
+    expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
     expect(financeTitleInAppBar, findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -1071,8 +1109,6 @@ void main() {
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
-    await tester.tap(find.text(l10n.manageSettingsOtherSection));
-    await tester.pumpAndSettle();
     final liveOperations = find.text(l10n.tournamentManagementLiveOperations);
     await tester.ensureVisible(liveOperations);
     await tester.tap(liveOperations);
@@ -1129,7 +1165,8 @@ void main() {
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
 
-    expect(find.text(l10n.tournamentManagementLifecycle), findsOneWidget);
+    // The lifecycle block has no card title any more: the step bar leads it.
+    expect(find.byKey(const ValueKey('lifecycle-step-current')), findsOneWidget);
     expect(find.text(l10n.tournamentManagementPublish), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegenerateInvite), findsNothing);
     expect(tester.takeException(), isNull);
@@ -1562,6 +1599,44 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('leaving the information page with unsaved edits asks first', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      _app(
+        _tournament('in_progress'),
+        managementRepository: _EmptyTournamentManagementRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await _openSettings(tester);
+    await tester.tap(find.text(l10n.manageSettingsInfoSection).first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Edited name');
+    await tester.pump();
+
+    // Back asks; "Cancel" keeps the page and the edit.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementDiscardTitle), findsOneWidget);
+    await tester.tap(find.text(l10n.tournamentManagementCancel));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementName), findsOneWidget);
+
+    // Confirming the discard closes the page.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(l10n.tournamentManagementDiscardConfirm));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.tournamentManagementName), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('bracket tab embeds an editable bracket workspace', (
     tester,
   ) async {
@@ -1988,10 +2063,7 @@ void main() {
         find.byKey(const ValueKey('athletes-import-excel')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(const ValueKey('athletes-download-template')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('athletes-more')), findsOneWidget);
     });
 
     testWidgets('tapping Excel import opens the roster import sheet', (
@@ -2018,17 +2090,20 @@ void main() {
       tester,
     ) async {
       await pumpAthletes(tester);
-      final l10n = AppLocalizations.of(
-        tester.element(find.byType(TournamentManagementHubScreen)),
-      )!;
 
       await tester.ensureVisible(rowMixed);
       await tester.tap(rowMixed);
       await tester.pumpAndSettle();
 
       expect(find.text('An – Bình'), findsOneWidget);
-      expect(find.text(l10n.tournamentManagementApprove), findsOneWidget);
-      expect(find.text(l10n.tournamentManagementReject), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('participant-approve-p-2')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('participant-reject-p-2')),
+        findsOneWidget,
+      );
     });
 
     final teamPairKey = const ValueKey('athlete-team-row-p-1');
@@ -2185,23 +2260,20 @@ void main() {
       tester,
     ) async {
       await openMixed(tester);
-      final l10n = AppLocalizations.of(
-        tester.element(find.byType(TournamentManagementHubScreen)),
-      )!;
       final row = find.byKey(const ValueKey('athlete-team-row-p-2'));
 
-      // Chưa mở đội vẫn thấy Duyệt / Từ chối ngay trên dòng.
+      // Chưa mở đội vẫn thấy ✓ / ✕ ngay trên dòng.
       expect(
         find.descendant(
           of: row,
-          matching: find.text(l10n.tournamentManagementApprove),
+          matching: find.byKey(const ValueKey('participant-approve-p-2')),
         ),
         findsOneWidget,
       );
       expect(
         find.descendant(
           of: row,
-          matching: find.text(l10n.tournamentManagementReject),
+          matching: find.byKey(const ValueKey('participant-reject-p-2')),
         ),
         findsOneWidget,
       );
@@ -2287,9 +2359,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Nút VĐV ảo mở đúng sheet ảo, chưa sinh gì.
-      final mockButton = find.byKey(const ValueKey('athletes-mock-data'));
-      await tester.ensureVisible(mockButton);
-      await tester.tap(mockButton);
+      final moreButton = find.byKey(const ValueKey('athletes-more'));
+      await tester.ensureVisible(moreButton);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('athletes-mock-data')));
       await tester.pumpAndSettle();
       expect(find.byType(MockParticipantsSheet), findsOneWidget);
       expect(management.seededMockNames, isEmpty);
@@ -2299,9 +2373,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Nút đặc cách mở đúng sheet đặc cách.
-      final wildcardButton = find.byKey(const ValueKey('athletes-wildcard'));
-      await tester.ensureVisible(wildcardButton);
-      await tester.tap(wildcardButton);
+      await tester.tap(moreButton);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('athletes-wildcard')));
       await tester.pumpAndSettle();
       expect(find.byType(WildcardSheet), findsOneWidget);
       expect(management.reservedSlotContacts, isEmpty);

@@ -1,11 +1,13 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -83,8 +85,9 @@ class TournamentEndChecklist {
 /// "trận đã hoàn tất X/Y" và "trận đang diễn ra còn lại", liệt kê từng trận
 /// LIVE kèm hạng mục chặn; còn trận LIVE thì nút kết thúc bị khoá (Web cũng
 /// chỉ chặn vì trận LIVE, trận chưa xong thì vẫn được kết thúc). Xác nhận gọi
-/// `POST /tournaments/:id/complete`; lỗi server hiển thị nguyên văn trong
-/// sheet. Phân quyền do backend chốt — organizer/co-organizer cũng mở được.
+/// `POST /tournaments/:id/complete` sau một hộp xác nhận nêu hậu quả; lỗi
+/// server hiển thị nguyên văn trong sheet. Đầu sheet có bục podium hạng 1-3
+/// (từ `GET /tournaments/:id/results`) và mô tả giải thưởng. Phân quyền do backend chốt — organizer/co-organizer cũng mở được.
 ///
 /// Stateful và bọc khung [TournamentManageSheet] trong `build` để `busy` đổi
 /// được bên trong sheet (giữ pattern `LifecycleOpeningSheet`).
@@ -120,6 +123,22 @@ class _LifecycleEndSheetState extends ConsumerState<LifecycleEndSheet> {
   bool _busy = false;
 
   String? _actionError;
+
+  /// The confirm button never completes on its own: the dialog states what
+  /// the tournament becomes first.
+  Future<void> _askThenConfirm() async {
+    if (_busy) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.lifecycleEndConfirmDialogTitle,
+      message: l10n.lifecycleEndConfirmDialogMessage,
+      confirmLabel: l10n.lifecycleEndConfirm,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    await _confirm();
+  }
 
   Future<void> _confirm() async {
     if (_busy) return;
@@ -157,124 +176,140 @@ class _LifecycleEndSheetState extends ConsumerState<LifecycleEndSheet> {
         ? null
         : TournamentEndChecklist.of(matches, widget.tournament.divisions);
     final blocked = checklist?.hasLiveMatches ?? true;
+    // A failed or pending results read just leaves the podium slots empty.
+    final results = ref
+        .watch(
+          tournamentResultProvider((
+            tournamentId: widget.tournament.id,
+            divisionId: null,
+          )),
+        )
+        .asData
+        ?.value;
     return TournamentManageSheet(
       title: l10n.lifecycleEndTitle,
       busy: _busy,
-      actions: [
-        FilledButton(
-          key: const ValueKey('lifecycle-end-confirm'),
-          onPressed: (_busy || blocked) ? null : _confirm,
-          child: Text(l10n.lifecycleEndConfirm),
-        ),
-        TextButton(
-          key: const ValueKey('lifecycle-end-cancel'),
-          onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
-          child: Text(l10n.tournamentManagementCancel),
-        ),
-      ],
+      bodyPadding: const EdgeInsets.only(bottom: 16),
       child: _buildBody(
         context,
         l10n,
         checklist: checklist,
         loadFailed: loadFailed,
+        blocked: blocked,
+        podium: podiumTeamNames(results?['awards']),
       ),
     );
   }
 
+  /// Design screen 7: podium, prize lines, condition rows, then the big
+  /// confirm button (grey with a red reason while a match is still live).
   Widget _buildBody(
     BuildContext context,
     AppLocalizations l10n, {
     required TournamentEndChecklist? checklist,
     required bool loadFailed,
+    required bool blocked,
+    required Map<int, String> podium,
   }) {
-    final hasMatches = checklist?.hasMatches ?? false;
+    final prizes = prizeLines(widget.tournament.prizeDescription);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _EndWarning(text: l10n.lifecycleEndWarning),
-        if (checklist != null) ...[
-          _EndCheckRow(
-            key: const ValueKey('lifecycle-end-check-matches'),
-            label: l10n.lifecycleEndCheckMatches(
-              checklist.completedMatches,
-              checklist.totalMatches,
-            ),
-            // Không có trận nào thì coi như đạt (Web: vẫn được kết thúc).
-            pass: !hasMatches || checklist.allCompleted,
-            notPassedText: l10n.lifecycleEndNotPassed,
-          ),
-          _EndCheckRow(
-            key: const ValueKey('lifecycle-end-check-live'),
-            label: l10n.lifecycleEndCheckLive(checklist.liveMatches),
-            pass: !hasMatches || !checklist.hasLiveMatches,
-            notPassedText: l10n.lifecycleEndNotPassed,
-          ),
-          for (final match in checklist.liveMatchList)
-            Padding(
-              key: ValueKey('lifecycle-end-live-${match.id}'),
-              padding: const EdgeInsets.only(left: 12, bottom: 4),
-              child: Text(
-                l10n.lifecycleEndLiveMatch(match.team1Name, match.team2Name),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.colors.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          if (checklist.blockingDivisionNames.isNotEmpty)
-            Padding(
-              key: const ValueKey('lifecycle-end-blocking-divisions'),
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                checklist.blockingDivisionNames.join(', '),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.colors.error,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          if (!hasMatches)
-            Container(
-              key: const ValueKey('lifecycle-end-no-matches'),
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: context.colors.bgSurface.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: context.colors.border),
-              ),
-              child: Text(
-                l10n.lifecycleEndNoMatches,
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-        ] else if (loadFailed)
-          _EndWarning(text: l10n.lifecycleEndLoadMatchesError, error: true)
-        else
-          Padding(
-            key: const ValueKey('lifecycle-end-loading'),
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                const SizedBox.square(
-                  dimension: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                const SizedBox(width: 10),
-                Expanded(child: Text(l10n.lifecycleEndLoadingMatches)),
-              ],
-            ),
-          ),
-        if (_actionError case final error?) ...[
-          const SizedBox(height: 12),
-          _EndError(text: error),
+        _ResultsPodium(names: podium),
+        if (prizes.isNotEmpty) ...[
+          LavishGroupHeader(l10n.lifecycleEndPrizesTitle),
+          for (final line in prizes) LavishRow(title: line),
         ],
+        LavishGroupHeader(l10n.lifecycleEndConditionsTitle),
+        ..._buildConditions(l10n, checklist, loadFailed),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
+          child: LavishButton(
+            buttonKey: const ValueKey('lifecycle-end-confirm'),
+            label: l10n.lifecycleEndConfirm,
+            busy: _busy,
+            onPressed: (_busy || blocked) ? null : _askThenConfirm,
+          ),
+        ),
+        if (checklist != null && checklist.hasLiveMatches)
+          _RedLine(
+            key: const ValueKey('lifecycle-end-blocked-reason'),
+            text: l10n.lifecycleEndBlockedReason(checklist.liveMatches),
+          ),
+        if (_actionError case final error?) _RedLine(text: error),
       ],
     );
+  }
+
+  List<Widget> _buildConditions(
+    AppLocalizations l10n,
+    TournamentEndChecklist? checklist,
+    bool loadFailed,
+  ) {
+    if (checklist == null) {
+      if (loadFailed) {
+        return [_RedLine(text: l10n.lifecycleEndLoadMatchesError)];
+      }
+      return [
+        Padding(
+          key: const ValueKey('lifecycle-end-loading'),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            children: [
+              const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: Text(l10n.lifecycleEndLoadingMatches)),
+            ],
+          ),
+        ),
+      ];
+    }
+    final hasMatches = checklist.hasMatches;
+    return [
+      _EndCheckRow(
+        key: const ValueKey('lifecycle-end-check-matches'),
+        label: l10n.lifecycleEndCheckMatches(
+          checklist.completedMatches,
+          checklist.totalMatches,
+        ),
+        // Không có trận nào thì coi như đạt (Web: vẫn được kết thúc).
+        pass: !hasMatches || checklist.allCompleted,
+        notPassedText: l10n.lifecycleEndNotPassed,
+      ),
+      _EndCheckRow(
+        key: const ValueKey('lifecycle-end-check-live'),
+        label: l10n.lifecycleEndCheckLive(checklist.liveMatches),
+        pass: !hasMatches || !checklist.hasLiveMatches,
+        notPassedText: l10n.lifecycleEndNotPassed,
+      ),
+      for (final match in checklist.liveMatchList)
+        _EndDetailLine(
+          key: ValueKey('lifecycle-end-live-${match.id}'),
+          text: l10n.lifecycleEndLiveMatch(match.team1Name, match.team2Name),
+        ),
+      if (checklist.blockingDivisionNames.isNotEmpty)
+        _EndDetailLine(
+          key: const ValueKey('lifecycle-end-blocking-divisions'),
+          text: checklist.blockingDivisionNames.join(', '),
+        ),
+      if (!hasMatches)
+        Padding(
+          key: const ValueKey('lifecycle-end-no-matches'),
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+          child: Text(
+            l10n.lifecycleEndNoMatches,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: LavishColors.of(context).muted,
+            ),
+          ),
+        ),
+    ];
   }
 }
 
@@ -287,49 +322,25 @@ String? _serverMessage(Object error) {
   return message is String && message.trim().isNotEmpty ? message : null;
 }
 
-/// Dòng cảnh báo vàng trên đầu sheet (đỏ khi [error]).
-class _EndWarning extends StatelessWidget {
-  const _EndWarning({required this.text, this.error = false});
-
-  final String text;
-
-  /// true: cảnh báo lỗi (đỏ) thay vì nhắc nhở (vàng).
-  final bool error;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final tone = error ? colors.error : colors.warning;
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: tone.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: tone.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.warning_amber_rounded, size: 18, color: tone),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: error ? colors.error : colors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+/// Team names of ranks 1 to 3 from the `awards` of the official results; a
+/// slot without a team is simply absent.
+Map<int, String> podiumTeamNames(Object? rawAwards) {
+  final names = <int, String>{};
+  if (rawAwards is! List) return names;
+  for (final award in rawAwards.whereType<Map<dynamic, dynamic>>()) {
+    final rank = (award['rank'] as num?)?.toInt() ?? 0;
+    final participant = award['participant'];
+    final team = participant is Map
+        ? participant['teamName']?.toString()
+        : null;
+    if (rank >= 1 && rank <= 3 && team != null && team.trim().isNotEmpty) {
+      names[rank] = team.trim();
+    }
   }
+  return names;
 }
 
-/// Một dòng checklist (đạt/không đạt) — như hàng check của Web.
+/// One condition row (design `.li` with a green check or a red cross box).
 class _EndCheckRow extends StatelessWidget {
   const _EndCheckRow({
     super.key,
@@ -343,78 +354,146 @@ class _EndCheckRow extends StatelessWidget {
   final String notPassedText;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final tone = pass ? colors.success : colors.error;
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: pass
-              ? colors.success.withValues(alpha: 0.35)
-              : colors.error.withValues(alpha: 0.35),
-        ),
+  Widget build(BuildContext context) => LavishRow(
+    leading: LavishIconBox(
+      tone: pass ? LavishTone.ok : LavishTone.bad,
+      child: Icon(pass ? Icons.check_rounded : Icons.close_rounded, size: 18),
+    ),
+    title: label,
+    trailing: [if (!pass) LavishPill(notPassedText, tone: LavishTone.bad)],
+  );
+}
+
+/// Small red detail under a failed condition (a live match, its division).
+class _EndDetailLine extends StatelessWidget {
+  const _EndDetailLine({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(59, 6, 14, 0),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: LavishColors.bad,
       ),
+    ),
+  );
+}
+
+/// Centered red reason line under the confirm button.
+class _RedLine extends StatelessWidget {
+  const _RedLine({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: LavishColors.bad,
+      ),
+    ),
+  );
+}
+
+/// The prize description is stored as rich text; the sheet shows one row per
+/// line (block ends and `<br>` split lines, other tags are dropped).
+List<String> prizeLines(String? html) => (html ?? '')
+    .replaceAll(
+      RegExp(r'<\s*(br|/p|/li|/div|/h[1-6])[^>]*>', caseSensitive: false),
+      '\n',
+    )
+    .replaceAll(RegExp(r'<[^>]*>'), ' ')
+    .replaceAll('&nbsp;', ' ')
+    .split('\n')
+    .map((line) => line.replaceAll(RegExp(r'\s+'), ' ').trim())
+    .where((line) => line.isNotEmpty)
+    .toList(growable: false);
+
+/// Design `.pod`: silver, gold, bronze steps from left to right, bottom
+/// aligned, 96 / 78 / 64 tall.
+class _ResultsPodium extends StatelessWidget {
+  const _ResultsPodium({required this.names});
+
+  final Map<int, String> names;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Icon(
-            pass ? Icons.check_rounded : Icons.close_rounded,
-            size: 18,
-            color: tone,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: pass ? colors.textSecondary : colors.textPrimary,
-                fontWeight: FontWeight.w700,
-                decoration: pass ? TextDecoration.lineThrough : null,
-              ),
+          for (final rank in const [2, 1, 3]) ...[
+            if (rank != 2) const SizedBox(width: 8),
+            Expanded(
+              child: _PodiumSlot(rank: rank, name: names[rank]),
             ),
-          ),
-          if (!pass)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: colors.error.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: colors.error.withValues(alpha: 0.35)),
-              ),
-              child: Text(
-                notPassedText,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.error),
-              ),
-            ),
+          ],
         ],
       ),
     );
   }
 }
 
-/// Lỗi hành động hiển thị trong sheet (nguyên văn message server nếu có).
-class _EndError extends StatelessWidget {
-  const _EndError({required this.text});
+class _PodiumSlot extends StatelessWidget {
+  const _PodiumSlot({required this.rank, required this.name});
 
-  final String text;
+  final int rank;
+  final String? name;
+
+  static const _medal = {1: '🥇', 2: '🥈', 3: '🥉'};
+  static const _fill = {
+    1: Color(0xFFFEF0C7),
+    2: Color(0xFFEAECF0),
+    3: Color(0xFFFDEADD),
+  };
+  // Label colours the design renders for its `.p1` / `.p2` / `.p3` steps.
+  static const _ink = {
+    1: Color(0xFFB42318),
+    2: Color(0xFFB54708),
+    3: Color(0xFF175CD3),
+  };
+  static const _height = {1: 96.0, 2: 78.0, 3: 64.0};
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
+      key: ValueKey('lifecycle-end-podium-$rank'),
+      constraints: BoxConstraints(minHeight: _height[rank] ?? 64),
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
       decoration: BoxDecoration(
-        color: colors.error.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.error.withValues(alpha: 0.35)),
+        color: _fill[rank],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
       ),
-      child: Text(text, style: TextStyle(color: colors.error)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_medal[rank] ?? '', style: const TextStyle(fontSize: 13)),
+          Text(
+            name ?? l10n.lifecycleEndPodiumEmpty,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.4,
+              fontWeight: FontWeight.w800,
+              color: _ink[rank],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

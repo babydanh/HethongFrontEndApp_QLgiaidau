@@ -1399,6 +1399,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentFounder => 'Người sáng lập giải đấu';
 
   @override
+  String get tournamentContactTitle => 'Liên hệ';
+
+  @override
+  String get tournamentContactPhone => 'Điện thoại';
+
+  @override
+  String get tournamentContactEmail => 'Email';
+
+  @override
+  String get tournamentContactHiddenHint => 'Đang ẩn với người xem';
+
+  @override
   String get sectionAboutTournament => 'GIỚI THIỆU GIẢI ĐẤU';
 
   @override
@@ -12503,6 +12515,72 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nhập URL phát của camera.';
 
   @override
+  String get tournamentManagementCourtCameraAttached => 'Đã gắn camera';
+
+  @override
+  String get tournamentManagementCourtCameraNotAttached => 'Chưa gắn camera';
+
+  @override
+  String get tournamentManagementCourtCameraEdit => 'Sửa camera';
+
+  @override
+  String get tournamentManagementCourtActions => 'Thao tác sân';
+
+  @override
+  String get tournamentManagementCameraShowUrl => 'Hiện';
+
+  @override
+  String get tournamentManagementCameraHideUrl => 'Ẩn';
+
+  @override
+  String get tournamentManagementCameraDetach => 'Gỡ camera';
+
+  @override
+  String get tournamentManagementDiscardTitle => 'Bỏ thay đổi?';
+
+  @override
+  String get tournamentManagementDiscardMessage =>
+      'Bạn có thay đổi chưa lưu. Thoát mà không lưu?';
+
+  @override
+  String get tournamentManagementDiscardConfirm => 'Bỏ thay đổi';
+
+  @override
+  String get manageInfoGroupGeneral => 'Chung';
+
+  @override
+  String get manageInfoGroupIdentity => 'Nhận diện';
+
+  @override
+  String get manageInfoGroupPrizes => 'Giải thưởng';
+
+  @override
+  String get manageInfoGroupContact => 'Liên hệ';
+
+  @override
+  String get manageInfoGroupCollapse => 'Thu gọn';
+
+  @override
+  String get manageInfoGroupExpand => 'Mở';
+
+  @override
+  String get tournamentManagementImageUploaded => 'Đã tải lên';
+
+  @override
+  String get tournamentManagementImageMissing => 'Chưa có';
+
+  @override
+  String get manageInfoPrizeLabel => 'Hạng nhất, nhì, ba';
+
+  @override
+  String get manageInfoSaveChanges => 'Lưu thay đổi';
+
+  @override
+  String tournamentManagementCourtCameraSheetTitle(Object court) {
+    return 'Camera · $court';
+  }
+
+  @override
   String get tournamentManagementCameraUrlSaved => 'Đã lưu URL camera.';
 
   @override
@@ -13556,6 +13634,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementChooseDate => 'Chọn ngày';
 
   @override
+  String tournamentManagementDateLimitRegistrationStartMax(String date) {
+    return 'không sau hạn chót $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitDeadlineMin(String date) {
+    return 'sau ngày mở đăng ký $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitOpeningMin(String date) {
+    return 'không trước hạn chót $date';
+  }
+
+  @override
+  String tournamentManagementDateLimitClosingMin(String date) {
+    return 'không trước ngày khai mạc $date';
+  }
+
+  @override
   String get tournamentManagementDefaultVenue => 'Mặc định';
 
   @override
@@ -13786,7 +13884,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get lifecycleEndTitle => 'Hoàn tất giải đấu';
+  String get lifecycleEndTitle => 'Xác nhận kết quả giải';
 
   @override
   String get lifecycleEndWarning =>
@@ -13822,7 +13920,45 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không tải được danh sách trận đấu. Hãy đóng rồi thử lại.';
 
   @override
-  String get lifecycleEndConfirm => 'Hoàn tất giải đấu';
+  String get lifecycleEndConditionsTitle => 'Điều kiện xác nhận';
+
+  @override
+  String get lifecycleEndPrizesTitle => 'Giải thưởng';
+
+  @override
+  String get lifecycleEndPodiumEmpty => 'Chưa xác định';
+
+  @override
+  String lifecycleEndBlockedReason(int live) {
+    return 'Chưa thể xác nhận: còn $live trận đang diễn ra.';
+  }
+
+  @override
+  String get lifecycleEndConfirmDialogTitle => 'Xác nhận kết quả giải?';
+
+  @override
+  String get lifecycleEndConfirmDialogMessage =>
+      'Giải sẽ chuyển sang trạng thái đã kết thúc và kết quả trở thành chính thức, hiển thị công khai. Ứng dụng không có thao tác mở lại giải sau khi xác nhận.';
+
+  @override
+  String get lifecycleResultsReconfirmNeeded =>
+      'Sơ đồ đã được sửa sau khi giải kết thúc. Hãy chốt lại kết quả giải.';
+
+  @override
+  String get lifecycleResultsReconfirmDialogTitle => 'Chốt lại kết quả giải?';
+
+  @override
+  String get lifecycleResultsReconfirmAction => 'Chốt lại kết quả';
+
+  @override
+  String get lifecycleResultsReconfirmDialogMessage =>
+      'Kết quả hiện tại của giải sẽ được chốt lại. Thao tác này không thay đổi sơ đồ.';
+
+  @override
+  String get lifecycleResultsReconfirmed => 'Đã chốt lại kết quả giải đấu.';
+
+  @override
+  String get lifecycleEndConfirm => 'Xác nhận kết quả';
 
   @override
   String get tournamentManagementCompleteTournament => 'Kết thúc giải';
@@ -13849,7 +13985,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementLoadError => 'Không thể tải mục này.';
 
   @override
-  String get tournamentManagementCloseRegistration => 'Chốt đăng ký';
+  String get tournamentManagementCloseRegistration => 'Đóng đăng ký';
 
   @override
   String get tournamentManagementCloseRegistrationConfirm =>
@@ -14146,6 +14282,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRefereeInvited => 'Đã mời';
 
   @override
+  String get tournamentManagementInviteByEmail => 'Mời qua email';
+
+  @override
+  String get tournamentManagementInviteEmail => 'Email người được mời';
+
+  @override
+  String get tournamentManagementInviteEmailInvalid => 'Email không hợp lệ.';
+
+  @override
+  String tournamentManagementInvitedCount(int count) {
+    return 'Đã mời · $count';
+  }
+
+  @override
+  String get tournamentManagementResend => 'Gửi lại';
+
+  @override
+  String tournamentManagementResendConfirm(String name) {
+    return 'Gửi lại lời mời cho $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteResent => 'Đã gửi lại lời mời.';
+
+  @override
+  String get tournamentManagementRevoke => 'Thu hồi';
+
+  @override
+  String tournamentManagementRevokeConfirm(String name) {
+    return 'Thu hồi lời mời của $name?';
+  }
+
+  @override
+  String get tournamentManagementRefereeInviteRevoked => 'Đã thu hồi lời mời.';
+
+  @override
   String get tournamentManagementRefereeRemoved => 'Đã xóa trọng tài.';
 
   @override
@@ -14319,7 +14491,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRoleOther => 'Vai trò khác';
 
   @override
-  String get tournamentManagementRoleSpectator => 'Người xem';
+  String get tournamentManagementRoleSpectator => 'Khán giả';
 
   @override
   String get tournamentManagementSave => 'Lưu';
@@ -14416,6 +14588,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementSponsorTierTitle => 'Nhà tài trợ danh xưng';
 
   @override
+  String tournamentManagementSponsorTierRank(String tier) {
+    return 'Hạng $tier';
+  }
+
+  @override
   String get tournamentManagementSponsorWebsite => 'Trang web';
 
   @override
@@ -14431,6 +14608,24 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentManagementSponsorsEmptyDescription =>
       'Thêm nhà tài trợ để giới thiệu đối tác của giải đấu.';
+
+  @override
+  String get tournamentManagementAddSponsorShort => 'Thêm';
+
+  @override
+  String get tournamentManagementSponsorPreview => 'Xem trước trang công khai';
+
+  @override
+  String get tournamentManagementSponsorHint =>
+      'Công tắc = hiển thị công khai. Vuốt trái để lưu trữ.';
+
+  @override
+  String get tournamentManagementSponsorDragHandle => 'Kéo để sắp xếp';
+
+  @override
+  String tournamentManagementSponsorCount(int count) {
+    return '$count nhà tài trợ';
+  }
 
   @override
   String get tournamentManagementStaff => 'Nhân sự';
@@ -14673,10 +14868,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementLivestreamDevices => 'Thiết bị camera';
 
   @override
-  String get tournamentManagementLivestreamDevicesDescription =>
-      'Thiết bị camera dùng lại của cộng đồng. Tạo mã QR ghép nối để thiết bị tự đăng nhập.';
-
-  @override
   String get tournamentManagementLivestreamDevicesEmpty =>
       'Chưa có thiết bị camera';
 
@@ -14700,51 +14891,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể tạo mã ghép nối.';
 
   @override
-  String get tournamentManagementLivestreamFacebookSubtitle =>
-      'Kết nối Fanpage để vận hành phát trực tiếp.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookNotConnected =>
-      'Chưa kết nối Fanpage.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnect => 'Kết nối Fanpage';
-
-  @override
-  String get tournamentManagementLivestreamFacebookRevalidate => 'Kiểm tra lại';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnect => 'Ngắt kết nối';
-
-  @override
-  String get tournamentManagementLivestreamFacebookConnectFailed =>
-      'Không thể mở trình duyệt để kết nối Fanpage.';
-
-  @override
-  String get tournamentManagementLivestreamFacebookActive => 'Đang hoạt động';
-
-  @override
-  String get tournamentManagementLivestreamFacebookDisconnected =>
-      'Đã ngắt kết nối';
-
-  @override
-  String tournamentManagementLivestreamFacebookLastChecked(String time) {
-    return 'Kiểm tra gần nhất: $time';
-  }
-
-  @override
   String get tournamentManagementLivestreamSessions => 'Phiên phát trực tiếp';
-
-  @override
-  String get tournamentManagementLivestreamSessionsDescription =>
-      'Theo dõi trạng thái phiên phát trực tiếp của giải đấu.';
 
   @override
   String get tournamentManagementLivestreamSessionsEmpty =>
       'Chưa có phiên phát trực tiếp.';
 
   @override
-  String get tournamentManagementLivestreamStopSession => 'Kết thúc phiên';
+  String get tournamentManagementLivestreamStopSession => 'Dừng phát';
 
   @override
   String get tournamentManagementLivestreamStopSessionConfirm =>
@@ -16081,6 +16235,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get financeFeeQuickAdjustLabel => 'Tăng/giảm nhanh:';
 
   @override
+  String get financeServerConfigGroup => 'Cấu hình từ máy chủ';
+
+  @override
+  String get financePayoutGroup => 'Thanh toán cho BTC';
+
+  @override
   String get financeFeeQuickFree => '0đ';
 
   @override
@@ -16099,6 +16259,87 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get financeFeeOrganizerNetPerPlayer => 'BTC thực nhận / VĐV';
+
+  @override
+  String get financeFeeSave => 'Lưu lệ phí';
+
+  @override
+  String financePayoutHistoryCount(int count) {
+    return '$count yêu cầu';
+  }
+
+  @override
+  String get financePayoutConfirmTitle => 'Gửi yêu cầu thanh toán?';
+
+  @override
+  String financePayoutConfirmBody(String amount) {
+    return 'Gửi yêu cầu thanh toán $amount đến máy chủ? Thông tin ngân hàng sẽ được xóa sau khi gửi thành công.';
+  }
+
+  @override
+  String get teamList_searchHint => 'Tìm tên đội hoặc VĐV…';
+
+  @override
+  String get teamList_filterAll => 'Tất cả';
+
+  @override
+  String get teamList_filterApproved => 'Đã duyệt';
+
+  @override
+  String get teamList_filterPending => 'Chờ duyệt';
+
+  @override
+  String get teamList_noMatch => 'Không có đội phù hợp';
+
+  @override
+  String get teamList_edit => 'Sửa';
+
+  @override
+  String get tournamentReportMenu => 'Xuất báo cáo';
+
+  @override
+  String get tournamentReportTitle => 'Xuất báo cáo Excel';
+
+  @override
+  String get tournamentReportHint => 'Chọn các sheet cần có trong file Excel.';
+
+  @override
+  String get tournamentReportFooter =>
+      'Xong sẽ mở khung chia sẻ để lưu hoặc gửi file.';
+
+  @override
+  String get tournamentReportSheetParticipants => 'Danh sách VĐV';
+
+  @override
+  String get tournamentReportSheetParticipantsDesc =>
+      'Tên, liên hệ, hạng mục, trạng thái, thanh toán';
+
+  @override
+  String get tournamentReportSheetMatches => 'Trận đấu';
+
+  @override
+  String get tournamentReportSheetMatchesDesc =>
+      'Vòng, cặp đấu, tỷ số, trạng thái, trọng tài';
+
+  @override
+  String tournamentReportExport(int count) {
+    return 'Xuất $count sheet';
+  }
+
+  @override
+  String get tournamentReportExporting => 'Đang xuất…';
+
+  @override
+  String get tournamentReportError =>
+      'Không xuất được báo cáo. Lựa chọn được giữ lại, hãy thử lại.';
+
+  @override
+  String get excelReportFilePrefix => 'BaoCao';
+
+  @override
+  String excelReportShare(String tournamentName) {
+    return 'Báo cáo giải đấu $tournamentName';
+  }
 
   @override
   String get divisionEditorEditTitle => 'Chỉnh sửa nội dung thi đấu';
@@ -16161,6 +16402,257 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get divisionEditorRulesPaneTitle => 'Cấu hình luật';
+
+  @override
+  String get divisionEditorAccBasic => 'Cơ bản';
+
+  @override
+  String get divisionEditorAccRules => 'Luật vòng';
+
+  @override
+  String get divisionEditorAccElo => 'Ràng buộc ELO';
+
+  @override
+  String get divisionEditorAccIllustration => 'Xem minh hoạ thể thức';
+
+  @override
+  String divisionEditorAccTeams(Object count) {
+    return '$count đội';
+  }
+
+  @override
+  String get divisionEditorAccNoLimit => 'Không giới hạn';
+
+  @override
+  String get divisionEditorAccFree => 'Miễn phí';
+
+  @override
+  String get divisionEditorAccRulesLite => 'Luật nhanh (mặc định)';
+
+  @override
+  String divisionEditorAccRulesStrict(Object points, Object sets) {
+    return 'Thắng $sets ván · $points điểm';
+  }
+
+  @override
+  String divisionEditorAccEloRange(Object limit, Object max, Object min) {
+    return 'ELO $min – $max · $limit';
+  }
+
+  @override
+  String divisionEditorAccEloNone(Object limit) {
+    return 'Không giới hạn ELO · $limit';
+  }
+
+  @override
+  String divisionEditorAccGroups(Object advancing, Object groups) {
+    return '$groups bảng · $advancing đội đi tiếp';
+  }
+
+  @override
+  String divisionEditorAccRounds(Object count) {
+    return '$count lượt';
+  }
+
+  @override
+  String divisionEditorAccSwissRounds(Object count) {
+    return '$count vòng';
+  }
+
+  @override
+  String get divisionEditorLockedNotice =>
+      'Nội dung này đã có sơ đồ thi đấu nên không đổi được thể thức và luật vòng. Vẫn sửa được những mục còn mở.';
+
+  @override
+  String formatIllustrationTitle(Object name) {
+    return 'Minh hoạ: $name';
+  }
+
+  @override
+  String get formatIllustrationSingleEliminationDescription =>
+      'Thua một trận là bị loại, người thắng đi tiếp đến chung kết.';
+
+  @override
+  String get formatIllustrationSingleEliminationSummary =>
+      'Ví dụ 8 người bốc thăm vào sơ đồ: tứ kết 4 cặp, người thắng vào bán kết rồi chung kết, không có trận tranh hạng ba.';
+
+  @override
+  String get formatIllustrationRoundRobinDescription =>
+      'Mỗi người gặp tất cả người còn lại, nhiều điểm nhất xếp đầu.';
+
+  @override
+  String get formatIllustrationRoundRobinSummary =>
+      'Ví dụ 5 người đấu 10 trận: mỗi lượt 2 trận, một người nghỉ. Thắng 3 điểm, hoà 1, thua 0 (mặc định); ai nhiều điểm nhất đứng đầu.';
+
+  @override
+  String get formatIllustrationDoubleEliminationDescription =>
+      'Thua lần đầu xuống nhánh thua, thua lần hai mới bị loại.';
+
+  @override
+  String get formatIllustrationDoubleEliminationSummary =>
+      'Ví dụ 4 người. Thua lần đầu ở nhánh thắng thì xuống nhánh thua; thua lần hai thì bị loại. Người thắng chung kết nhánh thắng gặp người thắng chung kết nhánh thua ở chung kết tổng (một trận, không đá lại).';
+
+  @override
+  String get formatIllustrationGroupStageDescription =>
+      'Đấu vòng tròn trong bảng, những người đứng đầu mỗi bảng vào loại trực tiếp.';
+
+  @override
+  String get formatIllustrationGroupStageSummary =>
+      'Ví dụ 8 người chia 2 bảng. Mỗi bảng đấu vòng tròn, 2 người đầu vào bán kết chéo (A1 gặp B2, B1 gặp A2), rồi chung kết. Số người đi tiếp do BTC đặt.';
+
+  @override
+  String get formatIllustrationSwissDescription =>
+      'Mỗi vòng ghép người cùng điểm, không gặp lại, không ai bị loại.';
+
+  @override
+  String get formatIllustrationSwissSummary =>
+      'Ví dụ 8 người, 3 vòng. Vòng 1 ghép theo hạt giống: 1 gặp 5, 2 gặp 6, 3 gặp 7, 4 gặp 8. Từ vòng 2, người cùng điểm gặp nhau và không gặp lại đối thủ cũ. Bằng điểm thì xét tổng điểm các đối thủ đã gặp.';
+
+  @override
+  String get registrationFormTitle => 'Form đăng ký';
+
+  @override
+  String get registrationFormSave => 'Lưu';
+
+  @override
+  String get registrationFormSystemName => 'Họ và tên';
+
+  @override
+  String get registrationFormSystemPhone => 'Số điện thoại';
+
+  @override
+  String get registrationFormSystemHint => 'Bắt buộc · lấy từ hồ sơ tài khoản';
+
+  @override
+  String get registrationFormRequired => 'Bắt buộc';
+
+  @override
+  String get registrationFormOptional => 'Tuỳ chọn';
+
+  @override
+  String get registrationFormAdd => 'Thêm câu hỏi';
+
+  @override
+  String get registrationFormTypeLabel => 'Loại câu hỏi';
+
+  @override
+  String get registrationFormTypeText => 'Văn bản';
+
+  @override
+  String get registrationFormTypeNumber => 'Số';
+
+  @override
+  String get registrationFormTypeSelect => 'Chọn một';
+
+  @override
+  String get registrationFormTypeMultiSelect => 'Chọn nhiều';
+
+  @override
+  String get registrationFormTypeTextarea => 'Văn bản dài';
+
+  @override
+  String get registrationFormTypeEmail => 'Email';
+
+  @override
+  String get registrationFormTypePhone => 'Số điện thoại';
+
+  @override
+  String get registrationFormTypeCheckbox => 'Xác nhận / đồng ý';
+
+  @override
+  String get registrationFormTypeFile => 'Tệp hoặc hình ảnh';
+
+  @override
+  String get registrationFormNewQuestion => 'Câu hỏi mới';
+
+  @override
+  String get registrationFormUnnamed => '(Chưa đặt tên)';
+
+  @override
+  String get registrationFormQuestionName => 'Tên câu hỏi';
+
+  @override
+  String get registrationFormOptionsLabel =>
+      'Các lựa chọn, mỗi dòng một lựa chọn';
+
+  @override
+  String get registrationFormRequiredAnswer => 'Bắt buộc trả lời';
+
+  @override
+  String get registrationFormDone => 'Xong';
+
+  @override
+  String get registrationFormDragHint => 'Kéo để đổi thứ tự';
+
+  @override
+  String get registrationFormDeleteTitle => 'Xóa câu hỏi?';
+
+  @override
+  String registrationFormDeleteConfirm(Object label) {
+    return 'Xóa câu hỏi “$label” khỏi form?';
+  }
+
+  @override
+  String registrationFormDeleteAnswered(Object label) {
+    return 'Đã có VĐV trả lời câu hỏi “$label”. Xóa câu hỏi thì các câu trả lời đó sẽ mất.';
+  }
+
+  @override
+  String get registrationFormErrorMissingLabel => 'Mỗi câu hỏi phải có tên.';
+
+  @override
+  String registrationFormErrorChoice(Object label) {
+    return 'Câu hỏi “$label” cần ít nhất 2 lựa chọn khác nhau.';
+  }
+
+  @override
+  String get registrationFormLocked =>
+      'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.';
+
+  @override
+  String get lifecycleStepDraft => 'Nháp';
+
+  @override
+  String get lifecycleStepPublish => 'Xuất bản';
+
+  @override
+  String get lifecycleStepOpen => 'Mở ĐK';
+
+  @override
+  String get lifecycleStepRunning => 'Đang đấu';
+
+  @override
+  String get lifecycleStepDone => 'Kết thúc';
+
+  @override
+  String lifecycleFullTitle(Object max, Object occupied) {
+    return 'Đã đủ $occupied/$max đội';
+  }
+
+  @override
+  String get lifecycleFullHint => 'Nên đóng đăng ký để chốt danh sách.';
+
+  @override
+  String get lifecycleRemindLater => 'Nhắc sau';
+
+  @override
+  String get lifecyclePublishFeeGroup => 'Phí xuất bản';
+
+  @override
+  String get lifecyclePublishFeeUnpaid => 'Chưa thanh toán';
+
+  @override
+  String lifecyclePublishFeeBlocked(Object amount) {
+    return 'Cần thanh toán phí công bố $amount trước khi công bố giải. Bước thanh toán này chưa có trên App, hãy thanh toán trên Web.';
+  }
+
+  @override
+  String lifecycleDeleteTypePrompt(Object name) {
+    return 'Gõ lại tên giải “$name” để xác nhận xóa.';
+  }
+
+  @override
+  String get lifecycleDeleteNameLabel => 'Tên giải';
 
   @override
   String get divisionEditorPickleballMode => 'Chế độ tính điểm';
@@ -16611,6 +17103,47 @@ class AppLocalizationsVi extends AppLocalizations {
   String get participantDetailNoteTitle => 'Ghi chú BTC';
 
   @override
+  String get participantDetailNoteRowHint => 'Chỉ BTC thấy';
+
+  @override
+  String get participantDetailCheckIn => 'Check-in';
+
+  @override
+  String get participantDetailFeePaid => 'Đã đóng phí';
+
+  @override
+  String get athletesAutoPair => 'Tự ghép';
+
+  @override
+  String get athletesPresentCount => 'Có mặt';
+
+  @override
+  String get athletesSearchHint => 'Tìm kiếm…';
+
+  @override
+  String get athleteFeeUnpaid => 'Chưa đóng phí';
+
+  @override
+  String get athletePresenceMarked => 'Đã check-in.';
+
+  @override
+  String get athletePresenceCleared => 'Đã bỏ check-in.';
+
+  @override
+  String get athletePresenceFailed => 'Không cập nhật được check-in. Thử lại.';
+
+  @override
+  String get athleteWaitingPill => 'Chờ';
+
+  @override
+  String get participantDetailFeePaidConfirm =>
+      'Xác nhận đã nhận lệ phí của VĐV này?';
+
+  @override
+  String get participantDetailFeeUnpaidConfirm =>
+      'Bỏ đánh dấu đã đóng phí cho VĐV này? Hệ thống có thể tạo yêu cầu hoàn tiền nếu lệ phí đã thu qua hệ thống.';
+
+  @override
   String get participantDetailNoteHint => 'Ghi chú nội bộ';
 
   @override
@@ -17055,7 +17588,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentCameraCourtsTitle => 'Sân';
 
   @override
-  String get tournamentCameraCourtNoCameras => 'Chưa có camera ở sân này.';
+  String get tournamentCameraCourtNoCameras => 'Chưa có camera';
 
   @override
   String get tournamentCameraAddTitle => 'Thêm camera';
@@ -17123,6 +17656,38 @@ class AppLocalizationsVi extends AppLocalizations {
   String tournamentCameraCourtChanged(Object court, Object name) {
     return 'Đã gắn $name vào $court.';
   }
+
+  @override
+  String tournamentCameraListTitle(int count) {
+    return 'Camera · $count';
+  }
+
+  @override
+  String get tournamentCameraStatusIdle => 'Chờ';
+
+  @override
+  String get tournamentCameraAssign => 'Gán camera';
+
+  @override
+  String get tournamentCameraChange => 'Đổi camera';
+
+  @override
+  String tournamentCameraPickTitle(String court) {
+    return 'Chọn camera cho $court';
+  }
+
+  @override
+  String get tournamentCameraPickNone => 'Bỏ gán camera';
+
+  @override
+  String get tournamentStreamKeyConfirmTitle => 'Hiện mã QR khoá phát?';
+
+  @override
+  String get tournamentStreamKeyConfirmMessage =>
+      'Mã QR chứa khoá phát của camera. Chỉ mở khi cần cài đặt thiết bị phát và không chia sẻ cho người khác.';
+
+  @override
+  String get tournamentStreamKeyConfirmAction => 'Hiện mã QR';
 
   @override
   String get tournamentStreamKeyTitle => 'QR stream key';
@@ -17195,4 +17760,54 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get tournamentStreamKeyRotated =>
       'Đã đổi key. Quét QR mới để phát lại.';
+
+  @override
+  String get resultsBoard_round => 'Vòng';
+
+  @override
+  String resultsBoard_roundOption(String label, int pending) {
+    return '$label · $pending chờ';
+  }
+
+  @override
+  String get resultsBoard_finished => 'Đã xong';
+
+  @override
+  String get resultsBoard_upcoming => 'Sắp tới';
+
+  @override
+  String get resultsBoard_pendingScore => 'Chờ nhập điểm';
+
+  @override
+  String get resultsBoard_unscheduled => 'Chưa xếp lịch';
+
+  @override
+  String get resultsBoard_doneBadge => 'Xong';
+
+  @override
+  String resultsBoard_untimed(String round, int count) {
+    return 'Chưa có giờ · $round · $count';
+  }
+
+  @override
+  String get resultsBoard_empty => 'Chưa có trận nào ở hạng mục này';
+
+  @override
+  String get resultsBoard_waitingTeams => 'Chờ đối thủ';
+
+  @override
+  String get resultsBoard_schedule => 'Xếp lịch';
+
+  @override
+  String get resultsBoard_enterScore => 'Nhập điểm';
+
+  @override
+  String get matchSchedule_title => 'Xếp lịch trận';
+
+  @override
+  String get matchSchedule_save => 'Lưu';
+
+  @override
+  String get matchSchedule_error =>
+      'Không lưu được lịch. Kiểm tra mạng rồi thử lại.';
 }

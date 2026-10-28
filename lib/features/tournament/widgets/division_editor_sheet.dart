@@ -5,6 +5,9 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_accordion.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/format_illustration_dialog.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/swiss_config_editor.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -12,6 +15,7 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 // ─── Nhận dạng: 7 lựa chọn định dạng của Web (match-format-options.ts) ───
 
@@ -206,6 +210,7 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
     this.swissStage,
     this.swissMinPlayedRounds = 0,
     this.lockContent = false,
+    this.onDelete,
   });
 
   final Tournament tournament;
@@ -223,6 +228,10 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
   /// Đã có sơ đồ: khoá kết cấu, chỉ còn sửa giới hạn/luật (Swiss qua stage).
   final bool lockContent;
 
+  /// Called after the sheet closes when the user taps "delete" (edit mode
+  /// only); the caller owns the confirmation and the request.
+  final VoidCallback? onDelete;
+
   /// Mở sheet hạng mục. Trả về `true` khi đã lưu thành công.
   ///
   /// Mở bằng `showModalBottomSheet` trực tiếp (khung `TournamentManageSheet`
@@ -235,6 +244,7 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
     SwissStageInfo? swissStage,
     int swissMinPlayedRounds = 0,
     bool lockContent = false,
+    VoidCallback? onDelete,
   }) => showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -246,6 +256,7 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
       swissStage: swissStage,
       swissMinPlayedRounds: swissMinPlayedRounds,
       lockContent: lockContent,
+      onDelete: onDelete,
     ),
   );
 
@@ -329,6 +340,17 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
 
   bool _busy = false;
   bool _eloInvalid = false;
+
+  /// Id of the one open accordion section (`basic` opens first).
+  String _openSection = 'basic';
+
+  /// Rebuilds the body (and the one-line summaries) while typing.
+  late final Listenable _summaryInputs = Listenable.merge([
+    _max,
+    _minElo,
+    _maxElo,
+    _fee,
+  ]);
   String? _errorText;
 
   @override
@@ -467,6 +489,7 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           ? l10n.divisionEditorEditTitle
           : l10n.tournamentManagementAddDivision,
       busy: _busy,
+      bodyPadding: EdgeInsets.zero,
       actions: [
         FilledButton(
           key: const ValueKey('division-editor-save'),
@@ -483,66 +506,206 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           child: Text(l10n.tournamentManagementCancel),
         ),
       ],
-      child: _buildBody(context, l10n),
+      child: ListenableBuilder(
+        listenable: _summaryInputs,
+        builder: (context, _) => _buildBody(context, l10n),
+      ),
     );
   }
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      _buildIdentity(l10n),
-      const SizedBox(height: 8),
-      SwitchListTile(
-        key: const ValueKey('division-editor-standard-rules'),
-        contentPadding: EdgeInsets.zero,
-        title: Text(
-          l10n.divisionEditorStandardRules,
-          style: TextStyle(color: context.colors.textPrimary),
+  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
+    final hasStage =
+        _bracketType == 'ROUND_ROBIN' ||
+        _bracketType == 'GROUP_STAGE_KNOCKOUT' ||
+        _bracketType == 'SWISS';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.lockContent)
+          Container(
+            key: const ValueKey('division-editor-locked-notice'),
+            margin: const EdgeInsets.fromLTRB(14, 4, 14, 10),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: context.colors.bgSurface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.lock_outline_rounded,
+                  size: 18,
+                  color: context.colors.textSecondary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.divisionEditorLockedNotice,
+                    style: TextStyle(color: context.colors.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (_errorText != null)
+          Padding(
+            key: const ValueKey('division-editor-error'),
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+            child: Text(
+              _errorText!,
+              style: TextStyle(color: context.colors.error),
+            ),
+          ),
+        _section(
+          id: 'basic',
+          title: l10n.divisionEditorAccBasic,
+          summary: _basicSummary(l10n),
+          child: _buildIdentity(l10n),
         ),
-        value: !_isLiteMode,
-        onChanged: _busy || widget.lockContent
-            ? null
-            : (value) => setState(() => _isLiteMode = !value),
-      ),
-      _buildLimits(l10n),
-      const SizedBox(height: 12),
-      if (_errorText != null)
-        Padding(
-          key: const ValueKey('division-editor-error'),
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Text(
-            _errorText!,
-            style: TextStyle(color: context.colors.error),
+        _section(
+          id: 'rules',
+          title: l10n.divisionEditorAccRules,
+          summary: _isLiteMode
+              ? l10n.divisionEditorAccRulesLite
+              : l10n.divisionEditorAccRulesStrict(_pointsPerSet, _setsToWin),
+          locked: widget.lockContent,
+          child: _buildRulesSection(context, l10n),
+        ),
+        _section(
+          id: 'elo',
+          title: l10n.divisionEditorAccElo,
+          summary: _eloSummary(l10n),
+          child: _buildLimits(l10n),
+        ),
+        if (hasStage)
+          _section(
+            id: 'stage',
+            title: _bracketLabel(l10n, _bracketType),
+            summary: _stageSummary(l10n),
+            locked: widget.lockContent && _bracketType != 'SWISS',
+            child: _buildStageSection(l10n),
+          ),
+        DivisionEditorAccordionSection(
+          id: 'illustration',
+          title: l10n.divisionEditorAccIllustration,
+          summary: '',
+          expanded: false,
+          onToggle: () => showFormatIllustrationDialog(
+            context,
+            bracketType: _bracketType,
+            formatName: _bracketLabel(l10n, _bracketType),
           ),
         ),
-      // Khối luật chỉ mở khi tắt Lite hoặc thể thức có cấu hình riêng
-      // (đối chiếu `rulesPaneOpen` của Web; Lite giữ nguyên cấu hình mặc định).
-      if (!_isLiteMode ||
-          _bracketType == 'ROUND_ROBIN' ||
-          _bracketType == 'GROUP_STAGE_KNOCKOUT' ||
-          _bracketType == 'SWISS') ...[
-        Text(
-          l10n.divisionEditorRulesPaneTitle,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: context.colors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (!_isLiteMode) _buildStrictRules(l10n),
-        if (_bracketType == 'ROUND_ROBIN') _buildRoundRobin(l10n),
-        if (_bracketType == 'GROUP_STAGE_KNOCKOUT') _buildGroupStage(l10n),
-        if (_bracketType == 'SWISS')
-          SwissConfigEditor(
-            value: _swiss,
-            teamCount: _effectiveTeamCount,
-            minPlayedRounds: widget.swissMinPlayedRounds,
-            enabled: !_busy,
-            onChanged: (value) => _swiss = value,
+        if (_isEditing && widget.onDelete != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+            child: LavishButton(
+              buttonKey: const ValueKey('division-editor-delete'),
+              kind: LavishButtonKind.danger,
+              label: l10n.tournamentManagementDeleteDivision,
+              onPressed: _busy ? null : _requestDelete,
+            ),
           ),
       ],
-    ],
+    );
+  }
+
+  /// Closes the sheet first, then hands over to the caller's delete flow.
+  void _requestDelete() {
+    final onDelete = widget.onDelete;
+    Navigator.of(context).pop(false);
+    onDelete?.call();
+  }
+
+  Widget _section({
+    required String id,
+    required String title,
+    required String summary,
+    required Widget child,
+    bool locked = false,
+  }) => DivisionEditorAccordionSection(
+    id: id,
+    title: title,
+    summary: summary,
+    locked: locked,
+    expanded: _openSection == id,
+    onToggle: () => setState(() => _openSection = id),
+    child: child,
   );
+
+  Widget _buildRulesSection(BuildContext context, AppLocalizations l10n) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _toggleRow(
+            key: const ValueKey('division-editor-standard-rules'),
+            title: l10n.divisionEditorStandardRules,
+            value: !_isLiteMode,
+            onChanged: _busy || widget.lockContent
+                ? null
+                : (value) => setState(() => _isLiteMode = !value),
+          ),
+          if (!_isLiteMode) _buildStrictRules(l10n),
+        ],
+      );
+
+  Widget _buildStageSection(AppLocalizations l10n) => switch (_bracketType) {
+    'ROUND_ROBIN' => _buildRoundRobin(l10n),
+    'GROUP_STAGE_KNOCKOUT' => _buildGroupStage(l10n),
+    _ => SwissConfigEditor(
+      value: _swiss,
+      teamCount: _effectiveTeamCount,
+      minPlayedRounds: widget.swissMinPlayedRounds,
+      enabled: !_busy,
+      onChanged: (value) => _swiss = value,
+    ),
+  };
+
+  // ─── Tóm tắt một dòng của từng mục ───
+
+  /// Capacity text shared by the basic and ELO summaries.
+  String _capacityText(AppLocalizations l10n) {
+    final parsed = _parseField(_max);
+    return _limitEnabled && parsed != null && parsed > 0
+        ? l10n.divisionEditorAccTeams(parsed)
+        : l10n.divisionEditorAccNoLimit;
+  }
+
+  String _basicSummary(AppLocalizations l10n) {
+    final fee = divisionFeePayload(_fee.text, widget.tournament.entryFee);
+    final amount = fee.entryFeeOverrideEnabled
+        ? (fee.entryFee ?? 0)
+        : (widget.tournament.entryFee ?? 0);
+    final feeText = amount <= 0
+        ? l10n.divisionEditorAccFree
+        : '${NumberFormat.decimalPattern('vi').format(amount)}đ';
+    return [
+      _bracketLabel(l10n, _bracketType),
+      _capacityText(l10n),
+      feeText,
+    ].join(' · ');
+  }
+
+  String _eloSummary(AppLocalizations l10n) {
+    final minElo = _eloEnabled ? _parseField(_minElo) : null;
+    final maxElo = _eloEnabled ? _parseField(_maxElo) : null;
+    final limit = _capacityText(l10n);
+    if (minElo == null && maxElo == null) {
+      return l10n.divisionEditorAccEloNone(limit);
+    }
+    return l10n.divisionEditorAccEloRange(limit, maxElo ?? '∞', minElo ?? 0);
+  }
+
+  String _stageSummary(AppLocalizations l10n) => switch (_bracketType) {
+    'ROUND_ROBIN' => l10n.divisionEditorAccRounds(_rrRounds),
+    'GROUP_STAGE_KNOCKOUT' => l10n.divisionEditorAccGroups(
+      _teamsAdvancing,
+      _numGroups,
+    ),
+    _ => l10n.divisionEditorAccSwissRounds(_swiss.totalRounds),
+  };
 
   // ─── Nhận dạng ───
 
@@ -556,13 +719,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         runSpacing: 8,
         children: [
           for (final option in divisionFormatOptions)
-            ChoiceChip(
+            LavishChipButton(
               key: ValueKey('division-editor-format-$option'),
-              label: Text(_formatLabel(l10n, option)),
+              label: _formatLabel(l10n, option),
               selected: _formatOption == option,
-              onSelected: _busy || widget.lockContent
+              onPressed: _busy || widget.lockContent
                   ? null
-                  : (_) => _selectFormat(option),
+                  : () => _selectFormat(option),
             ),
         ],
       ),
@@ -576,7 +739,15 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           labelText: l10n.tournamentManagementDivisionName,
           helperText: l10n.divisionEditorNameHint,
           counterText: '',
-          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: LavishColors.of(context).surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: LavishColors.of(context).chipLine,
+              width: 1.5,
+            ),
+          ),
         ),
       ),
       const SizedBox(height: 8),
@@ -590,13 +761,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         runSpacing: 8,
         children: [
           for (final bracketType in _bracketTypes)
-            ChoiceChip(
+            LavishChipButton(
               key: ValueKey('division-editor-bracket-$bracketType'),
-              label: Text(_bracketLabel(l10n, bracketType)),
+              label: _bracketLabel(l10n, bracketType),
               selected: _bracketType == bracketType,
-              onSelected: _busy || widget.lockContent
+              onPressed: _busy || widget.lockContent
                   ? null
-                  : (_) => _selectBracketType(bracketType),
+                  : () => _selectBracketType(bracketType),
             ),
         ],
       ),
@@ -655,23 +826,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l10n.divisionEditorLimitsTitle,
-          style: _sectionTitleStyle(context),
-        ),
-        const SizedBox(height: 4),
-        CheckboxListTile(
+        _toggleRow(
           key: const ValueKey('division-editor-limit-switch'),
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(
-            l10n.divisionEditorParticipantLimit,
-            style: TextStyle(color: colors.textPrimary),
-          ),
+          title: l10n.divisionEditorParticipantLimit,
           value: _limitEnabled,
           onChanged: _busy
               ? null
-              : (value) => setState(() => _limitEnabled = value == true),
+              : (value) => setState(() => _limitEnabled = value),
         ),
         if (_limitEnabled)
           Padding(
@@ -694,18 +855,11 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
               ),
             ),
           ),
-        CheckboxListTile(
+        _toggleRow(
           key: const ValueKey('division-editor-elo-switch'),
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(
-            l10n.divisionEditorEloLimit,
-            style: TextStyle(color: colors.textPrimary),
-          ),
+          title: l10n.divisionEditorEloLimit,
           value: _eloEnabled,
-          onChanged: _busy
-              ? null
-              : (value) => setState(() => _eloEnabled = value == true),
+          onChanged: _busy ? null : (value) => setState(() => _eloEnabled = value),
         ),
         if (_eloEnabled)
           Padding(
@@ -900,18 +1054,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           ),
         ],
       ),
-      CheckboxListTile(
+      _toggleRow(
         key: const ValueKey('division-editor-win-by-two'),
-        contentPadding: EdgeInsets.zero,
-        dense: true,
-        title: Text(
-          l10n.divisionEditorWinByTwo,
-          style: TextStyle(color: context.colors.textPrimary),
-        ),
+        title: l10n.divisionEditorWinByTwo,
         value: _winByTwo,
         onChanged: _busy || widget.lockContent
             ? null
-            : (value) => setState(() => _winByTwo = value == true),
+            : (value) => setState(() => _winByTwo = value),
       ),
       if (_winByTwo)
         SizedBox(
@@ -938,19 +1087,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           ),
         ),
       if (_supportsTiebreak) ...[
-        CheckboxListTile(
+        _toggleRow(
           key: const ValueKey('division-editor-super-tiebreak'),
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Text(
-            l10n.divisionEditorSuperTiebreak,
-            style: TextStyle(color: context.colors.textPrimary),
-          ),
+          title: l10n.divisionEditorSuperTiebreak,
           value: _superTiebreakEnabled,
           onChanged: _busy || widget.lockContent
               ? null
-              : (value) =>
-                    setState(() => _superTiebreakEnabled = value == true),
+              : (value) => setState(() => _superTiebreakEnabled = value),
         ),
         if (_superTiebreakEnabled)
           Row(
@@ -1256,6 +1399,20 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
   late final TextEditingController _teamsAdvancingController =
       TextEditingController(text: '$_teamsAdvancing');
 
+  /// Design `.li` row with the green switch on the right (replaces the
+  /// Material checkbox/switch tiles); the whole row toggles.
+  Widget _toggleRow({
+    required Key key,
+    required String title,
+    required bool value,
+    required ValueChanged<bool>? onChanged,
+  }) => LavishRow(
+    key: key,
+    title: title,
+    onTap: onChanged == null ? null : () => onChanged(!value),
+    trailing: [LavishSwitch(value: value, onChanged: onChanged)],
+  );
+
   Widget _numberField({
     required String key,
     required String label,
@@ -1308,7 +1465,10 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     final invalidElo =
         _eloEnabled && minElo != null && maxElo != null && minElo > maxElo;
     if (invalidElo) {
-      setState(() => _eloInvalid = invalidElo);
+      setState(() {
+        _eloInvalid = invalidElo;
+        _openSection = 'elo';
+      });
       return;
     }
     setState(() {

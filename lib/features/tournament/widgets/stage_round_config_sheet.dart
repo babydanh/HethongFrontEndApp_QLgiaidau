@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_sheet.dart'
     show
@@ -13,10 +14,10 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_s
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 /// Một vòng chọn được trong sheet cấu hình (port `RoundOption` của Web
 /// `DivisionRoundRulesSection`): stage thật từ `GET /tournaments/:id/bracket`
@@ -374,35 +375,20 @@ class _StageRoundConfigSheetState extends ConsumerState<StageRoundConfigSheet> {
     });
   }
 
-  /// Chọn giờ mặc định: chọn ngày rồi giờ (tham khảo
+  /// Chọn giờ mặc định bằng popup cuộn dùng chung (tham khảo
   /// `pickTournamentManagementDeadline`, không ràng buộc tương lai vì giờ
   /// mặc định của vòng có thể là thời điểm bất kỳ).
   Future<void> _pickDateTime() async {
     final now = DateTime.now();
-    final initial = _scheduledAt ?? now;
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 2),
+    final picked = await SocialDateTimePickerSheet.show(
+      context,
+      _scheduledAt ?? now,
+      subtitle: AppLocalizations.of(context)!.stageRoundDefaultTimeLabel,
+      minDate: DateTime(now.year - 1),
+      maxDate: DateTime(now.year + 2),
     );
-    if (date == null || !mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-      // Nhập giờ trực tiếp như ô input của Web, khỏi lật mặt đồng hồ.
-      initialEntryMode: TimePickerEntryMode.input,
-    );
-    if (time == null || !mounted) return;
-    setState(() {
-      _scheduledAt = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
-    });
+    if (picked == null || !mounted) return;
+    setState(() => _scheduledAt = picked);
   }
 
   /// Lưu cấu hình vòng (port `handleSaveStageDetails` của Web — nhánh stage
@@ -586,29 +572,17 @@ class _StageRoundConfigSheetState extends ConsumerState<StageRoundConfigSheet> {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          l10n.stageRoundDefaultTimeLabel,
-          style: TextStyle(
-            color: context.colors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-              child: Text(
-                _scheduledAt == null
-                    ? l10n.stageRoundNoTime
-                    : DateFormat('dd/MM/yyyy HH:mm').format(_scheduledAt!),
-                style: TextStyle(color: context.colors.textPrimary),
+              child: DateTimeField(
+                buttonKey: const ValueKey('stage-round-pick-time'),
+                label: l10n.stageRoundDefaultTimeLabel,
+                placeholder: l10n.stageRoundNoTime,
+                value: _scheduledAt,
+                onTap: _busy ? null : _pickDateTime,
               ),
-            ),
-            IconButton(
-              key: const ValueKey('stage-round-pick-time'),
-              tooltip: l10n.stageRoundDefaultTimeLabel,
-              onPressed: _busy ? null : _pickDateTime,
-              icon: const Icon(Icons.schedule_rounded),
             ),
             if (_scheduledAt != null)
               IconButton(

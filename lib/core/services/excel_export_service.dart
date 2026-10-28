@@ -12,6 +12,9 @@ import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 
+/// Sheets that can be ticked for the whole-tournament Excel report.
+enum TournamentReportSection { participants, matches }
+
 class ExcelExportService {
   static Future<void> exportMatchProtocol(MatchModel match) async {
     final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
@@ -174,6 +177,46 @@ class ExcelExportService {
       excel.delete('Sheet1');
     }
 
+    _fillResultsSheet(overviewSheet, l10n, tournamentName, matches);
+
+    final fileBytes = excel.save();
+    if (fileBytes == null) return;
+
+    final fileName =
+        '${l10n.excelResultsFilePrefix}_${tournamentName}_${DateFormatterUtils.formatFileTime(DateTime.now())}.xlsx'
+            .replaceAll(' ', '_');
+
+    if (kIsWeb) {
+      // ignore: deprecated_member_use
+      await Share.shareXFiles([
+        XFile.fromData(
+          Uint8List.fromList(fileBytes),
+          name: fileName,
+          mimeType:
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ),
+      ], text: l10n.excelResultsShare(tournamentName));
+    } else {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsBytes(fileBytes);
+
+      if (Platform.isAndroid || Platform.isIOS) {
+        // ignore: deprecated_member_use
+        await Share.shareXFiles([
+          XFile(file.path),
+        ], text: l10n.excelResultsShare(tournamentName));
+      }
+    }
+  }
+
+  /// Results sheet: title row, header row, then one row per match.
+  static void _fillResultsSheet(
+    Sheet overviewSheet,
+    AppLocalizations l10n,
+    String tournamentName,
+    List<MatchModel> matches,
+  ) {
     overviewSheet.appendRow([
       TextCellValue(l10n.excelResultsTitle(tournamentName)),
     ]);
@@ -218,14 +261,42 @@ class ExcelExportService {
         TextCellValue(match.refereeName ?? ''),
       ]);
     }
+  }
 
-    final fileBytes = excel.save();
-    if (fileBytes == null) return;
+  /// Roster sheet: title row, header row, then one row per participant.
+  static void _fillRosterSheet(
+    Sheet sheet,
+    AppLocalizations l10n,
+    String tournamentName,
+    List<OrganizerOpsParticipant> participants,
+    Map<String, String> divisionNameById,
+  ) {
+    sheet.appendRow([TextCellValue(l10n.excelRosterTitle(tournamentName))]);
+    sheet.appendRow([TextCellValue('')]);
+    sheet.appendRow([
+      for (final header in participantsHeaderRow(l10n)) TextCellValue(header),
+    ]);
 
-    final fileName =
-        '${l10n.excelResultsFilePrefix}_${tournamentName}_${DateFormatterUtils.formatFileTime(DateTime.now())}.xlsx'
-            .replaceAll(' ', '_');
+    for (final participant in participants) {
+      sheet.appendRow([
+        for (final cell in participantsRow(
+          participant: participant,
+          divisionNameById: divisionNameById,
+          l10n: l10n,
+        ))
+          TextCellValue(cell),
+      ]);
+    }
+  }
 
+  /// Hands an xlsx that holds personal contacts to the share sheet. On mobile
+  /// it stays in the temp directory and is deleted once the share sheet is
+  /// done.
+  static Future<void> _shareSensitiveXlsx(
+    List<int> fileBytes,
+    String fileName,
+    String shareText,
+  ) async {
     if (kIsWeb) {
       // ignore: deprecated_member_use
       await Share.shareXFiles([
@@ -235,19 +306,97 @@ class ExcelExportService {
           mimeType:
               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ),
-      ], text: l10n.excelResultsShare(tournamentName));
-    } else {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/$fileName');
-      await file.writeAsBytes(fileBytes);
-
+      ], text: shareText);
+      return;
+    }
+    final directory = await getTemporaryDirectory();
+    final file = File('${directory.path}/$fileName');
+    await file.writeAsBytes(fileBytes);
+    try {
       if (Platform.isAndroid || Platform.isIOS) {
         // ignore: deprecated_member_use
-        await Share.shareXFiles([
-          XFile(file.path),
-        ], text: l10n.excelResultsShare(tournamentName));
+        await Share.shareXFiles([XFile(file.path)], text: shareText);
+      }
+    } finally {
+      try {
+        await file.delete();
+      } catch (_) {
+        // Best effort: the OS clears the temp directory anyway.
       }
     }
+  }
+
+  /// Builds the whole-tournament report workbook with one sheet per ticked
+  /// section (pure, no I/O, so it can be tested).
+  static Excel buildTournamentReport({
+    required Set<TournamentReportSection> sheets,
+    required String tournamentName,
+    required List<OrganizerOpsParticipant> participants,
+    required Map<String, String> divisionNameById,
+    required List<MatchModel> matches,
+    required AppLocalizations l10n,
+  }) {
+    if (sheets.isEmpty) {
+      throw ArgumentError.value(sheets, 'sheets', 'must not be empty');
+    }
+    final excel = Excel.createExcel();
+    if (sheets.contains(TournamentReportSection.participants)) {
+      _fillRosterSheet(
+        excel[l10n.excelRosterSheet],
+        l10n,
+        tournamentName,
+        participants,
+        divisionNameById,
+      );
+    }
+    if (sheets.contains(TournamentReportSection.matches)) {
+      _fillResultsSheet(
+        excel[l10n.excelResultsSheet],
+        l10n,
+        tournamentName,
+        matches,
+      );
+    }
+    excel.setDefaultSheet(
+      sheets.contains(TournamentReportSection.participants)
+          ? l10n.excelRosterSheet
+          : l10n.excelResultsSheet,
+    );
+    if (excel.tables.containsKey('Sheet1')) {
+      excel.delete('Sheet1');
+    }
+    return excel;
+  }
+
+  /// Exports the ticked sections to one Excel file and opens the share sheet.
+  /// Throws on failure so the caller can keep its selection and retry.
+  static Future<void> exportTournamentReport({
+    required Set<TournamentReportSection> sheets,
+    required String tournamentName,
+    required List<OrganizerOpsParticipant> participants,
+    required Map<String, String> divisionNameById,
+    required List<MatchModel> matches,
+  }) async {
+    final l10n = lookupAppLocalizations(PlatformDispatcher.instance.locale);
+    final excel = buildTournamentReport(
+      sheets: sheets,
+      tournamentName: tournamentName,
+      participants: participants,
+      divisionNameById: divisionNameById,
+      matches: matches,
+      l10n: l10n,
+    );
+    final fileBytes = excel.save();
+    if (fileBytes == null) throw StateError('excel save returned null');
+    await _shareSensitiveXlsx(
+      fileBytes,
+      rosterFileName(
+        prefix: l10n.excelReportFilePrefix,
+        tournamentName: tournamentName,
+        at: DateTime.now(),
+      ),
+      l10n.excelReportShare(tournamentName),
+    );
   }
 
   /// Tiêu đề cột của sheet danh sách VĐV (hàm thuần để kiểm thử được).
@@ -338,22 +487,7 @@ class ExcelExportService {
       excel.delete('Sheet1');
     }
 
-    sheet.appendRow([TextCellValue(l10n.excelRosterTitle(tournamentName))]);
-    sheet.appendRow([TextCellValue('')]);
-    sheet.appendRow([
-      for (final header in participantsHeaderRow(l10n)) TextCellValue(header),
-    ]);
-
-    for (final participant in participants) {
-      sheet.appendRow([
-        for (final cell in participantsRow(
-          participant: participant,
-          divisionNameById: divisionNameById,
-          l10n: l10n,
-        ))
-          TextCellValue(cell),
-      ]);
-    }
+    _fillRosterSheet(sheet, l10n, tournamentName, participants, divisionNameById);
 
     final fileBytes = excel.save();
     if (fileBytes == null) return;
@@ -364,37 +498,11 @@ class ExcelExportService {
       at: DateTime.now(),
     );
 
-    if (kIsWeb) {
-      // ignore: deprecated_member_use
-      await Share.shareXFiles([
-        XFile.fromData(
-          Uint8List.fromList(fileBytes),
-          name: fileName,
-          mimeType:
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ),
-      ], text: l10n.excelRosterShare(tournamentName));
-    } else {
-      // The roster holds personal contacts: keep it in the temp directory and
-      // delete it once the share sheet is done.
-      final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/$fileName');
-      await file.writeAsBytes(fileBytes);
-      try {
-        if (Platform.isAndroid || Platform.isIOS) {
-          // ignore: deprecated_member_use
-          await Share.shareXFiles([
-            XFile(file.path),
-          ], text: l10n.excelRosterShare(tournamentName));
-        }
-      } finally {
-        try {
-          await file.delete();
-        } catch (_) {
-          // Best effort: the OS clears the temp directory anyway.
-        }
-      }
-    }
+    await _shareSensitiveXlsx(
+      fileBytes,
+      fileName,
+      l10n.excelRosterShare(tournamentName),
+    );
   }
 
   /// Roster file name built only from `[A-Za-z0-9_.-]`: every other character

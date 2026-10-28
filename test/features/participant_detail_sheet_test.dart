@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,8 @@ class _RecordingManagementRepository implements TournamentManagementRepository {
   final statusUpdates = <(String participantId, String status)>[];
   final rosterLocks = <(String participantId, bool lock)>[];
   final mockDeletes = <String>[];
+  final presence = <(String participantId, bool present)>[];
+  final feePaid = <(String participantId, bool paid)>[];
   int refreshes = 0;
 
   @override
@@ -52,6 +55,24 @@ class _RecordingManagementRepository implements TournamentManagementRepository {
     String status,
   ) async {
     statusUpdates.add((participantId, status));
+  }
+
+  @override
+  Future<void> setParticipantPresent(
+    String id,
+    String participantId,
+    bool present,
+  ) async {
+    presence.add((participantId, present));
+  }
+
+  @override
+  Future<void> setParticipantFeePaid(
+    String id,
+    String participantId,
+    bool paid,
+  ) async {
+    feePaid.add((participantId, paid));
   }
 
   @override
@@ -192,6 +213,53 @@ void main() {
     // Ghi chú (notes) và key hệ thống không lặp lại thành câu trả lời.
     expect(find.text('Notes'), findsNothing);
     expect(repo.notes, isEmpty);
+  });
+
+  testWidgets('Màn 3: công tắc Check-in gửi PATCH presence', (tester) async {
+    final repo = _RecordingManagementRepository();
+    await tester.pumpWidget(_app(repo));
+    await tester.tap(find.byKey(const ValueKey('open-sheet')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('participant-detail-checkin')),
+        matching: find.byType(LavishSwitch),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.presence, [('p-1', true)]);
+    expect(repo.refreshes, 1);
+  });
+
+  testWidgets('Màn 3: công tắc Đã đóng phí hỏi xác nhận rồi gửi PATCH', (
+    tester,
+  ) async {
+    final repo = _RecordingManagementRepository();
+    await tester.pumpWidget(_app(repo));
+    await tester.tap(find.byKey(const ValueKey('open-sheet')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('participant-detail-fee-paid')),
+        matching: find.byType(LavishSwitch),
+      ),
+    );
+    await tester.pumpAndSettle();
+    // Chưa xác nhận thì chưa gọi API.
+    expect(repo.feePaid, isEmpty);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Đã đóng phí'),
+      ).last,
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.feePaid, [('p-1', true)]);
   });
 
   testWidgets('TC-WP-03-02: dòng nguồn import theo Web (nhãn + tên file)', (
@@ -628,7 +696,9 @@ void main() {
       find.byKey(const ValueKey('participant-contact-name-1')),
       ' ',
     );
-    await tester.tap(find.byKey(const ValueKey('participant-contact-save')));
+    final save = find.byKey(const ValueKey('participant-contact-save'));
+    await tester.ensureVisible(save);
+    await tester.tap(save);
     await tester.pumpAndSettle();
 
     expect(find.text('Nhập tên'), findsOneWidget);

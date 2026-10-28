@@ -21,6 +21,8 @@ import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
+import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
 
 /// Nút viền đứt, dùng cho "Thêm nội dung" để khớp web. `OutlinedButton` của
 /// Flutter không vẽ được nét đứt nên phải tự vẽ; chiều cao 48dp để đạt chuẩn
@@ -860,62 +862,47 @@ class _CreatePublicQuickTournamentScreenState
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: colors.border.withValues(alpha: 0.6)),
               ),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 children: [
-                  _buildScheduleRow(
-                    avatarLetter: 'S',
-                    title: 'Thời gian bắt đầu *',
+                  DateTimeField(
+                    buttonKey: const ValueKey('quick-schedule-start'),
+                    label: '$_startLabel *',
+                    placeholder: l10n.tournamentManagementChooseDate,
                     value: _startDate == null
                         ? null
                         : _withTime(_startDate!, _startTime),
                     onTap: _pickStartDateTime,
-                    colors: colors,
                   ),
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: colors.border.withValues(alpha: 0.4),
-                    indent: 56,
-                  ),
-                  _buildScheduleRow(
-                    avatarLetter: 'E',
-                    title: 'Thời gian kết thúc',
-                    hint: 'Dự kiến',
+                  const SizedBox(height: 12),
+                  DateTimeField(
+                    buttonKey: const ValueKey('quick-schedule-end'),
+                    label: '$_endLabel (dự kiến)',
+                    placeholder: l10n.tournamentManagementChooseDate,
                     value: _endDate == null
                         ? null
                         : _withTime(_endDate!, _endTime),
                     onTap: _pickEndDateTime,
-                    colors: colors,
                   ),
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: colors.border.withValues(alpha: 0.4),
-                    indent: 56,
-                  ),
-                  _buildScheduleRow(
-                    avatarLetter: 'R',
-                    title: 'Mở đăng ký',
+                  const SizedBox(height: 12),
+                  DateTimeField(
+                    buttonKey: const ValueKey('quick-schedule-reg-start'),
+                    label: _regStartLabel,
+                    placeholder: l10n.tournamentManagementChooseDate,
                     value: _regStartDate == null
                         ? null
                         : _withTime(_regStartDate!, _regStartTime),
                     onTap: _pickRegStartDateTime,
-                    colors: colors,
                   ),
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: colors.border.withValues(alpha: 0.4),
-                    indent: 56,
-                  ),
-                  _buildScheduleRow(
-                    avatarLetter: 'C',
-                    title: 'Hạn chót đăng ký (Đóng)',
+                  const SizedBox(height: 12),
+                  DateTimeField(
+                    buttonKey: const ValueKey('quick-schedule-reg-end'),
+                    label: '$_regEndLabel (Đóng)',
+                    placeholder: l10n.tournamentManagementChooseDate,
                     value: _regEndDate == null
                         ? null
                         : _withTime(_regEndDate!, _regEndTime),
                     onTap: _pickRegEndDateTime,
-                    colors: colors,
                   ),
                 ],
               ),
@@ -2914,68 +2901,80 @@ class _CreatePublicQuickTournamentScreenState
     );
   }
 
+  static const _startLabel = 'Thời gian bắt đầu';
+  static const _endLabel = 'Thời gian kết thúc';
+  static const _regStartLabel = 'Mở đăng ký';
+  static const _regEndLabel = 'Hạn chót đăng ký';
+
+  /// Shared scroll popup for the four schedule fields; `null` when cancelled.
+  Future<DateTime?> _pickSchedule({
+    required DateTime? date,
+    required TimeOfDay time,
+    required DateTime fallback,
+    required String label,
+    required DateTime minDate,
+    required DateTime maxDate,
+    bool endOfDayChip = false,
+  }) => SocialDateTimePickerSheet.show(
+    context,
+    _withTime(date ?? fallback, time),
+    subtitle: label,
+    minDate: minDate,
+    maxDate: maxDate,
+    showEndOfDayChip: endOfDayChip,
+  );
+
   Future<void> _pickStartDateTime() async {
     final now = DateTime.now();
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _startDate ?? now.add(const Duration(days: 7)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 730)),
+    final picked = await _pickSchedule(
+      date: _startDate,
+      time: _startTime,
+      fallback: now.add(const Duration(days: 7)),
+      label: _startLabel,
+      minDate: now,
+      maxDate: now.add(const Duration(days: 730)),
     );
-    if (pickedDate == null || !mounted) return;
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: _startDate == null ? _startTime : _startTime,
-    );
-    if (pickedTime == null || !mounted) return;
-
-    final start = _withTime(pickedDate, pickedTime);
+    if (picked == null || !mounted) return;
     setState(() {
-      _startDate = pickedDate;
-      _startTime = pickedTime;
-      _syncScheduleFromStart(start);
+      _startDate = DateUtils.dateOnly(picked);
+      _startTime = TimeOfDay.fromDateTime(picked);
+      _syncScheduleFromStart(picked);
     });
   }
 
   Future<void> _pickEndDateTime() async {
     final now = DateTime.now();
     final earliest = _startDate ?? now;
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _endDate ?? earliest,
-      firstDate: earliest,
-      lastDate: now.add(const Duration(days: 730)),
+    final picked = await _pickSchedule(
+      date: _endDate,
+      time: _endTime,
+      fallback: earliest,
+      label: _endLabel,
+      minDate: earliest,
+      maxDate: now.add(const Duration(days: 730)),
     );
-    if (pickedDate == null || !mounted) return;
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: _endDate == null ? _endTime : _endTime,
-    );
-    if (pickedTime == null || !mounted) return;
+    if (picked == null || !mounted) return;
     setState(() {
-      _endDate = pickedDate;
-      _endTime = pickedTime;
+      _endDate = DateUtils.dateOnly(picked);
+      _endTime = TimeOfDay.fromDateTime(picked);
       _endDateManuallySet = true;
     });
   }
 
   Future<void> _pickRegStartDateTime() async {
     final now = DateTime.now();
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _regStartDate ?? now,
-      firstDate: now.subtract(const Duration(days: 1)),
-      lastDate: _startDate ?? now.add(const Duration(days: 365)),
+    final picked = await _pickSchedule(
+      date: _regStartDate,
+      time: _regStartTime,
+      fallback: now,
+      label: _regStartLabel,
+      minDate: now.subtract(const Duration(days: 1)),
+      maxDate: _startDate ?? now.add(const Duration(days: 365)),
     );
-    if (pickedDate == null || !mounted) return;
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: _regStartTime,
-    );
-    if (pickedTime == null || !mounted) return;
+    if (picked == null || !mounted) return;
     setState(() {
-      _regStartDate = pickedDate;
-      _regStartTime = pickedTime;
+      _regStartDate = DateUtils.dateOnly(picked);
+      _regStartTime = TimeOfDay.fromDateTime(picked);
       _regStartDateManuallySet = true;
     });
   }
@@ -2983,21 +2982,19 @@ class _CreatePublicQuickTournamentScreenState
   Future<void> _pickRegEndDateTime() async {
     final now = DateTime.now();
     final earliest = _regStartDate ?? now;
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _regEndDate ?? earliest,
-      firstDate: earliest,
-      lastDate: _startDate ?? now.add(const Duration(days: 365)),
+    final picked = await _pickSchedule(
+      date: _regEndDate,
+      time: _regEndTime,
+      fallback: earliest,
+      label: _regEndLabel,
+      minDate: earliest,
+      maxDate: _startDate ?? now.add(const Duration(days: 365)),
+      endOfDayChip: true,
     );
-    if (pickedDate == null || !mounted) return;
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: _regEndTime,
-    );
-    if (pickedTime == null || !mounted) return;
+    if (picked == null || !mounted) return;
     setState(() {
-      _regEndDate = pickedDate;
-      _regEndTime = pickedTime;
+      _regEndDate = DateUtils.dateOnly(picked);
+      _regEndTime = TimeOfDay.fromDateTime(picked);
       _registrationEndManuallySet = true;
     });
   }
@@ -3015,138 +3012,4 @@ class _CreatePublicQuickTournamentScreenState
   Future<void> _pickRegStartDate() => _pickRegStartDateTime();
   // ignore: unused_element
   Future<void> _pickRegEndDate() => _pickRegEndDateTime();
-
-  String _formatScheduleDisplay(DateTime dt) {
-    // e.g. T2 21 Tháng 9 0:00 or T3 28 Tháng 9 08:00
-    final weekdayStr = switch (dt.weekday) {
-      DateTime.monday => 'T2',
-      DateTime.tuesday => 'T3',
-      DateTime.wednesday => 'T4',
-      DateTime.thursday => 'T5',
-      DateTime.friday => 'T6',
-      DateTime.saturday => 'T7',
-      _ => 'CN',
-    };
-    final minuteStr = dt.minute.toString().padLeft(2, '0');
-    return '$weekdayStr ${dt.day} Tháng ${dt.month} ${dt.hour}:$minuteStr';
-  }
-
-  Widget _buildScheduleRow({
-    required String avatarLetter,
-    required String title,
-    String? hint,
-    required DateTime? value,
-    required VoidCallback onTap,
-    required AppColorsExtension colors,
-  }) {
-    final hasValue = value != null;
-    final displayTime = hasValue ? _formatScheduleDisplay(value) : null;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Circular Avatar Letter (like R, E, C, D in Image 2)
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: colors.textSecondary.withValues(alpha: 0.15),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                avatarLetter,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            // Middle Content: Title • action & Date Time text
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: colors.textSecondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '•',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colors.textSecondary.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        hasValue ? 'sửa' : 'thêm',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                      if (hint != null) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.textSecondary.withValues(
-                              alpha: 0.12,
-                            ),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            hint,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  if (displayTime != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      displayTime,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

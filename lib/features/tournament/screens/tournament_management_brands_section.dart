@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,125 +48,110 @@ class _TournamentManagementBrandsSectionState
     });
   }
 
+  /// Content of the "Branding" group on the information page. Image picks are
+  /// sent to the server straight away (not with the page's save button).
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final errorText = _error == null
+        ? null
+        : Text(
+            l10n.tournamentManagementSaveError,
+            style: TextStyle(color: colors.error),
+          );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TournamentManagementSectionCard(
-          title: l10n.tournamentManagementBrandAssets,
-          subtitle: l10n.tournamentManagementBrandAssetsDescription,
-          child: Column(
-            children: [
-              _BrandImageTile(
-                label: l10n.tournamentManagementLogo,
-                url: _logoUrl,
-                icon: Icons.emoji_events_outlined,
-                isBusy: _isBusy,
-                actionLabel: l10n.tournamentManagementUploadLogo,
-                onUpload: () => _uploadBrandImage(isLogo: true),
-              ),
-              const SizedBox(height: 12),
-              _BrandImageTile(
-                label: l10n.tournamentManagementBanner,
-                url: _bannerUrl,
-                icon: Icons.panorama_outlined,
-                isBusy: _isBusy,
-                actionLabel: l10n.tournamentManagementUploadBanner,
-                onUpload: () => _uploadBrandImage(isLogo: false),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  l10n.tournamentManagementSaveError,
-                  style: TextStyle(color: colors.error),
-                ),
-              ],
-            ],
-          ),
+        _BrandImageTile(
+          label: l10n.tournamentManagementLogo,
+          url: _logoUrl,
+          icon: Icons.emoji_events_outlined,
+          isBusy: _isBusy,
+          actionLabel: l10n.tournamentManagementUploadLogo,
+          onUpload: () => _uploadBrandImage(isLogo: true),
         ),
-        const SizedBox(height: 16),
-        TournamentManagementSectionCard(
-          title: l10n.tournamentManagementGallery,
-          subtitle: l10n.tournamentManagementGalleryDescription,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed: _isBusy ? null : _addGalleryImage,
-                  icon: _isBusy
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add_photo_alternate_outlined),
-                  label: Text(l10n.tournamentManagementAddImage),
-                ),
+        _BrandImageTile(
+          label: l10n.tournamentManagementBanner,
+          url: _bannerUrl,
+          icon: Icons.panorama_outlined,
+          isBusy: _isBusy,
+          actionLabel: l10n.tournamentManagementUploadBanner,
+          onUpload: () => _uploadBrandImage(isLogo: false),
+        ),
+        if (errorText != null) ...[const SizedBox(height: 12), errorText],
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.tournamentManagementGallery,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  l10n.tournamentManagementSaveError,
-                  style: TextStyle(color: colors.error),
-                ),
-              ],
-              const SizedBox(height: 12),
-              FutureBuilder<List<String>>(
-                future: _galleryFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  if (snapshot.hasError)
-                    return TournamentManagementError(
-                      error: snapshot.error,
-                      onRetry: _reload,
-                    );
-                  final images = snapshot.data ?? const <String>[];
-                  if (images.isEmpty)
-                    return TournamentManagementEmpty(
-                      title: l10n.tournamentManagementGalleryEmpty,
-                      subtitle:
-                          l10n.tournamentManagementGalleryEmptyDescription,
-                      icon: Icons.photo_library_outlined,
-                    );
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final columns = constraints.maxWidth >= 700
-                          ? 4
-                          : constraints.maxWidth >= 430
-                          ? 3
-                          : 2;
-                      return GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: columns,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 1.05,
-                        ),
-                        itemCount: images.length,
-                        itemBuilder: (context, index) => _GalleryImageTile(
-                          url: images[index],
-                          onRemove: _isBusy
-                              ? null
-                              : () => _removeGalleryImage(index),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+            FilledButton.icon(
+              onPressed: _isBusy ? null : _addGalleryImage,
+              icon: _isBusy
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_photo_alternate_outlined),
+              label: Text(l10n.tournamentManagementAddImage),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        FutureBuilder<List<String>>(
+          future: _galleryFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Padding(
+                padding: EdgeInsets.all(20),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return TournamentManagementError(
+                error: snapshot.error,
+                onRetry: _reload,
+              );
+            }
+            final images = snapshot.data ?? const <String>[];
+            if (images.isEmpty) {
+              return TournamentManagementEmpty(
+                title: l10n.tournamentManagementGalleryEmpty,
+                subtitle: l10n.tournamentManagementGalleryEmptyDescription,
+                icon: Icons.photo_library_outlined,
+              );
+            }
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 700
+                    ? 4
+                    : constraints.maxWidth >= 430
+                    ? 3
+                    : 2;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.05,
+                  ),
+                  itemCount: images.length,
+                  itemBuilder: (context, index) => _GalleryImageTile(
+                    url: images[index],
+                    onRemove: _isBusy ? null : () => _removeGalleryImage(index),
+                  ),
+                );
+              },
+            );
+          },
         ),
       ],
     );
@@ -278,6 +264,8 @@ class _TournamentManagementBrandsSectionState
   }
 }
 
+/// Design 16 `.li` row: thumbnail (or icon box), label, "Đã tải lên / Chưa có"
+/// and an upload arrow; the whole row opens the picker.
 class _BrandImageTile extends StatelessWidget {
   const _BrandImageTile({
     required this.label,
@@ -296,48 +284,36 @@ class _BrandImageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: 76,
-              height: 64,
-              child: url?.trim().isNotEmpty == true
-                  ? Image.network(
-                      resolveTournamentManagementImageUrl(url!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) =>
-                          Icon(icon, color: colors.textMuted, size: 30),
-                    )
-                  : Icon(icon, color: colors.textMuted, size: 30),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
+    final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
+    final hasImage = url?.trim().isNotEmpty == true;
+    return LavishRow(
+      leading: hasImage
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 34,
+                height: 34,
+                child: Image.network(
+                  resolveTournamentManagementImageUrl(url!),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) =>
+                      LavishIconBox(child: Icon(icon)),
+                ),
               ),
-            ),
-          ),
-          IconButton(
-            onPressed: isBusy ? null : onUpload,
-            tooltip: actionLabel,
-            icon: const Icon(Icons.upload_rounded),
-          ),
-        ],
-      ),
+            )
+          : LavishIconBox(child: Icon(icon)),
+      title: label,
+      subtitle: hasImage
+          ? l10n.tournamentManagementImageUploaded
+          : l10n.tournamentManagementImageMissing,
+      onTap: isBusy ? null : onUpload,
+      trailing: [
+        Tooltip(
+          message: actionLabel,
+          child: Icon(Icons.upload_rounded, size: 20, color: colors.faint),
+        ),
+      ],
     );
   }
 }

@@ -449,6 +449,30 @@ class ApiTournamentManagementRepository
   }
 
   @override
+  Future<void> setParticipantPresent(
+    String id,
+    String participantId,
+    bool present,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/presence',
+      data: {'present': present},
+    );
+  }
+
+  @override
+  Future<void> setParticipantFeePaid(
+    String id,
+    String participantId,
+    bool paid,
+  ) async {
+    await _dio.patch(
+      '/tournaments/$id/participants/$participantId/fee-payment',
+      data: {'paid': paid},
+    );
+  }
+
+  @override
   Future<void> updateOrganizerEntry(
     String id,
     String participantId,
@@ -647,6 +671,11 @@ class ApiTournamentManagementRepository
   @override
   Future<Map<String, dynamic>> completeTournament(String id) async =>
       _map(await _dio.post('/tournaments/$id/complete'));
+
+  @override
+  Future<void> confirmTournamentResults(String id) async {
+    await _dio.post('/tournaments/$id/results/confirm');
+  }
 
   @override
   Future<Map<String, dynamic>> publishTournament(String id) async =>

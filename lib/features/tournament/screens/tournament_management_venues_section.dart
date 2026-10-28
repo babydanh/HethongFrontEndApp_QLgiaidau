@@ -1,8 +1,9 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -47,64 +48,61 @@ class _TournamentManagementVenuesSectionState
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _venuesFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        if (snapshot.hasError)
+        }
+        if (snapshot.hasError) {
           return TournamentManagementError(
             error: snapshot.error,
             onRetry: _reload,
           );
+        }
         final venues = snapshot.data ?? const <Map<String, dynamic>>[];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TournamentManagementSectionCard(
-              title: l10n.tournamentManagementVenues,
-              subtitle: l10n.tournamentManagementVenuesDescription,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton.icon(
-                      onPressed: _isBusy ? null : _createVenue,
-                      icon: const Icon(Icons.add_location_alt_outlined),
-                      label: Text(l10n.tournamentManagementAddVenue),
+        return LavishSurface(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 24),
+            children: [
+              if (_mutationError != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                  child: Text(
+                    l10n.tournamentManagementActionError,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: LavishColors.bad,
                     ),
                   ),
-                  if (_mutationError != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      l10n.tournamentManagementActionError,
-                      style: TextStyle(color: context.colors.error),
-                    ),
-                  ],
-                  if (venues.isEmpty)
-                    TournamentManagementEmpty(
-                      title: l10n.tournamentManagementVenuesEmpty,
-                      subtitle: l10n.tournamentManagementVenuesEmptyDescription,
-                      icon: Icons.place_outlined,
-                    )
-                  else ...[
-                    const SizedBox(height: 12),
-                    for (final venue in venues) ...[
-                      _VenueCard(
-                        tournamentId: widget.tournamentId,
-                        venue: venue,
-                        isBusy: _isBusy,
-                        onEdit: () => _editVenue(venue),
-                        onSetDefault: () => _setDefault(venue),
-                        onRemove: () => _removeVenue(venue),
-                        onAddCourt: () => _addCourt(venue),
-                        onRemoveCourt: (court) => _removeCourt(venue, court),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ],
-                ],
+                ),
+              if (venues.isEmpty)
+                TournamentManagementEmpty(
+                  title: l10n.tournamentManagementVenuesEmpty,
+                  subtitle: l10n.tournamentManagementVenuesEmptyDescription,
+                  icon: Icons.place_outlined,
+                )
+              else
+                for (final venue in venues)
+                  _VenueCard(
+                    tournamentId: widget.tournamentId,
+                    venue: venue,
+                    isBusy: _isBusy,
+                    onEdit: () => _editVenue(venue),
+                    onSetDefault: () => _setDefault(venue),
+                    onRemove: () => _removeVenue(venue),
+                    onAddCourt: () => _addCourt(venue),
+                    onRemoveCourt: (court) => _removeCourt(venue, court),
+                  ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                child: LavishButton(
+                  buttonKey: const ValueKey('venue-add'),
+                  kind: LavishButtonKind.outline,
+                  icon: const Icon(Icons.add_location_alt_outlined, size: 16),
+                  label: l10n.tournamentManagementAddVenue,
+                  onPressed: _isBusy ? null : _createVenue,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -442,6 +440,8 @@ class _VenueDialogState extends State<_VenueDialog> {
   }
 }
 
+/// One venue: the design's `.li` header row (place box, name, address,
+/// "Mặc định" pill, menu) followed by its "N SÂN" group of one-line courts.
 class _VenueCard extends StatelessWidget {
   const _VenueCard({
     required this.tournamentId,
@@ -465,7 +465,7 @@ class _VenueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     final isDefault = venue['isDefault'] == true || venue['is_default'] == true;
     final rawCourts = venue['courts'] is List
         ? venue['courts'] as List
@@ -476,119 +476,87 @@ class _VenueCard extends StatelessWidget {
         .toList(growable: false);
     final address = (venue['locationAddress'] ?? venue['address'] ?? '')
         .toString();
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.place_outlined, color: AppTheme.primary),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tournamentManagementRecordName(venue),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                    if (address.isNotEmpty)
-                      Text(
-                        address,
-                        style: TextStyle(color: colors.textSecondary),
-                      ),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishRow(
+          leading: const LavishIconBox(child: Icon(Icons.place_outlined)),
+          title: tournamentManagementRecordName(venue),
+          subtitle: address.isEmpty ? null : address,
+          trailing: [
+            if (isDefault) LavishPill(l10n.tournamentManagementDefaultVenue),
+            PopupMenuButton<String>(
+              enabled: !isBusy,
+              padding: EdgeInsets.zero,
+              icon: Icon(Icons.more_vert_rounded, size: 18, color: colors.faint),
+              onSelected: (value) {
+                if (value == 'edit') onEdit();
+                if (value == 'default') onSetDefault();
+                if (value == 'remove') onRemove();
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text(l10n.tournamentManagementEdit),
                 ),
-              ),
-              if (isDefault)
-                Chip(
-                  label: Text(l10n.tournamentManagementDefaultVenue),
-                  visualDensity: VisualDensity.compact,
-                ),
-              PopupMenuButton<String>(
-                enabled: !isBusy,
-                onSelected: (value) {
-                  if (value == 'edit') onEdit();
-                  if (value == 'default') onSetDefault();
-                  if (value == 'remove') onRemove();
-                },
-                itemBuilder: (context) => [
+                if (!isDefault)
                   PopupMenuItem(
-                    value: 'edit',
-                    child: Text(l10n.tournamentManagementEdit),
+                    value: 'default',
+                    child: Text(l10n.tournamentManagementSetAsDefault),
                   ),
-                  if (!isDefault)
-                    PopupMenuItem(
-                      value: 'default',
-                      child: Text(l10n.tournamentManagementSetAsDefault),
-                    ),
-                  PopupMenuItem(
-                    value: 'remove',
-                    child: Text(
-                      l10n.tournamentManagementRemove,
-                      style: TextStyle(color: colors.error),
-                    ),
+                PopupMenuItem(
+                  value: 'remove',
+                  child: Text(
+                    l10n.tournamentManagementRemove,
+                    style: const TextStyle(color: LavishColors.bad),
                   ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.tournamentManagementCourtsCount(courts.length),
-                  style: TextStyle(color: colors.textSecondary),
                 ),
-              ),
-              TextButton.icon(
-                onPressed: isBusy ? null : onAddCourt,
-                icon: const Icon(Icons.add_rounded),
-                label: Text(l10n.tournamentManagementAddCourt),
-              ),
-            ],
-          ),
-          if (courts.isEmpty)
-            Text(
-              l10n.tournamentManagementNoCourts,
-              style: TextStyle(color: colors.textMuted),
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final court in courts) ...[
-                  _VenueCourtRow(
-                    tournamentId: tournamentId,
-                    court: court,
-                    fallbackName: l10n.tournamentManagementCourt,
-                    isBusy: isBusy,
-                    onRemove: () => onRemoveCourt(court),
-                  ),
-                  const SizedBox(height: 12),
-                ],
               ],
             ),
-        ],
-      ),
+          ],
+        ),
+        LavishGroupHeader(
+          l10n.tournamentManagementCourtsCount(courts.length),
+          trailing: InkWell(
+            key: const ValueKey('venue-add-court'),
+            onTap: isBusy ? null : onAddCourt,
+            child: Text(
+              '＋ ${l10n.tournamentManagementAddCourt}'.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.66,
+                color: LavishColors.accent,
+              ),
+            ),
+          ),
+        ),
+        if (courts.isEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+            child: Text(
+              l10n.tournamentManagementNoCourts,
+              style: TextStyle(fontSize: 13, color: colors.faint),
+            ),
+          )
+        else
+          for (final court in courts)
+            _VenueCourtRow(
+              tournamentId: tournamentId,
+              court: court,
+              fallbackName: l10n.tournamentManagementCourt,
+              isBusy: isBusy,
+              onRemove: () => onRemoveCourt(court),
+            ),
+      ],
     );
   }
 }
 
-/// A court inside a venue: the existing chip, plus the camera playback-URL
-/// control the organizer needs to keep the court's camera alive.
-class _VenueCourtRow extends StatelessWidget {
+/// One court on one line: name, camera status, edit-camera button and a menu
+/// holding the destructive action. The camera URL itself never shows here; it
+/// only lives (masked) in [CourtCameraSheet].
+class _VenueCourtRow extends ConsumerWidget {
   const _VenueCourtRow({
     required this.tournamentId,
     required this.court,
@@ -604,29 +572,104 @@ class _VenueCourtRow extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
     final name =
         (court['name'] ?? court['courtName'] ?? fallbackName).toString();
     final courtId = (court['id'] ?? court['courtId'] ?? '').toString();
-
-    final chip = InputChip(label: Text(name), onDeleted: isBusy ? null : onRemove);
-
-    // Without an id the camera routes cannot address this court, so the
-    // control is hidden rather than offering a field that cannot be saved.
-    if (courtId.isEmpty) return chip;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        chip,
-        const SizedBox(height: 8),
-        CourtCameraUrlRow(
-          tournamentId: tournamentId,
-          courtId: courtId,
-          courtName: name,
-          dense: true,
-        ),
-      ],
+    final attached =
+        cameraForCourt(
+          ref.watch(tournamentCamerasProvider(tournamentId)).asData?.value ??
+              const [],
+          courtId,
+        )?.hasPlaybackUrl ??
+        false;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.rowLine)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: colors.text,
+                  ),
+                ),
+                // Icon plus wording, never colour alone.
+                Row(
+                  children: [
+                    Icon(
+                      attached
+                          ? Icons.videocam_rounded
+                          : Icons.videocam_off_outlined,
+                      size: 14,
+                      color: attached ? LavishColors.ok : colors.faint,
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        attached
+                            ? l10n.tournamentManagementCourtCameraAttached
+                            : l10n.tournamentManagementCourtCameraNotAttached,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: attached ? colors.muted : colors.faint,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Without an id the camera routes cannot address this court.
+          if (courtId.isNotEmpty)
+            IconButton(
+              key: ValueKey('court-edit-$courtId'),
+              tooltip: l10n.tournamentManagementCourtCameraEdit,
+              visualDensity: VisualDensity.compact,
+              onPressed: isBusy
+                  ? null
+                  : () => showCourtCameraSheet(
+                      context,
+                      tournamentId: tournamentId,
+                      courtId: courtId,
+                      courtName: name,
+                    ),
+              icon: Icon(Icons.edit_outlined, size: 18, color: colors.faint),
+            ),
+          PopupMenuButton<String>(
+            key: ValueKey('court-menu-$courtId'),
+            tooltip: l10n.tournamentManagementCourtActions,
+            enabled: !isBusy,
+            padding: EdgeInsets.zero,
+            icon: Icon(Icons.more_vert_rounded, size: 18, color: colors.faint),
+            onSelected: (_) => onRemove(),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'remove',
+                child: Text(
+                  l10n.tournamentManagementRemove,
+                  style: const TextStyle(color: LavishColors.bad),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

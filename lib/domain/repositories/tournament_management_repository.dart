@@ -72,6 +72,22 @@ abstract interface class TournamentManagementRepository {
     String note,
   );
 
+  /// Day-of-event check-in mark (`PATCH .../participants/:pid/presence`,
+  /// body `{ present }`); a note for organizers only.
+  Future<void> setParticipantPresent(
+    String id,
+    String participantId,
+    bool present,
+  );
+
+  /// Entry-fee paid flag (`PATCH .../participants/:pid/fee-payment`, body
+  /// `{ paid }`); the Backend may open a refund request when it is cleared.
+  Future<void> setParticipantFeePaid(
+    String id,
+    String participantId,
+    bool paid,
+  );
+
   /// Sửa liên hệ hồ sơ do BTC tạo (`PATCH .../participants/:pid/entry`):
   /// payload `{ members: [{ slot, name, email, phone, expectedKey }] }`
   /// (chỉ thành viên khách, giống Web `updateOrganizerEntry`).
@@ -254,6 +270,10 @@ extension TournamentSettingsRepositoryAccess on TournamentManagementRepository {
 abstract interface class TournamentLifecycleRepository {
   Future<Map<String, dynamic>> startTournament(String id);
   Future<Map<String, dynamic>> completeTournament(String id);
+
+  /// `POST /tournaments/:id/results/confirm`: the organizer confirms the
+  /// results again after the bracket was edited (clears `needsReconfirm`).
+  Future<void> confirmTournamentResults(String id);
 }
 
 extension TournamentLifecycleRepositoryAccess
@@ -263,4 +283,7 @@ extension TournamentLifecycleRepositoryAccess
 
   Future<Map<String, dynamic>> completeTournament(String id) =>
       (this as TournamentLifecycleRepository).completeTournament(id);
+
+  Future<void> confirmTournamentResults(String id) =>
+      (this as TournamentLifecycleRepository).confirmTournamentResults(id);
 }

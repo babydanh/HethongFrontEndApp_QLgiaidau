@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/camera_device_model.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
-import 'package:app_quanly_giaidau/data/models/facebook_page_connection_model.dart';
 import 'package:app_quanly_giaidau/data/models/live_session_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/camera_admin_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/court_camera_repository.dart';
@@ -51,19 +50,6 @@ LiveSessionModel _session({
   title: title,
 );
 
-FacebookPageConnectionModel _connection({
-  FacebookPageConnectionStatus status = FacebookPageConnectionStatus.active,
-  DateTime? lastValidatedAt,
-}) => FacebookPageConnectionModel(
-  id: 'conn-1',
-  communityId: _communityId,
-  pageId: 'page-1',
-  pageName: 'Sporto FC',
-  status: status,
-  connectedAt: DateTime.utc(2025, 12, 1),
-  lastValidatedAt: lastValidatedAt ?? DateTime.utc(2026, 1, 1),
-);
-
 DioException _forbidden(String path) => DioException(
   requestOptions: RequestOptions(path: path),
   type: DioExceptionType.badResponse,
@@ -74,19 +60,17 @@ DioException _forbidden(String path) => DioException(
 );
 
 /// Records every repository call the section makes and answers only the safe
-/// subset. Any un-stubbed method fails loudly through [noSuchMethod], so a
+/// subset (no Facebook method is stubbed: the screen must never reach one). Any un-stubbed method fails loudly through [noSuchMethod], so a
 /// screen change that reaches for a blocked route cannot pass quietly.
 class _FakeLiveSessionRepository implements ILiveSessionRepository {
   _FakeLiveSessionRepository({
     this.devices = const <CameraDeviceModel>[],
     this.sessions = const <LiveSessionModel>[],
-    this.connection,
     this.devicesError,
   });
 
   List<CameraDeviceModel> devices;
   List<LiveSessionModel> sessions;
-  FacebookPageConnectionModel? connection;
   Object? devicesError;
   final String pairingToken = 'token-abc';
 
@@ -157,36 +141,6 @@ class _FakeLiveSessionRepository implements ILiveSessionRepository {
   }
 
   @override
-  Future<FacebookPageConnectionModel?> getFacebookConnection(
-    String communityId,
-  ) async {
-    calls.add('getFacebookConnection');
-    return connection;
-  }
-
-  @override
-  Future<String> createFacebookOAuthUrl(String communityId) async {
-    calls.add('createFacebookOAuthUrl:$communityId');
-    return 'https://www.facebook.com/oauth';
-  }
-
-  @override
-  Future<FacebookPageConnectionModel> validateFacebookConnection(
-    String connectionId,
-  ) async {
-    calls.add('validateFacebookConnection:$connectionId');
-    return _connection();
-  }
-
-  @override
-  Future<FacebookPageConnectionModel?> disconnectFacebookConnection(
-    String communityId,
-  ) async {
-    calls.add('disconnectFacebookConnection');
-    return _connection(status: FacebookPageConnectionStatus.disconnected);
-  }
-
-  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -200,7 +154,9 @@ Future<AppLocalizations> _pumpSection(
       overrides: [
         liveSessionRepositoryProvider.overrideWithValue(repository),
         // The embedded camera panel reads these; keep it off the real network.
-        courtCameraRepositoryProvider.overrideWithValue(_EmptyCameraRepository()),
+        courtCameraRepositoryProvider.overrideWithValue(
+          _EmptyCameraRepository(),
+        ),
         cameraAdminRepositoryProvider.overrideWithValue(_UnusedCameraAdmin()),
         tournamentManagementRepositoryProvider.overrideWithValue(
           _NoVenuesManagement(),
@@ -250,6 +206,15 @@ class _NoVenuesManagement implements TournamentManagementRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// The camera-device block is collapsed by default (design screen 11).
+Future<void> _expandDevices(WidgetTester tester) async {
+  final toggle = find.byKey(const ValueKey('livestream-devices-toggle'));
+  await tester.ensureVisible(toggle);
+  await tester.pumpAndSettle();
+  await tester.tap(toggle);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets(
     'without a community no community-scoped call is made, but sessions still load',
@@ -257,7 +222,6 @@ void main() {
       final repository = _FakeLiveSessionRepository(
         devices: <CameraDeviceModel>[_device()],
         sessions: <LiveSessionModel>[_session()],
-        connection: _connection(),
       );
 
       final l10n = await _pumpSection(tester, repository, communityId: null);
@@ -267,19 +231,54 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text(l10n.tournamentManagementLivestreamDevices),
+        find.text(l10n.tournamentManagementLivestreamDevices.toUpperCase()),
         findsNothing,
       );
-      expect(find.text(l10n.contactFacebook), findsNothing);
       // Session monitoring is tournament-scoped, so it still runs.
       expect(
-        find.text(l10n.tournamentManagementLivestreamSessions),
+        find.text(l10n.tournamentManagementLivestreamSessions.toUpperCase()),
         findsOneWidget,
       );
       expect(find.text('Court 1 semi-final'), findsOneWidget);
       expect(repository.calls, ['listSessions']);
     },
   );
+
+  testWidgets('fits a 320dp phone with devices open and a stoppable session', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final repository = _FakeLiveSessionRepository(
+      devices: <CameraDeviceModel>[_device(name: 'Dien thoai A')],
+      sessions: <LiveSessionModel>[
+        _session(status: LiveSessionStatus.reconnecting),
+      ],
+    );
+
+    await _pumpSection(tester, repository);
+    await _expandDevices(tester);
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the screen has no Facebook block and never asks about it', (
+    tester,
+  ) async {
+    final repository = _FakeLiveSessionRepository(
+      devices: <CameraDeviceModel>[_device()],
+      sessions: <LiveSessionModel>[_session()],
+    );
+
+    await _pumpSection(tester, repository);
+
+    expect(find.textContaining('Facebook'), findsNothing);
+    expect(find.textContaining('Fanpage'), findsNothing);
+    // Any Facebook call would have thrown through noSuchMethod.
+    expect(tester.takeException(), isNull);
+    expect(repository.calls.where((c) => c.contains('Facebook')), isEmpty);
+  });
 
   testWidgets(
     'tapping a device opens a QR sheet and never renders the token as text',
@@ -289,6 +288,7 @@ void main() {
       );
 
       final l10n = await _pumpSection(tester, repository);
+      await _expandDevices(tester);
       await tester.tap(
         find.widgetWithText(
           OutlinedButton,
@@ -329,6 +329,10 @@ void main() {
         devicesError: _forbidden('/livestream/devices'),
       );
 
+      // Tall viewport: the device block sits below the camera panel.
+      tester.view.physicalSize = const Size(800, 1800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
       final l10n = await _pumpSection(tester, repository);
 
       expect(find.text(l10n.tournamentManagementForbidden), findsOneWidget);
@@ -374,25 +378,19 @@ void main() {
         l10n.tournamentManagementLivestreamRecheckStatus,
       );
       final stop = find.widgetWithText(
-        TextButton,
+        OutlinedButton,
         l10n.tournamentManagementLivestreamStopSession,
       );
       expect(recheck, findsOneWidget);
       expect(stop, findsNWidgets(2));
       // The LIVE and RECONNECTING sessions can end; only RECONNECTING supports
       // status re-check. ENDED sessions offer neither action.
-      final endedTile = find.ancestor(
-        of: find.text('All done'),
-        matching: find.byType(Column),
+      final endedTile = find.byKey(
+        const ValueKey('live-session-session-ended'),
       );
-      expect(
-        find.descendant(of: endedTile.first, matching: stop),
-        findsNothing,
-      );
-      expect(
-        find.descendant(of: endedTile.first, matching: recheck),
-        findsNothing,
-      );
+      expect(endedTile, findsOneWidget);
+      expect(find.descendant(of: endedTile, matching: stop), findsNothing);
+      expect(find.descendant(of: endedTile, matching: recheck), findsNothing);
     },
   );
 
@@ -422,7 +420,7 @@ void main() {
       expect(repository.calls, contains('reconnectSession:session-1'));
 
       final stop = find.widgetWithText(
-        TextButton,
+        OutlinedButton,
         l10n.tournamentManagementLivestreamStopSession,
       );
       await tester.ensureVisible(stop);
@@ -446,116 +444,13 @@ void main() {
     },
   );
 
-  testWidgets('returning to the app re-polls the Facebook connection status', (
-    tester,
-  ) async {
-    final repository = _FakeLiveSessionRepository(connection: _connection());
-
-    final l10n = await _pumpSection(tester, repository);
-    expect(find.text('Sporto FC'), findsOneWidget);
-    expect(
-      repository.calls.where((c) => c == 'getFacebookConnection').length,
-      1,
-    );
-
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pumpAndSettle();
-
-    expect(
-      repository.calls.where((c) => c == 'getFacebookConnection').length,
-      2,
-    );
-    // A re-check is what the UI offers; the copy must never promise a restart.
-    expect(
-      find.widgetWithText(
-        OutlinedButton,
-        l10n.tournamentManagementLivestreamFacebookRevalidate,
-      ),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('a community with no Page offers the connect action', (
-    tester,
-  ) async {
-    final repository = _FakeLiveSessionRepository();
-
-    final l10n = await _pumpSection(tester, repository);
-
-    expect(
-      find.text(l10n.tournamentManagementLivestreamFacebookNotConnected),
-      findsOneWidget,
-    );
-    final connect = find.widgetWithText(
-      FilledButton,
-      l10n.tournamentManagementLivestreamFacebookConnect,
-    );
-    await tester.ensureVisible(connect);
-    await tester.pumpAndSettle();
-    expect(connect, findsOneWidget);
-  });
-
-  testWidgets(
-    'an existing Page offers re-check and disconnect, never a Page token',
-    (tester) async {
-      final repository = _FakeLiveSessionRepository(connection: _connection());
-
-      final l10n = await _pumpSection(tester, repository);
-      final revalidate = find.widgetWithText(
-        OutlinedButton,
-        l10n.tournamentManagementLivestreamFacebookRevalidate,
-      );
-      await tester.ensureVisible(revalidate);
-      await tester.pumpAndSettle();
-      expect(revalidate, findsOneWidget);
-
-      await tester.tap(revalidate);
-      await tester.pumpAndSettle();
-      expect(repository.calls, contains('validateFacebookConnection:conn-1'));
-
-      final disconnect = find.widgetWithText(
-        TextButton,
-        l10n.tournamentManagementLivestreamFacebookDisconnect,
-      );
-      await tester.ensureVisible(disconnect);
-      await tester.pumpAndSettle();
-      await tester.tap(disconnect);
-      await tester.pumpAndSettle();
-      expect(repository.calls, contains('disconnectFacebookConnection'));
-      // The re-polled status, not any secret, is what the screen renders.
-      expect(repository.calls, isNot(contains('createFacebookOAuthUrl')));
-    },
-  );
-
-  testWidgets('a disconnected Page can start a fresh Facebook authorization', (
-    tester,
-  ) async {
-    final repository = _FakeLiveSessionRepository(
-      connection: _connection(
-        status: FacebookPageConnectionStatus.disconnected,
-      ),
-    );
-
-    final l10n = await _pumpSection(tester, repository);
-    final connect = find.widgetWithText(
-      FilledButton,
-      l10n.tournamentManagementLivestreamFacebookConnect,
-    );
-    expect(connect, findsOneWidget);
-    await tester.ensureVisible(connect);
-    await tester.pumpAndSettle();
-    await tester.tap(connect);
-    await tester.pumpAndSettle();
-
-    expect(repository.calls, contains('createFacebookOAuthUrl:$_communityId'));
-  });
-
   testWidgets(
     'a community with no camera devices can create the first one from the empty state',
     (tester) async {
       final repository = _FakeLiveSessionRepository();
 
       final l10n = await _pumpSection(tester, repository);
+      await _expandDevices(tester);
       expect(
         find.text(l10n.tournamentManagementLivestreamDevicesEmpty),
         findsOneWidget,
@@ -593,6 +488,7 @@ void main() {
     final repository = _FakeLiveSessionRepository();
 
     final l10n = await _pumpSection(tester, repository);
+    await _expandDevices(tester);
     final create = find.widgetWithText(
       FilledButton,
       l10n.tournamentManagementLivestreamCreateDevice,
@@ -615,6 +511,7 @@ void main() {
   ) async {
     final repository = _FakeLiveSessionRepository();
     final l10n = await _pumpSection(tester, repository);
+    await _expandDevices(tester);
     final create = find.widgetWithText(
       FilledButton,
       l10n.tournamentManagementLivestreamCreateDevice,
@@ -654,6 +551,7 @@ void main() {
     final repository = _FakeLiveSessionRepository()..createDeviceGate = gate;
 
     final l10n = await _pumpSection(tester, repository);
+    await _expandDevices(tester);
     final create = find.widgetWithText(
       FilledButton,
       l10n.tournamentManagementLivestreamCreateDevice,
@@ -693,6 +591,7 @@ void main() {
         );
 
       final l10n = await _pumpSection(tester, repository);
+      await _expandDevices(tester);
       final create = find.widgetWithText(
         FilledButton,
         l10n.tournamentManagementLivestreamCreateDevice,
