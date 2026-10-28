@@ -82,12 +82,19 @@ void main() {
 
     final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)))!;
     expect(find.text('Waiting Pair'), findsOneWidget);
-    // Nhãn "Chờ duyệt" hiện 2 lần: chip lọc trạng thái (task 3.1) + nhãn trạng thái của dòng.
+    // Nhãn "Chờ duyệt" chỉ ở dòng (chip lọc nay là một chip "Tất cả (n)").
     expect(
       find.text(l10n.tournamentManagementParticipantPending),
-      findsNWidgets(2),
+      findsOneWidget,
     );
-    expect(find.text(l10n.tournamentManagementApprove), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementReject), findsOneWidget);
+    // Hai nút icon vuông 30x30 thay hai nút chữ.
+    expect(
+      find.byKey(const ValueKey('participant-approve-participant-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('participant-reject-participant-1')),
+      findsOneWidget,
+    );
   });
 }

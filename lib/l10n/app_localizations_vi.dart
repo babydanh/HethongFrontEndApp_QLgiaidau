@@ -17112,6 +17112,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get participantDetailFeePaid => 'Đã đóng phí';
 
   @override
+  String get athletesAutoPair => 'Tự ghép';
+
+  @override
+  String get athletesPresentCount => 'Có mặt';
+
+  @override
+  String get athletesSearchHint => 'Tìm kiếm…';
+
+  @override
+  String get athleteFeeUnpaid => 'Chưa đóng phí';
+
+  @override
+  String get athletePresenceMarked => 'Đã check-in.';
+
+  @override
+  String get athletePresenceCleared => 'Đã bỏ check-in.';
+
+  @override
+  String get athletePresenceFailed => 'Không cập nhật được check-in. Thử lại.';
+
+  @override
+  String get athleteWaitingPill => 'Chờ';
+
+  @override
   String get participantDetailFeePaidConfirm =>
       'Xác nhận đã nhận lệ phí của VĐV này?';
 

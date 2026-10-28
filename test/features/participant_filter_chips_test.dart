@@ -117,47 +117,50 @@ Future<_ParticipantsRepository> _pump(
   return repo;
 }
 
-/// Số đếm trong chip = Text cuối cùng của chip (sau nhãn).
-String _chipCount(WidgetTester tester, String name) {
-  final chip = find.byKey(ValueKey('participant-filter-$name'));
-  final texts = find.descendant(of: chip, matching: find.byType(Text));
-  return tester.widget<Text>(texts.last).data!;
+/// Opens the single filter chip's list.
+Future<void> _openMenu(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('participant-filter-menu')));
+  await tester.pumpAndSettle();
+}
+
+/// Count shown after the label of a menu item, e.g. `Tất cả (5)` -> `5`.
+String _menuCount(WidgetTester tester, String name) {
+  final item = find.byKey(ValueKey('participant-filter-$name'));
+  final text = tester
+      .widget<Text>(find.descendant(of: item, matching: find.byType(Text)))
+      .data!;
+  return RegExp(r'\((\d+)\)$').firstMatch(text)!.group(1)!;
 }
 
 void main() {
-  testWidgets(
-    'filter chips are 44px tall and expose button+selected semantics',
-    (tester) async {
-      final handle = tester.ensureSemantics();
-        await _pump(tester);
+  testWidgets('one filter chip shows the active filter with its count', (
+    tester,
+  ) async {
+    await _pump(tester);
 
-      final chip = find.byKey(const ValueKey('participant-filter-all'));
-      expect(tester.getSize(chip).height, greaterThanOrEqualTo(44));
-
-      final data = tester.getSemantics(chip);
-      expect(data.flagsCollection.isButton, isTrue);
-      expect(data.flagsCollection.isSelected, Tristate.isTrue);
-      expect(data.label, contains('5'));
-
-      final other = tester.getSemantics(
-        find.byKey(const ValueKey('participant-filter-pending')),
-      );
-      expect(other.flagsCollection.isSelected, Tristate.isFalse);
-    handle.dispose();
-    },
-  );
+    final chip = find.byKey(const ValueKey('participant-filter-menu'));
+    expect(
+      find.descendant(of: chip, matching: find.text('Tất cả (5)')),
+      findsOneWidget,
+    );
+    // Menu items only exist once the list is open.
+    expect(find.byKey(const ValueKey('participant-filter-pending')), findsNothing);
+    await _openMenu(tester);
+    expect(find.byKey(const ValueKey('participant-filter-pending')), findsOneWidget);
+  });
 
   testWidgets('TC-WP-03-01: chips lọc trạng thái hiện đủ 6 mục kèm số đếm', (
     tester,
   ) async {
     await _pump(tester);
+    await _openMenu(tester);
 
-    expect(_chipCount(tester, 'all'), '5');
-    expect(_chipCount(tester, 'pending'), '1');
-    expect(_chipCount(tester, 'pendingPartner'), '1');
-    expect(_chipCount(tester, 'approved'), '2');
-    expect(_chipCount(tester, 'unpaid'), '2');
-    expect(_chipCount(tester, 'rejected'), '1');
+    expect(_menuCount(tester, 'all'), '5');
+    expect(_menuCount(tester, 'pending'), '1');
+    expect(_menuCount(tester, 'pendingPartner'), '1');
+    expect(_menuCount(tester, 'approved'), '2');
+    expect(_menuCount(tester, 'unpaid'), '2');
+    expect(_menuCount(tester, 'rejected'), '1');
   });
 
   testWidgets('TC-WP-03-01: chọn "Chờ duyệt" lọc ngay tại chỗ, không gọi API', (
@@ -165,6 +168,7 @@ void main() {
   ) async {
     final repo = await _pump(tester);
 
+    await _openMenu(tester);
     await tester.tap(find.byKey(const ValueKey('participant-filter-pending')));
     await tester.pumpAndSettle();
 
@@ -177,6 +181,7 @@ void main() {
     // Lọc tại chỗ: đúng 1 lần tải danh sách lúc mở tab.
     expect(repo.calls, 1);
 
+    await _openMenu(tester);
     await tester.tap(find.byKey(const ValueKey('participant-filter-all')));
     await tester.pumpAndSettle();
     for (final id in ['p-1', 'p-2', 'p-3', 'p-4', 'p-5']) {
@@ -189,6 +194,7 @@ void main() {
   ) async {
     await _pump(tester);
 
+    await _openMenu(tester);
     await tester.tap(find.byKey(const ValueKey('participant-filter-unpaid')));
     await tester.pumpAndSettle();
 
@@ -216,6 +222,7 @@ void main() {
         )
         .toList(growable: false);
     await _pump(tester, participants: singles, pairFormat: false);
+    await _openMenu(tester);
 
     expect(
       find.byKey(const ValueKey('participant-filter-pendingPartner')),

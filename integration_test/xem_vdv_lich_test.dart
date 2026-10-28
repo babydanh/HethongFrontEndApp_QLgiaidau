@@ -74,6 +74,70 @@ void main() {
     await shooter.snap('tab-vdv-menu-khac');
   });
 
+  testWidgets('xem: tab VDV hop chon cach ghep tu dong', (tester) async {
+    final shooter = XemShooter(tester, binding);
+    await shooter.pump(
+      xemApp(
+        overrides: [
+          introTeamsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => const <Team>[]),
+          tournamentDivisionsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => _divisions),
+          tournamentRepositoryProvider.overrideWithValue(
+            _ParticipantsRepository(),
+          ),
+          tournamentManagementRepositoryProvider.overrideWithValue(
+            _EmptyManagementRepository(),
+          ),
+        ],
+        home: Scaffold(
+          body: TournamentManagementAthletesTab(tournament: _tournament()),
+        ),
+      ),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('athlete-division-row-div-mixed')),
+    );
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('athletes-auto-pair')));
+    await settle(tester);
+    await shooter.snap('tab-vdv-tu-ghep');
+  });
+
+  testWidgets('xem: tab VDV dang mo dang ky an vong check-in', (tester) async {
+    final shooter = XemShooter(tester, binding);
+    await shooter.pump(
+      xemApp(
+        overrides: [
+          introTeamsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => const <Team>[]),
+          tournamentDivisionsProvider(
+            'tournament-1',
+          ).overrideWith((ref) async => _divisions),
+          tournamentRepositoryProvider.overrideWithValue(
+            _ParticipantsRepository(),
+          ),
+          tournamentManagementRepositoryProvider.overrideWithValue(
+            _EmptyManagementRepository(),
+          ),
+        ],
+        home: Scaffold(
+          body: TournamentManagementAthletesTab(
+            tournament: _tournament('registration'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('athlete-division-row-div-mixed')),
+    );
+    await settle(tester);
+    await shooter.snap('tab-vdv-dang-ky');
+  });
+
   testWidgets('xem: ho so VDV', (tester) async {
     final shooter = XemShooter(tester, binding);
     await shooter.pump(
@@ -162,12 +226,12 @@ const _divisions = <Map<String, dynamic>>[
   {'id': 'div-men', 'name': 'Don nam', 'matchType': 'SINGLES'},
 ];
 
-Tournament _tournament() => Tournament.fromJson({
+Tournament _tournament([String status = 'in_progress']) => Tournament.fromJson({
   'name': 'Giai thu nghiem',
   'sport': 'pickleball',
   'format': 'doubles',
   'bracketType': 'single_elimination',
-  'status': 'registration',
+  'status': status,
   'maxTeams': 16,
   'maxPlayersPerTeam': 2,
   'divisions': _divisions,
@@ -181,6 +245,7 @@ const _participants = [
     teamName: 'Nguyen Van A',
     teamStatus: 'COMPLETE',
     isPaid: true,
+    isPresent: true,
     entryFee: 200000,
     members: [OrganizerOpsMember(userId: 'u-a', fullName: 'Nguyen Van A')],
     divisionId: 'div-mixed',
@@ -201,6 +266,25 @@ const _participants = [
     isPaid: false,
     entryFee: 200000,
     members: [OrganizerOpsMember(userId: 'u-c', fullName: 'Le Van C')],
+    divisionId: 'div-mixed',
+  ),
+  // Waiting for a partner: yellow "Cho" pill + the badge on the Ghep doi box.
+  OrganizerOpsParticipant(
+    id: 'p-4',
+    teamName: 'Pham Van D',
+    teamStatus: 'PENDING_PARTNER',
+    isPaid: false,
+    entryFee: 200000,
+    members: [OrganizerOpsMember(userId: 'u-d', fullName: 'Pham Van D')],
+    divisionId: 'div-mixed',
+  ),
+  // Approved with no entry fee: shows "Mien phi".
+  OrganizerOpsParticipant(
+    id: 'p-5',
+    teamName: 'Hoang Thi E',
+    teamStatus: 'COMPLETE',
+    isPaid: false,
+    members: [OrganizerOpsMember(userId: 'u-e', fullName: 'Hoang Thi E')],
     divisionId: 'div-mixed',
   ),
 ];

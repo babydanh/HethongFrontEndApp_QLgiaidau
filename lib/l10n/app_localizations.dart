@@ -30865,6 +30865,54 @@ abstract class AppLocalizations {
   /// **'Đã đóng phí'**
   String get participantDetailFeePaid;
 
+  /// No description provided for @athletesAutoPair.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự ghép'**
+  String get athletesAutoPair;
+
+  /// No description provided for @athletesPresentCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có mặt'**
+  String get athletesPresentCount;
+
+  /// No description provided for @athletesSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm…'**
+  String get athletesSearchHint;
+
+  /// No description provided for @athleteFeeUnpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đóng phí'**
+  String get athleteFeeUnpaid;
+
+  /// No description provided for @athletePresenceMarked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã check-in.'**
+  String get athletePresenceMarked;
+
+  /// No description provided for @athletePresenceCleared.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bỏ check-in.'**
+  String get athletePresenceCleared;
+
+  /// No description provided for @athletePresenceFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không cập nhật được check-in. Thử lại.'**
+  String get athletePresenceFailed;
+
+  /// No description provided for @athleteWaitingPill.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ'**
+  String get athleteWaitingPill;
+
   /// No description provided for @participantDetailFeePaidConfirm.
   ///
   /// In vi, this message translates to:

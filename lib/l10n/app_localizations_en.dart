@@ -17181,6 +17181,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get participantDetailFeePaid => 'Fee paid';
 
   @override
+  String get athletesAutoPair => 'Auto pair';
+
+  @override
+  String get athletesPresentCount => 'Present';
+
+  @override
+  String get athletesSearchHint => 'Search…';
+
+  @override
+  String get athleteFeeUnpaid => 'Fee unpaid';
+
+  @override
+  String get athletePresenceMarked => 'Checked in.';
+
+  @override
+  String get athletePresenceCleared => 'Check-in removed.';
+
+  @override
+  String get athletePresenceFailed => 'Could not update check-in. Try again.';
+
+  @override
+  String get athleteWaitingPill => 'Waiting';
+
+  @override
   String get participantDetailFeePaidConfirm =>
       'Confirm the entry fee was received from this athlete?';
 

@@ -2099,8 +2099,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('An – Bình'), findsOneWidget);
-      expect(find.text(l10n.tournamentManagementApprove), findsOneWidget);
-      expect(find.text(l10n.tournamentManagementReject), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('participant-approve-p-2')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('participant-reject-p-2')),
+        findsOneWidget,
+      );
     });
 
     final teamPairKey = const ValueKey('athlete-team-row-p-1');
@@ -2262,18 +2268,18 @@ void main() {
       )!;
       final row = find.byKey(const ValueKey('athlete-team-row-p-2'));
 
-      // Chưa mở đội vẫn thấy Duyệt / Từ chối ngay trên dòng.
+      // Chưa mở đội vẫn thấy ✓ / ✕ ngay trên dòng.
       expect(
         find.descendant(
           of: row,
-          matching: find.text(l10n.tournamentManagementApprove),
+          matching: find.byKey(const ValueKey('participant-approve-p-2')),
         ),
         findsOneWidget,
       );
       expect(
         find.descendant(
           of: row,
-          matching: find.text(l10n.tournamentManagementReject),
+          matching: find.byKey(const ValueKey('participant-reject-p-2')),
         ),
         findsOneWidget,
       );

@@ -1,6 +1,8 @@
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
@@ -33,9 +35,14 @@ class TournamentManagementPeopleSection extends StatelessWidget {
     this.divisionName,
     this.embedded = false,
     this.pairFormat = false,
+    this.onPresenceChanged,
   });
   final Tournament tournament;
   final bool showRegistration;
+
+  /// Called after a check-in flip (and again on rollback) so a parent header
+  /// can keep its "present x/y" count in step without reloading.
+  final void Function(String participantId, bool present)? onPresenceChanged;
 
   /// Chỉ hiện người tham gia của nội dung này. Null: toàn giải (hành vi cũ).
   final String? divisionId;
@@ -57,6 +64,7 @@ class TournamentManagementPeopleSection extends StatelessWidget {
           divisionName: divisionName,
           embedded: embedded,
           pairFormat: pairFormat,
+          onPresenceChanged: onPresenceChanged,
         )
       : _TournamentPermissions(tournamentId: tournament.id);
 }
@@ -68,12 +76,14 @@ class _RegistrationPeople extends ConsumerStatefulWidget {
     this.divisionName,
     this.embedded = false,
     this.pairFormat = false,
+    this.onPresenceChanged,
   });
   final Tournament tournament;
   final String? divisionId;
   final String? divisionName;
   final bool embedded;
   final bool pairFormat;
+  final void Function(String participantId, bool present)? onPresenceChanged;
 
   @override
   ConsumerState<_RegistrationPeople> createState() =>
@@ -85,6 +95,21 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   String? _busyParticipantId;
   String? _mutationError;
   ParticipantStatusFilter _filter = ParticipantStatusFilter.all;
+  String _query = '';
+
+  /// Check-in flips that the server accepted (or are in flight); they win over
+  /// the loaded list until the next reload.
+  final Map<String, bool> _presence = {};
+  final Set<String> _presenceBusy = {};
+
+  /// Check-in only makes sense once registration is closed: hidden while the
+  /// tournament is a draft, upcoming or still open for registration. The
+  /// Backend does not gate `.../presence` on tournament status at all.
+  bool get _showPresence => !const {
+    AppConstants.statusDraft,
+    AppConstants.statusUpcoming,
+    AppConstants.statusRegistration,
+  }.contains(StatusHelper.normalizeTournamentStatus(widget.tournament.status));
 
   @override
   void initState() {
@@ -97,6 +122,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   void _reload() {
     setState(() {
       _mutationError = null;
+      _presence.clear();
       _participantsFuture = ref
           .read(tournamentRepositoryProvider)
           .getOrganizerParticipants(widget.tournament.id);
@@ -139,6 +165,57 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
     ParticipantStatusFilter.rejected =>
       participant.teamStatus.toUpperCase() == 'REJECTED',
   };
+
+  /// Client-side search over the team name and every player/member name.
+  bool _matchesSearch(OrganizerOpsParticipant participant) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return true;
+    final haystack = [
+      participant.teamName,
+      for (final player in participant.players) player.fullName,
+      for (final member in participant.members) member.fullName,
+    ].join(' ').toLowerCase();
+    return haystack.contains(query);
+  }
+
+  /// One tap flips the check-in. The circle changes at once; a failure puts it
+  /// back and says so. A second tap while the request is in flight is ignored.
+  Future<void> _togglePresence(OrganizerOpsParticipant participant) async {
+    if (_presenceBusy.contains(participant.id)) return;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final previous = _presence[participant.id] ?? participant.isPresent;
+    final next = !previous;
+    setState(() {
+      _presenceBusy.add(participant.id);
+      _presence[participant.id] = next;
+    });
+    widget.onPresenceChanged?.call(participant.id, next);
+    try {
+      await ref
+          .read(tournamentManagementRepositoryProvider)
+          .setParticipantPresent(widget.tournament.id, participant.id, next);
+      if (!mounted) return;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              next ? l10n.athletePresenceMarked : l10n.athletePresenceCleared,
+            ),
+          ),
+        );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _presence[participant.id] = previous);
+      widget.onPresenceChanged?.call(participant.id, previous);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.athletePresenceFailed)));
+    } finally {
+      if (mounted) setState(() => _presenceBusy.remove(participant.id));
+    }
+  }
 
   /// Mở sheet hồ sơ chi tiết (thay card mở rộng cũ).
   Future<void> _openDetail(OrganizerOpsParticipant participant) async {
@@ -243,7 +320,9 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             counts[ParticipantStatusFilter.pendingPartner]! > 0 ||
             _filter == ParticipantStatusFilter.pendingPartner;
         final visible = participants
-            .where((item) => _matchesFilter(item, _filter))
+            .where(
+              (item) => _matchesFilter(item, _filter) && _matchesSearch(item),
+            )
             .toList(growable: false);
         final body = <Widget>[
           if (_mutationError != null) ...[
@@ -261,23 +340,17 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
             )
           else ...[
             if (!widget.embedded) const SizedBox(height: 12),
-            // Chips lọc trạng thái kèm số đếm (task 3.1).
+            // Design 2: one filter chip (opens the list with counts) + search.
             Padding(
-              padding: EdgeInsets.only(top: widget.embedded ? 4 : 0, bottom: 8),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              padding: EdgeInsets.only(
+                top: widget.embedded ? 4 : 0,
+                bottom: 8,
+              ),
+              child: Row(
                 children: [
-                  for (final option in ParticipantStatusFilter.values)
-                    if (option != ParticipantStatusFilter.pendingPartner ||
-                        showPendingPartner)
-                      _FilterChip(
-                        key: ValueKey('participant-filter-${option.name}'),
-                        label: _filterLabel(l10n, option),
-                        count: counts[option]!,
-                        selected: _filter == option,
-                        onTap: () => setState(() => _filter = option),
-                      ),
+                  _filterMenu(l10n, counts, showPendingPartner),
+                  const SizedBox(width: 8),
+                  Expanded(child: _searchField(l10n)),
                 ],
               ),
             ),
@@ -294,6 +367,9 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
                 _ParticipantCard(
                   participant: participant,
                   pairFormat: widget.pairFormat,
+                  showPresence: _showPresence,
+                  isPresent: _presence[participant.id] ?? participant.isPresent,
+                  onTogglePresence: () => _togglePresence(participant),
                   tournamentStatus: widget.tournament.status,
                   isBusy: _busyParticipantId == participant.id,
                   onApprove: () =>
@@ -356,6 +432,66 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
           ],
         );
       },
+    );
+  }
+
+  Widget _filterMenu(
+    AppLocalizations l10n,
+    Map<ParticipantStatusFilter, int> counts,
+    bool showPendingPartner,
+  ) {
+    return PopupMenuButton<ParticipantStatusFilter>(
+      key: const ValueKey('participant-filter-menu'),
+      padding: EdgeInsets.zero,
+      initialValue: _filter,
+      onSelected: (option) => setState(() => _filter = option),
+      itemBuilder: (_) => [
+        for (final option in ParticipantStatusFilter.values)
+          if (option != ParticipantStatusFilter.pendingPartner ||
+              showPendingPartner)
+            PopupMenuItem(
+              key: ValueKey('participant-filter-${option.name}'),
+              value: option,
+              child: Text('${_filterLabel(l10n, option)} (${counts[option]})'),
+            ),
+      ],
+      // The menu owns the tap; the chip is only its face.
+      child: IgnorePointer(
+        child: LavishChipButton(
+          label: '${_filterLabel(l10n, _filter)} (${counts[_filter]})',
+          chevron: true,
+          onPressed: () {},
+        ),
+      ),
+    );
+  }
+
+  Widget _searchField(AppLocalizations l10n) {
+    final colors = LavishColors.of(context);
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: colors.chipLine, width: 1.5),
+    );
+    return TextField(
+      key: const ValueKey('participant-search'),
+      onChanged: (value) => setState(() => _query = value),
+      style: const TextStyle(fontSize: 13),
+      decoration: InputDecoration(
+        hintText: l10n.athletesSearchHint,
+        hintStyle: TextStyle(fontSize: 13, color: colors.muted),
+        prefixIcon: Icon(Icons.search_rounded, size: 18, color: colors.muted),
+        prefixIconConstraints: const BoxConstraints(minWidth: 36),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+        border: border,
+        enabledBorder: border,
+        focusedBorder: border.copyWith(
+          borderSide: const BorderSide(
+            color: LavishColors.accent,
+            width: 1.5,
+          ),
+        ),
+      ),
     );
   }
 
@@ -860,74 +996,6 @@ class _CountChip extends StatelessWidget {
   );
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    super.key,
-    required this.label,
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
-  final String label;
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    // The pill keeps its look; only the tap target grows to 44 px.
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(999),
-          child: Align(
-            widthFactor: 1,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: selected
-                    ? AppTheme.primary.withValues(alpha: 0.15)
-                    : null,
-                border: Border.all(
-                  color: selected ? AppTheme.primary : colors.border,
-                ),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: selected ? AppTheme.primary : colors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$count',
-                    style: TextStyle(
-                      color: selected ? AppTheme.primary : colors.textMuted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ParticipantCard extends StatelessWidget {
   const _ParticipantCard({
     required this.participant,
@@ -937,6 +1005,9 @@ class _ParticipantCard extends StatelessWidget {
     required this.onReject,
     required this.onOpenDetail,
     required this.onUnpair,
+    required this.showPresence,
+    required this.isPresent,
+    required this.onTogglePresence,
     this.pairFormat = false,
   });
   final OrganizerOpsParticipant participant;
@@ -948,6 +1019,11 @@ class _ParticipantCard extends StatelessWidget {
   final VoidCallback onReject;
   final VoidCallback onOpenDetail;
   final VoidCallback onUnpair;
+
+  /// Whether the check-in circle shows (not while registration is open).
+  final bool showPresence;
+  final bool isPresent;
+  final VoidCallback onTogglePresence;
 
   /// Nội dung đôi / đôi nam nữ: hồ sơ luôn mở được sheet kể cả khi mới có 1 người.
   final bool pairFormat;
@@ -965,28 +1041,13 @@ class _ParticipantCard extends StatelessWidget {
     final colors = context.colors;
     final status = participant.teamStatus.toUpperCase();
     final pending = const {'PENDING', 'PENDING_APPROVAL'}.contains(status);
-    final (statusLabel, statusColor) = switch (status) {
-      'PENDING' || 'PENDING_APPROVAL' => (
-        l10n.tournamentManagementParticipantPending,
-        colors.warning,
-      ),
-      'PENDING_PARTNER' => (
-        l10n.tournamentManagementParticipantPendingPartner,
-        colors.warning,
-      ),
-      'COMPLETE' => (
-        l10n.tournamentManagementParticipantApproved,
-        colors.success,
-      ),
-      'REJECTED' => (
-        l10n.tournamentManagementParticipantRejected,
-        colors.error,
-      ),
-      'KICKED' => (
-        l10n.tournamentManagementParticipantRemoved,
-        colors.textMuted,
-      ),
-      _ => (l10n.tournamentManagementStatusOther, colors.textSecondary),
+    final statusLabel = switch (status) {
+      'PENDING' || 'PENDING_APPROVAL' => l10n.tournamentManagementParticipantPending,
+      'PENDING_PARTNER' => l10n.tournamentManagementParticipantPendingPartner,
+      'COMPLETE' => l10n.tournamentManagementParticipantApproved,
+      'REJECTED' => l10n.tournamentManagementParticipantRejected,
+      'KICKED' => l10n.tournamentManagementParticipantRemoved,
+      _ => l10n.tournamentManagementStatusOther,
     };
     final lead = participant.members.isEmpty ? null : participant.members.first;
     final nameDisplay = resolveParticipantDisplay(
@@ -1002,40 +1063,6 @@ class _ParticipantCard extends StatelessWidget {
       fontSize: 13,
       fontWeight: FontWeight.w700,
     );
-    // Design 2: status and payment sit on one line under the name.
-    final showPayment = (participant.entryFee ?? 0) > 0;
-    final subtitle = Row(
-      children: [
-        Text(
-          statusLabel,
-          style: TextStyle(
-            color: statusColor,
-            fontSize: 11.5,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        if (showPayment) ...[
-          Text(
-            ' · ',
-            style: TextStyle(color: colors.textMuted, fontSize: 11.5),
-          ),
-          Flexible(
-            child: Text(
-              participant.isPaid
-                  ? l10n.participantDetailPaid
-                  : l10n.participantDetailUnpaid,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: participant.isPaid ? colors.success : colors.error,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
     final header = Row(
       children: [
         if (lead != null)
@@ -1043,11 +1070,11 @@ class _ParticipantCard extends StatelessWidget {
             userId: lead.userId,
             name: lead.fullName,
             imageUrl: lead.avatarUrl,
-            size: 38,
+            size: 36,
           )
         else
-          const SizedBox(width: 38, height: 44),
-        const SizedBox(width: 8),
+          const SizedBox(width: 36, height: 44),
+        const SizedBox(width: 11),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1069,10 +1096,12 @@ class _ParticipantCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: nameStyle,
                     ),
-              subtitle,
+              _subtitle(context, l10n, status, statusLabel),
             ],
           ),
         ),
+        const SizedBox(width: 8),
+        ..._trailing(context, l10n, status, pending),
         // Menu dòng: Tách cặp (task 3.3) — chỉ khi server cho phép.
         if (_canUnpair)
           PopupMenuButton<String>(
@@ -1099,10 +1128,7 @@ class _ParticipantCard extends StatelessWidget {
       children: [
         Semantics(
           button: true,
-          label: participantLabel(
-            teamName: participant.teamName,
-            players: participant.players,
-          ),
+          label: rowLabel,
           child: InkWell(
             onTap: onOpenDetail,
             child: Padding(
@@ -1111,34 +1137,130 @@ class _ParticipantCard extends StatelessWidget {
             ),
           ),
         ),
-        if (pending)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: isBusy ? null : onReject,
-                    child: Text(l10n.tournamentManagementReject),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: isBusy ? null : onApprove,
-                    child: isBusy
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.tournamentManagementApprove),
-                  ),
-                ),
-              ],
-            ),
-          ),
       ],
     );
+  }
+
+  /// "Đã duyệt · Đã đóng phí": the fee part is bold green / red; a free entry
+  /// shows plain text.
+  Widget _subtitle(
+    BuildContext context,
+    AppLocalizations l10n,
+    String status,
+    String statusLabel,
+  ) {
+    final colors = context.colors;
+    final lavish = LavishColors.of(context);
+    final muted = TextStyle(
+      color: status == 'REJECTED' ? colors.error : colors.textSecondary,
+      fontSize: 11.5,
+      fontWeight: FontWeight.w500,
+    );
+    final hasFee = (participant.entryFee ?? 0) > 0;
+    final fee = hasFee
+        ? Text(
+            participant.isPaid
+                ? l10n.participantDetailFeePaid
+                : l10n.athleteFeeUnpaid,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: lavish.pillText(
+                participant.isPaid ? LavishTone.ok : LavishTone.bad,
+              ),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
+          )
+        : (status == 'COMPLETE'
+              ? Text(l10n.participantDetailFreeEntry, style: muted)
+              : null);
+    return Row(
+      children: [
+        Text(statusLabel, style: muted),
+        if (fee != null) ...[
+          Text(' · ', style: muted),
+          Flexible(child: fee),
+        ],
+      ],
+    );
+  }
+
+  /// Right side of the row: ✓/✕ while waiting for approval, the check-in
+  /// circle once approved, a yellow pill while waiting for a partner.
+  List<Widget> _trailing(
+    BuildContext context,
+    AppLocalizations l10n,
+    String status,
+    bool pending,
+  ) {
+    if (pending) {
+      return [
+        LavishIconBox(
+          key: ValueKey('participant-approve-${participant.id}'),
+          size: 30,
+          tone: LavishTone.ok,
+          tooltip: l10n.tournamentManagementApprove,
+          onTap: isBusy ? null : onApprove,
+          child: const Icon(Icons.check_rounded),
+        ),
+        const SizedBox(width: 8),
+        LavishIconBox(
+          key: ValueKey('participant-reject-${participant.id}'),
+          size: 30,
+          tone: LavishTone.bad,
+          tooltip: l10n.tournamentManagementReject,
+          onTap: isBusy ? null : onReject,
+          child: const Icon(Icons.close_rounded),
+        ),
+      ];
+    }
+    if (status == 'PENDING_PARTNER') {
+      return [LavishPill(l10n.athleteWaitingPill, tone: LavishTone.warn)];
+    }
+    if (status == 'COMPLETE' && showPresence) {
+      final lavish = LavishColors.of(context);
+      return [
+        Semantics(
+          button: true,
+          checked: isPresent,
+          label: l10n.participantDetailCheckIn,
+          child: GestureDetector(
+            key: ValueKey('participant-checkin-${participant.id}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: onTogglePresence,
+            // 40dp touch target around the design's 26dp circle.
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Center(
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isPresent ? LavishColors.ok : null,
+                    border: Border.all(
+                      color: isPresent ? LavishColors.ok : lavish.chipLine,
+                      width: 2,
+                    ),
+                  ),
+                  child: isPresent
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        )
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+    return const [];
   }
 }
 
