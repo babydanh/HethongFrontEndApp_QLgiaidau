@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/permission_rows.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -403,10 +404,12 @@ class _TournamentPermissions extends ConsumerStatefulWidget {
 
 class _TournamentPermissionsState
     extends ConsumerState<_TournamentPermissions> {
-  late Future<List<Map<String, dynamic>>> _staffFuture;
-  late Future<List<Map<String, dynamic>>> _refereesFuture;
+  static const _roles = ['CO_ORGANIZER', 'REFEREE', 'SPECTATOR'];
+
+  late Future<List<PermissionRow>> _rowsFuture;
   final TextEditingController _emailController = TextEditingController();
-  String _staffRole = 'CO_ORGANIZER';
+  String _role = 'CO_ORGANIZER';
+  String _filter = 'ALL';
   bool _isBusy = false;
   String? _mutationError;
 
@@ -418,8 +421,10 @@ class _TournamentPermissionsState
 
   void _load() {
     final repo = ref.read(tournamentManagementRepositoryProvider);
-    _staffFuture = repo.getStaff(widget.tournamentId);
-    _refereesFuture = repo.getReferees(widget.tournamentId);
+    _rowsFuture = Future.wait([
+      repo.getStaff(widget.tournamentId),
+      repo.getReferees(widget.tournamentId),
+    ]).then((lists) => buildPermissionRows(lists[0], lists[1]));
   }
 
   void _reload() => setState(() {
@@ -430,7 +435,6 @@ class _TournamentPermissionsState
   @override
   void dispose() {
     _emailController.dispose();
-    _refereeEmailController.dispose();
     super.dispose();
   }
 
@@ -440,234 +444,172 @@ class _TournamentPermissionsState
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        TournamentManagementSectionCard(
-          title: l10n.tournamentManagementStaff,
-          subtitle: l10n.tournamentManagementStaffDescription,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.done,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementStaffEmail,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                initialValue: _staffRole,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementStaffRole,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: 'CO_ORGANIZER',
-                    child: Text(l10n.tournamentManagementRoleCoOrganizer),
-                  ),
-                  DropdownMenuItem(
-                    value: 'SPECTATOR',
-                    child: Text(l10n.tournamentManagementRoleSpectator),
-                  ),
-                ],
-                onChanged: _isBusy
-                    ? null
-                    : (value) {
-                        if (value != null) setState(() => _staffRole = value);
-                      },
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed: _isBusy ? null : _addStaff,
-                  icon: _isBusy
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.person_add_alt_1_rounded),
-                  label: Text(l10n.tournamentManagementAddStaff),
-                ),
-              ),
-              if (_mutationError != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  l10n.tournamentManagementActionError,
-                  style: TextStyle(color: context.colors.error),
-                ),
-              ],
-              const SizedBox(height: 12),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _staffFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(14),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  if (snapshot.hasError)
-                    return TournamentManagementError(
-                      error: snapshot.error,
-                      onRetry: _reload,
-                    );
-                  final staff = snapshot.data ?? const <Map<String, dynamic>>[];
-                  if (staff.isEmpty)
-                    return TournamentManagementEmpty(
-                      title: l10n.tournamentManagementStaffEmpty,
-                      icon: Icons.groups_outlined,
-                    );
-                  return Column(
-                    children: [
-                      for (final member in staff)
-                        _PersonRow(
-                          name: _personName(
-                            member,
-                            l10n.tournamentManagementStaffMember,
-                          ),
-                          status: _staffRoleLabel(
-                            l10n,
-                            (member['role'] ?? '').toString(),
-                          ),
-                          userId: _personUserId(member, const [
-                            'userId',
-                            'user_id',
-                            'id',
-                          ]),
-                          onRemove: _isBusy ? null : () => _removeStaff(member),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
+        _buildInviteCard(l10n),
         const SizedBox(height: 16),
-        TournamentManagementSectionCard(
-          title: l10n.tournamentManagementReferees,
-          subtitle: l10n.tournamentManagementRefereesDescription,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _refereeEmailController,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.done,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementRefereeEmail,
-                  border: const OutlineInputBorder(),
+        FutureBuilder<List<PermissionRow>>(
+          future: _rowsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(14),
+                  child: CircularProgressIndicator(),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: FilledButton.icon(
-                  onPressed: _isBusy ? null : _addReferee,
-                  icon: _isBusy
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.send_rounded),
-                  label: Text(l10n.tournamentManagementSendInvite),
-                ),
-              ),
-              const SizedBox(height: 12),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _refereesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(14),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  if (snapshot.hasError)
-                    return TournamentManagementError(
-                      error: snapshot.error,
-                      onRetry: _reload,
-                    );
-                  final referees =
-                      snapshot.data ?? const <Map<String, dynamic>>[];
-                  if (referees.isEmpty)
-                    return TournamentManagementEmpty(
-                      title: l10n.tournamentManagementRefereesEmpty,
-                      icon: Icons.sports_outlined,
-                    );
-                  return Column(
-                    children: [
-                      for (final referee in referees)
-                        _PersonRow(
-                          name: _personName(
-                            referee,
-                            l10n.tournamentManagementReferee,
-                          ),
-                          status: _refereeStatus(
-                            l10n,
-                            (referee['status'] ?? '').toString(),
-                          ),
-                          userId: _personUserId(referee, const [
-                            'userId',
-                            'user_id',
-                          ]),
-                          onRemove: _isBusy
-                              ? null
-                              : () => _removeReferee(referee),
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
+              );
+            }
+            if (snapshot.hasError) {
+              return TournamentManagementError(
+                error: snapshot.error,
+                onRetry: _reload,
+              );
+            }
+            return _buildListCard(
+              l10n,
+              snapshot.data ?? const <PermissionRow>[],
+            );
+          },
         ),
       ],
     );
   }
 
-  late final TextEditingController _refereeEmailController =
-      TextEditingController();
-
-  String _personName(Map<String, dynamic> person, String fallback) {
-    final nestedUser = person['user'];
-    final nestedName = nestedUser is Map
-        ? nestedUser['fullName'] ?? nestedUser['name']
-        : null;
-    final name = (person['fullName'] ?? person['name'] ?? nestedName)
-        ?.toString()
-        .trim();
-    return name?.isNotEmpty == true ? name! : fallback;
+  Widget _buildInviteCard(AppLocalizations l10n) {
+    return TournamentManagementSectionCard(
+      title: l10n.tournamentManagementInviteByEmail,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final role in _roles)
+                ChoiceChip(
+                  key: Key('permissions-role-$role'),
+                  label: Text(_roleLabel(l10n, role)),
+                  selected: _role == role,
+                  onSelected: _isBusy
+                      ? null
+                      : (_) => setState(() => _role = role),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            key: const Key('permissions-invite-email'),
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            decoration: InputDecoration(
+              labelText: l10n.tournamentManagementInviteEmail,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              key: const Key('permissions-invite-send'),
+              onPressed: _isBusy ? null : _invite,
+              icon: _isBusy
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_rounded),
+              label: Text(l10n.tournamentManagementSendInvite),
+            ),
+          ),
+          if (_mutationError != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              _mutationError == 'validation'
+                  ? l10n.tournamentManagementInviteEmailInvalid
+                  : l10n.tournamentManagementActionError,
+              style: TextStyle(color: context.colors.error),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
-  /// Reads the first non-empty id among [keys], falling back to a nested `user`
-  /// object. Returns '' when the row is not backed by a real account — a
-  /// referee invite is keyed by its record id, not by a user, so it stays out.
-  String _personUserId(Map<String, dynamic> person, List<String> keys) {
-    for (final key in keys) {
-      final value = person[key]?.toString().trim();
-      if (value != null && value.isNotEmpty) return value;
-    }
-    final nestedUser = person['user'];
-    if (nestedUser is Map) {
-      return _personUserId(Map<String, dynamic>.from(nestedUser), keys);
-    }
-    return '';
+  Widget _buildListCard(AppLocalizations l10n, List<PermissionRow> rows) {
+    final visible = _filter == 'ALL'
+        ? rows
+        : rows.where((row) => row.role == _filter).toList();
+    return TournamentManagementSectionCard(
+      title: l10n.tournamentManagementInvitedCount(rows.length),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final value in ['ALL', ..._roles])
+                ChoiceChip(
+                  key: Key('permissions-filter-$value'),
+                  label: Text(
+                    value == 'ALL' ? l10n.filterAll : _roleLabel(l10n, value),
+                  ),
+                  selected: _filter == value,
+                  onSelected: (_) => setState(() => _filter = value),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (visible.isEmpty)
+            TournamentManagementEmpty(
+              title: l10n.tournamentManagementStaffEmpty,
+              icon: Icons.groups_outlined,
+            )
+          else
+            for (final row in visible) _buildRow(l10n, row),
+        ],
+      ),
+    );
   }
 
-  String _staffRoleLabel(AppLocalizations l10n, String role) =>
-      switch (role.toUpperCase()) {
-        'CO_ORGANIZER' => l10n.tournamentManagementRoleCoOrganizer,
-        'SPECTATOR' => l10n.tournamentManagementRoleSpectator,
-        _ => l10n.tournamentManagementRoleOther,
-      };
+  Widget _buildRow(AppLocalizations l10n, PermissionRow row) {
+    final isReferee = row.role == 'REFEREE';
+    final roleLabel = _roleLabel(l10n, row.role);
+    return _PersonRow(
+      name: row.name.isNotEmpty ? row.name : roleLabel,
+      status: isReferee
+          ? '$roleLabel · ${_refereeStatus(l10n, row.status ?? '')}'
+          : roleLabel,
+      userId: row.userId,
+      trailing: switch (row.action) {
+        RefereeAction.revoke => TextButton(
+          onPressed: _isBusy ? null : () => _revoke(row),
+          child: Text(
+            l10n.tournamentManagementRevoke,
+            style: TextStyle(color: context.colors.error),
+          ),
+        ),
+        RefereeAction.resend => TextButton(
+          onPressed: _isBusy ? null : () => _resend(row),
+          child: Text(l10n.tournamentManagementResend),
+        ),
+        RefereeAction.none when !isReferee => IconButton(
+          onPressed: _isBusy ? null : () => _removeStaff(row),
+          tooltip: l10n.tournamentManagementRemove,
+          icon: Icon(
+            Icons.person_remove_alt_1_outlined,
+            color: context.colors.error,
+          ),
+        ),
+        RefereeAction.none => null,
+      },
+    );
+  }
+
+  String _roleLabel(AppLocalizations l10n, String role) => switch (role) {
+    'CO_ORGANIZER' => l10n.tournamentManagementRoleCoOrganizer,
+    'REFEREE' => l10n.tournamentManagementReferee,
+    'SPECTATOR' => l10n.tournamentManagementRoleSpectator,
+    _ => l10n.tournamentManagementRoleOther,
+  };
 
   String _refereeStatus(AppLocalizations l10n, String status) =>
       switch (status.toUpperCase()) {
@@ -677,104 +619,54 @@ class _TournamentPermissionsState
         _ => l10n.tournamentManagementStatusOther,
       };
 
-  Future<void> _addStaff() async {
+  Future<void> _invite() async {
     if (_isBusy) return;
     final email = _emailController.text.trim();
     if (!_looksLikeEmail(email)) {
       setState(() => _mutationError = 'validation');
       return;
     }
-    setState(() {
-      _isBusy = true;
-      _mutationError = null;
-    });
-    try {
-      await ref
-          .read(tournamentManagementRepositoryProvider)
-          .addStaff(widget.tournamentId, email, _staffRole);
-      if (!mounted) return;
-      _emailController.clear();
-      _reload();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.tournamentManagementStaffAdded,
-          ),
-        ),
-      );
-    } catch (_) {
-      if (mounted) setState(() => _mutationError = 'error');
-    } finally {
-      if (mounted) setState(() => _isBusy = false);
-    }
-  }
-
-  Future<void> _addReferee() async {
-    if (_isBusy) return;
-    final email = _refereeEmailController.text.trim();
-    if (!_looksLikeEmail(email)) {
-      setState(() => _mutationError = 'validation');
-      return;
-    }
-    setState(() {
-      _isBusy = true;
-      _mutationError = null;
-    });
-    try {
-      await ref
-          .read(tournamentManagementRepositoryProvider)
-          .addReferee(widget.tournamentId, email);
-      if (!mounted) return;
-      _refereeEmailController.clear();
-      _reload();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.tournamentManagementRefereeInviteSent,
-          ),
-        ),
-      );
-    } catch (_) {
-      if (mounted) setState(() => _mutationError = 'error');
-    } finally {
-      if (mounted) setState(() => _isBusy = false);
-    }
-  }
-
-  Future<void> _removeStaff(Map<String, dynamic> member) async {
     final l10n = AppLocalizations.of(context)!;
-    final userId = (member['userId'] ?? member['user_id'] ?? member['id'] ?? '')
-        .toString();
-    if (userId.isEmpty) return;
+    final repo = ref.read(tournamentManagementRepositoryProvider);
+    final asReferee = _role == 'REFEREE';
+    final ok = await _runMutation(
+      () => asReferee
+          ? repo.addReferee(widget.tournamentId, email)
+          : repo.addStaff(widget.tournamentId, email, _role),
+      asReferee
+          ? l10n.tournamentManagementRefereeInviteSent
+          : l10n.tournamentManagementStaffAdded,
+    );
+    if (ok) _emailController.clear();
+  }
+
+  Future<void> _resend(PermissionRow row) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (row.email.isEmpty) return;
     final confirmed = await confirmTournamentManagementAction(
       context,
-      title: l10n.tournamentManagementRemoveStaff,
-      message: l10n.tournamentManagementRemoveStaffConfirm(
-        _personName(member, l10n.tournamentManagementStaffMember),
-      ),
-      confirmLabel: l10n.tournamentManagementRemove,
-      destructive: true,
+      title: l10n.tournamentManagementResend,
+      message: l10n.tournamentManagementResendConfirm(row.name),
+      confirmLabel: l10n.tournamentManagementResend,
     );
     if (!confirmed || !mounted || _isBusy) return;
     await _runMutation(
       () => ref
           .read(tournamentManagementRepositoryProvider)
-          .removeStaff(widget.tournamentId, userId),
-      l10n.tournamentManagementStaffRemoved,
+          .addReferee(widget.tournamentId, row.email),
+      l10n.tournamentManagementRefereeInviteResent,
     );
   }
 
-  Future<void> _removeReferee(Map<String, dynamic> referee) async {
+  Future<void> _revoke(PermissionRow row) async {
     final l10n = AppLocalizations.of(context)!;
-    final refereeId = (referee['id'] ?? referee['refereeId'] ?? '').toString();
-    if (refereeId.isEmpty) return;
+    final refereeId = row.refereeId;
+    if (refereeId == null || refereeId.isEmpty) return;
     final confirmed = await confirmTournamentManagementAction(
       context,
-      title: l10n.tournamentManagementRemoveReferee,
-      message: l10n.tournamentManagementRemoveRefereeConfirm(
-        _personName(referee, l10n.tournamentManagementReferee),
-      ),
-      confirmLabel: l10n.tournamentManagementRemove,
+      title: l10n.tournamentManagementRevoke,
+      message: l10n.tournamentManagementRevokeConfirm(row.name),
+      confirmLabel: l10n.tournamentManagementRevoke,
       destructive: true,
     );
     if (!confirmed || !mounted || _isBusy) return;
@@ -782,27 +674,51 @@ class _TournamentPermissionsState
       () => ref
           .read(tournamentManagementRepositoryProvider)
           .removeReferee(widget.tournamentId, refereeId),
-      l10n.tournamentManagementRefereeRemoved,
+      l10n.tournamentManagementRefereeInviteRevoked,
     );
   }
 
-  Future<void> _runMutation(
+  Future<void> _removeStaff(PermissionRow row) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (row.userId.isEmpty) return;
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.tournamentManagementRemoveStaff,
+      message: l10n.tournamentManagementRemoveStaffConfirm(row.name),
+      confirmLabel: l10n.tournamentManagementRemove,
+      destructive: true,
+    );
+    if (!confirmed || !mounted || _isBusy) return;
+    await _runMutation(
+      () => ref
+          .read(tournamentManagementRepositoryProvider)
+          .removeStaff(widget.tournamentId, row.userId),
+      l10n.tournamentManagementStaffRemoved,
+    );
+  }
+
+  /// Runs one mutation under the shared busy flag. Returns whether it
+  /// succeeded; a failure keeps the list as is and shows a generic error.
+  Future<bool> _runMutation(
     Future<void> Function() operation,
     String success,
   ) async {
+    if (_isBusy) return false;
     setState(() {
       _isBusy = true;
       _mutationError = null;
     });
     try {
       await operation();
-      if (!mounted) return;
+      if (!mounted) return false;
       _reload();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(success)));
+      return true;
     } catch (_) {
       if (mounted) setState(() => _mutationError = 'error');
+      return false;
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
@@ -1082,12 +998,12 @@ class _PersonRow extends StatelessWidget {
     required this.name,
     required this.status,
     required this.userId,
-    required this.onRemove,
+    this.trailing,
   });
   final String name;
   final String status;
   final String userId;
-  final VoidCallback? onRemove;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -1129,11 +1045,7 @@ class _PersonRow extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            onPressed: onRemove,
-            tooltip: AppLocalizations.of(context)!.tournamentManagementRemove,
-            icon: Icon(Icons.person_remove_alt_1_outlined, color: colors.error),
-          ),
+          if (trailing != null) trailing!,
         ],
       ),
     );
