@@ -17444,6 +17444,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wildcardAssignFailed => 'Failed to assign the wildcard slot.';
 
   @override
+  String get athletesFilterTooltip => 'Choose content';
+
+  @override
   String get pairingOpen => 'Pair athletes';
 
   @override

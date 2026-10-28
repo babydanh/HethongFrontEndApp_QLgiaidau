@@ -17375,7 +17375,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wildcardAssignFailed => 'Gán suất đặc cách thất bại.';
 
   @override
-  String get pairingOpen => 'BTC ghép đôi';
+  String get athletesFilterTooltip => 'Chọn nội dung';
+
+  @override
+  String get pairingOpen => 'Ghép đôi';
 
   @override
   String get pairingSheetTitle => 'Chọn VĐV để ghép đôi';

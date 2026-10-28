@@ -6920,6 +6920,8 @@
   "wildcardDivisionRequired": "Choose a division first",
   "wildcardAssignedToast": "Wildcard slot assigned.",
   "wildcardAssignFailed": "Failed to assign the wildcard slot.",
+  "athletesFilterTooltip": "Choose content",
+  "@athletesFilterTooltip": {"description": "Tooltip of the status filter button in the athletes tab (replaces the default Show menu text)."},
   "pairingOpen": "Pair athletes",
   "@pairingOpen": {"description": "Button opening the pairing sheet in the doubles division block of the athletes tab (Web pairNow)."},
   "pairingSheetTitle": "Choose athletes to pair",

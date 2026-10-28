@@ -444,6 +444,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
   ) {
     return PopupMenuButton<ParticipantStatusFilter>(
       key: const ValueKey('participant-filter-menu'),
+      tooltip: l10n.athletesFilterTooltip,
       padding: EdgeInsets.zero,
       initialValue: _filter,
       onSelected: (option) => setState(() => _filter = option),

@@ -351,7 +351,6 @@ class _DivisionRow extends StatelessWidget {
         .length;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: expanded ? colors.bgSurface : null,
         border: Border(bottom: BorderSide(color: colors.border)),
       ),
       child: Column(

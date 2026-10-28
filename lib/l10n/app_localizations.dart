@@ -31357,10 +31357,16 @@ abstract class AppLocalizations {
   /// **'Gán suất đặc cách thất bại.'**
   String get wildcardAssignFailed;
 
+  /// Tooltip của nút lọc trạng thái trong tab VĐV (thay cho chữ mặc định Hiển thị menu).
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn nội dung'**
+  String get athletesFilterTooltip;
+
   /// Nút mở sheet ghép cặp trong khối nút hạng mục đôi của tab VĐV (Web pairNow).
   ///
   /// In vi, this message translates to:
-  /// **'BTC ghép đôi'**
+  /// **'Ghép đôi'**
   String get pairingOpen;
 
   /// No description provided for @pairingSheetTitle.
