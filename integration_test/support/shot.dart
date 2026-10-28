@@ -30,10 +30,12 @@ Future<void> shot(
   String name,
 ) async {
   final bytes = await binding.takeScreenshot(name);
-  debugPrint('[[SHOT-BEGIN $name ${bytes.length}]]');
+  // debugPrint is throttled and drops queued lines when the test ends first
+  // (cloud run 40652452530 lost most of the image), so print synchronously.
+  debugPrintSynchronously('[[SHOT-BEGIN $name ${bytes.length}]]');
   final chunks = chunkBase64(bytes);
   for (var i = 0; i < chunks.length; i++) {
-    debugPrint('[[SHOT $name $i]] ${chunks[i]}');
+    debugPrintSynchronously('[[SHOT $name $i]] ${chunks[i]}');
   }
-  debugPrint('[[SHOT-END $name]]');
+  debugPrintSynchronously('[[SHOT-END $name]]');
 }
