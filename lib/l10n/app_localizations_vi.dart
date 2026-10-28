@@ -12503,6 +12503,60 @@ class AppLocalizationsVi extends AppLocalizations {
       'Nhập URL phát của camera.';
 
   @override
+  String get tournamentManagementCourtCameraAttached => 'Đã gắn camera';
+
+  @override
+  String get tournamentManagementCourtCameraNotAttached => 'Chưa gắn camera';
+
+  @override
+  String get tournamentManagementCourtCameraEdit => 'Sửa camera';
+
+  @override
+  String get tournamentManagementCourtActions => 'Thao tác sân';
+
+  @override
+  String get tournamentManagementCameraShowUrl => 'Hiện';
+
+  @override
+  String get tournamentManagementCameraHideUrl => 'Ẩn';
+
+  @override
+  String get tournamentManagementCameraDetach => 'Gỡ camera';
+
+  @override
+  String get tournamentManagementDiscardTitle => 'Bỏ thay đổi?';
+
+  @override
+  String get tournamentManagementDiscardMessage =>
+      'Bạn có thay đổi chưa lưu. Thoát mà không lưu?';
+
+  @override
+  String get tournamentManagementDiscardConfirm => 'Bỏ thay đổi';
+
+  @override
+  String get manageInfoGroupGeneral => 'Chung';
+
+  @override
+  String get manageInfoGroupIdentity => 'Nhận diện';
+
+  @override
+  String get manageInfoGroupPrizes => 'Giải thưởng';
+
+  @override
+  String get manageInfoGroupContact => 'Liên hệ';
+
+  @override
+  String get manageInfoPrizeLabel => 'Hạng nhất, nhì, ba';
+
+  @override
+  String get manageInfoSaveChanges => 'Lưu thay đổi';
+
+  @override
+  String tournamentManagementCourtCameraSheetTitle(Object court) {
+    return 'Camera · $court';
+  }
+
+  @override
   String get tournamentManagementCameraUrlSaved => 'Đã lưu URL camera.';
 
   @override

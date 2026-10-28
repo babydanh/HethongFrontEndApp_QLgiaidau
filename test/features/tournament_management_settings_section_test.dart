@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
@@ -25,6 +27,10 @@ class _SettingsRepository implements ITournamentRepository {
   final Tournament tournament;
   final Object? updateError;
   Map<String, dynamic>? updatedPayload;
+  int updateCalls = 0;
+
+  /// When set, `update` waits on it so tests can observe the saving state.
+  Completer<void>? updateGate;
 
   @override
   Future<Tournament?> getById(String id, {String? inviteCode}) async =>
@@ -32,6 +38,8 @@ class _SettingsRepository implements ITournamentRepository {
 
   @override
   Future<void> update(String id, Map<String, dynamic> data) async {
+    updateCalls++;
+    await updateGate?.future;
     if (updateError != null) throw updateError!;
     updatedPayload = data;
   }
@@ -86,9 +94,12 @@ Future<_SettingsRepository> _pumpSection(
   Map<String, dynamic> overrides = const <String, dynamic>{},
   _ManagementRepository? managementRepository,
   Object? updateError,
+  ValueNotifier<bool>? unsavedChanges,
+  Completer<void>? updateGate,
 }) async {
   final tournament = _tournament(overrides);
-  final repository = _SettingsRepository(tournament, updateError: updateError);
+  final repository = _SettingsRepository(tournament, updateError: updateError)
+    ..updateGate = updateGate;
   tester.view.physicalSize = const Size(390, 1400);
   tester.view.devicePixelRatio = 1;
   await tester.pumpWidget(
@@ -112,6 +123,7 @@ Future<_SettingsRepository> _pumpSection(
             section: section,
             opsWorkspaceRoute: '/organizer/ops/tournament-1',
             actionRouteBase: '/organizer/tournaments/tournament-1/manage',
+            unsavedChanges: unsavedChanges,
           ),
         ),
       ),
@@ -134,6 +146,18 @@ Future<void> _tapSave(WidgetTester tester, AppLocalizations l10n) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _tapSaveChanges(WidgetTester tester, AppLocalizations l10n) async {
+  await tester.tap(
+    find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
+  );
+  await tester.pumpAndSettle();
+}
+
+FilledButton _saveChangesButton(WidgetTester tester, AppLocalizations l10n) =>
+    tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
+    );
+
 void main() {
   testWidgets('information saves name, description and config only', (
     tester,
@@ -150,7 +174,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(toggle);
     await tester.pump();
-    await _tapSave(tester, l10n);
+    await _tapSaveChanges(tester, l10n);
 
     expect(
       repository.updatedPayload?.keys,
@@ -536,5 +560,121 @@ void main() {
 
     expect(tester.getBottomLeft(saveButton).dy, lessThanOrEqualTo(1400 - 500));
     expect(tester.takeException(), isNull);
+  });
+
+  group('information page', () {
+    testWidgets('has four groups and exactly one save button, disabled until edited', (
+      tester,
+    ) async {
+      await _pumpSection(tester, TournamentManagementSection.information);
+      final l10n = _l10n(tester);
+
+      for (final title in [
+        l10n.manageInfoGroupGeneral,
+        l10n.manageInfoGroupIdentity,
+        l10n.manageInfoGroupPrizes,
+        l10n.manageInfoGroupContact,
+      ]) {
+        expect(find.text(title), findsOneWidget);
+      }
+      expect(find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
+          findsOneWidget);
+      expect(find.widgetWithText(FilledButton, l10n.tournamentManagementSave),
+          findsNothing);
+      expect(_saveChangesButton(tester, l10n).onPressed, isNull);
+
+      await tester.enterText(find.byType(TextField).first, 'New name');
+      await tester.pump();
+      expect(_saveChangesButton(tester, l10n).onPressed, isNotNull);
+
+      await tester.enterText(find.byType(TextField).first, 'City Pickleball Cup');
+      await tester.pump();
+      expect(_saveChangesButton(tester, l10n).onPressed, isNull);
+    });
+
+    testWidgets('a second tap while saving does not send a second update', (
+      tester,
+    ) async {
+      final gate = Completer<void>();
+      final repository = await _pumpSection(
+        tester,
+        TournamentManagementSection.information,
+        updateGate: gate,
+      );
+      final l10n = _l10n(tester);
+
+      await tester.enterText(find.byType(TextField).first, 'New name');
+      await tester.pump();
+      final button = find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges);
+      await tester.tap(button);
+      await tester.pump();
+      // While saving the label becomes "Saving" and the button is disabled.
+      final saving = find.widgetWithText(
+        FilledButton,
+        l10n.tournamentManagementSaving,
+      );
+      expect(tester.widget<FilledButton>(saving).onPressed, isNull);
+      await tester.tap(saving, warnIfMissed: false);
+      await tester.pump();
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(repository.updateCalls, 1);
+    });
+
+    testWidgets('saving contact details merges into the saved contact info', (
+      tester,
+    ) async {
+      final repository = await _pumpSection(
+        tester,
+        TournamentManagementSection.information,
+        overrides: const <String, dynamic>{
+          'contactInfo': {'hidden': false, 'phone': '0900000000'},
+        },
+      );
+      final l10n = _l10n(tester);
+
+      await tester.tap(find.text(l10n.manageInfoGroupContact));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('info-contact-phone')),
+        '0911111111',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('info-contact-email')),
+        'host@example.test',
+      );
+      await tester.pump();
+      await _tapSaveChanges(tester, l10n);
+
+      expect(repository.updatedPayload?['contactInfo'], {
+        'hidden': false,
+        'phone': '0911111111',
+        'email': 'host@example.test',
+      });
+      expect(repository.updatedPayload?.containsKey('prizeDescription'), isFalse);
+    });
+
+    testWidgets('unsaved flag follows edits and clears after a successful save', (
+      tester,
+    ) async {
+      final flag = ValueNotifier<bool>(false);
+      addTearDown(flag.dispose);
+      await _pumpSection(
+        tester,
+        TournamentManagementSection.information,
+        unsavedChanges: flag,
+      );
+      final l10n = _l10n(tester);
+      expect(flag.value, isFalse);
+
+      await tester.enterText(find.byType(TextField).first, 'New name');
+      await tester.pump();
+      expect(flag.value, isTrue);
+
+      await _tapSaveChanges(tester, l10n);
+      expect(flag.value, isFalse);
+      expect(_saveChangesButton(tester, l10n).onPressed, isNull);
+    });
   });
 }

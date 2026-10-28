@@ -1,8 +1,9 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -568,7 +569,7 @@ class _VenueCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final court in courts) ...[
+                for (final court in courts)
                   _VenueCourtRow(
                     tournamentId: tournamentId,
                     court: court,
@@ -576,8 +577,6 @@ class _VenueCard extends StatelessWidget {
                     isBusy: isBusy,
                     onRemove: () => onRemoveCourt(court),
                   ),
-                  const SizedBox(height: 12),
-                ],
               ],
             ),
         ],
@@ -586,9 +585,10 @@ class _VenueCard extends StatelessWidget {
   }
 }
 
-/// A court inside a venue: the existing chip, plus the camera playback-URL
-/// control the organizer needs to keep the court's camera alive.
-class _VenueCourtRow extends StatelessWidget {
+/// One court on one line: name, camera status, edit-camera button and a menu
+/// holding the destructive action. The camera URL itself never shows here; it
+/// only lives (masked) in [CourtCameraSheet].
+class _VenueCourtRow extends ConsumerWidget {
   const _VenueCourtRow({
     required this.tournamentId,
     required this.court,
@@ -604,27 +604,92 @@ class _VenueCourtRow extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
     final name =
         (court['name'] ?? court['courtName'] ?? fallbackName).toString();
     final courtId = (court['id'] ?? court['courtId'] ?? '').toString();
-
-    final chip = InputChip(label: Text(name), onDeleted: isBusy ? null : onRemove);
-
-    // Without an id the camera routes cannot address this court, so the
-    // control is hidden rather than offering a field that cannot be saved.
-    if (courtId.isEmpty) return chip;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final attached =
+        cameraForCourt(
+          ref.watch(tournamentCamerasProvider(tournamentId)).asData?.value ??
+              const [],
+          courtId,
+        )?.hasPlaybackUrl ??
+        false;
+    return Row(
       children: [
-        chip,
-        const SizedBox(height: 8),
-        CourtCameraUrlRow(
-          tournamentId: tournamentId,
-          courtId: courtId,
-          courtName: name,
-          dense: true,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+              // Icon plus wording, never colour alone.
+              Row(
+                children: [
+                  Icon(
+                    attached
+                        ? Icons.videocam_rounded
+                        : Icons.videocam_off_outlined,
+                    size: 16,
+                    color: attached ? colors.success : colors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      attached
+                          ? l10n.tournamentManagementCourtCameraAttached
+                          : l10n.tournamentManagementCourtCameraNotAttached,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: attached ? colors.textSecondary : colors.textMuted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // Without an id the camera routes cannot address this court.
+        if (courtId.isNotEmpty)
+          IconButton(
+            key: ValueKey('court-edit-$courtId'),
+            tooltip: l10n.tournamentManagementCourtCameraEdit,
+            onPressed: isBusy
+                ? null
+                : () => showCourtCameraSheet(
+                    context,
+                    tournamentId: tournamentId,
+                    courtId: courtId,
+                    courtName: name,
+                  ),
+            icon: const Icon(Icons.edit_outlined),
+          ),
+        PopupMenuButton<String>(
+          key: ValueKey('court-menu-$courtId'),
+          tooltip: l10n.tournamentManagementCourtActions,
+          enabled: !isBusy,
+          onSelected: (_) => onRemove(),
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'remove',
+              child: Text(
+                l10n.tournamentManagementRemove,
+                style: TextStyle(color: colors.error),
+              ),
+            ),
+          ],
         ),
       ],
     );
