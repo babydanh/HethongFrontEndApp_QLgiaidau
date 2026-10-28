@@ -127,6 +127,14 @@ Future<void> _invite(
   );
 }
 
+/// Opens the row's three-dot sheet and taps its single action.
+Future<void> _pickRowAction(WidgetTester tester) async {
+  await tester.tap(find.byIcon(Icons.more_vert_rounded));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('permissions-row-sheet-action')));
+  await tester.pumpAndSettle();
+}
+
 Finder _confirmButton() => find.descendant(
   of: find.byType(AlertDialog),
   matching: find.byType(FilledButton),
@@ -196,7 +204,7 @@ void main() {
     );
     final l10n = await _pump(tester, repo);
 
-    await tester.tap(find.text(l10n.tournamentManagementResend));
+    await _pickRowAction(tester);
     await tester.pumpAndSettle();
     await tester.tap(_confirmButton());
     await tester.pumpAndSettle();
@@ -210,7 +218,7 @@ void main() {
     final repo = _FakeRepo(referees: [_referee('i1', 'INVITED')]);
     final l10n = await _pump(tester, repo);
 
-    await tester.tap(find.text(l10n.tournamentManagementRevoke));
+    await _pickRowAction(tester);
     await tester.pumpAndSettle();
     await tester.tap(_confirmButton());
     await tester.pumpAndSettle();
@@ -224,7 +232,7 @@ void main() {
     final repo = _FakeRepo(referees: [_referee('i1', 'INVITED')]);
     final l10n = await _pump(tester, repo);
 
-    await tester.tap(find.text(l10n.tournamentManagementRevoke));
+    await _pickRowAction(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.tournamentManagementCancel));
     await tester.pumpAndSettle();
@@ -239,6 +247,7 @@ void main() {
     final l10n = await _pump(tester, repo);
 
     expect(find.text('Referee a1'), findsOneWidget);
+    expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
     expect(find.text(l10n.tournamentManagementResend), findsNothing);
     expect(find.text(l10n.tournamentManagementRevoke), findsNothing);
   });

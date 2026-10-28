@@ -931,10 +931,10 @@ void main() {
         l10n.manageInfoGroupPrizes,
         l10n.manageInfoGroupContact,
       ]) {
-        expect(find.text(group), findsOneWidget);
+        expect(find.text(group.toUpperCase()), findsOneWidget);
       }
       // Branding is collapsed by default; opening it reveals the image tiles.
-      await tester.tap(find.text(l10n.manageInfoGroupIdentity));
+      await tester.tap(find.text(l10n.manageInfoGroupIdentity.toUpperCase()));
       await tester.pumpAndSettle();
       expect(find.text(l10n.tournamentManagementLogo), findsOneWidget);
       expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
@@ -964,7 +964,8 @@ void main() {
       await tester.tap(find.text(l10n.manageSettingsVenueSection).first);
       await tester.pumpAndSettle();
 
-      expect(find.text(l10n.tournamentManagementVenues), findsOneWidget);
+      // The venues page has no card title any more: the add button leads it.
+      expect(find.text(l10n.tournamentManagementAddVenue), findsOneWidget);
       expect(find.text(l10n.tournamentManagementStartDate), findsNothing);
       expect(find.text(l10n.tournamentManagementEndDate), findsNothing);
       expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);

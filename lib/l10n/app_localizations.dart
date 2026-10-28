@@ -22852,6 +22852,18 @@ abstract class AppLocalizations {
   /// **'Liên hệ'**
   String get manageInfoGroupContact;
 
+  /// No description provided for @manageInfoGroupCollapse.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu gọn'**
+  String get manageInfoGroupCollapse;
+
+  /// No description provided for @manageInfoGroupExpand.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở'**
+  String get manageInfoGroupExpand;
+
   /// No description provided for @manageInfoPrizeLabel.
   ///
   /// In vi, this message translates to:
@@ -26263,7 +26275,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRoleSpectator.
   ///
   /// In vi, this message translates to:
-  /// **'Người xem'**
+  /// **'Khán giả'**
   String get tournamentManagementRoleSpectator;
 
   /// No description provided for @tournamentManagementSave.

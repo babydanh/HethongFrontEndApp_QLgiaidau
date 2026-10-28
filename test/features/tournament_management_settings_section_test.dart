@@ -676,7 +676,7 @@ void main() {
         l10n.manageInfoGroupPrizes,
         l10n.manageInfoGroupContact,
       ]) {
-        expect(find.text(title), findsOneWidget);
+        expect(find.text(title.toUpperCase()), findsOneWidget);
       }
       expect(find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
           findsOneWidget);
@@ -735,7 +735,7 @@ void main() {
       );
       final l10n = _l10n(tester);
 
-      await tester.tap(find.text(l10n.manageInfoGroupContact));
+      await tester.tap(find.text(l10n.manageInfoGroupContact.toUpperCase()));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('info-contact-phone')),

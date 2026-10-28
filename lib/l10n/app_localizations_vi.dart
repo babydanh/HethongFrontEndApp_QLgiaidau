@@ -12558,6 +12558,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get manageInfoGroupContact => 'Liên hệ';
 
   @override
+  String get manageInfoGroupCollapse => 'Thu gọn';
+
+  @override
+  String get manageInfoGroupExpand => 'Mở';
+
+  @override
   String get manageInfoPrizeLabel => 'Hạng nhất, nhì, ba';
 
   @override
@@ -14479,7 +14485,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRoleOther => 'Vai trò khác';
 
   @override
-  String get tournamentManagementRoleSpectator => 'Người xem';
+  String get tournamentManagementRoleSpectator => 'Khán giả';
 
   @override
   String get tournamentManagementSave => 'Lưu';

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/permission_rows.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/registration_form_editor.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -472,167 +473,252 @@ class _TournamentPermissionsState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildInviteCard(l10n),
-        const SizedBox(height: 16),
-        FutureBuilder<List<PermissionRow>>(
-          future: _rowsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(14),
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
-            if (snapshot.hasError) {
-              return TournamentManagementError(
-                error: snapshot.error,
-                onRetry: _reload,
-              );
-            }
-            return _buildListCard(
-              l10n,
-              snapshot.data ?? const <PermissionRow>[],
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInviteCard(AppLocalizations l10n) {
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementInviteByEmail,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return LavishSurface(
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final role in _roles)
-                ChoiceChip(
-                  key: Key('permissions-role-$role'),
-                  label: Text(_roleLabel(l10n, role)),
-                  selected: _role == role,
-                  onSelected: _isBusy
-                      ? null
-                      : (_) => setState(() => _role = role),
-                ),
-            ],
+          ..._buildInvite(l10n),
+          FutureBuilder<List<PermissionRow>>(
+            future: _rowsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(14),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              if (snapshot.hasError) {
+                return TournamentManagementError(
+                  error: snapshot.error,
+                  onRetry: _reload,
+                );
+              }
+              return _buildList(l10n, snapshot.data ?? const <PermissionRow>[]);
+            },
           ),
-          const SizedBox(height: 10),
-          TextField(
-            key: const Key('permissions-invite-email'),
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
-            autocorrect: false,
-            decoration: InputDecoration(
-              labelText: l10n.tournamentManagementInviteEmail,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: FilledButton.icon(
-              key: const Key('permissions-invite-send'),
-              onPressed: _isBusy ? null : _invite,
-              icon: _isBusy
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.send_rounded),
-              label: Text(l10n.tournamentManagementSendInvite),
-            ),
-          ),
-          if (_mutationError != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              _mutationError == 'validation'
-                  ? l10n.tournamentManagementInviteEmailInvalid
-                  : l10n.tournamentManagementActionError,
-              style: TextStyle(color: context.colors.error),
-            ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildListCard(AppLocalizations l10n, List<PermissionRow> rows) {
+  /// Design 13: "MỜI NGƯỜI MỚI" group, email field, role chips, one button.
+  List<Widget> _buildInvite(AppLocalizations l10n) {
+    final colors = LavishColors.of(context);
+    return [
+      LavishGroupHeader(l10n.tournamentManagementInviteByEmail),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
+        child: TextField(
+          key: const Key('permissions-invite-email'),
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.done,
+          autocorrect: false,
+          style: TextStyle(fontSize: 13, color: colors.text),
+          decoration: InputDecoration(
+            labelText: l10n.tournamentManagementInviteEmail,
+            labelStyle: TextStyle(fontSize: 13, color: colors.muted),
+            isDense: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.chipLine, width: 1.5),
+            ),
+          ),
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+        child: Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final role in _roles)
+              LavishChipButton(
+                key: Key('permissions-role-$role'),
+                label: _roleLabel(l10n, role),
+                selected: _role == role,
+                onPressed: _isBusy ? null : () => setState(() => _role = role),
+              ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+        child: LavishButton(
+          buttonKey: const Key('permissions-invite-send'),
+          label: l10n.tournamentManagementSendInvite,
+          busy: _isBusy,
+          onPressed: _isBusy ? null : _invite,
+        ),
+      ),
+      if (_mutationError != null)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+          child: Text(
+            _mutationError == 'validation'
+                ? l10n.tournamentManagementInviteEmailInvalid
+                : l10n.tournamentManagementActionError,
+            style: const TextStyle(fontSize: 13, color: LavishColors.bad),
+          ),
+        ),
+    ];
+  }
+
+  /// "ĐÃ MỜI · N" group; the role filter chips stay (logic unchanged).
+  Widget _buildList(AppLocalizations l10n, List<PermissionRow> rows) {
     final visible = _filter == 'ALL'
         ? rows
         : rows.where((row) => row.role == _filter).toList();
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementInvitedCount(rows.length),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Wrap(
-            spacing: 8,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishGroupHeader(l10n.tournamentManagementInvitedCount(rows.length)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
               for (final value in ['ALL', ..._roles])
-                ChoiceChip(
+                LavishChipButton(
                   key: Key('permissions-filter-$value'),
-                  label: Text(
-                    value == 'ALL' ? l10n.filterAll : _roleLabel(l10n, value),
-                  ),
+                  label: value == 'ALL'
+                      ? l10n.filterAll
+                      : _roleLabel(l10n, value),
                   selected: _filter == value,
-                  onSelected: (_) => setState(() => _filter = value),
+                  onPressed: () => setState(() => _filter = value),
                 ),
             ],
           ),
-          const SizedBox(height: 8),
-          if (visible.isEmpty)
-            TournamentManagementEmpty(
-              title: l10n.tournamentManagementStaffEmpty,
-              icon: Icons.groups_outlined,
-            )
-          else
-            for (final row in visible) _buildRow(l10n, row),
-        ],
-      ),
+        ),
+        if (visible.isEmpty)
+          TournamentManagementEmpty(
+            title: l10n.tournamentManagementStaffEmpty,
+            icon: Icons.groups_outlined,
+          )
+        else
+          for (final row in visible) _buildRow(l10n, row),
+      ],
     );
   }
 
   Widget _buildRow(AppLocalizations l10n, PermissionRow row) {
     final isReferee = row.role == 'REFEREE';
     final roleLabel = _roleLabel(l10n, row.role);
-    return _PersonRow(
-      name: row.name.isNotEmpty ? row.name : roleLabel,
-      status: isReferee
-          ? '$roleLabel · ${_refereeStatus(l10n, row.status ?? '')}'
-          : roleLabel,
-      userId: row.userId,
-      trailing: switch (row.action) {
-        RefereeAction.revoke => TextButton(
-          onPressed: _isBusy ? null : () => _revoke(row),
-          child: Text(
-            l10n.tournamentManagementRevoke,
-            style: TextStyle(color: context.colors.error),
+    final name = row.name.isNotEmpty ? row.name : roleLabel;
+    final hasAction = row.action != RefereeAction.none || !isReferee;
+    return LavishRow(
+      leading: row.userId.isNotEmpty
+          ? UserAvatarTap(userId: row.userId, name: name, size: 36)
+          : _LetterAvatar(name),
+      title: name,
+      subtitle: roleLabel,
+      trailing: [
+        if (isReferee) _refereePill(l10n, row.status ?? ''),
+        if (hasAction)
+          IconButton(
+            key: Key('permissions-row-menu-${row.userId}-${row.email}'),
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+            tooltip: l10n.club_moreOptions,
+            icon: Icon(
+              Icons.more_vert_rounded,
+              size: 18,
+              color: LavishColors.of(context).faint,
+            ),
+            onPressed: _isBusy ? null : () => _openRowSheet(l10n, row, name),
           ),
-        ),
-        RefereeAction.resend => TextButton(
-          onPressed: _isBusy ? null : () => _resend(row),
-          child: Text(l10n.tournamentManagementResend),
-        ),
-        RefereeAction.none when !isReferee => IconButton(
-          onPressed: _isBusy ? null : () => _removeStaff(row),
-          tooltip: l10n.tournamentManagementRemove,
-          icon: Icon(
-            Icons.person_remove_alt_1_outlined,
-            color: context.colors.error,
+      ],
+    );
+  }
+
+  Widget _refereePill(AppLocalizations l10n, String status) {
+    final label = _refereeStatus(l10n, status);
+    return switch (status.toUpperCase()) {
+      'INVITED' => LavishPill(label, tone: LavishTone.warn),
+      'ACCEPTED' => LavishPill(label, tone: LavishTone.ok),
+      'DECLINED' => LavishPill(label, tone: LavishTone.bad),
+      _ => LavishPill(label, tone: LavishTone.neutral),
+    };
+  }
+
+  /// Design 13b: bottom sheet with the person and the one action that applies
+  /// (revoke / resend / remove); the existing confirm dialog still follows.
+  Future<void> _openRowSheet(
+    AppLocalizations l10n,
+    PermissionRow row,
+    String name,
+  ) async {
+    final isReferee = row.role == 'REFEREE';
+    final sub = isReferee
+        ? '${_roleLabel(l10n, row.role)} · ${_refereeStatus(l10n, row.status ?? '')}'
+        : _roleLabel(l10n, row.role);
+    final (label, tone, icon, run) = switch (row.action) {
+      RefereeAction.revoke => (
+        l10n.tournamentManagementRevoke,
+        LavishTone.bad,
+        Icons.close_rounded,
+        () => _revoke(row),
+      ),
+      RefereeAction.resend => (
+        l10n.tournamentManagementResend,
+        LavishTone.accent,
+        Icons.refresh_rounded,
+        () => _resend(row),
+      ),
+      RefereeAction.none => (
+        l10n.tournamentManagementRemove,
+        LavishTone.bad,
+        Icons.person_remove_alt_1_outlined,
+        () => _removeStaff(row),
+      ),
+    };
+    final chosen = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final colors = LavishColors.of(sheetContext);
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: colors.text,
+                      ),
+                    ),
+                    Text(
+                      sub,
+                      style: TextStyle(fontSize: 13, color: colors.muted),
+                    ),
+                  ],
+                ),
+              ),
+              LavishRow(
+                key: const Key('permissions-row-sheet-action'),
+                leading: LavishIconBox(tone: tone, child: Icon(icon)),
+                title: label,
+                titleColor: tone == LavishTone.bad ? LavishColors.bad : null,
+                onTap: () => Navigator.of(sheetContext).pop(true),
+              ),
+            ],
           ),
-        ),
-        RefereeAction.none => null,
+        );
       },
     );
+    if (chosen == true && mounted) await run();
   }
 
   String _roleLabel(AppLocalizations l10n, String role) => switch (role) {
@@ -1024,61 +1110,28 @@ class _ParticipantCard extends StatelessWidget {
   }
 }
 
-class _PersonRow extends StatelessWidget {
-  const _PersonRow({
-    required this.name,
-    required this.status,
-    required this.userId,
-    this.trailing,
-  });
+/// Initial on the design's blue-soft circle (`.av`), used when the row has no
+/// user id to load an avatar for.
+class _LetterAvatar extends StatelessWidget {
+  const _LetterAvatar(this.name);
   final String name;
-  final String status;
-  final String userId;
-  final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          if (userId.isNotEmpty)
-            UserAvatarTap(userId: userId, name: name, size: 34)
-          else
-            CircleAvatar(
-              radius: 17,
-              backgroundColor: colors.bgElevated,
-              child: Icon(
-                Icons.person_outline_rounded,
-                size: 18,
-                color: colors.textSecondary,
-              ),
-            ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  status,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          if (trailing != null) trailing!,
-        ],
+  Widget build(BuildContext context) => Container(
+    width: 36,
+    height: 36,
+    alignment: Alignment.center,
+    decoration: const BoxDecoration(
+      color: Color(0xFFD1E9FF),
+      shape: BoxShape.circle,
+    ),
+    child: Text(
+      name.trim().isEmpty ? '?' : name.trim().substring(0, 1).toUpperCase(),
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w800,
+        color: Color(0xFF1570EF),
       ),
-    );
-  }
+    ),
+  );
 }

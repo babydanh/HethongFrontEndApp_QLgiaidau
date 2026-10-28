@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_management_rep
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -350,20 +351,20 @@ void main() {
       // Kết cấu bị khoá: định dạng và thể thức không chọn được nữa.
       expect(
         tester
-            .widget<ChoiceChip>(
+            .widget<LavishChipButton>(
               find.byKey(const ValueKey('division-editor-format-MALE_DOUBLES')),
             )
-            .onSelected,
+            .onPressed,
         isNull,
       );
       expect(
         tester
-            .widget<ChoiceChip>(
+            .widget<LavishChipButton>(
               find.byKey(
                 const ValueKey('division-editor-bracket-SINGLE_ELIMINATION'),
               ),
             )
-            .onSelected,
+            .onPressed,
         isNull,
       );
 
@@ -413,10 +414,10 @@ void main() {
 
       expect(
         tester
-            .widget<ChoiceChip>(
+            .widget<LavishChipButton>(
               find.byKey(const ValueKey('division-editor-bracket-ROUND_ROBIN')),
             )
-            .onSelected,
+            .onPressed,
         isNull,
       );
       // Giới hạn vẫn mở: tăng sức chứa 8 → 12.
@@ -619,6 +620,51 @@ void main() {
       find.textContaining('Mỗi vòng ghép người cùng điểm'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('sửa: nút xoá nội dung đóng sheet rồi gọi onDelete; tạo mới thì không có', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var deleted = 0;
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) => DivisionEditorSheet.show(
+          context,
+          tournament: _tournament(),
+          division: _swissDivision(),
+          onDelete: () => deleted++,
+        ),
+      ),
+    );
+
+    final deleteButton = find.byKey(const ValueKey('division-editor-delete'));
+    await tester.ensureVisible(deleteButton);
+    await tester.tap(deleteButton);
+    await tester.pumpAndSettle();
+
+    expect(deleted, 1);
+    expect(find.byKey(const ValueKey('division-editor-save')), findsNothing);
+
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) => DivisionEditorSheet.show(
+          context,
+          tournament: _tournament(),
+          onDelete: () => deleted++,
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('division-editor-delete')), findsNothing);
   });
 
   testWidgets('đã có sơ đồ: hiện thông báo vì sao khoá; chưa có thì không', (

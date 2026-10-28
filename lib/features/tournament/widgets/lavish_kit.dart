@@ -101,9 +101,10 @@ class LavishSurface extends StatelessWidget {
 
   final Widget child;
 
+  // Material (not a ColoredBox) so ListTile / InkWell children can paint ink.
   @override
   Widget build(BuildContext context) =>
-      ColoredBox(color: LavishColors.of(context).surface, child: child);
+      Material(color: LavishColors.of(context).surface, child: child);
 }
 
 /// `.hd`: 11px / 800 / .06em uppercase group title.
@@ -149,6 +150,7 @@ class LavishRow extends StatelessWidget {
     this.onTap,
     this.background,
     this.subtitleMaxLines = 2,
+    this.titleColor,
   });
 
   final String title;
@@ -158,6 +160,9 @@ class LavishRow extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? background;
   final int subtitleMaxLines;
+
+  /// Overrides the title colour (e.g. red for a destructive action).
+  final Color? titleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +191,7 @@ class LavishRow extends StatelessWidget {
                         fontSize: 13,
                         height: 1.3,
                         fontWeight: FontWeight.w700,
-                        color: c.text,
+                        color: titleColor ?? c.text,
                       ),
                     ),
                     if (subtitle != null)

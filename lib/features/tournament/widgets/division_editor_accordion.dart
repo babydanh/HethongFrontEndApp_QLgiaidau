@@ -1,9 +1,10 @@
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:flutter/material.dart';
 
-/// One accordion row of the division editor: a header with a one-line
-/// [summary] and, when [expanded], the [child] body. A row without [child]
-/// is an action row (shows a play icon instead of the chevron).
+/// One accordion row of the division editor (design `.li` + `.go`): a header
+/// with a one-line [summary] and, when [expanded], the [child] body on a soft
+/// grey band. A row without [child] is an action row (play icon box instead of
+/// the chevron).
 ///
 /// The parent keeps the single open id, so opening one row closes the rest.
 class DivisionEditorAccordionSection extends StatelessWidget {
@@ -33,85 +34,46 @@ class DivisionEditorAccordionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     final body = child;
-    // Material (not a decorated box) so ListTile children can paint ink.
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: colors.bgSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: colors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            InkWell(
-              key: ValueKey('division-editor-section-$id'),
-              borderRadius: BorderRadius.circular(14),
-              onTap: onToggle,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textPrimary,
-                                ),
-                          ),
-                          if (summary.isNotEmpty)
-                            Text(
-                              summary,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: colors.textSecondary,
-                                fontSize: 12.5,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    if (locked)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: Icon(
-                          Icons.lock_outline_rounded,
-                          size: 16,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    Icon(
-                      body == null
-                          ? Icons.play_circle_outline_rounded
-                          : expanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      color: colors.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (body != null && expanded)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                child: body,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishRow(
+          key: ValueKey('division-editor-section-$id'),
+          title: title,
+          subtitle: summary.isEmpty ? null : summary,
+          onTap: onToggle,
+          trailing: [
+            if (locked)
+              Icon(Icons.lock_outline_rounded, size: 16, color: colors.faint),
+            if (body == null)
+              const LavishIconBox(
+                child: Icon(Icons.play_arrow_rounded, size: 18),
+              )
+            else
+              Icon(
+                expanded
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 20,
+                color: colors.faint,
               ),
           ],
         ),
-      ),
+        if (body != null && expanded)
+          // Material so ListTile children paint their ink on the band colour.
+          Material(
+            color: colors.dark ? colors.rowLine : const Color(0xFFF9FAFB),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: colors.rowLine)),
+              ),
+              child: body,
+            ),
+          ),
+      ],
     );
   }
 }

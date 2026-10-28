@@ -282,6 +282,7 @@ class _TournamentManagementDivisionsSectionState
       swissStage: stage,
       swissMinPlayedRounds: minPlayed,
       lockContent: lockContent,
+      onDelete: () => _deleteDivision(division),
     );
     if (saved == true && mounted) _reload();
   }

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_accordion.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/format_illustration_dialog.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/swiss_config_editor.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
@@ -209,6 +210,7 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
     this.swissStage,
     this.swissMinPlayedRounds = 0,
     this.lockContent = false,
+    this.onDelete,
   });
 
   final Tournament tournament;
@@ -226,6 +228,10 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
   /// Đã có sơ đồ: khoá kết cấu, chỉ còn sửa giới hạn/luật (Swiss qua stage).
   final bool lockContent;
 
+  /// Called after the sheet closes when the user taps "delete" (edit mode
+  /// only); the caller owns the confirmation and the request.
+  final VoidCallback? onDelete;
+
   /// Mở sheet hạng mục. Trả về `true` khi đã lưu thành công.
   ///
   /// Mở bằng `showModalBottomSheet` trực tiếp (khung `TournamentManageSheet`
@@ -238,6 +244,7 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
     SwissStageInfo? swissStage,
     int swissMinPlayedRounds = 0,
     bool lockContent = false,
+    VoidCallback? onDelete,
   }) => showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -249,6 +256,7 @@ class DivisionEditorSheet extends ConsumerStatefulWidget {
       swissStage: swissStage,
       swissMinPlayedRounds: swissMinPlayedRounds,
       lockContent: lockContent,
+      onDelete: onDelete,
     ),
   );
 
@@ -481,6 +489,7 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           ? l10n.divisionEditorEditTitle
           : l10n.tournamentManagementAddDivision,
       busy: _busy,
+      bodyPadding: EdgeInsets.zero,
       actions: [
         FilledButton(
           key: const ValueKey('division-editor-save'),
@@ -515,7 +524,7 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         if (widget.lockContent)
           Container(
             key: const ValueKey('division-editor-locked-notice'),
-            margin: const EdgeInsets.only(bottom: 10),
+            margin: const EdgeInsets.fromLTRB(14, 4, 14, 10),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: context.colors.bgSurface,
@@ -543,7 +552,7 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         if (_errorText != null)
           Padding(
             key: const ValueKey('division-editor-error'),
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
             child: Text(
               _errorText!,
               style: TextStyle(color: context.colors.error),
@@ -589,8 +598,25 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
             formatName: _bracketLabel(l10n, _bracketType),
           ),
         ),
+        if (_isEditing && widget.onDelete != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+            child: LavishButton(
+              buttonKey: const ValueKey('division-editor-delete'),
+              kind: LavishButtonKind.danger,
+              label: l10n.tournamentManagementDeleteDivision,
+              onPressed: _busy ? null : _requestDelete,
+            ),
+          ),
       ],
     );
+  }
+
+  /// Closes the sheet first, then hands over to the caller's delete flow.
+  void _requestDelete() {
+    final onDelete = widget.onDelete;
+    Navigator.of(context).pop(false);
+    onDelete?.call();
   }
 
   Widget _section({
@@ -697,13 +723,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         runSpacing: 8,
         children: [
           for (final option in divisionFormatOptions)
-            ChoiceChip(
+            LavishChipButton(
               key: ValueKey('division-editor-format-$option'),
-              label: Text(_formatLabel(l10n, option)),
+              label: _formatLabel(l10n, option),
               selected: _formatOption == option,
-              onSelected: _busy || widget.lockContent
+              onPressed: _busy || widget.lockContent
                   ? null
-                  : (_) => _selectFormat(option),
+                  : () => _selectFormat(option),
             ),
         ],
       ),
@@ -717,7 +743,15 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           labelText: l10n.tournamentManagementDivisionName,
           helperText: l10n.divisionEditorNameHint,
           counterText: '',
-          border: const OutlineInputBorder(),
+          filled: true,
+          fillColor: LavishColors.of(context).surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: LavishColors.of(context).chipLine,
+              width: 1.5,
+            ),
+          ),
         ),
       ),
       const SizedBox(height: 8),
@@ -731,13 +765,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         runSpacing: 8,
         children: [
           for (final bracketType in _bracketTypes)
-            ChoiceChip(
+            LavishChipButton(
               key: ValueKey('division-editor-bracket-$bracketType'),
-              label: Text(_bracketLabel(l10n, bracketType)),
+              label: _bracketLabel(l10n, bracketType),
               selected: _bracketType == bracketType,
-              onSelected: _busy || widget.lockContent
+              onPressed: _busy || widget.lockContent
                   ? null
-                  : (_) => _selectBracketType(bracketType),
+                  : () => _selectBracketType(bracketType),
             ),
         ],
       ),

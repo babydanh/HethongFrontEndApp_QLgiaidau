@@ -12598,6 +12598,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageInfoGroupContact => 'Contact';
 
   @override
+  String get manageInfoGroupCollapse => 'Collapse';
+
+  @override
+  String get manageInfoGroupExpand => 'Open';
+
+  @override
   String get manageInfoPrizeLabel => '1st, 2nd and 3rd place';
 
   @override
@@ -14535,7 +14541,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRoleOther => 'Other role';
 
   @override
-  String get tournamentManagementRoleSpectator => 'Viewer';
+  String get tournamentManagementRoleSpectator => 'Spectator';
 
   @override
   String get tournamentManagementSave => 'Save';

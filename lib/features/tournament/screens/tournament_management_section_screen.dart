@@ -70,11 +70,8 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
       group: _SettingsGroup.information,
       unsavedChanges: unsavedChanges,
     ),
-    TournamentManagementSection.schedule => _SettingsPage(
-      children: [
-        TournamentManagementVenuesSection(tournamentId: tournament.id),
-      ],
-    ),
+    TournamentManagementSection.schedule =>
+      TournamentManagementVenuesSection(tournamentId: tournament.id),
     TournamentManagementSection.registration => _TournamentSettingsForm(
       tournament: tournament,
       group: _SettingsGroup.registration,
@@ -112,24 +109,6 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   };
 }
 
-/// Trang cài đặt: các khối xếp dọc, cách nhau 16, cuộn chung một ListView.
-class _SettingsPage extends StatelessWidget {
-  const _SettingsPage({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(16),
-    children: [
-      for (var i = 0; i < children.length; i++) ...[
-        if (i > 0) const SizedBox(height: 16),
-        children[i],
-      ],
-    ],
-  );
-}
-
 /// Thanh dưới cố định của trang Thông tin và Đăng ký: đường kẻ mảnh phía trên, có SafeArea đáy.
 class _StickySaveBar extends StatelessWidget {
   const _StickySaveBar({required this.error, required this.button});
@@ -139,16 +118,16 @@ class _StickySaveBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: colors.bgCard,
-        border: Border(top: BorderSide(color: colors.border)),
+        color: colors.surface,
+        border: Border(top: BorderSide(color: colors.line)),
       ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -157,7 +136,7 @@ class _StickySaveBar extends StatelessWidget {
                 _InlineError(text: error!),
                 const SizedBox(height: 8),
               ],
-              Align(alignment: Alignment.centerRight, child: button),
+              button,
             ],
           ),
         ),
@@ -179,8 +158,10 @@ typedef _InfoValues = ({
   String email,
 });
 
-/// One collapsible group of the information page.
-class _InfoGroup extends StatelessWidget {
+/// One collapsible group of the information page: the design's `.hd` header
+/// with an accent "Thu gọn / Mở" toggle; the body stays mounted while hidden so
+/// unsaved edits survive a collapse.
+class _InfoGroup extends StatefulWidget {
   const _InfoGroup({
     required this.title,
     required this.children,
@@ -192,26 +173,63 @@ class _InfoGroup extends StatelessWidget {
   final bool initiallyExpanded;
 
   @override
-  Widget build(BuildContext context) => Card(
-    margin: EdgeInsets.zero,
-    clipBehavior: Clip.antiAlias,
-    child: Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        title: Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+  State<_InfoGroup> createState() => _InfoGroupState();
+}
+
+class _InfoGroupState extends State<_InfoGroup> {
+  late bool _open = widget.initiallyExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          key: ValueKey('info-group-${widget.title}'),
+          onTap: () => setState(() => _open = !_open),
+          child: LavishGroupHeader(
+            widget.title,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  (_open
+                          ? l10n.manageInfoGroupCollapse
+                          : l10n.manageInfoGroupExpand)
+                      .toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.66,
+                    color: LavishColors.accent,
+                  ),
+                ),
+                Icon(
+                  _open
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: LavishColors.accent,
+                ),
+              ],
+            ),
+          ),
         ),
-        initiallyExpanded: initiallyExpanded,
-        maintainState: true,
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
-      ),
-    ),
-  );
+        Visibility(
+          visible: _open,
+          maintainState: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: widget.children,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Date fields of the registration group that can carry an order error.
@@ -400,16 +418,18 @@ class _TournamentSettingsFormState
     return Column(
       children: [
         Expanded(
-          child: ListView(padding: const EdgeInsets.all(16), children: [body]),
+          child: LavishSurface(
+            child: ListView(
+              padding: _isInformation
+                  ? const EdgeInsets.only(bottom: 16)
+                  : const EdgeInsets.all(16),
+              children: [body],
+            ),
+          ),
         ),
         _StickySaveBar(
           error: _errorMessage,
-          button: _saveButton(
-            l10n,
-            style: FilledButton.styleFrom(
-              minimumSize: Size(_isInformation ? double.infinity : 0, 44),
-            ),
-          ),
+          button: _saveButton(l10n),
         ),
       ],
     );
@@ -425,14 +445,12 @@ class _TournamentSettingsFormState
             initiallyExpanded: true,
             children: _generalFields(l10n),
           ),
-          const SizedBox(height: 12),
           _InfoGroup(
             title: l10n.manageInfoGroupIdentity,
             children: [
               TournamentManagementBrandsSection(tournament: widget.tournament),
             ],
           ),
-          const SizedBox(height: 12),
           _InfoGroup(
             title: l10n.manageInfoGroupPrizes,
             children: [
@@ -447,7 +465,6 @@ class _TournamentSettingsFormState
               ),
             ],
           ),
-          const SizedBox(height: 12),
           _InfoGroup(
             title: l10n.manageInfoGroupContact,
             children: _contactFields(l10n),
@@ -483,30 +500,21 @@ class _TournamentSettingsFormState
       widget.group == _SettingsGroup.registration &&
       _registrationOrderErrors(l10n).isNotEmpty;
 
-  Widget _saveButton(AppLocalizations l10n, {ButtonStyle? style}) =>
-      FilledButton.icon(
-        onPressed:
-            _isSaving ||
-                _locked ||
-                _hasOrderErrors(l10n) ||
-                (_isInformation && !_dirty)
-            ? null
-            : _save,
-        style: style,
-        icon: _isSaving
-            ? const SizedBox.square(
-                dimension: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.save_outlined),
-        label: Text(
-          _isSaving
-              ? l10n.tournamentManagementSaving
-              : _isInformation
-              ? l10n.manageInfoSaveChanges
-              : l10n.tournamentManagementSave,
-        ),
-      );
+  Widget _saveButton(AppLocalizations l10n) => LavishButton(
+    busy: _isSaving,
+    onPressed:
+        _isSaving ||
+            _locked ||
+            _hasOrderErrors(l10n) ||
+            (_isInformation && !_dirty)
+        ? null
+        : _save,
+    label: _isSaving
+        ? l10n.tournamentManagementSaving
+        : _isInformation
+        ? l10n.manageInfoSaveChanges
+        : l10n.tournamentManagementSave,
+  );
 
   String _title(AppLocalizations l10n) => switch (widget.group) {
     _SettingsGroup.information => l10n.manageSettingsInfoSection,
