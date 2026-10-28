@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/match_schedule_dialo
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_match_summary_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -168,41 +169,25 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     List<ResultsRound> rounds,
     String selectedKey,
   ) {
-    return Row(
-      children: [
-        Text(
-          l10n.resultsBoard_round,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: context.colors.textMuted,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: DropdownButton<String>(
-            key: const ValueKey('results-round-select'),
-            value: selectedKey,
-            isExpanded: true,
-            items: [
-              for (final round in rounds)
-                DropdownMenuItem(
-                  value: round.key,
-                  child: Text(
-                    round.pending > 0
-                        ? l10n.resultsBoard_roundOption(
-                            round.label,
-                            round.pending,
-                          )
-                        : round.label,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
-            onChanged: (key) => setState(() => _roundKey = key),
-          ),
-        ),
-      ],
+    // Design 6: one chip per round ("Vòng 1", "Tứ kết"...), the open one filled.
+    return SingleChildScrollView(
+      key: const ValueKey('results-round-select'),
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final round in rounds) ...[
+            LavishChipButton(
+              key: ValueKey('results-round-${round.key}'),
+              label: round.pending > 0
+                  ? l10n.resultsBoard_roundOption(round.label, round.pending)
+                  : round.label,
+              selected: round.key == selectedKey,
+              onPressed: () => setState(() => _roundKey = round.key),
+            ),
+            const SizedBox(width: 6),
+          ],
+        ],
+      ),
     );
   }
 
@@ -246,6 +231,8 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   );
 }
 
+/// `.hd` group title with the count ("ĐÃ XONG · 3"); the board already sits in
+/// the tab's 12dp gutter, so this header only adds a 2dp inset.
 class _PanelTitle extends StatelessWidget {
   const _PanelTitle({required this.title, required this.count});
 
@@ -253,33 +240,18 @@ class _PanelTitle extends StatelessWidget {
   final int count;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(2, 0, 2, 8),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: colors.textSecondary,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: colors.textMuted,
-            ),
-          ),
-        ],
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(2, 4, 2, 4),
+    child: Text(
+      '$title · $count'.toUpperCase(),
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.66,
+        color: LavishColors.of(context).muted,
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _Panel extends StatelessWidget {
@@ -294,26 +266,10 @@ class _Panel extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-            child: _PanelTitle(title: title, count: count),
-          ),
-          ...children,
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [_PanelTitle(title: title, count: count), ...children],
+  );
 }
 
 class _GroupHeader extends StatelessWidget {
@@ -323,16 +279,16 @@ class _GroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final colors = LavishColors.of(context);
     return Container(
-      color: colors.bgSurface,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      color: colors.rowLine,
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 5),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w800,
-          color: colors.textMuted,
+          color: colors.muted,
         ),
       ),
     );
@@ -363,10 +319,10 @@ class _MatchRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+            bottom: BorderSide(color: LavishColors.of(context).rowLine),
           ),
         ),
         child: Row(
@@ -381,18 +337,28 @@ class _MatchRow extends StatelessWidget {
                     ),
             ),
             if (closed && match.hasTeams) _scores(colors),
-            if (onSchedule != null)
-              IconButton(
-                onPressed: onSchedule,
-                tooltip: l10n.matchSchedule_title,
-                icon: Icon(
-                  Icons.event_outlined,
-                  size: 18,
-                  color: colors.textMuted,
-                ),
-                visualDensity: VisualDensity.compact,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            // Design 6: pencil (score entry) and clock (schedule) boxes.
+            if (onTap != null && !closed) ...[
+              const SizedBox(width: 8),
+              LavishIconBox(
+                key: ValueKey('results-score-${match.id}'),
+                size: 36,
+                tooltip: l10n.resultsBoard_enterScore,
+                onTap: onTap,
+                child: const Icon(Icons.edit_outlined),
               ),
+            ],
+            if (onSchedule != null) ...[
+              const SizedBox(width: 8),
+              LavishIconBox(
+                key: ValueKey('results-schedule-${match.id}'),
+                size: 36,
+                tone: LavishTone.warn,
+                tooltip: l10n.matchSchedule_title,
+                onTap: onSchedule,
+                child: const Icon(Icons.event_outlined),
+              ),
+            ],
           ],
         ),
       ),

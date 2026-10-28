@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/live_match_summary_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -120,9 +121,14 @@ void main() {
       _match('r2todo', round: 2, number: 1),
     ]);
 
-    await tester.tap(find.byKey(const ValueKey('results-round-select')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownMenuItem<String>).last);
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byKey(const ValueKey('results-round-select')),
+            matching: find.byType(LavishChipButton),
+          )
+          .last,
+    );
     await tester.pumpAndSettle();
 
     expect(_row('r2todo'), findsOneWidget);
