@@ -37,6 +37,16 @@ void main() {
                 onPressed: () => DivisionEditorSheet.show(
                   context,
                   tournament: _tournament(status: 'REGISTRATION'),
+                  // Edit mode: the design shows the existing division with
+                  // its accordion sections and the delete button.
+                  division: const {
+                    'id': 'div-a',
+                    'name': 'Doi nam',
+                    'matchType': 'DOUBLES',
+                    'bracketType': 'ROUND_ROBIN',
+                    'maxParticipants': 16,
+                  },
+                  onDelete: () {},
                 ),
                 child: const Text('Mo sheet'),
               ),
@@ -49,9 +59,11 @@ void main() {
     await settle(tester);
     await shooter.snap('noi-dung-thi-dau-dong');
 
-    await tester.tap(find.byKey(const ValueKey('division-editor-section-elo')));
+    await tester.tap(
+      find.byKey(const ValueKey('division-editor-section-rules')),
+    );
     await settle(tester);
-    await shooter.snap('noi-dung-thi-dau-muc-elo');
+    await shooter.snap('noi-dung-thi-dau-muc-luat-vong');
   });
 
   testWidgets('xem: form dang ky tuy bien', (tester) async {
@@ -104,6 +116,8 @@ void main() {
                   'isFull': true,
                 },
               ),
+              onShare: () {},
+              onDelete: () {},
             ),
           ),
         ),
@@ -122,23 +136,49 @@ void main() {
           body: SingleChildScrollView(
             child: TournamentLifecycleCard(
               tournament: _tournament(status: 'IN_PROGRESS'),
+              onShare: () {},
+              onDelete: () {},
             ),
           ),
         ),
       ),
     );
     await shooter.snap('vong-doi-dang-dien-ra');
+
+    await shooter.pump(
+      xemApp(
+        overrides: [
+          tournamentManagementRepositoryProvider.overrideWithValue(
+            _ManagementRepository(publishFee: 200000),
+          ),
+        ],
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: TournamentLifecycleCard(
+              tournament: _tournament(status: 'DRAFT'),
+              onShare: () {},
+              onDelete: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await shooter.snap('vong-doi-nhap-phi-xuat-ban');
   });
 }
 
 /// Management fake: fixed fee config and no writes.
 class _ManagementRepository
     implements TournamentManagementRepository, TournamentSettingsRepository {
+  _ManagementRepository({this.publishFee = 0});
+
+  final num publishFee;
+
   @override
   Future<Map<String, dynamic>> getFeesConfig() async => {
-    'feeClub': 0,
-    'feePublicRanked': 0,
-    'feePublicUnranked': 0,
+    'feeClub': publishFee,
+    'feePublicRanked': publishFee,
+    'feePublicUnranked': publishFee,
   };
 
   @override

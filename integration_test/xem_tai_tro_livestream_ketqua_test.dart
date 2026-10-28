@@ -82,50 +82,74 @@ void main() {
     await shooter.snap('livestream-khoi-camera');
     await scrollBy(tester, 420);
     await shooter.snap('livestream-khoi-san');
+
+    // Design 11: tapping the QR box only asks for confirmation; the stream
+    // key is never requested here. The dialog is dismissed afterwards.
+    final qrBox = find.byKey(const ValueKey('camera-stream-key-cam-1'));
+    await scrollTo(tester, qrBox);
+    await tester.tap(qrBox);
+    await settle(tester);
+    await shooter.snap('livestream-xac-nhan-khoa-phat');
+    await tester.tapAt(const Offset(4, 4));
+    await settle(tester);
   });
 
   testWidgets('xem: sheet xac nhan ket qua giai', (tester) async {
     final shooter = XemShooter(tester, binding);
-    await shooter.pump(
-      xemApp(
-        overrides: [
-          userProfileProvider.overrideWith(
-            (ref) async => const UserProfile(
-              id: 'organizer-1',
-              role: 'ORGANIZER',
-              roles: ['ORGANIZER'],
+
+    Future<void> openEndSheet(List<MatchModel> matches) async {
+      await shooter.pump(
+        xemApp(
+          overrides: [
+            userProfileProvider.overrideWith(
+              (ref) async => const UserProfile(
+                id: 'organizer-1',
+                role: 'ORGANIZER',
+                roles: ['ORGANIZER'],
+              ),
             ),
+            tournamentManagementRepositoryProvider.overrideWithValue(
+              _EndRepository(),
+            ),
+            matchesProvider(
+              _tournamentId,
+            ).overrideWith((ref) => Stream.value(matches)),
+            tournamentResultProvider((
+              tournamentId: _tournamentId,
+              divisionId: null,
+            )).overrideWith((ref) => Stream.value({'awards': const []})),
+          ],
+          home: TournamentManagementHubScreen(
+            tournament: _tournament(),
+            actionRouteBase: '/organizer/tournaments/$_tournamentId/manage',
+            opsWorkspaceRoute: '/organizer/tournaments/$_tournamentId/ops',
           ),
-          tournamentManagementRepositoryProvider.overrideWithValue(
-            _EndRepository(),
-          ),
-          matchesProvider(_tournamentId).overrideWith(
-            (ref) => Stream.value([
-              _match('m-1', 'COMPLETED', 'Team A', 'Team B'),
-              _match('m-2', 'COMPLETED', 'Team C', 'Team D'),
-              _match('m-3', 'ONGOING', 'Team E', 'Team F'),
-            ]),
-          ),
-          tournamentResultProvider((
-            tournamentId: _tournamentId,
-            divisionId: null,
-          )).overrideWith((ref) => Stream.value({'awards': const []})),
-        ],
-        home: TournamentManagementHubScreen(
-          tournament: _tournament(),
-          actionRouteBase: '/organizer/tournaments/$_tournamentId/manage',
-          opsWorkspaceRoute: '/organizer/tournaments/$_tournamentId/ops',
         ),
-      ),
-    );
-    final l10n = AppLocalizations.of(
-      tester.element(find.byType(TournamentManagementHubScreen)),
-    )!;
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await settle(tester);
-    await tester.tap(find.text(l10n.endTournament));
-    await settle(tester);
+      );
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(TournamentManagementHubScreen)),
+      )!;
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await settle(tester);
+      await tester.tap(find.text(l10n.endTournament));
+      await settle(tester);
+    }
+
+    // Not ready: one match is still running.
+    await openEndSheet([
+      _match('m-1', 'COMPLETED', 'Team A', 'Team B'),
+      _match('m-2', 'COMPLETED', 'Team C', 'Team D'),
+      _match('m-3', 'ONGOING', 'Team E', 'Team F'),
+    ]);
     await shooter.snap('xac-nhan-ket-qua-giai');
+
+    // Ready: every match is done, so the green check and green button show.
+    await openEndSheet([
+      _match('m-1', 'COMPLETED', 'Team A', 'Team B'),
+      _match('m-2', 'COMPLETED', 'Team C', 'Team D'),
+      _match('m-3', 'COMPLETED', 'Team E', 'Team F'),
+    ]);
+    await shooter.snap('xac-nhan-ket-qua-giai-dat');
   });
 }
 
@@ -270,6 +294,7 @@ Tournament _tournament() => Tournament.fromJson({
   'status': 'IN_PROGRESS',
   'maxTeams': 8,
   'maxPlayersPerTeam': 2,
+  'prizeDescription': 'Nhat 5.000.000d, Nhi 3.000.000d, Ba 1.000.000d',
   'divisions': [
     {'id': 'div-1', 'name': 'Doi Nam', 'matchType': 'DOUBLES'},
   ],

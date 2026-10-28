@@ -99,6 +99,11 @@ void main() {
       ),
     );
     await shooter.snap('dia-diem-va-san');
+
+    // Design 17: camera sheet of one court, playback URL stays masked.
+    await tester.tap(find.byKey(const ValueKey('court-edit-court-1')));
+    await settle(tester);
+    await shooter.snap('dia-diem-san-camera');
   });
 }
 

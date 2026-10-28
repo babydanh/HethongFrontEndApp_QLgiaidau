@@ -114,6 +114,13 @@ void main() {
       ),
     );
     await shooter.snap('phan-quyen-moi-email');
+
+    // Design 13b: row sheet with the single "revoke invite" action.
+    await tester.tap(
+      find.byKey(const Key('permissions-row-menu-u-r2-r2@example.test')),
+    );
+    await settle(tester);
+    await shooter.snap('phan-quyen-thu-hoi-loi-moi');
   });
 }
 
