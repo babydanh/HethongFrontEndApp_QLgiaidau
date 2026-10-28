@@ -5867,6 +5867,16 @@
   "tournamentManagementSponsorsDescription": "Thêm, chỉnh sửa hoặc lưu trữ nhà tài trợ giải đấu.",
   "tournamentManagementSponsorsEmpty": "Chưa có nhà tài trợ",
   "tournamentManagementSponsorsEmptyDescription": "Thêm nhà tài trợ để giới thiệu đối tác của giải đấu.",
+  "tournamentManagementAddSponsorShort": "Thêm",
+  "tournamentManagementSponsorPreview": "Xem trước trang công khai",
+  "tournamentManagementSponsorHint": "Công tắc = hiển thị công khai. Vuốt trái để lưu trữ.",
+  "tournamentManagementSponsorDragHandle": "Kéo để sắp xếp",
+  "tournamentManagementSponsorCount": "{count} nhà tài trợ",
+  "@tournamentManagementSponsorCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "tournamentManagementStaff": "Nhân sự",
   "tournamentManagementStaffAdded": "Đã thêm nhân sự.",
   "tournamentManagementStaffDescription": "Thêm đồng tổ chức hoặc người xem. Email không được hiển thị sau khi gửi.",

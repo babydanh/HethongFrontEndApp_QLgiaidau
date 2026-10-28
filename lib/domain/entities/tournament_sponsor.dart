@@ -37,6 +37,13 @@ class TournamentSponsor {
     );
   }
 
+  /// Archived sponsors stay in the list but can no longer be shown or toggled.
+  bool get isArchived => status.toUpperCase() == 'ARCHIVED';
+
+  /// Mirrors the public sponsors page: published, flagged public, not archived.
+  bool get isShownPublicly =>
+      !isArchived && status.toUpperCase() == 'PUBLISHED' && (isPublic ?? true);
+
   static bool? _toBool(dynamic value) {
     if (value is bool) return value;
     if (value is String) {
@@ -55,3 +62,10 @@ class TournamentSponsor {
     return int.tryParse(value?.toString() ?? '');
   }
 }
+
+/// `displayOrder` updates needed after the list was reordered: only the
+/// sponsors whose index differs from their stored order, keyed by id.
+Map<String, int> sponsorOrderChanges(List<TournamentSponsor> ordered) => {
+  for (var index = 0; index < ordered.length; index++)
+    if (ordered[index].displayOrder != index) ordered[index].id: index,
+};

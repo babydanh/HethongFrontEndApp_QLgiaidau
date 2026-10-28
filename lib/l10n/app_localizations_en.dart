@@ -14486,6 +14486,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a sponsor to show tournament partners.';
 
   @override
+  String get tournamentManagementAddSponsorShort => 'Add';
+
+  @override
+  String get tournamentManagementSponsorPreview => 'Preview public page';
+
+  @override
+  String get tournamentManagementSponsorHint =>
+      'Switch = shown publicly. Swipe left to archive.';
+
+  @override
+  String get tournamentManagementSponsorDragHandle => 'Drag to reorder';
+
+  @override
+  String tournamentManagementSponsorCount(int count) {
+    return '$count sponsors';
+  }
+
+  @override
   String get tournamentManagementStaff => 'Staff';
 
   @override

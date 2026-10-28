@@ -5748,6 +5748,16 @@
   "tournamentManagementSponsorsDescription": "Add, edit or archive tournament sponsors.",
   "tournamentManagementSponsorsEmpty": "No sponsors yet",
   "tournamentManagementSponsorsEmptyDescription": "Add a sponsor to show tournament partners.",
+  "tournamentManagementAddSponsorShort": "Add",
+  "tournamentManagementSponsorPreview": "Preview public page",
+  "tournamentManagementSponsorHint": "Switch = shown publicly. Swipe left to archive.",
+  "tournamentManagementSponsorDragHandle": "Drag to reorder",
+  "tournamentManagementSponsorCount": "{count} sponsors",
+  "@tournamentManagementSponsorCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "tournamentManagementStaff": "Staff",
   "tournamentManagementStaffAdded": "Staff member added.",
   "tournamentManagementStaffDescription": "Add co-organizers or viewers. Email addresses are not shown after submission.",

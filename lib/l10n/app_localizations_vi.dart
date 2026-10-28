@@ -14433,6 +14433,24 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thêm nhà tài trợ để giới thiệu đối tác của giải đấu.';
 
   @override
+  String get tournamentManagementAddSponsorShort => 'Thêm';
+
+  @override
+  String get tournamentManagementSponsorPreview => 'Xem trước trang công khai';
+
+  @override
+  String get tournamentManagementSponsorHint =>
+      'Công tắc = hiển thị công khai. Vuốt trái để lưu trữ.';
+
+  @override
+  String get tournamentManagementSponsorDragHandle => 'Kéo để sắp xếp';
+
+  @override
+  String tournamentManagementSponsorCount(int count) {
+    return '$count nhà tài trợ';
+  }
+
+  @override
   String get tournamentManagementStaff => 'Nhân sự';
 
   @override

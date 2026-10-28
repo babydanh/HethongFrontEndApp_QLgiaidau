@@ -26200,6 +26200,36 @@ abstract class AppLocalizations {
   /// **'Thêm nhà tài trợ để giới thiệu đối tác của giải đấu.'**
   String get tournamentManagementSponsorsEmptyDescription;
 
+  /// No description provided for @tournamentManagementAddSponsorShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm'**
+  String get tournamentManagementAddSponsorShort;
+
+  /// No description provided for @tournamentManagementSponsorPreview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trước trang công khai'**
+  String get tournamentManagementSponsorPreview;
+
+  /// No description provided for @tournamentManagementSponsorHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công tắc = hiển thị công khai. Vuốt trái để lưu trữ.'**
+  String get tournamentManagementSponsorHint;
+
+  /// No description provided for @tournamentManagementSponsorDragHandle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo để sắp xếp'**
+  String get tournamentManagementSponsorDragHandle;
+
+  /// No description provided for @tournamentManagementSponsorCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} nhà tài trợ'**
+  String tournamentManagementSponsorCount(int count);
+
   /// No description provided for @tournamentManagementStaff.
   ///
   /// In vi, this message translates to:
