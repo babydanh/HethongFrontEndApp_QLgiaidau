@@ -6871,6 +6871,25 @@
   "tournamentCameraCreated": "Đã thêm camera {name}.",
   "tournamentCameraDeleted": "Đã xoá camera {name}.",
   "tournamentCameraCourtChanged": "Đã gắn {name} vào {court}.",
+  "tournamentCameraListTitle": "Camera · {count}",
+  "@tournamentCameraListTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tournamentCameraStatusIdle": "Chờ",
+  "tournamentCameraAssign": "Gán camera",
+  "tournamentCameraChange": "Đổi camera",
+  "tournamentCameraPickTitle": "Chọn camera cho {court}",
+  "@tournamentCameraPickTitle": {
+    "placeholders": {
+      "court": { "type": "String" }
+    }
+  },
+  "tournamentCameraPickNone": "Bỏ gán camera",
+  "tournamentStreamKeyConfirmTitle": "Hiện mã QR khoá phát?",
+  "tournamentStreamKeyConfirmMessage": "Mã QR chứa khoá phát của camera. Chỉ mở khi cần cài đặt thiết bị phát và không chia sẻ cho người khác.",
+  "tournamentStreamKeyConfirmAction": "Hiện mã QR",
   "tournamentStreamKeyTitle": "QR stream key",
   "@tournamentStreamKeyTitle": {"description": "Tiêu đề sheet QR stream key của camera PUSH."},
   "tournamentStreamKeyTooltip": "Hiện QR stream key",

@@ -8,12 +8,12 @@
 
 ## 2. Màn 11 — Livestream
 
-- [ ] 2.1 Nút QR của camera PUSH mở hộp xác nhận trước khi mở sheet khoá phát. Tiêu chí: `flutter test --no-pub test/features/tournament_camera_panel_test.dart` → exit 0
+- [x] 2.1 Nút QR của camera PUSH mở hộp xác nhận trước khi mở sheet khoá phát. Tiêu chí: `flutter test --no-pub test/features/tournament_camera_panel_test.dart` → exit 0
   - Files: sửa `lib/features/tournament/widgets/tournament_camera_panel.dart`, ARB; test `test/features/tournament_camera_panel_test.dart`
-- [ ] 2.2 Khối "Camera · N" (thanh trên có nút Thêm camera, hàng camera có trạng thái Đang phát/Chờ) và khối "Sân" gán/đổi camera bằng chip chọn. Tiêu chí: `flutter test --no-pub test/features/tournament_camera_panel_test.dart` → exit 0
+- [x] 2.2 Khối "Camera · N" (thanh trên có nút Thêm camera, hàng camera có trạng thái Đang phát/Chờ) và khối "Sân" gán/đổi camera bằng chip chọn. Tiêu chí: `flutter test --no-pub test/features/tournament_camera_panel_test.dart` → exit 0
   - Files: sửa `lib/features/tournament/widgets/tournament_camera_panel.dart`, ARB; test như 2.1
-- [ ] 2.3 Dừng phát luôn hỏi lại (đã có `_stopSession`): thêm test chốt hành vi. Tiêu chí: `flutter test --no-pub test/features/tournament_management_livestream_stop_test.dart` → exit 0
-  - Files: tạo test `test/features/tournament_management_livestream_stop_test.dart`
+- [x] 2.3 Dừng phát luôn hỏi lại: `_stopSession` đã có hộp xác nhận và test đã khoá hành vi (không gọi `stopSession` trước khi xác nhận). Không code mới; chạy lại test. Tiêu chí: `flutter test --no-pub test/features/tournament_management_livestream_section_test.dart` → exit 0
+  - Files: không sửa; test sẵn có `test/features/tournament_management_livestream_section_test.dart`
 
 ## 3. Màn 7 — Xác nhận kết quả giải
 

@@ -17204,6 +17204,38 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tournamentCameraListTitle(int count) {
+    return 'Cameras · $count';
+  }
+
+  @override
+  String get tournamentCameraStatusIdle => 'Idle';
+
+  @override
+  String get tournamentCameraAssign => 'Assign camera';
+
+  @override
+  String get tournamentCameraChange => 'Change camera';
+
+  @override
+  String tournamentCameraPickTitle(String court) {
+    return 'Pick a camera for $court';
+  }
+
+  @override
+  String get tournamentCameraPickNone => 'Remove camera';
+
+  @override
+  String get tournamentStreamKeyConfirmTitle => 'Show the stream key QR?';
+
+  @override
+  String get tournamentStreamKeyConfirmMessage =>
+      'The QR carries the camera\'s stream key. Open it only to set up a streaming device and do not share it.';
+
+  @override
+  String get tournamentStreamKeyConfirmAction => 'Show QR';
+
+  @override
   String get tournamentStreamKeyTitle => 'Stream key QR';
 
   @override

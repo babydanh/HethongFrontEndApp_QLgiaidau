@@ -30949,6 +30949,60 @@ abstract class AppLocalizations {
   /// **'Đã gắn {name} vào {court}.'**
   String tournamentCameraCourtChanged(Object court, Object name);
 
+  /// No description provided for @tournamentCameraListTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera · {count}'**
+  String tournamentCameraListTitle(int count);
+
+  /// No description provided for @tournamentCameraStatusIdle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ'**
+  String get tournamentCameraStatusIdle;
+
+  /// No description provided for @tournamentCameraAssign.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gán camera'**
+  String get tournamentCameraAssign;
+
+  /// No description provided for @tournamentCameraChange.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi camera'**
+  String get tournamentCameraChange;
+
+  /// No description provided for @tournamentCameraPickTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn camera cho {court}'**
+  String tournamentCameraPickTitle(String court);
+
+  /// No description provided for @tournamentCameraPickNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ gán camera'**
+  String get tournamentCameraPickNone;
+
+  /// No description provided for @tournamentStreamKeyConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mã QR khoá phát?'**
+  String get tournamentStreamKeyConfirmTitle;
+
+  /// No description provided for @tournamentStreamKeyConfirmMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã QR chứa khoá phát của camera. Chỉ mở khi cần cài đặt thiết bị phát và không chia sẻ cho người khác.'**
+  String get tournamentStreamKeyConfirmMessage;
+
+  /// No description provided for @tournamentStreamKeyConfirmAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mã QR'**
+  String get tournamentStreamKeyConfirmAction;
+
   /// Tiêu đề sheet QR stream key của camera PUSH.
   ///
   /// In vi, this message translates to:

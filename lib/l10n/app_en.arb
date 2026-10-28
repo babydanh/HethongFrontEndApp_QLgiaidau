@@ -6855,6 +6855,25 @@
   "tournamentCameraCreated": "Camera {name} added.",
   "tournamentCameraDeleted": "Camera {name} deleted.",
   "tournamentCameraCourtChanged": "{name} moved to {court}.",
+  "tournamentCameraListTitle": "Cameras · {count}",
+  "@tournamentCameraListTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "tournamentCameraStatusIdle": "Idle",
+  "tournamentCameraAssign": "Assign camera",
+  "tournamentCameraChange": "Change camera",
+  "tournamentCameraPickTitle": "Pick a camera for {court}",
+  "@tournamentCameraPickTitle": {
+    "placeholders": {
+      "court": { "type": "String" }
+    }
+  },
+  "tournamentCameraPickNone": "Remove camera",
+  "tournamentStreamKeyConfirmTitle": "Show the stream key QR?",
+  "tournamentStreamKeyConfirmMessage": "The QR carries the camera's stream key. Open it only to set up a streaming device and do not share it.",
+  "tournamentStreamKeyConfirmAction": "Show QR",
   "tournamentStreamKeyTitle": "Stream key QR",
   "@tournamentStreamKeyTitle": {"description": "Title of the stream-key QR sheet of a PUSH camera."},
   "tournamentStreamKeyTooltip": "Show stream key QR",

@@ -17143,6 +17143,38 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String tournamentCameraListTitle(int count) {
+    return 'Camera · $count';
+  }
+
+  @override
+  String get tournamentCameraStatusIdle => 'Chờ';
+
+  @override
+  String get tournamentCameraAssign => 'Gán camera';
+
+  @override
+  String get tournamentCameraChange => 'Đổi camera';
+
+  @override
+  String tournamentCameraPickTitle(String court) {
+    return 'Chọn camera cho $court';
+  }
+
+  @override
+  String get tournamentCameraPickNone => 'Bỏ gán camera';
+
+  @override
+  String get tournamentStreamKeyConfirmTitle => 'Hiện mã QR khoá phát?';
+
+  @override
+  String get tournamentStreamKeyConfirmMessage =>
+      'Mã QR chứa khoá phát của camera. Chỉ mở khi cần cài đặt thiết bị phát và không chia sẻ cho người khác.';
+
+  @override
+  String get tournamentStreamKeyConfirmAction => 'Hiện mã QR';
+
+  @override
   String get tournamentStreamKeyTitle => 'QR stream key';
 
   @override

@@ -1,10 +1,12 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/camera_live_status_model.dart';
+import 'package:app_quanly_giaidau/data/models/camera_stream_key_model.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/camera_admin_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/court_camera_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/stream_key_qr_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_camera_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
@@ -41,6 +43,7 @@ class _FakeCameraServer
   List<TournamentCameraModel> cameras;
   String? failWith;
   final List<String> assignCalls = <String>[];
+  final List<String> streamKeyCalls = <String>[];
   final List<_CameraCreate> createCalls = <_CameraCreate>[];
   var _nextId = 100;
 
@@ -97,7 +100,15 @@ class _FakeCameraServer
     ];
   }
 
-  // The stream-key methods are covered by stream_key_qr_sheet_test.dart.
+  // Only the first read is faked (and fails): the key itself is covered by
+  // stream_key_qr_sheet_test.dart. It proves the sheet is, or is not, opened.
+  @override
+  Future<CameraStreamKeyModel> getStreamKey(String cameraId) async {
+    streamKeyCalls.add(cameraId);
+    throw StateError('stream key is not available in this test');
+  }
+
+  // The other stream-key methods are covered by stream_key_qr_sheet_test.dart.
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 
@@ -142,6 +153,14 @@ const _phone = TournamentCameraModel(
   mode: 'PUSH',
   status: 'IDLE',
   courtId: 'court-1',
+);
+
+const _livePhone = TournamentCameraModel(
+  id: 'cam-3',
+  name: 'Court 3 phone',
+  mode: 'PUSH',
+  status: 'LIVE',
+  courtId: 'court-3',
 );
 
 const _pullCamera = TournamentCameraModel(
@@ -347,25 +366,126 @@ void main() {
     );
   });
 
-  testWidgets('the court picker moves a camera without dragging', (
+  testWidgets('the header counts cameras and each row shows its status', (
+    tester,
+  ) async {
+    final server = _FakeCameraServer(const [_phone, _livePhone, _pullCamera]);
+    final l10n = await _pump(tester, server);
+
+    expect(find.text(l10n.tournamentCameraListTitle(3)), findsOneWidget);
+    expect(
+      find.descendant(
+        of: _card('cam-3'),
+        matching: find.text(l10n.tournamentManagementLivestreamStatusLive),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: _card('cam-1'),
+        matching: find.text(l10n.tournamentCameraStatusIdle),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: _card('cam-2'),
+        matching: find.text(l10n.tournamentCameraNoCourt),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('the stream-key QR asks first; cancelling opens nothing', (
     tester,
   ) async {
     final server = _FakeCameraServer(const [_phone]);
-    await _pump(tester, server);
+    final l10n = await _pump(tester, server);
 
-    await tester.tap(find.byKey(const ValueKey('camera-edit-cam-1')));
+    await tester.tap(find.byKey(const ValueKey('camera-stream-key-cam-1')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('camera-editor-court')));
+
+    expect(find.text(l10n.tournamentStreamKeyConfirmTitle), findsOneWidget);
+    expect(find.byType(StreamKeyQrSheet), findsNothing);
+    await tester.tap(find.text(l10n.tournamentManagementCancel));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Court 3').last);
+    expect(find.byType(StreamKeyQrSheet), findsNothing);
+    expect(server.streamKeyCalls, isEmpty);
+  });
+
+  testWidgets('confirming the dialog opens the stream-key QR sheet', (
+    tester,
+  ) async {
+    final server = _FakeCameraServer(const [_phone]);
+    final l10n = await _pump(tester, server);
+
+    await tester.tap(find.byKey(const ValueKey('camera-stream-key-cam-1')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('camera-editor-submit')));
+    await tester.tap(find.text(l10n.tournamentStreamKeyConfirmAction));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StreamKeyQrSheet), findsOneWidget);
+    expect(server.streamKeyCalls, ['cam-1']);
+  });
+
+  testWidgets('a court without camera offers Assign and picks by chip', (
+    tester,
+  ) async {
+    final server = _FakeCameraServer(const [_phone]);
+    final l10n = await _pump(tester, server);
+
+    expect(
+      find.descendant(
+        of: _courtCard('court-3'),
+        matching: find.text(l10n.tournamentCameraCourtNoCameras),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('camera-court-assign-court-3')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('camera-pick-cam-1')));
     await tester.pumpAndSettle();
 
     expect(server.assignCalls, ['cam-1->court-3']);
+    expect(
+      find.descendant(
+        of: _courtCard('court-3'),
+        matching: find.text('Court 1 phone'),
+      ),
+      findsOneWidget,
+    );
   });
 
-  testWidgets('a read-only tournament cannot add, edit or delete cameras', (
+  testWidgets('a court with a camera offers Change and can unassign it', (
+    tester,
+  ) async {
+    final server = _FakeCameraServer(const [_phone]);
+    final l10n = await _pump(tester, server);
+
+    final button = find.byKey(const ValueKey('camera-court-assign-court-1'));
+    expect(
+      find.descendant(of: button, matching: find.text(l10n.tournamentCameraChange)),
+      findsOneWidget,
+    );
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('camera-pick-none')));
+    await tester.pumpAndSettle();
+
+    expect(server.assignCalls, ['cam-1->null']);
+  });
+
+  testWidgets('fits a 320dp wide phone without overflow', (tester) async {
+    final server = _FakeCameraServer(const [_phone, _livePhone, _pullCamera]);
+    await _pump(tester, server);
+
+    tester.view.physicalSize = const Size(320, 2400);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a read-only tournament cannot add, assign or delete cameras', (
     tester,
   ) async {
     final server = _FakeCameraServer(const [_phone]);
@@ -373,9 +493,9 @@ void main() {
 
     final add = find.byKey(const ValueKey('camera-panel-add'));
     expect(tester.widget<ButtonStyleButton>(add).onPressed, isNull);
-    for (final key in const ['camera-edit-cam-1', 'camera-delete-cam-1']) {
-      final button = find.byKey(ValueKey(key));
-      expect(tester.widget<IconButton>(button).onPressed, isNull, reason: key);
-    }
+    final delete = find.byKey(const ValueKey('camera-delete-cam-1'));
+    expect(tester.widget<IconButton>(delete).onPressed, isNull);
+    final assign = find.byKey(const ValueKey('camera-court-assign-court-3'));
+    expect(tester.widget<ButtonStyleButton>(assign).onPressed, isNull);
   });
 }
