@@ -25,7 +25,9 @@ Widget _body({
   List<SearchFilterGroup> groups = _groups,
 }) => Column(
   children: [
-    Row(children: [SearchFilterToggle(tabKey: tabKey)]),
+    Row(
+      children: [SearchFilterToggle(tabKey: tabKey, groups: groups)],
+    ),
     SearchFilterBar(
       tabKey: tabKey,
       hint: 'Tìm trận',
@@ -213,7 +215,7 @@ void main() {
     expect(find.text('3 kết quả ở ngày hoặc sân đang ẩn'), findsOneWidget);
   });
 
-  testWidgets('a filter value no longer offered is ignored and cleaned up', (
+  testWidgets('a filter value no longer offered is ignored, not counted', (
     tester,
   ) async {
     // The court group is gone (e.g. only one court left): its old value must
@@ -225,8 +227,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(_clearAll), findsNothing);
-    expect(container.read(searchFilterProvider('a')).selected, isEmpty);
-    expect(container.read(searchFilterProvider('a')).activeCount, 0);
+    // Badge and clear action ignore it; the stored value is kept.
+    expect(
+      tester
+          .widget<Badge>(find.byKey(const ValueKey('search-filter-badge')))
+          .isLabelVisible,
+      isFalse,
+    );
+    expect(container.read(searchFilterProvider('a')).selected, {'court': 'X'});
+  });
+
+  testWidgets('a filter survives groups that are briefly not offered', (
+    tester,
+  ) async {
+    // e.g. the divisions list is reloading: the chip group disappears for a
+    // moment and then comes back. The user's filter must still be there.
+    final offered = ValueNotifier<List<SearchFilterGroup>>(_groups);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: _app(
+          Scaffold(
+            body: ValueListenableBuilder<List<SearchFilterGroup>>(
+              valueListenable: offered,
+              builder: (_, groups, _) => _body(groups: groups),
+            ),
+          ),
+        ),
+      ),
+    );
+    final container = _container(tester);
+    container.read(searchFilterProvider('a').notifier).setFilter('court', 's1');
+    container.read(searchFilterProvider('a').notifier).setOpen(true);
+    await tester.pumpAndSettle();
+    expect(find.byKey(_clearAll), findsOneWidget);
+
+    offered.value = const [];
+    await tester.pumpAndSettle();
+    // Hidden while not offered, but not thrown away.
+    expect(find.byKey(_clearAll), findsNothing);
+    expect(container.read(searchFilterProvider('a')).selected, {'court': 's1'});
+
+    offered.value = _groups;
+    await tester.pumpAndSettle();
+    expect(find.byKey(_clearAll), findsOneWidget);
+    expect(container.read(searchFilterProvider('a')).selected, {'court': 's1'});
   });
 
   test('pruned() drops groups and values that are not offered', () {

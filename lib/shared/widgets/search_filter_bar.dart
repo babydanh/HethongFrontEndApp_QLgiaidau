@@ -52,9 +52,10 @@ class SearchFilterState {
     selected: selected ?? this.selected,
   );
 
-  /// This state without filters whose group or option is no longer offered
-  /// (the list of courts or divisions changed). A stale value must neither
-  /// filter invisibly nor count in the badge.
+  /// This state without filters whose group or option is not offered right
+  /// now (the list of courts or divisions changed or is reloading). Used only
+  /// for display and matching: the stored state is left alone, so a filter
+  /// comes back if its option reappears.
   SearchFilterState pruned(List<SearchFilterGroup> groups) {
     final valid = <String, String>{};
     for (final entry in selected.entries) {
@@ -101,12 +102,6 @@ class SearchFilterNotifier extends Notifier<SearchFilterState> {
       next[groupId] = value;
     }
     state = state.copyWith(selected: next);
-  }
-
-  /// Drops filters that [groups] no longer offer.
-  void prune(List<SearchFilterGroup> groups) {
-    final next = state.pruned(groups);
-    if (!identical(next, state)) state = next;
   }
 
   /// Resets text and filters; the bar stays open.
@@ -159,13 +154,18 @@ bool searchTextMatches(String foldedNeedle, Iterable<String> haystacks) {
 /// Search icon for the toolbar: highlighted while the bar is open, with a
 /// badge counting active conditions so a collapsed bar still shows them.
 class SearchFilterToggle extends ConsumerWidget {
-  const SearchFilterToggle({super.key, required this.tabKey});
+  const SearchFilterToggle({super.key, required this.tabKey, this.groups});
 
   final String tabKey;
 
+  /// The groups the tab offers now; filters outside them are not counted.
+  final List<SearchFilterGroup>? groups;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(searchFilterProvider(tabKey));
+    final raw = ref.watch(searchFilterProvider(tabKey));
+    final offered = groups;
+    final state = offered == null ? raw : raw.pruned(offered);
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final count = state.activeCount;
@@ -284,13 +284,9 @@ class _SearchFilterBarState extends ConsumerState<SearchFilterBar> {
 
   @override
   Widget build(BuildContext context) {
-    final raw = ref.watch(searchFilterProvider(widget.tabKey));
-    final state = raw.pruned(widget.groups);
-    if (!identical(state, raw)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _notifier.prune(widget.groups);
-      });
-    }
+    final state = ref
+        .watch(searchFilterProvider(widget.tabKey))
+        .pruned(widget.groups);
     ref.listen(searchFilterProvider(widget.tabKey), (prev, next) {
       // Focus (and the keyboard) only when the user just opened the bar, not
       // when the widget is rebuilt or the screen is re-entered already open.

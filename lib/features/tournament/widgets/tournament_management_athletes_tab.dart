@@ -251,7 +251,7 @@ class _TournamentManagementAthletesTabState
                   ),
                 ),
               ),
-              SearchFilterToggle(tabKey: searchKey),
+              SearchFilterToggle(tabKey: searchKey, groups: groups),
             ],
           ),
         ),

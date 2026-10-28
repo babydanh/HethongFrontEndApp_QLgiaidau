@@ -1085,7 +1085,10 @@ class _TournamentScheduleCourtGridState
                     side: BorderSide(color: colors.border),
                   ),
                 ),
-                SearchFilterToggle(tabKey: _searchKey),
+                SearchFilterToggle(
+                  tabKey: _searchKey,
+                  groups: _searchGroups(l10n, allCourts),
+                ),
                 PopupMenuButton<String>(
                   key: const ValueKey('schedule-more-button'),
                   tooltip: MaterialLocalizations.of(context).moreButtonTooltip,

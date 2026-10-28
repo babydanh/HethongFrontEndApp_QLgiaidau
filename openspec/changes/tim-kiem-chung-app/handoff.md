@@ -20,7 +20,7 @@ Một icon tìm kiếm trong hàng công cụ của các tab danh sách BTC; b�
 - ARB: thêm 17 key vào `app_vi.arb` / `app_en.arb` (chèn sau `schedulePrint`, không ở cuối file để tránh xung đột với nhánh khác), đã chạy `flutter gen-l10n`.
 - `PopScope` của thanh tìm chỉ chặn Back khi thanh đang hiển thị (`TickerMode` bật và route là route hiện tại); thanh bị che (hub dùng `IndexedStack`) không nuốt Back. Có test.
 - State tìm kiếm là `autoDispose` + `ref.keepAlive()` với 10 phút ân hạn (`_keepAliveGrace`): sống qua đổi tab và reload danh sách, rồi tự giải phóng khi rời màn. Vẫn còn `open` được nhớ trong 10 phút đó (không tự lấy focus khi quay lại).
-- Bộ lọc có giá trị không còn trong danh sách (đổi sân/nội dung) bị bỏ qua và dọn khỏi state (`SearchFilterState.pruned`).
+- Bộ lọc có giá trị không còn được cung cấp (đổi sân/nội dung, hoặc danh sách đang nạp lại) bị bỏ qua khi hiển thị và khi lọc (`SearchFilterState.pruned`) nhưng KHÔNG xoá khỏi state, nên quay lại khi tuỳ chọn xuất hiện lại. `SearchFilterToggle` nhận `groups` để badge không đếm giá trị đó.
 - Khoá state: `'<tournamentId>:schedule'` và `'<tournamentId>:athletes'`.
 
 ## Ràng buộc thay đổi lần này

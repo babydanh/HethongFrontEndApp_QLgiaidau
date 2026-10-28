@@ -288,7 +288,10 @@ void main() {
     expect(_dimmed(tester, 'm1'), isFalse);
     expect(_dimmed(tester, 'm3'), isFalse);
     expect(find.byKey(const ValueKey('search-filter-clear-all')), findsNothing);
-    expect(container.read(searchFilterProvider(_key)).selected, isEmpty);
+    // Ignored for matching and display, but kept in the stored state.
+    expect(container.read(searchFilterProvider(_key)).selected, {
+      'court': 'Sân 9',
+    });
   });
 
   testWidgets('result count covers what is on screen, rest is reported', (
