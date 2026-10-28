@@ -191,6 +191,8 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     );
   }
 
+  /// Design 6: "CHỜ NHẬP ĐIỂM" (real matches that take a score now), then
+  /// "ĐÃ XONG", then "SẮP TỚI" (still waiting for opponents).
   List<Widget> _panels(
     BuildContext context,
     AppLocalizations l10n,
@@ -198,28 +200,28 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   ) {
     final split = splitResultsMatches(round.matches);
     final byTime = splitUpcomingByTime(split.upcoming);
+    final ordered = [...byTime.timed, ...byTime.untimed];
+    final pending = ordered.where(canEnterScore).toList();
+    final waiting = ordered.where((m) => !canEnterScore(m)).toList();
     return [
-      _Panel(
-        title: l10n.resultsBoard_finished,
-        count: split.finished.length,
-        children: [for (final m in split.finished) _row(m)],
-      ),
-      const SizedBox(height: 12),
-      _Panel(
-        title: l10n.resultsBoard_upcoming,
-        count: split.upcoming.length,
-        children: [
-          for (final m in byTime.timed) _row(m),
-          if (byTime.untimed.isNotEmpty)
-            _GroupHeader(
-              text: l10n.resultsBoard_untimed(
-                round.label,
-                byTime.untimed.length,
-              ),
-            ),
-          for (final m in byTime.untimed) _row(m),
-        ],
-      ),
+      if (pending.isNotEmpty)
+        _Panel(
+          title: l10n.resultsBoard_pendingScore,
+          count: pending.length,
+          children: [for (final m in pending) _row(m)],
+        ),
+      if (split.finished.isNotEmpty)
+        _Panel(
+          title: l10n.resultsBoard_finished,
+          count: split.finished.length,
+          children: [for (final m in split.finished) _row(m)],
+        ),
+      if (waiting.isNotEmpty)
+        _Panel(
+          title: l10n.resultsBoard_upcoming,
+          count: waiting.length,
+          children: [for (final m in waiting) _row(m)],
+        ),
     ];
   }
 
@@ -272,29 +274,6 @@ class _Panel extends StatelessWidget {
   );
 }
 
-class _GroupHeader extends StatelessWidget {
-  const _GroupHeader({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = LavishColors.of(context);
-    return Container(
-      color: colors.rowLine,
-      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 5),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          color: colors.muted,
-        ),
-      ),
-    );
-  }
-}
-
 class _MatchRow extends StatelessWidget {
   const _MatchRow({
     super.key,
@@ -311,134 +290,66 @@ class _MatchRow extends StatelessWidget {
   /// Null for rows nobody can score (viewers, closed or incomplete matches).
   final VoidCallback? onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final closed = !canEnterScore(match);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: LavishColors.of(context).rowLine),
-          ),
-        ),
-        child: Row(
-          children: [
-            SizedBox(width: 44, child: _time(colors)),
-            Expanded(
-              child: match.hasTeams
-                  ? _sides(context)
-                  : Text(
-                      l10n.resultsBoard_waitingTeams,
-                      style: TextStyle(color: colors.textMuted, fontSize: 13),
-                    ),
-            ),
-            if (closed && match.hasTeams) _scores(colors),
-            // Design 6: pencil (score entry) and clock (schedule) boxes.
-            if (onTap != null && !closed) ...[
-              const SizedBox(width: 8),
-              LavishIconBox(
-                key: ValueKey('results-score-${match.id}'),
-                size: 36,
-                tooltip: l10n.resultsBoard_enterScore,
-                onTap: onTap,
-                child: const Icon(Icons.edit_outlined),
-              ),
-            ],
-            if (onSchedule != null) ...[
-              const SizedBox(width: 8),
-              LavishIconBox(
-                key: ValueKey('results-schedule-${match.id}'),
-                size: 36,
-                tone: LavishTone.warn,
-                tooltip: l10n.matchSchedule_title,
-                onTap: onSchedule,
-                child: const Icon(Icons.event_outlined),
-              ),
-            ],
-          ],
-        ),
-      ),
+  String _title(AppLocalizations l10n) {
+    if (!match.hasTeams) return l10n.resultsBoard_waitingTeams;
+    String side(int n) => participantLabel(
+      teamName: matchSideTeamName(match, n),
+      players: matchSidePlayers(match, n),
+      teamOnly: isFootballMatch(match),
+      abbreviated: true,
     );
+    return '${side(1)} vs ${side(2)}';
   }
 
-  Widget _time(AppColorsExtension colors) {
+  /// "Sân 1 · 07:00", or "Chưa xếp lịch"; finished rows lead with the score.
+  String _subtitle(AppLocalizations l10n, bool closed) {
     final time = match.completedAt ?? match.scheduledTime;
     final court = TournamentLocationFormatter.matchShortCourt(
       match.court.isNotEmpty ? match.court : match.courtName,
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          time == null ? '—' : DateFormat('HH:mm').format(time.toLocal()),
-          style: TextStyle(fontSize: 13, color: colors.textMuted),
-        ),
-        if (court.isNotEmpty)
-          Text(
-            court,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10, color: colors.textMuted),
-          ),
-      ],
-    );
-  }
-
-  Widget _sides(BuildContext context) {
-    final colors = context.colors;
-    Widget side(int n, bool winner) => ParticipantLabel(
-      teamName: matchSideTeamName(match, n),
-      players: matchSidePlayers(match, n),
-      teamOnly: isFootballMatch(match),
-      compact: true,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: winner ? FontWeight.w800 : FontWeight.w500,
-        color: colors.textPrimary,
-      ),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        side(1, match.winnerId.isNotEmpty && match.winnerId == match.team1Id),
-        const SizedBox(height: 4),
-        side(2, match.winnerId.isNotEmpty && match.winnerId == match.team2Id),
-      ],
-    );
-  }
-
-  Widget _scores(AppColorsExtension colors) {
+    final when = [
+      if (court.isNotEmpty) court,
+      if (time != null) DateFormat('HH:mm').format(time.toLocal()),
+    ].join(' · ');
+    final place = when.isEmpty ? l10n.resultsBoard_unscheduled : when;
+    if (!closed || !match.hasTeams) return place;
     final sets = match.scoreHistory.isNotEmpty
         ? match.scoreHistory
         : [SetScore(score1: match.score1, score2: match.score2)];
-    Widget line(int Function(SetScore) pick, bool winner) => Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final set in sets)
-          SizedBox(
-            width: 22,
-            child: Text(
-              '${pick(set)}',
-              textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: winner ? FontWeight.w800 : FontWeight.w500,
-                color: winner ? colors.textPrimary : colors.textMuted,
-              ),
-            ),
+    final score = sets.map((s) => '${s.score1}–${s.score2}').join(', ');
+    return '$score · $place';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final closed = !canEnterScore(match);
+    return LavishRow(
+      title: _title(l10n),
+      subtitle: _subtitle(l10n, closed),
+      onTap: onTap,
+      trailing: [
+        // Design 6: pencil (score entry) and clock (schedule) boxes; closed
+        // rows carry the green "Xong" pill instead.
+        if (closed && match.hasTeams)
+          LavishPill(l10n.resultsBoard_doneBadge, tone: LavishTone.ok),
+        if (onTap != null && !closed)
+          LavishIconBox(
+            key: ValueKey('results-score-${match.id}'),
+            size: 36,
+            tooltip: l10n.resultsBoard_enterScore,
+            onTap: onTap,
+            child: const Icon(Icons.edit_outlined),
           ),
-      ],
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        line((s) => s.score1, match.winnerId == match.team1Id),
-        const SizedBox(height: 4),
-        line((s) => s.score2, match.winnerId == match.team2Id),
+        if (onSchedule != null)
+          LavishIconBox(
+            key: ValueKey('results-schedule-${match.id}'),
+            size: 36,
+            tone: LavishTone.warn,
+            tooltip: l10n.matchSchedule_title,
+            onTap: onSchedule,
+            child: const Icon(Icons.event_outlined),
+          ),
       ],
     );
   }

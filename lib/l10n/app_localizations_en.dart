@@ -17802,6 +17802,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsBoard_upcoming => 'Upcoming';
 
   @override
+  String get resultsBoard_pendingScore => 'Awaiting score';
+
+  @override
+  String get resultsBoard_unscheduled => 'Not scheduled';
+
+  @override
+  String get resultsBoard_doneBadge => 'Done';
+
+  @override
   String resultsBoard_untimed(String round, int count) {
     return 'No time yet · $round · $count';
   }

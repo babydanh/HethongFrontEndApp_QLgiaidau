@@ -17729,6 +17729,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get resultsBoard_upcoming => 'Sắp tới';
 
   @override
+  String get resultsBoard_pendingScore => 'Chờ nhập điểm';
+
+  @override
+  String get resultsBoard_unscheduled => 'Chưa xếp lịch';
+
+  @override
+  String get resultsBoard_doneBadge => 'Xong';
+
+  @override
   String resultsBoard_untimed(String round, int count) {
     return 'Chưa có giờ · $round · $count';
   }

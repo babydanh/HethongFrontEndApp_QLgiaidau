@@ -135,6 +135,27 @@ void main() {
     expect(_row('r1todo'), findsNothing);
   });
 
+  testWidgets('groups: chờ nhập điểm, đã xong, sắp tới; trận xong có pill Xong', (
+    tester,
+  ) async {
+    await _pump(tester, [
+      _match(
+        'done',
+        round: 1,
+        number: 1,
+        status: 'COMPLETED',
+        completedAt: DateTime(2026, 1, 1, 9),
+      ),
+      _match('todo', round: 1, number: 2),
+      _match('wait', round: 1, number: 3, team2Id: ''),
+    ]);
+
+    expect(find.text('CHỜ NHẬP ĐIỂM · 1'), findsOneWidget);
+    expect(find.text('ĐÃ XONG · 1'), findsOneWidget);
+    expect(find.text('SẮP TỚI · 1'), findsOneWidget);
+    expect(find.text('Xong'), findsOneWidget);
+  });
+
   testWidgets('live block shows live matches of any round, once', (
     tester,
   ) async {

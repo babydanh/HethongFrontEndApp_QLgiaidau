@@ -31957,6 +31957,24 @@ abstract class AppLocalizations {
   /// **'Sắp tới'**
   String get resultsBoard_upcoming;
 
+  /// No description provided for @resultsBoard_pendingScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ nhập điểm'**
+  String get resultsBoard_pendingScore;
+
+  /// No description provided for @resultsBoard_unscheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp lịch'**
+  String get resultsBoard_unscheduled;
+
+  /// No description provided for @resultsBoard_doneBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get resultsBoard_doneBadge;
+
   /// No description provided for @resultsBoard_untimed.
   ///
   /// In vi, this message translates to:
