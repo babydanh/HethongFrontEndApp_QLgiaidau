@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_venues_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:dio/dio.dart';
@@ -868,6 +869,23 @@ class _TournamentLifecycleCardState
               division.status?.toUpperCase() != 'CANCELLED' &&
               !divisionMatches.any((match) => match.divisionId == division.id),
         );
+    // Phí công bố do Backend cấu hình: còn phí thì khoá nút Công bố (Backend
+    // cũng từ chối), App không tự tính hay thanh toán phí này.
+    final publishFee = status == AppConstants.statusDraft
+        ? ref
+                  .watch(
+                    lifecyclePublishFeeProvider((
+                      isClub: widget.tournament.communityId?.isNotEmpty == true,
+                      isRanked: widget.tournament.isRanked,
+                    )),
+                  )
+                  .asData
+                  ?.value ??
+              0
+        : 0;
+    final fullCapacity = status == AppConstants.statusRegistration
+        ? lifecycleCapacityFull(widget.tournament)
+        : null;
     // Mỗi lúc một nút theo việc tiếp theo (như Web). Khoá/mở từng nội dung nằm ở mục Nội dung.
     final primary = switch (status) {
       AppConstants.statusDraft => _lifecycleButton(
@@ -879,6 +897,11 @@ class _TournamentLifecycleCardState
               .publishTournament(id),
           l10n.tournamentManagementPublishConfirm,
         ),
+        blockedReason: publishFee > 0
+            ? l10n.lifecyclePublishFeeBlocked(
+                lifecycleMoney(context, publishFee),
+              )
+            : null,
       ),
       AppConstants.statusUpcoming => _lifecycleButton(
         l10n.tournamentManagementOpenRegistrationNow,
@@ -888,12 +911,7 @@ class _TournamentLifecycleCardState
       AppConstants.statusRegistration => _lifecycleButton(
         l10n.tournamentManagementCloseRegistration,
         Icons.lock_outline_rounded,
-        () => _runAction(
-          () => ref
-              .read(tournamentManagementRepositoryProvider)
-              .closeRegistration(id),
-          l10n.tournamentManagementCloseRegistrationConfirm,
-        ),
+        () => _closeRegistration(id, l10n),
       ),
       AppConstants.statusRegistrationClosed => _lifecycleButton(
         l10n.tournamentManagementStartTournament,
@@ -912,14 +930,28 @@ class _TournamentLifecycleCardState
       ),
       _ => null,
     };
-    if (primary == null) return const SizedBox.shrink();
+    // Đã kết thúc vẫn hiện thanh bước (không còn nút); đã huỷ thì ẩn thẻ.
+    if (primary == null && lifecycleStepIndex(status) == null) {
+      return const SizedBox.shrink();
+    }
     return TournamentManagementSectionCard(
       title: l10n.tournamentManagementLifecycle,
       subtitle: l10n.tournamentManagementLifecycleDescription,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          primary,
+          LifecycleStepBar(status: status),
+          const SizedBox(height: 12),
+          if (fullCapacity != null) ...[
+            LifecycleCapacityBanner(
+              occupied: fullCapacity.occupied,
+              max: fullCapacity.max,
+              closeLabel: l10n.tournamentManagementCloseRegistration,
+              onClose: _isActing ? () {} : () => _closeRegistration(id, l10n),
+            ),
+            const SizedBox(height: 8),
+          ],
+          ?primary,
           // Đã đóng hết: vẫn cần lối mở lại cả giải; chỉ là nút chữ, không phải nút chính.
           if (status == AppConstants.statusRegistrationClosed)
             TextButton(
@@ -936,15 +968,25 @@ class _TournamentLifecycleCardState
             const SizedBox(height: 8),
             _InlineError(text: error),
           ],
-          const SizedBox(height: 8),
-          Text(
-            l10n.tournamentManagementServerAuthorizationNote,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          if (primary != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              l10n.tournamentManagementServerAuthorizationNote,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     );
   }
+
+  Future<void> _closeRegistration(String id, AppLocalizations l10n) =>
+      _runAction(
+        () => ref
+            .read(tournamentManagementRepositoryProvider)
+            .closeRegistration(id),
+        l10n.tournamentManagementCloseRegistrationConfirm,
+      );
 
   /// Mở (lại) đăng ký cả giải. Hạn cấp giải đã qua thì hỏi hạn mới trước,
   /// vì server từ chối mở lại khi thiếu hạn mới.
@@ -1025,19 +1067,35 @@ class _TournamentLifecycleCardState
     ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));
   }
 
+  /// [blockedReason] non-null disables the button and shows why.
   Widget _lifecycleButton(
     String label,
     IconData icon,
-    VoidCallback onPressed,
-  ) => Padding(
+    VoidCallback onPressed, {
+    String? blockedReason,
+  }) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
-    child: SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _isActing ? null : onPressed,
-        icon: Icon(icon),
-        label: Text(label, textAlign: TextAlign.center),
-      ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _isActing || blockedReason != null ? null : onPressed,
+            icon: Icon(icon),
+            label: Text(label, textAlign: TextAlign.center),
+          ),
+        ),
+        if (blockedReason != null)
+          Padding(
+            key: const ValueKey('lifecycle-publish-blocked'),
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              blockedReason,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+      ],
     ),
   );
 }

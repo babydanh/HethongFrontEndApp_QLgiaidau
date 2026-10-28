@@ -16424,6 +16424,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'The form is locked because registration is closed or the tournament has started.';
 
   @override
+  String get lifecycleStepDraft => 'Draft';
+
+  @override
+  String get lifecycleStepPublish => 'Publish';
+
+  @override
+  String get lifecycleStepOpen => 'Reg. open';
+
+  @override
+  String get lifecycleStepRunning => 'Playing';
+
+  @override
+  String get lifecycleStepDone => 'Finished';
+
+  @override
+  String lifecycleFullTitle(Object max, Object occupied) {
+    return 'Full: $occupied/$max teams';
+  }
+
+  @override
+  String get lifecycleFullHint =>
+      'Consider closing registration to lock the list.';
+
+  @override
+  String get lifecycleRemindLater => 'Remind later';
+
+  @override
+  String lifecyclePublishFeeBlocked(Object amount) {
+    return 'The publish fee of $amount must be paid before publishing. This payment step is not in the App yet, please pay on the Web.';
+  }
+
+  @override
+  String lifecycleDeleteTypePrompt(Object name) {
+    return 'Type the tournament name “$name” to confirm deletion.';
+  }
+
+  @override
+  String get lifecycleDeleteNameLabel => 'Tournament name';
+
+  @override
   String get divisionEditorPickleballMode => 'Scoring mode';
 
   @override

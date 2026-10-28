@@ -12,12 +12,12 @@
 
 ## 3. Màn 10 - Vòng đời
 
-- [ ] 3.1 Thanh bước, cảnh báo đủ đội, khoá Xuất bản, xoá giải gõ tên
+- [x] 3.1 Thanh bước, cảnh báo đủ đội, khoá Xuất bản, xoá giải gõ tên
   - Files: lib/features/tournament/widgets/lifecycle_stepper.dart, lib/features/tournament/screens/tournament_management_section_screen.dart, lib/features/tournament/screens/tournament_management_hub_screen.dart, lib/l10n/app_vi.arb, lib/l10n/app_en.arb, test/features/lifecycle_stepper_test.dart
   - Tiêu chí: `flutter test --no-pub test/features/lifecycle_stepper_test.dart` exit 0
 
 ## 4. Kiểm tra chung
 
-- [ ] 4.1 Phân tích tĩnh và validate OpenSpec
+- [x] 4.1 Phân tích tĩnh và validate OpenSpec
   - Files: openspec/changes/noidung-form-vongdoi/
   - Tiêu chí: `flutter analyze --no-pub lib/features/tournament` không lỗi/cảnh báo mới; `openspec validate noidung-form-vongdoi --strict` exit 0

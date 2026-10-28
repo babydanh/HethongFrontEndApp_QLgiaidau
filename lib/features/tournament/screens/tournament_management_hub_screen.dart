@@ -1,7 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
-import 'package:app_quanly_giaidau/core/dialogs/confirm_dialog.dart';
 import 'package:app_quanly_giaidau/core/services/excel_export_service.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -13,6 +12,7 @@ import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart'
 import 'package:app_quanly_giaidau/features/tournament/screens/token_management_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
@@ -935,13 +935,11 @@ class _TournamentManagementHubScreenState
   Future<void> _deleteTournament() async {
     if (_isDeleting) return;
     final l10n = AppLocalizations.of(context)!;
-    final confirm = await showConfirmDialog(
-      context: context,
-      title: l10n.deleteTournamentTitle,
-      content: l10n.deleteTournamentContent,
-      confirmText: l10n.delete,
+    final confirm = await showDeleteTournamentDialog(
+      context,
+      tournamentName: widget.tournament.name,
     );
-    if (confirm != true || !mounted) return;
+    if (!confirm || !mounted) return;
     setState(() => _isDeleting = true);
     final success = await ref
         .read(tournamentActionProvider.notifier)

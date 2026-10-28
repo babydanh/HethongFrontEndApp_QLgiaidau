@@ -16369,6 +16369,45 @@ class AppLocalizationsVi extends AppLocalizations {
       'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.';
 
   @override
+  String get lifecycleStepDraft => 'Nháp';
+
+  @override
+  String get lifecycleStepPublish => 'Công bố';
+
+  @override
+  String get lifecycleStepOpen => 'Mở ĐK';
+
+  @override
+  String get lifecycleStepRunning => 'Đang đấu';
+
+  @override
+  String get lifecycleStepDone => 'Kết thúc';
+
+  @override
+  String lifecycleFullTitle(Object max, Object occupied) {
+    return 'Đã đủ $occupied/$max đội';
+  }
+
+  @override
+  String get lifecycleFullHint => 'Nên đóng đăng ký để chốt danh sách.';
+
+  @override
+  String get lifecycleRemindLater => 'Nhắc sau';
+
+  @override
+  String lifecyclePublishFeeBlocked(Object amount) {
+    return 'Cần thanh toán phí công bố $amount trước khi công bố giải. Bước thanh toán này chưa có trên App, hãy thanh toán trên Web.';
+  }
+
+  @override
+  String lifecycleDeleteTypePrompt(Object name) {
+    return 'Gõ lại tên giải “$name” để xác nhận xóa.';
+  }
+
+  @override
+  String get lifecycleDeleteNameLabel => 'Tên giải';
+
+  @override
   String get divisionEditorPickleballMode => 'Chế độ tính điểm';
 
   @override

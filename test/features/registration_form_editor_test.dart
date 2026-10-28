@@ -33,7 +33,7 @@ Map<String, dynamic> _field(
   'label': label,
   'type': type,
   'required': required,
-  if (options != null) 'options': options,
+  'options': ?options,
 };
 
 Tournament _tournament({

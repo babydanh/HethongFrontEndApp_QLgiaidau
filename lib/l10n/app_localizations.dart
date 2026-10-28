@@ -29534,6 +29534,72 @@ abstract class AppLocalizations {
   /// **'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.'**
   String get registrationFormLocked;
 
+  /// No description provided for @lifecycleStepDraft.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nháp'**
+  String get lifecycleStepDraft;
+
+  /// No description provided for @lifecycleStepPublish.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công bố'**
+  String get lifecycleStepPublish;
+
+  /// No description provided for @lifecycleStepOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở ĐK'**
+  String get lifecycleStepOpen;
+
+  /// No description provided for @lifecycleStepRunning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đấu'**
+  String get lifecycleStepRunning;
+
+  /// No description provided for @lifecycleStepDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc'**
+  String get lifecycleStepDone;
+
+  /// No description provided for @lifecycleFullTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đủ {occupied}/{max} đội'**
+  String lifecycleFullTitle(Object max, Object occupied);
+
+  /// No description provided for @lifecycleFullHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nên đóng đăng ký để chốt danh sách.'**
+  String get lifecycleFullHint;
+
+  /// No description provided for @lifecycleRemindLater.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắc sau'**
+  String get lifecycleRemindLater;
+
+  /// No description provided for @lifecyclePublishFeeBlocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần thanh toán phí công bố {amount} trước khi công bố giải. Bước thanh toán này chưa có trên App, hãy thanh toán trên Web.'**
+  String lifecyclePublishFeeBlocked(Object amount);
+
+  /// No description provided for @lifecycleDeleteTypePrompt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gõ lại tên giải “{name}” để xác nhận xóa.'**
+  String lifecycleDeleteTypePrompt(Object name);
+
+  /// No description provided for @lifecycleDeleteNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên giải'**
+  String get lifecycleDeleteNameLabel;
+
   /// No description provided for @divisionEditorPickleballMode.
   ///
   /// In vi, this message translates to:
