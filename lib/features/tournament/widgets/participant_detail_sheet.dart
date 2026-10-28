@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -473,7 +474,7 @@ class _ParticipantDetailSheetState
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final status = participant.teamStatus.toUpperCase();
-    final (statusLabel, statusColor) = _statusStyle(l10n, colors, status);
+    final (statusLabel, _) = _statusStyle(l10n, colors, status);
     final free = participant.entryFee == null || participant.entryFee! <= 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -482,62 +483,17 @@ class _ParticipantDetailSheetState
           spacing: 6,
           runSpacing: 6,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: colors.border),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                statusLabel,
-                style: TextStyle(
-                  color: statusColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: participant.isPaid
-                    ? colors.bgSurface
-                    : colors.error.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: colors.border),
-              ),
-              child: Text(
-                participant.isPaid
-                    ? (free
-                          ? l10n.participantDetailFreeEntry
-                          : l10n.participantDetailPaid)
-                    : l10n.participantDetailUnpaid,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            LavishPill(statusLabel, tone: _statusTone(status)),
+            LavishPill(
+              participant.isPaid
+                  ? (free
+                        ? l10n.participantDetailFreeEntry
+                        : l10n.participantDetailPaid)
+                  : l10n.participantDetailUnpaid,
+              tone: participant.isPaid ? LavishTone.ok : LavishTone.bad,
             ),
             if (participant.isWildcard)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  l10n.participantDetailWildcard,
-                  style: TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              LavishPill(l10n.participantDetailWildcard),
           ],
         ),
         const SizedBox(height: 6),
@@ -620,6 +576,14 @@ class _ParticipantDetailSheetState
       if (fileName != null && fileName.isNotEmpty) fileName,
     ].join(' · ');
   }
+
+  /// Maps the registration status onto the Lavish pill tone.
+  LavishTone _statusTone(String status) => switch (status) {
+    'PENDING' || 'PENDING_APPROVAL' || 'PENDING_PARTNER' => LavishTone.warn,
+    'COMPLETE' => LavishTone.ok,
+    'REJECTED' => LavishTone.bad,
+    _ => LavishTone.neutral,
+  };
 
   (String, Color) _statusStyle(
     AppLocalizations l10n,
