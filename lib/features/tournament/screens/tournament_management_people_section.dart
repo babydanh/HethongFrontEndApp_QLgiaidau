@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/registration_form_editor.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -149,6 +150,26 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
       onRefresh: () async {
         if (mounted) _reload();
       },
+    );
+  }
+
+  /// Mở màn soạn form đăng ký; câu hỏi đã có VĐV trả lời lấy từ danh sách đang tải.
+  Future<void> _openRegistrationForm(
+    List<OrganizerOpsParticipant> participants,
+  ) async {
+    final answered = <String>{
+      for (final participant in participants)
+        for (final entry in participant.customResponses.entries)
+          if (entry.value != null && entry.value.toString().trim().isNotEmpty)
+            entry.key,
+    };
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => RegistrationFormEditorScreen(
+          tournament: widget.tournament,
+          answeredFieldIds: answered,
+        ),
+      ),
     );
   }
 
@@ -302,6 +323,16 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('open-registration-form'),
+                      onPressed: () => _openRegistrationForm(all),
+                      icon: const Icon(Icons.dynamic_form_outlined),
+                      label: Text(l10n.registrationFormTitle),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,

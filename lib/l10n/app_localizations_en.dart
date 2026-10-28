@@ -16288,6 +16288,253 @@ class AppLocalizationsEn extends AppLocalizations {
   String get divisionEditorRulesPaneTitle => 'Rules setup';
 
   @override
+  String get divisionEditorAccBasic => 'Basics';
+
+  @override
+  String get divisionEditorAccRules => 'Round rules';
+
+  @override
+  String get divisionEditorAccElo => 'ELO limits';
+
+  @override
+  String get divisionEditorAccIllustration => 'See format illustration';
+
+  @override
+  String divisionEditorAccTeams(Object count) {
+    return '$count teams';
+  }
+
+  @override
+  String get divisionEditorAccNoLimit => 'No limit';
+
+  @override
+  String get divisionEditorAccFree => 'Free';
+
+  @override
+  String get divisionEditorAccRulesLite => 'Quick rules (default)';
+
+  @override
+  String divisionEditorAccRulesStrict(Object points, Object sets) {
+    return 'Win $sets sets · $points points';
+  }
+
+  @override
+  String divisionEditorAccEloRange(Object limit, Object max, Object min) {
+    return 'ELO $min – $max · $limit';
+  }
+
+  @override
+  String divisionEditorAccEloNone(Object limit) {
+    return 'No ELO limit · $limit';
+  }
+
+  @override
+  String divisionEditorAccGroups(Object advancing, Object groups) {
+    return '$groups groups · $advancing advance';
+  }
+
+  @override
+  String divisionEditorAccRounds(Object count) {
+    return '$count rounds';
+  }
+
+  @override
+  String divisionEditorAccSwissRounds(Object count) {
+    return '$count rounds';
+  }
+
+  @override
+  String get divisionEditorLockedNotice =>
+      'This division already has a bracket, so its format and round rules can no longer change. The sections that are still open can be edited.';
+
+  @override
+  String formatIllustrationTitle(Object name) {
+    return 'Illustration: $name';
+  }
+
+  @override
+  String get formatIllustrationSingleEliminationDescription =>
+      'Lose once and you are out; winners advance to the final.';
+
+  @override
+  String get formatIllustrationSingleEliminationSummary =>
+      'Example with 8 players drawn into a bracket: 4 quarterfinal pairs, winners go to the semifinals and then the final, no third-place match.';
+
+  @override
+  String get formatIllustrationRoundRobinDescription =>
+      'Everyone plays everyone else; the most points ranks first.';
+
+  @override
+  String get formatIllustrationRoundRobinSummary =>
+      'Example with 5 players and 10 matches: 2 matches per round, one player rests. A win is 3 points, a draw 1, a loss 0 (default); the most points ranks first.';
+
+  @override
+  String get formatIllustrationDoubleEliminationDescription =>
+      'The first loss drops you to the lower bracket; a second loss knocks you out.';
+
+  @override
+  String get formatIllustrationDoubleEliminationSummary =>
+      'Example with 4 players. A first loss in the upper bracket drops you to the lower bracket; a second loss eliminates you. The upper-bracket winner meets the lower-bracket winner in the grand final (one match, no replay).';
+
+  @override
+  String get formatIllustrationGroupStageDescription =>
+      'Round robin inside each group, the top players of each group go to the knockout.';
+
+  @override
+  String get formatIllustrationGroupStageSummary =>
+      'Example with 8 players in 2 groups. Each group plays a round robin, the top 2 reach crossed semifinals (A1 vs B2, B1 vs A2), then the final. The organizer sets how many advance.';
+
+  @override
+  String get formatIllustrationSwissDescription =>
+      'Each round pairs players on equal points, no rematches, nobody is eliminated.';
+
+  @override
+  String get formatIllustrationSwissSummary =>
+      'Example with 8 players over 3 rounds. Round 1 pairs by seed: 1 vs 5, 2 vs 6, 3 vs 7, 4 vs 8. From round 2, players on equal points meet and never replay an opponent. Ties are broken by the total points of the opponents faced.';
+
+  @override
+  String get registrationFormTitle => 'Registration form';
+
+  @override
+  String get registrationFormSave => 'Save';
+
+  @override
+  String get registrationFormSystemName => 'Full name';
+
+  @override
+  String get registrationFormSystemPhone => 'Phone number';
+
+  @override
+  String get registrationFormSystemHint =>
+      'Required · taken from the account profile';
+
+  @override
+  String get registrationFormRequired => 'Required';
+
+  @override
+  String get registrationFormOptional => 'Optional';
+
+  @override
+  String get registrationFormAdd => 'Add question';
+
+  @override
+  String get registrationFormTypeLabel => 'Question type';
+
+  @override
+  String get registrationFormTypeText => 'Text';
+
+  @override
+  String get registrationFormTypeNumber => 'Number';
+
+  @override
+  String get registrationFormTypeSelect => 'Choose one';
+
+  @override
+  String get registrationFormTypeMultiSelect => 'Choose many';
+
+  @override
+  String get registrationFormTypeTextarea => 'Long text';
+
+  @override
+  String get registrationFormTypeEmail => 'Email';
+
+  @override
+  String get registrationFormTypePhone => 'Phone number';
+
+  @override
+  String get registrationFormTypeCheckbox => 'Confirmation / consent';
+
+  @override
+  String get registrationFormTypeFile => 'File or image';
+
+  @override
+  String get registrationFormNewQuestion => 'New question';
+
+  @override
+  String get registrationFormUnnamed => '(Unnamed)';
+
+  @override
+  String get registrationFormQuestionName => 'Question title';
+
+  @override
+  String get registrationFormOptionsLabel => 'Options, one per line';
+
+  @override
+  String get registrationFormRequiredAnswer => 'Answer required';
+
+  @override
+  String get registrationFormDone => 'Done';
+
+  @override
+  String get registrationFormDragHint => 'Drag to reorder';
+
+  @override
+  String get registrationFormDeleteTitle => 'Delete question?';
+
+  @override
+  String registrationFormDeleteConfirm(Object label) {
+    return 'Remove the question “$label” from the form?';
+  }
+
+  @override
+  String registrationFormDeleteAnswered(Object label) {
+    return 'Players have already answered “$label”. Deleting the question will lose those answers.';
+  }
+
+  @override
+  String get registrationFormErrorMissingLabel =>
+      'Every question needs a title.';
+
+  @override
+  String registrationFormErrorChoice(Object label) {
+    return 'The question “$label” needs at least 2 different options.';
+  }
+
+  @override
+  String get registrationFormLocked =>
+      'The form is locked because registration is closed or the tournament has started.';
+
+  @override
+  String get lifecycleStepDraft => 'Draft';
+
+  @override
+  String get lifecycleStepPublish => 'Publish';
+
+  @override
+  String get lifecycleStepOpen => 'Reg. open';
+
+  @override
+  String get lifecycleStepRunning => 'Playing';
+
+  @override
+  String get lifecycleStepDone => 'Finished';
+
+  @override
+  String lifecycleFullTitle(Object max, Object occupied) {
+    return 'Full: $occupied/$max teams';
+  }
+
+  @override
+  String get lifecycleFullHint =>
+      'Consider closing registration to lock the list.';
+
+  @override
+  String get lifecycleRemindLater => 'Remind later';
+
+  @override
+  String lifecyclePublishFeeBlocked(Object amount) {
+    return 'The publish fee of $amount must be paid before publishing. This payment step is not in the App yet, please pay on the Web.';
+  }
+
+  @override
+  String lifecycleDeleteTypePrompt(Object name) {
+    return 'Type the tournament name “$name” to confirm deletion.';
+  }
+
+  @override
+  String get lifecycleDeleteNameLabel => 'Tournament name';
+
+  @override
   String get divisionEditorPickleballMode => 'Scoring mode';
 
   @override

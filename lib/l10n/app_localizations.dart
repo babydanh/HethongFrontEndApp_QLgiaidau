@@ -29312,6 +29312,414 @@ abstract class AppLocalizations {
   /// **'Cấu hình luật'**
   String get divisionEditorRulesPaneTitle;
 
+  /// No description provided for @divisionEditorAccBasic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cơ bản'**
+  String get divisionEditorAccBasic;
+
+  /// No description provided for @divisionEditorAccRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật vòng'**
+  String get divisionEditorAccRules;
+
+  /// No description provided for @divisionEditorAccElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ràng buộc ELO'**
+  String get divisionEditorAccElo;
+
+  /// No description provided for @divisionEditorAccIllustration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem minh hoạ thể thức'**
+  String get divisionEditorAccIllustration;
+
+  /// No description provided for @divisionEditorAccTeams.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đội'**
+  String divisionEditorAccTeams(Object count);
+
+  /// No description provided for @divisionEditorAccNoLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn'**
+  String get divisionEditorAccNoLimit;
+
+  /// No description provided for @divisionEditorAccFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get divisionEditorAccFree;
+
+  /// No description provided for @divisionEditorAccRulesLite.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật nhanh (mặc định)'**
+  String get divisionEditorAccRulesLite;
+
+  /// No description provided for @divisionEditorAccRulesStrict.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng {sets} ván · {points} điểm'**
+  String divisionEditorAccRulesStrict(Object points, Object sets);
+
+  /// No description provided for @divisionEditorAccEloRange.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO {min} – {max} · {limit}'**
+  String divisionEditorAccEloRange(Object limit, Object max, Object min);
+
+  /// No description provided for @divisionEditorAccEloNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn ELO · {limit}'**
+  String divisionEditorAccEloNone(Object limit);
+
+  /// No description provided for @divisionEditorAccGroups.
+  ///
+  /// In vi, this message translates to:
+  /// **'{groups} bảng · {advancing} đội đi tiếp'**
+  String divisionEditorAccGroups(Object advancing, Object groups);
+
+  /// No description provided for @divisionEditorAccRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} lượt'**
+  String divisionEditorAccRounds(Object count);
+
+  /// No description provided for @divisionEditorAccSwissRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} vòng'**
+  String divisionEditorAccSwissRounds(Object count);
+
+  /// No description provided for @divisionEditorLockedNotice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này đã có sơ đồ thi đấu nên không đổi được thể thức và luật vòng. Vẫn sửa được những mục còn mở.'**
+  String get divisionEditorLockedNotice;
+
+  /// No description provided for @formatIllustrationTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Minh hoạ: {name}'**
+  String formatIllustrationTitle(Object name);
+
+  /// No description provided for @formatIllustrationSingleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua một trận là bị loại, người thắng đi tiếp đến chung kết.'**
+  String get formatIllustrationSingleEliminationDescription;
+
+  /// No description provided for @formatIllustrationSingleEliminationSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 8 người bốc thăm vào sơ đồ: tứ kết 4 cặp, người thắng vào bán kết rồi chung kết, không có trận tranh hạng ba.'**
+  String get formatIllustrationSingleEliminationSummary;
+
+  /// No description provided for @formatIllustrationRoundRobinDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi người gặp tất cả người còn lại, nhiều điểm nhất xếp đầu.'**
+  String get formatIllustrationRoundRobinDescription;
+
+  /// No description provided for @formatIllustrationRoundRobinSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 5 người đấu 10 trận: mỗi lượt 2 trận, một người nghỉ. Thắng 3 điểm, hoà 1, thua 0 (mặc định); ai nhiều điểm nhất đứng đầu.'**
+  String get formatIllustrationRoundRobinSummary;
+
+  /// No description provided for @formatIllustrationDoubleEliminationDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua lần đầu xuống nhánh thua, thua lần hai mới bị loại.'**
+  String get formatIllustrationDoubleEliminationDescription;
+
+  /// No description provided for @formatIllustrationDoubleEliminationSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 4 người. Thua lần đầu ở nhánh thắng thì xuống nhánh thua; thua lần hai thì bị loại. Người thắng chung kết nhánh thắng gặp người thắng chung kết nhánh thua ở chung kết tổng (một trận, không đá lại).'**
+  String get formatIllustrationDoubleEliminationSummary;
+
+  /// No description provided for @formatIllustrationGroupStageDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đấu vòng tròn trong bảng, những người đứng đầu mỗi bảng vào loại trực tiếp.'**
+  String get formatIllustrationGroupStageDescription;
+
+  /// No description provided for @formatIllustrationGroupStageSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 8 người chia 2 bảng. Mỗi bảng đấu vòng tròn, 2 người đầu vào bán kết chéo (A1 gặp B2, B1 gặp A2), rồi chung kết. Số người đi tiếp do BTC đặt.'**
+  String get formatIllustrationGroupStageSummary;
+
+  /// No description provided for @formatIllustrationSwissDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi vòng ghép người cùng điểm, không gặp lại, không ai bị loại.'**
+  String get formatIllustrationSwissDescription;
+
+  /// No description provided for @formatIllustrationSwissSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ 8 người, 3 vòng. Vòng 1 ghép theo hạt giống: 1 gặp 5, 2 gặp 6, 3 gặp 7, 4 gặp 8. Từ vòng 2, người cùng điểm gặp nhau và không gặp lại đối thủ cũ. Bằng điểm thì xét tổng điểm các đối thủ đã gặp.'**
+  String get formatIllustrationSwissSummary;
+
+  /// No description provided for @registrationFormTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Form đăng ký'**
+  String get registrationFormTitle;
+
+  /// No description provided for @registrationFormSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get registrationFormSave;
+
+  /// No description provided for @registrationFormSystemName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ và tên'**
+  String get registrationFormSystemName;
+
+  /// No description provided for @registrationFormSystemPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại'**
+  String get registrationFormSystemPhone;
+
+  /// No description provided for @registrationFormSystemHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt buộc · lấy từ hồ sơ tài khoản'**
+  String get registrationFormSystemHint;
+
+  /// No description provided for @registrationFormRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt buộc'**
+  String get registrationFormRequired;
+
+  /// No description provided for @registrationFormOptional.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuỳ chọn'**
+  String get registrationFormOptional;
+
+  /// No description provided for @registrationFormAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm câu hỏi'**
+  String get registrationFormAdd;
+
+  /// No description provided for @registrationFormTypeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại câu hỏi'**
+  String get registrationFormTypeLabel;
+
+  /// No description provided for @registrationFormTypeText.
+  ///
+  /// In vi, this message translates to:
+  /// **'Văn bản'**
+  String get registrationFormTypeText;
+
+  /// No description provided for @registrationFormTypeNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số'**
+  String get registrationFormTypeNumber;
+
+  /// No description provided for @registrationFormTypeSelect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn một'**
+  String get registrationFormTypeSelect;
+
+  /// No description provided for @registrationFormTypeMultiSelect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn nhiều'**
+  String get registrationFormTypeMultiSelect;
+
+  /// No description provided for @registrationFormTypeTextarea.
+  ///
+  /// In vi, this message translates to:
+  /// **'Văn bản dài'**
+  String get registrationFormTypeTextarea;
+
+  /// No description provided for @registrationFormTypeEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email'**
+  String get registrationFormTypeEmail;
+
+  /// No description provided for @registrationFormTypePhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại'**
+  String get registrationFormTypePhone;
+
+  /// No description provided for @registrationFormTypeCheckbox.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận / đồng ý'**
+  String get registrationFormTypeCheckbox;
+
+  /// No description provided for @registrationFormTypeFile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tệp hoặc hình ảnh'**
+  String get registrationFormTypeFile;
+
+  /// No description provided for @registrationFormNewQuestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi mới'**
+  String get registrationFormNewQuestion;
+
+  /// No description provided for @registrationFormUnnamed.
+  ///
+  /// In vi, this message translates to:
+  /// **'(Chưa đặt tên)'**
+  String get registrationFormUnnamed;
+
+  /// No description provided for @registrationFormQuestionName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên câu hỏi'**
+  String get registrationFormQuestionName;
+
+  /// No description provided for @registrationFormOptionsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các lựa chọn, mỗi dòng một lựa chọn'**
+  String get registrationFormOptionsLabel;
+
+  /// No description provided for @registrationFormRequiredAnswer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt buộc trả lời'**
+  String get registrationFormRequiredAnswer;
+
+  /// No description provided for @registrationFormDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get registrationFormDone;
+
+  /// No description provided for @registrationFormDragHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo để đổi thứ tự'**
+  String get registrationFormDragHint;
+
+  /// No description provided for @registrationFormDeleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa câu hỏi?'**
+  String get registrationFormDeleteTitle;
+
+  /// No description provided for @registrationFormDeleteConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa câu hỏi “{label}” khỏi form?'**
+  String registrationFormDeleteConfirm(Object label);
+
+  /// No description provided for @registrationFormDeleteAnswered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có VĐV trả lời câu hỏi “{label}”. Xóa câu hỏi thì các câu trả lời đó sẽ mất.'**
+  String registrationFormDeleteAnswered(Object label);
+
+  /// No description provided for @registrationFormErrorMissingLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi câu hỏi phải có tên.'**
+  String get registrationFormErrorMissingLabel;
+
+  /// No description provided for @registrationFormErrorChoice.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi “{label}” cần ít nhất 2 lựa chọn khác nhau.'**
+  String registrationFormErrorChoice(Object label);
+
+  /// No description provided for @registrationFormLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.'**
+  String get registrationFormLocked;
+
+  /// No description provided for @lifecycleStepDraft.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nháp'**
+  String get lifecycleStepDraft;
+
+  /// No description provided for @lifecycleStepPublish.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công bố'**
+  String get lifecycleStepPublish;
+
+  /// No description provided for @lifecycleStepOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở ĐK'**
+  String get lifecycleStepOpen;
+
+  /// No description provided for @lifecycleStepRunning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đấu'**
+  String get lifecycleStepRunning;
+
+  /// No description provided for @lifecycleStepDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc'**
+  String get lifecycleStepDone;
+
+  /// No description provided for @lifecycleFullTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đủ {occupied}/{max} đội'**
+  String lifecycleFullTitle(Object max, Object occupied);
+
+  /// No description provided for @lifecycleFullHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nên đóng đăng ký để chốt danh sách.'**
+  String get lifecycleFullHint;
+
+  /// No description provided for @lifecycleRemindLater.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắc sau'**
+  String get lifecycleRemindLater;
+
+  /// No description provided for @lifecyclePublishFeeBlocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần thanh toán phí công bố {amount} trước khi công bố giải. Bước thanh toán này chưa có trên App, hãy thanh toán trên Web.'**
+  String lifecyclePublishFeeBlocked(Object amount);
+
+  /// No description provided for @lifecycleDeleteTypePrompt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gõ lại tên giải “{name}” để xác nhận xóa.'**
+  String lifecycleDeleteTypePrompt(Object name);
+
+  /// No description provided for @lifecycleDeleteNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên giải'**
+  String get lifecycleDeleteNameLabel;
+
   /// No description provided for @divisionEditorPickleballMode.
   ///
   /// In vi, this message translates to:

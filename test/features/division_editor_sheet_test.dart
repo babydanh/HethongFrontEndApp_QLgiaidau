@@ -134,6 +134,11 @@ Future<void> _open(WidgetTester tester, Widget app) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _openSection(WidgetTester tester, String id) async {
+  await tester.tap(find.byKey(ValueKey('division-editor-section-$id')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets(
     'TC-WP-02-01: tạo hạng mục đôi có ELO và phí riêng — payload đủ trường',
@@ -164,7 +169,8 @@ void main() {
       );
       expect(nameField.controller!.text, 'Đôi nam');
 
-      // Bật ELO riêng và điền min/max.
+      // Bật ELO riêng và điền min/max (mục ELO của accordion).
+      await _openSection(tester, 'elo');
       await tester.tap(
         find.byKey(const ValueKey('division-editor-elo-switch')),
       );
@@ -227,6 +233,7 @@ void main() {
         ),
       );
 
+      await _openSection(tester, 'elo');
       await tester.tap(
         find.byKey(const ValueKey('division-editor-elo-switch')),
       );
@@ -275,7 +282,8 @@ void main() {
       ),
     );
 
-    // Bật Luật chuẩn để hiện khối cấu hình luật.
+    // Bật Luật chuẩn để hiện khối cấu hình luật (mục Luật vòng).
+    await _openSection(tester, 'rules');
     await tester.tap(
       find.byKey(const ValueKey('division-editor-standard-rules')),
     );
@@ -412,6 +420,7 @@ void main() {
         isNull,
       );
       // Giới hạn vẫn mở: tăng sức chứa 8 → 12.
+      await _openSection(tester, 'elo');
       await tester.enterText(
         find.byKey(const ValueKey('division-editor-max')),
         '12',
@@ -475,6 +484,7 @@ void main() {
       );
 
       // Sức chứa "0": không chặn lưu như Web, tự chuẩn về 2.
+      await _openSection(tester, 'elo');
       await tester.tap(
         find.byKey(const ValueKey('division-editor-limit-switch')),
       );
@@ -493,6 +503,196 @@ void main() {
       expect(payload['startDate'], contains('2026-06-01'));
     },
   );
+
+  testWidgets('accordion: mở mục nào chỉ hiện mục đó, tóm tắt tiếng Việt', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) =>
+            DivisionEditorSheet.show(context, tournament: _tournament()),
+      ),
+    );
+
+    // Mở sẵn mục Cơ bản; mục ELO đóng.
+    expect(find.byKey(const ValueKey('division-editor-name')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('division-editor-limit-switch')),
+      findsNothing,
+    );
+    // Tóm tắt một dòng, thể thức viết tiếng Việt (không lộ mã API).
+    expect(find.textContaining('Loại trực tiếp · 16 đội'), findsOneWidget);
+    expect(find.textContaining('SINGLE_ELIMINATION'), findsNothing);
+
+    await _openSection(tester, 'elo');
+    expect(
+      find.byKey(const ValueKey('division-editor-limit-switch')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('division-editor-name')), findsNothing);
+  });
+
+  testWidgets('accordion: tóm tắt Luật vòng và Vòng bảng theo cấu hình', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) => DivisionEditorSheet.show(
+          context,
+          tournament: _tournament(),
+          division: {
+            'id': 'div-g',
+            'name': 'Bảng đấu',
+            'matchType': 'DOUBLES',
+            'bracketType': 'GROUP_STAGE_KNOCKOUT',
+            'maxParticipants': 16,
+            'minElo': 1000,
+            'maxElo': 1600,
+            'roundConfig': {
+              'groupsConfig': {'numGroups': 4, 'teamsPerGroup': 4},
+              'advancementConfig': {'teamsAdvancing': 2},
+            },
+          },
+        ),
+      ),
+    );
+
+    expect(find.text('Luật nhanh (mặc định)'), findsOneWidget);
+    expect(find.text('4 bảng · 2 đội đi tiếp'), findsOneWidget);
+    expect(find.text('ELO 1000 – 1600 · 16 đội'), findsOneWidget);
+    // Mục Vòng bảng mở ra mới thấy ô cấu hình.
+    expect(
+      find.byKey(const ValueKey('division-editor-num-groups')),
+      findsNothing,
+    );
+    await _openSection(tester, 'stage');
+    expect(
+      find.byKey(const ValueKey('division-editor-num-groups')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('minh hoạ thể thức: mở hộp thoại mô tả đúng thể thức', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) => DivisionEditorSheet.show(
+          context,
+          tournament: _tournament(),
+          division: _swissDivision(),
+        ),
+      ),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('division-editor-section-illustration')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('format-illustration-dialog')),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Mỗi vòng ghép người cùng điểm'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('đã có sơ đồ: hiện thông báo vì sao khoá; chưa có thì không', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const notice = 'Nội dung này đã có sơ đồ thi đấu';
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) => DivisionEditorSheet.show(
+          context,
+          tournament: _tournament(),
+          division: {
+            'id': 'div-2',
+            'name': 'Đơn nam',
+            'matchType': 'SINGLES',
+            'bracketType': 'SINGLE_ELIMINATION',
+          },
+          lockContent: true,
+        ),
+      ),
+    );
+    expect(find.textContaining(notice), findsOneWidget);
+  });
+
+  testWidgets('chưa có sơ đồ: không hiện thông báo khoá', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) =>
+            DivisionEditorSheet.show(context, tournament: _tournament()),
+      ),
+    );
+    expect(
+      find.textContaining('Nội dung này đã có sơ đồ thi đấu'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('bấm đúp Lưu chỉ gửi một lần', (tester) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final mgmt = _MgmtRepo();
+    await _open(
+      tester,
+      _app(
+        mgmt,
+        _StageRepo(),
+        (context) =>
+            DivisionEditorSheet.show(context, tournament: _tournament()),
+      ),
+    );
+
+    final save = find.byKey(const ValueKey('division-editor-save'));
+    await tester.tap(save);
+    await tester.tap(save, warnIfMissed: false);
+    await tester.pumpAndSettle();
+
+    expect(mgmt.created.length, 1);
+  });
 
   group('port Web registration-fee (divisionFeePayload/feeInputValue)', () {
     test('ô trống hoặc bằng phí giải → theo phí giải, không override', () {
