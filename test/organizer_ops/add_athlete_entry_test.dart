@@ -1055,6 +1055,53 @@ void _addAthleteLayoutTests() {
     expect(score.width, source.width);
     expect(phone.width, name.width);
   });
+
+  testWidgets('filled direct-entry fields keep one height next to the type picker', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    await tester.pumpWidget(_app('IN_PROGRESS'));
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester, accountsTab: false);
+    await _fillDirect(
+      tester,
+      name: 'An Nguyen',
+      email: 'an@example.com',
+      phone: '0900000000',
+      score: '1500',
+    );
+
+    Size sizeOf(String key) => tester.getSize(find.byKey(ValueKey(key)).first);
+    final name = sizeOf('add-athlete-direct-name');
+    expect(sizeOf('add-athlete-direct-email').height, name.height);
+    expect(sizeOf('add-athlete-direct-phone').height, name.height);
+    expect(sizeOf('add-athlete-direct-score').height, name.height);
+    expect(sizeOf('add-athlete-score-source').height, name.height);
+
+    // Real fonts grow a box once its label floats; a picker always has a value,
+    // so every box keeps its label above the value to stay level with it.
+    for (final key in [
+      'add-athlete-direct-name',
+      'add-athlete-direct-email',
+      'add-athlete-direct-phone',
+      'add-athlete-direct-score',
+      'add-athlete-score-source',
+    ]) {
+      final decorator = tester.widget<InputDecorator>(
+        find
+            .descendant(
+              of: find.byKey(ValueKey(key)),
+              matching: find.byType(InputDecorator),
+            )
+            .first,
+      );
+      expect(
+        decorator.decoration.floatingLabelBehavior,
+        FloatingLabelBehavior.always,
+        reason: key,
+      );
+    }
+  });
 }
 
 Future<void> _openDirectTab(WidgetTester tester) async {

@@ -786,11 +786,13 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     );
   }
 
-  /// Direct-entry box: shared fill, no counter, one minimum height.
+  /// Direct-entry box: shared fill, no counter, label always above the value
+  /// so a picker (always has a value) and an empty field are the same height.
   InputDecoration _directField(LavishColors lavish, String label) {
     return _lavishField(lavish, labelText: label).copyWith(
       counterText: '',
-      constraints: const BoxConstraints(minHeight: _touchTarget + 4),
+      floatingLabelBehavior: FloatingLabelBehavior.always,
+      constraints: const BoxConstraints(minHeight: _touchTarget + 12),
     );
   }
 
