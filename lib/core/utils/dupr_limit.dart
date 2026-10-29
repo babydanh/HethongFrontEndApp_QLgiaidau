@@ -1,5 +1,5 @@
-/// DUPR limit helpers shared by the division editor and the register screens.
-/// The backend is the source of truth; these only guide the user client-side.
+// DUPR limit helpers shared by the division editor and the register screens.
+// The backend is the source of truth; these only guide the user client-side.
 
 /// Selectable limit values: 2.0 to 6.0 in 0.5 steps.
 const List<double> duprLimitOptions = [
