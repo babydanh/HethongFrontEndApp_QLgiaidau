@@ -1084,5 +1084,52 @@ void main() {
       expect(payload['minDupr'], isNull);
       expect(payload['maxDupr'], isNull);
     });
+
+    testWidgets('mốc lệch (Đến nhỏ hơn Từ) nạp vào thì Đến về không giới hạn', (
+      tester,
+    ) async {
+      bigView(tester);
+      final mgmt = _MgmtRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          _StageRepo(),
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: _tournament(),
+            division: {
+              'id': 'div-10',
+              'name': 'Đôi dữ liệu lệch',
+              'matchType': 'DOUBLES',
+              'bracketType': 'SINGLE_ELIMINATION',
+              'minDupr': 4,
+              'maxDupr': 3,
+              'roundConfig': {
+                'kind': 'PICKLEBALL_RALLY',
+                'setsToWin': 2,
+                'pointsPerSet': 11,
+              },
+            },
+          ),
+        ),
+      );
+
+      await _openSection(tester, 'dupr');
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('division-editor-dupr-max')),
+          matching: find.text('Không giới hạn'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+      final payload = mgmt.updated.single.payload;
+      expect(payload['minDupr'], 4.0);
+      expect(payload['maxDupr'], isNull);
+    });
   });
 }

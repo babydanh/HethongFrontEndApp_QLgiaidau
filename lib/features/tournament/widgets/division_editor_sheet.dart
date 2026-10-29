@@ -305,7 +305,12 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
   );
   // DUPR limit (pickleball only); null on a side means no bound there.
   late double? _minDupr = _duprFrom(widget.division?['minDupr']);
-  late double? _maxDupr = _duprFrom(widget.division?['maxDupr']);
+  // Stored data with To below From is dropped to "no limit" on load.
+  late double? _maxDupr = () {
+    final max = _duprFrom(widget.division?['maxDupr']);
+    final min = _minDupr;
+    return min != null && max != null && max < min ? null : max;
+  }();
   late bool _limitEnabled = _isEditing
       ? (widget.division?['maxParticipants'] != null)
       : true;
