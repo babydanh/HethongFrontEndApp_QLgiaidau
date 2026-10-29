@@ -15417,6 +15417,16 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get scheduleSelectMode => 'Chọn nhiều ô';
+
+  @override
+  String get scheduleSelectHint =>
+      'Chạm ô đầu rồi ô cuối để chọn vùng. Chạm lần nữa để chọn vùng khác.';
+
+  @override
+  String get scheduleSelectClear => 'Bỏ chọn';
+
+  @override
   String get scheduleQuickBulkMoveCourt => 'Dời sân';
 
   @override

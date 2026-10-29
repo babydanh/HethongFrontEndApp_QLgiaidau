@@ -194,8 +194,11 @@ class _TournamentScheduleCourtGridState
   /// Ngày đang xem; chọn ngày đầu tiên có trận khi biết dữ liệu.
   DateTime? _day;
 
-  /// Vùng ô đang được chọn bằng nhấn giữ kéo.
+  /// Vùng ô đang được chọn (nhấn giữ kéo, hoặc chạm hai ô ở chế độ chọn nhiều).
   ScheduleRange? _range;
+
+  /// Chế độ "Chọn nhiều": chạm ô đầu rồi ô cuối để chọn vùng.
+  bool _selectMode = false;
 
   /// Trận chờ được tích chọn từ khay, theo thứ tự bấm — quyết định thứ tự xếp.
   final List<String> _selectedWaitingIds = [];
@@ -388,6 +391,19 @@ class _TournamentScheduleCourtGridState
             ),
             if (days.length > 1) _dayPicker(context, days, day),
             if (widget.draftMatches.isNotEmpty) _draftBar(context, l10n),
+            // Thanh thao tác theo vùng chọn nằm NGAY trên lưới để luôn thấy.
+            if (_hasRangeActions && _range != null)
+              _bulkBar(
+                context,
+                l10n,
+                visibleCourts,
+                placed,
+                drafts,
+                day,
+                waiting,
+              )
+            else if (_hasRangeActions && _selectMode)
+              _selectHint(context, l10n),
             if (visibleCourts.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -438,19 +454,15 @@ class _TournamentScheduleCourtGridState
                 onRangeSelected: _hasRangeActions
                     ? (range) => setState(() => _range = range)
                     : null,
+                selectMode: _hasRangeActions && _selectMode,
+                selectedRange: _range,
+                onResizeMatch: widget.onBulkDuration == null
+                    ? null
+                    : (match, minutes) =>
+                          widget.onBulkDuration!([match], minutes),
                 slotHeight: _slotHeight,
                 onSlotHeightChanged: (height) =>
                     setState(() => _slotHeight = height),
-              ),
-            if (_hasRangeActions && _range != null)
-              _bulkBar(
-                context,
-                l10n,
-                visibleCourts,
-                placed,
-                drafts,
-                day,
-                waiting,
               ),
             if (widget.onScheduleDrop != null && waiting.isNotEmpty)
               _waitingTray(context, l10n, waiting, day),
@@ -611,6 +623,13 @@ class _TournamentScheduleCourtGridState
         spacing: AppSpacing.sm,
         runSpacing: AppSpacing.xs,
         children: [
+          IconButton(
+            key: const ValueKey('schedule-bulk-clear-button'),
+            tooltip: l10n.scheduleSelectClear,
+            visualDensity: VisualDensity.compact,
+            onPressed: () => setState(() => _range = null),
+            icon: const Icon(Icons.close_rounded, size: 18),
+          ),
           if (widget.onBulkSchedule != null) ...[
             Text(
               '${l10n.opsUnscheduled}: ${batch.length}/${cells.length}',
@@ -648,6 +667,28 @@ class _TournamentScheduleCourtGridState
               label: Text(l10n.scheduleQuickBulkMoveCourt),
             ),
         ],
+      ),
+    );
+  }
+
+  /// Gợi ý cách chọn vùng khi đã bật chế độ "Chọn nhiều" mà chưa chọn ô nào.
+  Widget _selectHint(BuildContext context, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        0,
+      ),
+      child: Text(
+        l10n.scheduleSelectHint,
+        key: const ValueKey('schedule-select-hint'),
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: context.colors.textSecondary,
+        ),
       ),
     );
   }
@@ -899,6 +940,19 @@ class _TournamentScheduleCourtGridState
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
+            ],
+            if (_hasRangeActions) ...[
+              LavishIconBox(
+                key: const ValueKey('schedule-select-mode-button'),
+                tone: _selectMode ? LavishTone.accent : LavishTone.neutral,
+                tooltip: l10n.scheduleSelectMode,
+                onTap: () => setState(() {
+                  _selectMode = !_selectMode;
+                  _range = null;
+                }),
+                child: const Icon(Icons.checklist_rounded),
+              ),
+              const SizedBox(width: 6),
             ],
             if (widget.onAutoSchedule != null)
               LavishIconBox(

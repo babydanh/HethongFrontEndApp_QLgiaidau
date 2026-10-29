@@ -27970,6 +27970,24 @@ abstract class AppLocalizations {
   /// **'{minutes} phút'**
   String scheduleQuickMinutes(int minutes);
 
+  /// No description provided for @scheduleSelectMode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn nhiều ô'**
+  String get scheduleSelectMode;
+
+  /// No description provided for @scheduleSelectHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm ô đầu rồi ô cuối để chọn vùng. Chạm lần nữa để chọn vùng khác.'**
+  String get scheduleSelectHint;
+
+  /// No description provided for @scheduleSelectClear.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ chọn'**
+  String get scheduleSelectClear;
+
   /// No description provided for @scheduleQuickBulkMoveCourt.
   ///
   /// In vi, this message translates to:

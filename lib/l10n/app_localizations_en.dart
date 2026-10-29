@@ -15474,6 +15474,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get scheduleSelectMode => 'Select multiple cells';
+
+  @override
+  String get scheduleSelectHint =>
+      'Tap the first cell, then the last cell to select an area. Tap again to start a new one.';
+
+  @override
+  String get scheduleSelectClear => 'Clear selection';
+
+  @override
   String get scheduleQuickBulkMoveCourt => 'Move court';
 
   @override

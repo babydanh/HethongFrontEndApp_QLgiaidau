@@ -75,6 +75,17 @@ class ScheduleGrid extends StatefulWidget {
   /// Có giá trị thì nhấn giữ rồi kéo trên lưới để chọn một vùng ô.
   final void Function(ScheduleRange range)? onRangeSelected;
 
+  /// Chế độ "Chọn nhiều": chạm ô đầu rồi ô cuối để chọn vùng (không cần nhấn
+  /// giữ). Chạm thẻ trận cũng tính là chạm ô bắt đầu của trận đó.
+  final bool selectMode;
+
+  /// Vùng đang chọn do host giữ; lưới tô sáng vùng này.
+  final ScheduleRange? selectedRange;
+
+  /// Kéo tay nắm ở cạnh dưới thẻ để đổi thời lượng: báo số phút mới (làm tròn
+  /// theo [stepMinutes]). Null thì thẻ không có tay nắm.
+  final void Function(MatchModel match, int minutes)? onResizeMatch;
+
   /// Chạm vào một ô trống (sân, giờ): mở chọn trận chờ để xếp vào ô đó.
   final void Function(String court, DateTime at)? onTapEmptyCell;
 
@@ -110,6 +121,9 @@ class ScheduleGrid extends StatefulWidget {
     this.day,
     this.onDropMatch,
     this.onRangeSelected,
+    this.selectMode = false,
+    this.selectedRange,
+    this.onResizeMatch,
     this.roundLabelOf,
     this.onTapEmptyCell,
     this.onDropOnMatch,
@@ -139,6 +153,10 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   static const int _compactBelowMinutes = 8;
   static const double _stripeWidth = 5;
 
+  /// Trần thời lượng khi kéo giãn thẻ (phút) và vùng chạm của tay nắm.
+  static const int _maxResizeMinutes = 240;
+  static const double _resizeHandleHeight = 18;
+
   // Header và thân dùng hai controller riêng: một ScrollController chỉ gắn
   // được một ScrollPosition, dùng chung sẽ assert ngay lần swipe ngang đầu.
   // Chỉ thân nhận cử chỉ cuộn, header nghe thân rồi jumpTo theo — một chiều nên
@@ -152,14 +170,64 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   (int court, int slot)? _rangeAnchor;
   (int court, int slot)? _rangeFocus;
 
+  // Chế độ "Chọn nhiều": ô đã chạm đầu tiên, chờ ô cuối.
+  (int court, int slot)? _tapAnchor;
+
+  // Kéo tay nắm đổi thời lượng: trận đang kéo và quãng đã kéo (px).
+  String? _resizeMatchId;
+  double _resizeDeltaPx = 0;
+
+  /// Vùng vẽ tô sáng: vùng đang kéo (chưa nhả tay) hoặc vùng host đang giữ.
+  ScheduleRange? get _activeRange {
+    final anchor = _rangeAnchor;
+    final focus = _rangeFocus;
+    if (anchor == null || focus == null) return widget.selectedRange;
+    return _normalizedRange(anchor, focus);
+  }
+
+  ScheduleRange _normalizedRange(
+    (int court, int slot) a,
+    (int court, int slot) b,
+  ) => (
+    firstCourt: a.$1 < b.$1 ? a.$1 : b.$1,
+    lastCourt: a.$1 > b.$1 ? a.$1 : b.$1,
+    firstSlot: a.$2 < b.$2 ? a.$2 : b.$2,
+    lastSlot: a.$2 > b.$2 ? a.$2 : b.$2,
+  );
+
   void _beginRange(Offset local) {
-    _rangeAnchor = _cellAt(local);
-    _rangeFocus = _rangeAnchor;
+    setState(() {
+      _rangeAnchor = _cellAt(local);
+      _rangeFocus = _rangeAnchor;
+    });
   }
 
   void _extendRange(Offset local) {
     if (_rangeAnchor == null) return;
-    _rangeFocus = _cellAt(local);
+    final cell = _cellAt(local);
+    if (cell == _rangeFocus) return;
+    setState(() => _rangeFocus = cell);
+  }
+
+  /// Chạm ô (court, slot) ở chế độ "Chọn nhiều": chạm đầu đánh dấu một ô, chạm
+  /// thứ hai chốt vùng chữ nhật, chạm thứ ba bắt đầu vùng mới.
+  void _tapSelect(int court, int slot) {
+    final anchor = _tapAnchor;
+    final cell = (court, slot);
+    if (anchor == null) {
+      _tapAnchor = cell;
+      widget.onRangeSelected?.call(_normalizedRange(cell, cell));
+      return;
+    }
+    _tapAnchor = null;
+    widget.onRangeSelected?.call(_normalizedRange(anchor, cell));
+  }
+
+  @override
+  void didUpdateWidget(ScheduleGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Tắt chế độ hoặc host xoá vùng thì bỏ ô chạm dở.
+    if (!widget.selectMode || widget.selectedRange == null) _tapAnchor = null;
   }
 
   /// Kéo tay nắm ở cột giờ: báo chiều cao hàng mới cho host (lưới không tự đổi).
@@ -174,15 +242,41 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   void _commitRange() {
     final anchor = _rangeAnchor;
     final focus = _rangeFocus;
-    _rangeAnchor = null;
-    _rangeFocus = null;
+    setState(() {
+      _rangeAnchor = null;
+      _rangeFocus = null;
+    });
     if (anchor == null || focus == null) return;
-    widget.onRangeSelected?.call((
-      firstCourt: anchor.$1 < focus.$1 ? anchor.$1 : focus.$1,
-      lastCourt: anchor.$1 > focus.$1 ? anchor.$1 : focus.$1,
-      firstSlot: anchor.$2 < focus.$2 ? anchor.$2 : focus.$2,
-      lastSlot: anchor.$2 > focus.$2 ? anchor.$2 : focus.$2,
-    ));
+    widget.onRangeSelected?.call(_normalizedRange(anchor, focus));
+  }
+
+  /// Kéo tay nắm cạnh dưới thẻ: cộng dồn quãng kéo để thẻ giãn theo ngón tay.
+  void _resizeUpdate(MatchModel match, double deltaY) => setState(() {
+    _resizeMatchId = match.id;
+    _resizeDeltaPx += deltaY;
+  });
+
+  /// Cử chỉ bị huỷ (không phải nhả tay): bỏ quãng đã kéo, không báo host.
+  void _resizeCancel() => setState(() {
+    _resizeMatchId = null;
+    _resizeDeltaPx = 0;
+  });
+
+  /// Nhả tay: đổi quãng đã kéo thành số phút (làm tròn theo bước ô, tối thiểu
+  /// một bước, tối đa [_maxResizeMinutes]) rồi báo host nếu có thay đổi.
+  void _resizeEnd(MatchModel match) {
+    final step = widget.stepMinutes;
+    final current = _durationOf(match);
+    final raw = current + _resizeDeltaPx / _pixelsPerMinute;
+    final snapped = ((raw / step).round() * step).clamp(
+      step,
+      _maxResizeMinutes,
+    );
+    setState(() {
+      _resizeMatchId = null;
+      _resizeDeltaPx = 0;
+    });
+    if (snapped != current) widget.onResizeMatch?.call(match, snapped);
   }
 
   /// Ô nằm dưới điểm [local] (toạ độ trong thân lưới, gồm cả cột giờ).
@@ -380,7 +474,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                                 width:
                                     courtLayouts[index].laneCount * laneWidth,
                                 child: _courtColumn(
-                                  widget.courts[index],
+                                  index,
                                   courtLayouts[index],
                                   colors,
                                   laneWidth,
@@ -576,11 +670,12 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   }
 
   Widget _courtColumn(
-    String court,
+    int courtIndex,
     _CourtLayout layout,
     AppColorsExtension colors,
     double laneWidth,
   ) {
+    final court = widget.courts[courtIndex];
     final dropEnabled = widget.onDropMatch != null;
     return Container(
       height: _slotHeight * _slotCount,
@@ -608,20 +703,50 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             ],
           ),
           // Ô trống nằm DƯỚI thẻ trận để bấm mở trận vẫn hoạt động.
-          if (dropEnabled || widget.onTapEmptyCell != null)
+          if (dropEnabled || widget.onTapEmptyCell != null || widget.selectMode)
             Positioned.fill(
               child: Column(
                 children: [
                   for (var index = 0; index < _slotCount; index++)
-                    _emptySlot(court, index, colors, dropEnabled),
+                    _emptySlot(court, courtIndex, index, colors, dropEnabled),
                 ],
               ),
             ),
           for (final placement in layout.placements)
             _matchCard(placement.match, placement.lane, colors, laneWidth),
+          ..._rangeHighlight(courtIndex),
         ],
       ),
     );
+  }
+
+  /// Khung tô sáng vùng đang chọn trên cột sân [courtIndex]; không bắt cử chỉ
+  /// nên thẻ và ô phía dưới vẫn nhận chạm.
+  List<Widget> _rangeHighlight(int courtIndex) {
+    final range = _activeRange;
+    if (range == null ||
+        courtIndex < range.firstCourt ||
+        courtIndex > range.lastCourt) {
+      return const [];
+    }
+    final rows = range.lastSlot - range.firstSlot + 1;
+    return [
+      Positioned(
+        key: const ValueKey('schedule-range-highlight'),
+        left: 0,
+        right: 0,
+        top: range.firstSlot * _slotHeight,
+        height: rows * _slotHeight,
+        child: IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.14),
+              border: Border.all(color: AppTheme.primary, width: 2),
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 
   /// Ô trống của sân [court] theo bước ô cấu hình: nhận thả trận để xếp lịch
@@ -629,11 +754,13 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   /// không nuốt cử chỉ.
   Widget _emptySlot(
     String court,
+    int courtIndex,
     int index,
     AppColorsExtension colors,
     bool dropEnabled,
   ) {
-    final tappable = widget.onTapEmptyCell != null;
+    final selecting = widget.selectMode;
+    final tappable = selecting || widget.onTapEmptyCell != null;
     return DragTarget<String>(
       key: ValueKey('schedule-slot-$court-$index'),
       onWillAcceptWithDetails: (details) =>
@@ -644,14 +771,16 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         final hovering = candidates.isNotEmpty;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: tappable
-              ? () => widget.onTapEmptyCell!(court, _slotStart(index))
-              : null,
+          onTap: !tappable
+              ? null
+              : selecting
+              ? () => _tapSelect(courtIndex, index)
+              : () => widget.onTapEmptyCell!(court, _slotStart(index)),
           child: Container(
             height: _slotHeight,
             alignment: Alignment.center,
             color: hovering ? AppTheme.primary.withValues(alpha: 0.12) : null,
-            child: tappable && !hovering
+            child: tappable && !selecting && !hovering
                 ? Icon(
                     Icons.add_rounded,
                     size: 16,
@@ -693,9 +822,13 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     final divisionName = _divisionNameFor(match);
     final calculatedHeight = duration * _pixelsPerMinute - 3;
     final minimumHeight = _minimumHeightFor(match, duration, divisionName);
-    final height = calculatedHeight < minimumHeight
+    final resizing = _resizeMatchId == match.id;
+    final baseHeight = calculatedHeight < minimumHeight
         ? minimumHeight
         : calculatedHeight;
+    final height = resizing
+        ? (baseHeight + _resizeDeltaPx).clamp(minimumHeight, double.infinity)
+        : baseHeight;
     final style = _cardStyle(match, colors);
     final isDraft = widget.draftMatchIds.contains(match.id);
     // Trận đã đấu hoặc đã kết thúc không được kéo đi và không nhận thả vào.
@@ -719,7 +852,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         : _fullContent(match, start, style, divisionName);
 
     Widget card = GestureDetector(
-      onTap: isDraft ? null : () => widget.onTapMatch(match.id),
+      onTap: isDraft ? null : () => _tapMatch(match, start),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: style.decoration,
@@ -740,6 +873,8 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                 color: style.tint.stripe,
               ),
             ),
+            if (movable && widget.onResizeMatch != null)
+              _resizeHandle(match, resizing),
           ],
         ),
       ),
@@ -800,6 +935,63 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       height: height,
       child: card,
     );
+  }
+
+  /// Chạm thẻ: mở trận, hoặc (chế độ "Chọn nhiều") tính là chạm ô bắt đầu của
+  /// trận để chọn vùng chứa cả trận.
+  void _tapMatch(MatchModel match, DateTime start) {
+    if (!widget.selectMode) return widget.onTapMatch(match.id);
+    final court = widget.courts.indexOf(_courtOf(match));
+    if (court < 0) return;
+    final minutes = (start.hour - widget.startHour) * 60 + start.minute;
+    final slot = (minutes ~/ widget.stepMinutes).clamp(0, _slotCount - 1);
+    _tapSelect(court, slot);
+  }
+
+  /// Tay nắm ở cạnh dưới thẻ: kéo xuống/lên để đổi thời lượng. Đang kéo thì hiện
+  /// số phút sẽ áp dụng.
+  Widget _resizeHandle(MatchModel match, bool resizing) {
+    final l10n = AppLocalizations.of(context)!;
+    return Positioned(
+      left: _stripeWidth,
+      right: 0,
+      bottom: 0,
+      height: _resizeHandleHeight,
+      child: GestureDetector(
+        key: ValueKey('schedule-resize-handle-${match.id}'),
+        behavior: HitTestBehavior.opaque,
+        onVerticalDragUpdate: (details) =>
+            _resizeUpdate(match, details.delta.dy),
+        onVerticalDragEnd: (_) => _resizeEnd(match),
+        onVerticalDragCancel: _resizeCancel,
+        child: Center(
+          child: resizing
+              ? Text(
+                  l10n.scheduleQuickMinutes(_pendingResizeMinutes(match)),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primaryDark,
+                  ),
+                )
+              : Container(
+                  width: 28,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryDark.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  /// Số phút sẽ áp dụng nếu nhả tay lúc này (cùng cách làm tròn với `_resizeEnd`).
+  int _pendingResizeMinutes(MatchModel match) {
+    final step = widget.stepMinutes;
+    final raw = _durationOf(match) + _resizeDeltaPx / _pixelsPerMinute;
+    return ((raw / step).round() * step).clamp(step, _maxResizeMinutes);
   }
 
   /// Hình theo ngón tay khi kéo thẻ: tên hai đội, nổi trên lưới.
