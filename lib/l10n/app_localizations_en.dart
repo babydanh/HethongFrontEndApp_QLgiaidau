@@ -2319,6 +2319,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cannot check ELO. Please try again before registering.';
 
   @override
+  String registerDuprRange(Object range) {
+    return 'DUPR $range';
+  }
+
+  @override
+  String get registerDuprChecking => 'Checking your DUPR rating...';
+
+  @override
+  String get registerDuprMatches => 'Your DUPR rating fits this category';
+
+  @override
+  String registerDuprBelowMin(Object value, Object range) {
+    return 'Your DUPR rating ($value) is below this category\'s limit ($range)';
+  }
+
+  @override
+  String registerDuprAboveMax(Object value, Object range) {
+    return 'Your DUPR rating ($value) is above this category\'s limit ($range)';
+  }
+
+  @override
+  String get registerDuprMissing =>
+      'This category limits DUPR level but you have no rating on file. Enter your DUPR rating to continue.';
+
+  @override
+  String get registerDuprInputLabel => 'Your DUPR rating';
+
+  @override
+  String get registerDuprSave => 'Save rating';
+
+  @override
+  String get registerDuprSaved => 'DUPR rating saved';
+
+  @override
+  String get registerDuprSaveFailed =>
+      'Could not save the DUPR rating. Please try again.';
+
+  @override
+  String get registerDuprSelfDeclaredNote =>
+      'This rating is self-declared; organizers may verify it.';
+
+  @override
   String get registerInviteInvalid => 'Invite code is invalid or expired';
 
   @override
@@ -16515,6 +16557,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get divisionEditorEloRangeError =>
       'Min ELO must be less than or equal to max ELO.';
+
+  @override
+  String get divisionEditorDuprLimit => 'DUPR level';
+
+  @override
+  String get divisionEditorDuprFrom => 'From';
+
+  @override
+  String get divisionEditorDuprTo => 'To';
+
+  @override
+  String get divisionEditorDuprUnlimited => 'No limit';
+
+  @override
+  String get divisionEditorDuprInclusiveHint =>
+      'The To value is inclusive: a rating equal to it can still register.';
+
+  @override
+  String get divisionEditorAccDupr => 'DUPR level';
+
+  @override
+  String get divisionEditorAccDuprNone => 'No DUPR limit';
 
   @override
   String get divisionEditorEntryFee => 'Fee';
