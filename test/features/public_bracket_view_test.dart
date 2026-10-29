@@ -34,6 +34,7 @@ MatchModel _match(
   String? stageType,
   String? groupName,
   int? leg,
+  String? matchCode,
 }) => MatchModel.fromJson({
   'id': id,
   'tournamentId': 't-1',
@@ -47,6 +48,7 @@ MatchModel _match(
   if (stageType != null) 'stageType': stageType,
   if (groupName != null) 'groupName': groupName,
   'leg': ?leg,
+  'matchCode': ?matchCode,
 }, id);
 
 Widget _host(Widget child, {List<Override> overrides = const []}) =>
@@ -457,6 +459,33 @@ void main() {
       // Current round (2) has three rows: two matches and the BYE.
       expect(find.byType(MatchTableRow), findsNWidgets(3));
       expect(find.text('Đội Nghỉ'), findsOneWidget);
+    });
+
+    testWidgets('public view never shows the organizer match code', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        plainHost(
+          PublicBracketView(
+            tournamentId: 't-1',
+            matches: [
+              _match(
+                's2',
+                round: 2,
+                position: 0,
+                stageType: 'SWISS',
+                matchCode: 'TS201',
+              ),
+            ],
+            bracketType: 'swiss',
+          ),
+          swissOverrides(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MatchTableRow), findsOneWidget);
+      expect(find.textContaining('TS201'), findsNothing);
     });
 
     Future<void> pumpScreen(WidgetTester tester) async {

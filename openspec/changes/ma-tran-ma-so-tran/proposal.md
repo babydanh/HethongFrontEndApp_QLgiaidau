@@ -1,3 +1,5 @@
+> **Superseded** by Backend change `ma-tran-chi-btc-xem` (hệ mã mới `TK01`/`V16`/`BA03`…, chỉ BTC/trọng tài thấy mã). Ví dụ mã `DNTB-K1-T3` ở dưới là hệ cũ. Không archive change này (sẽ đồng bộ spec cũ vào `openspec/specs`); xoá hoặc gộp sau khi `ma-tran-chi-btc-xem` lên `main`.
+
 ## Why
 App chỉ hiện "Trận N" (`matchNumber` lấy từ `matchOrder`), lặp lại giữa các vòng/nội dung. Backend (change cùng tên) trả `matchCode` hoàn chỉnh (ví dụ `DNTB-K1-T3`, không có `#`); App thêm `#` ở đầu khi hiển thị (`#DNTB-K1-T3`), giống Web. Tên VĐV không nằm trong mã.
 

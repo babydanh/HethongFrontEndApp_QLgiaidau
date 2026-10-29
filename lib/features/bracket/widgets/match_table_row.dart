@@ -24,6 +24,7 @@ class MatchTableRow extends StatelessWidget {
   final String tournamentId;
   final bool isReferee;
   final bool canScoreMatch;
+  final bool showMatchCode;
   final BracketSlotUnassignCallback? onUnassignSlot;
 
   const MatchTableRow({
@@ -34,6 +35,7 @@ class MatchTableRow extends StatelessWidget {
     required this.tournamentId,
     this.isReferee = false,
     this.canScoreMatch = false,
+    this.showMatchCode = false,
     this.onUnassignSlot,
   });
 
@@ -89,8 +91,8 @@ class MatchTableRow extends StatelessWidget {
     // Round / Group / Match location label
     final branch = match.bracketPosition.bracket.toLowerCase();
     final isGroup = isGroupStageMatch(match);
-    // Round + match code when the backend sent one, else the old "Trận N".
-    final matchCode = matchCodeOrNull(match);
+    // Organizer-only: the code shows only where the caller opts in, else the old "Trận N".
+    final matchCode = showMatchCode ? matchCodeOrNull(match) : null;
     String appendMatchCode(String label) =>
         matchCode == null || label.endsWith('#$matchCode')
         ? label
