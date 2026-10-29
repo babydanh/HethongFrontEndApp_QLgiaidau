@@ -83,6 +83,9 @@ class TournamentDivisionOption {
     };
   }
 
+  /// Canonical match type for rating lookups; null when the format is unknown.
+  String? get ratingMatchType => _normalizedMatchType;
+
   /// Số suất đội đã chiếm. null nghĩa là backend chưa gửi projection cho nội
   /// dung mà app không chắc 1 bản ghi = 1 suất → sức chứa CHƯA BIẾT, không
   /// phải bằng 0 cũng không phải bằng số hồ sơ.

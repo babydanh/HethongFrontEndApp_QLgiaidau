@@ -818,6 +818,7 @@
   "registerEloCheckError": "Cannot check ELO. Please try again before registering.",
   "registerDuprRange": "DUPR {range}",
   "registerDuprChecking": "Checking your DUPR rating...",
+  "registerDuprCheckError": "Could not check your DUPR rating. Please try again.",
   "registerDuprMatches": "Your DUPR rating fits this category",
   "registerDuprBelowMin": "Your DUPR rating ({value}) is below this category's limit ({range})",
   "registerDuprAboveMax": "Your DUPR rating ({value}) is above this category's limit ({range})",

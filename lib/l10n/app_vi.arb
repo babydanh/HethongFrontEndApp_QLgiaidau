@@ -820,6 +820,7 @@
   "registerEloCheckError": "Không thể kiểm tra ELO. Vui lòng thử lại trước khi đăng ký.",
   "registerDuprRange": "DUPR {range}",
   "registerDuprChecking": "Đang kiểm tra điểm DUPR...",
+  "registerDuprCheckError": "Không kiểm tra được điểm DUPR. Vui lòng thử lại.",
   "registerDuprMatches": "Điểm DUPR của bạn phù hợp với nội dung này",
   "registerDuprBelowMin": "Điểm DUPR của bạn ({value}) thấp hơn mốc của nội dung ({range})",
   "registerDuprAboveMax": "Điểm DUPR của bạn ({value}) cao hơn mốc của nội dung ({range})",

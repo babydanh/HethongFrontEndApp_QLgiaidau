@@ -4442,6 +4442,12 @@ abstract class AppLocalizations {
   /// **'Đang kiểm tra điểm DUPR...'**
   String get registerDuprChecking;
 
+  /// No description provided for @registerDuprCheckError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kiểm tra được điểm DUPR. Vui lòng thử lại.'**
+  String get registerDuprCheckError;
+
   /// No description provided for @registerDuprMatches.
   ///
   /// In vi, this message translates to:

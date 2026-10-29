@@ -2327,6 +2327,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerDuprChecking => 'Checking your DUPR rating...';
 
   @override
+  String get registerDuprCheckError =>
+      'Could not check your DUPR rating. Please try again.';
+
+  @override
   String get registerDuprMatches => 'Your DUPR rating fits this category';
 
   @override

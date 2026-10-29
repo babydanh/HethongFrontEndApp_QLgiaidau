@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/features/register/widgets/dupr_limit_card.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:app_quanly_giaidau/features/register/utils/division_gender_restriction.dart';
 import 'package:intl/intl.dart';
@@ -59,6 +60,9 @@ class _DoublesRegistrationFlowState
   String? _genderError;
   String? _eloError;
   bool _eloChecking = false;
+
+  /// False while the DUPR limit card is checking or the rating does not fit.
+  bool _duprValid = true;
 
   List<Map<String, dynamic>> _activeRegistrationFields(Tournament tournament) {
     final divisionId = widget.division.id;
@@ -1046,6 +1050,13 @@ class _DoublesRegistrationFlowState
               ],
             ),
           ),
+        DuprLimitCard(
+          key: ValueKey('dupr-limit-${widget.division.id}'),
+          division: widget.division,
+          onValidityChanged: (valid) {
+            if (_duprValid != valid) setState(() => _duprValid = valid);
+          },
+        ),
         if (!organizerPairing) ...[
           Row(
             children: [
@@ -1164,7 +1175,7 @@ class _DoublesRegistrationFlowState
           height: 50,
           child: FilledButton.icon(
             onPressed:
-                (_submitting || _isNewClaimBlocked)
+                (_submitting || _isNewClaimBlocked || !_duprValid)
                 ? null
                 : _handleStep1Submit,
             icon: _submitting
