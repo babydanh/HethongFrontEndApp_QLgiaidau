@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dar
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_playback_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_home_projection_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_external_rating_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_ranking_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.dart';
@@ -17,6 +18,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_user_repository.dar
 import 'package:app_quanly_giaidau/data/repositories/local/app_session_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/local/shared_prefs_local_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/external_rating_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/local_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_playback_repository.dart';
@@ -86,6 +88,12 @@ final localSessionRepositoryProvider = Provider<ILocalSessionRepository>((ref) {
 
 final rankingRepositoryProvider = Provider<IRankingRepository>((ref) {
   return ApiRankingRepository(ref.watch(dioClientProvider));
+});
+
+final externalRatingRepositoryProvider = Provider<ExternalRatingRepository>((
+  ref,
+) {
+  return ApiExternalRatingRepository(ref.watch(dioClientProvider));
 });
 
 final userRepositoryProvider = Provider<IUserRepository>((ref) {
