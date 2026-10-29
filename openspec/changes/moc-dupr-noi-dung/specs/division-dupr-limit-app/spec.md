@@ -32,7 +32,7 @@ BTC pickleball đặt mốc DUPR cho nội dung ngay trong App; VĐV thấy mố
 
 ### Requirement: Màn đăng ký hiện và kiểm mốc DUPR
 
-Màn đăng ký đơn và màn đăng ký đôi MUST hiện mốc DUPR của nội dung khi có. Khi người dùng chọn nội dung có mốc, App MUST lấy điểm DUPR của họ cho đúng `categoryId` và thể thức, MUST báo hợp lệ, thấp hơn, cao hơn hoặc chưa khai, và MUST khoá nút đăng ký khi điểm đã biết là chưa hợp lệ (thấp hơn, cao hơn hoặc chưa khai); khi không tải được điểm thì nút KHÔNG bị khoá (Backend là nguồn sự thật) và hiện nút Thử lại. Khi chưa khai, App MUST có ô nhập điểm và nút lưu gọi `PUT /users/me/external-ratings`.
+Màn đăng ký đơn và màn đăng ký đôi MUST hiện mốc DUPR của nội dung khi có. Khi người dùng chọn nội dung có mốc, App MUST lấy điểm DUPR của họ cho đúng `categoryId` và thể thức, MUST báo hợp lệ, thấp hơn, cao hơn hoặc chưa khai, và MUST khoá nút đăng ký khi điểm đã biết là chưa hợp lệ (trừ khi không tải được điểm, xem scenario). Khi chưa khai, App MUST có ô nhập điểm và nút lưu gọi `PUT /users/me/external-ratings`.
 
 #### Scenario: Hợp lệ
 
