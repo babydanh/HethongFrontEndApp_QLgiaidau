@@ -1054,7 +1054,9 @@ class _DoublesRegistrationFlowState
           key: ValueKey('dupr-limit-${widget.division.id}'),
           division: widget.division,
           onValidityChanged: (valid) {
-            if (_duprValid != valid) setState(() => _duprValid = valid);
+            if (mounted && _duprValid != valid) {
+              setState(() => _duprValid = valid);
+            }
           },
         ),
         if (!organizerPairing) ...[

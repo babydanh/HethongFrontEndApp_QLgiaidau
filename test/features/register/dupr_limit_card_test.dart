@@ -18,6 +18,9 @@ class _FakeRatings implements ExternalRatingRepository {
   Completer<void>? saveGate;
   int getCalls = 0;
   int failGets = 0;
+
+  /// Answers of successive lookups, completed by the test (oldest first).
+  final getGates = <Completer<double?>>[];
   final saved = <double>[];
 
   @override
@@ -26,6 +29,7 @@ class _FakeRatings implements ExternalRatingRepository {
     required String matchType,
   }) async {
     getCalls++;
+    if (getGates.isNotEmpty) return getGates.removeAt(0).future;
     if (failGets > 0) {
       failGets--;
       throw Exception('offline');
@@ -56,14 +60,11 @@ TournamentDivisionOption _division({double? min, double? max}) =>
       maxDupr: max,
     );
 
-Future<List<bool>> _pump(
-  WidgetTester tester,
+Widget _host(
   _FakeRatings repo,
   TournamentDivisionOption division,
-) async {
-  final validity = <bool>[];
-  await tester.pumpWidget(
-    ProviderScope(
+  List<bool> validity,
+) => ProviderScope(
       overrides: [externalRatingRepositoryProvider.overrideWithValue(repo)],
       child: MaterialApp(
         theme: AppTheme.darkTheme,
@@ -79,8 +80,15 @@ Future<List<bool>> _pump(
           ),
         ),
       ),
-    ),
-  );
+    );
+
+Future<List<bool>> _pump(
+  WidgetTester tester,
+  _FakeRatings repo,
+  TournamentDivisionOption division,
+) async {
+  final validity = <bool>[];
+  await tester.pumpWidget(_host(repo, division, validity));
   await tester.pumpAndSettle();
   return validity;
 }
@@ -235,5 +243,82 @@ void main() {
 
     expect(repo.saved, [3.2]);
     expect(find.byKey(const ValueKey('dupr-card-retry')), findsOneWidget);
+  });
+
+  testWidgets('an older lookup answering late is ignored', (tester) async {
+    final repo = _FakeRatings();
+    final first = Completer<double?>();
+    final second = Completer<double?>();
+    repo.getGates.addAll([first, second]);
+    final validity = <bool>[];
+
+    await tester.pumpWidget(
+      _host(repo, _division(min: 3.0, max: 3.5), validity),
+    );
+    await tester.pump();
+    // Same division, limit edited: starts a second lookup while the first is open.
+    await tester.pumpWidget(
+      _host(repo, _division(min: 3.0, max: 3.1), validity),
+    );
+    await tester.pump();
+
+    second.complete(3.05);
+    await tester.pumpAndSettle();
+    expect(validity.last, isTrue);
+
+    first.complete(5.0);
+    await tester.pumpAndSettle();
+    expect(find.text('Điểm DUPR của bạn phù hợp với nội dung này'), findsOne);
+    expect(validity.last, isTrue);
+  });
+
+  testWidgets('removing the card while blocked releases the parent', (
+    tester,
+  ) async {
+    final repo = _FakeRatings(rating: 5.0);
+    final validity = await _pump(tester, repo, _division(min: 3.0, max: 3.5));
+    expect(validity.last, isFalse);
+
+    await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    await tester.pump();
+
+    expect(validity.last, isTrue);
+  });
+
+  testWidgets('a save finishing after the division changed is dropped', (
+    tester,
+  ) async {
+    final repo = _FakeRatings()..saveGate = Completer<void>();
+    final validity = <bool>[];
+    await tester.pumpWidget(
+      _host(repo, _division(min: 3.0, max: 3.5), validity),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('dupr-limit-input')),
+      '3.2',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('dupr-limit-save')));
+    await tester.pump();
+
+    final other = TournamentDivisionOption(
+      id: 'div-2',
+      name: 'Khác',
+      matchType: 'SINGLES',
+      categoryId: 'cat-2',
+      minDupr: 4.0,
+    );
+    await tester.pumpWidget(_host(repo, other, validity));
+    await tester.pump();
+    final callsBefore = repo.getCalls;
+
+    repo.saveGate!.complete();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Đã lưu điểm DUPR'), findsNothing);
+    // Only the new division's own lookup ran; the stale save did not reload.
+    expect(repo.getCalls, callsBefore);
   });
 }

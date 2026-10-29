@@ -38,6 +38,9 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
   bool _saveFailed = false;
   bool? _reportedValid;
 
+  /// Bumped by every lookup; an answer from an older lookup is dropped.
+  int _loadSeq = 0;
+
   TournamentDivisionOption get _division => widget.division;
   bool get _hasLimit => _division.minDupr != null || _division.maxDupr != null;
   bool get _canLookUp =>
@@ -77,6 +80,11 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
 
   @override
   void dispose() {
+    // A card removed while blocking must not leave the parent blocked.
+    if (_reportedValid == false) {
+      final report = widget.onValidityChanged;
+      WidgetsBinding.instance.addPostFrameCallback((_) => report(true));
+    }
     _input.dispose();
     super.dispose();
   }
@@ -91,24 +99,23 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
   }
 
   Future<void> _load() async {
+    final seq = ++_loadSeq;
+    final categoryId = _division.categoryId!;
+    final matchType = _division.ratingMatchType!;
     setState(() => _phase = _Phase.checking);
     _report(false);
-    final divisionId = _division.id;
     try {
       final rating = await ref
           .read(externalRatingRepositoryProvider)
-          .getMyDuprRating(
-            categoryId: _division.categoryId!,
-            matchType: _division.ratingMatchType!,
-          );
-      if (!mounted || divisionId != _division.id) return;
+          .getMyDuprRating(categoryId: categoryId, matchType: matchType);
+      if (!mounted || seq != _loadSeq) return;
       setState(() {
         _rating = rating;
         _phase = _Phase.ready;
       });
       _report(_status == DuprLimitStatus.ok);
     } catch (_) {
-      if (!mounted || divisionId != _division.id) return;
+      if (!mounted || seq != _loadSeq) return;
       setState(() => _phase = _Phase.error);
       _report(false);
     }
@@ -120,6 +127,9 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
   Future<void> _save() async {
     final value = _typedValue;
     if (_saving || value == null || value <= 0) return;
+    final divisionId = _division.id;
+    final categoryId = _division.categoryId!;
+    final matchType = _division.ratingMatchType!;
     setState(() {
       _saving = true;
       _saveFailed = false;
@@ -128,8 +138,8 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
       await ref
           .read(externalRatingRepositoryProvider)
           .saveMyDuprRating(
-            categoryId: _division.categoryId!,
-            matchType: _division.ratingMatchType!,
+            categoryId: categoryId,
+            matchType: matchType,
             value: value,
           );
     } catch (_) {
@@ -143,6 +153,8 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
     }
     if (!mounted) return;
     setState(() => _saving = false);
+    // The user moved to another division while saving: nothing to refresh here.
+    if (divisionId != _division.id) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context)!.registerDuprSaved)),
     );
