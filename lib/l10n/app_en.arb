@@ -820,6 +820,7 @@
   "registerDuprChecking": "Checking your DUPR rating...",
   "registerDuprCheckError": "Could not check your DUPR rating. Please try again.",
   "registerDuprRetry": "Retry",
+  "registerDuprRatingHint": "Enter a rating from 1.0 to 8.0 (up to 2 decimals).",
   "registerDuprMatches": "Your DUPR rating fits this category",
   "registerDuprBelowMin": "Your DUPR rating ({value}) is below this category's limit ({range})",
   "registerDuprAboveMax": "Your DUPR rating ({value}) is above this category's limit ({range})",

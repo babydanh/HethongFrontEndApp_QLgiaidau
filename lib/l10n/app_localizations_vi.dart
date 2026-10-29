@@ -2328,6 +2328,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get registerDuprRetry => 'Thử lại';
 
   @override
+  String get registerDuprRatingHint =>
+      'Nhập điểm từ 1.0 đến 8.0 (tối đa 2 chữ số thập phân).';
+
+  @override
   String get registerDuprMatches =>
       'Điểm DUPR của bạn phù hợp với nội dung này';
 

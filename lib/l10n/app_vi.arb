@@ -822,6 +822,7 @@
   "registerDuprChecking": "Đang kiểm tra điểm DUPR...",
   "registerDuprCheckError": "Không kiểm tra được điểm DUPR. Vui lòng thử lại.",
   "registerDuprRetry": "Thử lại",
+  "registerDuprRatingHint": "Nhập điểm từ 1.0 đến 8.0 (tối đa 2 chữ số thập phân).",
   "registerDuprMatches": "Điểm DUPR của bạn phù hợp với nội dung này",
   "registerDuprBelowMin": "Điểm DUPR của bạn ({value}) thấp hơn mốc của nội dung ({range})",
   "registerDuprAboveMax": "Điểm DUPR của bạn ({value}) cao hơn mốc của nội dung ({range})",

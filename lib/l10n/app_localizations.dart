@@ -4454,6 +4454,12 @@ abstract class AppLocalizations {
   /// **'Thử lại'**
   String get registerDuprRetry;
 
+  /// No description provided for @registerDuprRatingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập điểm từ 1.0 đến 8.0 (tối đa 2 chữ số thập phân).'**
+  String get registerDuprRatingHint;
+
   /// No description provided for @registerDuprMatches.
   ///
   /// In vi, this message translates to:

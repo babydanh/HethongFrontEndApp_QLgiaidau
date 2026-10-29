@@ -2334,6 +2334,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerDuprRetry => 'Retry';
 
   @override
+  String get registerDuprRatingHint =>
+      'Enter a rating from 1.0 to 8.0 (up to 2 decimals).';
+
+  @override
   String get registerDuprMatches => 'Your DUPR rating fits this category';
 
   @override
