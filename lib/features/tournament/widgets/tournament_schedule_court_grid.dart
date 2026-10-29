@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/court_schedule_cascade.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -881,94 +882,85 @@ class _TournamentScheduleCourtGridState
         ),
         child: Row(
           children: [
-          // Bộ đếm tiến độ xếp lịch, như thanh công cụ của web.
-          Icon(Icons.event_available_outlined, size: 16, color: colors.textMuted),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              '${l10n.opsMatches} $placedCount/$totalCount',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: colors.textSecondary,
-              ),
+            // Bộ đếm tiến độ xếp lịch, như thanh công cụ của web.
+            Icon(
+              Icons.event_available_outlined,
+              size: 16,
+              color: colors.textMuted,
             ),
-          ),
-          const Spacer(),
-          if (widget.divisions.length > 1 &&
-              widget.onDivisionSelected != null) ...[
+            const SizedBox(width: 6),
             Flexible(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 180),
-                child: _divisionDropdown(context),
+              child: Text(
+                '${l10n.opsMatches} $placedCount/$totalCount',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                ),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-          ],
-          OutlinedButton.icon(
-            key: const ValueKey('court-picker-button'),
-            onPressed: () => _openCourtPicker(context, allCourts, selectedCourts),
-            icon: const Icon(Icons.grid_view_rounded, size: 16),
-            label: Text(
-              '${l10n.tournamentManagementVenues} $visibleCount/${allCourts.length}',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(0, 34),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              side: BorderSide(color: colors.border),
-            ),
-          ),
-          IconButton(
-            key: const ValueKey('schedule-print-button'),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-            tooltip: l10n.schedulePrint,
-            onPressed: widget.onPrint ?? _printSchedule,
-            icon: Icon(Icons.print_outlined, color: colors.textMuted),
-          ),
-          IconButton(
-            key: const ValueKey('schedule-export-button'),
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-            tooltip: l10n.exportData,
-            onPressed: _exporting ? null : _exportSchedule,
-            icon: _exporting
-                ? const SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(Icons.file_download_outlined, color: colors.textMuted),
-          ),
-          if (widget.onOpenScheduleSettings != null)
-            IconButton(
-              key: const ValueKey('schedule-settings-button'),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-              tooltip: l10n.scheduleSettingsTitle,
-              onPressed: widget.onOpenScheduleSettings,
-              icon: Icon(Icons.schedule_rounded, color: colors.textMuted),
-            ),
-          if (widget.onOpenFullscreen != null) ...[
-            const SizedBox(width: 4),
-            IconButton(
-              key: const ValueKey('court-grid-fullscreen'),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-              tooltip: l10n.tabSchedule,
-              onPressed: widget.onOpenFullscreen,
-              icon: Icon(
-                Icons.open_in_full_rounded,
-                color: colors.textMuted,
+            const Spacer(),
+            if (widget.divisions.length > 1 &&
+                widget.onDivisionSelected != null) ...[
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 180),
+                  child: _divisionDropdown(context),
+                ),
               ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
+            LavishChipButton(
+              key: const ValueKey('court-picker-button'),
+              label:
+                  '${l10n.tournamentManagementVenues} $visibleCount/${allCourts.length}',
+              chevron: true,
+              onPressed: () =>
+                  _openCourtPicker(context, allCourts, selectedCourts),
             ),
-          ],
+            const SizedBox(width: 6),
+            LavishIconBox(
+              key: const ValueKey('schedule-print-button'),
+              tone: LavishTone.neutral,
+              tooltip: l10n.schedulePrint,
+              onTap: widget.onPrint ?? _printSchedule,
+              child: const Icon(Icons.print_outlined),
+            ),
+            const SizedBox(width: 6),
+            LavishIconBox(
+              key: const ValueKey('schedule-export-button'),
+              tone: LavishTone.neutral,
+              tooltip: l10n.exportData,
+              onTap: _exporting ? null : _exportSchedule,
+              child: _exporting
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.file_download_outlined),
+            ),
+            if (widget.onOpenScheduleSettings != null) ...[
+              const SizedBox(width: 6),
+              LavishIconBox(
+                key: const ValueKey('schedule-settings-button'),
+                tone: LavishTone.neutral,
+                tooltip: l10n.scheduleSettingsTitle,
+                onTap: widget.onOpenScheduleSettings,
+                child: const Icon(Icons.schedule_rounded),
+              ),
+            ],
+            if (widget.onOpenFullscreen != null) ...[
+              const SizedBox(width: 6),
+              LavishIconBox(
+                key: const ValueKey('court-grid-fullscreen'),
+                tone: LavishTone.neutral,
+                tooltip: l10n.tabSchedule,
+                onTap: widget.onOpenFullscreen,
+                child: const Icon(Icons.open_in_full_rounded),
+              ),
+            ],
           ],
         ),
       ),
@@ -1044,7 +1036,8 @@ class _TournamentScheduleCourtGridState
                     ),
                     TextButton(
                       key: const ValueKey('court-picker-none'),
-                      onPressed: () => setSheetState(() => working = <String>{}),
+                      onPressed: () =>
+                          setSheetState(() => working = <String>{}),
                       child: Text(l10n.opsFilterKicked),
                     ),
                   ],
@@ -1098,12 +1091,11 @@ class _TournamentScheduleCourtGridState
         runSpacing: AppSpacing.xs,
         children: [
           for (final day in days)
-            ChoiceChip(
+            LavishChipButton(
               key: ValueKey('schedule-day-${day.day}-${day.month}'),
-              label: Text('${day.day}/${day.month}'),
+              label: '${day.day}/${day.month}',
               selected: selected == day,
-              onSelected: (_) => setState(() => _day = day),
-              selectedColor: AppTheme.primary.withValues(alpha: 0.18),
+              onPressed: () => setState(() => _day = day),
             ),
         ],
       ),

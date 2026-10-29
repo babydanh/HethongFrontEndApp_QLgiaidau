@@ -128,6 +128,11 @@ Future<void> _pump(
         ),
       ],
       child: MaterialApp(
+        // The live dot pulses forever; keep it still so pumpAndSettle ends.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child ?? const SizedBox.shrink(),
+        ),
         theme: AppTheme.lightTheme,
         locale: const Locale('vi'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -204,29 +209,32 @@ void main() {
     expect(find.byIcon(Icons.sports_score_outlined), findsOneWidget);
   });
 
-  testWidgets('no courts: division picker sits above the notice and changes division', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      matchesView: OrganizerOpsMatchesView.grid,
-      matches: const [],
-      divisionIds: const [_divisionId, _secondDivisionId],
-      withCourts: false,
-    );
+  testWidgets(
+    'no courts: division picker sits above the notice and changes division',
+    (tester) async {
+      await _pump(
+        tester,
+        matchesView: OrganizerOpsMatchesView.grid,
+        matches: const [],
+        divisionIds: const [_divisionId, _secondDivisionId],
+        withCourts: false,
+      );
 
-    expect(find.byIcon(Icons.stadium_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.stadium_outlined), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('schedule-division-dropdown')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Youth').last);
-    await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const ValueKey('schedule-division-dropdown')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Youth').last);
+      await tester.pumpAndSettle();
 
-    final dropdown = tester.widget<DropdownButton<String>>(
-      find.byKey(const ValueKey('schedule-division-dropdown')),
-    );
-    expect(dropdown.value, _secondDivisionId);
-  });
+      final dropdown = tester.widget<DropdownButton<String>>(
+        find.byKey(const ValueKey('schedule-division-dropdown')),
+      );
+      expect(dropdown.value, _secondDivisionId);
+    },
+  );
 
   testWidgets('grid shows unplayed matches and list keeps the all filter', (
     tester,

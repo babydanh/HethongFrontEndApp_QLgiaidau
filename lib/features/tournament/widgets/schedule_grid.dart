@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/schedule_gender_tint.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -13,7 +14,7 @@ typedef _ScheduledMatchLane = ({MatchModel match, int lane});
 
 typedef _CardStyle = ({
   BoxDecoration decoration,
-  Color headerBg,
+  ScheduleGenderTint tint,
   Color winnerBg,
   Color accent,
   Color fg,
@@ -136,6 +137,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
 
   /// Thẻ dưới 8 phút chỉ hiện một dòng; từ 8 phút trở lên hiện đủ hai đội.
   static const int _compactBelowMinutes = 8;
+  static const double _stripeWidth = 5;
 
   // Header và thân dùng hai controller riêng: một ScrollController chỉ gắn
   // được một ScrollPosition, dùng chung sẽ assert ngay lần swipe ngang đầu.
@@ -661,30 +663,47 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     // Trận đã đấu hoặc đã kết thúc không được kéo đi và không nhận thả vào.
     final movable = !isDraft && !isScheduleLocked(match);
 
+    final content = duration < _compactBelowMinutes
+        ? Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (divisionName != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _divisionChip(divisionName, style.tint.headerText),
+                  ),
+                Expanded(child: _compactContent(match, style)),
+              ],
+            ),
+          )
+        : _fullContent(match, start, style, divisionName);
+
     Widget card = GestureDetector(
       onTap: isDraft ? null : () => widget.onTapMatch(match.id),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: style.decoration,
-        child: duration < _compactBelowMinutes
-            ? Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (divisionName != null)
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: _divisionChip(
-                          divisionName,
-                          _divisionColorFor(match) ?? style.fg,
-                        ),
-                      ),
-                    Expanded(child: _compactContent(match, style)),
-                  ],
-                ),
-              )
-            : _fullContent(match, start, style, divisionName),
+        // Full-height gender stripe on the left; content is inset past it.
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: _stripeWidth),
+              child: content,
+            ),
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: _stripeWidth,
+              child: ColoredBox(
+                key: ValueKey('schedule-match-stripe-${match.id}'),
+                color: style.tint.stripe,
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -793,29 +812,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return name == null || name.isEmpty ? null : name;
   }
 
-  /// Hạng mục đôi nam/nữ lấy màu từ metadata; các loại khác dùng bảng dự phòng.
-  Color? _divisionColorFor(MatchModel match) {
+  /// Card colours follow the division's gender restriction (same palette as the
+  /// web schedule card); a missing division reads as "flexible".
+  ScheduleGenderTint _tintFor(MatchModel match) {
     final divisionId = _divisionIdFor(match);
-    if (divisionId == null) return null;
-    final colors = context.colors;
-    final metadata = widget.divisionMetadataById[divisionId];
-    final matchType = metadata?.matchType.trim().toUpperCase();
-    final gender = metadata?.genderRestriction?.trim().toUpperCase();
-    if (matchType == 'DOUBLES' && gender == 'MALE') return colors.info;
-    if (matchType == 'DOUBLES' && gender == 'FEMALE') {
-      return const Color(0xFFDB2777);
-    }
-
-    final palette = [
-      AppTheme.primary,
-      colors.warning,
-      colors.success,
-      AppTheme.secondaryDark,
-      AppTheme.primaryDark,
-      colors.info,
-    ];
-    final index = widget.divisionNameById.keys.toList().indexOf(divisionId);
-    return palette[index % palette.length];
+    return scheduleGenderTint(
+      divisionId == null
+          ? null
+          : widget.divisionMetadataById[divisionId]?.genderRestriction,
+    );
   }
 
   Widget _divisionChip(String name, Color color) {
@@ -890,20 +895,28 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return renderedMinutes > duration ? renderedMinutes : duration;
   }
 
-  /// Thân/header/footer trung tính, không mã hoá trạng thái bằng màu.
-  /// Chỉ viền chọn là phản hồi tương tác; LIVE được biểu thị bằng badge.
+  /// Thẻ tô theo giới tính hạng mục (vạch trái, viền, header); trạng thái không
+  /// đổi màu thẻ. Chỉ viền chọn là phản hồi tương tác; LIVE là chấm đỏ nhấp nháy.
   _CardStyle _cardStyle(MatchModel match, AppColorsExtension colors) {
     final selected = match.id == widget.selectedMatchId;
+    final tint = _tintFor(match);
     return (
       decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(7),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: selected ? colors.warning : colors.border,
-          width: selected ? 2.0 : 1.0,
+          color: selected ? colors.warning : tint.border,
+          width: selected ? 2.0 : 1.5,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 3,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
-      headerBg: colors.bgSurface,
+      tint: tint,
       winnerBg: colors.bgSurface,
       accent: Colors.transparent,
       fg: colors.textPrimary,
@@ -922,7 +935,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   }
 
   Widget _compactCenter(MatchModel match, _CardStyle style) {
-    if (match.isLive) return _liveBadge();
+    if (match.isLive) return _LiveDot(key: _liveDotKey(match));
     final label = match.isCompleted
         ? '${match.score1} - ${match.score2}'
         : 'vs';
@@ -949,13 +962,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _fullHeader(
-          match,
-          start,
-          style,
-          divisionName,
-          _divisionColorFor(match),
-        ),
+        _fullHeader(match, start, style, divisionName),
         // Hai đội căn giữa giữa header và footer, như justify-between của web.
         Expanded(
           child: Column(
@@ -973,28 +980,23 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   }
 
   /// Header thẻ: "🕐 giờ / sân" một cụm bên trái (chip sân tô theo chỉ số sân), nhãn
-  /// hạng mục (màu riêng mỗi hạng mục) và LIVE bên phải; vạch trái cùng màu hạng
-  /// mục để lướt là phân biệt được.
+  /// hạng mục và chấm LIVE bên phải; nền và chữ theo màu giới tính của hạng mục.
   Widget _fullHeader(
     MatchModel match,
     DateTime start,
     _CardStyle style,
     String? divisionName,
-    Color? divisionColor,
   ) {
     final time =
         '${start.hour.toString().padLeft(2, '0')}:'
         '${start.minute.toString().padLeft(2, '0')}';
     final court = _courtOf(match);
-    final muted = style.fg.withValues(alpha: 0.75);
+    final muted = style.tint.headerText.withValues(alpha: 0.85);
     return Container(
       padding: const EdgeInsets.fromLTRB(5, 1, 5, 1),
       decoration: BoxDecoration(
-        color: style.headerBg,
-        border: Border(
-          left: BorderSide(color: divisionColor ?? style.accent, width: 3),
-          bottom: BorderSide(color: context.colors.border),
-        ),
+        color: style.tint.header,
+        border: Border(bottom: BorderSide(color: style.tint.border)),
       ),
       child: Row(
         children: [
@@ -1033,14 +1035,14 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                     alignment: Alignment.centerRight,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 4),
-                      child: _divisionChip(
-                        divisionName,
-                        divisionColor ?? style.fg,
-                      ),
+                      child: _divisionChip(divisionName, style.tint.headerText),
                     ),
                   ),
           ),
-          if (match.isLive) _liveBadge(),
+          if (match.isLive) ...[
+            const SizedBox(width: 4),
+            _LiveDot(key: _liveDotKey(match)),
+          ],
         ],
       ),
     );
@@ -1087,6 +1089,18 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
+          if (match.isCompleted) ...[
+            const SizedBox(width: 6),
+            Text(
+              l10n.organizer_statusCompleted,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                color: colors.textMuted,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1204,9 +1218,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     }
 
     // Đơn (1 người)
-    return Flexible(
-      child: _playerMiniRow(players[0], textStyle),
-    );
+    return Flexible(child: _playerMiniRow(players[0], textStyle));
   }
 
   Widget _playerMiniRow(ParticipantPlayer player, TextStyle textStyle) {
@@ -1216,12 +1228,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         CircleAvatar(
           radius: 6.5,
           backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
-          backgroundImage: player.avatarUrl != null && player.avatarUrl!.isNotEmpty
+          backgroundImage:
+              player.avatarUrl != null && player.avatarUrl!.isNotEmpty
               ? NetworkImage(player.avatarUrl!)
               : null,
           child: (player.avatarUrl == null || player.avatarUrl!.isEmpty)
               ? Text(
-                  player.fullName.isNotEmpty ? player.fullName[0].toUpperCase() : '?',
+                  player.fullName.isNotEmpty
+                      ? player.fullName[0].toUpperCase()
+                      : '?',
                   style: const TextStyle(
                     fontSize: 7.5,
                     fontWeight: FontWeight.w800,
@@ -1243,19 +1258,56 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  Widget _liveBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-      decoration: BoxDecoration(
-        gradient: context.liveGradient,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: const Text(
-        'LIVE',
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
+  Key _liveDotKey(MatchModel match) =>
+      ValueKey('schedule-live-dot-${match.id}');
+}
+
+/// Red dot that pulses while a match is live. Stays solid when the platform
+/// asks to reduce animations.
+class _LiveDot extends StatefulWidget {
+  const _LiveDot({super.key});
+
+  @override
+  State<_LiveDot> createState() => _LiveDotState();
+}
+
+class _LiveDotState extends State<_LiveDot>
+    with SingleTickerProviderStateMixin {
+  static const Color _liveRed = Color(0xFFEF4444);
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+      _controller.value = 1;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.35, end: 1).animate(_controller),
+      child: Container(
+        width: 8,
+        height: 8,
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        decoration: const BoxDecoration(
+          color: _liveRed,
+          shape: BoxShape.circle,
         ),
       ),
     );

@@ -46,6 +46,11 @@ Future<int> _pump(WidgetTester tester) async {
         ),
       ],
       child: MaterialApp(
+        // The live dot pulses forever; keep it still so pumpAndSettle ends.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child ?? const SizedBox.shrink(),
+        ),
         theme: AppTheme.lightTheme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -107,6 +112,11 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          // The live dot pulses forever; keep it still so pumpAndSettle ends.
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(disableAnimations: true),
+            child: child ?? const SizedBox.shrink(),
+          ),
           theme: AppTheme.lightTheme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

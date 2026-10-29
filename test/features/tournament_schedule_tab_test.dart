@@ -139,6 +139,11 @@ Future<void> _pumpTournamentDetail(
         ),
       ],
       child: MaterialApp(
+        // The live dot pulses forever; keep it still so pumpAndSettle ends.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child ?? const SizedBox.shrink(),
+        ),
         theme: AppTheme.lightTheme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -166,6 +171,11 @@ Future<void> _pumpGrid(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
+      // The live dot pulses forever; keep it still so pumpAndSettle ends.
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(disableAnimations: true),
+        child: child ?? const SizedBox.shrink(),
+      ),
       theme: AppTheme.lightTheme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -578,11 +588,10 @@ void main() {
 
       Color? colourOf(String division) =>
           tester.widget<Text>(find.text(division)).style?.color;
-      final colors = AppTheme.lightTheme.extension<AppColorsExtension>()!;
-      expect(colourOf('Nhóm A'), colors.info);
-      expect(colourOf('Nhóm B'), const Color(0xFFDB2777));
-      expect(colourOf('Nhóm C'), isNot(colors.info));
-      expect(colourOf('Nhóm C'), isNot(const Color(0xFFDB2777)));
+      // Chip text follows the gender tint of the web schedule card.
+      expect(colourOf('Nhóm A'), const Color(0xFF1E3A8A));
+      expect(colourOf('Nhóm B'), const Color(0xFF831843));
+      expect(colourOf('Nhóm C'), const Color(0xFF134E4A));
       expect(tester.takeException(), isNull);
     },
   );

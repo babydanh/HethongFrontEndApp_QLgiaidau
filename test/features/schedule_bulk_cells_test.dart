@@ -79,6 +79,11 @@ Future<({List<_Cell> cells, List<MatchModel> waiting})?> _selectRangeAndConfirm(
         ),
       ],
       child: MaterialApp(
+        // The live dot pulses forever; keep it still so pumpAndSettle ends.
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: child ?? const SizedBox.shrink(),
+        ),
         theme: AppTheme.lightTheme,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -161,7 +166,9 @@ void main() {
     expect(captured.waiting.map((m) => m.id), ['w1']);
   });
 
-  testWidgets('a free range offers one cell per 15-minute slot', (tester) async {
+  testWidgets('a free range offers one cell per 15-minute slot', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(600, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
