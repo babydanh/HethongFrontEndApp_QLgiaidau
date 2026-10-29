@@ -2,6 +2,8 @@
 // The backend is the source of truth; these only guide the user client-side.
 
 /// Selectable limit values: 2.0 to 6.0 in 0.5 steps.
+/// UI choice; Backend accepts 1.0–8.0 in 0.5 steps; stored values outside the
+/// list are still shown by the editor.
 const List<double> duprLimitOptions = [
   2.0,
   2.5,
@@ -52,4 +54,33 @@ double? pickDuprFromRatings(List<Map<String, dynamic>> rows) {
     }
   }
   return null;
+}
+
+/// Range the backend accepts for a self-declared DUPR rating.
+const double duprRatingMin = 1.0;
+const double duprRatingMax = 8.0;
+
+/// True when [value] is finite, within 1.0–8.0 and has at most 2 decimals.
+bool isValidDuprRating(double value) {
+  if (!value.isFinite || value < duprRatingMin || value > duprRatingMax) {
+    return false;
+  }
+  return ((value * 100).round() / 100 - value).abs() < 1e-9;
+}
+
+final RegExp _ratingText = RegExp(r'^\d+(\.\d{1,2})?$');
+
+/// Parses typed text ("3.5" or "3,5"); null when empty, malformed, outside
+/// 1.0–8.0 or with more than 2 decimals.
+double? parseDuprRating(String text) {
+  final normalized = text.trim().replaceAll(',', '.');
+  if (!_ratingText.hasMatch(normalized)) return null;
+  final value = double.parse(normalized);
+  return isValidDuprRating(value) ? value : null;
+}
+
+/// Display text with 1 to 2 decimals (3 -> "3.0", 3.62 -> "3.62").
+String formatDuprRating(double value) {
+  final text = ((value * 100).round() / 100).toStringAsFixed(2);
+  return text.endsWith('0') ? text.substring(0, text.length - 1) : text;
 }

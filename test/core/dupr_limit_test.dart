@@ -115,4 +115,41 @@ void main() {
       );
     });
   });
+
+  group('parseDuprRating / isValidDuprRating', () {
+    test('accepts dot and comma decimals inside 1.0 to 8.0', () {
+      expect(parseDuprRating('3.5'), 3.5);
+      expect(parseDuprRating('3,5'), 3.5);
+      expect(parseDuprRating(' 3.62 '), 3.62);
+      expect(parseDuprRating('1'), 1.0);
+      expect(parseDuprRating('8.00'), 8.0);
+    });
+
+    test('rejects empty, out of range, junk and more than 2 decimals', () {
+      for (final text in ['', ' ', '.', '3.', '0.9', '8.01', '9', 'abc', '3.621', '-3', '3..5']) {
+        expect(parseDuprRating(text), isNull, reason: '"$text"');
+      }
+    });
+
+    test('isValidDuprRating mirrors the range and decimal rule', () {
+      expect(isValidDuprRating(1.0), isTrue);
+      expect(isValidDuprRating(8.0), isTrue);
+      expect(isValidDuprRating(3.62), isTrue);
+      expect(isValidDuprRating(0.99), isFalse);
+      expect(isValidDuprRating(8.5), isFalse);
+      expect(isValidDuprRating(3.621), isFalse);
+      expect(isValidDuprRating(double.nan), isFalse);
+      expect(isValidDuprRating(double.infinity), isFalse);
+    });
+  });
+
+  group('formatDuprRating', () {
+    test('1 to 2 decimals, float noise removed', () {
+      expect(formatDuprRating(3), '3.0');
+      expect(formatDuprRating(3.5), '3.5');
+      expect(formatDuprRating(3.62), '3.62');
+      expect(formatDuprRating(3.4999999), '3.5');
+      expect(formatDuprRating(3.10), '3.1');
+    });
+  });
 }
