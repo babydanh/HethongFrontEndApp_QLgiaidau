@@ -17,6 +17,7 @@ class _FakeRatings implements ExternalRatingRepository {
   Object? saveError;
   Completer<void>? saveGate;
   int getCalls = 0;
+  int failGets = 0;
   final saved = <double>[];
 
   @override
@@ -25,6 +26,10 @@ class _FakeRatings implements ExternalRatingRepository {
     required String matchType,
   }) async {
     getCalls++;
+    if (failGets > 0) {
+      failGets--;
+      throw Exception('offline');
+    }
     return rating;
   }
 
@@ -193,22 +198,42 @@ void main() {
   });
 
   testWidgets('rating lookup failure blocks and says so', (tester) async {
-    final repo = _FakeRatings();
-    // Force the GET to throw.
-    final failing = _ThrowingGet(repo);
-    final validity = await _pump(tester, failing, _division(min: 3.0));
+    final repo = _FakeRatings()..failGets = 1;
+    final validity = await _pump(tester, repo, _division(min: 3.0));
 
     expect(find.textContaining('Không kiểm tra được điểm DUPR'), findsOne);
     expect(validity.last, isFalse);
   });
-}
 
-class _ThrowingGet extends _FakeRatings {
-  _ThrowingGet(_FakeRatings _);
+  testWidgets('lookup failure offers a retry that recovers', (tester) async {
+    final repo = _FakeRatings(rating: 3.2)..failGets = 1;
+    final validity = await _pump(tester, repo, _division(min: 3.0, max: 3.5));
 
-  @override
-  Future<double?> getMyDuprRating({
-    required String categoryId,
-    required String matchType,
-  }) async => throw Exception('offline');
+    expect(find.byKey(const ValueKey('dupr-card-retry')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('dupr-card-retry')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('dupr-card-retry')), findsNothing);
+    expect(find.text('Điểm DUPR của bạn phù hợp với nội dung này'), findsOne);
+    expect(validity.last, isTrue);
+  });
+
+  testWidgets('a reload that fails right after a save also offers retry', (
+    tester,
+  ) async {
+    final repo = _FakeRatings();
+    await _pump(tester, repo, _division(min: 3.0, max: 3.5));
+
+    repo.failGets = 1;
+    await tester.enterText(
+      find.byKey(const ValueKey('dupr-limit-input')),
+      '3.2',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('dupr-limit-save')));
+    await tester.pumpAndSettle();
+
+    expect(repo.saved, [3.2]);
+    expect(find.byKey(const ValueKey('dupr-card-retry')), findsOneWidget);
+  });
 }

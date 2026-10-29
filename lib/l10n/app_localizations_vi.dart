@@ -2325,6 +2325,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không kiểm tra được điểm DUPR. Vui lòng thử lại.';
 
   @override
+  String get registerDuprRetry => 'Thử lại';
+
+  @override
   String get registerDuprMatches =>
       'Điểm DUPR của bạn phù hợp với nội dung này';
 

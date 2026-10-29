@@ -4448,6 +4448,12 @@ abstract class AppLocalizations {
   /// **'Không kiểm tra được điểm DUPR. Vui lòng thử lại.'**
   String get registerDuprCheckError;
 
+  /// No description provided for @registerDuprRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get registerDuprRetry;
+
   /// No description provided for @registerDuprMatches.
   ///
   /// In vi, this message translates to:

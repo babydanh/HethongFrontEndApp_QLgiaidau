@@ -224,6 +224,15 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
               ],
             ),
             if (needsInput) ..._inputRows(l10n, colors),
+            if (_phase == _Phase.error)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  key: const ValueKey('dupr-card-retry'),
+                  onPressed: _load,
+                  child: Text(l10n.registerDuprRetry),
+                ),
+              ),
           ],
         ),
       ),
