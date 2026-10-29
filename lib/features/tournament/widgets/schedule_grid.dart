@@ -86,6 +86,9 @@ class ScheduleGrid extends StatefulWidget {
   /// theo [stepMinutes]). Null thì thẻ không có tay nắm.
   final void Function(MatchModel match, int minutes)? onResizeMatch;
 
+  /// Nút ✕ nằm ngay trên vùng đang chọn để bỏ chọn; null thì không hiện.
+  final VoidCallback? onClearRange;
+
   /// Chạm vào một ô trống (sân, giờ): mở chọn trận chờ để xếp vào ô đó.
   final void Function(String court, DateTime at)? onTapEmptyCell;
 
@@ -124,6 +127,7 @@ class ScheduleGrid extends StatefulWidget {
     this.selectMode = false,
     this.selectedRange,
     this.onResizeMatch,
+    this.onClearRange,
     this.roundLabelOf,
     this.onTapEmptyCell,
     this.onDropOnMatch,
@@ -173,6 +177,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   // Chế độ "Chọn nhiều": ô đã chạm đầu tiên, chờ ô cuối.
   (int court, int slot)? _tapAnchor;
 
+  // Ô cuối cùng ngón tay chạm/nhả: nút ✕ bỏ chọn hiện ngay tại đó.
+  (int court, int slot)? _clearCell;
+
   // Kéo tay nắm đổi thời lượng: trận đang kéo và quãng đã kéo (px).
   String? _resizeMatchId;
   double _resizeDeltaPx = 0;
@@ -214,6 +221,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   void _tapSelect(int court, int slot) {
     final anchor = _tapAnchor;
     final cell = (court, slot);
+    _clearCell = cell;
     if (anchor == null) {
       _tapAnchor = cell;
       widget.onRangeSelected?.call(_normalizedRange(cell, cell));
@@ -226,8 +234,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   @override
   void didUpdateWidget(ScheduleGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Tắt chế độ hoặc host xoá vùng thì bỏ ô chạm dở.
+    // Host xoá vùng thì bỏ ô chạm dở và vị trí nút ✕; tắt chế độ thì bỏ ô chạm dở.
     if (!widget.selectMode || widget.selectedRange == null) _tapAnchor = null;
+    if (widget.selectedRange == null) _clearCell = null;
   }
 
   /// Kéo tay nắm ở cột giờ: báo chiều cao hàng mới cho host (lưới không tự đổi).
@@ -245,6 +254,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     setState(() {
       _rangeAnchor = null;
       _rangeFocus = null;
+      _clearCell = focus;
     });
     if (anchor == null || focus == null) return;
     widget.onRangeSelected?.call(_normalizedRange(anchor, focus));
@@ -589,15 +599,9 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                 style: TextStyle(
                   fontSize: widget.emphasizeTimeLabels ? 12 : 10.5,
                   fontWeight: label.endsWith(':00')
-                      ? FontWeight.w700
-                      : widget.emphasizeTimeLabels
-                      ? FontWeight.w600
-                      : FontWeight.w500,
-                  color: label.endsWith(':00')
-                      ? colors.textPrimary
-                      : widget.emphasizeTimeLabels
-                      ? colors.textSecondary
-                      : colors.textMuted,
+                      ? FontWeight.w800
+                      : FontWeight.w600,
+                  color: colors.textPrimary,
                 ),
               ),
             ),
@@ -730,6 +734,16 @@ class _ScheduleGridState extends State<ScheduleGrid> {
       return const [];
     }
     final rows = range.lastSlot - range.firstSlot + 1;
+    // Only the host-held range (not the live drag) carries the ✕, and only
+    // once: on the cell the finger last touched (falls back to the box's
+    // top-right when the range was set without a touch).
+    final touched = _clearCell;
+    final clearCourt = touched?.$1 ?? range.lastCourt;
+    final clearSlot = touched?.$2 ?? range.firstSlot;
+    final showClear =
+        widget.onClearRange != null &&
+        widget.selectedRange == range &&
+        courtIndex == clearCourt;
     return [
       Positioned(
         key: const ValueKey('schedule-range-highlight'),
@@ -746,6 +760,32 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           ),
         ),
       ),
+      if (showClear)
+        Positioned(
+          right: 4,
+          top: clearSlot * _slotHeight + 4,
+          child: Tooltip(
+            message: AppLocalizations.of(context)!.scheduleSelectClear,
+            child: GestureDetector(
+              key: const ValueKey('schedule-range-clear'),
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onClearRange,
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: const BoxDecoration(
+                  color: AppTheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close_rounded,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
     ];
   }
 

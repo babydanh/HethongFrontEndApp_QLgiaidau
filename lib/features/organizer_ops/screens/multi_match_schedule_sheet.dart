@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/court_schedule_cascade.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -319,6 +320,7 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
+    final lavish = LavishColors.of(context);
     final rounds = _rounds;
     final shown = _shown;
     final planned = _plannedStarts;
@@ -333,14 +335,15 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
       ),
       busy: _busy,
       actions: [
-        FilledButton(
-          key: const ValueKey('schedule-multi-submit'),
+        LavishButton(
+          buttonKey: const ValueKey('schedule-multi-submit'),
+          label: l10n.scheduleMultiSubmit(_selectedIds.length),
           onPressed: _canSubmit ? _submit : null,
-          child: Text(l10n.scheduleMultiSubmit(_selectedIds.length)),
         ),
-        TextButton(
+        LavishButton(
+          kind: LavishButtonKind.outline,
+          label: l10n.tournamentManagementCancel,
           onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
-          child: Text(l10n.tournamentManagementCancel),
         ),
       ],
       child: Column(
@@ -348,7 +351,12 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
         children: [
           Text(
             l10n.scheduleMultiSheetDescription,
-            style: TextStyle(color: colors.textSecondary, fontSize: 12),
+            style: TextStyle(
+              color: lavish.muted,
+              fontSize: 12.5,
+              height: 1.4,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           if (_busy && _progress != null) ...[
             const SizedBox(height: 8),
@@ -386,9 +394,9 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
                 key: const ValueKey('schedule-multi-round-filter'),
                 initialValue: _roundFilter,
                 isExpanded: true,
-                decoration: InputDecoration(
+                decoration: _lavishField(
+                  lavish,
                   labelText: l10n.scheduleMultiRoundLabel,
-                  border: const OutlineInputBorder(),
                 ),
                 items: [
                   DropdownMenuItem(
@@ -417,26 +425,31 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
                     controller: _searchController,
                     enabled: !_busy,
                     onChanged: (value) => setState(() => _query = value),
-                    decoration: InputDecoration(
-                      hintText: l10n.scheduleMultiSearchHint,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      isDense: true,
-                    ),
+                    style: TextStyle(fontSize: 13, color: lavish.text),
+                    decoration:
+                        _lavishField(
+                          lavish,
+                          hintText: l10n.scheduleMultiSearchHint,
+                          prefixIcon: const Icon(Icons.search_rounded),
+                        ).copyWith(
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 11,
+                          ),
+                        ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                OutlinedButton(
+                LavishChipButton(
                   key: const ValueKey('schedule-multi-toggle-visible'),
+                  selected: allVisibleSelected,
                   onPressed: shown.isEmpty ? null : _toggleVisible,
-                  child: Text(
-                    allVisibleSelected
-                        ? l10n.scheduleMultiDeselectVisible
-                        : l10n.scheduleMultiSelectVisible,
-                  ),
+                  label: allVisibleSelected
+                      ? l10n.scheduleMultiDeselectVisible
+                      : l10n.scheduleMultiSelectVisible,
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             if (shown.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -460,128 +473,186 @@ class _MultiMatchScheduleSheetState extends State<MultiMatchScheduleSheet> {
     );
   }
 
+  /// Web-style waiting card: tick + round on top, the two sides with avatars,
+  /// then the duration field and planned start. The card toggles the match.
   Widget _matchRow(
     MatchModel match, {
     required Map<String, DateTime>? planned,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
+    final lavish = LavishColors.of(context);
     final selected = _selectedIds.contains(match.id);
     final controller = _durationControllers[match.id]!;
     final invalidDraft = _isInvalidDraft(controller.text);
     final startAt = planned?[match.id];
+    final border = selected ? LavishColors.accent : lavish.chipLine;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        key: ValueKey('schedule-picker-${match.id}'),
-        onTap: _busy ? null : () => _toggle(match),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: selected ? colors.info.withValues(alpha: 0.08) : null,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected ? colors.info : colors.border,
-              width: selected ? 2 : 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    selected
-                        ? Icons.check_box_rounded
-                        : Icons.check_box_outline_blank_rounded,
-                    size: 18,
-                    color: selected ? colors.info : colors.textMuted,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      _roundLabel(match, l10n),
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
+      child: Material(
+        color: selected ? lavish.soft(LavishTone.accent) : lavish.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: border, width: selected ? 1.4 : 1),
+        ),
+        child: InkWell(
+          key: ValueKey('schedule-picker-${match.id}'),
+          borderRadius: BorderRadius.circular(12),
+          onTap: _busy ? null : () => _toggle(match),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      selected
+                          ? Icons.check_box_rounded
+                          : Icons.check_box_outline_blank_rounded,
+                      size: 18,
+                      color: selected ? LavishColors.accent : lavish.faint,
                     ),
-                  ),
-                  if (startAt != null)
-                    Text(
-                      key: ValueKey('schedule-multi-start-${match.id}'),
-                      '→ ${_hhmm(startAt.hour * 60 + startAt.minute)}',
-                      style: TextStyle(
-                        color: colors.info,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _pairLabel(match),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    l10n.scheduleQuickDuration,
-                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
-                  ),
-                  const SizedBox(width: 6),
-                  SizedBox(
-                    width: 64,
-                    child: TextField(
-                      key: ValueKey('schedule-multi-duration-${match.id}'),
-                      controller: controller,
-                      enabled: !_busy,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13),
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 6,
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _roundLabel(match, l10n),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: lavish.text,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      onChanged: (_) => setState(() {}),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _sideRow(match, 1, lavish),
+                const SizedBox(height: 4),
+                _sideRow(match, 2, lavish),
+                const SizedBox(height: 10),
+                Container(height: 1, color: lavish.rowLine),
+                const SizedBox(height: 8),
+                _footer(match, controller, startAt, lavish, l10n),
+                if (invalidDraft)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      key: ValueKey(
+                        'schedule-multi-duration-error-${match.id}',
+                      ),
+                      l10n.scheduleMultiDurationInvalid,
+                      style: const TextStyle(
+                        color: LavishColors.bad,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    l10n.scheduleMultiMinutesSuffix,
-                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
-                  ),
-                ],
-              ),
-              if (invalidDraft) ...[
-                const SizedBox(height: 6),
-                Text(
-                  key: ValueKey('schedule-multi-duration-error-${match.id}'),
-                  l10n.scheduleMultiDurationInvalid,
-                  style: TextStyle(color: colors.error, fontSize: 11),
-                ),
               ],
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  /// One competitor line: stacked avatars + names (team name for team sides).
+  Widget _sideRow(MatchModel match, int side, LavishColors lavish) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 24),
+      child: ParticipantLabel(
+        teamName: matchSideTeamName(match, side),
+        players: matchSidePlayers(match, side),
+        teamOnly: isFootballMatch(match),
+        style: TextStyle(
+          color: lavish.text,
+          fontSize: 13,
+          fontWeight: side == 1 ? FontWeight.w800 : FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  /// Card footer: duration field + "phút" on the left, planned start on the right.
+  Widget _footer(
+    MatchModel match,
+    TextEditingController controller,
+    DateTime? startAt,
+    LavishColors lavish,
+    AppLocalizations l10n,
+  ) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 54,
+          child: TextField(
+            key: ValueKey('schedule-multi-duration-${match.id}'),
+            controller: controller,
+            enabled: !_busy,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: lavish.text,
+            ),
+            decoration: _lavishField(lavish, radius: 10).copyWith(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 8,
+              ),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          l10n.scheduleMultiMinutesSuffix,
+          style: TextStyle(
+            color: lavish.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const Spacer(),
+        if (startAt != null)
+          LavishPill(
+            key: ValueKey('schedule-multi-start-${match.id}'),
+            '→ ${_hhmm(startAt.hour * 60 + startAt.minute)}',
+          ),
+      ],
+    );
+  }
+
+  /// Lavish input: soft grey fill, no outline, accent ring on focus.
+  InputDecoration _lavishField(
+    LavishColors lavish, {
+    double radius = 12,
+    String? hintText,
+    String? labelText,
+    Widget? prefixIcon,
+  }) {
+    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(radius),
+      borderSide: BorderSide(color: color, width: width),
+    );
+    return InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: lavish.dark ? lavish.rowLine : const Color(0xFFF2F4F7),
+      hintText: hintText,
+      hintStyle: TextStyle(color: lavish.faint, fontSize: 13),
+      labelText: labelText,
+      prefixIcon: prefixIcon,
+      prefixIconColor: lavish.muted,
+      border: border(Colors.transparent, 0),
+      enabledBorder: border(Colors.transparent, 0),
+      focusedBorder: border(LavishColors.accent, 1.5),
+      disabledBorder: border(Colors.transparent, 0),
     );
   }
 

@@ -456,6 +456,7 @@ class _TournamentScheduleCourtGridState
                     : null,
                 selectMode: _hasRangeActions && _selectMode,
                 selectedRange: _range,
+                onClearRange: () => setState(() => _range = null),
                 onResizeMatch: widget.onBulkDuration == null
                     ? null
                     : (match, minutes) =>
@@ -623,13 +624,6 @@ class _TournamentScheduleCourtGridState
         spacing: AppSpacing.sm,
         runSpacing: AppSpacing.xs,
         children: [
-          IconButton(
-            key: const ValueKey('schedule-bulk-clear-button'),
-            tooltip: l10n.scheduleSelectClear,
-            visualDensity: VisualDensity.compact,
-            onPressed: () => setState(() => _range = null),
-            icon: const Icon(Icons.close_rounded, size: 18),
-          ),
           if (widget.onBulkSchedule != null) ...[
             Text(
               '${l10n.opsUnscheduled}: ${batch.length}/${cells.length}',

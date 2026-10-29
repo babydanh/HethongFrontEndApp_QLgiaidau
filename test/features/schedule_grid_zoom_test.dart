@@ -40,7 +40,48 @@ Future<double?> _dragScaleHandle(WidgetTester tester, double dy) async {
   return captured;
 }
 
+Future<void> _pumpGrid(WidgetTester tester) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: AppTheme.lightTheme,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('vi'),
+      home: Scaffold(
+        body: SingleChildScrollView(
+          child: ScheduleGrid(
+            courts: const ['Sân 1'],
+            matches: const [],
+            startHour: 7,
+            endHour: 10,
+            onTapMatch: (_) {},
+            onSlotHeightChanged: (_) {},
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  testWidgets('time labels are drawn in the primary (dark) text colour', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpGrid(tester);
+    final dark = AppTheme.lightTheme
+        .extension<AppColorsExtension>()!
+        .textPrimary;
+    for (final label in ['07:00', '07:15']) {
+      expect(tester.widget<Text>(find.text(label)).style!.color, dark);
+    }
+  });
+
   testWidgets('dragging the grip down grows the hour rows', (tester) async {
     tester.view.physicalSize = const Size(600, 900);
     tester.view.devicePixelRatio = 1;

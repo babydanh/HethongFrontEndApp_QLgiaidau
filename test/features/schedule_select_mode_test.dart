@@ -136,12 +136,71 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.byKey(const ValueKey('schedule-bulk-clear-button')));
+    // The ✕ now sits on the selection itself, not in the bulk bar.
+    await tester.tap(find.byKey(const ValueKey('schedule-range-clear')));
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('schedule-range-highlight')),
       findsNothing,
     );
+  });
+
+  testWidgets('the clear button appears on the cell the finger lands on', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await tester.tap(find.byKey(const ValueKey('schedule-select-mode-button')));
+    await tester.pumpAndSettle();
+
+    // Tap mode: the ✕ sits on the last tapped cell (row 3), not a fixed corner.
+    await tester.tap(find.byKey(const ValueKey('schedule-slot-Sân 1-2')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('schedule-slot-Sân 1-4')));
+    await tester.pumpAndSettle();
+    final clear = find.byKey(const ValueKey('schedule-range-clear'));
+    expect(
+      tester
+          .getRect(find.byKey(const ValueKey('schedule-slot-Sân 1-4')))
+          .contains(tester.getCenter(clear)),
+      isTrue,
+    );
+  });
+
+  testWidgets('after a long-press drag the clear button follows the finger', (
+    tester,
+  ) async {
+    await _pump(tester);
+    await tester.tap(find.byKey(const ValueKey('schedule-select-mode-button')));
+    await tester.pumpAndSettle();
+
+    Future<void> hold(int from, int to) async {
+      final start = tester.getCenter(
+        find.byKey(ValueKey('schedule-slot-Sân 1-$from')),
+      );
+      final end = tester.getCenter(
+        find.byKey(ValueKey('schedule-slot-Sân 1-$to')),
+      );
+      final gesture = await tester.startGesture(start);
+      await tester.pump(const Duration(milliseconds: 700));
+      await gesture.moveTo(end);
+      await tester.pump(const Duration(milliseconds: 50));
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    final clear = find.byKey(const ValueKey('schedule-range-clear'));
+    Rect slot(int i) =>
+        tester.getRect(find.byKey(ValueKey('schedule-slot-Sân 1-$i')));
+
+    // Dragging down ends on row 5: the ✕ is on row 5.
+    await hold(2, 5);
+    expect(slot(5).contains(tester.getCenter(clear)), isTrue);
+
+    // Dragging back up ends on row 2: the ✕ moves to row 2 with the finger.
+    await tester.tap(clear);
+    await tester.pumpAndSettle();
+    await hold(5, 2);
+    expect(slot(2).contains(tester.getCenter(clear)), isTrue);
   });
 
   testWidgets('turning select mode off clears the selection', (tester) async {

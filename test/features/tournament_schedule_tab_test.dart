@@ -939,7 +939,7 @@ void main() {
     expect(tester.widget<Text>(hourLabel).style?.fontSize, 10.5);
     expect(
       tester.widget<Text>(quarterLabel).style?.fontWeight,
-      FontWeight.w500,
+      FontWeight.w600,
     );
   });
 

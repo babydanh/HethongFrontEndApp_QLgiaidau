@@ -26,6 +26,7 @@ Future<void> _pump(
   ScheduleRange? selectedRange,
   void Function(ScheduleRange range)? onRangeSelected,
   void Function(MatchModel match, int minutes)? onResizeMatch,
+  VoidCallback? onClearRange,
 }) async {
   tester.view.physicalSize = const Size(600, 1400);
   tester.view.devicePixelRatio = 1;
@@ -56,6 +57,7 @@ Future<void> _pump(
             selectedRange: selectedRange,
             onRangeSelected: onRangeSelected,
             onResizeMatch: onResizeMatch,
+            onClearRange: onClearRange,
           ),
         ),
       ),
@@ -117,6 +119,42 @@ void main() {
       find.byKey(const ValueKey('schedule-range-highlight')),
       findsNWidgets(2),
     );
+  });
+
+  testWidgets('the clear button sits on the selection itself and clears it', (
+    tester,
+  ) async {
+    var cleared = 0;
+    await _pump(
+      tester,
+      selectedRange: (firstCourt: 0, lastCourt: 1, firstSlot: 1, lastSlot: 2),
+      onClearRange: () => cleared++,
+    );
+
+    // One button only, inside the highlighted box (last court column).
+    final clear = find.byKey(const ValueKey('schedule-range-clear'));
+    expect(clear, findsOneWidget);
+    final box = tester.getRect(
+      find.byKey(const ValueKey('schedule-range-highlight')).last,
+    );
+    expect(box.contains(tester.getCenter(clear)), isTrue);
+
+    await tester.tap(clear);
+    await tester.pump();
+    expect(cleared, 1);
+  });
+
+  testWidgets('no clear button without a selection or a handler', (
+    tester,
+  ) async {
+    await _pump(tester, onClearRange: () {});
+    expect(find.byKey(const ValueKey('schedule-range-clear')), findsNothing);
+
+    await _pump(
+      tester,
+      selectedRange: (firstCourt: 0, lastCourt: 0, firstSlot: 0, lastSlot: 0),
+    );
+    expect(find.byKey(const ValueKey('schedule-range-clear')), findsNothing);
   });
 
   testWidgets('dragging the bottom handle of a card resizes by whole steps', (
