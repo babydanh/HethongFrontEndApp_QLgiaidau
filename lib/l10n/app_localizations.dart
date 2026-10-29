@@ -25582,6 +25582,12 @@ abstract class AppLocalizations {
   /// **'Chọn mục để chỉnh sửa cài đặt được hỗ trợ hoặc mở không gian vận hành hiện có.'**
   String get tournamentManagementOverviewHint;
 
+  /// No description provided for @tournamentManagementTabDivisions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get tournamentManagementTabDivisions;
+
   /// No description provided for @tournamentManagementTabAthletes.
   ///
   /// In vi, this message translates to:

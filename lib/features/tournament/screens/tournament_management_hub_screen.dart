@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dar
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
@@ -54,7 +55,6 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection.information,
     TournamentManagementSection.schedule,
     TournamentManagementSection.registration,
-    TournamentManagementSection.divisions,
   ];
   static const _otherSections = [
     TournamentManagementSection.liveOperations,
@@ -114,6 +114,11 @@ class _TournamentManagementHubScreenState
   }
 
   void _openSection(TournamentManagementSection section) {
+    // Divisions have their own tab instead of a settings page.
+    if (section == TournamentManagementSection.divisions) {
+      _tabController.animateTo(_HubTab.divisions.index);
+      return;
+    }
     final isTablet = !ResponsiveLayout.isMobile(context);
     setState(() {
       _selectedSection = section;
@@ -343,6 +348,7 @@ class _TournamentManagementHubScreenState
               colors: colors,
               tabHeaders: [
                 Tab(text: l10n.tournamentManagementOverview),
+                Tab(text: l10n.tournamentManagementTabDivisions),
                 Tab(text: l10n.tournamentManagementTabAthletes),
                 Tab(text: l10n.tournamentManagementTabBracket),
                 Tab(text: l10n.tournamentManagementSchedule),
@@ -380,6 +386,21 @@ class _TournamentManagementHubScreenState
                 onEditFinance: () =>
                     _openSection(TournamentManagementSection.finance),
                 onToggleFounderHidden: _setFounderHidden,
+              ),
+              CustomScrollView(
+                slivers: [
+                  ...overlapHandles.map(
+                    (handle) => SliverOverlapInjector(handle: handle),
+                  ),
+                  SliverFillRemaining(
+                    hasScrollBody: true,
+                    child: PrimaryScrollController.none(
+                      child: TournamentManagementDivisionsSection(
+                        tournament: tournament,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               CustomScrollView(
                 slivers: [
@@ -986,7 +1007,7 @@ class _TournamentManagementHubScreenState
   }
 }
 
-enum _HubTab { overview, athletes, bracket, schedule, settings }
+enum _HubTab { overview, divisions, athletes, bracket, schedule, settings }
 
 class _SectionDetails {
   const _SectionDetails(this.icon, this.title, this.subtitle, this.color);

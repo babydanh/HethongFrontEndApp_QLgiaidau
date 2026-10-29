@@ -12,6 +12,7 @@ import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AutoDrawScreen extends ConsumerStatefulWidget {
@@ -313,8 +314,17 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                             ),
                             if (tournament.divisions.length > 1) ...[
                               const SizedBox(height: 16),
-                              DropdownButtonFormField<String>(
-                                initialValue:
+                              DivisionStrip(
+                                items: [
+                                  for (final division in tournament.divisions)
+                                    DivisionStripItem(
+                                      id: division.id,
+                                      name: division.name.trim().isEmpty
+                                          ? l10n.registerDefaultDivision
+                                          : division.name,
+                                    ),
+                                ],
+                                selectedId:
                                     tournament.divisions.any(
                                       (division) =>
                                           division.id == _selectedDivisionId,
@@ -327,23 +337,6 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                                       )
                                     ? widget.initialDivisionId
                                     : null,
-                                decoration: InputDecoration(
-                                  labelText: l10n.registerSelectDivision,
-                                  border: const OutlineInputBorder(),
-                                ),
-                                hint: Text(l10n.registerSelectDivision),
-                                items: tournament.divisions
-                                    .map(
-                                      (division) => DropdownMenuItem(
-                                        value: division.id,
-                                        child: Text(
-                                          division.name.trim().isEmpty
-                                              ? l10n.registerDefaultDivision
-                                              : division.name,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
                                 onChanged: (divisionId) {
                                   setState(
                                     () => _selectedDivisionId = divisionId,

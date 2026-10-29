@@ -180,9 +180,7 @@ void main() {
     final l10n = AppLocalizations.of(
       tester.element(find.byType(AutoDrawScreen)),
     )!;
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Nội dung 2').last);
+    await tester.tap(find.byKey(const ValueKey('division-chip-division-2')));
     await tester.pumpAndSettle();
     await drawAndSave(tester, l10n);
 

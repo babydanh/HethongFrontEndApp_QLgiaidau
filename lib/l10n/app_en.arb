@@ -6215,6 +6215,7 @@
   "recordingPlayerSegmentFailed": "This segment could not be played and was skipped.",
   "recordingPlayerPlay": "Play",
   "recordingPlayerPause": "Pause",
+  "tournamentManagementTabDivisions": "Divisions",
   "tournamentManagementTabAthletes": "Athletes",
   "tournamentManagementTabBracket": "Bracket",
   "tournamentManagementTabSettings": "Settings",

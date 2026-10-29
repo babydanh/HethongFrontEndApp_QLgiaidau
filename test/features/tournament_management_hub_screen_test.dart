@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/mock_participants_sheet.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
@@ -774,7 +775,8 @@ void main() {
     expect(find.text(l10n.manageSettingsInfoSection), findsOneWidget);
     expect(find.text(l10n.manageSettingsVenueSection), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegistration), findsOneWidget);
-    expect(find.text(l10n.manageSettingsCompetitionSection), findsOneWidget);
+    // Divisions moved to their own tab; settings no longer list them.
+    expect(find.text(l10n.manageSettingsCompetitionSection), findsNothing);
 
     // Nhóm Hệ thống luôn mở: các mục nằm sẵn trong danh sách.
     expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
@@ -1171,7 +1173,10 @@ void main() {
     await _openSettings(tester);
 
     // The lifecycle block has no card title any more: the step bar leads it.
-    expect(find.byKey(const ValueKey('lifecycle-step-current')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('lifecycle-step-current')),
+      findsOneWidget,
+    );
     expect(find.text(l10n.tournamentManagementPublish), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegenerateInvite), findsNothing);
     expect(tester.takeException(), isNull);
@@ -1661,6 +1666,79 @@ void main() {
     expect(bracket.canEditBracket, isTrue);
   });
 
+  testWidgets('divisions tab sits right after the overview tab', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(
+        _tournament('in_progress'),
+        managementRepository: _LifecycleRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    final tabs = tester
+        .widgetList<Tab>(find.byType(Tab))
+        .map((tab) => tab.text)
+        .toList();
+    expect(tabs, [
+      l10n.tournamentManagementOverview,
+      l10n.tournamentManagementTabDivisions,
+      l10n.tournamentManagementTabAthletes,
+      l10n.tournamentManagementTabBracket,
+      l10n.tournamentManagementSchedule,
+      l10n.tournamentManagementTabSettings,
+    ]);
+
+    await _openTab(tester, l10n.tournamentManagementTabDivisions);
+    expect(find.byType(TournamentManagementDivisionsSection), findsOneWidget);
+  });
+
+  testWidgets('bracket tab "Quản lý" chip jumps to the divisions tab', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(
+        _tournament('in_progress'),
+        managementRepository: _LifecycleRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await _openTab(tester, l10n.tournamentManagementTabBracket);
+    tester
+        .widget<BracketViewScreen>(find.byType(BracketViewScreen).first)
+        .onManageDivisions!();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TournamentManagementDivisionsSection), findsOneWidget);
+  });
+
+  testWidgets('settings tab no longer lists divisions (they have a tab)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(_tournament('in_progress')));
+    await tester.pumpAndSettle();
+    await _openSettings(tester);
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    expect(find.text(l10n.tournamentManagementDivisions), findsNothing);
+  });
+
   testWidgets('bracket tab gives organizers a manage-divisions action', (
     tester,
   ) async {
@@ -1847,6 +1925,8 @@ void main() {
         Tab,
         l10n.tournamentManagementTabBracket,
       );
+      // The strip scrolls sideways now that it has six tabs.
+      await tester.ensureVisible(tabFinder);
       await tester.tap(tabFinder);
       await tester.pumpAndSettle();
 

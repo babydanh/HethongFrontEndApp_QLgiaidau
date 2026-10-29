@@ -14141,6 +14141,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose a section to edit supported tournament settings or open an existing organizer workspace.';
 
   @override
+  String get tournamentManagementTabDivisions => 'Divisions';
+
+  @override
   String get tournamentManagementTabAthletes => 'Athletes';
 
   @override

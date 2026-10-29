@@ -14089,6 +14089,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chọn mục để chỉnh sửa cài đặt được hỗ trợ hoặc mở không gian vận hành hiện có.';
 
   @override
+  String get tournamentManagementTabDivisions => 'Nội dung';
+
+  @override
   String get tournamentManagementTabAthletes => 'VĐV';
 
   @override
