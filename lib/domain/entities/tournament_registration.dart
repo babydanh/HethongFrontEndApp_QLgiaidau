@@ -8,6 +8,8 @@ class TournamentDivisionOption {
     this.categoryId,
     this.minElo,
     this.maxElo,
+    this.minDupr,
+    this.maxDupr,
     this.entryFee,
     this.maxParticipants,
     this.bracketType,
@@ -27,6 +29,10 @@ class TournamentDivisionOption {
   final String? categoryId;
   final double? minElo;
   final double? maxElo;
+
+  /// DUPR limit of the division; null on a side means no bound there.
+  final double? minDupr;
+  final double? maxDupr;
   final double? entryFee;
   final int? maxParticipants;
   final String? bracketType;
@@ -158,6 +164,8 @@ class TournamentDivisionOption {
       categoryId: (json['categoryId'] ?? json['category_id'])?.toString(),
       minElo: _parseDouble(minElo),
       maxElo: _parseDouble(maxElo),
+      minDupr: _parseDouble(json['minDupr'] ?? json['min_dupr']),
+      maxDupr: _parseDouble(json['maxDupr'] ?? json['max_dupr']),
       entryFee: _parseDouble(entryFee),
       maxParticipants: _parseInt(maxParticipants),
       bracketType: (json['bracketType'] ?? json['bracket_type'])?.toString(),

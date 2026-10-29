@@ -151,5 +151,36 @@ void main() {
       expect(division.maxParticipants, isNull);
       expect(division.participantCount, isNull);
     });
+
+    test('parse minDupr/maxDupr from number, numeric string, snake_case', () {
+      final asNumber = TournamentDivisionOption.fromJson({
+        'id': 'd1',
+        'name': 'A',
+        'minDupr': 3,
+        'maxDupr': 3.5,
+      });
+      final asString = TournamentDivisionOption.fromJson({
+        'id': 'd2',
+        'name': 'B',
+        'minDupr': '3.00',
+        'maxDupr': '3.50',
+      });
+      final snake = TournamentDivisionOption.fromJson({
+        'id': 'd3',
+        'name': 'C',
+        'min_dupr': '2.5',
+        'max_dupr': null,
+      });
+      final none = TournamentDivisionOption.fromJson({'id': 'd4', 'name': 'D'});
+
+      expect(asNumber.minDupr, 3.0);
+      expect(asNumber.maxDupr, 3.5);
+      expect(asString.minDupr, 3.0);
+      expect(asString.maxDupr, 3.5);
+      expect(snake.minDupr, 2.5);
+      expect(snake.maxDupr, isNull);
+      expect(none.minDupr, isNull);
+      expect(none.maxDupr, isNull);
+    });
   });
 }
