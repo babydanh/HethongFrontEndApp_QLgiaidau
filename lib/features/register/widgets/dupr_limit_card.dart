@@ -76,12 +76,18 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
         oldWidget.division.id != _division.id ||
         oldWidget.division.minDupr != _division.minDupr ||
         oldWidget.division.maxDupr != _division.maxDupr ||
-        oldWidget.categoryId != widget.categoryId;
+        oldWidget.division.ratingMatchType != _division.ratingMatchType ||
+        (oldWidget.division.categoryId ?? oldWidget.categoryId) != _categoryId;
     if (!changed) return;
     _reportedValid = null;
+    // Typed text and a save error belong to the previous limit / division.
+    _input.clear();
+    _saveFailed = false;
     if (_hasLimit && _canLookUp) {
       _load();
     } else {
+      // Nothing to look up any more: drop a lookup still in flight.
+      _loadSeq++;
       _report(true);
     }
   }
@@ -125,16 +131,16 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
     } catch (_) {
       if (!mounted || seq != _loadSeq) return;
       setState(() => _phase = _Phase.error);
-      _report(false);
+      // A failed lookup does not block: the backend has the final say.
+      _report(true);
     }
   }
 
-  double? get _typedValue =>
-      double.tryParse(_input.text.trim().replaceAll(',', '.'));
+  double? get _typedValue => parseDuprRating(_input.text);
 
   Future<void> _save() async {
     final value = _typedValue;
-    if (_saving || value == null || value <= 0) return;
+    if (_saving || value == null) return;
     final divisionId = _division.id;
     final categoryId = _categoryId!;
     final matchType = _division.ratingMatchType!;
@@ -194,12 +200,12 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
           Icons.check_circle_outline_rounded,
         ),
         DuprLimitStatus.belowMin => (
-          l10n.registerDuprBelowMin('$_rating', range),
+          l10n.registerDuprBelowMin(formatDuprRating(_rating!), range),
           colors.error,
           Icons.trending_down_rounded,
         ),
         DuprLimitStatus.aboveMax => (
-          l10n.registerDuprAboveMax('$_rating', range),
+          l10n.registerDuprAboveMax(formatDuprRating(_rating!), range),
           colors.error,
           Icons.trending_up_rounded,
         ),
@@ -226,22 +232,26 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, size: 16, color: tone),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: tone,
+            // Live region: screen readers announce each status change.
+            Semantics(
+              liveRegion: true,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ExcludeSemantics(child: Icon(icon, size: 16, color: tone)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: tone,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             if (needsInput) ..._inputRows(l10n, colors),
             if (_phase == _Phase.error)
@@ -260,7 +270,7 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
   }
 
   List<Widget> _inputRows(AppLocalizations l10n, AppColorsExtension colors) {
-    final canSave = !_saving && (_typedValue ?? 0) > 0;
+    final canSave = !_saving && _typedValue != null;
     return [
       const SizedBox(height: 10),
       Row(
@@ -281,6 +291,12 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: l10n.registerDuprInputLabel,
+                helperText: l10n.registerDuprRatingHint,
+                helperMaxLines: 2,
+                errorText: _input.text.isNotEmpty && _typedValue == null
+                    ? l10n.registerDuprRatingHint
+                    : null,
+                errorMaxLines: 2,
                 isDense: true,
                 border: const OutlineInputBorder(),
               ),

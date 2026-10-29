@@ -10,6 +10,8 @@ Backend là nguồn sự thật. App đọc điểm DUPR của mình theo `categ
 
 `GET /tournaments/:id/divisions` không trả `categoryId` của nội dung (Backend kiểm DUPR theo `categoryId` cấp giải), nên `categoryId` tra điểm là `division.categoryId ?? tournament.categoryId`; màn cha truyền `categoryId` của giải vào `DuprLimitCard`. Không có category nào thì ẩn thẻ và coi là hợp lệ để Backend quyết định.
 
+Lỗi tải điểm không khoá nút (thẻ vẫn báo lỗi và có nút Thử lại); Backend là nguồn chốt, thống nhất với Web.
+
 ## D3. Điểm quốc tế
 
 Repository mới `ExternalRatingRepository` (interface ở `lib/domain/repositories/`, bản API ở `lib/data/repositories/api/`, provider ở `lib/core/di/repository_providers.dart`): `getMyDuprRating(categoryId, matchType) -> double?` (dòng nguồn `API` ưu tiên hơn `SELF`) và `saveMyDuprRating(categoryId, matchType, value)` (PUT, `provider: 'DUPR'`, `isPublic: true`; PUT là upsert nên bấm đúp không tạo dòng thứ hai, nút vẫn tắt khi đang gửi). Hàm chọn dòng là hàm thuần để test.
