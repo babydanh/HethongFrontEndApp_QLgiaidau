@@ -12486,6 +12486,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'The result is uncertain. The roster was refreshed; check for the athlete before retrying.';
 
   @override
+  String get opsAddAthleteEmailIsAccount =>
+      'This email belongs to a Sporto account';
+
+  @override
+  String get opsAddAthleteEmailIsAccountHint =>
+      'Pick that account instead of typing it in, so the athlete is linked to their profile.';
+
+  @override
+  String get opsAddAthleteFindAccount => 'Find this account';
+
+  @override
   String get opsAddAthleteRefreshFailed =>
       'Roster refresh failed. Refresh the roster before retrying.';
 

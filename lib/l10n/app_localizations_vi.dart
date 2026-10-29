@@ -12447,6 +12447,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa xác định được kết quả. Danh sách đã được làm mới; hãy kiểm tra trước khi thử lại.';
 
   @override
+  String get opsAddAthleteEmailIsAccount => 'Email này là tài khoản Sporto';
+
+  @override
+  String get opsAddAthleteEmailIsAccountHint =>
+      'Hãy chọn đúng tài khoản thay vì nhập tay để VĐV được gắn với hồ sơ của họ.';
+
+  @override
+  String get opsAddAthleteFindAccount => 'Tìm tài khoản này';
+
+  @override
   String get opsAddAthleteRefreshFailed =>
       'Không tải lại được danh sách. Hãy làm mới roster trước khi thử lại.';
 

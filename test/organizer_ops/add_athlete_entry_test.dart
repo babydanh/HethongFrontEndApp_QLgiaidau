@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/organizer_ops_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +87,7 @@ class _TournamentManagementRepository
     this.failAutoApprove = false,
     this.failCandidateAdd = false,
     this.candidateAdditionGate,
+    this.directError,
   }) : _candidateLoader =
            candidateLoader ??
            ((source, query, participantId) async =>
@@ -95,6 +97,8 @@ class _TournamentManagementRepository
   final bool failAutoApprove;
   final bool failCandidateAdd;
   final Completer<void>? candidateAdditionGate;
+  final Object? directError;
+  final emailSearches = <String?>[];
   final candidateRequests = <Map<String, Object?>>[];
   final candidateAdditions = <Map<String, Object?>>[];
   final directNames = <String>[];
@@ -147,7 +151,20 @@ class _TournamentManagementRepository
     String? tournamentDivisionId,
   }) async {
     directNames.add(name);
+    final error = directError;
+    if (error != null) throw error;
     return 'participant-direct';
+  }
+
+  @override
+  Future<List<AddAthleteSearchCandidate>> searchAddAthleteCandidates(
+    String id, {
+    String? name,
+    String? email,
+    String? participantId,
+  }) async {
+    emailSearches.add(email);
+    return const <AddAthleteSearchCandidate>[];
   }
 
   @override
@@ -911,4 +928,92 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('guest email owned by an account offers to find that account', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository(
+      directError: _conflict('EMAIL_BELONGS_TO_ACCOUNT'),
+    );
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _submitGuest(tester, 'An Nguyen', 'an.nguyen@example.com');
+
+    expect(find.text('Email này là tài khoản Sporto'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('add-athlete-find-account')),
+      findsOneWidget,
+    );
+    expect(find.text('An Nguyen'), findsOneWidget);
+    expect(find.text('an.nguyen@example.com'), findsOneWidget);
+    expect(
+      find.text(
+        'Chưa xác định được kết quả. Danh sách đã được làm mới; hãy kiểm tra trước khi thử lại.',
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('find-account button switches tab and searches that email', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository(
+      directError: _conflict('EMAIL_BELONGS_TO_ACCOUNT'),
+    );
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _submitGuest(tester, 'An Nguyen', 'an.nguyen@example.com');
+    final button = find.byKey(const ValueKey('add-athlete-find-account'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+
+    final search = tester.widget<TextField>(
+      find.byKey(const ValueKey('add-athlete-search')),
+    );
+    expect(search.controller?.text, 'an.nguyen@example.com');
+    expect(repository.emailSearches, ['an.nguyen@example.com']);
+    expect(find.byKey(const ValueKey('add-athlete-direct-name')), findsNothing);
+  });
+}
+
+DioException _conflict(String code) {
+  final options = RequestOptions(path: '/tournaments/t/add-athletes/direct');
+  return DioException(
+    requestOptions: options,
+    type: DioExceptionType.badResponse,
+    response: Response<Map<String, dynamic>>(
+      requestOptions: options,
+      statusCode: 409,
+      data: {'statusCode': 409, 'code': code, 'message': 'conflict'},
+    ),
+  );
+}
+
+Future<void> _submitGuest(
+  WidgetTester tester,
+  String name,
+  String email,
+) async {
+  final directTab = find.text('Nhập tên');
+  await tester.ensureVisible(directTab);
+  await tester.tap(directTab);
+  await tester.pumpAndSettle();
+  final nameField = find.byKey(const ValueKey('add-athlete-direct-name'));
+  await tester.ensureVisible(nameField);
+  await tester.enterText(nameField, name);
+  await tester.enterText(
+    find.byKey(const ValueKey('add-athlete-direct-email')),
+    email,
+  );
+  await tester.tap(find.byKey(const ValueKey('add-athlete-direct-submit')));
+  await tester.pumpAndSettle();
 }

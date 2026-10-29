@@ -6,7 +6,9 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/add_athlete_candidate.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,6 +28,7 @@ class AddAthleteSheet extends ConsumerStatefulWidget {
   final Tournament tournament;
   final String divisionId;
   final String divisionName;
+
   /// matchType của division (SINGLES, DOUBLES, MIXED_DOUBLES...); null = không bật ghép cặp.
   final String? divisionMatchType;
   final double? divisionEntryFee;
@@ -41,6 +44,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   static const _directNameMax = 255;
   static const _directEmailMax = 254;
   static const _candidateLimit = 25;
+  static const _touchTarget = 44.0;
   static const _searchDebounce = Duration(milliseconds: 250);
   static const _pairSourceOrder = [
     AddAthleteSource.friends,
@@ -75,6 +79,8 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   String? _emailError;
   String? _directError;
   String? _batchSummary;
+  // Email the backend rejected because it belongs to a SportO account.
+  String? _accountConflictEmail;
   Timer? _searchTimer;
   int _candidateRequestVersion = 0;
   int _emailRequestVersion = 0;
@@ -118,7 +124,8 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
         (scoring is Map && scoring['kind'] == 'FOOTBALL');
     final matchType = widget.divisionMatchType?.trim().toUpperCase();
     _canUsePairMode =
-        !_isFootball && (matchType == 'DOUBLES' || matchType == 'MIXED_DOUBLES');
+        !_isFootball &&
+        (matchType == 'DOUBLES' || matchType == 'MIXED_DOUBLES');
     final effectiveFee =
         widget.effectiveEntryFee ??
         widget.divisionEntryFee ??
@@ -151,7 +158,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final lavish = LavishColors.of(context);
     final l10n = AppLocalizations.of(context)!;
     return PopScope(
       canPop: !_mutationInFlight,
@@ -170,7 +177,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                 child: SizedBox.expand(
                   child: Material(
                     key: const ValueKey('add-athlete-sheet'),
-                    color: colors.bgCard,
+                    color: lavish.surface,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
@@ -224,7 +231,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.person_add_alt_1_rounded, color: AppTheme.primary),
+        const LavishIconBox(child: Icon(Icons.person_add_alt_1_rounded)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -247,9 +254,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
               const SizedBox(height: 6),
               Text(
                 '${widget.tournament.name} · ${widget.divisionName}',
-                style: textTheme.labelMedium?.copyWith(
-                  color: colors.textMuted,
-                ),
+                style: textTheme.labelMedium?.copyWith(color: colors.textMuted),
               ),
             ],
           ),
@@ -302,16 +307,16 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        ChoiceChip(
-          label: Text(l10n.opsAddAthleteAccounts),
+        LavishChipButton(
+          label: l10n.opsAddAthleteAccounts,
           selected: _activeTab == _AddAthleteTab.accounts,
-          onSelected: (_) => _selectTab(_AddAthleteTab.accounts),
+          onPressed: () => _selectTab(_AddAthleteTab.accounts),
         ),
         if (!_isFootball)
-          ChoiceChip(
-            label: Text(l10n.opsAddAthleteDirect),
+          LavishChipButton(
+            label: l10n.opsAddAthleteDirect,
             selected: _activeTab == _AddAthleteTab.direct,
-            onSelected: (_) => _selectTab(_AddAthleteTab.direct),
+            onPressed: () => _selectTab(_AddAthleteTab.direct),
           ),
       ],
     );
@@ -351,6 +356,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
 
   Widget _buildAccountContent(BuildContext context, AppLocalizations l10n) {
     final colors = context.colors;
+    final lavish = LavishColors.of(context);
     final isTeamMissing = _isFootball && _selectedTeamParticipantId == null;
     final query = _query.trim();
     final emailMode = _isEmailQuery;
@@ -380,10 +386,11 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           enabled: _canSubmit && !isTeamMissing,
           textInputAction: TextInputAction.search,
           onChanged: _onSearchChanged,
-          decoration: InputDecoration(
+          style: TextStyle(fontSize: 13, color: lavish.text),
+          decoration: _lavishField(
+            lavish,
+            hintText: l10n.opsAddAthleteSearch,
             prefixIcon: const Icon(Icons.search_rounded),
-            labelText: l10n.opsAddAthleteSearch,
-            border: const OutlineInputBorder(),
           ),
         ),
         if (isTeamMissing) ...[
@@ -401,19 +408,32 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           ),
         ],
         if (_canUsePairMode) ...[
-          const SizedBox(height: 8),
-          SwitchListTile(
-            key: const ValueKey('add-athlete-pair-toggle'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.opsAddAthletePairToggle),
-            value: _pairMode,
-            onChanged: _mutationInFlight
-                ? null
-                : (value) => setState(() {
-                    _batchSummary = null;
-                    _pairMode = value;
-                  }),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.opsAddAthletePairToggle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: lavish.text,
+                  ),
+                ),
+              ),
+              LavishSwitch(
+                key: const ValueKey('add-athlete-pair-toggle'),
+                value: _pairMode,
+                onChanged: _mutationInFlight
+                    ? null
+                    : (value) => setState(() {
+                        _batchSummary = null;
+                        _pairMode = value;
+                      }),
+              ),
+            ],
           ),
+          const SizedBox(height: 4),
           if (_pairingActive && !_pairSelectionReady)
             Text(
               l10n.opsAddAthletePairRequirement,
@@ -485,7 +505,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     AppLocalizations l10n,
     _SourcedCandidate entry,
   ) {
-    final colors = context.colors;
+    final lavish = LavishColors.of(context);
     final userId = entry.candidate.userId;
     final isSelected = _selected.any((item) => item.candidate.userId == userId);
     final isAdded = _addedUserIds.contains(userId);
@@ -494,117 +514,45 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
         isAdded ||
         (!isSelected && _selected.length >= _candidateLimit);
     final isPending = _pendingUserIds.contains(userId);
-    final pairBadge = _pairBadge(context, l10n, userId);
-    return Card(
-      margin: const EdgeInsets.only(top: 8),
-      color: isSelected ? colors.bgElevated : colors.bgCard,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: ValueKey('add-athlete-candidate-select-$userId'),
-        onTap: disabled ? null : () => _toggleCandidate(entry),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 44),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: colors.bgSurface,
-                  child: Icon(
-                    Icons.person_outline_rounded,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        entry.candidate.fullName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          for (final source in entry.sources)
-                            Text(
-                              _sourceLabel(l10n, source),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (pairBadge != null) ...[const SizedBox(width: 8), pairBadge],
-                if (isPending) ...[
-                  const SizedBox(width: 8),
-                  _spinner(),
-                ],
-                if (isAdded) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    l10n.opsAddAthleteAdded,
-                    style: TextStyle(fontSize: 12, color: colors.textMuted),
-                  ),
-                ],
-                const SizedBox(width: 8),
-                Icon(
-                  isSelected
-                      ? Icons.check_circle_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: isSelected ? AppTheme.primary : colors.textMuted,
-                ),
-              ],
-            ),
-          ),
-        ),
+    final pairBadge = _pairBadge(l10n, userId);
+    return LavishRow(
+      key: ValueKey('add-athlete-candidate-select-$userId'),
+      title: entry.candidate.fullName,
+      background: isSelected ? lavish.soft(LavishTone.accent) : null,
+      onTap: disabled ? null : () => _toggleCandidate(entry),
+      leading: LavishIconBox(
+        tone: isSelected ? LavishTone.accent : LavishTone.neutral,
+        child: const Icon(Icons.person_outline_rounded),
       ),
+      trailing: [
+        for (final source in entry.sources)
+          LavishPill(_sourceLabel(l10n, source), tone: LavishTone.neutral),
+        ?pairBadge,
+        if (isPending) _spinner(),
+        if (isAdded) LavishPill(l10n.opsAddAthleteAdded, tone: LavishTone.ok),
+        Icon(
+          isSelected
+              ? Icons.check_circle_rounded
+              : Icons.radio_button_unchecked_rounded,
+          color: isSelected ? LavishColors.accent : lavish.faint,
+        ),
+      ],
     );
   }
 
-  Widget? _pairBadge(
-    BuildContext context,
-    AppLocalizations l10n,
-    String userId,
-  ) {
+  Widget? _pairBadge(AppLocalizations l10n, String userId) {
     if (!_pairingActive) return null;
     final index = _selected.indexWhere(
       (item) => item.candidate.userId == userId,
     );
     if (index < 0) return null;
-    final colors = context.colors;
     final isWaiting = index == _selected.length - 1 && index.isEven;
     final label = isWaiting
         ? l10n.opsAddAthletePairWaiting
         : l10n.opsAddAthletePairGroup(String.fromCharCode(65 + index ~/ 2));
-    final accent = isWaiting ? colors.warning : AppTheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: colors.textPrimary,
-        ),
-      ),
+    return LavishPill(
+      label,
+      tone: isWaiting ? LavishTone.warn : LavishTone.accent,
     );
   }
 
@@ -617,81 +565,77 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   }
 
   Widget _buildCandidateFooter(BuildContext context, AppLocalizations l10n) {
-    final colors = context.colors;
+    final lavish = LavishColors.of(context);
     final Widget actions;
     if (_isFootball) {
       final teamReady =
-          _canSubmit && _selectedTeamParticipantId != null && _selected.isNotEmpty;
+          _canSubmit &&
+          _selectedTeamParticipantId != null &&
+          _selected.isNotEmpty;
       actions = Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: FilledButton.icon(
+            child: LavishButton(
               key: const ValueKey('add-athlete-candidate-main'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-              ),
+              label: l10n.opsAddAthleteMain,
+              icon: const Icon(Icons.check_rounded, size: 16),
+              busy: _mutationInFlight,
               onPressed: teamReady
                   ? () => unawaited(
                       _submitSelected(role: FootballRosterRole.main),
                     )
                   : null,
-              icon: _mutationInFlight
-                  ? _spinner()
-                  : const Icon(Icons.check_rounded),
-              label: Text(l10n.opsAddAthleteMain),
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: OutlinedButton(
+            child: LavishButton(
               key: const ValueKey('add-athlete-candidate-reserve'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-              ),
+              kind: LavishButtonKind.outline,
+              label: l10n.opsAddAthleteReserve,
               onPressed: teamReady
                   ? () => unawaited(
                       _submitSelected(role: FootballRosterRole.reserve),
                     )
                   : null,
-              child: Text(l10n.opsAddAthleteReserve),
             ),
           ),
         ],
       );
     } else {
       final count = _selected.length;
-      actions = FilledButton.icon(
+      actions = LavishButton(
         key: const ValueKey('add-athlete-candidate-submit'),
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+        icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
+        busy: _mutationInFlight,
         onPressed: _submitDisabled
             ? null
             : () => unawaited(
                 _pairingActive ? _submitPairs() : _submitSelected(),
               ),
-        icon: _mutationInFlight
-            ? _spinner()
-            : const Icon(Icons.person_add_alt_1_rounded),
-        label: Text(
-          _pairingActive
-              ? l10n.opsAddAthletePairSubmit
-              : count > 0
-              ? l10n.opsAddAthleteAddSelectedCount(count)
-              : l10n.opsAddAthleteAddAction,
-        ),
+        label: _pairingActive
+            ? l10n.opsAddAthletePairSubmit
+            : count > 0
+            ? l10n.opsAddAthleteAddSelectedCount(count)
+            : l10n.opsAddAthleteAddAction,
       );
     }
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       decoration: BoxDecoration(
-        color: colors.bgCard,
-        border: Border(top: BorderSide(color: colors.border)),
+        color: lavish.surface,
+        border: Border(top: BorderSide(color: lavish.line)),
       ),
-      child: actions,
+      // LavishButton is 42dp tall; keep the 44dp minimum touch target.
+      child: SizedBox(height: _touchTarget, child: actions),
     );
   }
 
   Widget _buildDirectEntry(BuildContext context, AppLocalizations l10n) {
+    final lavish = LavishColors.of(context);
+    final fieldStyle = TextStyle(fontSize: 13, color: lavish.text);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -700,6 +644,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           controller: _directNameController,
           enabled: _canSubmit,
           textInputAction: TextInputAction.next,
+          style: fieldStyle,
           onChanged: (value) {
             setState(() {
               _directError = value.length > _directNameMax
@@ -707,12 +652,12 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                   : null;
             });
           },
-          decoration: InputDecoration(
-            labelText: l10n.opsAddAthleteName,
-            border: const OutlineInputBorder(),
-            counterText: '${_directNameController.text.length}/$_directNameMax',
-            errorText: _directError,
-          ),
+          decoration: _lavishField(lavish, labelText: l10n.opsAddAthleteName)
+              .copyWith(
+                counterText:
+                    '${_directNameController.text.length}/$_directNameMax',
+                errorText: _directError,
+              ),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -722,24 +667,123 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.done,
           maxLength: _directEmailMax,
+          style: fieldStyle,
+          onChanged: (_) {
+            if (_accountConflictEmail != null) {
+              setState(() => _accountConflictEmail = null);
+            }
+          },
           onSubmitted: (_) => unawaited(_submitGuest()),
-          decoration: InputDecoration(
-            labelText: l10n.opsAddAthleteGuestEmail,
-            helperText: l10n.opsAddAthleteGuestEmailHint,
-            border: const OutlineInputBorder(),
+          decoration:
+              _lavishField(
+                lavish,
+                labelText: l10n.opsAddAthleteGuestEmail,
+              ).copyWith(
+                helperText: l10n.opsAddAthleteGuestEmailHint,
+                helperMaxLines: 2,
+              ),
+        ),
+        if (_accountConflictEmail != null) ...[
+          const SizedBox(height: 12),
+          _buildAccountConflict(l10n, lavish),
+        ],
+        const SizedBox(height: 12),
+        SizedBox(
+          height: _touchTarget,
+          child: LavishButton(
+            key: const ValueKey('add-athlete-direct-submit'),
+            label: l10n.opsAddAthlete,
+            icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
+            busy: _mutationInFlight,
+            onPressed: _canSubmit ? () => unawaited(_submitGuest()) : null,
           ),
         ),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          key: const ValueKey('add-athlete-direct-submit'),
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(44)),
-          onPressed: _canSubmit ? () => unawaited(_submitGuest()) : null,
-          icon: _mutationInFlight
-              ? _spinner()
-              : const Icon(Icons.person_add_alt_1_rounded),
-          label: Text(l10n.opsAddAthlete),
-        ),
       ],
+    );
+  }
+
+  /// Shown when the backend says the typed email already belongs to an account.
+  Widget _buildAccountConflict(AppLocalizations l10n, LavishColors lavish) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: lavish.soft(LavishTone.warn),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const LavishIconBox(
+                tone: LavishTone.warn,
+                size: 30,
+                child: Icon(Icons.person_search_rounded),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.opsAddAthleteEmailIsAccount,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: lavish.text,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.opsAddAthleteEmailIsAccountHint,
+                      style: TextStyle(fontSize: 11.5, color: lavish.muted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          LavishButton(
+            key: const ValueKey('add-athlete-find-account'),
+            kind: LavishButtonKind.outline,
+            label: l10n.opsAddAthleteFindAccount,
+            icon: const Icon(Icons.search_rounded, size: 16),
+            onPressed: _canSubmit ? _findAccountForEmail : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Grey filled field used by the Lavish popups (no border until focused).
+  InputDecoration _lavishField(
+    LavishColors lavish, {
+    String? hintText,
+    String? labelText,
+    Widget? prefixIcon,
+  }) {
+    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: color, width: width),
+    );
+    return InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: lavish.dark ? lavish.rowLine : const Color(0xFFF2F4F7),
+      hintText: hintText,
+      hintStyle: TextStyle(color: lavish.faint, fontSize: 13),
+      labelText: labelText,
+      prefixIcon: prefixIcon,
+      prefixIconColor: lavish.muted,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: border(Colors.transparent, 0),
+      enabledBorder: border(Colors.transparent, 0),
+      disabledBorder: border(Colors.transparent, 0),
+      focusedBorder: border(LavishColors.accent, 1.5),
+      errorBorder: border(LavishColors.bad, 1.5),
+      focusedErrorBorder: border(LavishColors.bad, 1.5),
     );
   }
 
@@ -772,6 +816,18 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
         (!_isFootball || _selectedTeamParticipantId != null)) {
       _runSearchNow(_query.trim());
     }
+  }
+
+  /// Jumps from the guest form to the account search with the rejected email.
+  void _findAccountForEmail() {
+    final email = _accountConflictEmail;
+    if (email == null) return;
+    setState(() {
+      _query = email;
+      _searchController.text = email;
+      _accountConflictEmail = null;
+    });
+    _selectTab(_AddAthleteTab.accounts);
   }
 
   void _selectFootballTeam(String? participantId) {
@@ -938,9 +994,9 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           _emailResults = null;
           _emailError = l10n.opsAddAthleteSearchFailed;
         } else {
-          _emailResults = mapped
-              .whereType<_SourcedCandidate>()
-              .toList(growable: false);
+          _emailResults = mapped.whereType<_SourcedCandidate>().toList(
+            growable: false,
+          );
         }
       });
     } catch (error) {
@@ -1141,6 +1197,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     setState(() {
       _mutationInFlight = true;
       _directError = null;
+      _accountConflictEmail = null;
     });
     try {
       final participantId = await ref
@@ -1155,10 +1212,23 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
       _directEmailController.clear();
       await _finishSuccessfulAdd(participantId);
     } catch (error) {
-      await _handleUncertainFailure(error);
+      if (_isEmailOwnedByAccount(error)) {
+        // Definite rejection (nothing was added): point to the account search.
+        if (mounted) setState(() => _accountConflictEmail = email);
+      } else {
+        await _handleUncertainFailure(error);
+      }
     } finally {
       if (mounted) setState(() => _mutationInFlight = false);
     }
+  }
+
+  bool _isEmailOwnedByAccount(Object error) {
+    if (error is! DioException || error.response?.statusCode != 409) {
+      return false;
+    }
+    final data = error.response?.data;
+    return data is Map && data['code'] == 'EMAIL_BELONGS_TO_ACCOUNT';
   }
 
   Future<void> _finishSuccessfulAdd(String participantId) async {

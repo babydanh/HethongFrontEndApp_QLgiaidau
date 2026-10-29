@@ -22654,6 +22654,24 @@ abstract class AppLocalizations {
   /// **'Chưa xác định được kết quả. Danh sách đã được làm mới; hãy kiểm tra trước khi thử lại.'**
   String get opsAddAthleteOutcomeUnknown;
 
+  /// No description provided for @opsAddAthleteEmailIsAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email này là tài khoản Sporto'**
+  String get opsAddAthleteEmailIsAccount;
+
+  /// No description provided for @opsAddAthleteEmailIsAccountHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy chọn đúng tài khoản thay vì nhập tay để VĐV được gắn với hồ sơ của họ.'**
+  String get opsAddAthleteEmailIsAccountHint;
+
+  /// No description provided for @opsAddAthleteFindAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm tài khoản này'**
+  String get opsAddAthleteFindAccount;
+
   /// No description provided for @opsAddAthleteRefreshFailed.
   ///
   /// In vi, this message translates to:
