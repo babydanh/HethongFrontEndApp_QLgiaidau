@@ -42,7 +42,7 @@ Phụ thuộc Backend: change `moc-dupr-noi-dung` của Backend phải apply tr�
 
 ## 5. Lỗi từ Backend
 
-- [ ] 5.1 Xác nhận `ErrorParser.parse` đã trả nguyên `message` của body lỗi `{ code: 'DUPR_LIMIT_VIOLATION', message }` (viết test trước). Nếu không (bị khớp chuỗi con khác hoặc rơi về fallback) thì thêm đúng một nhánh theo `code` trong `lib/core/utils/error_parser.dart`. Đường vào đội `join_team_screen.dart:49` và `tournament_register_screen.dart:~821-850` đã dùng `ErrorParser`; chỉ sửa khi test cho thấy thiếu. Tiêu chí: `flutter test --no-pub test/core/error_parser_dupr_test.dart` → exit 0 (400 + `DUPR_LIMIT_VIOLATION` ra đúng message Backend; lỗi khác không đổi).
+- [x] 5.1 Xác nhận `ErrorParser.parse` đã trả nguyên `message` của body lỗi `{ code: 'DUPR_LIMIT_VIOLATION', message }` (viết test trước). Nếu không (bị khớp chuỗi con khác hoặc rơi về fallback) thì thêm đúng một nhánh theo `code` trong `lib/core/utils/error_parser.dart`. Đường vào đội `join_team_screen.dart:49` và `tournament_register_screen.dart:~821-850` đã dùng `ErrorParser`; chỉ sửa khi test cho thấy thiếu. Tiêu chí: `flutter test --no-pub test/core/error_parser_dupr_test.dart` → exit 0 (400 + `DUPR_LIMIT_VIOLATION` ra đúng message Backend; lỗi khác không đổi).
   - Files: tạo `test/core/error_parser_dupr_test.dart`; sửa `lib/core/utils/error_parser.dart` (chỉ nếu test đỏ), `lib/features/register/screens/join_team_screen.dart` (chỉ nếu cần)
   - Giao: không · Nhận: không
   - Chủ file chung: không
