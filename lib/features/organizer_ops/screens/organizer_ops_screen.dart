@@ -158,30 +158,36 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       isEmbedded: widget.isEmbedded,
       subtitle: l10n.opsOrganizerOnly,
       onBack: () => _goBack(context),
-      actions: [
-        IconButton(
-          tooltip: l10n.opsRefresh,
-          onPressed: () {
-            ref.invalidate(tournamentProvider(widget.tournamentId));
-            ref.invalidate(tournamentDivisionsProvider(widget.tournamentId));
-            if (_selectedDivisionId != null) {
-              ref.invalidate(
-                managedMatchesWithDivisionProvider((
-                  tournamentId: widget.tournamentId,
-                  divisionId: _selectedDivisionId,
-                )),
-              );
-              ref.invalidate(
-                organizerOpsReadModelProvider((
-                  tournamentId: widget.tournamentId,
-                  divisionId: _selectedDivisionId!,
-                )),
-              );
-            }
-          },
-          icon: const Icon(Icons.refresh_rounded),
-        ),
-      ],
+      // Under the hub tab strip the refresh row hides behind the tabs and only
+      // pushes the content down; pull-to-refresh covers that case.
+      actions: widget.isEmbedded && widget.overlapHandles.isNotEmpty
+          ? null
+          : [
+              IconButton(
+                tooltip: l10n.opsRefresh,
+                onPressed: () {
+                  ref.invalidate(tournamentProvider(widget.tournamentId));
+                  ref.invalidate(
+                    tournamentDivisionsProvider(widget.tournamentId),
+                  );
+                  if (_selectedDivisionId != null) {
+                    ref.invalidate(
+                      managedMatchesWithDivisionProvider((
+                        tournamentId: widget.tournamentId,
+                        divisionId: _selectedDivisionId,
+                      )),
+                    );
+                    ref.invalidate(
+                      organizerOpsReadModelProvider((
+                        tournamentId: widget.tournamentId,
+                        divisionId: _selectedDivisionId!,
+                      )),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ],
       body: divisionsAsync.when(
         loading: () => const _OpsLoadingBody(),
         error: (error, _) => _OpsErrorBody(
@@ -2285,6 +2291,10 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       ? null
                       : waitingBatchFinished,
                   onScheduleSwap: readOnly ? null : swapMatches,
+                  // Long-press + drag over the time column selects many slots.
+                  onBulkSchedule: readOnly ? null : bulkSchedule,
+                  onBulkDuration: readOnly ? null : bulkDuration,
+                  onBulkMoveCourt: readOnly ? null : bulkMoveCourt,
                   onAutoSchedule: readOnly ? null : openAutoSchedule,
                   onAiSchedule: readOnly || !_aiScheduleAvailable
                       ? null

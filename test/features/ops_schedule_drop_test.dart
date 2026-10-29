@@ -260,70 +260,50 @@ void main() {
     expect(find.byKey(const ValueKey('schedule-tray-m-live')), findsNothing);
   });
 
-  testWidgets('bulk scheduling lives in the fullscreen workspace only', (
-    tester,
-  ) async {
-    final repository = await _pump(tester);
-    expect(repository.calls, isEmpty);
+  testWidgets(
+    'long-press and drag in the tab grid selects slots and bulk schedules',
+    (tester) async {
+      final repository = await _pump(tester);
+      expect(repository.calls, isEmpty);
 
-    // Lưới trong tab không có chọn vùng: nhấn giữ rồi kéo không sinh nút xếp lô.
-    final inlineStart = tester.getCenter(
-      find.byKey(const ValueKey('schedule-slot-Sân 1-0')),
-    );
-    final inlineGesture = await tester.startGesture(inlineStart);
-    await tester.pump(const Duration(milliseconds: 700));
-    await inlineGesture.moveTo(
-      tester.getCenter(find.byKey(const ValueKey('schedule-slot-Sân 1-2'))),
-    );
-    await tester.pump(const Duration(milliseconds: 50));
-    await inlineGesture.up();
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('schedule-bulk-schedule-button')),
-      findsNothing,
-    );
+      // Nhấn giữ rồi kéo dọc ngay trên lưới trong tab: chọn vùng, hiện nút xếp lô.
+      final start = tester.getCenter(
+        find.byKey(const ValueKey('schedule-slot-Sân 1-0')),
+      );
+      final end = tester.getCenter(
+        find.byKey(const ValueKey('schedule-slot-Sân 1-2')),
+      );
+      final gesture = await tester.startGesture(start);
+      await tester.pump(const Duration(milliseconds: 700));
+      await gesture.moveTo(end);
+      await tester.pump(const Duration(milliseconds: 50));
+      await gesture.up();
+      await tester.pumpAndSettle();
 
-    // Mở không gian toàn màn hình rồi chọn vùng và xác nhận ở đó.
-    await tester.tap(find.byKey(const ValueKey('court-grid-fullscreen')));
-    await tester.pumpAndSettle();
-    expect(find.byType(ScheduleFullscreenScreen), findsOneWidget);
+      final bulk = find.byKey(const ValueKey('schedule-bulk-schedule-button'));
+      expect(bulk, findsOneWidget);
+      expect(
+        bulk.hitTestable(),
+        findsOneWidget,
+        reason: 'nút phải nằm trong vùng chạm',
+      );
+      expect(
+        tester.widget<FilledButton>(bulk).onPressed,
+        isNotNull,
+        reason: 'còn ô trống thì nút phải bật',
+      );
+      await tester.tap(bulk);
+      await tester.pumpAndSettle();
 
-    final start = tester.getCenter(
-      find.byKey(const ValueKey('schedule-slot-Sân 1-0')),
-    );
-    final end = tester.getCenter(
-      find.byKey(const ValueKey('schedule-slot-Sân 1-2')),
-    );
-    final gesture = await tester.startGesture(start);
-    await tester.pump(const Duration(milliseconds: 700));
-    await gesture.moveTo(end);
-    await tester.pump(const Duration(milliseconds: 50));
-    await gesture.up();
-    await tester.pumpAndSettle();
-
-    final bulk = find.byKey(const ValueKey('schedule-bulk-schedule-button'));
-    expect(bulk, findsOneWidget);
-    expect(
-      bulk.hitTestable(),
-      findsOneWidget,
-      reason: 'nút phải nằm trong vùng chạm',
-    );
-    expect(
-      tester.widget<FilledButton>(bulk).onPressed,
-      isNotNull,
-      reason: 'còn ô trống thì nút phải bật',
-    );
-    await tester.tap(bulk);
-    await tester.pumpAndSettle();
-
-    // Một trận trong khay -> ghi vào ô đầu của vùng, đúng sân và đúng giờ mở cửa.
-    expect(repository.calls, hasLength(1));
-    expect(repository.calls.single.matchId, 'm-wait');
-    expect(repository.calls.single.courtId, 'court-1');
-    expect(repository.calls.single.courtName, 'Sân 1');
-    expect(repository.calls.single.scheduledAt!.hour, 7);
-    expect(repository.calls.single.scheduledAt!.minute, 0);
-  });
+      // Một trận trong khay -> ghi vào ô đầu của vùng, đúng sân và đúng giờ mở cửa.
+      expect(repository.calls, hasLength(1));
+      expect(repository.calls.single.matchId, 'm-wait');
+      expect(repository.calls.single.courtId, 'court-1');
+      expect(repository.calls.single.courtName, 'Sân 1');
+      expect(repository.calls.single.scheduledAt!.hour, 7);
+      expect(repository.calls.single.scheduledAt!.minute, 0);
+    },
+  );
 
   testWidgets('the fullscreen button opens a real fullscreen workspace', (
     tester,

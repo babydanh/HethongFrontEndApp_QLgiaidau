@@ -160,6 +160,15 @@ void main() {
     expect(find.text('Đội A'), findsOneWidget);
   });
 
+  testWidgets('the inline grid supports long-press range selection', (
+    tester,
+  ) async {
+    await _pump(tester, matchesView: OrganizerOpsMatchesView.grid);
+
+    final grid = tester.widget<ScheduleGrid>(find.byType(ScheduleGrid));
+    expect(grid.onRangeSelected, isNotNull);
+  });
+
   testWidgets('the standalone ops screen still opens the list', (tester) async {
     await _pump(tester, matchesView: OrganizerOpsMatchesView.list);
 

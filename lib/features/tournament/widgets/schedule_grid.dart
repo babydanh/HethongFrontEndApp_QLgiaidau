@@ -275,22 +275,47 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                 children: [
                   Container(
                     width: _timeColumnWidth,
-                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: colors.bgCard,
+                      color: _timeColumnColor(colors),
                       border: Border(bottom: BorderSide(color: colors.border)),
                     ),
+                    // Timetable corner: clock (time axis) and "Sân" (court axis)
+                    // split by a diagonal; dragging it still scales the rows.
                     child: Listener(
                       key: const ValueKey('schedule-scale-handle'),
                       behavior: HitTestBehavior.opaque,
                       onPointerMove: widget.onSlotHeightChanged == null
                           ? null
                           : (event) => _resizeSlots(event.delta.dy),
-                      // Clock corner like the web; dragging it still scales rows.
-                      child: Icon(
-                        Icons.schedule_rounded,
-                        size: 16,
-                        color: colors.textMuted,
+                      child: CustomPaint(
+                        painter: _CornerDiagonalPainter(colors.border),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: 3,
+                              right: 6,
+                              child: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.scheduleQuickCourt,
+                                style: TextStyle(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 4,
+                              left: 6,
+                              child: Icon(
+                                Icons.schedule_rounded,
+                                size: 14,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -375,35 +400,39 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  /// Plain court header like the web: full name on a neutral band, no tint.
+  /// Blue band with just the court number ("Sân 1" -> "1"); the full name
+  /// stays in the tooltip.
   Widget _courtHeader(String court) {
-    final colors = context.colors;
     return Container(
       height: 38,
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 6),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
+      decoration: const BoxDecoration(
+        color: AppTheme.primary,
         border: Border(
-          bottom: BorderSide(color: colors.border),
-          left: BorderSide(color: colors.border),
+          bottom: BorderSide(color: AppTheme.primaryDark),
+          left: BorderSide(color: AppTheme.primaryDark),
         ),
       ),
       child: Tooltip(
         message: court,
         child: Text(
-          court,
+          formatCourtShortName(court),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12.5,
+          style: const TextStyle(
+            fontSize: 14,
             fontWeight: FontWeight.w800,
-            color: colors.textPrimary,
+            color: Colors.white,
           ),
         ),
       ),
     );
   }
+
+  /// Light grey for the time axis (the corner and the hour labels).
+  Color _timeColumnColor(AppColorsExtension colors) =>
+      Color.alphaBlend(colors.border.withValues(alpha: 0.7), colors.bgCard);
 
   /// Court label chip tinted by column index so a card can be tied to its column.
   Widget _courtChip(
@@ -439,7 +468,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return Container(
       width: _timeColumnWidth,
       decoration: BoxDecoration(
-        color: colors.bgCard,
+        color: _timeColumnColor(colors),
         border: Border(right: BorderSide(color: colors.border)),
       ),
       child: Column(
@@ -1366,4 +1395,26 @@ class _DashedBorderPainter extends CustomPainter {
   @override
   bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
       oldDelegate.color != color || oldDelegate.radius != radius;
+}
+
+/// Top-left to bottom-right slash splitting the corner into time and court.
+class _CornerDiagonalPainter extends CustomPainter {
+  const _CornerDiagonalPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawLine(
+      Offset.zero,
+      Offset(size.width, size.height),
+      Paint()
+        ..color = color
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CornerDiagonalPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

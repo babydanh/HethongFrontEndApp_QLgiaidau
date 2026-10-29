@@ -450,7 +450,8 @@ void main() {
 
     await _openTab(tester, l10n.tournamentManagementSchedule);
     expect(find.byType(OrganizerOpsScreen), findsOneWidget);
-    expect(find.byTooltip(l10n.opsRefresh), findsOneWidget);
+    // The schedule tab starts right under the tab strip: no refresh row there.
+    expect(find.byTooltip(l10n.opsRefresh), findsNothing);
     expect(find.byType(TournamentManagementHubScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
