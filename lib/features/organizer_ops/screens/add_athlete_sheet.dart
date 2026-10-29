@@ -83,7 +83,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   late final bool _isFootball;
   late final bool _canAutoApprove;
   late final bool _canUsePairMode;
-  _AddAthleteTab _activeTab = _AddAthleteTab.accounts;
+  late _AddAthleteTab _activeTab;
   bool _pairMode = false;
   String _query = '';
   String? _loadedCandidateQuery;
@@ -151,11 +151,8 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
         (participant) => participant.footballTeamId?.isNotEmpty == true,
       ),
     );
-    if (!_isFootball) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_loadCandidates(''));
-      });
-    }
+    // Typing a name is the common path; account search loads when its tab opens.
+    _activeTab = _isFootball ? _AddAthleteTab.accounts : _AddAthleteTab.direct;
   }
 
   @override
@@ -311,17 +308,17 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        LavishChipButton(
-          label: l10n.opsAddAthleteAccounts,
-          selected: _activeTab == _AddAthleteTab.accounts,
-          onPressed: () => _selectTab(_AddAthleteTab.accounts),
-        ),
         if (!_isFootball)
           LavishChipButton(
             label: l10n.opsAddAthleteDirect,
             selected: _activeTab == _AddAthleteTab.direct,
             onPressed: () => _selectTab(_AddAthleteTab.direct),
           ),
+        LavishChipButton(
+          label: l10n.opsAddAthleteAccounts,
+          selected: _activeTab == _AddAthleteTab.accounts,
+          onPressed: () => _selectTab(_AddAthleteTab.accounts),
+        ),
       ],
     );
   }
@@ -659,12 +656,10 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                   : null;
             });
           },
-          decoration: _lavishField(lavish, labelText: l10n.opsAddAthleteName)
-              .copyWith(
-                counterText:
-                    '${_directNameController.text.length}/$_directNameMax',
-                errorText: _directError,
-              ),
+          decoration: _directField(
+            lavish,
+            l10n.opsAddAthleteName,
+          ).copyWith(errorText: _directError),
         ),
         const SizedBox(height: 12),
         TextField(
@@ -680,14 +675,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
               setState(() => _accountConflictEmail = null);
             }
           },
-          decoration:
-              _lavishField(
-                lavish,
-                labelText: l10n.opsAddAthleteGuestEmail,
-              ).copyWith(
-                helperText: l10n.opsAddAthleteGuestEmailHint,
-                helperMaxLines: 2,
-              ),
+          decoration: _directField(lavish, l10n.opsAddAthleteGuestEmail),
         ),
         if (_accountConflictEmail != null) ...[
           const SizedBox(height: 12),
@@ -702,10 +690,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           textInputAction: TextInputAction.next,
           maxLength: _directPhoneMax,
           style: fieldStyle,
-          decoration: _lavishField(
-            lavish,
-            labelText: l10n.opsAddAthleteGuestPhone,
-          ).copyWith(counterText: ''),
+          decoration: _directField(lavish, l10n.opsAddAthleteGuestPhone),
         ),
         const SizedBox(height: 12),
         _buildScoreRow(l10n, lavish, fieldStyle),
@@ -718,10 +703,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           maxLines: 2,
           maxLength: _directNotesMax,
           style: fieldStyle,
-          decoration: _lavishField(
-            lavish,
-            labelText: l10n.opsAddAthleteGuestNotes,
-          ).copyWith(counterText: ''),
+          decoration: _directField(lavish, l10n.opsAddAthleteGuestNotes),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -775,43 +757,40 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
             onChanged: (_) {
               if (_scoreError != null) setState(() => _scoreError = null);
             },
-            decoration: _lavishField(
+            decoration: _directField(
               lavish,
-              labelText: l10n.opsAddAthleteGuestScore,
-            ).copyWith(counterText: '', errorText: _scoreError),
+              l10n.opsAddAthleteGuestScore,
+            ).copyWith(errorText: _scoreError),
           ),
         ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.opsAddAthleteGuestScoreType,
-              style: TextStyle(fontSize: 11.5, color: lavish.muted),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                LavishChipButton(
-                  key: const ValueKey('add-athlete-score-source-elo'),
-                  label: 'ELO',
-                  selected: _scoreSource == 'MANUAL',
-                  onPressed: _canSubmit
-                      ? () => _pickScoreSource('MANUAL')
-                      : null,
-                ),
-                const SizedBox(width: 6),
-                LavishChipButton(
-                  key: const ValueKey('add-athlete-score-source-dupr'),
-                  label: 'DUPR',
-                  selected: _scoreSource == 'DUPR',
-                  onPressed: _canSubmit ? () => _pickScoreSource('DUPR') : null,
-                ),
-              ],
-            ),
-          ],
+        const SizedBox(width: 12),
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            key: const ValueKey('add-athlete-score-source'),
+            initialValue: _scoreSource,
+            isExpanded: true,
+            style: fieldStyle,
+            decoration: _directField(lavish, l10n.opsAddAthleteGuestScoreType),
+            items: const [
+              DropdownMenuItem(value: 'MANUAL', child: Text('ELO')),
+              DropdownMenuItem(value: 'DUPR', child: Text('DUPR')),
+            ],
+            onChanged: _canSubmit
+                ? (value) {
+                    if (value != null) _pickScoreSource(value);
+                  }
+                : null,
+          ),
         ),
       ],
+    );
+  }
+
+  /// Direct-entry box: shared fill, no counter, one minimum height.
+  InputDecoration _directField(LavishColors lavish, String label) {
+    return _lavishField(lavish, labelText: label).copyWith(
+      counterText: '',
+      constraints: const BoxConstraints(minHeight: _touchTarget + 4),
     );
   }
 

@@ -285,11 +285,19 @@ void _useMobileViewport(WidgetTester tester) {
   tester.view.devicePixelRatio = 1;
 }
 
-Future<void> _openAddAthlete(WidgetTester tester) async {
+Future<void> _openAddAthlete(
+  WidgetTester tester, {
+  bool accountsTab = true,
+}) async {
   await _openRoster(tester);
   final action = find.text('Thêm VĐV').first;
   await tester.ensureVisible(action);
   await tester.tap(action);
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+  if (!accountsTab) return;
+  await tester.tap(find.text('Bạn bè & CLB'));
+  // Candidate loads may still be pending, so settle with fixed pumps.
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
 }
@@ -1002,6 +1010,51 @@ void main() {
     expect(find.byKey(const ValueKey('add-athlete-direct-name')), findsNothing);
   });
   _addAthleteMultiTests();
+  _addAthleteLayoutTests();
+}
+
+void _addAthleteLayoutTests() {
+  testWidgets('sheet opens on the Nhập tên tab, listed before Bạn bè & CLB', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    await tester.pumpWidget(_app('IN_PROGRESS'));
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester, accountsTab: false);
+
+    expect(
+      find.byKey(const ValueKey('add-athlete-direct-name')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('add-athlete-search')), findsNothing);
+    final direct = tester.getTopLeft(find.text('Nhập tên')).dx;
+    final accounts = tester.getTopLeft(find.text('Bạn bè & CLB')).dx;
+    expect(direct, lessThan(accounts));
+  });
+
+  testWidgets('direct-entry fields share one height and the score row splits evenly', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    await tester.pumpWidget(_app('IN_PROGRESS'));
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester, accountsTab: false);
+
+    Size sizeOf(String key) =>
+        tester.getSize(find.byKey(ValueKey(key)).first);
+    final name = sizeOf('add-athlete-direct-name');
+    final email = sizeOf('add-athlete-direct-email');
+    final phone = sizeOf('add-athlete-direct-phone');
+    final score = sizeOf('add-athlete-direct-score');
+    final source = sizeOf('add-athlete-score-source');
+
+    expect(email.height, name.height);
+    expect(phone.height, name.height);
+    expect(score.height, name.height);
+    expect(source.height, name.height);
+    expect(score.width, source.width);
+    expect(phone.width, name.width);
+  });
 }
 
 Future<void> _openDirectTab(WidgetTester tester) async {
@@ -1032,6 +1085,12 @@ Future<void> _fillDirect(
   await enter('add-athlete-direct-phone', phone);
   await enter('add-athlete-direct-score', score);
   await enter('add-athlete-direct-notes', notes);
+}
+
+Future<void> _pickDupr(WidgetTester tester) async {
+  await _tapKey(tester, 'add-athlete-score-source');
+  await tester.tap(find.text('DUPR').last);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _tapKey(WidgetTester tester, String key) async {
@@ -1085,7 +1144,7 @@ void _addAthleteMultiTests() {
       score: '4,5',
       notes: 'Left-handed',
     );
-    await _tapKey(tester, 'add-athlete-score-source-dupr');
+    await _pickDupr(tester);
     await _tapKey(tester, 'add-athlete-direct-submit');
 
     expect(repository.directCalls, hasLength(1));
@@ -1114,7 +1173,7 @@ void _addAthleteMultiTests() {
     expect(find.text('Điểm phải là số.'), findsOneWidget);
     expect(repository.directCalls, isEmpty);
 
-    await _tapKey(tester, 'add-athlete-score-source-dupr');
+    await _pickDupr(tester);
     await _fillDirect(tester, score: '9');
     await _tapKey(tester, 'add-athlete-direct-submit');
     expect(find.text('Điểm DUPR phải từ 1 đến 8.'), findsOneWidget);
