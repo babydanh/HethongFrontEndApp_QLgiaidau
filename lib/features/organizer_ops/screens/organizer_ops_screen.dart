@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/schedule_fullscreen_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_conflicts.dart';
@@ -3404,7 +3405,6 @@ class _OpsDivisionSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
     if (divisions.isEmpty) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -3416,67 +3416,15 @@ class _OpsDivisionSelector extends StatelessWidget {
       );
     }
 
-    return SizedBox(
-      height: 76,
-      child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-        scrollDirection: Axis.horizontal,
-        itemCount: divisions.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final division = divisions[index];
-          final selected = division.id == selectedDivisionId;
-          return Semantics(
-            button: true,
-            selected: selected,
-            label: division.name,
-            child: InkWell(
-              onTap: () => onChanged(division.id),
-              borderRadius: BorderRadius.circular(12),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                constraints: const BoxConstraints(minWidth: 112),
-                decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary : colors.bgSurface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: selected ? AppTheme.primary : colors.border,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      division.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: selected ? Colors.white : colors.textPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      division.matchType,
-                      style: TextStyle(
-                        color: selected ? Colors.white70 : colors.textMuted,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+    return DivisionStrip(
+      items: [
+        for (final division in divisions)
+          DivisionStripItem(id: division.id, name: division.name),
+      ],
+      selectedId: selectedDivisionId,
+      onChanged: (id) {
+        if (id != null) onChanged(id);
+      },
     );
   }
 }

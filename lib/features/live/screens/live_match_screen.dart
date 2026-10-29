@@ -12,7 +12,7 @@ import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.da
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 
 class LiveMatchScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -155,30 +155,17 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
-                child: DivisionFilterSegment(
-                  divisions: [
-                    l10n.matchesFilterAll,
-                    ...divisions.map((d) => d['name'] as String),
+                child: DivisionStrip(
+                  showAll: true,
+                  items: [
+                    for (final d in divisions)
+                      DivisionStripItem(
+                        id: d['id'] as String,
+                        name: d['name'] as String,
+                      ),
                   ],
-                  selectedDivision: _selectedDivisionId == null
-                      ? l10n.matchesFilterAll
-                      : (divisions.firstWhere(
-                              (d) => d['id'] == _selectedDivisionId,
-                              orElse: () => {'name': l10n.matchesFilterAll},
-                            )['name']
-                            as String),
-                  onDivisionChanged: (name) {
-                    setState(() {
-                      if (name == l10n.matchesFilterAll) {
-                        _selectedDivisionId = null;
-                      } else {
-                        final div = divisions.firstWhere(
-                          (d) => d['name'] == name,
-                        );
-                        _selectedDivisionId = div['id'] as String;
-                      }
-                    });
-                  },
+                  selectedId: _selectedDivisionId,
+                  onChanged: (id) => setState(() => _selectedDivisionId = id),
                 ),
               ),
             ),
@@ -717,30 +704,17 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
-                child: DivisionFilterSegment(
-                  divisions: [
-                    l10n.matchesFilterAll,
-                    ...divisions.map((d) => d['name'] as String),
+                child: DivisionStrip(
+                  showAll: true,
+                  items: [
+                    for (final d in divisions)
+                      DivisionStripItem(
+                        id: d['id'] as String,
+                        name: d['name'] as String,
+                      ),
                   ],
-                  selectedDivision: _selectedDivisionId == null
-                      ? l10n.matchesFilterAll
-                      : (divisions.firstWhere(
-                              (d) => d['id'] == _selectedDivisionId,
-                              orElse: () => {'name': l10n.matchesFilterAll},
-                            )['name']
-                            as String),
-                  onDivisionChanged: (name) {
-                    setState(() {
-                      if (name == l10n.matchesFilterAll) {
-                        _selectedDivisionId = null;
-                      } else {
-                        final div = divisions.firstWhere(
-                          (d) => d['name'] == name,
-                        );
-                        _selectedDivisionId = div['id'] as String;
-                      }
-                    });
-                  },
+                  selectedId: _selectedDivisionId,
+                  onChanged: (id) => setState(() => _selectedDivisionId = id),
                 ),
               ),
             ),

@@ -7003,6 +7003,7 @@
   "pairingNoPairsFormed": "Chưa ghép được cặp nào.",
   "pairingLoadFailed": "Tải danh sách VĐV chờ ghép thất bại.",
   "pairingActionFailed": "Ghép cặp thất bại.",
+  "divisionStripManage": "Quản lý",
   "scheduleSettingsTitle": "Cài đặt khung giờ sân",
   "@scheduleSettingsTitle": {"description": "Tiêu đề sheet cài đặt khung giờ sân (task 4.3)."},
   "scheduleSettingsOpeningHours": "Khung giờ mở sân trong ngày",

@@ -1661,6 +1661,26 @@ void main() {
     expect(bracket.canEditBracket, isTrue);
   });
 
+  testWidgets('bracket tab gives organizers a manage-divisions action', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(_app(_tournament('in_progress')));
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(TournamentManagementHubScreen));
+    final l10n = AppLocalizations.of(context)!;
+    await _openTab(tester, l10n.tournamentManagementTabBracket);
+
+    final bracket = tester.widget<BracketViewScreen>(
+      find.byType(BracketViewScreen).first,
+    );
+    // The action opens the divisions screen; its providers need the real
+    // DioClient (.env), so only the wiring is asserted here.
+    expect(bracket.onManageDivisions, isNotNull);
+  });
+
   testWidgets(
     'overview tab content is positioned immediately below pinned tab strip without excessive gap',
     (tester) async {

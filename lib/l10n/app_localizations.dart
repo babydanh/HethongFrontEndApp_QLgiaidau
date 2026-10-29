@@ -31627,6 +31627,12 @@ abstract class AppLocalizations {
   /// **'Ghép cặp thất bại.'**
   String get pairingActionFailed;
 
+  /// No description provided for @divisionStripManage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý'**
+  String get divisionStripManage;
+
   /// Tiêu đề sheet cài đặt khung giờ sân (task 4.3).
   ///
   /// In vi, this message translates to:

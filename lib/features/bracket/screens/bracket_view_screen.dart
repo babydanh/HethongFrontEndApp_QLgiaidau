@@ -28,7 +28,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/division_filter_segment.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -43,6 +43,9 @@ class BracketViewScreen extends ConsumerStatefulWidget {
   final bool canEditBracket;
   final bool isLite;
   final bool isEmbedded;
+
+  /// Organizers only: shows a "Quản lý" chip that opens the divisions screen.
+  final VoidCallback? onManageDivisions;
   final ScrollController? scrollController;
 
   const BracketViewScreen({
@@ -56,6 +59,7 @@ class BracketViewScreen extends ConsumerStatefulWidget {
     this.canEditBracket = false,
     this.isLite = false,
     this.isEmbedded = false,
+    this.onManageDivisions,
     this.scrollController,
   });
 
@@ -161,19 +165,24 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   }
 
   Widget _buildDivisionSelector(List<TournamentDivision> divisions) {
-    final activeId = _activeDivisionId;
-    final selectedName =
-        divisions.where((d) => d.id == activeId).firstOrNull?.name ?? '';
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 4),
-      child: DivisionFilterSegment(
-        divisions: divisions.map((d) => d.name).toList(),
-        selectedDivision: selectedName,
-        onDivisionChanged: (name) {
-          final picked = divisions.where((d) => d.name == name).firstOrNull;
-          if (picked == null) return;
-          setState(() => _selectedDivisionId = picked.id);
+      child: DivisionStrip(
+        items: [
+          for (final d in divisions)
+            DivisionStripItem(
+              id: d.id,
+              name: d.name,
+              count: d.participantCount,
+              capacity: d.maxParticipants,
+            ),
+        ],
+        selectedId: _activeDivisionId,
+        onChanged: (id) {
+          if (id == null) return;
+          setState(() => _selectedDivisionId = id);
         },
+        onManage: widget.onManageDivisions,
       ),
     );
   }
@@ -493,7 +502,11 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                 ),
               );
     final divisions = _divisions;
-    final bodyContent = !_hasRequestedDivision && divisions.length > 1
+    final showStrip =
+        !_hasRequestedDivision &&
+        divisions.isNotEmpty &&
+        (divisions.length > 1 || widget.onManageDivisions != null);
+    final bodyContent = showStrip
         ? Column(
             mainAxisSize: widget.isEmbedded
                 ? MainAxisSize.min

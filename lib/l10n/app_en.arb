@@ -6975,6 +6975,7 @@
   "pairingNoPairsFormed": "No pairs were formed.",
   "pairingLoadFailed": "Failed to load the waiting list.",
   "pairingActionFailed": "Pairing failed.",
+  "divisionStripManage": "Manage",
   "scheduleSettingsTitle": "Court hours settings",
   "@scheduleSettingsTitle": {"description": "Title of the court hours settings sheet (task 4.3)."},
   "scheduleSettingsOpeningHours": "Daily court opening hours",

@@ -17600,6 +17600,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairingActionFailed => 'Pairing failed.';
 
   @override
+  String get divisionStripManage => 'Manage';
+
+  @override
   String get scheduleSettingsTitle => 'Court hours settings';
 
   @override

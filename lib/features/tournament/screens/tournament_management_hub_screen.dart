@@ -403,6 +403,8 @@ class _TournamentManagementHubScreenState
                       tournamentId: tournament.id,
                       isEmbedded: true,
                       canEditBracket: true,
+                      onManageDivisions: () =>
+                          _openSection(TournamentManagementSection.divisions),
                     ),
                   ),
                 ],

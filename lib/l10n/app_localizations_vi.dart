@@ -17529,6 +17529,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairingActionFailed => 'Ghép cặp thất bại.';
 
   @override
+  String get divisionStripManage => 'Quản lý';
+
+  @override
   String get scheduleSettingsTitle => 'Cài đặt khung giờ sân';
 
   @override
