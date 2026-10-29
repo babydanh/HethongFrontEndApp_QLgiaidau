@@ -50,7 +50,7 @@ Phụ thuộc Backend: change `moc-dupr-noi-dung` của Backend phải apply tr�
 
 ## 6. Kiểm tổng
 
-- [ ] 6.1 `flutter analyze lib/core lib/domain lib/data lib/features/register lib/features/tournament lib/l10n` không thêm lỗi so với `origin/main`; `flutter test --no-pub` cho mọi test của change này và các test cũ cùng thư mục đã nêu → exit 0; `openspec validate moc-dupr-noi-dung --strict` pass; ast-grep kiểm không còn chỗ dựng `TournamentDivisionOption` bị vỡ; `app-run.py status` không có `errors` thuộc nhánh này.
+- [x] 6.1 `flutter analyze lib/core lib/domain lib/data lib/features/register lib/features/tournament lib/l10n` không thêm lỗi so với `origin/main`; `flutter test --no-pub` cho mọi test của change này và các test cũ cùng thư mục đã nêu → exit 0; `openspec validate moc-dupr-noi-dung --strict` pass; ast-grep kiểm không còn chỗ dựng `TournamentDivisionOption` bị vỡ; `app-run.py status` không có `errors` thuộc nhánh này.
   - Files: không sửa file
   - Giao/Nhận: không
   - Chủ file chung: không
