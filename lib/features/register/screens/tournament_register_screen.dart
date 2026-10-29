@@ -2227,6 +2227,7 @@ class _TournamentRegisterScreenState
                           DuprLimitCard(
                             key: ValueKey('dupr-limit-${selected.id}'),
                             division: selected,
+                            categoryId: t.categoryId,
                             // Reports from a card of a previously selected
                             // division (e.g. its dispose) must not count.
                             onValidityChanged: (valid) {

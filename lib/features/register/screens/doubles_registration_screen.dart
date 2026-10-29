@@ -1053,6 +1053,7 @@ class _DoublesRegistrationFlowState
         DuprLimitCard(
           key: ValueKey('dupr-limit-${widget.division.id}'),
           division: widget.division,
+          categoryId: t.categoryId,
           onValidityChanged: (valid) {
             if (mounted && _duprValid != valid) {
               setState(() => _duprValid = valid);

@@ -17,6 +17,7 @@ class _FakeRatings implements ExternalRatingRepository {
   Object? saveError;
   Completer<void>? saveGate;
   int getCalls = 0;
+  final lookedUp = <({String categoryId, String matchType})>[];
   int failGets = 0;
 
   /// Answers of successive lookups, completed by the test (oldest first).
@@ -29,6 +30,7 @@ class _FakeRatings implements ExternalRatingRepository {
     required String matchType,
   }) async {
     getCalls++;
+    lookedUp.add((categoryId: categoryId, matchType: matchType));
     if (getGates.isNotEmpty) return getGates.removeAt(0).future;
     if (failGets > 0) {
       failGets--;
@@ -50,12 +52,16 @@ class _FakeRatings implements ExternalRatingRepository {
   }
 }
 
-TournamentDivisionOption _division({double? min, double? max}) =>
+TournamentDivisionOption _division({
+  double? min,
+  double? max,
+  String? categoryId = 'cat-1',
+}) =>
     TournamentDivisionOption(
       id: 'div-1',
       name: 'Đôi 3.0',
       matchType: 'DOUBLES',
-      categoryId: 'cat-1',
+      categoryId: categoryId,
       minDupr: min,
       maxDupr: max,
     );
@@ -63,8 +69,9 @@ TournamentDivisionOption _division({double? min, double? max}) =>
 Widget _host(
   _FakeRatings repo,
   TournamentDivisionOption division,
-  List<bool> validity,
-) => ProviderScope(
+  List<bool> validity, {
+  String? categoryId,
+}) => ProviderScope(
       overrides: [externalRatingRepositoryProvider.overrideWithValue(repo)],
       child: MaterialApp(
         theme: AppTheme.darkTheme,
@@ -75,6 +82,7 @@ Widget _host(
           body: SingleChildScrollView(
             child: DuprLimitCard(
               division: division,
+              categoryId: categoryId,
               onValidityChanged: validity.add,
             ),
           ),
@@ -320,5 +328,79 @@ void main() {
     expect(find.text('Đã lưu điểm DUPR'), findsNothing);
     // Only the new division's own lookup ran; the stale save did not reload.
     expect(repo.getCalls, callsBefore);
+  });
+
+  testWidgets('division without a category uses the tournament category', (
+    tester,
+  ) async {
+    final repo = _FakeRatings(rating: 3.2);
+    final validity = <bool>[];
+    await tester.pumpWidget(
+      _host(
+        repo,
+        _division(min: 3.0, max: 3.5, categoryId: null),
+        validity,
+        categoryId: 'tour-cat',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.lookedUp.single, (
+      categoryId: 'tour-cat',
+      matchType: 'DOUBLES',
+    ));
+    expect(validity.last, isTrue);
+  });
+
+  testWidgets('the division category wins over the tournament one', (
+    tester,
+  ) async {
+    final repo = _FakeRatings(rating: 3.2);
+    final validity = <bool>[];
+    await tester.pumpWidget(
+      _host(
+        repo,
+        _division(min: 3.0, max: 3.5, categoryId: 'div-cat'),
+        validity,
+        categoryId: 'tour-cat',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.lookedUp.single.categoryId, 'div-cat');
+  });
+
+  testWidgets('no category anywhere: hidden, no lookup, parent not blocked', (
+    tester,
+  ) async {
+    final repo = _FakeRatings(rating: 3.2);
+    final validity = <bool>[];
+    await tester.pumpWidget(
+      _host(repo, _division(min: 3.0, categoryId: null), validity),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.getCalls, 0);
+    expect(find.textContaining('DUPR'), findsNothing);
+    expect(validity.last, isTrue);
+  });
+
+  testWidgets('tournament category arriving later triggers the lookup', (
+    tester,
+  ) async {
+    final repo = _FakeRatings(rating: 3.2);
+    final validity = <bool>[];
+    final division = _division(min: 3.0, max: 3.5, categoryId: null);
+    await tester.pumpWidget(_host(repo, division, validity));
+    await tester.pumpAndSettle();
+    expect(repo.getCalls, 0);
+
+    await tester.pumpWidget(
+      _host(repo, division, validity, categoryId: 'tour-cat'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.lookedUp.single.categoryId, 'tour-cat');
+    expect(validity.last, isTrue);
   });
 }

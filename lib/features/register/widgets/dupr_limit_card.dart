@@ -14,16 +14,22 @@ enum _Phase { checking, ready, error }
 /// allowed through [onValidityChanged]; the backend stays the source of truth.
 ///
 /// Renders nothing (and never calls the repository) when the division has no
-/// limit, or when its category / match type is unknown so the rating cannot
-/// be looked up.
+/// limit, or when neither the division nor the tournament gives a category
+/// (or the match type is unknown), since the rating cannot be looked up.
 class DuprLimitCard extends ConsumerStatefulWidget {
   const DuprLimitCard({
     super.key,
     required this.division,
     required this.onValidityChanged,
+    this.categoryId,
   });
 
   final TournamentDivisionOption division;
+
+  /// Tournament-level category, used when the division has none of its own
+  /// (the divisions endpoint does not return one; the backend checks DUPR
+  /// against the tournament category).
+  final String? categoryId;
   final ValueChanged<bool> onValidityChanged;
 
   @override
@@ -43,8 +49,9 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
 
   TournamentDivisionOption get _division => widget.division;
   bool get _hasLimit => _division.minDupr != null || _division.maxDupr != null;
+  String? get _categoryId => _division.categoryId ?? widget.categoryId;
   bool get _canLookUp =>
-      _division.categoryId != null && _division.ratingMatchType != null;
+      _categoryId != null && _division.ratingMatchType != null;
 
   DuprLimitStatus get _status => checkDuprAgainstLimit(
     value: _rating,
@@ -68,7 +75,8 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
     final changed =
         oldWidget.division.id != _division.id ||
         oldWidget.division.minDupr != _division.minDupr ||
-        oldWidget.division.maxDupr != _division.maxDupr;
+        oldWidget.division.maxDupr != _division.maxDupr ||
+        oldWidget.categoryId != widget.categoryId;
     if (!changed) return;
     _reportedValid = null;
     if (_hasLimit && _canLookUp) {
@@ -100,7 +108,7 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
 
   Future<void> _load() async {
     final seq = ++_loadSeq;
-    final categoryId = _division.categoryId!;
+    final categoryId = _categoryId!;
     final matchType = _division.ratingMatchType!;
     setState(() => _phase = _Phase.checking);
     _report(false);
@@ -128,7 +136,7 @@ class _DuprLimitCardState extends ConsumerState<DuprLimitCard> {
     final value = _typedValue;
     if (_saving || value == null || value <= 0) return;
     final divisionId = _division.id;
-    final categoryId = _division.categoryId!;
+    final categoryId = _categoryId!;
     final matchType = _division.ratingMatchType!;
     setState(() {
       _saving = true;
