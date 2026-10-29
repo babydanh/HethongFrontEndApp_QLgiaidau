@@ -43,6 +43,11 @@ class AddAthleteSheet extends ConsumerStatefulWidget {
 class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   static const _directNameMax = 255;
   static const _directEmailMax = 254;
+  static const _directPhoneMax = 32;
+  static const _directNotesMax = 2000;
+  static const _scoreMaxLength = 8;
+  // Backend accepts MANUAL (ELO) 100-3000 and DUPR 1-8.
+  static const _scoreRanges = {'MANUAL': (100, 3000), 'DUPR': (1, 8)};
   static const _candidateLimit = 25;
   static const _touchTarget = 44.0;
   static const _searchDebounce = Duration(milliseconds: 250);
@@ -55,6 +60,9 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   final _searchController = TextEditingController();
   final _directNameController = TextEditingController();
   final _directEmailController = TextEditingController();
+  final _directPhoneController = TextEditingController();
+  final _directScoreController = TextEditingController();
+  final _directNotesController = TextEditingController();
   final _footballTeams = <OrganizerOpsParticipant>[];
   // Kết quả tìm theo tên (bạn bè + CLB), đã gộp theo userId.
   final _candidates = <_SourcedCandidate>[];
@@ -66,6 +74,11 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
   final _addedUserIds = <String>{};
   // userId đang được xử lý, để hiện spinner đúng dòng.
   final _pendingUserIds = <String>{};
+  // Direct-entry athletes waiting to be sent, newest first.
+  final _guestDrafts = <_GuestDraft>[];
+  int _draftSeq = 0;
+  String _scoreSource = 'MANUAL';
+  String? _scoreError;
 
   late final bool _isFootball;
   late final bool _canAutoApprove;
@@ -153,6 +166,9 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     _searchController.dispose();
     _directNameController.dispose();
     _directEmailController.dispose();
+    _directPhoneController.dispose();
+    _directScoreController.dispose();
+    _directNotesController.dispose();
     super.dispose();
   }
 
@@ -243,18 +259,6 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
                   fontWeight: FontWeight.w800,
                   color: colors.textPrimary,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.opsAddAthleteDescription,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '${widget.tournament.name} · ${widget.divisionName}',
-                style: textTheme.labelMedium?.copyWith(color: colors.textMuted),
               ),
             ],
           ),
@@ -633,9 +637,12 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     );
   }
 
+  bool get _hasFormEntry => _directNameController.text.trim().isNotEmpty;
+
   Widget _buildDirectEntry(BuildContext context, AppLocalizations l10n) {
     final lavish = LavishColors.of(context);
     final fieldStyle = TextStyle(fontSize: 13, color: lavish.text);
+    final count = _guestDrafts.length + (_hasFormEntry ? 1 : 0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -665,7 +672,7 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           controller: _directEmailController,
           enabled: _canSubmit,
           keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.done,
+          textInputAction: TextInputAction.next,
           maxLength: _directEmailMax,
           style: fieldStyle,
           onChanged: (_) {
@@ -673,7 +680,6 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
               setState(() => _accountConflictEmail = null);
             }
           },
-          onSubmitted: (_) => unawaited(_submitGuest()),
           decoration:
               _lavishField(
                 lavish,
@@ -688,18 +694,203 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
           _buildAccountConflict(l10n, lavish),
         ],
         const SizedBox(height: 12),
+        TextField(
+          key: const ValueKey('add-athlete-direct-phone'),
+          controller: _directPhoneController,
+          enabled: _canSubmit,
+          keyboardType: TextInputType.phone,
+          textInputAction: TextInputAction.next,
+          maxLength: _directPhoneMax,
+          style: fieldStyle,
+          decoration: _lavishField(
+            lavish,
+            labelText: l10n.opsAddAthleteGuestPhone,
+          ).copyWith(counterText: ''),
+        ),
+        const SizedBox(height: 12),
+        _buildScoreRow(l10n, lavish, fieldStyle),
+        const SizedBox(height: 12),
+        TextField(
+          key: const ValueKey('add-athlete-direct-notes'),
+          controller: _directNotesController,
+          enabled: _canSubmit,
+          minLines: 2,
+          maxLines: 2,
+          maxLength: _directNotesMax,
+          style: fieldStyle,
+          decoration: _lavishField(
+            lavish,
+            labelText: l10n.opsAddAthleteGuestNotes,
+          ).copyWith(counterText: ''),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: _touchTarget,
+          child: LavishButton(
+            key: const ValueKey('add-athlete-direct-queue'),
+            kind: LavishButtonKind.outline,
+            label: l10n.opsAddAthleteQueueAdd,
+            icon: const Icon(Icons.playlist_add_rounded, size: 16),
+            onPressed: _canSubmit ? _queueGuest : null,
+          ),
+        ),
+        for (final draft in _guestDrafts) ...[
+          const SizedBox(height: 8),
+          _buildDraftRow(draft, l10n, lavish),
+        ],
+        const SizedBox(height: 12),
         SizedBox(
           height: _touchTarget,
           child: LavishButton(
             key: const ValueKey('add-athlete-direct-submit'),
-            label: l10n.opsAddAthlete,
+            label: _guestDrafts.isEmpty
+                ? l10n.opsAddAthlete
+                : l10n.opsAddAthleteSubmitCount(count),
             icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
             busy: _mutationInFlight,
-            onPressed: _canSubmit ? () => unawaited(_submitGuest()) : null,
+            onPressed: _canSubmit ? () => unawaited(_submitDirect()) : null,
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildScoreRow(
+    AppLocalizations l10n,
+    LavishColors lavish,
+    TextStyle fieldStyle,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: TextField(
+            key: const ValueKey('add-athlete-direct-score'),
+            controller: _directScoreController,
+            enabled: _canSubmit,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textInputAction: TextInputAction.next,
+            maxLength: _scoreMaxLength,
+            style: fieldStyle,
+            onChanged: (_) {
+              if (_scoreError != null) setState(() => _scoreError = null);
+            },
+            decoration: _lavishField(
+              lavish,
+              labelText: l10n.opsAddAthleteGuestScore,
+            ).copyWith(counterText: '', errorText: _scoreError),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.opsAddAthleteGuestScoreType,
+              style: TextStyle(fontSize: 11.5, color: lavish.muted),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                LavishChipButton(
+                  key: const ValueKey('add-athlete-score-source-elo'),
+                  label: 'ELO',
+                  selected: _scoreSource == 'MANUAL',
+                  onPressed: _canSubmit
+                      ? () => _pickScoreSource('MANUAL')
+                      : null,
+                ),
+                const SizedBox(width: 6),
+                LavishChipButton(
+                  key: const ValueKey('add-athlete-score-source-dupr'),
+                  label: 'DUPR',
+                  selected: _scoreSource == 'DUPR',
+                  onPressed: _canSubmit ? () => _pickScoreSource('DUPR') : null,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDraftRow(
+    _GuestDraft draft,
+    AppLocalizations l10n,
+    LavishColors lavish,
+  ) {
+    final detail = [
+      if (draft.email.isNotEmpty) draft.email,
+      if (draft.phone.isNotEmpty) draft.phone,
+      if (draft.elo != null)
+        '${_formatScore(draft.elo!)} ${_scoreLabel(draft.eloSource)}',
+    ].join(' · ');
+    return Container(
+      key: ValueKey('add-athlete-draft-${draft.seq}'),
+      padding: const EdgeInsets.fromLTRB(14, 8, 4, 8),
+      decoration: BoxDecoration(
+        color: lavish.dark ? lavish.rowLine : const Color(0xFFF2F4F7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  draft.name,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: lavish.text,
+                  ),
+                ),
+                if (detail.isNotEmpty)
+                  Text(
+                    detail,
+                    style: TextStyle(fontSize: 11.5, color: lavish.muted),
+                  ),
+                if (draft.error != null)
+                  Text(
+                    draft.error!,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: LavishColors.bad,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            key: ValueKey('add-athlete-draft-remove-${draft.seq}'),
+            tooltip: l10n.opsAddAthleteDraftRemove,
+            constraints: const BoxConstraints.tightFor(
+              width: _touchTarget,
+              height: _touchTarget,
+            ),
+            onPressed: _canSubmit
+                ? () => setState(() => _guestDrafts.remove(draft))
+                : null,
+            icon: const Icon(Icons.close_rounded, size: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _scoreLabel(String? source) => source == 'DUPR' ? 'DUPR' : 'ELO';
+
+  String _formatScore(double value) =>
+      value == value.roundToDouble() ? value.toInt().toString() : '$value';
+
+  void _pickScoreSource(String source) {
+    if (source == _scoreSource) return;
+    setState(() {
+      _scoreSource = source;
+      _scoreError = null;
+    });
   }
 
   /// Shown when the backend says the typed email already belongs to an account.
@@ -1181,46 +1372,251 @@ class _AddAthleteSheetState extends ConsumerState<AddAthleteSheet> {
     }
   }
 
-  Future<void> _submitGuest() async {
-    if (!_canSubmit) return;
-    final l10n = AppLocalizations.of(context)!;
+  /// Parses the score box; [value] is null when empty, [error] when invalid.
+  ({double? value, String? error}) _parseScore(AppLocalizations l10n) {
+    final raw = _directScoreController.text.trim().replaceAll(',', '.');
+    if (raw.isEmpty) return (value: null, error: null);
+    final value = double.tryParse(raw);
+    if (value == null || !value.isFinite) {
+      return (value: null, error: l10n.opsAddAthleteScoreNotNumber);
+    }
+    final (min, max) = _scoreRanges[_scoreSource]!;
+    if (value < min || value > max) {
+      final error = l10n.opsAddAthleteScoreRange(
+        _scoreLabel(_scoreSource),
+        '$min',
+        '$max',
+      );
+      return (value: null, error: error);
+    }
+    return (value: value, error: null);
+  }
+
+  /// Validates the form; sets the field errors and returns null when invalid.
+  _GuestDraft? _readForm(AppLocalizations l10n) {
     final name = _directNameController.text.trim();
-    final email = _directEmailController.text.trim();
     if (name.isEmpty) {
       setState(() => _directError = l10n.opsAddAthleteNameRequired);
-      return;
+      return null;
     }
     if (name.length > _directNameMax) {
       setState(() => _directError = l10n.opsAddAthleteNameTooLong);
-      return;
+      return null;
+    }
+    final score = _parseScore(l10n);
+    if (score.error != null) {
+      setState(() => _scoreError = score.error);
+      return null;
     }
     setState(() {
-      _mutationInFlight = true;
       _directError = null;
+      _scoreError = null;
+    });
+    return _GuestDraft(
+      name: name,
+      email: _directEmailController.text.trim(),
+      phone: _directPhoneController.text.trim(),
+      notes: _directNotesController.text.trim(),
+      elo: score.value,
+      eloSource: score.value == null ? null : _scoreSource,
+    );
+  }
+
+  void _clearForm() {
+    _directNameController.clear();
+    _directEmailController.clear();
+    _directPhoneController.clear();
+    _directScoreController.clear();
+    _directNotesController.clear();
+  }
+
+  bool _isDuplicateDraft(_GuestDraft draft) {
+    if (draft.email.isEmpty) return false;
+    final email = draft.email.toLowerCase();
+    return _guestDrafts.any((entry) => entry.email.toLowerCase() == email);
+  }
+
+  Future<String> _sendDraft(_GuestDraft draft) {
+    return ref
+        .read(tournamentManagementRepositoryProvider)
+        .addAthleteDirect(
+          widget.tournament.id,
+          name: draft.name,
+          email: draft.email.isEmpty ? null : draft.email,
+          phone: draft.phone.isEmpty ? null : draft.phone,
+          notes: draft.notes.isEmpty ? null : draft.notes,
+          elo: draft.elo,
+          eloSource: draft.eloSource,
+          tournamentDivisionId: widget.divisionId,
+        );
+  }
+
+  /// Moves the athlete being typed into the waiting list (newest on top).
+  void _queueGuest() {
+    if (!_canSubmit) return;
+    final l10n = AppLocalizations.of(context)!;
+    final draft = _readForm(l10n);
+    if (draft == null) return;
+    String? refusal;
+    if (_guestDrafts.length >= _candidateLimit) {
+      refusal = l10n.opsAddAthleteSelectionLimit;
+    } else if (_isDuplicateDraft(draft)) {
+      refusal = l10n.opsAddAthleteDraftDuplicate;
+    }
+    setState(() {
+      if (refusal != null) {
+        _directError = refusal;
+        return;
+      }
+      _guestDrafts.insert(0, draft.copyWith(seq: ++_draftSeq));
+      _clearForm();
+    });
+  }
+
+  Future<void> _submitDirect() async {
+    if (!_canSubmit) return;
+    if (_guestDrafts.isEmpty) return _submitGuest();
+    await _submitQueue();
+  }
+
+  Future<void> _submitGuest() async {
+    if (!_canSubmit) return;
+    final l10n = AppLocalizations.of(context)!;
+    final draft = _readForm(l10n);
+    if (draft == null) return;
+    setState(() {
+      _mutationInFlight = true;
       _accountConflictEmail = null;
     });
     try {
-      final participantId = await ref
-          .read(tournamentManagementRepositoryProvider)
-          .addAthleteDirect(
-            widget.tournament.id,
-            name: name,
-            email: email.isEmpty ? null : email,
-            tournamentDivisionId: widget.divisionId,
-          );
-      _directNameController.clear();
-      _directEmailController.clear();
+      final participantId = await _sendDraft(draft);
+      _clearForm();
       await _finishSuccessfulAdd(participantId);
     } catch (error) {
       if (_isEmailOwnedByAccount(error)) {
         // Definite rejection (nothing was added): point to the account search.
-        if (mounted) setState(() => _accountConflictEmail = email);
+        if (mounted) setState(() => _accountConflictEmail = draft.email);
       } else {
         await _handleUncertainFailure(error);
       }
     } finally {
       if (mounted) setState(() => _mutationInFlight = false);
     }
+  }
+
+  /// Sends every waiting athlete (oldest first) plus the one being typed.
+  Future<void> _submitQueue() async {
+    final l10n = AppLocalizations.of(context)!;
+    final typed = _hasFormEntry ? _readForm(l10n) : null;
+    if (_hasFormEntry && typed == null) return;
+    if (typed != null && _isDuplicateDraft(typed)) {
+      setState(() => _directError = l10n.opsAddAthleteDraftDuplicate);
+      return;
+    }
+    setState(() {
+      _mutationInFlight = true;
+      _accountConflictEmail = null;
+    });
+    try {
+      final result = await _sendQueue([..._guestDrafts.reversed, ?typed]);
+      if (!mounted) return;
+      final uncertain = result.uncertain;
+      if (uncertain != null) {
+        await _handleUncertainFailure(uncertain);
+        return;
+      }
+      final refreshed = await _tryRefreshRoster();
+      if (!mounted) return;
+      setState(() {
+        _staleNotice = !refreshed;
+        _requiresRefresh = !refreshed;
+      });
+      _showMessage(_queueSummary(l10n, result, refreshed));
+    } finally {
+      if (mounted) setState(() => _mutationInFlight = false);
+    }
+  }
+
+  Future<_QueueResult> _sendQueue(List<_GuestDraft> queue) async {
+    final l10n = AppLocalizations.of(context)!;
+    var added = 0;
+    var failed = 0;
+    var approvalFailed = false;
+    for (final draft in queue) {
+      try {
+        final participantId = await _sendDraft(draft);
+        added++;
+        if (await _tryAutoApprove(participantId)) approvalFailed = true;
+        if (mounted) _forgetDraft(draft);
+      } catch (error) {
+        if (!_isDefiniteRejection(error)) {
+          return (
+            added: added,
+            failed: failed,
+            approvalFailed: approvalFailed,
+            uncertain: error,
+          );
+        }
+        failed++;
+        if (mounted) _keepRejected(draft, _rejectionReason(error, l10n));
+      }
+    }
+    return (
+      added: added,
+      failed: failed,
+      approvalFailed: approvalFailed,
+      uncertain: null,
+    );
+  }
+
+  /// A sent athlete leaves the waiting list; a typed one clears the form.
+  void _forgetDraft(_GuestDraft draft) {
+    setState(() {
+      if (draft.seq == 0) {
+        _clearForm();
+      } else {
+        _guestDrafts.removeWhere((entry) => entry.seq == draft.seq);
+      }
+    });
+  }
+
+  /// A refused athlete stays in the waiting list with the reason.
+  void _keepRejected(_GuestDraft draft, String reason) {
+    setState(() {
+      if (draft.seq == 0) {
+        _guestDrafts.insert(0, draft.copyWith(seq: ++_draftSeq, error: reason));
+        _clearForm();
+        return;
+      }
+      final index = _guestDrafts.indexWhere((entry) => entry.seq == draft.seq);
+      if (index >= 0) _guestDrafts[index] = draft.copyWith(error: reason);
+    });
+  }
+
+  bool _isDefiniteRejection(Object error) {
+    if (error is! DioException) return false;
+    final status = error.response?.statusCode;
+    return status != null && status >= 400 && status < 500;
+  }
+
+  String _rejectionReason(Object error, AppLocalizations l10n) {
+    if (_isEmailOwnedByAccount(error)) return l10n.opsAddAthleteEmailIsAccount;
+    return ErrorParser.parse(error, l10n.opsAddAthleteFailed, l10n);
+  }
+
+  String _queueSummary(
+    AppLocalizations l10n,
+    _QueueResult result,
+    bool refreshed,
+  ) {
+    if (!refreshed) return l10n.opsAddAthleteRefreshFailed;
+    if (result.failed > 0) {
+      return l10n.opsAddAthleteDraftsPartial(result.added, result.failed);
+    }
+    if (result.approvalFailed) return l10n.opsAddAthleteApprovalFailed;
+    return result.added == 1
+        ? l10n.opsAddAthleteSuccess
+        : l10n.opsAddAthleteMultipleSuccess(result.added);
   }
 
   bool _isEmailOwnedByAccount(Object error) {
@@ -1329,6 +1725,47 @@ _SearchMode _searchModeFor(String query) {
   return query.length >= 2 && query.length <= _nameSearchMax
       ? _SearchMode.names
       : _SearchMode.none;
+}
+
+typedef _QueueResult = ({
+  int added,
+  int failed,
+  bool approvalFailed,
+  Object? uncertain,
+});
+
+/// An athlete typed in the direct-entry tab; seq 0 = not queued yet.
+class _GuestDraft {
+  const _GuestDraft({
+    this.seq = 0,
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.notes,
+    required this.elo,
+    required this.eloSource,
+    this.error,
+  });
+
+  final int seq;
+  final String name;
+  final String email;
+  final String phone;
+  final String notes;
+  final double? elo;
+  final String? eloSource;
+  final String? error;
+
+  _GuestDraft copyWith({int? seq, String? error}) => _GuestDraft(
+    seq: seq ?? this.seq,
+    name: name,
+    email: email,
+    phone: phone,
+    notes: notes,
+    elo: elo,
+    eloSource: eloSource,
+    error: error ?? this.error,
+  );
 }
 
 class _SourcedCandidate {

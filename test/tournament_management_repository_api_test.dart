@@ -1120,6 +1120,31 @@ void main() {
       });
     });
 
+    test('direct athlete posts phone, notes and a typed score', () async {
+      backend.onPost('/tournaments/$tournamentId/add-athletes/direct', {
+        'participantId': 'participant-1',
+      });
+
+      await repository.addAthleteDirect(
+        tournamentId,
+        name: 'Direct athlete',
+        phone: '0900000000',
+        notes: 'Left-handed',
+        elo: 4.5,
+        eloSource: 'DUPR',
+        tournamentDivisionId: 'division-1',
+      );
+
+      expect(backend.only.data, {
+        'name': 'Direct athlete',
+        'phone': '0900000000',
+        'notes': 'Left-handed',
+        'elo': 4.5,
+        'eloSource': 'DUPR',
+        'tournamentDivisionId': 'division-1',
+      });
+    });
+
     test(
       'missing participant id is not reported as a successful add',
       () async {

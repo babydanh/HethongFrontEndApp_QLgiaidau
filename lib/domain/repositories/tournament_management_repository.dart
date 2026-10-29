@@ -171,6 +171,10 @@ abstract interface class TournamentManagementRepository {
     String id, {
     required String name,
     String? email,
+    String? phone,
+    String? notes,
+    double? elo,
+    String? eloSource,
     String? tournamentDivisionId,
   });
   Future<List<AddAthleteSearchCandidate>> searchAddAthleteCandidates(

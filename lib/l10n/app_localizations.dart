@@ -22507,7 +22507,7 @@ abstract class AppLocalizations {
   /// No description provided for @opsAddAthleteTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Thêm VĐV vào danh sách'**
+  /// **'Thêm VĐV'**
   String get opsAddAthleteTitle;
 
   /// No description provided for @opsAddAthleteDescription.
@@ -28665,6 +28665,72 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thêm {count} VĐV'**
   String opsAddAthleteAddSelectedCount(int count);
+
+  /// No description provided for @opsAddAthleteGuestPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'SĐT'**
+  String get opsAddAthleteGuestPhone;
+
+  /// No description provided for @opsAddAthleteGuestScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm'**
+  String get opsAddAthleteGuestScore;
+
+  /// No description provided for @opsAddAthleteGuestScoreType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại điểm'**
+  String get opsAddAthleteGuestScoreType;
+
+  /// No description provided for @opsAddAthleteGuestNotes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú'**
+  String get opsAddAthleteGuestNotes;
+
+  /// No description provided for @opsAddAthleteQueueAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm vào danh sách'**
+  String get opsAddAthleteQueueAdd;
+
+  /// No description provided for @opsAddAthleteSubmitCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ({count})'**
+  String opsAddAthleteSubmitCount(int count);
+
+  /// No description provided for @opsAddAthleteDraftDuplicate.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV này đã có trong danh sách đang chọn.'**
+  String get opsAddAthleteDraftDuplicate;
+
+  /// No description provided for @opsAddAthleteDraftRemove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá khỏi danh sách'**
+  String get opsAddAthleteDraftRemove;
+
+  /// No description provided for @opsAddAthleteScoreNotNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm phải là số.'**
+  String get opsAddAthleteScoreNotNumber;
+
+  /// No description provided for @opsAddAthleteScoreRange.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm {type} phải từ {min} đến {max}.'**
+  String opsAddAthleteScoreRange(String type, String min, String max);
+
+  /// No description provided for @opsAddAthleteDraftsPartial.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm {addedCount} VĐV; thất bại: {failedCount}. VĐV thất bại vẫn được giữ trong danh sách chọn, hãy kiểm tra rồi thử lại.'**
+  String opsAddAthleteDraftsPartial(int addedCount, int failedCount);
 
   /// No description provided for @opsAddAthleteMultipleSuccess.
   ///

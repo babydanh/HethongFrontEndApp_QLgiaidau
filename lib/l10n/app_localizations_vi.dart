@@ -12364,7 +12364,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get opsAddAthlete => 'Thêm VĐV';
 
   @override
-  String get opsAddAthleteTitle => 'Thêm VĐV vào danh sách';
+  String get opsAddAthleteTitle => 'Thêm VĐV';
 
   @override
   String get opsAddAthleteDescription =>
@@ -15847,6 +15847,46 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String opsAddAthleteAddSelectedCount(int count) {
     return 'Thêm $count VĐV';
+  }
+
+  @override
+  String get opsAddAthleteGuestPhone => 'SĐT';
+
+  @override
+  String get opsAddAthleteGuestScore => 'Điểm';
+
+  @override
+  String get opsAddAthleteGuestScoreType => 'Loại điểm';
+
+  @override
+  String get opsAddAthleteGuestNotes => 'Ghi chú';
+
+  @override
+  String get opsAddAthleteQueueAdd => 'Thêm vào danh sách';
+
+  @override
+  String opsAddAthleteSubmitCount(int count) {
+    return 'Thêm ($count)';
+  }
+
+  @override
+  String get opsAddAthleteDraftDuplicate =>
+      'VĐV này đã có trong danh sách đang chọn.';
+
+  @override
+  String get opsAddAthleteDraftRemove => 'Xoá khỏi danh sách';
+
+  @override
+  String get opsAddAthleteScoreNotNumber => 'Điểm phải là số.';
+
+  @override
+  String opsAddAthleteScoreRange(String type, String min, String max) {
+    return 'Điểm $type phải từ $min đến $max.';
+  }
+
+  @override
+  String opsAddAthleteDraftsPartial(int addedCount, int failedCount) {
+    return 'Đã thêm $addedCount VĐV; thất bại: $failedCount. VĐV thất bại vẫn được giữ trong danh sách chọn, hãy kiểm tra rồi thử lại.';
   }
 
   @override

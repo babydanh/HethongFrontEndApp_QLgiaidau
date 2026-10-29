@@ -247,6 +247,10 @@ class _RecordingManagementRepository
     String id, {
     required String name,
     String? email,
+    String? phone,
+    String? notes,
+    double? elo,
+    String? eloSource,
     String? tournamentDivisionId,
   }) async {
     directNames.add(name);

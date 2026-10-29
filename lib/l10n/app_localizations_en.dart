@@ -12403,7 +12403,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opsAddAthlete => 'Add athlete';
 
   @override
-  String get opsAddAthleteTitle => 'Add athletes to the roster';
+  String get opsAddAthleteTitle => 'Add athlete';
 
   @override
   String get opsAddAthleteDescription =>
@@ -15905,6 +15905,46 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String opsAddAthleteAddSelectedCount(int count) {
     return 'Add $count athletes';
+  }
+
+  @override
+  String get opsAddAthleteGuestPhone => 'Phone';
+
+  @override
+  String get opsAddAthleteGuestScore => 'Rating';
+
+  @override
+  String get opsAddAthleteGuestScoreType => 'Rating type';
+
+  @override
+  String get opsAddAthleteGuestNotes => 'Notes';
+
+  @override
+  String get opsAddAthleteQueueAdd => 'Add to list';
+
+  @override
+  String opsAddAthleteSubmitCount(int count) {
+    return 'Add ($count)';
+  }
+
+  @override
+  String get opsAddAthleteDraftDuplicate =>
+      'This athlete is already in the selected list.';
+
+  @override
+  String get opsAddAthleteDraftRemove => 'Remove from list';
+
+  @override
+  String get opsAddAthleteScoreNotNumber => 'Rating must be a number.';
+
+  @override
+  String opsAddAthleteScoreRange(String type, String min, String max) {
+    return '$type rating must be between $min and $max.';
+  }
+
+  @override
+  String opsAddAthleteDraftsPartial(int addedCount, int failedCount) {
+    return 'Added $addedCount athletes; failed: $failedCount. Failed athletes stay in the selected list; check them and try again.';
   }
 
   @override

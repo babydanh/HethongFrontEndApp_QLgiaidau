@@ -88,6 +88,7 @@ class _TournamentManagementRepository
     this.failCandidateAdd = false,
     this.candidateAdditionGate,
     this.directError,
+    this.directErrorsByName = const {},
   }) : _candidateLoader =
            candidateLoader ??
            ((source, query, participantId) async =>
@@ -98,10 +99,12 @@ class _TournamentManagementRepository
   final bool failCandidateAdd;
   final Completer<void>? candidateAdditionGate;
   final Object? directError;
+  final Map<String, Object> directErrorsByName;
   final emailSearches = <String?>[];
   final candidateRequests = <Map<String, Object?>>[];
   final candidateAdditions = <Map<String, Object?>>[];
   final directNames = <String>[];
+  final directCalls = <Map<String, Object?>>[];
   final statusUpdates = <Map<String, String>>[];
 
   @override
@@ -148,9 +151,24 @@ class _TournamentManagementRepository
     String id, {
     required String name,
     String? email,
+    String? phone,
+    String? notes,
+    double? elo,
+    String? eloSource,
     String? tournamentDivisionId,
   }) async {
     directNames.add(name);
+    directCalls.add({
+      'name': name,
+      'email': email,
+      'phone': phone,
+      'notes': notes,
+      'elo': elo,
+      'eloSource': eloSource,
+      'tournamentDivisionId': tournamentDivisionId,
+    });
+    final byName = directErrorsByName[name];
+    if (byName != null) throw byName;
     final error = directError;
     if (error != null) throw error;
     return 'participant-direct';
@@ -982,6 +1000,212 @@ void main() {
     expect(search.controller?.text, 'an.nguyen@example.com');
     expect(repository.emailSearches, ['an.nguyen@example.com']);
     expect(find.byKey(const ValueKey('add-athlete-direct-name')), findsNothing);
+  });
+  _addAthleteMultiTests();
+}
+
+Future<void> _openDirectTab(WidgetTester tester) async {
+  final directTab = find.text('Nhập tên');
+  await tester.ensureVisible(directTab);
+  await tester.tap(directTab);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _fillDirect(
+  WidgetTester tester, {
+  String? name,
+  String? email,
+  String? phone,
+  String? score,
+  String? notes,
+}) async {
+  Future<void> enter(String key, String? value) async {
+    if (value == null) return;
+    final field = find.byKey(ValueKey(key));
+    await tester.ensureVisible(field);
+    await tester.enterText(field, value);
+    await tester.pump();
+  }
+
+  await enter('add-athlete-direct-name', name);
+  await enter('add-athlete-direct-email', email);
+  await enter('add-athlete-direct-phone', phone);
+  await enter('add-athlete-direct-score', score);
+  await enter('add-athlete-direct-notes', notes);
+}
+
+Future<void> _tapKey(WidgetTester tester, String key) async {
+  final target = find.byKey(ValueKey(key));
+  await tester.ensureVisible(target);
+  await tester.tap(target);
+  await tester.pumpAndSettle();
+}
+
+void _addAthleteMultiTests() {
+  testWidgets('header shows only the title, no description or tournament line', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    await tester.pumpWidget(_app('IN_PROGRESS'));
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+
+    expect(
+      find.text(
+        'Tìm bạn bè, thành viên CLB hoặc nhập tên cho nội dung cá nhân hay đôi.',
+      ),
+      findsNothing,
+    );
+    expect(find.textContaining('· Open'), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('add-athlete-sheet')),
+        matching: find.text('Thêm VĐV'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('direct entry posts phone, notes and a typed DUPR score', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository();
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _openDirectTab(tester);
+    await _fillDirect(
+      tester,
+      name: 'An Nguyen',
+      email: 'an.nguyen@example.com',
+      phone: '0900000000',
+      score: '4,5',
+      notes: 'Left-handed',
+    );
+    await _tapKey(tester, 'add-athlete-score-source-dupr');
+    await _tapKey(tester, 'add-athlete-direct-submit');
+
+    expect(repository.directCalls, hasLength(1));
+    final call = repository.directCalls.single;
+    expect(call['name'], 'An Nguyen');
+    expect(call['email'], 'an.nguyen@example.com');
+    expect(call['phone'], '0900000000');
+    expect(call['notes'], 'Left-handed');
+    expect(call['elo'], 4.5);
+    expect(call['eloSource'], 'DUPR');
+  });
+
+  testWidgets('a score that is not a number or out of range is blocked', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository();
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _openDirectTab(tester);
+    await _fillDirect(tester, name: 'An Nguyen', score: 'abc');
+    await _tapKey(tester, 'add-athlete-direct-submit');
+    expect(find.text('Điểm phải là số.'), findsOneWidget);
+    expect(repository.directCalls, isEmpty);
+
+    await _tapKey(tester, 'add-athlete-score-source-dupr');
+    await _fillDirect(tester, score: '9');
+    await _tapKey(tester, 'add-athlete-direct-submit');
+    expect(find.text('Điểm DUPR phải từ 1 đến 8.'), findsOneWidget);
+    expect(repository.directCalls, isEmpty);
+  });
+
+  testWidgets('queued athletes are sent one by one, oldest first', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository();
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _openDirectTab(tester);
+    await _fillDirect(tester, name: 'An Nguyen', email: 'an@example.com');
+    await _tapKey(tester, 'add-athlete-direct-queue');
+    await _fillDirect(tester, name: 'Binh Tran', email: 'binh@example.com');
+
+    expect(find.text('Thêm (2)'), findsOneWidget);
+    await _tapKey(tester, 'add-athlete-direct-submit');
+
+    expect(repository.directNames, ['An Nguyen', 'Binh Tran']);
+    expect(find.byKey(const ValueKey('add-athlete-draft-1')), findsNothing);
+  });
+
+  testWidgets('newest queued athlete sits on top and can be removed', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    await tester.pumpWidget(_app('IN_PROGRESS'));
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _openDirectTab(tester);
+    await _fillDirect(tester, name: 'An Nguyen');
+    await _tapKey(tester, 'add-athlete-direct-queue');
+    await _fillDirect(tester, name: 'Binh Tran');
+    await _tapKey(tester, 'add-athlete-direct-queue');
+
+    final first = tester.getTopLeft(find.text('Binh Tran')).dy;
+    final second = tester.getTopLeft(find.text('An Nguyen')).dy;
+    expect(first, lessThan(second));
+    await _tapKey(tester, 'add-athlete-draft-remove-2');
+    expect(find.text('Binh Tran'), findsNothing);
+    expect(find.text('An Nguyen'), findsOneWidget);
+  });
+
+  testWidgets('queueing a duplicate email is refused', (tester) async {
+    _useMobileViewport(tester);
+    await tester.pumpWidget(_app('IN_PROGRESS'));
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _openDirectTab(tester);
+    await _fillDirect(tester, name: 'An Nguyen', email: 'an@example.com');
+    await _tapKey(tester, 'add-athlete-direct-queue');
+    await _fillDirect(tester, name: 'Binh Tran', email: 'AN@example.com');
+    await _tapKey(tester, 'add-athlete-direct-queue');
+
+    expect(find.text('VĐV này đã có trong danh sách đang chọn.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-athlete-draft-2')), findsNothing);
+  });
+
+  testWidgets('a rejected queued athlete stays with the reason', (
+    tester,
+  ) async {
+    _useMobileViewport(tester);
+    final repository = _TournamentManagementRepository(
+      directErrorsByName: {'Binh Tran': _conflict('EMAIL_ALREADY_IN_DIVISION')},
+    );
+    await tester.pumpWidget(
+      _app('IN_PROGRESS', managementRepository: repository),
+    );
+    await tester.pumpAndSettle();
+    await _openAddAthlete(tester);
+    await _openDirectTab(tester);
+    await _fillDirect(tester, name: 'An Nguyen', email: 'an@example.com');
+    await _tapKey(tester, 'add-athlete-direct-queue');
+    await _fillDirect(tester, name: 'Binh Tran', email: 'binh@example.com');
+    await _tapKey(tester, 'add-athlete-direct-queue');
+    await _tapKey(tester, 'add-athlete-direct-submit');
+
+    expect(repository.directNames, ['An Nguyen', 'Binh Tran']);
+    expect(find.text('An Nguyen'), findsNothing);
+    expect(find.text('Binh Tran'), findsOneWidget);
+    expect(find.byKey(const ValueKey('add-athlete-draft-2')), findsOneWidget);
+    expect(
+      find.textContaining('Đã thêm 1 VĐV; thất bại: 1'),
+      findsOneWidget,
+    );
   });
 }
 

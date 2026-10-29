@@ -286,6 +286,10 @@ class ApiTournamentManagementRepository
     String id, {
     required String name,
     String? email,
+    String? phone,
+    String? notes,
+    double? elo,
+    String? eloSource,
     String? tournamentDivisionId,
   }) async {
     final response = _map(
@@ -294,6 +298,10 @@ class ApiTournamentManagementRepository
         data: {
           'name': name,
           if (email != null) 'email': email,
+          'phone': ?phone,
+          'notes': ?notes,
+          'elo': ?elo,
+          'eloSource': ?eloSource,
           if (tournamentDivisionId != null)
             'tournamentDivisionId': tournamentDivisionId,
         },
