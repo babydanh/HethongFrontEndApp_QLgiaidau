@@ -20,6 +20,9 @@ typedef ScheduleCourt = ({String id, String name});
 /// Một nội dung thi đấu để chọn trong thanh công cụ.
 typedef ScheduleDivision = ({String id, String name});
 
+/// Mục trong menu ⋯ của thanh công cụ lịch.
+enum _ScheduleMenuAction { courts, print, export, ai, settings }
+
 /// Đọc sân của giải từ danh sách cơ sở (mỗi cơ sở có mảng `courts`). Sân thiếu
 /// tên bị bỏ qua; trùng tên thì giữ bản ghi sau cùng. Kết quả sắp theo tên.
 List<ScheduleCourt> parseScheduleCourts(List<Map<String, dynamic>> venues) {
@@ -71,6 +74,7 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
     this.onScheduleWaitingWrite,
     this.onWaitingBatchFinished,
     this.onAutoSchedule,
+    this.onAiSchedule,
     this.onOpenScheduleSettings,
     this.draftMatches = const [],
     this.draftSkippedCount = 0,
@@ -147,8 +151,11 @@ class TournamentScheduleCourtGrid extends ConsumerStatefulWidget {
   /// gọi tải lại nguồn trận quản lý.
   final VoidCallback? onWaitingBatchFinished;
 
-  /// Mở xếp tự động (nút ⚡). Null thì không hiện nút.
+  /// Mở xếp tự động (mục trong menu ⋯). Null thì không hiện mục.
   final VoidCallback? onAutoSchedule;
+
+  /// Mở "Xếp bằng AI" (mục trong menu ⋯). Null thì không hiện mục.
+  final VoidCallback? onAiSchedule;
 
   /// Mở sheet cài đặt khung giờ sân (giờ mở/đóng + bước ô). Null thì không
   /// hiện nút.
@@ -371,24 +378,6 @@ class _TournamentScheduleCourtGridState
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.onAutoSchedule != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.sm,
-                  AppSpacing.sm,
-                  AppSpacing.sm,
-                  0,
-                ),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton.icon(
-                    key: const ValueKey('schedule-auto-button'),
-                    onPressed: widget.onAutoSchedule,
-                    icon: const Icon(Icons.bolt_rounded, size: 18),
-                    label: Text(l10n.scheduleQuickAutoButton),
-                  ),
-                ),
-              ),
             _toolbar(
               context,
               l10n,
@@ -865,7 +854,6 @@ class _TournamentScheduleCourtGridState
     int totalCount,
   ) {
     final colors = context.colors;
-    final visibleCount = selectedCourts.length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.sm,
@@ -912,45 +900,14 @@ class _TournamentScheduleCourtGridState
               ),
               const SizedBox(width: AppSpacing.sm),
             ],
-            LavishChipButton(
-              key: const ValueKey('court-picker-button'),
-              label:
-                  '${l10n.tournamentManagementVenues} $visibleCount/${allCourts.length}',
-              chevron: true,
-              onPressed: () =>
-                  _openCourtPicker(context, allCourts, selectedCourts),
-            ),
-            const SizedBox(width: 6),
-            LavishIconBox(
-              key: const ValueKey('schedule-print-button'),
-              tone: LavishTone.neutral,
-              tooltip: l10n.schedulePrint,
-              onTap: widget.onPrint ?? _printSchedule,
-              child: const Icon(Icons.print_outlined),
-            ),
-            const SizedBox(width: 6),
-            LavishIconBox(
-              key: const ValueKey('schedule-export-button'),
-              tone: LavishTone.neutral,
-              tooltip: l10n.exportData,
-              onTap: _exporting ? null : _exportSchedule,
-              child: _exporting
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.file_download_outlined),
-            ),
-            if (widget.onOpenScheduleSettings != null) ...[
-              const SizedBox(width: 6),
+            if (widget.onAutoSchedule != null)
               LavishIconBox(
-                key: const ValueKey('schedule-settings-button'),
+                key: const ValueKey('schedule-auto-button'),
                 tone: LavishTone.neutral,
-                tooltip: l10n.scheduleSettingsTitle,
-                onTap: widget.onOpenScheduleSettings,
-                child: const Icon(Icons.schedule_rounded),
+                tooltip: l10n.scheduleQuickAutoButton,
+                onTap: widget.onAutoSchedule,
+                child: const Icon(Icons.bolt_rounded),
               ),
-            ],
             if (widget.onOpenFullscreen != null) ...[
               const SizedBox(width: 6),
               LavishIconBox(
@@ -961,8 +918,97 @@ class _TournamentScheduleCourtGridState
                 child: const Icon(Icons.open_in_full_rounded),
               ),
             ],
+            const SizedBox(width: 6),
+            _moreMenu(context, l10n, allCourts, selectedCourts),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Menu ⋯: các thao tác ít dùng nằm đây để thanh công cụ chỉ còn một hàng.
+  Widget _moreMenu(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<ScheduleCourt> allCourts,
+    Set<String> selectedCourts,
+  ) {
+    PopupMenuItem<_ScheduleMenuAction> item(
+      _ScheduleMenuAction action,
+      String key,
+      IconData icon,
+      String label, {
+      bool enabled = true,
+    }) => PopupMenuItem(
+      key: ValueKey(key),
+      value: action,
+      enabled: enabled,
+      child: Row(
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 10),
+          Flexible(child: Text(label)),
+        ],
+      ),
+    );
+    return PopupMenuButton<_ScheduleMenuAction>(
+      key: const ValueKey('schedule-more-button'),
+      tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+      padding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      onSelected: (action) {
+        switch (action) {
+          case _ScheduleMenuAction.courts:
+            _openCourtPicker(context, allCourts, selectedCourts);
+          case _ScheduleMenuAction.print:
+            (widget.onPrint ?? _printSchedule)();
+          case _ScheduleMenuAction.export:
+            _exportSchedule();
+          case _ScheduleMenuAction.ai:
+            widget.onAiSchedule?.call();
+          case _ScheduleMenuAction.settings:
+            widget.onOpenScheduleSettings?.call();
+        }
+      },
+      itemBuilder: (_) => [
+        item(
+          _ScheduleMenuAction.courts,
+          'court-picker-button',
+          Icons.grid_view_rounded,
+          '${l10n.tournamentManagementVenues} '
+              '${selectedCourts.length}/${allCourts.length}',
+        ),
+        item(
+          _ScheduleMenuAction.print,
+          'schedule-print-button',
+          Icons.print_outlined,
+          l10n.schedulePrint,
+        ),
+        item(
+          _ScheduleMenuAction.export,
+          'schedule-export-button',
+          Icons.file_download_outlined,
+          l10n.exportData,
+          enabled: !_exporting,
+        ),
+        if (widget.onAiSchedule != null)
+          item(
+            _ScheduleMenuAction.ai,
+            'schedule-ai-button',
+            Icons.auto_awesome,
+            l10n.scheduleAiButton,
+          ),
+        if (widget.onOpenScheduleSettings != null)
+          item(
+            _ScheduleMenuAction.settings,
+            'schedule-settings-button',
+            Icons.schedule_rounded,
+            l10n.scheduleSettingsTitle,
+          ),
+      ],
+      child: const LavishIconBox(
+        tone: LavishTone.neutral,
+        child: Icon(Icons.more_horiz_rounded),
       ),
     );
   }

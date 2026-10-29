@@ -166,17 +166,14 @@ void main() {
     expect(find.byType(ScheduleGrid), findsNothing);
   });
 
-  testWidgets('the view toggle switches between grid and list', (tester) async {
+  testWidgets('the grid shows only the schedule, with no view toggle', (
+    tester,
+  ) async {
     await _pump(tester, matchesView: OrganizerOpsMatchesView.grid);
-    expect(find.byType(ScheduleGrid), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('ops-matches-view-list')));
-    await tester.pumpAndSettle();
-    expect(find.byType(ScheduleGrid), findsNothing);
-
-    await tester.tap(find.byKey(const ValueKey('ops-matches-view-grid')));
-    await tester.pumpAndSettle();
     expect(find.byType(ScheduleGrid), findsOneWidget);
+    expect(find.byKey(const ValueKey('ops-matches-view-list')), findsNothing);
+    expect(find.byKey(const ValueKey('ops-matches-view-grid')), findsNothing);
   });
 
   testWidgets('grid keeps the court grid and division picker with no matches', (
@@ -249,9 +246,6 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('ops-matches-view-grid')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Đội A'), findsWidgets);
-
-    await tester.tap(find.byKey(const ValueKey('ops-matches-view-list')));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('Đội A'), findsWidgets);
+    expect(find.byKey(const ValueKey('ops-matches-view-list')), findsNothing);
   });
 }

@@ -303,7 +303,11 @@ void main() {
 
     final bulk = find.byKey(const ValueKey('schedule-bulk-schedule-button'));
     expect(bulk, findsOneWidget);
-    expect(bulk.hitTestable(), findsOneWidget, reason: 'nút phải nằm trong vùng chạm');
+    expect(
+      bulk.hitTestable(),
+      findsOneWidget,
+      reason: 'nút phải nằm trong vùng chạm',
+    );
     expect(
       tester.widget<FilledButton>(bulk).onPressed,
       isNotNull,
@@ -347,99 +351,102 @@ void main() {
     expect(find.byType(ScheduleFullscreenScreen), findsNothing);
   });
 
-  testWidgets('tapping an empty cell offers waiting matches and schedules the pick there', (
-    tester,
-  ) async {
-    final repository = await _pump(
-      tester,
-      matches: [
-        _waitingMatch(),
-        _scheduledMatch(id: 'm-sched', at: DateTime(2026, 6, 1, 7)),
-      ],
-    );
+  testWidgets(
+    'tapping an empty cell offers waiting matches and schedules the pick there',
+    (tester) async {
+      final repository = await _pump(
+        tester,
+        matches: [
+          _waitingMatch(),
+          _scheduledMatch(id: 'm-sched', at: DateTime(2026, 6, 1, 7)),
+        ],
+      );
 
-    final cell = find.byKey(const ValueKey('schedule-slot-Sân 1-2'));
-    await tester.ensureVisible(cell);
-    await tester.tap(cell);
-    await tester.pumpAndSettle();
+      final cell = find.byKey(const ValueKey('schedule-slot-Sân 1-2'));
+      await tester.ensureVisible(cell);
+      await tester.tap(cell);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Xếp trận vào Sân 1 lúc 07:30'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('schedule-picker-m-wait')));
-    await tester.pump();
-    // Sheet mới chọn nhiều trận (task 4.1): xác nhận mới ghi.
-    await tester.tap(find.byKey(const ValueKey('schedule-multi-submit')));
-    await tester.pumpAndSettle();
+      expect(find.text('Xếp trận vào Sân 1 lúc 07:30'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('schedule-picker-m-wait')));
+      await tester.pump();
+      // Sheet mới chọn nhiều trận (task 4.1): xác nhận mới ghi.
+      await tester.tap(find.byKey(const ValueKey('schedule-multi-submit')));
+      await tester.pumpAndSettle();
 
-    expect(repository.calls, hasLength(1));
-    final call = repository.calls.single;
-    expect(call.matchId, 'm-wait');
-    expect(call.courtId, 'court-1');
-    expect(call.courtName, 'Sân 1');
-    expect(
-      call.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7, 30)),
-      isTrue,
-    );
-  });
+      expect(repository.calls, hasLength(1));
+      final call = repository.calls.single;
+      expect(call.matchId, 'm-wait');
+      expect(call.courtId, 'court-1');
+      expect(call.courtName, 'Sân 1');
+      expect(
+        call.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7, 30)),
+        isTrue,
+      );
+    },
+  );
 
-  testWidgets('a scheduled card opens the quick sheet and Gỡ lịch clears only court and time', (
-    tester,
-  ) async {
-    final repository = await _pump(
-      tester,
-      matches: [
-        _waitingMatch(),
-        _scheduledMatch(id: 'm-sched', at: DateTime(2026, 6, 1, 7)),
-      ],
-    );
+  testWidgets(
+    'a scheduled card opens the quick sheet and Gỡ lịch clears only court and time',
+    (tester) async {
+      final repository = await _pump(
+        tester,
+        matches: [
+          _waitingMatch(),
+          _scheduledMatch(id: 'm-sched', at: DateTime(2026, 6, 1, 7)),
+        ],
+      );
 
-    final card = find.byKey(const ValueKey('schedule-match-m-sched'));
-    await tester.ensureVisible(card);
-    await tester.tap(card);
-    await tester.pumpAndSettle();
+      final card = find.byKey(const ValueKey('schedule-match-m-sched'));
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Xếp nhanh'), findsOneWidget);
-    await tester.tap(find.text('Gỡ lịch'));
-    await tester.pumpAndSettle();
+      expect(find.text('Xếp nhanh'), findsOneWidget);
+      await tester.tap(find.text('Gỡ lịch'));
+      await tester.pumpAndSettle();
 
-    expect(repository.calls, hasLength(1));
-    final call = repository.calls.single;
-    expect(call.matchId, 'm-sched');
-    // Gỡ lịch chỉ xoá sân và giờ; không gửi thời lượng hay trường khác.
-    expect(call.clear, {
-      MatchScheduleField.courtId,
-      MatchScheduleField.courtName,
-      MatchScheduleField.scheduledAt,
-    });
-    expect(call.durationMinutes, isNull);
-  });
+      expect(repository.calls, hasLength(1));
+      final call = repository.calls.single;
+      expect(call.matchId, 'm-sched');
+      // Gỡ lịch chỉ xoá sân và giờ; không gửi thời lượng hay trường khác.
+      expect(call.clear, {
+        MatchScheduleField.courtId,
+        MatchScheduleField.courtName,
+        MatchScheduleField.scheduledAt,
+      });
+      expect(call.durationMinutes, isNull);
+    },
+  );
 
-  testWidgets('a quick edit that overlaps another match on the same court is refused', (
-    tester,
-  ) async {
-    final repository = await _pump(
-      tester,
-      matches: [
-        _scheduledMatch(id: 'm-first', at: DateTime(2026, 6, 1, 7, 45)),
-        _scheduledMatch(id: 'm-second', at: DateTime(2026, 6, 1, 7, 30)),
-      ],
-    );
+  testWidgets(
+    'a quick edit that overlaps another match on the same court is refused',
+    (tester) async {
+      final repository = await _pump(
+        tester,
+        matches: [
+          _scheduledMatch(id: 'm-first', at: DateTime(2026, 6, 1, 7, 45)),
+          _scheduledMatch(id: 'm-second', at: DateTime(2026, 6, 1, 7, 30)),
+        ],
+      );
 
-    // Kéo dài m-second lên 30 phút thì chồng lên m-first lúc 07:45.
-    final card = find.byKey(const ValueKey('schedule-match-m-second'));
-    await tester.ensureVisible(card);
-    await tester.tap(card);
-    await tester.pumpAndSettle();
+      // Kéo dài m-second lên 30 phút thì chồng lên m-first lúc 07:45.
+      final card = find.byKey(const ValueKey('schedule-match-m-second'));
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(DropdownButtonFormField<int>).last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('30 phút').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Lưu Thay Đổi'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<int>).last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('30 phút').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Lưu Thay Đổi'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Trùng sân và giờ với trận khác.'), findsOneWidget);
-    expect(repository.calls, isEmpty);
-  });
+      expect(find.text('Trùng sân và giờ với trận khác.'), findsOneWidget);
+      expect(repository.calls, isEmpty);
+    },
+  );
 
   testWidgets('a slot the server moved tells the organizer', (tester) async {
     final repository = await _pump(
@@ -466,97 +473,106 @@ void main() {
     expect(find.textContaining('Máy chủ đã dời 1 trận'), findsOneWidget);
   });
 
-  testWidgets('⚡ auto schedule shows a draft on the grid and writes it only when applied', (
-    tester,
-  ) async {
-    final repository = await _pump(
-      tester,
-      matches: [
-        _waitingMatch(),
-        _scheduledMatch(id: 'm-sched', at: DateTime(2026, 6, 1, 7)),
-      ],
-    );
-    repository.plan = SchedulePlanPreview(
-      durationMinutes: 45,
-      assignments: [
-        (
-          matchId: 'm-wait',
-          courtId: 'court-1',
-          scheduledAt: DateTime(2026, 6, 1, 7, 45),
-        ),
-      ],
-      skipped: const [],
-      eligibleCount: 1,
-    );
+  testWidgets(
+    '⚡ auto schedule shows a draft on the grid and writes it only when applied',
+    (tester) async {
+      final repository = await _pump(
+        tester,
+        matches: [
+          _waitingMatch(),
+          _scheduledMatch(id: 'm-sched', at: DateTime(2026, 6, 1, 7)),
+        ],
+      );
+      repository.plan = SchedulePlanPreview(
+        durationMinutes: 45,
+        assignments: [
+          (
+            matchId: 'm-wait',
+            courtId: 'court-1',
+            scheduledAt: DateTime(2026, 6, 1, 7, 45),
+          ),
+        ],
+        skipped: const [],
+        eligibleCount: 1,
+      );
 
-    final auto = find.byKey(const ValueKey('schedule-auto-button'));
-    await tester.ensureVisible(auto);
-    await tester.tap(auto);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Xem trước'));
-    await tester.pumpAndSettle();
+      final auto = find.byKey(const ValueKey('schedule-auto-button'));
+      await tester.ensureVisible(auto);
+      await tester.tap(auto);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Xem trước'));
+      await tester.pumpAndSettle();
 
-    // Xem trước chỉ hiện bản nháp, chưa ghi gì xuống server.
-    expect(repository.calls, isEmpty);
-    final apply = find.byKey(const ValueKey('schedule-draft-apply'));
-    expect(apply, findsOneWidget);
-    await tester.ensureVisible(apply);
-    await tester.tap(apply);
-    await tester.pumpAndSettle();
+      // Xem trước chỉ hiện bản nháp, chưa ghi gì xuống server.
+      expect(repository.calls, isEmpty);
+      final apply = find.byKey(const ValueKey('schedule-draft-apply'));
+      expect(apply, findsOneWidget);
+      await tester.ensureVisible(apply);
+      await tester.tap(apply);
+      await tester.pumpAndSettle();
 
-    expect(repository.calls, hasLength(1));
-    final call = repository.calls.single;
-    expect(call.matchId, 'm-wait');
-    expect(call.courtId, 'court-1');
-    expect(
-      call.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7, 45)),
-      isTrue,
-    );
-    // Ghi đúng thời lượng mà máy chủ đã dùng để tính khung giờ.
-    expect(call.durationMinutes, 45);
-  });
+      expect(repository.calls, hasLength(1));
+      final call = repository.calls.single;
+      expect(call.matchId, 'm-wait');
+      expect(call.courtId, 'court-1');
+      expect(
+        call.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7, 45)),
+        isTrue,
+      );
+      // Ghi đúng thời lượng mà máy chủ đã dùng để tính khung giờ.
+      expect(call.durationMinutes, 45);
+    },
+  );
 
-  testWidgets('dragging a scheduled card onto another asks first, then swaps both', (
-    tester,
-  ) async {
-    final repository = await _pump(
-      tester,
-      matches: [
-        _scheduledMatch(id: 'm-a', at: DateTime(2026, 6, 1, 7)),
-        _scheduledMatch(id: 'm-b', at: DateTime(2026, 6, 1, 7, 30)),
-      ],
-    );
+  testWidgets(
+    'dragging a scheduled card onto another asks first, then swaps both',
+    (tester) async {
+      final repository = await _pump(
+        tester,
+        matches: [
+          _scheduledMatch(id: 'm-a', at: DateTime(2026, 6, 1, 7)),
+          _scheduledMatch(id: 'm-b', at: DateTime(2026, 6, 1, 7, 30)),
+        ],
+      );
 
-    final from = tester.getCenter(
-      find.byKey(const ValueKey('schedule-match-m-a')),
-    );
-    final to = tester.getCenter(
-      find.byKey(const ValueKey('schedule-match-m-b')),
-    );
-    final gesture = await tester.startGesture(from);
-    await tester.pump(const Duration(milliseconds: 700));
-    await gesture.moveTo(to);
-    await tester.pump(const Duration(milliseconds: 50));
-    await gesture.up();
-    await tester.pumpAndSettle();
+      final from = tester.getCenter(
+        find.byKey(const ValueKey('schedule-match-m-a')),
+      );
+      final to = tester.getCenter(
+        find.byKey(const ValueKey('schedule-match-m-b')),
+      );
+      final gesture = await tester.startGesture(from);
+      await tester.pump(const Duration(milliseconds: 700));
+      await gesture.moveTo(to);
+      await tester.pump(const Duration(milliseconds: 50));
+      await gesture.up();
+      await tester.pumpAndSettle();
 
-    expect(find.text('Đổi chỗ hai trận?'), findsOneWidget);
-    expect(repository.calls, isEmpty);
-    await tester.tap(find.text('Đổi chỗ'));
-    await tester.pumpAndSettle();
+      expect(find.text('Đổi chỗ hai trận?'), findsOneWidget);
+      expect(repository.calls, isEmpty);
+      await tester.tap(find.text('Đổi chỗ'));
+      await tester.pumpAndSettle();
 
-    // Đổi chỗ có thể gồm bước gỡ trận đích để tránh trùng lịch; chỉ kiểm tra
-    // trạng thái cuối của hai trận: mỗi trận nằm ở ô của trận kia.
-    expect(repository.calls.map((call) => call.matchId).toSet(), {'m-a', 'm-b'});
-    final finalA = repository.calls.lastWhere((call) => call.matchId == 'm-a');
-    final finalB = repository.calls.lastWhere((call) => call.matchId == 'm-b');
-    expect(
-      finalA.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7, 30)),
-      isTrue,
-    );
-    expect(
-      finalB.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7)),
-      isTrue,
-    );
-  });
+      // Đổi chỗ có thể gồm bước gỡ trận đích để tránh trùng lịch; chỉ kiểm tra
+      // trạng thái cuối của hai trận: mỗi trận nằm ở ô của trận kia.
+      expect(repository.calls.map((call) => call.matchId).toSet(), {
+        'm-a',
+        'm-b',
+      });
+      final finalA = repository.calls.lastWhere(
+        (call) => call.matchId == 'm-a',
+      );
+      final finalB = repository.calls.lastWhere(
+        (call) => call.matchId == 'm-b',
+      );
+      expect(
+        finalA.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7, 30)),
+        isTrue,
+      );
+      expect(
+        finalB.scheduledAt!.isAtSameMomentAs(DateTime(2026, 6, 1, 7)),
+        isTrue,
+      );
+    },
+  );
 }

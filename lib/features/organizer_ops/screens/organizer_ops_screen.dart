@@ -773,12 +773,8 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         visualDensity: VisualDensity.compact,
         style: IconButton.styleFrom(
           backgroundColor: selected ? AppTheme.primary : colors.bgCard,
-          side: BorderSide(
-            color: selected ? AppTheme.primary : colors.border,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          side: BorderSide(color: selected ? AppTheme.primary : colors.border),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         icon: Icon(
           isGrid ? Icons.grid_view_rounded : Icons.view_list_rounded,
@@ -927,8 +923,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           start +
           scheduledDurationMinutes(waiting[i], minutesPerSet: minutesPerSet);
       if (busy.any(
-        (b) =>
-            b.court == cells[i].courtName && start < b.end && b.start < end,
+        (b) => b.court == cells[i].courtName && start < b.end && b.start < end,
       )) {
         _showScheduleMessage(messenger, l10n.tournamentManagementActionError);
         return;
@@ -1034,9 +1029,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   /// giải chưa tải thì không mở. Dùng context của màn (guard `mounted` liên
   /// quan) vì chạy qua await.
   Future<void> _showScheduleSettingsSheet() async {
-    final tournament = ref
-        .read(tournamentProvider(widget.tournamentId))
-        .value;
+    final tournament = ref.read(tournamentProvider(widget.tournamentId)).value;
     if (tournament == null || !mounted) return;
     final saved = await ScheduleSettingsSheet.show(
       context,
@@ -1184,9 +1177,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final moved = report.movedMatchIds.length;
     _showScheduleMessage(
       messenger,
-      moved == 0
-          ? outcome
-          : '$outcome ${l10n.scheduleQuickServerMoved(moved)}',
+      moved == 0 ? outcome : '$outcome ${l10n.scheduleQuickServerMoved(moved)}',
     );
     if (report.result == ScheduleSwapResult.swapped) {
       await _warnScheduleConflicts(
@@ -1331,9 +1322,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final summary = l10n.scheduleQuickBulkDone(done);
     _showScheduleMessage(
       messenger,
-      moved == 0
-          ? summary
-          : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
+      moved == 0 ? summary : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
     );
     await _warnScheduleConflicts(
       visible,
@@ -1515,10 +1504,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     }
     var duration = firstWaiting == null
         ? 60
-        : scheduledDurationMinutes(
-            firstWaiting,
-            minutesPerSet: minutesPerSet,
-          );
+        : scheduledDurationMinutes(firstWaiting, minutesPerSet: minutesPerSet);
     final durationOptions = <int>{...scheduleDurationOptions, duration}.toList()
       ..sort();
     final selectedDivisions = <String>{?initialDivisionId};
@@ -1759,9 +1745,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         )).future,
       );
       waiting.addAll(
-        matches.where(
-          (match) => _isWaiting(match) && !isScheduleLocked(match),
-        ),
+        matches.where((match) => _isWaiting(match) && !isScheduleLocked(match)),
       );
     }
     if (waiting.isEmpty) return (drafts: const <MatchModel>[], skipped: 0);
@@ -1852,7 +1836,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
           courtIds: [for (final court in courts) court.id],
           divisionId: divisionId,
           windowStart: dayStart.add(
-            Duration(hours: _settingHour(scheduleSettings['operatingStart'], 7)),
+            Duration(
+              hours: _settingHour(scheduleSettings['operatingStart'], 7),
+            ),
           ),
           windowEnd: dayStart.add(
             Duration(hours: _settingHour(scheduleSettings['operatingEnd'], 22)),
@@ -1884,8 +1870,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     ];
     return AiScheduleSheetResult(
       drafts: drafts,
-      skipped:
-          plan.skipped.length + (plan.assignments.length - drafts.length),
+      skipped: plan.skipped.length + (plan.assignments.length - drafts.length),
       needsReview: aiPlan.needsReview,
     );
   }
@@ -1944,9 +1929,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     final summary = l10n.scheduleQuickAutoApplied(done, drafts.length);
     _showScheduleMessage(
       messenger,
-      moved == 0
-          ? summary
-          : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
+      moved == 0 ? summary : '$summary ${l10n.scheduleQuickServerMoved(moved)}',
     );
     if (done > 0) {
       await _warnScheduleConflicts(
@@ -2117,8 +2100,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
         ),
       ),
       data: (matches) {
-        if (matches.isEmpty &&
-            _matchesView != OrganizerOpsMatchesView.grid) {
+        if (matches.isEmpty && _matchesView != OrganizerOpsMatchesView.grid) {
           return SliverToBoxAdapter(
             child: _OpsReadOnlyNotice(
               icon: Icons.sports_score_outlined,
@@ -2288,25 +2270,6 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildOpsMatchFilterBar(
-                  context,
-                  l10n,
-                  selectedFilter,
-                  onFilterChanged,
-                ),
-                if (!readOnly && _aiScheduleAvailable)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 12, bottom: 4),
-                      child: OutlinedButton.icon(
-                        key: const ValueKey('schedule-ai-button'),
-                        onPressed: openAiSchedule,
-                        icon: const Icon(Icons.auto_awesome, size: 18),
-                        label: Text(l10n.scheduleAiButton),
-                      ),
-                    ),
-                  ),
                 TournamentScheduleCourtGrid(
                   tournamentId: widget.tournamentId,
                   matches: visible,
@@ -2323,6 +2286,9 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
                       : waitingBatchFinished,
                   onScheduleSwap: readOnly ? null : swapMatches,
                   onAutoSchedule: readOnly ? null : openAutoSchedule,
+                  onAiSchedule: readOnly || !_aiScheduleAvailable
+                      ? null
+                      : openAiSchedule,
                   onOpenScheduleSettings: readOnly
                       ? null
                       : _showScheduleSettingsSheet,
@@ -2614,12 +2580,12 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return;
     }
     if (action == 'schedule') {
-        await _showQuickScheduleSheet(
-          context,
-          match,
-          visible: visible,
-          divisionId: divisionId,
-        );
+      await _showQuickScheduleSheet(
+        context,
+        match,
+        visible: visible,
+        divisionId: divisionId,
+      );
       return;
     }
     await _showSpecialOperationSheet(context, match);

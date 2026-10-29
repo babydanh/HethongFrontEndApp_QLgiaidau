@@ -146,6 +146,8 @@ void main() {
       expect(find.text('07:10'), findsNothing);
       expect(find.text('07:15'), findsWidgets);
 
+      await tester.tap(find.byKey(const ValueKey('schedule-more-button')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('schedule-settings-button')));
       await tester.pumpAndSettle();
       expect(find.text('Cài đặt khung giờ sân'), findsOneWidget);
@@ -183,6 +185,8 @@ void main() {
   testWidgets('giờ đóng trước giờ mở bị chặn, không lưu', (tester) async {
     final repository = await _pump(tester);
 
+    await tester.tap(find.byKey(const ValueKey('schedule-more-button')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('schedule-settings-button')));
     await tester.pumpAndSettle();
 

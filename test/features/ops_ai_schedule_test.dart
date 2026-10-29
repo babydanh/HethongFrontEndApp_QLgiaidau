@@ -213,8 +213,16 @@ Future<_MatchRepository> _pump(
 
 final _aiButton = find.byKey(const ValueKey('schedule-ai-button'));
 
+/// The AI and auto entries live in the ⋯ menu of the schedule toolbar.
+Future<void> _openScheduleMenu(WidgetTester tester) async {
+  final more = find.byKey(const ValueKey('schedule-more-button'));
+  await tester.ensureVisible(more);
+  await tester.tap(more);
+  await tester.pumpAndSettle();
+}
+
 Future<void> _openAndPreview(WidgetTester tester, String command) async {
-  await tester.ensureVisible(_aiButton);
+  await _openScheduleMenu(tester);
   await tester.tap(_aiButton);
   await tester.pumpAndSettle();
   await tester.enterText(
@@ -261,8 +269,12 @@ void main() {
 
       await _openAndPreview(tester, 'vòng 1 từ 8h');
 
+      await _openScheduleMenu(tester);
       expect(_aiButton, findsNothing);
-      expect(find.byKey(const ValueKey('schedule-auto-button')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('schedule-auto-button')),
+        findsOneWidget,
+      );
       expect(
         find.text('AI xếp lịch chưa dùng được trên máy chủ này.'),
         findsOneWidget,
@@ -280,10 +292,7 @@ void main() {
 
       expect(find.textContaining('AI chưa xếp được trận nào'), findsOneWidget);
       expect(find.byKey(const ValueKey('schedule-draft-apply')), findsNothing);
-      expect(
-        find.byKey(const ValueKey('ai-schedule-command')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('ai-schedule-command')), findsOneWidget);
     },
   );
 
@@ -291,6 +300,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, status: 'COMPLETED');
+    await _openScheduleMenu(tester);
 
     expect(_aiButton, findsNothing);
   });

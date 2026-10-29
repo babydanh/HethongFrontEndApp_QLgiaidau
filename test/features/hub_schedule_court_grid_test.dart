@@ -120,6 +120,8 @@ void main() {
     );
     expect(find.byTooltip('Sân 3'), findsOneWidget);
 
+    await tester.tap(find.byKey(const ValueKey('schedule-more-button')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-item-Sân 3')));
@@ -143,6 +145,8 @@ void main() {
       ],
     );
 
+    await tester.tap(find.byKey(const ValueKey('schedule-more-button')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-item-Sân 3')));
@@ -151,6 +155,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Đội m3 A'), findsNothing);
 
+    await tester.tap(find.byKey(const ValueKey('schedule-more-button')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('court-picker-item-Sân 3')));

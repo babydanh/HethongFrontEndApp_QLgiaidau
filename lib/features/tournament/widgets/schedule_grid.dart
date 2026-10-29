@@ -286,11 +286,10 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                       onPointerMove: widget.onSlotHeightChanged == null
                           ? null
                           : (event) => _resizeSlots(event.delta.dy),
+                      // Clock corner like the web; dragging it still scales rows.
                       child: Icon(
-                        widget.onSlotHeightChanged == null
-                            ? Icons.schedule_rounded
-                            : Icons.unfold_more_rounded,
-                        size: 15,
+                        Icons.schedule_rounded,
+                        size: 16,
                         color: colors.textMuted,
                       ),
                     ),
@@ -311,7 +310,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
                           )
                             SizedBox(
                               width: courtLayouts[index].laneCount * laneWidth,
-                              child: _courtHeader(widget.courts[index], index),
+                              child: _courtHeader(widget.courts[index]),
                             ),
                         ],
                       ),
@@ -376,22 +375,32 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     );
   }
 
-  Widget _courtHeader(String court, int index) {
+  /// Plain court header like the web: full name on a neutral band, no tint.
+  Widget _courtHeader(String court) {
+    final colors = context.colors;
     return Container(
       height: 38,
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 6),
-      decoration: const BoxDecoration(
-        color: AppTheme.primary,
+      decoration: BoxDecoration(
+        color: colors.bgCard,
         border: Border(
-          bottom: BorderSide(color: AppTheme.primaryDark),
-          left: BorderSide(color: AppTheme.primaryDark),
+          bottom: BorderSide(color: colors.border),
+          left: BorderSide(color: colors.border),
         ),
       ),
-      // Short label ("Sân 1" -> "1"); the full name stays in the tooltip.
       child: Tooltip(
         message: court,
-        child: _courtChip(court, index, fontSize: 12.5, hPadding: 10),
+        child: Text(
+          court,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w800,
+            color: colors.textPrimary,
+          ),
+        ),
       ),
     );
   }
