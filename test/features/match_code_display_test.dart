@@ -42,7 +42,11 @@ Widget _host(Widget child) => MaterialApp(
 
 // Wide view on purpose: the test font (Ahem) is far wider than the real one,
 // so a phone-width pump overflows even without a match code.
-Future<void> _pumpRow(WidgetTester tester, MatchModel match) async {
+Future<void> _pumpRow(
+  WidgetTester tester,
+  MatchModel match, {
+  bool showMatchCode = true,
+}) async {
   tester.view.physicalSize = const Size(1200, 640);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -54,6 +58,7 @@ Future<void> _pumpRow(WidgetTester tester, MatchModel match) async {
         isReadOnly: true,
         totalRounds: 4,
         tournamentId: 't-1',
+        showMatchCode: showMatchCode,
       ),
     ),
   );
@@ -95,6 +100,19 @@ void main() {
 
       expect(find.text('Vòng 1/8 - Trận 3'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('public surface (showMatchCode off) never shows the code', (
+      tester,
+    ) async {
+      await _pumpRow(
+        tester,
+        _match(matchCode: 'TK01'),
+        showMatchCode: false,
+      );
+
+      expect(find.textContaining('TK01'), findsNothing);
+      expect(find.text('Vòng 1/8 - Trận 3'), findsOneWidget);
     });
   });
 

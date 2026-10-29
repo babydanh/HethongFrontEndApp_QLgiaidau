@@ -167,6 +167,40 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('public explore card never shows the organizer match code', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final match = MatchModel(
+      id: 'code-match',
+      tournamentId: _tournament.id,
+      round: 1,
+      matchNumber: 1,
+      matchCode: 'TK01',
+      team1Id: 'team-alpha-id',
+      team2Id: 'team-beta-id',
+      team1Name: 'Team Alpha',
+      team2Name: 'Team Beta',
+      status: 'scheduled',
+      bracketPosition: const BracketPosition(round: 1, position: 1),
+      updatedAt: DateTime.utc(2026, 9, 27),
+    );
+    final repository = _PagedMatchRepository({
+      null: (matches: [match], nextCursor: null),
+    });
+
+    await tester.pumpWidget(_cardApp(repository));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('TK01'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a pair whose team name differs from API order shows the team name', (
     tester,
   ) async {

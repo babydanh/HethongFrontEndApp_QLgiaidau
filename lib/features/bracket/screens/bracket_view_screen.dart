@@ -1434,6 +1434,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             tournamentId: widget.tournamentId,
             isReferee: isReferee,
             canScoreMatch: canScoreMatch,
+            showMatchCode: !isReadOnly || isReferee,
             onUnassignSlot: widget.canEditBracket ? _unassignBracketSlot : null,
           ),
         ],
