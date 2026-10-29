@@ -24898,6 +24898,18 @@ abstract class AppLocalizations {
   /// **'Tên nội dung'**
   String get tournamentManagementDivisionName;
 
+  /// No description provided for @tournamentManagementDivisionSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm nội dung'**
+  String get tournamentManagementDivisionSearchHint;
+
+  /// No description provided for @tournamentManagementDivisionSearchEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có nội dung phù hợp'**
+  String get tournamentManagementDivisionSearchEmpty;
+
   /// No description provided for @tournamentManagementDivisions.
   ///
   /// In vi, this message translates to:

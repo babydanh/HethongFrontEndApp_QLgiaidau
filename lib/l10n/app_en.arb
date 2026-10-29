@@ -5504,6 +5504,8 @@
   "tournamentManagementDivision": "Division",
   "tournamentManagementDivisionConfiguration": "Format settings",
   "tournamentManagementDivisionName": "Division name",
+  "tournamentManagementDivisionSearchHint": "Search divisions",
+  "tournamentManagementDivisionSearchEmpty": "No matching division",
   "tournamentManagementDivisions": "Divisions",
   "tournamentManagementDivisionsDescription": "Create and configure divisions.",
   "tournamentManagementDivisionsEmpty": "No divisions yet",

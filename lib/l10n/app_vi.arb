@@ -5614,6 +5614,8 @@
   "tournamentManagementDivision": "Nội dung",
   "tournamentManagementDivisionConfiguration": "Cấu hình thể thức",
   "tournamentManagementDivisionName": "Tên nội dung",
+  "tournamentManagementDivisionSearchHint": "Tìm nội dung",
+  "tournamentManagementDivisionSearchEmpty": "Không có nội dung phù hợp",
   "tournamentManagementDivisions": "Nội dung thi đấu",
   "tournamentManagementDivisionsDescription": "Tạo và cấu hình nội dung thi đấu.",
   "tournamentManagementDivisionsEmpty": "Chưa có nội dung thi đấu",

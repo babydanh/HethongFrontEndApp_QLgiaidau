@@ -13693,6 +13693,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementDivisionName => 'Tên nội dung';
 
   @override
+  String get tournamentManagementDivisionSearchHint => 'Tìm nội dung';
+
+  @override
+  String get tournamentManagementDivisionSearchEmpty =>
+      'Không có nội dung phù hợp';
+
+  @override
   String get tournamentManagementDivisions => 'Nội dung thi đấu';
 
   @override

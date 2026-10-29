@@ -13740,6 +13740,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementDivisionName => 'Division name';
 
   @override
+  String get tournamentManagementDivisionSearchHint => 'Search divisions';
+
+  @override
+  String get tournamentManagementDivisionSearchEmpty => 'No matching division';
+
+  @override
   String get tournamentManagementDivisions => 'Divisions';
 
   @override
