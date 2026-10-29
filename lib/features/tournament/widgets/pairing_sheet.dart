@@ -1,9 +1,10 @@
 import 'dart:math';
 
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/pairing.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_strategy_picker.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -63,12 +64,11 @@ class PairingSheet extends ConsumerStatefulWidget {
   ConsumerState<PairingSheet> createState() => _PairingSheetState();
 }
 
-class _PairingSheetState extends ConsumerState<PairingSheet>
-    with SingleTickerProviderStateMixin {
+class _PairingSheetState extends ConsumerState<PairingSheet> {
   /// Web `MAX_PAIRING_SELECTION`: tối đa 24 VĐV mỗi lần ghép (12 cặp).
   static const _maxSelection = 24;
 
-  late final TabController _tab = TabController(length: 2, vsync: this);
+  bool _manualTab = true;
   final _searchController = TextEditingController();
   late Future<List<PairingCandidate>> _candidatesFuture = _load();
   PairingStrategy _strategy = PairingStrategy.random;
@@ -85,22 +85,9 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _tab.addListener(_onTabChanged);
-  }
-
-  @override
   void dispose() {
-    _tab.removeListener(_onTabChanged);
-    _tab.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _onTabChanged() {
-    if (_tab.indexIsChanging) return;
-    setState(() {});
   }
 
   Future<List<PairingCandidate>> _load() => ref
@@ -335,87 +322,141 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
     }
   }
 
+  /// One button of the footer row: 44dp tall (touch target) whatever the kit's
+  /// own minimum is.
+  Widget _footerButton(Widget button) => SizedBox(height: 44, child: button);
+
+  Widget _buildFooter(AppLocalizations l10n) {
+    if (!_manualTab) {
+      return _footerButton(
+        LavishButton(
+          buttonKey: const ValueKey('pairing-generate'),
+          label: _busy ? l10n.pairingRunning : l10n.pairingRandomConfirmAction,
+          busy: _busy,
+          onPressed: _busy ? null : _submitGenerate,
+        ),
+      );
+    }
+    final pairCount = _pairs.length;
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: _footerButton(
+            LavishButton(
+              buttonKey: const ValueKey('pairing-shuffle'),
+              kind: LavishButtonKind.outline,
+              label: l10n.pairingShuffleButton,
+              onPressed: (_busy || _selectedIds.length < 2) ? null : _shuffle,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 3,
+          child: _footerButton(
+            LavishButton(
+              buttonKey: const ValueKey('pairing-submit'),
+              label: _busy
+                  ? l10n.pairingSubmitting
+                  : l10n.pairingSubmitPairs(pairCount),
+              busy: _busy,
+              onPressed: (_busy || pairCount == 0) ? null : _submitBatch,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final isManualTab = _tab.index == 0;
-    final pairs = _pairs;
+    final c = LavishColors.of(context);
     return TournamentManageSheet(
       title: l10n.pairingSheetTitle,
       busy: _busy,
-      actions: [
-        if (isManualTab) ...[
-          FilledButton(
-            key: const ValueKey('pairing-submit'),
-            onPressed: (_busy || pairs.isEmpty) ? null : _submitBatch,
-            child: Text(
-              _busy
-                  ? l10n.pairingSubmitting
-                  : l10n.pairingSubmitPairs(pairs.length),
-            ),
-          ),
-          OutlinedButton(
-            key: const ValueKey('pairing-shuffle'),
-            onPressed: (_busy || _selectedIds.length < 2) ? null : _shuffle,
-            child: Text(l10n.pairingShuffleButton),
-          ),
-        ] else
-          FilledButton(
-            key: const ValueKey('pairing-generate'),
-            onPressed: _busy ? null : _submitGenerate,
-            child: Text(
-              _busy ? l10n.pairingRunning : l10n.pairingRandomConfirmAction,
-            ),
-          ),
-        TextButton(
-          onPressed: _busy ? null : () => Navigator.of(context).maybePop(),
-          child: Text(l10n.tournamentManagementCancel),
-        ),
-      ],
+      footer: _buildFooter(l10n),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.pairingSheetDescription(widget.divisionName),
-            style: TextStyle(color: colors.textSecondary, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          TabBar(
+          Row(
             key: const ValueKey('pairing-tabs'),
-            controller: _tab,
-            tabs: [
-              Tab(
+            children: [
+              LavishChipButton(
                 key: const ValueKey('pairing-tab-manual'),
-                text: l10n.pairingManualTab,
+                label: l10n.pairingManualTab,
+                selected: _manualTab,
+                onPressed: _busy ? null : () => _selectTab(manual: true),
               ),
-              Tab(
+              const SizedBox(width: 8),
+              LavishChipButton(
                 key: const ValueKey('pairing-tab-auto'),
-                text: l10n.pairingAutoTab,
+                label: l10n.pairingAutoTab,
+                selected: !_manualTab,
+                onPressed: _busy ? null : () => _selectTab(manual: false),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          if (isManualTab)
-            _buildManualTab(context, l10n, colors)
+          const SizedBox(height: 16),
+          if (_manualTab)
+            _buildManualTab(l10n, c)
           else
-            _buildAutoTab(l10n, colors),
+            PairingStrategyPicker(
+              keyPrefix: 'pairing-strategy',
+              value: _strategy,
+              onChanged: _busy
+                  ? null
+                  : (value) => setState(() => _strategy = value),
+            ),
           if (_error != null) ...[
             const SizedBox(height: 8),
-            Text(_error!, style: TextStyle(color: colors.error)),
+            Text(
+              _error!,
+              style: const TextStyle(color: LavishColors.bad, fontSize: 13),
+            ),
           ],
         ],
       ),
     );
   }
 
+  void _selectTab({required bool manual}) {
+    if (manual != _manualTab) setState(() => _manualTab = manual);
+  }
+
+  /// Grey filled field of the Lavish popups (no border until focused).
+  InputDecoration _lavishInput(
+    LavishColors c, {
+    String? hintText,
+    String? labelText,
+    Widget? prefixIcon,
+  }) {
+    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: color, width: width),
+    );
+    return InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: c.dark ? c.rowLine : const Color(0xFFF2F4F7),
+      hintText: hintText,
+      hintStyle: TextStyle(color: c.faint, fontSize: 13),
+      labelText: labelText,
+      prefixIcon: prefixIcon,
+      prefixIconColor: c.muted,
+      constraints: const BoxConstraints(minHeight: 48),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: border(Colors.transparent, 0),
+      enabledBorder: border(Colors.transparent, 0),
+      disabledBorder: border(Colors.transparent, 0),
+      focusedBorder: border(LavishColors.accent, 1.5),
+    );
+  }
+
   // ── Tab thủ công ──────────────────────────────────────────────────────────
 
-  Widget _buildManualTab(
-    BuildContext context,
-    AppLocalizations l10n,
-    AppColorsExtension colors,
-  ) {
+  Widget _buildManualTab(AppLocalizations l10n, LavishColors c) {
     return FutureBuilder<List<PairingCandidate>>(
       future: _candidatesFuture,
       builder: (context, snapshot) {
@@ -439,88 +480,6 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
             : divisionCandidates
                   .where((item) => _normalizeSearch(item.name).contains(query))
                   .toList(growable: false);
-        // Trạng thái đặc biệt (đang tải / lỗi / rỗng) dựng trực tiếp; danh
-        // sách row đi qua ListView.builder cho dựng lười (shrinkWrap nằm
-        // trong thân cuộn của sheet).
-        Widget listArea;
-        if (loading && snapshot.data == null) {
-          listArea = Padding(
-            key: const ValueKey('pairing-loading'),
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Column(
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.pairingLoading,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
-                ),
-              ],
-            ),
-          );
-        } else if (snapshot.hasError) {
-          listArea = Padding(
-            key: const ValueKey('pairing-load-error'),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                Text(
-                  tournamentSheetServerMessage(snapshot.error!) ??
-                      l10n.pairingLoadFailed,
-                  style: TextStyle(color: colors.error, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  key: const ValueKey('pairing-retry'),
-                  onPressed: loading ? null : _retry,
-                  child: Text(l10n.infoRetry),
-                ),
-              ],
-            ),
-          );
-        } else if (candidates.isEmpty) {
-          listArea = Container(
-            key: const ValueKey('pairing-empty'),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            decoration: BoxDecoration(
-              border: Border.all(color: colors.border),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  divisionCandidates.isEmpty
-                      ? l10n.pairingEmpty
-                      : l10n.pairingNoSearchResults,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.pairingSearchEmptyHint,
-                  style: TextStyle(color: colors.textMuted, fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
-        } else {
-          listArea = ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            itemCount: candidates.length,
-            itemBuilder: (context, index) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _buildCandidateRow(candidates[index], l10n, colors),
-            ),
-          );
-        }
         final pairs = _pairs;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -530,38 +489,129 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
               controller: _searchController,
               enabled: !_busy && !loading,
               onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                prefixIcon: const Icon(Icons.search_rounded),
-                labelText: l10n.pairingSearchLabel,
+              style: TextStyle(fontSize: 14, color: c.text),
+              decoration: _lavishInput(
+                c,
                 hintText: l10n.pairingSearchPlaceholder,
+                prefixIcon: const Icon(Icons.search_rounded),
               ),
             ),
             const SizedBox(height: 12),
-            listArea,
+            _buildCandidateArea(
+              l10n,
+              c,
+              snapshot: snapshot,
+              loading: loading,
+              candidates: candidates,
+              hasAnyWaiting: divisionCandidates.isNotEmpty,
+            ),
             if (_hasOddWaiting && snapshot.data != null) ...[
               const SizedBox(height: 4),
               Container(
                 key: const ValueKey('pairing-odd-hint'),
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: colors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: colors.warning.withValues(alpha: 0.4),
-                  ),
+                  color: c.soft(LavishTone.warn),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   l10n.pairingOddHint,
-                  style: TextStyle(color: colors.warning, fontSize: 12),
+                  style: TextStyle(
+                    color: c.pillText(LavishTone.warn),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
+            if (pairs.isNotEmpty) const SizedBox(height: 12),
             for (var index = 0; index < pairs.length; index++)
-              _buildPairNameInput(pairs[index], index, l10n),
+              _buildPairNameInput(pairs[index], index, l10n, c),
           ],
         );
       },
+    );
+  }
+
+  /// Loading / error / empty states are built directly; rows go through a
+  /// lazy `ListView.builder` (shrink-wrapped inside the sheet's scroll body).
+  Widget _buildCandidateArea(
+    AppLocalizations l10n,
+    LavishColors c, {
+    required AsyncSnapshot<List<PairingCandidate>> snapshot,
+    required bool loading,
+    required List<PairingCandidate> candidates,
+    required bool hasAnyWaiting,
+  }) {
+    if (loading && snapshot.data == null) {
+      return Padding(
+        key: const ValueKey('pairing-loading'),
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        child: Column(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 12),
+            Text(
+              l10n.pairingLoading,
+              style: TextStyle(color: c.muted, fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    }
+    if (snapshot.hasError) {
+      return Padding(
+        key: const ValueKey('pairing-load-error'),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Text(
+              tournamentSheetServerMessage(snapshot.error!) ??
+                  l10n.pairingLoadFailed,
+              style: const TextStyle(color: LavishColors.bad, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              key: const ValueKey('pairing-retry'),
+              onPressed: loading ? null : _retry,
+              child: Text(l10n.infoRetry),
+            ),
+          ],
+        ),
+      );
+    }
+    if (candidates.isEmpty) {
+      return Container(
+        key: const ValueKey('pairing-empty'),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 28),
+        decoration: BoxDecoration(
+          border: Border.all(color: c.line),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          hasAnyWaiting ? l10n.pairingNoSearchResults : l10n.pairingEmpty,
+          style: TextStyle(
+            color: c.muted,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
+      itemCount: candidates.length,
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: _buildCandidateRow(candidates[index], l10n, c),
+      ),
     );
   }
 
@@ -571,30 +621,21 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
     (String, String) pair,
     int index,
     AppLocalizations l10n,
+    LavishColors c,
   ) {
     final key = _pairKey(pair);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.pairingOptionalNameLabel(index + 1),
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 4),
-          TextFormField(
-            key: ValueKey('pairing-name-$key'),
-            initialValue: _pairNames[key] ?? '',
-            enabled: !_busy,
-            onChanged: (value) => _pairNames[key] = value,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              isDense: true,
-              hintText: l10n.pairingOptionalNamePlaceholder,
-            ),
-          ),
-        ],
+      child: TextFormField(
+        key: ValueKey('pairing-name-$key'),
+        initialValue: _pairNames[key] ?? '',
+        enabled: !_busy,
+        onChanged: (value) => _pairNames[key] = value,
+        style: TextStyle(fontSize: 14, color: c.text),
+        decoration: _lavishInput(
+          c,
+          labelText: l10n.pairingOptionalNameLabel(index + 1),
+        ),
       ),
     );
   }
@@ -602,7 +643,7 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
   Widget _buildCandidateRow(
     PairingCandidate candidate,
     AppLocalizations l10n,
-    AppColorsExtension colors,
+    LavishColors c,
   ) {
     final selectionIndex = _selectedIds.indexOf(candidate.id);
     final selected = selectionIndex >= 0;
@@ -610,20 +651,19 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
         selected && _hasOddWaiting && selectionIndex == _selectedIds.length - 1;
     final pairNumber = (selectionIndex ~/ 2) + 1;
     final row = Material(
-      color: selected
-          ? AppTheme.primary.withValues(alpha: 0.08)
-          : colors.bgSurface,
+      color: selected ? c.soft(LavishTone.accent) : c.surface,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         key: ValueKey('pairing-row-${candidate.id}'),
         borderRadius: BorderRadius.circular(12),
         onTap: () => _toggle(candidate),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          constraints: const BoxConstraints(minHeight: 52),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? AppTheme.primary : colors.border,
+              color: selected ? LavishColors.accent : c.line,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -650,51 +690,24 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      candidate.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      l10n.pairingWaitingSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: colors.textMuted, fontSize: 11),
-                    ),
-                  ],
+                child: Text(
+                  candidate.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                  ),
                 ),
               ),
               if (selected) ...[
                 const SizedBox(width: 8),
-                Icon(Icons.check_rounded, size: 18, color: AppTheme.primary),
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: (isWaiting ? colors.warning : AppTheme.primary)
-                        .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    isWaiting
-                        ? l10n.pairingWaitingBadge
-                        : l10n.pairingPairBadge(pairNumber),
-                    style: TextStyle(
-                      color: isWaiting ? colors.warning : AppTheme.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+                LavishPill(
+                  isWaiting
+                      ? l10n.pairingWaitingBadge
+                      : l10n.pairingPairBadge(pairNumber),
+                  tone: isWaiting ? LavishTone.warn : LavishTone.accent,
                 ),
               ],
             ],
@@ -727,80 +740,13 @@ class _PairingSheetState extends ConsumerState<PairingSheet>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               border: highlighted
-                  ? Border.all(color: AppTheme.primary, width: 2)
+                  ? Border.all(color: LavishColors.accent, width: 2)
                   : null,
             ),
             child: row,
           );
         },
       ),
-    );
-  }
-
-  // ── Tab tự động ───────────────────────────────────────────────────────────
-
-  Widget _buildAutoTab(AppLocalizations l10n, AppColorsExtension colors) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l10n.pairingAutoTitle,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.pairingAutoDescription,
-          style: TextStyle(color: colors.textSecondary, fontSize: 12),
-        ),
-        const SizedBox(height: 8),
-        RadioGroup<PairingStrategy>(
-          groupValue: _strategy,
-          onChanged: (value) {
-            if (_busy || value == null) return;
-            setState(() => _strategy = value);
-          },
-          child: Column(
-            children: [
-              for (final strategy in PairingStrategy.values)
-                _strategyTile(strategy, l10n, colors),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _strategyTile(
-    PairingStrategy strategy,
-    AppLocalizations l10n,
-    AppColorsExtension colors,
-  ) {
-    final (label, hint) = switch (strategy) {
-      PairingStrategy.random => (
-        l10n.pairingStrategyRandomLabel,
-        l10n.pairingStrategyRandomHint,
-      ),
-      PairingStrategy.eloBalanced => (
-        l10n.pairingStrategyEloBalancedLabel,
-        l10n.pairingStrategyEloBalancedHint,
-      ),
-      PairingStrategy.sameLevel => (
-        l10n.pairingStrategySameLevelLabel,
-        l10n.pairingStrategySameLevelHint,
-      ),
-    };
-    return RadioListTile<PairingStrategy>(
-      key: ValueKey('pairing-strategy-${strategy.name}'),
-      value: strategy,
-      title: Text(
-        label,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-      ),
-      subtitle: Text(
-        hint,
-        style: TextStyle(color: colors.textSecondary, fontSize: 12),
-      ),
-      contentPadding: EdgeInsets.zero,
     );
   }
 }

@@ -17444,18 +17444,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairingSheetTitle => 'Chọn VĐV để ghép đôi';
 
   @override
-  String pairingSheetDescription(String division) {
-    return 'Chọn VĐV theo thứ tự: cứ hai người liên tiếp là một đôi — $division';
-  }
-
-  @override
   String get pairingManualTab => 'Thủ công';
 
   @override
   String get pairingAutoTab => 'Tự động';
-
-  @override
-  String get pairingSearchLabel => 'Tìm VĐV';
 
   @override
   String get pairingSearchPlaceholder => 'Nhập tên VĐV...';
@@ -17464,16 +17456,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairingLoading => 'Đang tải danh sách VĐV...';
 
   @override
-  String get pairingEmpty => 'Chưa có VĐV nào đang chờ ghép.';
+  String get pairingEmpty => 'Chưa có VĐV chờ ghép.';
 
   @override
   String get pairingNoSearchResults => 'Không tìm thấy VĐV phù hợp.';
-
-  @override
-  String get pairingSearchEmptyHint => 'Thử từ khóa khác hoặc đóng sheet này.';
-
-  @override
-  String get pairingWaitingSubtitle => 'Đang chờ ghép';
 
   @override
   String pairingPairBadge(int n) {
@@ -17484,8 +17470,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairingWaitingBadge => 'Chờ ghép';
 
   @override
-  String get pairingOddHint =>
-      'VĐV cuối cùng chưa có đôi, sẽ tiếp tục chờ ghép.';
+  String get pairingOddHint => 'VĐV cuối chưa có đôi, tiếp tục chờ.';
 
   @override
   String get pairingSelectionLimit => 'Tối đa 24 VĐV mỗi lần ghép.';
@@ -17494,9 +17479,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String pairingOptionalNameLabel(int n) {
     return 'Tên đôi $n (không bắt buộc)';
   }
-
-  @override
-  String get pairingOptionalNamePlaceholder => 'Để trống để dùng tên hai VĐV';
 
   @override
   String get pairingShuffleButton => 'Xếp ngẫu nhiên';
@@ -17513,28 +17495,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pairingAutoTitle => 'Ghép đôi tự động';
 
   @override
-  String get pairingAutoDescription => 'Chọn cách ghép cho nội dung đang xem.';
-
-  @override
   String get pairingStrategyRandomLabel => 'Ngẫu nhiên';
 
   @override
-  String get pairingStrategyRandomHint =>
-      'Xáo trộn rồi ghép cặp, không xét trình độ.';
-
-  @override
-  String get pairingStrategyEloBalancedLabel => 'Cân bằng mạnh–yếu';
-
-  @override
-  String get pairingStrategyEloBalancedHint =>
-      'Mạnh ghép yếu; chưa có điểm thì ghép ngẫu nhiên.';
+  String get pairingStrategyEloBalancedLabel => 'Cân bằng';
 
   @override
   String get pairingStrategySameLevelLabel => 'Cùng trình';
-
-  @override
-  String get pairingStrategySameLevelHint =>
-      'Ghép người có điểm gần nhau; chưa có điểm thì ghép ngẫu nhiên.';
 
   @override
   String get pairingRandomConfirmAction => 'Bắt đầu ghép';

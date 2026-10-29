@@ -17514,18 +17514,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairingSheetTitle => 'Choose athletes to pair';
 
   @override
-  String pairingSheetDescription(String division) {
-    return 'Pick athletes in order: every two consecutive ones form a pair — $division';
-  }
-
-  @override
   String get pairingManualTab => 'Manual';
 
   @override
   String get pairingAutoTab => 'Automatic';
-
-  @override
-  String get pairingSearchLabel => 'Search athletes';
 
   @override
   String get pairingSearchPlaceholder => 'Type an athlete name...';
@@ -17538,13 +17530,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pairingNoSearchResults => 'No matching athletes.';
-
-  @override
-  String get pairingSearchEmptyHint =>
-      'Try another keyword or close this sheet.';
-
-  @override
-  String get pairingWaitingSubtitle => 'Waiting for a partner';
 
   @override
   String pairingPairBadge(int n) {
@@ -17567,10 +17552,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get pairingOptionalNamePlaceholder =>
-      'Leave blank to use both athlete names';
-
-  @override
   String get pairingShuffleButton => 'Shuffle';
 
   @override
@@ -17585,29 +17566,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairingAutoTitle => 'Automatic pairing';
 
   @override
-  String get pairingAutoDescription =>
-      'Choose how to pair the current division.';
-
-  @override
   String get pairingStrategyRandomLabel => 'Random';
 
   @override
-  String get pairingStrategyRandomHint =>
-      'Shuffle then pair, ignoring skill levels.';
-
-  @override
-  String get pairingStrategyEloBalancedLabel => 'Balance strong–weak';
-
-  @override
-  String get pairingStrategyEloBalancedHint =>
-      'Strong pairs with weak; unscored athletes pair randomly.';
+  String get pairingStrategyEloBalancedLabel => 'Balanced';
 
   @override
   String get pairingStrategySameLevelLabel => 'Same level';
-
-  @override
-  String get pairingStrategySameLevelHint =>
-      'Pairs athletes with close scores; unscored athletes pair randomly.';
 
   @override
   String get pairingRandomConfirmAction => 'Start pairing';

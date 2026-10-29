@@ -296,6 +296,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('athletes-auto-pair')));
     await tester.pumpAndSettle();
     expect(repo.generates, isEmpty);
+    // Short labels only: no instruction line and no per-strategy hints.
+    expect(find.text('Cân bằng'), findsOneWidget);
+    expect(find.text('Chọn cách ghép cho nội dung đang xem.'), findsNothing);
+    expect(find.textContaining('Xáo trộn rồi ghép'), findsNothing);
 
     // Cancel: still nothing sent.
     await tester.tap(find.byKey(const ValueKey('auto-pair-cancel')));

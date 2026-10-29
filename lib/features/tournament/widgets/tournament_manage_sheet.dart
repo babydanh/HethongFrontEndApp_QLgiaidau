@@ -15,6 +15,7 @@ class TournamentManageSheet extends StatelessWidget {
     required this.title,
     required this.child,
     this.actions,
+    this.footer,
     this.busy = false,
     this.heightFactor = 0.92,
     this.bodyPadding = const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -29,6 +30,10 @@ class TournamentManageSheet extends StatelessWidget {
   /// Các nút trên thanh thao tác sticky; nút đầu tiên là nút chính
   /// (hiện spinner khi [busy]).
   final List<Widget>? actions;
+
+  /// Chân sheet tự dựng (vd. một hàng nút Lavish), thay cho [actions]. Nơi
+  /// dùng tự khoá nút khi [busy]; khung chỉ vẽ nền và đường kẻ trên.
+  final Widget? footer;
 
   /// Đang xử lý: khoá nút, hiện spinner, chặn đóng sheet qua `PopScope`
   /// (barrier/back). Lưu ý kéo xuống và drag handle dismiss đều gọi thẳng
@@ -116,7 +121,9 @@ class TournamentManageSheet extends StatelessWidget {
                             child: child,
                           ),
                         ),
-                        if (actionList != null && actionList.isNotEmpty)
+                        if (footer != null)
+                          _buildFooter(context, footer!)
+                        else if (actionList != null && actionList.isNotEmpty)
                           _buildActionBar(context, actionList),
                       ],
                     ),
@@ -155,6 +162,20 @@ class TournamentManageSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFooter(BuildContext context, Widget child) {
+    final colors = context.colors;
+    return Container(
+      key: const ValueKey('tournament-manage-sheet-actions'),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border(top: BorderSide(color: colors.border)),
+      ),
+      child: child,
     );
   }
 

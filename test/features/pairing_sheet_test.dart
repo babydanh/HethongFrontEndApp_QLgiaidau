@@ -527,4 +527,70 @@ void main() {
       );
     },
   );
+
+  testWidgets('gọn chữ: không mô tả, chân một hàng hai nút, không nút Hủy', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repo = _Repo([for (var i = 1; i <= 3; i++) _candidate('p-$i', 'VĐV $i')]);
+    await _open(
+      tester,
+      _app(
+        repo,
+        (context) => PairingSheet.show(
+          context,
+          tournamentId: 't1',
+          divisionId: 'div-1',
+          divisionName: 'Đôi nam',
+        ),
+      ),
+    );
+
+    expect(find.textContaining('Chọn VĐV theo thứ tự'), findsNothing);
+    expect(find.text('Đang chờ ghép'), findsNothing);
+    expect(find.text('Hủy'), findsNothing);
+    final submit = tester.getCenter(find.byKey(const ValueKey('pairing-submit')));
+    final shuffle = tester.getCenter(find.byKey(const ValueKey('pairing-shuffle')));
+    expect(shuffle.dy, submit.dy);
+    expect(shuffle.dx, lessThan(submit.dx));
+    expect(
+      tester.getSize(find.byKey(const ValueKey('pairing-submit'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('tab tự động chỉ còn nhãn ngắn, không câu hướng dẫn', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repo = _Repo([for (var i = 1; i <= 3; i++) _candidate('p-$i', 'VĐV $i')]);
+    await _open(
+      tester,
+      _app(
+        repo,
+        (context) => PairingSheet.show(
+          context,
+          tournamentId: 't1',
+          divisionId: 'div-1',
+          divisionName: 'Đôi nam',
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('pairing-tab-auto')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ngẫu nhiên'), findsOneWidget);
+    expect(find.text('Cân bằng'), findsOneWidget);
+    expect(find.text('Cùng trình'), findsOneWidget);
+    expect(find.text('Chọn cách ghép cho nội dung đang xem.'), findsNothing);
+    expect(find.textContaining('Xáo trộn rồi ghép'), findsNothing);
+    expect(find.text('Hủy'), findsNothing);
+    expect(find.byKey(const ValueKey('pairing-generate')), findsOneWidget);
+  });
 }

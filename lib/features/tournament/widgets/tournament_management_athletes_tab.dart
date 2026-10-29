@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_strategy_picker.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -711,7 +712,7 @@ class _ActionBoxFace extends StatelessWidget {
 }
 
 /// Three-way strategy choice for "Tự ghép"; pops the chosen strategy only when
-/// the organizer confirms.
+/// the organizer confirms. Labels only, no instructions.
 class _AutoPairDialog extends StatefulWidget {
   const _AutoPairDialog();
 
@@ -722,62 +723,58 @@ class _AutoPairDialog extends StatefulWidget {
 class _AutoPairDialogState extends State<_AutoPairDialog> {
   PairingStrategy _strategy = PairingStrategy.random;
 
-  (String, String) _text(AppLocalizations l10n, PairingStrategy strategy) =>
-      switch (strategy) {
-        PairingStrategy.random => (
-          l10n.pairingStrategyRandomLabel,
-          l10n.pairingStrategyRandomHint,
-        ),
-        PairingStrategy.eloBalanced => (
-          l10n.pairingStrategyEloBalancedLabel,
-          l10n.pairingStrategyEloBalancedHint,
-        ),
-        PairingStrategy.sameLevel => (
-          l10n.pairingStrategySameLevelLabel,
-          l10n.pairingStrategySameLevelHint,
-        ),
-      };
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
     return AlertDialog(
-      title: Text(l10n.pairingAutoTitle),
+      backgroundColor: c.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      title: Text(
+        l10n.pairingAutoTitle,
+        style: TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
+          color: c.text,
+        ),
+      ),
       content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.pairingAutoDescription),
-            const SizedBox(height: 8),
-            for (final strategy in PairingStrategy.values)
-              ListTile(
-                key: ValueKey('auto-pair-strategy-${strategy.name}'),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                leading: Icon(
-                  _strategy == strategy
-                      ? Icons.radio_button_checked_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  color: _strategy == strategy ? LavishColors.accent : null,
-                ),
-                title: Text(_text(l10n, strategy).$1),
-                subtitle: Text(_text(l10n, strategy).$2),
-                onTap: () => setState(() => _strategy = strategy),
-              ),
-          ],
+        child: PairingStrategyPicker(
+          keyPrefix: 'auto-pair-strategy',
+          value: _strategy,
+          onChanged: (value) => setState(() => _strategy = value),
         ),
       ),
       actions: [
-        TextButton(
-          key: const ValueKey('auto-pair-cancel'),
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
-        ),
-        FilledButton(
-          key: const ValueKey('auto-pair-confirm'),
-          onPressed: () => Navigator.of(context).pop(_strategy),
-          child: Text(l10n.pairingRandomConfirmAction),
+        Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: LavishButton(
+                  buttonKey: const ValueKey('auto-pair-cancel'),
+                  kind: LavishButtonKind.outline,
+                  label: l10n.commonCancel,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 44,
+                child: LavishButton(
+                  buttonKey: const ValueKey('auto-pair-confirm'),
+                  label: l10n.pairingRandomConfirmAction,
+                  onPressed: () => Navigator.of(context).pop(_strategy),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

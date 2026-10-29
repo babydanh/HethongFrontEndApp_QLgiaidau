@@ -31477,12 +31477,6 @@ abstract class AppLocalizations {
   /// **'Chọn VĐV để ghép đôi'**
   String get pairingSheetTitle;
 
-  /// Mô tả sheet ghép cặp, kèm tên hạng mục (Web pairingDialogDescription).
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn VĐV theo thứ tự: cứ hai người liên tiếp là một đôi — {division}'**
-  String pairingSheetDescription(String division);
-
   /// No description provided for @pairingManualTab.
   ///
   /// In vi, this message translates to:
@@ -31494,12 +31488,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tự động'**
   String get pairingAutoTab;
-
-  /// No description provided for @pairingSearchLabel.
-  ///
-  /// In vi, this message translates to:
-  /// **'Tìm VĐV'**
-  String get pairingSearchLabel;
 
   /// No description provided for @pairingSearchPlaceholder.
   ///
@@ -31516,7 +31504,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairingEmpty.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có VĐV nào đang chờ ghép.'**
+  /// **'Chưa có VĐV chờ ghép.'**
   String get pairingEmpty;
 
   /// No description provided for @pairingNoSearchResults.
@@ -31524,18 +31512,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không tìm thấy VĐV phù hợp.'**
   String get pairingNoSearchResults;
-
-  /// No description provided for @pairingSearchEmptyHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Thử từ khóa khác hoặc đóng sheet này.'**
-  String get pairingSearchEmptyHint;
-
-  /// No description provided for @pairingWaitingSubtitle.
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang chờ ghép'**
-  String get pairingWaitingSubtitle;
 
   /// Nhãn VĐV đã được xếp vào đôi thứ n.
   ///
@@ -31552,7 +31528,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairingOddHint.
   ///
   /// In vi, this message translates to:
-  /// **'VĐV cuối cùng chưa có đôi, sẽ tiếp tục chờ ghép.'**
+  /// **'VĐV cuối chưa có đôi, tiếp tục chờ.'**
   String get pairingOddHint;
 
   /// No description provided for @pairingSelectionLimit.
@@ -31566,12 +31542,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tên đôi {n} (không bắt buộc)'**
   String pairingOptionalNameLabel(int n);
-
-  /// No description provided for @pairingOptionalNamePlaceholder.
-  ///
-  /// In vi, this message translates to:
-  /// **'Để trống để dùng tên hai VĐV'**
-  String get pairingOptionalNamePlaceholder;
 
   /// No description provided for @pairingShuffleButton.
   ///
@@ -31597,47 +31567,23 @@ abstract class AppLocalizations {
   /// **'Ghép đôi tự động'**
   String get pairingAutoTitle;
 
-  /// No description provided for @pairingAutoDescription.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chọn cách ghép cho nội dung đang xem.'**
-  String get pairingAutoDescription;
-
   /// No description provided for @pairingStrategyRandomLabel.
   ///
   /// In vi, this message translates to:
   /// **'Ngẫu nhiên'**
   String get pairingStrategyRandomLabel;
 
-  /// No description provided for @pairingStrategyRandomHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Xáo trộn rồi ghép cặp, không xét trình độ.'**
-  String get pairingStrategyRandomHint;
-
   /// No description provided for @pairingStrategyEloBalancedLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Cân bằng mạnh–yếu'**
+  /// **'Cân bằng'**
   String get pairingStrategyEloBalancedLabel;
-
-  /// No description provided for @pairingStrategyEloBalancedHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Mạnh ghép yếu; chưa có điểm thì ghép ngẫu nhiên.'**
-  String get pairingStrategyEloBalancedHint;
 
   /// No description provided for @pairingStrategySameLevelLabel.
   ///
   /// In vi, this message translates to:
   /// **'Cùng trình'**
   String get pairingStrategySameLevelLabel;
-
-  /// No description provided for @pairingStrategySameLevelHint.
-  ///
-  /// In vi, this message translates to:
-  /// **'Ghép người có điểm gần nhau; chưa có điểm thì ghép ngẫu nhiên.'**
-  String get pairingStrategySameLevelHint;
 
   /// No description provided for @pairingRandomConfirmAction.
   ///
