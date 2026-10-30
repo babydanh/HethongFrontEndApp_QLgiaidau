@@ -88,81 +88,49 @@ class _TournamentManagementDivisionsSectionState
               ),
             )
             .toList();
-        final fade = Theme.of(context).scaffoldBackgroundColor;
-        return Stack(
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
-            ListView(
-              // Bottom room so the last card clears the "+" button and fade.
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-              children: [
-                if (divisions.length > _searchThreshold)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 8),
-                    child: TextField(
-                      onChanged: (value) => setState(() => _query = value),
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: l10n.tournamentManagementDivisionSearchHint,
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                if (_mutationError != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      l10n.tournamentManagementActionError,
-                      style: TextStyle(color: context.colors.error),
-                    ),
-                  ),
-                if (divisions.isEmpty)
-                  TournamentManagementEmpty(
-                    title: l10n.tournamentManagementDivisionsEmpty,
-                    subtitle:
-                        l10n.tournamentManagementDivisionsEmptyDescription,
-                    icon: Icons.category_outlined,
-                  )
-                else
-                  ..._divisionRows(l10n, divisions),
-                if (seedDivisions.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _TournamentSeedsSection(
-                    tournamentId: widget.tournament.id,
-                    divisions: seedDivisions,
-                  ),
-                ],
-              ],
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: Container(
-                  key: const ValueKey('division-bottom-fade'),
-                  height: 96,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [fade.withValues(alpha: 0), fade],
-                    ),
+            if (divisions.length > _searchThreshold)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 8),
+                child: TextField(
+                  onChanged: (value) => setState(() => _query = value),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: l10n.tournamentManagementDivisionSearchHint,
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    isDense: true,
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                key: const ValueKey('division-add-fab'),
-                heroTag: null,
-                tooltip: l10n.tournamentManagementAddDivision,
-                onPressed: _isBusy ? null : _addDivision,
-                child: const Icon(Icons.add_rounded),
+            if (_mutationError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  l10n.tournamentManagementActionError,
+                  style: TextStyle(color: context.colors.error),
+                ),
               ),
+            if (divisions.isEmpty)
+              TournamentManagementEmpty(
+                title: l10n.tournamentManagementDivisionsEmpty,
+                subtitle: l10n.tournamentManagementDivisionsEmptyDescription,
+                icon: Icons.category_outlined,
+              )
+            else
+              ..._divisionRows(l10n, divisions),
+            _AddDivisionTile(
+              label: l10n.tournamentManagementAddDivision,
+              onTap: _isBusy ? null : _addDivision,
             ),
+            if (seedDivisions.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _TournamentSeedsSection(
+                tournamentId: widget.tournament.id,
+                divisions: seedDivisions,
+              ),
+            ],
           ],
         );
       },
@@ -432,6 +400,50 @@ class _TournamentManagementDivisionsSectionState
     } finally {
       if (mounted) setState(() => _isBusy = false);
     }
+  }
+}
+
+/// Last item of the list: adds a division, right under the last card.
+class _AddDivisionTile extends StatelessWidget {
+  const _AddDivisionTile({required this.label, required this.onTap});
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = onTap == null ? context.colors.textMuted : AppTheme.primary;
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        key: const ValueKey('division-add-tile'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 52),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: tone.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_rounded, size: 20, color: tone),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: tone,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -7,7 +7,7 @@ Tab "Nội dung" sau `noi-dung-gon` vẫn còn nhãn nhóm "ĐƠN · 1" / "ĐÔI
 - Bỏ nhãn nhóm ĐƠN/ĐÔI; mỗi nội dung là một thẻ viền riêng, cách nhau 8dp.
 - Bấm thẻ để mở (AnimatedSize 220ms), một thẻ mở tại một thời điểm. Thẻ mở hiện: Thể loại, Thể thức, Đã đăng ký, Đăng ký (mở/đóng/hạn), ELO (nếu có), Phí riêng (nếu có).
 - Nút sửa (icon bút) và menu ⋮ nằm ngay trên hàng của thẻ, không cần mở thẻ. Menu gồm cấu hình vòng, khoá/mở khoá, mở lại có hạn, đăng ký hàng loạt, xoá.
-- Nút thêm là FloatingActionButton "+" cuối trang trên lớp mờ trắng; bỏ menu ⋮ phía trên danh sách (mục đăng ký hàng loạt chuyển vào menu ⋮ của thẻ).
+- Bỏ menu ⋮ phía trên danh sách (mục đăng ký hàng loạt chuyển vào menu ⋮ của thẻ). Nút thêm: xem change `noi-dung-them-cuoi`.
 - Thêm 5 khoá l10n cho nhãn thông tin trong thẻ.
 
 ## Out of scope
