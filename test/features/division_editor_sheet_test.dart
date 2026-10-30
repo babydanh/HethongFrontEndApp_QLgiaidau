@@ -351,7 +351,7 @@ void main() {
       // Kết cấu bị khoá: định dạng và thể thức không chọn được nữa.
       expect(
         tester
-            .widget<LavishChipButton>(
+            .widget<LavishChoiceTile>(
               find.byKey(const ValueKey('division-editor-format-MALE_DOUBLES')),
             )
             .onPressed,
@@ -359,7 +359,7 @@ void main() {
       );
       expect(
         tester
-            .widget<LavishChipButton>(
+            .widget<LavishChoiceTile>(
               find.byKey(
                 const ValueKey('division-editor-bracket-SINGLE_ELIMINATION'),
               ),
@@ -414,7 +414,7 @@ void main() {
 
       expect(
         tester
-            .widget<LavishChipButton>(
+            .widget<LavishChoiceTile>(
               find.byKey(const ValueKey('division-editor-bracket-ROUND_ROBIN')),
             )
             .onPressed,
@@ -607,8 +607,9 @@ void main() {
       ),
     );
 
+    // Nút ▶ nằm ngay trên ô thể thức (như Web), không đổi thể thức đang chọn.
     await tester.tap(
-      find.byKey(const ValueKey('division-editor-section-illustration')),
+      find.byKey(const ValueKey('division-editor-illustration-SWISS')),
     );
     await tester.pumpAndSettle();
 

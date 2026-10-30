@@ -354,6 +354,111 @@ class LavishChipButton extends StatelessWidget {
   }
 }
 
+/// Pick-one tile of the Web division form (`choiceButtonClass`): 8px radius,
+/// 1px border, 2px accent border and accent text once selected. With [icon] the
+/// glyph sits in a 32px rounded box on the left (`choiceIconBoxClass`);
+/// [trailing] takes the right edge (the format illustration trigger).
+class LavishChoiceTile extends StatelessWidget {
+  const LavishChoiceTile({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.selected = false,
+    this.icon,
+    this.trailing,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool selected;
+  final Widget? icon;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = LavishColors.of(context);
+    final accent = LavishColors.accent;
+    final fg = selected ? accent : c.text;
+    return Opacity(
+      // A disabled selected tile keeps full contrast; the others fade.
+      opacity: onPressed == null && !selected ? 0.6 : 1,
+      child: Material(
+        color: c.surface,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: selected ? accent : c.chipLine,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: icon == null ? 40 : 48),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                icon == null ? 10 : 6,
+                4,
+                trailing == null ? 10 : 0,
+                4,
+              ),
+              child: Row(
+                children: [
+                  if (icon != null) ...[
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? accent.withValues(alpha: 0.10)
+                            : c.faint,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: selected
+                              ? accent.withValues(alpha: 0.40)
+                              : c.chipLine,
+                        ),
+                      ),
+                      child: IconTheme(
+                        data: IconThemeData(
+                          size: 16,
+                          color: selected ? accent : c.muted,
+                        ),
+                        child: icon!,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: icon == null
+                          ? TextAlign.center
+                          : TextAlign.start,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.2,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        color: fg,
+                      ),
+                    ),
+                  ),
+                  ?trailing,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 enum LavishButtonKind { primary, outline, danger }
 
 /// `.btn` (+ `.out`, `.bd`, `.dis`): 12px radius, 11px padding, 13px / 800.

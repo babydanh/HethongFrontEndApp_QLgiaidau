@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 // ─── Nhận dạng: 7 lựa chọn định dạng của Web (match-format-options.ts) ───
 
@@ -31,10 +32,12 @@ const List<String> divisionFormatOptions = [
   'OPEN_DOUBLES',
 ];
 
+/// Thứ tự hiển thị theo Web `BRACKET_OPTIONS`: hai nhãn ngắn chung một hàng,
+/// rồi Loại kép, Vòng bảng (cả hàng) và Thụy Sĩ.
 const List<String> _bracketTypes = [
   'SINGLE_ELIMINATION',
-  'DOUBLE_ELIMINATION',
   'ROUND_ROBIN',
+  'DOUBLE_ELIMINATION',
   'GROUP_STAGE_KNOCKOUT',
   'SWISS',
 ];
@@ -587,17 +590,6 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
             locked: widget.lockContent && _bracketType != 'SWISS',
             child: _buildStageSection(l10n),
           ),
-        DivisionEditorAccordionSection(
-          id: 'illustration',
-          title: l10n.divisionEditorAccIllustration,
-          summary: '',
-          expanded: false,
-          onToggle: () => showFormatIllustrationDialog(
-            context,
-            bracketType: _bracketType,
-            formatName: _bracketLabel(l10n, _bracketType),
-          ),
-        ),
         if (_isEditing && widget.onDelete != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
@@ -709,70 +701,151 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
 
   // ─── Nhận dạng ───
 
-  Widget _buildIdentity(AppLocalizations l10n) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text(l10n.divisionEditorTypeLabel, style: _sectionTitleStyle(context)),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
+  /// Đối chiếu Web `DivisionIdentitySection`: loại và thể thức là lưới 2 cột,
+  /// thể thức có icon và nút ▶ minh hoạ ngay trên ô (không chọn thể thức).
+  Widget _buildIdentity(AppLocalizations l10n) {
+    final locked = _busy || widget.lockContent;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.divisionEditorTypeLabel, style: _sectionTitleStyle(context)),
+        const SizedBox(height: 8),
+        _choiceGrid([
           for (final option in divisionFormatOptions)
-            LavishChipButton(
-              key: ValueKey('division-editor-format-$option'),
-              label: _formatLabel(l10n, option),
-              selected: _formatOption == option,
-              onPressed: _busy || widget.lockContent
-                  ? null
-                  : () => _selectFormat(option),
+            (
+              full: false,
+              tile: LavishChoiceTile(
+                key: ValueKey('division-editor-format-$option'),
+                label: _formatLabel(l10n, option),
+                selected: _formatOption == option,
+                onPressed: locked ? null : () => _selectFormat(option),
+              ),
             ),
-        ],
-      ),
-      const SizedBox(height: 12),
-      TextField(
-        key: const ValueKey('division-editor-name'),
-        controller: _name,
-        enabled: !_busy,
-        maxLength: 255,
-        decoration: InputDecoration(
-          labelText: l10n.tournamentManagementDivisionName,
-          helperText: l10n.divisionEditorNameHint,
-          counterText: '',
-          filled: true,
-          fillColor: LavishColors.of(context).surface,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(
-              color: LavishColors.of(context).chipLine,
-              width: 1.5,
+        ]),
+        const SizedBox(height: 12),
+        TextField(
+          key: const ValueKey('division-editor-name'),
+          controller: _name,
+          enabled: !_busy,
+          maxLength: 255,
+          decoration: InputDecoration(
+            isDense: true,
+            labelText: l10n.tournamentManagementDivisionName,
+            helperText: l10n.divisionEditorNameHint,
+            counterText: '',
+            filled: true,
+            fillColor: LavishColors.of(context).surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: LavishColors.of(context).chipLine),
             ),
           ),
         ),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        l10n.tournamentManagementBracketType,
-        style: _sectionTitleStyle(context),
-      ),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
+        const SizedBox(height: 12),
+        Text(
+          l10n.tournamentManagementBracketType,
+          style: _sectionTitleStyle(context),
+        ),
+        const SizedBox(height: 8),
+        _choiceGrid([
           for (final bracketType in _bracketTypes)
-            LavishChipButton(
-              key: ValueKey('division-editor-bracket-$bracketType'),
-              label: _bracketLabel(l10n, bracketType),
-              selected: _bracketType == bracketType,
-              onPressed: _busy || widget.lockContent
-                  ? null
-                  : () => _selectBracketType(bracketType),
+            (
+              // Nhãn dài chiếm cả hàng như Web (`col-span-2` dưới `sm`).
+              full:
+                  bracketType == 'DOUBLE_ELIMINATION' ||
+                  bracketType == 'GROUP_STAGE_KNOCKOUT',
+              tile: LavishChoiceTile(
+                key: ValueKey('division-editor-bracket-$bracketType'),
+                label: _bracketLabel(l10n, bracketType),
+                selected: _bracketType == bracketType,
+                icon: _bracketIcon(bracketType),
+                onPressed: locked
+                    ? null
+                    : () => _selectBracketType(bracketType),
+                trailing: _illustrationTrigger(l10n, bracketType),
+              ),
             ),
+        ]),
+      ],
+    );
+  }
+
+  /// Lưới 2 cột: ô `full` chiếm cả hàng, các ô còn lại ghép đôi theo thứ tự.
+  Widget _choiceGrid(List<({bool full, Widget tile})> items) {
+    final rows = <Widget>[];
+    Widget? pending;
+    void flush() {
+      if (pending == null) return;
+      rows.add(
+        Row(
+          children: [
+            Expanded(child: pending!),
+            const SizedBox(width: 8),
+            const Spacer(),
+          ],
+        ),
+      );
+      pending = null;
+    }
+
+    for (final item in items) {
+      if (item.full) {
+        flush();
+        rows.add(item.tile);
+      } else if (pending == null) {
+        pending = item.tile;
+      } else {
+        rows.add(
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: pending!),
+                const SizedBox(width: 8),
+                Expanded(child: item.tile),
+              ],
+            ),
+          ),
+        );
+        pending = null;
+      }
+    }
+    flush();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          rows[i],
         ],
+      ],
+    );
+  }
+
+  /// Icon theo Web `BRACKET_OPTIONS` (lucide), Swiss vẽ tay như `SwissIcon`.
+  Widget _bracketIcon(String bracketType) => switch (bracketType) {
+    'SINGLE_ELIMINATION' => const Icon(LucideIcons.gitBranch),
+    'DOUBLE_ELIMINATION' => const Icon(LucideIcons.gitMerge),
+    'ROUND_ROBIN' => const Icon(LucideIcons.rotateCw),
+    'GROUP_STAGE_KNOCKOUT' => const Icon(LucideIcons.gitFork),
+    _ => const _SwissIcon(),
+  };
+
+  /// Nút ▶ minh hoạ ở mép phải ô thể thức: luôn bấm được, kể cả khi khoá kết cấu.
+  Widget _illustrationTrigger(AppLocalizations l10n, String bracketType) {
+    final label = _bracketLabel(l10n, bracketType);
+    return IconButton(
+      key: ValueKey('division-editor-illustration-$bracketType'),
+      tooltip: '${l10n.divisionEditorAccIllustration}: $label',
+      icon: const Icon(LucideIcons.circlePlay, size: 20),
+      color: LavishColors.accent,
+      onPressed: () => showFormatIllustrationDialog(
+        context,
+        bracketType: bracketType,
+        formatName: label,
       ),
-    ],
-  );
+    );
+  }
 
   /// Chọn định dạng điền luôn tên theo loại (đối chiếu Web
   /// `handleFormatSelect`: tên luôn theo định dạng vừa chọn).
@@ -1710,3 +1783,47 @@ String divisionEditorPresetDescription(
   'tennis-short-set' => l10n.divisionEditorPresetTennisShortSetDesc,
   _ => l10n.divisionEditorPresetFootballStandardDesc,
 };
+
+/// Port `SwissIcon` của Web: hai cột 3 người, nối bằng hai đường cắt nhau và
+/// một đường ngang (lưới 24×24, chấm r=2, nét 1.75), theo màu `IconTheme`.
+class _SwissIcon extends StatelessWidget {
+  const _SwissIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = IconTheme.of(context);
+    final size = theme.size ?? 24;
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _SwissIconPainter(theme.color ?? Colors.black),
+    );
+  }
+}
+
+class _SwissIconPainter extends CustomPainter {
+  const _SwissIconPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / 24;
+    final line = Paint()
+      ..color = color
+      ..strokeWidth = 1.75 * s
+      ..strokeCap = StrokeCap.round;
+    final dot = Paint()..color = color;
+    canvas
+      ..drawLine(Offset(4 * s, 5 * s), Offset(20 * s, 12 * s), line)
+      ..drawLine(Offset(4 * s, 12 * s), Offset(20 * s, 5 * s), line)
+      ..drawLine(Offset(4 * s, 19 * s), Offset(20 * s, 19 * s), line);
+    for (final x in [4.0, 20.0]) {
+      for (final y in [5.0, 12.0, 19.0]) {
+        canvas.drawCircle(Offset(x * s, y * s), 2 * s, dot);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SwissIconPainter old) => old.color != color;
+}
