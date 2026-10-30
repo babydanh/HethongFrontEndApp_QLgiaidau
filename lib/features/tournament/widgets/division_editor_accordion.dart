@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 /// the chevron).
 ///
 /// The parent keeps the single open id, so opening one row closes the rest.
+/// A null [onToggle] makes the row always open: no chevron, nothing to tap.
 class DivisionEditorAccordionSection extends StatelessWidget {
   const DivisionEditorAccordionSection({
     super.key,
@@ -14,7 +15,7 @@ class DivisionEditorAccordionSection extends StatelessWidget {
     required this.title,
     required this.summary,
     required this.expanded,
-    required this.onToggle,
+    this.onToggle,
     this.locked = false,
     this.child,
   });
@@ -24,7 +25,7 @@ class DivisionEditorAccordionSection extends StatelessWidget {
   final String title;
   final String summary;
   final bool expanded;
-  final VoidCallback onToggle;
+  final VoidCallback? onToggle;
 
   /// Shows a lock icon: the structure inside can no longer change.
   final bool locked;
@@ -51,7 +52,7 @@ class DivisionEditorAccordionSection extends StatelessWidget {
               const LavishIconBox(
                 child: Icon(Icons.play_arrow_rounded, size: 18),
               )
-            else
+            else if (onToggle != null)
               Icon(
                 expanded
                     ? Icons.expand_less_rounded
@@ -61,7 +62,10 @@ class DivisionEditorAccordionSection extends StatelessWidget {
               ),
           ],
         ),
-        if (body != null && expanded)
+        if (body != null && expanded && onToggle == null)
+          // Always open (Web: plain block under its title): no band, no inset.
+          Padding(padding: const EdgeInsets.only(bottom: 8), child: body)
+        else if (body != null && expanded)
           // Material so ListTile children paint their ink on the band colour.
           Material(
             color: colors.dark ? colors.rowLine : const Color(0xFFF9FAFB),

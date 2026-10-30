@@ -16554,6 +16554,15 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get formatIllustrationPlay => 'Phát';
+
+  @override
+  String get formatIllustrationPause => 'Tạm dừng';
+
+  @override
+  String get formatIllustrationReplay => 'Chạy lại';
+
+  @override
   String get formatIllustrationSingleEliminationDescription =>
       'Thua một trận là bị loại, người thắng đi tiếp đến chung kết.';
 

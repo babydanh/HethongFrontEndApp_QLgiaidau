@@ -1,10 +1,10 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/format_illustration_stage.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Static explanation of a bracket format (text from the Web
-/// `FormatIllustration` messages; the animated player is not ported).
+/// Explanation of a bracket format: a looping animation (a compact take on
+/// the Web `FormatIllustration` player) plus the Web description text.
 /// [formatName] is the localized format label shown in the title.
 Future<void> showFormatIllustrationDialog(
   BuildContext context, {
@@ -61,14 +61,8 @@ class _FormatIllustrationDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: BracketFormatIcons.getIcon(
-                bracketType,
-                size: 56,
-                color: AppTheme.primary,
-              ),
-            ),
-            const SizedBox(height: 12),
+            FormatIllustrationStage(bracketType: bracketType),
+            const SizedBox(height: 8),
             Text(
               description,
               style: TextStyle(

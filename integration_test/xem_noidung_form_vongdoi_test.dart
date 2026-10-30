@@ -60,7 +60,7 @@ void main() {
     await shooter.snap('noi-dung-thi-dau-dong');
 
     await tester.tap(
-      find.byKey(const ValueKey('division-editor-section-rules')),
+      find.byKey(const ValueKey('division-editor-standard-rules')),
     );
     await settle(tester);
     await shooter.snap('noi-dung-thi-dau-muc-luat-vong');

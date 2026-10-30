@@ -29858,6 +29858,24 @@ abstract class AppLocalizations {
   /// **'Minh hoạ: {name}'**
   String formatIllustrationTitle(Object name);
 
+  /// No description provided for @formatIllustrationPlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát'**
+  String get formatIllustrationPlay;
+
+  /// No description provided for @formatIllustrationPause.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm dừng'**
+  String get formatIllustrationPause;
+
+  /// No description provided for @formatIllustrationReplay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạy lại'**
+  String get formatIllustrationReplay;
+
   /// No description provided for @formatIllustrationSingleEliminationDescription.
   ///
   /// In vi, this message translates to:

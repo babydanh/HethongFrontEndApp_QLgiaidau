@@ -524,34 +524,6 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (widget.lockContent)
-          Container(
-            key: const ValueKey('division-editor-locked-notice'),
-            margin: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: context.colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.colors.border),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.lock_outline_rounded,
-                  size: 18,
-                  color: context.colors.textSecondary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.divisionEditorLockedNotice,
-                    style: TextStyle(color: context.colors.textSecondary),
-                  ),
-                ),
-              ],
-            ),
-          ),
         if (_errorText != null)
           Padding(
             key: const ValueKey('division-editor-error'),
@@ -567,19 +539,12 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           summary: _basicSummary(l10n),
           child: _buildIdentity(l10n),
         ),
-        _section(
-          id: 'rules',
-          title: l10n.divisionEditorAccRules,
-          summary: _isLiteMode
-              ? l10n.divisionEditorAccRulesLite
-              : l10n.divisionEditorAccRulesStrict(_pointsPerSet, _setsToWin),
-          locked: widget.lockContent,
-          child: _buildRulesSection(context, l10n),
-        ),
+        _buildRulesSection(context, l10n),
         _section(
           id: 'elo',
           title: l10n.divisionEditorAccElo,
-          summary: _eloSummary(l10n),
+          summary: '',
+          alwaysOpen: true,
           child: _buildLimits(l10n),
         ),
         if (hasStage)
@@ -617,13 +582,16 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     required String summary,
     required Widget child,
     bool locked = false,
+    bool alwaysOpen = false,
   }) => DivisionEditorAccordionSection(
     id: id,
     title: title,
     summary: summary,
     locked: locked,
-    expanded: _openSection == id,
-    onToggle: () => setState(() => _openSection = id),
+    expanded: alwaysOpen || _openSection == id,
+    onToggle: alwaysOpen
+        ? null
+        : () => setState(() => _openSection = _openSection == id ? '' : id),
     child: child,
   );
 
@@ -633,7 +601,11 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         children: [
           _toggleRow(
             key: const ValueKey('division-editor-standard-rules'),
-            title: l10n.divisionEditorStandardRules,
+            title: l10n.divisionEditorAccRules,
+            subtitle: _isLiteMode
+                ? l10n.divisionEditorAccRulesLite
+                : l10n.divisionEditorAccRulesStrict(_pointsPerSet, _setsToWin),
+            locked: widget.lockContent,
             value: !_isLiteMode,
             onChanged: _busy || widget.lockContent
                 ? null
@@ -678,16 +650,6 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
       _capacityText(l10n),
       feeText,
     ].join(' · ');
-  }
-
-  String _eloSummary(AppLocalizations l10n) {
-    final minElo = _eloEnabled ? _parseField(_minElo) : null;
-    final maxElo = _eloEnabled ? _parseField(_maxElo) : null;
-    final limit = _capacityText(l10n);
-    if (minElo == null && maxElo == null) {
-      return l10n.divisionEditorAccEloNone(limit);
-    }
-    return l10n.divisionEditorAccEloRange(limit, maxElo ?? '∞', minElo ?? 0);
   }
 
   String _stageSummary(AppLocalizations l10n) => switch (_bracketType) {
@@ -891,7 +853,6 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
   // ─── Giới hạn và phí ───
 
   Widget _buildLimits(AppLocalizations l10n) {
-    final colors = context.colors;
     final feeCustom = divisionFeePayload(
       _fee.text,
       widget.tournament.entryFee,
@@ -908,24 +869,13 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
               : (value) => setState(() => _limitEnabled = value),
         ),
         if (_limitEnabled)
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: SizedBox(
-              width: 160,
-              child: TextField(
-                key: const ValueKey('division-editor-max'),
-                controller: _max,
-                enabled: !_busy,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(3),
-                ],
-                decoration: InputDecoration(
-                  labelText: l10n.divisionEditorMaxCount,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
+          _inset(
+            _textBox(
+              key: 'division-editor-max',
+              label: l10n.divisionEditorMaxCount,
+              controller: _max,
+              enabled: !_busy,
+              maxLength: 3,
             ),
           ),
         _toggleRow(
@@ -934,199 +884,69 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           value: _eloEnabled,
           onChanged: _busy ? null : (value) => setState(() => _eloEnabled = value),
         ),
-        if (_eloEnabled)
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const ValueKey('division-editor-elo-min'),
-                        controller: _minElo,
-                        enabled: !_busy,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: InputDecoration(
-                          labelText: l10n.divisionEditorEloMin,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        key: const ValueKey('division-editor-elo-max'),
-                        controller: _maxElo,
-                        enabled: !_busy,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: InputDecoration(
-                          labelText: l10n.divisionEditorEloMax,
-                          errorText: _eloInvalid
-                              ? l10n.divisionEditorEloRangeError
-                              : null,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    l10n.divisionEditorEloBlankHint,
-                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 8),
-        TextField(
-          key: const ValueKey('division-editor-fee'),
-          controller: _fee,
-          enabled: !_busy,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(12),
-          ],
-          decoration: InputDecoration(
-            labelText: l10n.divisionEditorEntryFee,
+        if (_eloEnabled) _eloFields(l10n),
+        _inset(
+          _textBox(
+            key: 'division-editor-fee',
+            label: l10n.divisionEditorEntryFee,
+            controller: _fee,
+            enabled: !_busy,
+            maxLength: 12,
             hintText: l10n.divisionEditorEntryFeePlaceholder,
             helperText: feeCustom
                 ? l10n.divisionEditorEntryFeeCustomHint
                 : l10n.divisionEditorEntryFeeFollowsHint,
-            border: const OutlineInputBorder(),
           ),
         ),
       ],
     );
   }
 
+  Widget _eloFields(AppLocalizations l10n) => _inset(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _textBox(
+                key: 'division-editor-elo-min',
+                label: l10n.divisionEditorEloMin,
+                controller: _minElo,
+                enabled: !_busy,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _textBox(
+                key: 'division-editor-elo-max',
+                label: l10n.divisionEditorEloMax,
+                controller: _maxElo,
+                enabled: !_busy,
+                errorText: _eloInvalid ? l10n.divisionEditorEloRangeError : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.divisionEditorEloBlankHint,
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
+        ),
+      ],
+    ),
+  );
+
   // ─── Luật theo môn ───
 
   Widget _buildStrictRules(AppLocalizations l10n) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      if (_isPickleball) ...[
-        Text(
-          l10n.divisionEditorPickleballMode,
-          style: _sectionTitleStyle(context),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final (kind, label) in [
-              (
-                SportRulePresetKind.pickleballRally,
-                l10n.divisionEditorRallyScoring,
-              ),
-              (
-                SportRulePresetKind.pickleballSideOut,
-                l10n.divisionEditorSideOutScoring,
-              ),
-            ])
-              ChoiceChip(
-                key: ValueKey('division-editor-scoring-${kind.apiValue}'),
-                label: Text(label),
-                selected: _sportKind == kind,
-                onSelected: _busy || widget.lockContent
-                    ? null
-                    : (_) => _applySportRuleKind(kind),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-      ],
-      Text(l10n.divisionEditorPresets, style: _sectionTitleStyle(context)),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          // Web chỉ hiện 2 preset đầu (`getQuickPresets(..., 2)`); mô tả
-          // preset hiện trong tooltip (Web dùng thuộc tính title).
-          for (final preset in getSportRulePresets(_sportKind).take(2))
-            Tooltip(
-              message: divisionEditorPresetDescription(l10n, preset.id),
-              child: ChoiceChip(
-                key: ValueKey('division-editor-preset-${preset.id}'),
-                label: Text(
-                  '${divisionEditorPresetLabel(l10n, preset.id)} · ${preset.setsToWin}×${preset.pointsPerSet}',
-                ),
-                selected:
-                    _setsToWin == preset.setsToWin &&
-                    _pointsPerSet == preset.pointsPerSet &&
-                    _winByTwo == preset.winByTwo,
-                onSelected: _busy || widget.lockContent
-                    ? null
-                    : (_) => _applyPreset(preset),
-              ),
-            ),
-        ],
-      ),
-      const SizedBox(height: 12),
-      Text(l10n.divisionEditorScoreTitle, style: _sectionTitleStyle(context)),
-      const SizedBox(height: 8),
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: DropdownButtonFormField<int>(
-              key: const ValueKey('division-editor-sets-to-win'),
-              initialValue: _setsToWin,
-              decoration: InputDecoration(
-                labelText: l10n.divisionEditorSetsToWin,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                for (final value in _setsToWinOptions)
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(
-                      divisionEditorSetOptionLabel(l10n, _sportKind, value),
-                    ),
-                  ),
-              ],
-              onChanged: _busy || widget.lockContent
-                  ? null
-                  : (value) {
-                      if (value != null) {
-                        setState(() {
-                          _setsToWin = value;
-                          _superTiebreakSetIndex = math.max(1, value * 2 - 1);
-                        });
-                      }
-                    },
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              key: const ValueKey('division-editor-points-per-set'),
-              controller: _pointsController,
-              enabled: !_busy && !widget.lockContent,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: divisionEditorSetUnitLabel(l10n, _sportKind),
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: _clampPoints,
-            ),
-          ),
-        ],
-      ),
+      const SizedBox(height: 4),
+      if (_isPickleball) _scoringModes(l10n),
+      _presetChips(l10n),
+      _scoreFields(l10n),
       _toggleRow(
         key: const ValueKey('division-editor-win-by-two'),
         title: l10n.divisionEditorWinByTwo,
@@ -1136,25 +956,18 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
             : (value) => setState(() => _winByTwo = value),
       ),
       if (_winByTwo)
-        SizedBox(
-          width: 160,
-          child: TextField(
-            key: const ValueKey('division-editor-max-deuce'),
+        _inset(
+          _textBox(
+            key: 'division-editor-max-deuce',
+            label: l10n.divisionEditorMaxDeucePoints,
             controller: _maxDeuceController,
             enabled: !_busy && !widget.lockContent,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: l10n.divisionEditorMaxDeucePoints,
-              border: const OutlineInputBorder(),
-            ),
             onChanged: _clampMaxDeuce,
           ),
         )
       else
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
+        _inset(
+          Text(
             l10n.divisionEditorNoDeuceLimit,
             style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
           ),
@@ -1168,50 +981,236 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
               ? null
               : (value) => setState(() => _superTiebreakEnabled = value),
         ),
-        if (_superTiebreakEnabled)
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('division-editor-tiebreak-set'),
-                  controller: _tiebreakSetController,
-                  enabled: !_busy && !widget.lockContent,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: l10n.divisionEditorTiebreakSet,
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (text) => _clampTiebreakSet(text),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('division-editor-tiebreak-points'),
-                  controller: _tiebreakPointsController,
-                  enabled: !_busy && !widget.lockContent,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: l10n.divisionEditorTiebreakPoints,
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (text) {
-                    final parsed = int.tryParse(text.trim());
-                    if (parsed == null) return;
-                    final clamped = math.max(1, parsed);
-                    setState(() => _superTiebreakPoints = clamped);
-                    if (clamped != parsed) {
-                      _tiebreakPointsController.text = '$clamped';
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
+        if (_superTiebreakEnabled) _tiebreakFields(l10n),
       ],
     ],
+  );
+
+  /// Web chip row: a title over bordered tiles (selected = 2dp blue border).
+  Widget _chipBlock(String title, List<Widget> chips) => _inset(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: _sectionTitleStyle(context)),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, runSpacing: 8, children: chips),
+      ],
+    ),
+  );
+
+  Widget _scoringModes(AppLocalizations l10n) => _chipBlock(
+    l10n.divisionEditorPickleballMode,
+    [
+      for (final (kind, label) in [
+        (SportRulePresetKind.pickleballRally, l10n.divisionEditorRallyScoring),
+        (
+          SportRulePresetKind.pickleballSideOut,
+          l10n.divisionEditorSideOutScoring,
+        ),
+      ])
+        LavishChoiceTile(
+          key: ValueKey('division-editor-scoring-${kind.apiValue}'),
+          label: label,
+          selected: _sportKind == kind,
+          onPressed: _busy || widget.lockContent
+              ? null
+              : () => _applySportRuleKind(kind),
+        ),
+    ],
+  );
+
+  // Web shows only the first 2 presets (`getQuickPresets(..., 2)`); the
+  // description is the tooltip (Web uses the title attribute).
+  Widget _presetChips(AppLocalizations l10n) => _chipBlock(
+    l10n.divisionEditorPresets,
+    [
+      for (final preset in getSportRulePresets(_sportKind).take(2))
+        Tooltip(
+          message: divisionEditorPresetDescription(l10n, preset.id),
+          child: LavishChoiceTile(
+            key: ValueKey('division-editor-preset-${preset.id}'),
+            label:
+                '${divisionEditorPresetLabel(l10n, preset.id)} · ${preset.setsToWin}×${preset.pointsPerSet}',
+            selected:
+                _setsToWin == preset.setsToWin &&
+                _pointsPerSet == preset.pointsPerSet &&
+                _winByTwo == preset.winByTwo,
+            onPressed: _busy || widget.lockContent
+                ? null
+                : () => _applyPreset(preset),
+          ),
+        ),
+    ],
+  );
+
+  Widget _scoreFields(AppLocalizations l10n) => _inset(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.divisionEditorScoreTitle, style: _sectionTitleStyle(context)),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _labeled(
+                l10n.divisionEditorSetsToWin,
+                DropdownButtonFormField<int>(
+                  key: const ValueKey('division-editor-sets-to-win'),
+                  initialValue: _setsToWin,
+                  isExpanded: true,
+                  decoration: _fieldDecoration(),
+                  items: [
+                    for (final value in _setsToWinOptions)
+                      DropdownMenuItem(
+                        value: value,
+                        child: Text(
+                          divisionEditorSetOptionLabel(l10n, _sportKind, value),
+                        ),
+                      ),
+                  ],
+                  onChanged: _busy || widget.lockContent
+                      ? null
+                      : (value) {
+                          if (value != null) {
+                            setState(() {
+                              _setsToWin = value;
+                              _superTiebreakSetIndex = math.max(
+                                1,
+                                value * 2 - 1,
+                              );
+                            });
+                          }
+                        },
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _textBox(
+                key: 'division-editor-points-per-set',
+                label: divisionEditorSetUnitLabel(l10n, _sportKind),
+                controller: _pointsController,
+                enabled: !_busy && !widget.lockContent,
+                onChanged: _clampPoints,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _tiebreakFields(AppLocalizations l10n) => _inset(
+    Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _textBox(
+            key: 'division-editor-tiebreak-set',
+            label: l10n.divisionEditorTiebreakSet,
+            controller: _tiebreakSetController,
+            enabled: !_busy && !widget.lockContent,
+            onChanged: _clampTiebreakSet,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _textBox(
+            key: 'division-editor-tiebreak-points',
+            label: l10n.divisionEditorTiebreakPoints,
+            controller: _tiebreakPointsController,
+            enabled: !_busy && !widget.lockContent,
+            onChanged: (text) {
+              final parsed = int.tryParse(text.trim());
+              if (parsed == null) return;
+              final clamped = math.max(1, parsed);
+              setState(() => _superTiebreakPoints = clamped);
+              if (clamped != parsed) {
+                _tiebreakPointsController.text = '$clamped';
+              }
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+
+  /// Side inset of a field row: toggle rows carry their own 14dp.
+  Widget _inset(Widget child) => Padding(
+    padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+    child: child,
+  );
+
+  /// Web `fieldClass`: 8dp-rounded box with a grey hairline, no floating label.
+  InputDecoration _fieldDecoration({
+    String? errorText,
+    String? hintText,
+    String? helperText,
+  }) {
+    final colors = LavishColors.of(context);
+    OutlineInputBorder border(Color color, [double width = 1]) =>
+        OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: color, width: width),
+        );
+    return InputDecoration(
+      isDense: true,
+      filled: true,
+      fillColor: colors.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      border: border(colors.chipLine),
+      enabledBorder: border(colors.chipLine),
+      focusedBorder: border(LavishColors.accent, 2),
+      errorText: errorText,
+      hintText: hintText,
+      helperText: helperText,
+    );
+  }
+
+  /// Web label-over-input: the label sits above the box instead of floating
+  /// on its border.
+  Widget _labeled(String label, Widget field) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        label,
+        style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+      ),
+      const SizedBox(height: 6),
+      field,
+    ],
+  );
+
+  Widget _textBox({
+    required String key,
+    required String label,
+    required TextEditingController controller,
+    required bool enabled,
+    ValueChanged<String>? onChanged,
+    int? maxLength,
+    String? errorText,
+    String? hintText,
+    String? helperText,
+  }) => _labeled(
+    label,
+    TextField(
+      key: ValueKey(key),
+      controller: controller,
+      enabled: enabled,
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+      ],
+      decoration: _fieldDecoration(
+        errorText: errorText,
+        hintText: hintText,
+        helperText: helperText,
+      ),
+      onChanged: onChanged,
+    ),
   );
 
   /// Ô số của luật: dùng controller riêng, cập nhật khi preset/đổi môn dựng lại.
@@ -1479,11 +1478,22 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     required String title,
     required bool value,
     required ValueChanged<bool>? onChanged,
+    String? subtitle,
+    bool locked = false,
   }) => LavishRow(
     key: key,
     title: title,
+    subtitle: subtitle,
     onTap: onChanged == null ? null : () => onChanged(!value),
-    trailing: [LavishSwitch(value: value, onChanged: onChanged)],
+    trailing: [
+      if (locked)
+        Icon(
+          Icons.lock_outline_rounded,
+          size: 16,
+          color: LavishColors.of(context).faint,
+        ),
+      LavishSwitch(value: value, onChanged: onChanged),
+    ],
   );
 
   Widget _numberField({
@@ -1492,17 +1502,11 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     required TextEditingController controller,
     required bool enabled,
     required ValueChanged<int> onChanged,
-  }) => TextField(
-    key: ValueKey(key),
+  }) => _textBox(
+    key: key,
+    label: label,
     controller: controller,
     enabled: enabled,
-    keyboardType: TextInputType.number,
-    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-    decoration: InputDecoration(
-      labelText: label,
-      border: const OutlineInputBorder(),
-      isDense: true,
-    ),
     onChanged: (text) {
       final parsed = int.tryParse(text.trim());
       if (parsed != null) onChanged(parsed);
@@ -1538,10 +1542,7 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     final invalidElo =
         _eloEnabled && minElo != null && maxElo != null && minElo > maxElo;
     if (invalidElo) {
-      setState(() {
-        _eloInvalid = invalidElo;
-        _openSection = 'elo';
-      });
+      setState(() => _eloInvalid = invalidElo);
       return;
     }
     setState(() {

@@ -16618,6 +16618,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get formatIllustrationPlay => 'Play';
+
+  @override
+  String get formatIllustrationPause => 'Pause';
+
+  @override
+  String get formatIllustrationReplay => 'Replay';
+
+  @override
   String get formatIllustrationSingleEliminationDescription =>
       'Lose once and you are out; winners advance to the final.';
 
