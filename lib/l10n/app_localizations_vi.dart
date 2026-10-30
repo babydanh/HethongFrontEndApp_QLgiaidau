@@ -2313,6 +2313,60 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể kiểm tra ELO. Vui lòng thử lại trước khi đăng ký.';
 
   @override
+  String registerDuprRange(Object range) {
+    return 'DUPR $range';
+  }
+
+  @override
+  String get registerDuprChecking => 'Đang kiểm tra điểm DUPR...';
+
+  @override
+  String get registerDuprCheckError =>
+      'Không kiểm tra được điểm DUPR. Vui lòng thử lại.';
+
+  @override
+  String get registerDuprRetry => 'Thử lại';
+
+  @override
+  String get registerDuprRatingHint =>
+      'Nhập điểm từ 1.0 đến 8.0 (tối đa 2 chữ số thập phân).';
+
+  @override
+  String get registerDuprMatches =>
+      'Điểm DUPR của bạn phù hợp với nội dung này';
+
+  @override
+  String registerDuprBelowMin(Object value, Object range) {
+    return 'Điểm DUPR của bạn ($value) thấp hơn mốc của nội dung ($range)';
+  }
+
+  @override
+  String registerDuprAboveMax(Object value, Object range) {
+    return 'Điểm DUPR của bạn ($value) cao hơn mốc của nội dung ($range)';
+  }
+
+  @override
+  String get registerDuprMissing =>
+      'Nội dung này giới hạn trình DUPR nhưng bạn chưa khai điểm. Nhập điểm DUPR để tiếp tục.';
+
+  @override
+  String get registerDuprInputLabel => 'Điểm DUPR của bạn';
+
+  @override
+  String get registerDuprSave => 'Lưu điểm';
+
+  @override
+  String get registerDuprSaved => 'Đã lưu điểm DUPR';
+
+  @override
+  String get registerDuprSaveFailed =>
+      'Không lưu được điểm DUPR. Vui lòng thử lại.';
+
+  @override
+  String get registerDuprSelfDeclaredNote =>
+      'Điểm do bạn tự khai; ban tổ chức có thể kiểm tra lại.';
+
+  @override
   String get registerInviteInvalid => 'Mã mời không hợp lệ hoặc đã hết hạn';
 
   @override
@@ -16472,6 +16526,28 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get divisionEditorEloRangeError =>
       'ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.';
+
+  @override
+  String get divisionEditorDuprLimit => 'Trình DUPR';
+
+  @override
+  String get divisionEditorDuprFrom => 'Từ';
+
+  @override
+  String get divisionEditorDuprTo => 'Đến';
+
+  @override
+  String get divisionEditorDuprUnlimited => 'Không giới hạn';
+
+  @override
+  String get divisionEditorDuprInclusiveHint =>
+      'Mốc Đến là mốc bao gồm: điểm bằng mốc vẫn được đăng ký.';
+
+  @override
+  String get divisionEditorAccDupr => 'Trình DUPR';
+
+  @override
+  String get divisionEditorAccDuprNone => 'Không giới hạn DUPR';
 
   @override
   String get divisionEditorEntryFee => 'Phí riêng';

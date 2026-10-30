@@ -12,6 +12,10 @@ class Tournament {
   final String format;
   final String? genderRestriction;
   final String? category;
+
+  /// Tournament-level category (sport) id; the backend checks DUPR limits
+  /// against it because divisions carry no category of their own.
+  final String? categoryId;
   final String bracketType;
   final String status;
   final String? rawStatus;
@@ -96,6 +100,7 @@ class Tournament {
     required this.format,
     this.genderRestriction,
     this.category,
+    this.categoryId,
     required this.bracketType,
     this.status = 'draft',
     this.rawStatus,
@@ -178,11 +183,14 @@ class Tournament {
 
     // ─── Category / Sport ───
     String? parsedCategory;
+    String? parsedCategoryId = (json['categoryId'] ?? json['category_id'])
+        ?.toString();
     String sportVal = '';
 
     if (json['category'] != null && json['category'] is Map) {
       final cat = json['category'] as Map<String, dynamic>;
       parsedCategory = cat['name']?.toString();
+      parsedCategoryId ??= cat['id']?.toString();
       sportVal = cat['slug']?.toString() ?? '';
     } else if (json['sport'] != null) {
       sportVal = json['sport'].toString();
@@ -386,6 +394,7 @@ class Tournament {
       format: formatVal,
       genderRestriction: json['genderRestriction']?.toString(),
       category: parsedCategory,
+      categoryId: parsedCategoryId,
       bracketType: bracketTypeVal,
       status: mappedStatus,
       rawStatus: json['status']?.toString(),
@@ -600,6 +609,7 @@ class Tournament {
     String? format,
     String? genderRestriction,
     String? category,
+    String? categoryId,
     String? bracketType,
     String? status,
     String? rawStatus,
@@ -659,6 +669,7 @@ class Tournament {
       format: format ?? this.format,
       genderRestriction: genderRestriction ?? this.genderRestriction,
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       bracketType: bracketType ?? this.bracketType,
       status: status ?? this.status,
       rawStatus: rawStatus ?? (status == null ? this.rawStatus : status),

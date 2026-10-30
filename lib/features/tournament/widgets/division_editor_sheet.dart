@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/dupr_limit.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
@@ -305,6 +306,14 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
     _bracketTypes,
     'SINGLE_ELIMINATION',
   );
+  // DUPR limit (pickleball only); null on a side means no bound there.
+  late double? _minDupr = _duprFrom(widget.division?['minDupr']);
+  // Stored data with To below From is dropped to "no limit" on load.
+  late double? _maxDupr = () {
+    final max = _duprFrom(widget.division?['maxDupr']);
+    final min = _minDupr;
+    return min != null && max != null && max < min ? null : max;
+  }();
   late bool _limitEnabled = _isEditing
       ? (widget.division?['maxParticipants'] != null)
       : true;
@@ -547,6 +556,15 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           alwaysOpen: true,
           child: _buildLimits(l10n),
         ),
+        if (_isPickleball)
+          _section(
+            id: 'dupr',
+            title: l10n.divisionEditorAccDupr,
+            summary:
+                formatDuprRange(_minDupr, _maxDupr) ??
+                l10n.divisionEditorAccDuprNone,
+            child: _buildDuprSection(l10n),
+          ),
         if (hasStage)
           _section(
             id: 'stage',
@@ -901,6 +919,103 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
       ],
     );
   }
+
+  // ─── Mốc DUPR ───
+
+  /// Reads a stored limit that may arrive as a number or a numeric string.
+  static double? _duprFrom(Object? raw) =>
+      raw is num ? raw.toDouble() : double.tryParse('${raw ?? ''}');
+
+  /// Standard steps plus the current value when it falls outside them.
+  List<double> _duprChoices({double? atLeast}) {
+    final values = {
+      ...duprLimitOptions,
+      ?_minDupr,
+      ?_maxDupr,
+    }.where((v) => atLeast == null || v >= atLeast).toList()..sort();
+    return values;
+  }
+
+  Widget _duprDropdown({
+    required String keySuffix,
+    required String label,
+    required double? value,
+    required List<double> choices,
+    required ValueChanged<double?> onChanged,
+    required AppLocalizations l10n,
+  }) => InputDecorator(
+    decoration: InputDecoration(
+      labelText: label,
+      border: const OutlineInputBorder(),
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<double?>(
+        key: ValueKey('division-editor-dupr-$keySuffix'),
+        isExpanded: true,
+        isDense: true,
+        value: value,
+        items: [
+          DropdownMenuItem<double?>(
+            child: Text(
+              l10n.divisionEditorDuprUnlimited,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          for (final option in choices)
+            DropdownMenuItem<double?>(
+              value: option,
+              child: Text(option.toStringAsFixed(1)),
+            ),
+        ],
+        onChanged: _busy ? null : onChanged,
+      ),
+    ),
+  );
+
+  Widget _buildDuprSection(AppLocalizations l10n) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(l10n.divisionEditorDuprLimit, style: _sectionTitleStyle(context)),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(
+            child: _duprDropdown(
+              keySuffix: 'min',
+              label: l10n.divisionEditorDuprFrom,
+              value: _minDupr,
+              choices: _duprChoices(),
+              l10n: l10n,
+              onChanged: (value) => setState(() {
+                _minDupr = value;
+                // A range with From above To is never kept.
+                final max = _maxDupr;
+                if (value != null && max != null && value > max) {
+                  _maxDupr = null;
+                }
+              }),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _duprDropdown(
+              keySuffix: 'max',
+              label: l10n.divisionEditorDuprTo,
+              value: _maxDupr,
+              choices: _duprChoices(atLeast: _minDupr),
+              l10n: l10n,
+              onChanged: (value) => setState(() => _maxDupr = value),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 6),
+      Text(
+        l10n.divisionEditorDuprInclusiveHint,
+        style: TextStyle(color: context.colors.textSecondary, fontSize: 12),
+      ),
+    ],
+  );
 
   Widget _eloFields(AppLocalizations l10n) => _inset(
     Column(
@@ -1662,6 +1777,8 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
       'roundConfig': roundConfig,
       'minElo': _eloEnabled ? _parseField(_minElo) : null,
       'maxElo': _eloEnabled ? _parseField(_maxElo) : null,
+      // Sent as null too, so the organizer can clear an existing limit.
+      if (_isPickleball) ...{'minDupr': _minDupr, 'maxDupr': _maxDupr},
       'maxParticipants': _limitEnabled ? _normalizedMaxParticipants() : null,
       'entryFeeOverrideEnabled': fee.entryFeeOverrideEnabled,
       'entryFee': fee.entryFee,

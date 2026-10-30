@@ -818,6 +818,37 @@
   "registerEloTooLow": "ELO của bạn ({elo}) thấp hơn yêu cầu tối thiểu ({min})",
   "registerEloTooHigh": "ELO của bạn ({elo}) cao hơn yêu cầu tối đa ({max})",
   "registerEloCheckError": "Không thể kiểm tra ELO. Vui lòng thử lại trước khi đăng ký.",
+  "registerDuprRange": "DUPR {range}",
+  "registerDuprChecking": "Đang kiểm tra điểm DUPR...",
+  "registerDuprCheckError": "Không kiểm tra được điểm DUPR. Vui lòng thử lại.",
+  "registerDuprRetry": "Thử lại",
+  "registerDuprRatingHint": "Nhập điểm từ 1.0 đến 8.0 (tối đa 2 chữ số thập phân).",
+  "registerDuprMatches": "Điểm DUPR của bạn phù hợp với nội dung này",
+  "registerDuprBelowMin": "Điểm DUPR của bạn ({value}) thấp hơn mốc của nội dung ({range})",
+  "registerDuprAboveMax": "Điểm DUPR của bạn ({value}) cao hơn mốc của nội dung ({range})",
+  "registerDuprMissing": "Nội dung này giới hạn trình DUPR nhưng bạn chưa khai điểm. Nhập điểm DUPR để tiếp tục.",
+  "registerDuprInputLabel": "Điểm DUPR của bạn",
+  "registerDuprSave": "Lưu điểm",
+  "registerDuprSaved": "Đã lưu điểm DUPR",
+  "registerDuprSaveFailed": "Không lưu được điểm DUPR. Vui lòng thử lại.",
+  "registerDuprSelfDeclaredNote": "Điểm do bạn tự khai; ban tổ chức có thể kiểm tra lại.",
+  "@registerDuprRange": {
+    "placeholders": {
+      "range": {}
+    }
+  },
+  "@registerDuprBelowMin": {
+    "placeholders": {
+      "value": {},
+      "range": {}
+    }
+  },
+  "@registerDuprAboveMax": {
+    "placeholders": {
+      "value": {},
+      "range": {}
+    }
+  },
   "registerInviteInvalid": "Mã mời không hợp lệ hoặc đã hết hạn",
   "registerInviteTooShort": "Mã mời phải có ít nhất 6 ký tự",
   "registerAlreadyRegistered": "Bạn đã đăng ký giải đấu này rồi.",
@@ -6629,6 +6660,13 @@
   "divisionEditorEloMax": "ELO tối đa",
   "divisionEditorEloBlankHint": "Để trống = không giới hạn",
   "divisionEditorEloRangeError": "ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.",
+  "divisionEditorDuprLimit": "Trình DUPR",
+  "divisionEditorDuprFrom": "Từ",
+  "divisionEditorDuprTo": "Đến",
+  "divisionEditorDuprUnlimited": "Không giới hạn",
+  "divisionEditorDuprInclusiveHint": "Mốc Đến là mốc bao gồm: điểm bằng mốc vẫn được đăng ký.",
+  "divisionEditorAccDupr": "Trình DUPR",
+  "divisionEditorAccDuprNone": "Không giới hạn DUPR",
   "divisionEditorEntryFee": "Phí riêng",
   "divisionEditorEntryFeeFollowsHint": "Theo lệ phí chung của giải",
   "divisionEditorEntryFeeCustomHint": "Phí riêng cho nội dung này",

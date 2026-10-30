@@ -816,6 +816,37 @@
   "registerEloTooLow": "Your ELO ({elo}) is below the minimum requirement ({min})",
   "registerEloTooHigh": "Your ELO ({elo}) exceeds the maximum requirement ({max})",
   "registerEloCheckError": "Cannot check ELO. Please try again before registering.",
+  "registerDuprRange": "DUPR {range}",
+  "registerDuprChecking": "Checking your DUPR rating...",
+  "registerDuprCheckError": "Could not check your DUPR rating. Please try again.",
+  "registerDuprRetry": "Retry",
+  "registerDuprRatingHint": "Enter a rating from 1.0 to 8.0 (up to 2 decimals).",
+  "registerDuprMatches": "Your DUPR rating fits this category",
+  "registerDuprBelowMin": "Your DUPR rating ({value}) is below this category's limit ({range})",
+  "registerDuprAboveMax": "Your DUPR rating ({value}) is above this category's limit ({range})",
+  "registerDuprMissing": "This category limits DUPR level but you have no rating on file. Enter your DUPR rating to continue.",
+  "registerDuprInputLabel": "Your DUPR rating",
+  "registerDuprSave": "Save rating",
+  "registerDuprSaved": "DUPR rating saved",
+  "registerDuprSaveFailed": "Could not save the DUPR rating. Please try again.",
+  "registerDuprSelfDeclaredNote": "This rating is self-declared; organizers may verify it.",
+  "@registerDuprRange": {
+    "placeholders": {
+      "range": {}
+    }
+  },
+  "@registerDuprBelowMin": {
+    "placeholders": {
+      "value": {},
+      "range": {}
+    }
+  },
+  "@registerDuprAboveMax": {
+    "placeholders": {
+      "value": {},
+      "range": {}
+    }
+  },
   "registerInviteInvalid": "Invite code is invalid or expired",
   "registerInviteTooShort": "Invite code must be at least 6 characters",
   "registerAlreadyRegistered": "You have already registered for this tournament.",
@@ -6604,6 +6635,13 @@
   "divisionEditorEloMax": "Max ELO",
   "divisionEditorEloBlankHint": "Leave blank for no limit",
   "divisionEditorEloRangeError": "Min ELO must be less than or equal to max ELO.",
+  "divisionEditorDuprLimit": "DUPR level",
+  "divisionEditorDuprFrom": "From",
+  "divisionEditorDuprTo": "To",
+  "divisionEditorDuprUnlimited": "No limit",
+  "divisionEditorDuprInclusiveHint": "The To value is inclusive: a rating equal to it can still register.",
+  "divisionEditorAccDupr": "DUPR level",
+  "divisionEditorAccDuprNone": "No DUPR limit",
   "divisionEditorEntryFee": "Fee",
   "divisionEditorEntryFeeFollowsHint": "Follows the tournament fee",
   "divisionEditorEntryFeeCustomHint": "Custom fee for this division",

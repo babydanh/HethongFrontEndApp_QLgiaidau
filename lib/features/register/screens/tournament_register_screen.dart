@@ -5,7 +5,9 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/dupr_limit.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/features/register/widgets/dupr_limit_card.dart';
 import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
@@ -164,6 +166,9 @@ class _TournamentRegisterScreenState
   String? _genderError;
   String? _eloError;
   bool _eloChecking = false;
+
+  /// False while the DUPR limit card is checking or the rating does not fit.
+  bool _duprValid = true;
   bool _inviteValidating = false;
   String? _inviteError;
   String? _localInviteCode;
@@ -900,6 +905,8 @@ class _TournamentRegisterScreenState
       final max = d.maxElo?.toInt().toString() ?? '∞';
       items.add(l10n.registerEloRange(min, max));
     }
+    final duprRange = formatDuprRange(d.minDupr, d.maxDupr);
+    if (duprRange != null) items.add(l10n.registerDuprRange(duprRange));
     if (d.entryFee != null && d.entryFee! > 0) {
       items.add(_formatFee(d.entryFee!));
     } else {
@@ -2216,6 +2223,21 @@ class _TournamentRegisterScreenState
                               ],
                             ),
                           ),
+                        if (_selectedDivision case final selected?)
+                          DuprLimitCard(
+                            key: ValueKey('dupr-limit-${selected.id}'),
+                            division: selected,
+                            categoryId: t.categoryId,
+                            // Reports from a card of a previously selected
+                            // division (e.g. its dispose) must not count.
+                            onValidityChanged: (valid) {
+                              if (mounted &&
+                                  _selectedDiv == selected.id &&
+                                  _duprValid != valid) {
+                                setState(() => _duprValid = valid);
+                              }
+                            },
+                          ),
                       ],
                     );
                   },
@@ -2357,6 +2379,7 @@ class _TournamentRegisterScreenState
                             _isSelectedDivisionClosed ||
                             _isDivisionRegistrationExpired ||
                             _isSelectedDivisionFull ||
+                            !_duprValid ||
                             _submitting)
                         ? null
                         : _register,

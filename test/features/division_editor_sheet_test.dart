@@ -997,4 +997,279 @@ void main() {
       );
     });
   });
+
+  group('mốc DUPR', () {
+    Tournament badmintonTournament() => Tournament.fromJson({
+      'name': 'City Badminton Cup',
+      'sport': 'badminton',
+      'format': 'doubles',
+      'bracketType': 'single_elimination',
+      'status': 'REGISTRATION',
+      'maxTeams': 32,
+      'entryFee': '50000',
+      'createdAt': '2026-01-01T00:00:00Z',
+      'updatedAt': '2026-01-01T00:00:00Z',
+    }, 'tournament-2');
+
+    Future<void> pickDupr(WidgetTester tester, String field, String label) async {
+      await tester.tap(find.byKey(ValueKey('division-editor-dupr-$field')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+    }
+
+    void bigView(WidgetTester tester) {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+    }
+
+    testWidgets('chọn 3.0 – 3.5 ra payload đúng', (tester) async {
+      bigView(tester);
+      final mgmt = _MgmtRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          _StageRepo(),
+          (context) =>
+              DivisionEditorSheet.show(context, tournament: _tournament()),
+        ),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-format-MALE_DOUBLES')),
+      );
+      await tester.pumpAndSettle();
+
+      await _openSection(tester, 'dupr');
+      await pickDupr(tester, 'min', '3.0');
+      await pickDupr(tester, 'max', '3.5');
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.created.single;
+      expect(payload['minDupr'], 3.0);
+      expect(payload['maxDupr'], 3.5);
+    });
+
+    testWidgets('chọn Từ lớn hơn Đến thì Đến về không giới hạn', (
+      tester,
+    ) async {
+      bigView(tester);
+      final mgmt = _MgmtRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          _StageRepo(),
+          (context) =>
+              DivisionEditorSheet.show(context, tournament: _tournament()),
+        ),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-format-MALE_DOUBLES')),
+      );
+      await tester.pumpAndSettle();
+
+      await _openSection(tester, 'dupr');
+      await pickDupr(tester, 'max', '3.0');
+      await pickDupr(tester, 'min', '4.0');
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.created.single;
+      expect(payload['minDupr'], 4.0);
+      expect(payload['maxDupr'], isNull);
+    });
+
+    testWidgets('môn khác: không có mục DUPR và payload không có hai trường', (
+      tester,
+    ) async {
+      bigView(tester);
+      final mgmt = _MgmtRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          _StageRepo(),
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: badmintonTournament(),
+          ),
+        ),
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('division-editor-format-MALE_DOUBLES')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('division-editor-section-dupr')),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.created.single;
+      expect(payload.containsKey('minDupr'), isFalse);
+      expect(payload.containsKey('maxDupr'), isFalse);
+    });
+
+    testWidgets('mở nội dung có mốc rồi xoá mốc ra null', (tester) async {
+      bigView(tester);
+      final mgmt = _MgmtRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          _StageRepo(),
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: _tournament(),
+            division: {
+              'id': 'div-9',
+              'name': 'Đôi có mốc',
+              'matchType': 'DOUBLES',
+              'bracketType': 'SINGLE_ELIMINATION',
+              'minDupr': 3,
+              'maxDupr': '3.50',
+              'roundConfig': {
+                'kind': 'PICKLEBALL_RALLY',
+                'setsToWin': 2,
+                'pointsPerSet': 11,
+              },
+            },
+          ),
+        ),
+      );
+
+      await _openSection(tester, 'dupr');
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('division-editor-dupr-min')),
+          matching: find.text('3.0'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('division-editor-dupr-max')),
+          matching: find.text('3.5'),
+        ),
+        findsOneWidget,
+      );
+
+      await pickDupr(tester, 'min', 'Không giới hạn');
+      await pickDupr(tester, 'max', 'Không giới hạn');
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+
+      final payload = mgmt.updated.single.payload;
+      expect(payload.containsKey('minDupr'), isTrue);
+      expect(payload['minDupr'], isNull);
+      expect(payload['maxDupr'], isNull);
+    });
+
+    testWidgets('mốc lệch (Đến nhỏ hơn Từ) nạp vào thì Đến về không giới hạn', (
+      tester,
+    ) async {
+      bigView(tester);
+      final mgmt = _MgmtRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          _StageRepo(),
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: _tournament(),
+            division: {
+              'id': 'div-10',
+              'name': 'Đôi dữ liệu lệch',
+              'matchType': 'DOUBLES',
+              'bracketType': 'SINGLE_ELIMINATION',
+              'minDupr': 4,
+              'maxDupr': 3,
+              'roundConfig': {
+                'kind': 'PICKLEBALL_RALLY',
+                'setsToWin': 2,
+                'pointsPerSet': 11,
+              },
+            },
+          ),
+        ),
+      );
+
+      await _openSection(tester, 'dupr');
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('division-editor-dupr-max')),
+          matching: find.text('Không giới hạn'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+      final payload = mgmt.updated.single.payload;
+      expect(payload['minDupr'], 4.0);
+      expect(payload['maxDupr'], isNull);
+    });
+
+    testWidgets('mốc ngoài danh sách (1.0 và 7.0) hiện đúng và giữ nguyên', (
+      tester,
+    ) async {
+      bigView(tester);
+      final mgmt = _MgmtRepo();
+      await _open(
+        tester,
+        _app(
+          mgmt,
+          _StageRepo(),
+          (context) => DivisionEditorSheet.show(
+            context,
+            tournament: _tournament(),
+            division: {
+              'id': 'div-11',
+              'name': 'Đôi mốc rộng',
+              'matchType': 'DOUBLES',
+              'bracketType': 'SINGLE_ELIMINATION',
+              'minDupr': '1.00',
+              'maxDupr': 7,
+              'roundConfig': {
+                'kind': 'PICKLEBALL_RALLY',
+                'setsToWin': 2,
+                'pointsPerSet': 11,
+              },
+            },
+          ),
+        ),
+      );
+
+      await _openSection(tester, 'dupr');
+      expect(tester.takeException(), isNull);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('division-editor-dupr-min')),
+          matching: find.text('1.0'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('division-editor-dupr-max')),
+          matching: find.text('7.0'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('division-editor-save')));
+      await tester.pumpAndSettle();
+      final payload = mgmt.updated.single.payload;
+      expect(payload['minDupr'], 1.0);
+      expect(payload['maxDupr'], 7.0);
+    });
+  });
 }

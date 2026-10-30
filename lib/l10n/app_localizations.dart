@@ -4430,6 +4430,90 @@ abstract class AppLocalizations {
   /// **'Không thể kiểm tra ELO. Vui lòng thử lại trước khi đăng ký.'**
   String get registerEloCheckError;
 
+  /// No description provided for @registerDuprRange.
+  ///
+  /// In vi, this message translates to:
+  /// **'DUPR {range}'**
+  String registerDuprRange(Object range);
+
+  /// No description provided for @registerDuprChecking.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kiểm tra điểm DUPR...'**
+  String get registerDuprChecking;
+
+  /// No description provided for @registerDuprCheckError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kiểm tra được điểm DUPR. Vui lòng thử lại.'**
+  String get registerDuprCheckError;
+
+  /// No description provided for @registerDuprRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get registerDuprRetry;
+
+  /// No description provided for @registerDuprRatingHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập điểm từ 1.0 đến 8.0 (tối đa 2 chữ số thập phân).'**
+  String get registerDuprRatingHint;
+
+  /// No description provided for @registerDuprMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm DUPR của bạn phù hợp với nội dung này'**
+  String get registerDuprMatches;
+
+  /// No description provided for @registerDuprBelowMin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm DUPR của bạn ({value}) thấp hơn mốc của nội dung ({range})'**
+  String registerDuprBelowMin(Object value, Object range);
+
+  /// No description provided for @registerDuprAboveMax.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm DUPR của bạn ({value}) cao hơn mốc của nội dung ({range})'**
+  String registerDuprAboveMax(Object value, Object range);
+
+  /// No description provided for @registerDuprMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung này giới hạn trình DUPR nhưng bạn chưa khai điểm. Nhập điểm DUPR để tiếp tục.'**
+  String get registerDuprMissing;
+
+  /// No description provided for @registerDuprInputLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm DUPR của bạn'**
+  String get registerDuprInputLabel;
+
+  /// No description provided for @registerDuprSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu điểm'**
+  String get registerDuprSave;
+
+  /// No description provided for @registerDuprSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu điểm DUPR'**
+  String get registerDuprSaved;
+
+  /// No description provided for @registerDuprSaveFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lưu được điểm DUPR. Vui lòng thử lại.'**
+  String get registerDuprSaveFailed;
+
+  /// No description provided for @registerDuprSelfDeclaredNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm do bạn tự khai; ban tổ chức có thể kiểm tra lại.'**
+  String get registerDuprSelfDeclaredNote;
+
   /// No description provided for @registerInviteInvalid.
   ///
   /// In vi, this message translates to:
@@ -29731,6 +29815,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'ELO tối thiểu phải nhỏ hơn hoặc bằng ELO tối đa.'**
   String get divisionEditorEloRangeError;
+
+  /// No description provided for @divisionEditorDuprLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trình DUPR'**
+  String get divisionEditorDuprLimit;
+
+  /// No description provided for @divisionEditorDuprFrom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ'**
+  String get divisionEditorDuprFrom;
+
+  /// No description provided for @divisionEditorDuprTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đến'**
+  String get divisionEditorDuprTo;
+
+  /// No description provided for @divisionEditorDuprUnlimited.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn'**
+  String get divisionEditorDuprUnlimited;
+
+  /// No description provided for @divisionEditorDuprInclusiveHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mốc Đến là mốc bao gồm: điểm bằng mốc vẫn được đăng ký.'**
+  String get divisionEditorDuprInclusiveHint;
+
+  /// No description provided for @divisionEditorAccDupr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trình DUPR'**
+  String get divisionEditorAccDupr;
+
+  /// No description provided for @divisionEditorAccDuprNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không giới hạn DUPR'**
+  String get divisionEditorAccDuprNone;
 
   /// No description provided for @divisionEditorEntryFee.
   ///
