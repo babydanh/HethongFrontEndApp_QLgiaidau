@@ -57,10 +57,10 @@ void main() {
       );
       await tester.tap(find.text('Thêm nội dung').last);
       await tester.pump(const Duration(seconds: 1));
-      // Form tick sẵn nội dung mặc định "Đôi linh hoạt" (OPEN_DOUBLES). Bỏ tick để giải chỉ còn
+      // Form tick sẵn nội dung mặc định "Đôi tự do" (OPEN_DOUBLES). Bỏ tick để giải chỉ còn
       // nội dung đơn vừa thêm; giữ cả hai thì tạo nhánh bị backend từ chối (400: "Vui lòng chọn nội dung để tạo sơ đồ.").
-      await scrollToText(tester, 'Đôi linh hoạt');
-      await tapCentered(tester, find.text('Đôi linh hoạt').first);
+      await scrollToText(tester, 'Đôi tự do');
+      await tapCentered(tester, find.text('Đôi tự do').first);
       await tester.pump(const Duration(milliseconds: 500));
 
       await scrollToText(tester, 'Thời gian bắt đầu *');
