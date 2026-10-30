@@ -1,12 +1,14 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
@@ -15,6 +17,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/stage_round_confi
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 class TournamentManagementDivisionsSection extends ConsumerStatefulWidget {
   const TournamentManagementDivisionsSection({
@@ -33,6 +36,9 @@ class _TournamentManagementDivisionsSectionState
   late Future<List<Map<String, dynamic>>> _divisionsFuture;
   bool _isBusy = false;
   String _query = '';
+
+  /// Card currently open (one at a time, like the division lists elsewhere).
+  String? _openDivisionId;
   bool _configuring = false;
   String? _mutationError;
 
@@ -82,61 +88,93 @@ class _TournamentManagementDivisionsSectionState
               ),
             )
             .toList();
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        final fade = Theme.of(context).scaffoldBackgroundColor;
+        return Stack(
           children: [
-            _DivisionsHeader(
-              addLabel: l10n.tournamentManagementAddDivision,
-              bulkLabel: l10n.divisionBulkOpenButton,
-              isBusy: _isBusy,
-              onAdd: _addDivision,
-              onBulkOpen: divisions.isEmpty
-                  ? null
-                  : _openBulkRegistrationSheet(divisions),
+            ListView(
+              // Bottom room so the last card clears the "+" button and fade.
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+              children: [
+                if (divisions.isNotEmpty)
+                  _DivisionsHeader(
+                    bulkLabel: l10n.divisionBulkOpenButton,
+                    isBusy: _isBusy,
+                    onBulkOpen: _openBulkRegistrationSheet(divisions),
+                  ),
+                if (divisions.length > _searchThreshold)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 8),
+                    child: TextField(
+                      onChanged: (value) => setState(() => _query = value),
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: l10n.tournamentManagementDivisionSearchHint,
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                if (_mutationError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      l10n.tournamentManagementActionError,
+                      style: TextStyle(color: context.colors.error),
+                    ),
+                  ),
+                if (divisions.isEmpty)
+                  TournamentManagementEmpty(
+                    title: l10n.tournamentManagementDivisionsEmpty,
+                    subtitle:
+                        l10n.tournamentManagementDivisionsEmptyDescription,
+                    icon: Icons.category_outlined,
+                  )
+                else
+                  ..._divisionRows(l10n, divisions),
+                if (seedDivisions.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _TournamentSeedsSection(
+                    tournamentId: widget.tournament.id,
+                    divisions: seedDivisions,
+                  ),
+                ],
+              ],
             ),
-            if (divisions.length > _searchThreshold)
-              Padding(
-                padding: const EdgeInsets.only(top: 4, bottom: 4),
-                child: TextField(
-                  onChanged: (value) => setState(() => _query = value),
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: l10n.tournamentManagementDivisionSearchHint,
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    isDense: true,
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                child: Container(
+                  key: const ValueKey('division-bottom-fade'),
+                  height: 96,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [fade.withValues(alpha: 0), fade],
+                    ),
                   ),
                 ),
               ),
-            if (_mutationError != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  l10n.tournamentManagementActionError,
-                  style: TextStyle(color: context.colors.error),
-                ),
+            ),
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: FloatingActionButton(
+                key: const ValueKey('division-add-fab'),
+                heroTag: null,
+                tooltip: l10n.tournamentManagementAddDivision,
+                onPressed: _isBusy ? null : _addDivision,
+                child: const Icon(Icons.add_rounded),
               ),
-            if (divisions.isEmpty)
-              TournamentManagementEmpty(
-                title: l10n.tournamentManagementDivisionsEmpty,
-                subtitle: l10n.tournamentManagementDivisionsEmptyDescription,
-                icon: Icons.category_outlined,
-              )
-            else
-              ..._divisionRows(l10n, divisions),
-            if (seedDivisions.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _TournamentSeedsSection(
-                tournamentId: widget.tournament.id,
-                divisions: seedDivisions,
-              ),
-            ],
+            ),
           ],
         );
       },
     );
   }
 
-  /// Rows grouped by match type; group labels only when there is more than one.
   List<Widget> _divisionRows(
     AppLocalizations l10n,
     List<Map<String, dynamic>> divisions,
@@ -160,63 +198,41 @@ class _TournamentManagementDivisionsSectionState
         ),
       ];
     }
-    final groups = <String, List<Map<String, dynamic>>>{};
-    for (final division in shown) {
-      groups.putIfAbsent(_matchGroup(division), () => []).add(division);
-    }
-    final showLabels = groups.length > 1;
-    return [
-      for (final key in _matchGroupOrder)
-        if (groups[key] case final rows?) ...[
-          if (showLabels)
-            Padding(
-              padding: const EdgeInsets.only(top: 16, bottom: 2),
-              child: Text(
-                '${_matchGroupLabel(l10n, key).toUpperCase()} · ${rows.length}',
-                style: TextStyle(
-                  color: context.colors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ),
-          for (var i = 0; i < rows.length; i++) ...[
-            if (i > 0) Divider(height: 1, color: context.colors.border),
-            _divisionCard(rows[i]),
-          ],
-        ],
-    ];
+    return [for (final division in shown) _divisionCard(division)];
   }
 
-  Widget _divisionCard(Map<String, dynamic> division) => _DivisionCard(
-    division: division,
-    isBusy: _isBusy,
-    // Khoá/mở đăng ký chỉ chặn VĐV tự đăng ký, không đụng sơ đồ:
-    // làm được mọi lúc trước khi giải kết thúc hoặc bị huỷ.
-    canToggleRegistration: !const {
-      'COMPLETED',
-      'CANCELLED',
-    }.contains(widget.tournament.status.toUpperCase()),
-    onEdit: () => _editDivision(division),
-    // Watch (không read) để menu hiện đúng ngay khi trận
-    // của giải mới về; read lúc build luôn thấy rỗng.
-    onConfigureRounds:
-        (ref
-                    .watch(matchesProvider(widget.tournament.id))
-                    .asData
-                    ?.value
-                    .any(
-                      (match) => match.divisionId == _divisionId(division),
-                    ) ??
-                false) &&
-            !_isSwiss(division['bracketType'])
-        ? () => _configureRounds(division)
-        : null,
-    onToggleRegistration: () => _toggleRegistration(division),
-    onReopenWithDeadline: () => _reopenWithDeadline(division),
-    onDelete: () => _deleteDivision(division),
-  );
+  Widget _divisionCard(Map<String, dynamic> division) {
+    final id = _divisionId(division);
+    final expanded = id.isNotEmpty && _openDivisionId == id;
+    return _DivisionTile(
+      division: division,
+      expanded: expanded,
+      isBusy: _isBusy,
+      onToggle: () => setState(() => _openDivisionId = expanded ? null : id),
+      // Khoá/mở đăng ký chỉ chặn VĐV tự đăng ký, không đụng sơ đồ:
+      // làm được mọi lúc trước khi giải kết thúc hoặc bị huỷ.
+      canToggleRegistration: !const {
+        'COMPLETED',
+        'CANCELLED',
+      }.contains(widget.tournament.status.toUpperCase()),
+      onEdit: () => _editDivision(division),
+      // Watch (không read) để menu hiện đúng ngay khi trận
+      // của giải mới về; read lúc build luôn thấy rỗng.
+      onConfigureRounds:
+          (ref
+                      .watch(matchesProvider(widget.tournament.id))
+                      .asData
+                      ?.value
+                      .any((match) => match.divisionId == id) ??
+                  false) &&
+              !_isSwiss(division['bracketType'])
+          ? () => _configureRounds(division)
+          : null,
+      onToggleRegistration: () => _toggleRegistration(division),
+      onReopenWithDeadline: () => _reopenWithDeadline(division),
+      onDelete: () => _deleteDivision(division),
+    );
+  }
 
   void _maybePromptFullDivisions(List<Map<String, dynamic>> divisions) {
     if (!mounted || _fullPromptActive) return;
@@ -423,11 +439,15 @@ class _TournamentManagementDivisionsSectionState
   }
 }
 
-class _DivisionCard extends StatelessWidget {
-  const _DivisionCard({
+/// One division as its own bordered card: summary row, and an animated panel
+/// with full info plus actions when opened.
+class _DivisionTile extends StatelessWidget {
+  const _DivisionTile({
     required this.division,
+    required this.expanded,
     required this.isBusy,
     required this.canToggleRegistration,
+    required this.onToggle,
     required this.onEdit,
     required this.onConfigureRounds,
     required this.onToggleRegistration,
@@ -435,8 +455,10 @@ class _DivisionCard extends StatelessWidget {
     required this.onDelete,
   });
   final Map<String, dynamic> division;
+  final bool expanded;
   final bool isBusy;
   final bool canToggleRegistration;
+  final VoidCallback onToggle;
   final VoidCallback onEdit;
 
   /// null = chưa có sơ đồ (hoặc Swiss): ẩn mục cấu hình từng vòng.
@@ -449,114 +471,135 @@ class _DivisionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final bracket = (division['bracketType'] ?? '').toString().toUpperCase();
-    final maximum = division['maxParticipants']?.toString();
-    final registered = registeredParticipantsOf(division);
-    final locked = _isRegistrationLocked(division);
+    final duration = MediaQuery.disableAnimationsOf(context)
+        ? const Duration(milliseconds: 1)
+        : const Duration(milliseconds: 220);
+    final countLabel = _registeredLabel(division);
     final deadline = _registrationDeadline(division);
-    final expired = deadline != null && !deadline.isAfter(DateTime.now());
     final registrationOpen = division['registrationOpen'];
-    return InkWell(
-      key: ValueKey('division-row-${_divisionId(division)}'),
-      onTap: isBusy ? null : onEdit,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
+    final accent = expanded ? AppTheme.primary : colors.textMuted;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        key: ValueKey('division-row-${_divisionId(division)}'),
+        decoration: BoxDecoration(
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: expanded
+                ? AppTheme.primary.withValues(alpha: 0.5)
+                : colors.border,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _divisionName(division),
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontWeight: FontWeight.w600,
+            MergeSemantics(
+              child: Semantics(
+                button: true,
+                expanded: expanded,
+                label: '${_divisionName(division)}, $countLabel',
+                child: InkWell(
+                  onTap: onToggle,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 52),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: expanded
+                                  ? AppTheme.primary.withValues(alpha: 0.12)
+                                  : colors.bgSurface,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: BracketFormatIcons.getIcon(
+                                division['bracketType']?.toString(),
+                                size: 16,
+                                color: accent,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _divisionName(division),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: expanded
+                                    ? AppTheme.primary
+                                    : colors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          // Open with no deadline: reminder to lock it by hand.
+                          if (registrationOpen == true && deadline == null) ...[
+                            _DivisionMeta(
+                              icon: Icons.lock_open_outlined,
+                              tooltip:
+                                  '${l10n.tournamentManagementDivisionRegistrationOpen} · ${l10n.tournamentManagementDivisionNoDeadline}',
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          if (registrationOpen == false) ...[
+                            _DivisionMeta(
+                              icon: Icons.lock_outline_rounded,
+                              color: colors.error,
+                              tooltip: l10n
+                                  .tournamentManagementDivisionRegistrationClosed,
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          _DivisionMeta(
+                            icon: Icons.groups_outlined,
+                            text: countLabel,
+                            tooltip: l10n.tournamentManagementMaxParticipants,
+                          ),
+                          const SizedBox(width: 4),
+                          AnimatedRotation(
+                            turns: expanded ? 0.5 : 0,
+                            duration: duration,
+                            child: Icon(
+                              Icons.expand_more_rounded,
+                              size: 20,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 4,
-                    children: [
-                      _DivisionMeta(
-                        icon: _bracketTypeIcon(bracket),
-                        tooltip: _bracketTypeLabel(l10n, bracket),
-                      ),
-                      if (maximum != null)
-                        _DivisionMeta(
-                          icon: Icons.groups_outlined,
-                          text: '$registered/$maximum',
-                          tooltip: l10n.tournamentManagementMaxParticipants,
-                        ),
-                      // Open with no deadline: reminder to lock it by hand.
-                      if (registrationOpen == true && deadline == null)
-                        _DivisionMeta(
-                          icon: Icons.lock_open_outlined,
-                          tooltip:
-                              '${l10n.tournamentManagementDivisionRegistrationOpen} · ${l10n.tournamentManagementDivisionNoDeadline}',
-                        ),
-                      if (registrationOpen == false)
-                        _DivisionMeta(
-                          icon: Icons.lock_outline_rounded,
-                          color: colors.error,
-                          tooltip: l10n
-                              .tournamentManagementDivisionRegistrationClosed,
-                        ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
-            PopupMenuButton<String>(
-              enabled: !isBusy,
-              // The whole row opens the editor; the menu keeps the rest.
-              padding: EdgeInsets.zero,
-              onSelected: (value) {
-                if (value == 'edit') onEdit();
-                if (value == 'rounds') onConfigureRounds?.call();
-                if (value == 'registration') onToggleRegistration();
-                if (value == 'reopen-deadline') onReopenWithDeadline();
-                if (value == 'delete') onDelete();
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Text(l10n.divisionEditorEditTitle),
-                ),
-                // Cấu hình từng vòng chỉ có khi hạng mục đã sinh sơ đồ.
-                if (onConfigureRounds != null)
-                  PopupMenuItem(
-                    value: 'rounds',
-                    child: Text(l10n.stageRoundMenuTitle),
-                  ),
-                // Quá hạn mà mở lại thì phải đặt hạn mới; còn hạn thì bật/tắt khoá.
-                if (expired)
-                  PopupMenuItem(
-                    value: 'reopen-deadline',
-                    enabled: canToggleRegistration,
-                    child: Text(
-                      l10n.tournamentManagementDivisionReopenWithDeadline,
-                    ),
-                  )
-                else
-                  PopupMenuItem(
-                    value: 'registration',
-                    enabled: canToggleRegistration,
-                    child: Text(
-                      locked
-                          ? l10n.tournamentManagementDivisionUnlockRegistration
-                          : l10n.tournamentManagementDivisionLockRegistration,
-                    ),
-                  ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text(
-                    l10n.tournamentManagementDelete,
-                    style: TextStyle(color: colors.error),
-                  ),
-                ),
-              ],
+            AnimatedSize(
+              duration: duration,
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: expanded
+                  ? _DivisionPanel(
+                      division: division,
+                      countLabel: countLabel,
+                      isBusy: isBusy,
+                      canToggleRegistration: canToggleRegistration,
+                      onEdit: onEdit,
+                      onConfigureRounds: onConfigureRounds,
+                      onToggleRegistration: onToggleRegistration,
+                      onReopenWithDeadline: onReopenWithDeadline,
+                      onDelete: onDelete,
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
           ],
         ),
@@ -565,46 +608,202 @@ class _DivisionCard extends StatelessWidget {
   }
 }
 
-/// Flat header: one primary action and a menu for the bulk action.
-class _DivisionsHeader extends StatelessWidget {
-  const _DivisionsHeader({
-    required this.addLabel,
-    required this.bulkLabel,
+/// Opened part of a card: label/value info rows, then Edit and a menu.
+class _DivisionPanel extends StatelessWidget {
+  const _DivisionPanel({
+    required this.division,
+    required this.countLabel,
     required this.isBusy,
-    required this.onAdd,
-    required this.onBulkOpen,
+    required this.canToggleRegistration,
+    required this.onEdit,
+    required this.onConfigureRounds,
+    required this.onToggleRegistration,
+    required this.onReopenWithDeadline,
+    required this.onDelete,
   });
-
-  final String addLabel;
-  final String bulkLabel;
+  final Map<String, dynamic> division;
+  final String countLabel;
   final bool isBusy;
-  final VoidCallback onAdd;
-
-  /// null = nothing to open yet; the menu stays disabled.
-  final VoidCallback? onBulkOpen;
+  final bool canToggleRegistration;
+  final VoidCallback onEdit;
+  final VoidCallback? onConfigureRounds;
+  final VoidCallback onToggleRegistration;
+  final VoidCallback onReopenWithDeadline;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    final locked = _isRegistrationLocked(division);
+    final deadline = _registrationDeadline(division);
+    final expired = deadline != null && !deadline.isAfter(DateTime.now());
+    final registration = switch (division['registrationOpen']) {
+      true =>
+        '${l10n.tournamentManagementDivisionRegistrationOpen} · ${deadline == null ? l10n.tournamentManagementDivisionNoDeadline : DateFormatterUtils.formatDateTime(deadline)}',
+      false => l10n.tournamentManagementDivisionRegistrationClosed,
+      _ => null,
+    };
+    final elo = _eloRange(division);
+    final fee = _ownFee(division);
+    final id = _divisionId(division);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(12, 0, 4, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Spacer(),
-          FilledButton.icon(
-            onPressed: isBusy ? null : onAdd,
-            icon: const Icon(Icons.add_rounded),
-            label: Text(addLabel),
+          Divider(height: 1, color: colors.border),
+          const SizedBox(height: 8),
+          _InfoRow(
+            label: l10n.tournamentManagementDivisionInfoMatchType,
+            value: _matchTypeLabel(
+              l10n,
+              (division['matchType'] ?? '').toString().toUpperCase(),
+            ),
           ),
-          PopupMenuButton<int>(
-            key: const ValueKey('division-header-menu'),
-            enabled: !isBusy && onBulkOpen != null,
-            tooltip: bulkLabel,
-            onSelected: (_) => onBulkOpen?.call(),
-            itemBuilder: (_) => [
-              PopupMenuItem(value: 0, child: Text(bulkLabel)),
+          _InfoRow(
+            label: l10n.tournamentManagementDivisionInfoBracket,
+            value: _bracketTypeLabel(
+              l10n,
+              (division['bracketType'] ?? '').toString().toUpperCase(),
+            ),
+          ),
+          _InfoRow(
+            label: l10n.tournamentManagementDivisionInfoRegistered,
+            value: countLabel,
+          ),
+          if (registration != null)
+            _InfoRow(
+              label: l10n.tournamentManagementDivisionInfoRegistration,
+              value: registration,
+            ),
+          if (elo != null)
+            _InfoRow(
+              label: l10n.tournamentManagementDivisionInfoElo,
+              value: elo,
+            ),
+          if (fee != null)
+            _InfoRow(label: l10n.divisionEditorEntryFee, value: fee),
+          Row(
+            children: [
+              TextButton.icon(
+                key: ValueKey('division-edit-$id'),
+                // The app theme gives buttons an infinite width; keep it compact.
+                style: TextButton.styleFrom(minimumSize: const Size(0, 44)),
+                onPressed: isBusy ? null : onEdit,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(l10n.infoEdit),
+              ),
+              const Spacer(),
+              PopupMenuButton<String>(
+                enabled: !isBusy,
+                onSelected: (value) {
+                  if (value == 'rounds') onConfigureRounds?.call();
+                  if (value == 'registration') onToggleRegistration();
+                  if (value == 'reopen-deadline') onReopenWithDeadline();
+                  if (value == 'delete') onDelete();
+                },
+                itemBuilder: (context) => [
+                  // Cấu hình từng vòng chỉ có khi hạng mục đã sinh sơ đồ.
+                  if (onConfigureRounds != null)
+                    PopupMenuItem(
+                      value: 'rounds',
+                      child: Text(l10n.stageRoundMenuTitle),
+                    ),
+                  // Quá hạn mà mở lại thì phải đặt hạn mới; còn hạn thì bật/tắt khoá.
+                  if (expired)
+                    PopupMenuItem(
+                      value: 'reopen-deadline',
+                      enabled: canToggleRegistration,
+                      child: Text(
+                        l10n.tournamentManagementDivisionReopenWithDeadline,
+                      ),
+                    )
+                  else
+                    PopupMenuItem(
+                      value: 'registration',
+                      enabled: canToggleRegistration,
+                      child: Text(
+                        locked
+                            ? l10n.tournamentManagementDivisionUnlockRegistration
+                            : l10n.tournamentManagementDivisionLockRegistration,
+                      ),
+                    ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      l10n.tournamentManagementDelete,
+                      style: TextStyle(color: colors.error),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 96,
+            child: Text(
+              label,
+              style: TextStyle(color: colors.textSecondary, fontSize: 12.5),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bulk "open registration" lives in this menu, out of the way.
+class _DivisionsHeader extends StatelessWidget {
+  const _DivisionsHeader({
+    required this.bulkLabel,
+    required this.isBusy,
+    required this.onBulkOpen,
+  });
+
+  final String bulkLabel;
+  final bool isBusy;
+  final VoidCallback onBulkOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: PopupMenuButton<int>(
+        key: const ValueKey('division-header-menu'),
+        enabled: !isBusy,
+        tooltip: bulkLabel,
+        onSelected: (_) => onBulkOpen(),
+        itemBuilder: (_) => [PopupMenuItem(value: 0, child: Text(bulkLabel))],
       ),
     );
   }
@@ -963,29 +1162,37 @@ DateTime? _registrationDeadline(Map<String, dynamic> division) {
 bool _isSwiss(Object? bracketType) =>
     bracketType?.toString().toUpperCase() == 'SWISS';
 
-/// Groups shown in this order; anything else falls into 'OTHER'.
-const _matchGroupOrder = ['SINGLES', 'DOUBLES', 'MIXED_DOUBLES', 'OTHER'];
-
 /// The list gets a search box once it is longer than this.
 const _searchThreshold = 8;
 
-String _matchGroup(Map<String, dynamic> division) {
-  final match = (division['matchType'] ?? '').toString().toUpperCase();
-  return _matchGroupOrder.contains(match) ? match : 'OTHER';
+/// "registered/max", or just "registered" when the division has no cap.
+String _registeredLabel(Map<String, dynamic> division) {
+  final registered = registeredParticipantsOf(division);
+  final maximum = division['maxParticipants']?.toString();
+  return maximum == null ? '$registered' : '$registered/$maximum';
 }
 
-String _matchGroupLabel(AppLocalizations l10n, String key) => switch (key) {
+/// "min – max" when the division sets its own ELO limits, else null.
+String? _eloRange(Map<String, dynamic> division) {
+  final min = division['minElo']?.toString();
+  final max = division['maxElo']?.toString();
+  if (min == null && max == null) return null;
+  return '${min ?? '–'} – ${max ?? '–'}';
+}
+
+/// Own entry fee of the division, formatted, when it overrides the tournament's.
+String? _ownFee(Map<String, dynamic> division) {
+  if (division['entryFeeOverrideEnabled'] != true) return null;
+  final fee = num.tryParse(division['entryFee']?.toString() ?? '');
+  if (fee == null) return null;
+  return '${NumberFormat.decimalPattern('vi').format(fee)}đ';
+}
+
+String _matchTypeLabel(AppLocalizations l10n, String value) => switch (value) {
   'SINGLES' => l10n.tournamentManagementMatchSingles,
   'DOUBLES' => l10n.tournamentManagementMatchDoubles,
   'MIXED_DOUBLES' => l10n.tournamentManagementMatchMixedDoubles,
   _ => l10n.tournamentManagementStatusOther,
-};
-
-IconData _bracketTypeIcon(String value) => switch (value.toUpperCase()) {
-  'ROUND_ROBIN' => Icons.grid_view_outlined,
-  'GROUP_STAGE_KNOCKOUT' => Icons.workspaces_outlined,
-  'SWISS' => Icons.swap_horiz_rounded,
-  _ => Icons.account_tree_outlined,
 };
 
 String _bracketTypeLabel(AppLocalizations l10n, String value) => switch (value

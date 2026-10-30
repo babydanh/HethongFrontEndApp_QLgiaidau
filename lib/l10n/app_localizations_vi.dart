@@ -13700,6 +13700,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không có nội dung phù hợp';
 
   @override
+  String get tournamentManagementDivisionInfoMatchType => 'Thể loại';
+
+  @override
+  String get tournamentManagementDivisionInfoBracket => 'Thể thức';
+
+  @override
+  String get tournamentManagementDivisionInfoRegistered => 'Đã đăng ký';
+
+  @override
+  String get tournamentManagementDivisionInfoRegistration => 'Đăng ký';
+
+  @override
+  String get tournamentManagementDivisionInfoElo => 'ELO';
+
+  @override
   String get tournamentManagementDivisions => 'Nội dung thi đấu';
 
   @override

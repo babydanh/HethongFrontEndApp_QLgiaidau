@@ -13746,6 +13746,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementDivisionSearchEmpty => 'No matching division';
 
   @override
+  String get tournamentManagementDivisionInfoMatchType => 'Type';
+
+  @override
+  String get tournamentManagementDivisionInfoBracket => 'Format';
+
+  @override
+  String get tournamentManagementDivisionInfoRegistered => 'Registered';
+
+  @override
+  String get tournamentManagementDivisionInfoRegistration => 'Registration';
+
+  @override
+  String get tournamentManagementDivisionInfoElo => 'ELO';
+
+  @override
   String get tournamentManagementDivisions => 'Divisions';
 
   @override

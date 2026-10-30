@@ -24910,6 +24910,36 @@ abstract class AppLocalizations {
   /// **'Không có nội dung phù hợp'**
   String get tournamentManagementDivisionSearchEmpty;
 
+  /// No description provided for @tournamentManagementDivisionInfoMatchType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể loại'**
+  String get tournamentManagementDivisionInfoMatchType;
+
+  /// No description provided for @tournamentManagementDivisionInfoBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức'**
+  String get tournamentManagementDivisionInfoBracket;
+
+  /// No description provided for @tournamentManagementDivisionInfoRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký'**
+  String get tournamentManagementDivisionInfoRegistered;
+
+  /// No description provided for @tournamentManagementDivisionInfoRegistration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký'**
+  String get tournamentManagementDivisionInfoRegistration;
+
+  /// No description provided for @tournamentManagementDivisionInfoElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO'**
+  String get tournamentManagementDivisionInfoElo;
+
   /// No description provided for @tournamentManagementDivisions.
   ///
   /// In vi, this message translates to:

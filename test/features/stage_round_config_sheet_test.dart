@@ -670,6 +670,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // The card's actions live inside it: open the card first.
+      await tester.tap(find.byKey(const ValueKey('division-row-div-1')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
       expect(find.text('Cấu hình từng vòng'), findsOneWidget);
@@ -702,6 +705,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byKey(const ValueKey('division-row-div-1')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(PopupMenuButton<String>));
       await tester.pumpAndSettle();
       expect(find.text('Cấu hình từng vòng'), findsNothing);
