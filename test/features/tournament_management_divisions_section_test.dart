@@ -3,9 +3,11 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _DivisionRepository implements TournamentManagementRepository {
@@ -104,11 +106,43 @@ Map<String, dynamic> _division(
 };
 
 void main() {
-  testWidgets('groups rows by match type with a count label', (tester) async {
+  testWidgets('each division is its own card and there are no group labels', (
+    tester,
+  ) async {
     final divisions = [
       _division('a', 'Đơn Nam', 'SINGLES'),
       _division('b', 'Đôi Nam', 'DOUBLES'),
       _division('c', 'Đôi Nữ', 'DOUBLES'),
+    ];
+    await _pump(
+      tester,
+      'REGISTRATION',
+      _DivisionRepository(divisions.first, all: divisions),
+    );
+
+    expect(find.textContaining('ĐƠN'), findsNothing);
+    expect(find.textContaining('ĐÔI'), findsNothing);
+    for (final id in ['a', 'b', 'c']) {
+      expect(find.byKey(ValueKey('division-row-$id')), findsOneWidget);
+    }
+    // Cards are separated by a gap, not glued together.
+    final firstBottom = tester
+        .getBottomLeft(find.byKey(const ValueKey('division-row-a')))
+        .dy;
+    final secondTop = tester
+        .getTopLeft(find.byKey(const ValueKey('division-row-b')))
+        .dy;
+    expect(secondTop - firstBottom, greaterThanOrEqualTo(6));
+    // No search box for a short list.
+    expect(find.byType(TextField), findsNothing);
+  });
+
+  testWidgets('tapping a card opens it with full info, one open at a time', (
+    tester,
+  ) async {
+    final divisions = [
+      _division('a', 'Nội dung A', 'DOUBLES', max: 16, registered: 4),
+      _division('b', 'Nội dung B', 'SINGLES', max: 8, registered: 2),
     ];
     final l10n = await _pump(
       tester,
@@ -116,29 +150,38 @@ void main() {
       _DivisionRepository(divisions.first, all: divisions),
     );
 
+    // Collapsed: only the summary, no format or type text.
+    expect(find.text('4/16'), findsOneWidget);
     expect(
-      find.text('${l10n.tournamentManagementMatchSingles.toUpperCase()} · 1'),
-      findsOneWidget,
-    );
-    expect(
-      find.text('${l10n.tournamentManagementMatchDoubles.toUpperCase()} · 2'),
-      findsOneWidget,
-    );
-    // No search box for a short list.
-    expect(find.byType(TextField), findsNothing);
-  });
-
-  testWidgets('a single group shows no group label', (tester) async {
-    final l10n = await _pump(
-      tester,
-      'REGISTRATION',
-      _DivisionRepository(_openDivision),
-    );
-
-    expect(
-      find.textContaining(l10n.tournamentManagementMatchDoubles.toUpperCase()),
+      find.text(l10n.tournamentManagementBracketSingleElimination),
       findsNothing,
     );
+
+    await tester.tap(find.byKey(const ValueKey('division-row-a')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(l10n.tournamentManagementDivisionInfoRegistered),
+      findsOneWidget,
+    );
+    expect(
+      find.text(l10n.tournamentManagementBracketSingleElimination),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.tournamentManagementMatchDoubles), findsOneWidget);
+    expect(
+      find.textContaining(l10n.tournamentManagementDivisionRegistrationOpen),
+      findsOneWidget,
+    );
+
+    // Opening another card closes the first one.
+    await tester.tap(find.byKey(const ValueKey('division-row-b')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(l10n.tournamentManagementDivisionInfoRegistered),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.tournamentManagementMatchDoubles), findsNothing);
+    expect(find.text(l10n.tournamentManagementMatchSingles), findsOneWidget);
   });
 
   testWidgets('shows registered over max and filters by search', (
@@ -176,7 +219,7 @@ void main() {
     );
   });
 
-  testWidgets('flat header: one primary action, bulk open in a menu', (
+  testWidgets('add is a "+" button over a white fade at the bottom', (
     tester,
   ) async {
     final l10n = await _pump(
@@ -185,23 +228,32 @@ void main() {
       _DivisionRepository(_openDivision),
     );
 
-    // No subtitle and no second button next to "Thêm nội dung".
+    // No subtitle, no repeated title, no text button at the top.
     expect(
       find.text(l10n.tournamentManagementDivisionsDescription),
       findsNothing,
     );
-    // The tab already names the screen: no repeated title in the body.
     expect(find.text(l10n.tournamentManagementDivisions), findsNothing);
     expect(find.byType(OutlinedButton), findsNothing);
-    expect(find.byType(FilledButton), findsOneWidget);
-    expect(find.text(l10n.tournamentManagementAddDivision), findsOneWidget);
+    expect(find.byType(FilledButton), findsNothing);
+    expect(find.text(l10n.tournamentManagementAddDivision), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('division-header-menu')));
+    expect(find.byKey(const ValueKey('division-add-fab')), findsOneWidget);
+    expect(find.byIcon(Icons.add_rounded), findsOneWidget);
+    expect(
+      find.byTooltip(l10n.tournamentManagementAddDivision),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('division-bottom-fade')), findsOneWidget);
+
+    // No extra menu above the list; bulk registration lives in the card menu.
+    expect(find.byKey(const ValueKey('division-header-menu')), findsNothing);
+    await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
     expect(find.text(l10n.divisionBulkOpenButton), findsOneWidget);
   });
 
-  testWidgets('rows are flat and tapping a row opens the editor', (
+  testWidgets('the card has an edit button that opens the editor', (
     tester,
   ) async {
     final l10n = await _pump(
@@ -210,21 +262,16 @@ void main() {
       _DivisionRepository({..._openDivision, 'maxParticipants': 16}),
     );
 
-    // No decorative category icon in front of the name.
+    // No decorative category icon; summary is the bracket icon and the count.
     expect(find.byIcon(Icons.category_outlined), findsNothing);
-    // Meta is icons, not sentences: bracket + max participants, no format text.
-    expect(find.byIcon(Icons.account_tree_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.groups_outlined), findsOneWidget);
+    expect(find.byType(SvgPicture), findsOneWidget);
     expect(find.text('0/16'), findsOneWidget);
-    expect(
-      find.text(l10n.tournamentManagementBracketSingleElimination),
-      findsNothing,
-    );
-    expect(find.text(l10n.tournamentManagementMatchDoubles), findsNothing);
 
-    await tester.tap(find.byKey(const ValueKey('division-row-div-1')));
+    // Edit and the menu sit on the closed card itself.
+    expect(find.byTooltip(l10n.infoEdit), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('division-edit-div-1')));
     await tester.pumpAndSettle();
-    expect(find.text(l10n.divisionEditorEditTitle), findsWidgets);
+    expect(find.byType(DivisionEditorSheet), findsOneWidget);
   });
 
   testWidgets(
