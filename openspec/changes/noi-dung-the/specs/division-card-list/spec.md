@@ -26,10 +26,9 @@ Each division card SHALL show an edit button and a ⋮ actions menu on its summa
 - **WHEN** a card is collapsed
 - **THEN** its row shows the edit button and the ⋮ menu
 
-### Requirement: Add button at the bottom
-The tab SHALL offer adding a division through a "+" floating button at the bottom over a white fade, and SHALL NOT show a text add button at the top.
+### Requirement: No menu above the list
+The tab SHALL NOT show a ⋮ menu or a text add button above the division list.
 
 #### Scenario: Tab opens
 - **WHEN** the tab opens
-- **THEN** a "+" button with the add-division tooltip is shown over a bottom fade
-- **AND** no ⋮ menu is shown above the list
+- **THEN** no ⋮ menu is shown above the list

@@ -219,7 +219,7 @@ void main() {
     );
   });
 
-  testWidgets('add is a "+" button over a white fade at the bottom', (
+  testWidgets('add is a "+ Thêm nội dung" tile right under the last card', (
     tester,
   ) async {
     final l10n = await _pump(
@@ -228,7 +228,7 @@ void main() {
       _DivisionRepository(_openDivision),
     );
 
-    // No subtitle, no repeated title, no text button at the top.
+    // No subtitle, no repeated title, no button above the list.
     expect(
       find.text(l10n.tournamentManagementDivisionsDescription),
       findsNothing,
@@ -236,21 +236,37 @@ void main() {
     expect(find.text(l10n.tournamentManagementDivisions), findsNothing);
     expect(find.byType(OutlinedButton), findsNothing);
     expect(find.byType(FilledButton), findsNothing);
-    expect(find.text(l10n.tournamentManagementAddDivision), findsNothing);
+    expect(find.byType(FloatingActionButton), findsNothing);
 
-    expect(find.byKey(const ValueKey('division-add-fab')), findsOneWidget);
-    expect(find.byIcon(Icons.add_rounded), findsOneWidget);
+    // The add tile sits under the last card, never floating off-screen.
+    final tile = find.byKey(const ValueKey('division-add-tile'));
+    expect(tile, findsOneWidget);
     expect(
-      find.byTooltip(l10n.tournamentManagementAddDivision),
+      find.descendant(of: tile, matching: find.byIcon(Icons.add_rounded)),
       findsOneWidget,
     );
-    expect(find.byKey(const ValueKey('division-bottom-fade')), findsOneWidget);
-
+    expect(
+      find.descendant(
+        of: tile,
+        matching: find.text(l10n.tournamentManagementAddDivision),
+      ),
+      findsOneWidget,
+    );
+    final cardBottom = tester
+        .getBottomLeft(find.byKey(const ValueKey('division-row-div-1')))
+        .dy;
+    expect(tester.getTopLeft(tile).dy - cardBottom, lessThan(24));
     // No extra menu above the list; bulk registration lives in the card menu.
     expect(find.byKey(const ValueKey('division-header-menu')), findsNothing);
     await tester.tap(find.byType(PopupMenuButton<String>));
     await tester.pumpAndSettle();
     expect(find.text(l10n.divisionBulkOpenButton), findsOneWidget);
+    await tester.tapAt(Offset.zero);
+    await tester.pumpAndSettle();
+
+    await tester.tap(tile);
+    await tester.pumpAndSettle();
+    expect(find.byType(DivisionEditorSheet), findsOneWidget);
   });
 
   testWidgets('the card has an edit button that opens the editor', (
