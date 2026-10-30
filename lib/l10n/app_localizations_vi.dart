@@ -14192,10 +14192,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementKpiRegistrationDeadline => 'Hạn ĐK';
 
   @override
-  String get registerTypeOpenSingles => 'Đơn linh hoạt';
+  String get registerTypeOpenSingles => 'Đơn tự do';
 
   @override
-  String get registerTypeOpenDoubles => 'Đôi linh hoạt';
+  String get registerTypeOpenDoubles => 'Đôi tự do';
 
   @override
   String get registerDivisionFull => 'Nội dung này đã đủ suất';
@@ -14219,10 +14219,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get tournamentCategoryOpenSingles => 'Đơn linh hoạt';
+  String get tournamentCategoryOpenSingles => 'Đơn tự do';
 
   @override
-  String get tournamentCategoryOpenDoubles => 'Đôi linh hoạt';
+  String get tournamentCategoryOpenDoubles => 'Đôi tự do';
 
   @override
   String get dashboard_noMoreTournaments => 'Đã xem hết giải đấu';
@@ -16490,10 +16490,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get divisionEditorTypeLabel => 'Loại';
 
   @override
-  String get divisionEditorFormatOpenSingles => 'Đơn linh hoạt';
+  String get divisionEditorFormatOpenSingles => 'Đơn tự do';
 
   @override
-  String get divisionEditorFormatOpenDoubles => 'Đôi linh hoạt';
+  String get divisionEditorFormatOpenDoubles => 'Đôi tự do';
 
   @override
   String get divisionEditorNameHint =>

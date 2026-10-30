@@ -25765,13 +25765,13 @@ abstract class AppLocalizations {
   /// No description provided for @registerTypeOpenSingles.
   ///
   /// In vi, this message translates to:
-  /// **'Đơn linh hoạt'**
+  /// **'Đơn tự do'**
   String get registerTypeOpenSingles;
 
   /// No description provided for @registerTypeOpenDoubles.
   ///
   /// In vi, this message translates to:
-  /// **'Đôi linh hoạt'**
+  /// **'Đôi tự do'**
   String get registerTypeOpenDoubles;
 
   /// No description provided for @registerDivisionFull.
@@ -25813,13 +25813,13 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentCategoryOpenSingles.
   ///
   /// In vi, this message translates to:
-  /// **'Đơn linh hoạt'**
+  /// **'Đơn tự do'**
   String get tournamentCategoryOpenSingles;
 
   /// No description provided for @tournamentCategoryOpenDoubles.
   ///
   /// In vi, this message translates to:
-  /// **'Đôi linh hoạt'**
+  /// **'Đôi tự do'**
   String get tournamentCategoryOpenDoubles;
 
   /// No description provided for @dashboard_noMoreTournaments.
@@ -29747,13 +29747,13 @@ abstract class AppLocalizations {
   /// No description provided for @divisionEditorFormatOpenSingles.
   ///
   /// In vi, this message translates to:
-  /// **'Đơn linh hoạt'**
+  /// **'Đơn tự do'**
   String get divisionEditorFormatOpenSingles;
 
   /// No description provided for @divisionEditorFormatOpenDoubles.
   ///
   /// In vi, this message translates to:
-  /// **'Đôi linh hoạt'**
+  /// **'Đôi tự do'**
   String get divisionEditorFormatOpenDoubles;
 
   /// No description provided for @divisionEditorNameHint.
