@@ -20,7 +20,6 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
@@ -353,10 +352,6 @@ void main() {
     final targets = <(String, String Function(AppLocalizations))>[
       ('tournament-overview-banner-edit', (l) => l.manageSettingsInfoSection),
       (
-        'tournament-overview-dates-edit',
-        (l) => l.tournamentManagementRegistration,
-      ),
-      (
         'tournament-overview-location-edit',
         (l) => l.manageSettingsVenueSection,
       ),
@@ -378,16 +373,45 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(labelOf(l10n)), findsWidgets, reason: key);
     }
-
-    await pumpHub();
-    final athletes = find.byKey(
-      const ValueKey('tournament-overview-athletes-edit'),
-    );
-    await tester.ensureVisible(athletes);
-    await tester.tap(athletes);
-    await tester.pumpAndSettle();
-    expect(find.byType(TournamentManagementAthletesTab), findsOneWidget);
   });
+
+  testWidgets(
+    'TC-FEAT-HDR-01: header has a 4-step progress bar, no KPI strip',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 1200);
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(_app(_tournament('in_progress')));
+      await tester.pumpAndSettle();
+
+      // The current step is lit and the Web's 4 steps are all shown.
+      expect(
+        find.byKey(const ValueKey('lifecycle-step-current')),
+        findsOneWidget,
+      );
+      for (final label in [
+        'Đăng ký',
+        'Lịch thi đấu',
+        'Đang thi đấu',
+        'Kết thúc',
+      ]) {
+        expect(find.text(label), findsWidgets, reason: label);
+      }
+      // The old 4-cell strip (dates, athletes, deadline) is gone from the top.
+      for (final key in [
+        'tournament-overview-dates-edit',
+        'tournament-overview-athletes-edit',
+        'tournament-management-kpi-deadline',
+      ]) {
+        expect(find.byKey(ValueKey(key)), findsNothing, reason: key);
+      }
+      // The tournament logo sits on the banner.
+      expect(
+        find.byKey(const ValueKey('tournament-overview-logo')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('hub shows five pinned tabs and grouped settings', (
     tester,
@@ -1160,7 +1184,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('settings end with lifecycle actions that apply to the status', (
+  testWidgets('lifecycle bar and action lead the page, settings keep Other', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 1500);
@@ -1170,14 +1194,18 @@ void main() {
 
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
+    // The next-step button is at the top of the page; opening the settings
+    // tab scrolls the header out of view, so it is checked first.
+    expect(find.text(l10n.tournamentManagementPublish), findsOneWidget);
     await _openSettings(tester);
 
-    // The lifecycle block has no card title any more: the step bar leads it.
+    // The step bar and the next-step button live in the header, once: the
+    // settings tab only carries the "Other" group (share / delete).
     expect(
       find.byKey(const ValueKey('lifecycle-step-current')),
-      findsOneWidget,
+      findsNothing, // draft: no step lit
     );
-    expect(find.text(l10n.tournamentManagementPublish), findsOneWidget);
+    expect(find.byKey(const ValueKey('lifecycle-share')), findsOneWidget);
     expect(find.text(l10n.tournamentManagementRegenerateInvite), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -1191,7 +1219,6 @@ void main() {
         _app(_tournament('UPCOMING'), managementRepository: startRepository),
       );
       await tester.pumpAndSettle();
-      await _openSettings(tester);
 
       final startContext = tester.element(
         find.byType(TournamentManagementHubScreen),
@@ -1214,7 +1241,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await _openSettings(tester);
       expect(
         find.text(startL10n.tournamentManagementCompleteTournament),
         findsNothing,
@@ -1257,7 +1283,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await _openSettings(tester);
       final completeContext = tester.element(
         find.byType(TournamentManagementHubScreen),
       );
@@ -1290,7 +1315,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await _openSettings(tester);
       final completedL10n = AppLocalizations.of(
         tester.element(find.byType(TournamentManagementHubScreen)),
       )!;
@@ -1324,7 +1348,6 @@ void main() {
       _app(_tournament('IN_PROGRESS'), managementRepository: repository),
     );
     await tester.pumpAndSettle();
-    await _openSettings(tester);
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await tester.tap(find.text(l10n.tournamentManagementCompleteTournament));
@@ -1349,7 +1372,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await _openSettings(tester);
       final l10n = AppLocalizations.of(
         tester.element(find.byType(TournamentManagementHubScreen)),
       )!;
@@ -1393,7 +1415,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await _openSettings(tester);
       final l10n = AppLocalizations.of(
         tester.element(find.byType(TournamentManagementHubScreen)),
       )!;
@@ -1427,7 +1448,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await _openSettings(tester);
       final l10n = AppLocalizations.of(
         tester.element(find.byType(TournamentManagementHubScreen)),
       )!;

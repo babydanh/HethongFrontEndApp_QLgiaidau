@@ -80,15 +80,19 @@ void _tallView(WidgetTester tester) {
 
 void main() {
   group('model', () {
-    test('lifecycleStepIndex: 5 bước, huỷ thì không có bước', () {
-      expect(lifecycleStepIndex(AppConstants.statusDraft), 0);
-      expect(lifecycleStepIndex(AppConstants.statusUpcoming), 1);
-      expect(lifecycleStepIndex(AppConstants.statusRegistration), 2);
-      expect(lifecycleStepIndex(AppConstants.statusRegistrationClosed), 2);
-      expect(lifecycleStepIndex(AppConstants.statusInProgress), 3);
-      expect(lifecycleStepIndex(AppConstants.statusCompleted), 4);
-      expect(lifecycleStepIndex(AppConstants.statusCancelled), isNull);
-    });
+    test(
+      'lifecycleStepIndex: 4 bước như Web, nháp chưa sáng, huỷ không có bước',
+      () {
+        expect(lifecycleStepIndex(AppConstants.statusDraft), -1);
+        expect(lifecycleStepIndex(AppConstants.statusUpcoming), 0);
+        expect(lifecycleStepIndex(AppConstants.statusRegistration), 0);
+        expect(lifecycleStepIndex(AppConstants.statusRegistrationClosed), 1);
+        expect(lifecycleStepIndex(AppConstants.statusDrawing), 1);
+        expect(lifecycleStepIndex(AppConstants.statusInProgress), 2);
+        expect(lifecycleStepIndex(AppConstants.statusCompleted), 3);
+        expect(lifecycleStepIndex(AppConstants.statusCancelled), isNull);
+      },
+    );
 
     test(
       'lifecycleCapacityFull: theo nội dung, rồi theo capacity cấp giải',
@@ -150,21 +154,40 @@ void main() {
     );
   });
 
-  testWidgets('thanh bước đánh dấu đúng bước hiện tại', (tester) async {
+  testWidgets('thanh 4 bước đánh dấu đúng bước hiện tại', (tester) async {
     await tester.pumpWidget(
-      _wrap(const LifecycleStepBar(status: AppConstants.statusRegistration)),
+      _wrap(const LifecycleStepBar(status: AppConstants.statusInProgress)),
     );
 
-    for (final label in ['Nháp', 'Xuất bản', 'Mở ĐK', 'Đang đấu', 'Kết thúc']) {
+    for (final label in [
+      'Đăng ký',
+      'Lịch thi đấu',
+      'Đang thi đấu',
+      'Kết thúc',
+    ]) {
       expect(find.text(label), findsOneWidget);
     }
     expect(
       find.descendant(
         of: find.byKey(const ValueKey('lifecycle-step-current')),
-        matching: find.text('Mở ĐK'),
+        matching: find.text('Đang thi đấu'),
       ),
       findsOneWidget,
     );
+    // Two earlier steps are done (check mark); the last one is still ahead.
+    expect(find.byIcon(Icons.check_rounded), findsNWidgets(2));
+  });
+
+  testWidgets('giải nháp: thanh hiện nhưng không bước nào sáng', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(const LifecycleStepBar(status: AppConstants.statusDraft)),
+    );
+
+    expect(find.text('Đăng ký'), findsOneWidget);
+    expect(find.byKey(const ValueKey('lifecycle-step-current')), findsNothing);
+    expect(find.byIcon(Icons.check_rounded), findsNothing);
   });
 
   testWidgets(
@@ -224,32 +247,33 @@ void main() {
     expect(find.text('Đã đủ 16/16 đội'), findsNothing);
   });
 
-  testWidgets('nhóm Khác: chia sẻ và xoá giải gọi đúng callback, ẩn khi không truyền', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      _wrap(TournamentLifecycleCard(tournament: _tournament())),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('lifecycle-share')), findsNothing);
-    expect(find.byKey(const ValueKey('lifecycle-delete')), findsNothing);
+  testWidgets(
+    'nhóm Khác: chia sẻ và xoá giải gọi đúng callback, ẩn khi không truyền',
+    (tester) async {
+      await tester.pumpWidget(
+        _wrap(TournamentLifecycleCard(tournament: _tournament())),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('lifecycle-share')), findsNothing);
+      expect(find.byKey(const ValueKey('lifecycle-delete')), findsNothing);
 
-    var shared = 0;
-    var deleted = 0;
-    await tester.pumpWidget(
-      _wrap(
-        TournamentLifecycleCard(
-          tournament: _tournament(),
-          onShare: () => shared++,
-          onDelete: () => deleted++,
+      var shared = 0;
+      var deleted = 0;
+      await tester.pumpWidget(
+        _wrap(
+          TournamentLifecycleCard(
+            tournament: _tournament(),
+            onShare: () => shared++,
+            onDelete: () => deleted++,
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('lifecycle-share')));
-    await tester.tap(find.byKey(const ValueKey('lifecycle-delete')));
-    expect((shared, deleted), (1, 1));
-  });
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('lifecycle-share')));
+      await tester.tap(find.byKey(const ValueKey('lifecycle-delete')));
+      expect((shared, deleted), (1, 1));
+    },
+  );
 
   testWidgets('chưa đủ đội: không có cảnh báo', (tester) async {
     _tallView(tester);

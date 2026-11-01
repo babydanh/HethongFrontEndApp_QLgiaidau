@@ -82,12 +82,12 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Tạo giải đấu'));
       await tester.pump();
 
-      // Sau khi tạo, app mở trang quản lý giải (hub, /lite-manage/:id); chờ KPI "Vận động viên" trên hub.
+      // Sau khi tạo, app mở trang quản lý giải (hub, /lite-manage/:id); chờ tên giải (ô sửa tên) trên hub.
       await pumpUntilFound(
         tester,
-        find.byKey(const ValueKey('tournament-overview-athletes-edit')),
+        find.byKey(const ValueKey('tournament-overview-name-edit')),
         timeout: const Duration(seconds: 60),
-        what: 'trang quản lý giải vừa tạo (hub, KPI Vận động viên)',
+        what: 'trang quản lý giải vừa tạo (hub, tên giải)',
       );
       final location = container
           .read(routerProvider)

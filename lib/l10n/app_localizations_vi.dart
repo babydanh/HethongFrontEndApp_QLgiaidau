@@ -16843,16 +16843,13 @@ class AppLocalizationsVi extends AppLocalizations {
       'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.';
 
   @override
-  String get lifecycleStepDraft => 'Nháp';
+  String get lifecycleStepOpen => 'Đăng ký';
 
   @override
-  String get lifecycleStepPublish => 'Xuất bản';
+  String get lifecycleStepSchedule => 'Lịch thi đấu';
 
   @override
-  String get lifecycleStepOpen => 'Mở ĐK';
-
-  @override
-  String get lifecycleStepRunning => 'Đang đấu';
+  String get lifecycleStepRunning => 'Đang thi đấu';
 
   @override
   String get lifecycleStepDone => 'Kết thúc';
