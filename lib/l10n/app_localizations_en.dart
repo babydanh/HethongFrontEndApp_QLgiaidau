@@ -7306,6 +7306,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveNoSignalLabel => 'No live signal yet';
 
   @override
+  String liveNewMessages(Object count) {
+    return '$count new messages';
+  }
+
+  @override
+  String get liveBackToLive => 'Back to live';
+
+  @override
+  String get liveEnterFullscreen => 'Fullscreen';
+
+  @override
+  String get liveExitFullscreen => 'Exit fullscreen';
+
+  @override
+  String get liveReportAction => 'Report';
+
+  @override
+  String get liveChatHide => 'Hide chat';
+
+  @override
+  String get liveChatShow => 'Show chat';
+
+  @override
   String get liveScoreboardToggle => 'Scoreboard';
 
   @override

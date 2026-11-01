@@ -7298,6 +7298,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveNoSignalLabel => 'Chưa có tín hiệu phát trực tiếp';
 
   @override
+  String liveNewMessages(Object count) {
+    return '$count tin mới';
+  }
+
+  @override
+  String get liveBackToLive => 'Về live';
+
+  @override
+  String get liveEnterFullscreen => 'Toàn màn hình';
+
+  @override
+  String get liveExitFullscreen => 'Thoát toàn màn hình';
+
+  @override
+  String get liveReportAction => 'Báo cáo';
+
+  @override
+  String get liveChatHide => 'Ẩn chat';
+
+  @override
+  String get liveChatShow => 'Hiện chat';
+
+  @override
   String get liveScoreboardToggle => 'Bảng điểm';
 
   @override

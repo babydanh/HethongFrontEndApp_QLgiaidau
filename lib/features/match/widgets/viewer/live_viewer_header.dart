@@ -14,6 +14,7 @@ class LiveViewerHeader extends StatelessWidget {
     required this.onMore,
     this.tournamentLabel,
     this.onOpenTournament,
+    this.onReport,
   });
 
   final String title;
@@ -24,6 +25,9 @@ class LiveViewerHeader extends StatelessWidget {
   final VoidCallback onMore;
   final String? tournamentLabel;
   final VoidCallback? onOpenTournament;
+
+  /// Shows the report chip when set.
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +101,14 @@ class LiveViewerHeader extends StatelessWidget {
                     icon: Icons.emoji_events_outlined,
                     label: tournamentLabel!,
                     onTap: onOpenTournament!,
+                  ),
+                ],
+                if (onReport != null) ...[
+                  const SizedBox(width: 8),
+                  _Pill(
+                    icon: Icons.flag_outlined,
+                    label: l10n.liveReportAction,
+                    onTap: onReport!,
                   ),
                 ],
               ],

@@ -2,8 +2,23 @@ import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_stream_stats_badge.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+
+/// How far behind the live edge playback may drift before "Back to live" shows.
+const liveEdgeThreshold = Duration(seconds: 8);
+
+/// True when playback trails the live edge by more than [threshold]. An unknown
+/// duration (non-seekable live stream) is never "behind".
+bool isBehindLive({
+  required Duration position,
+  required Duration duration,
+  Duration threshold = liveEdgeThreshold,
+}) {
+  if (duration <= Duration.zero) return false;
+  return duration - position > threshold;
+}
 
 /// Trình phát luồng trực tiếp.
 ///
@@ -16,9 +31,22 @@ class LiveVideoPlayer extends StatefulWidget {
     required this.url,
     this.label,
     this.showStreamStats = false,
+    this.fill = false,
+    this.fullscreen = false,
+    this.onToggleFullscreen,
   });
 
   final String url;
+
+  /// Fill the parent's bounded height instead of sizing by aspect ratio
+  /// (landscape fullscreen).
+  final bool fill;
+
+  /// Current fullscreen state, only used to pick the button icon.
+  final bool fullscreen;
+
+  /// Shows a fullscreen button when set.
+  final VoidCallback? onToggleFullscreen;
 
   /// Tên sân/camera, hiện ở góc phải. Rỗng thì không hiện.
   final String? label;
@@ -41,6 +69,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
   double _aspectRatio = 16 / 9;
   bool _playing = false;
   bool _controlsVisible = true;
+  bool _behindLive = false;
   String? _error;
 
 
@@ -105,7 +134,16 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     controller.addListener(() {
       if (!mounted) return;
       final playing = controller.value.isPlaying;
-      if (playing != _playing) setState(() => _playing = playing);
+      final behind = isBehindLive(
+        position: controller.value.position,
+        duration: controller.value.duration,
+      );
+      if (playing != _playing || behind != _behindLive) {
+        setState(() {
+          _playing = playing;
+          _behindLive = behind;
+        });
+      }
     });
     _scheduleHide();
     await previous?.dispose();
@@ -130,6 +168,15 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     _revealControls();
   }
 
+
+  void _goLive() {
+    final controller = _controller;
+    if (controller == null) return;
+    controller
+      ..seekTo(controller.value.duration)
+      ..play();
+    _revealControls();
+  }
 
   void _togglePlay() {
     final controller = _controller;
@@ -158,7 +205,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     final visible = _controlsVisible || !ready;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+      borderRadius: BorderRadius.circular(widget.fill ? 0 : AppTheme.radiusXL),
       child: GestureDetector(
         onTap: _revealControls,
         child: LayoutBuilder(
@@ -168,7 +215,9 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
               width: constraints.maxWidth,
               // Cao theo tỉ lệ thật của luồng, chỉ fallback 16/9 lúc stream chưa
               // có metadata. Ép cứng 16/9 làm camera sân 4:3 bị dư viền đen.
-              height: constraints.maxWidth / _aspectRatio,
+              height: widget.fill && constraints.hasBoundedHeight
+                  ? constraints.maxHeight
+                  : constraints.maxWidth / _aspectRatio,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -274,6 +323,33 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                                 label: _muted ? 'Bật tiếng' : 'Tắt tiếng',
                                 onPressed: _toggleMute,
                               ),
+                              if (_behindLive)
+                                TextButton(
+                                  onPressed: _goLive,
+                                  child: Text(
+                                    AppLocalizations.of(context)!.liveBackToLive,
+                                    style: const TextStyle(
+                                      color: Color(0xFFEF4444),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              const Spacer(),
+                              if (widget.onToggleFullscreen != null)
+                                _ControlButton(
+                                  icon: widget.fullscreen
+                                      ? Icons.fullscreen_exit
+                                      : Icons.fullscreen,
+                                  label: widget.fullscreen
+                                      ? AppLocalizations.of(
+                                          context,
+                                        )!.liveExitFullscreen
+                                      : AppLocalizations.of(
+                                          context,
+                                        )!.liveEnterFullscreen,
+                                  onPressed: widget.onToggleFullscreen!,
+                                ),
                             ],
                           ),
                         ),

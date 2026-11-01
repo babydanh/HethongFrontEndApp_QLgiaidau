@@ -43,9 +43,20 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     super.key,
     required this.matchId,
     this.showStreamStats = false,
+    this.fill = false,
+    this.fullscreen = false,
+    this.onToggleFullscreen,
   });
 
   final String matchId;
+
+  /// Fill the parent's bounded height (landscape fullscreen) instead of sizing
+  /// by aspect ratio.
+  final bool fill;
+
+  /// Fullscreen state and toggle, forwarded to the live player's controls.
+  final bool fullscreen;
+  final VoidCallback? onToggleFullscreen;
 
   /// Bật huy hiệu thông số luồng (chỉ owner/admin, do màn live quyết định).
   final bool showStreamStats;
@@ -76,6 +87,9 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         url: _url!,
         label: label,
         showStreamStats: widget.showStreamStats,
+        fill: widget.fill,
+        fullscreen: widget.fullscreen,
+        onToggleFullscreen: widget.onToggleFullscreen,
       );
     }
 
@@ -84,15 +98,32 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
     if (!playback.hasValue) return const _NoSignalBox();
     final replay = ref.watch(matchReplayProvider(widget.matchId));
     return replay.maybeWhen(
-      data: (value) => value == null
-          ? const _NoSignalBox()
-          : MatchReplayPlayer(
-              key: ValueKey<String>('match-replay-${value.matchId}'),
-              replay: value,
-            ),
+      data: (value) {
+        if (value == null) return const _NoSignalBox();
+        final player = MatchReplayPlayer(
+          key: ValueKey<String>('match-replay-${value.matchId}'),
+          replay: value,
+        );
+        return widget.fill ? _fitReplay(player) : player;
+      },
       orElse: () => const _NoSignalBox(),
     );
   }
+}
+
+/// The replay is a column (label + 16:9 video + timeline). In a bounded
+/// landscape box, narrow it so the whole column fits the height.
+Widget _fitReplay(Widget player) {
+  const chromeHeight = 140.0;
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final width = ((constraints.maxHeight - chromeHeight) * 16 / 9).clamp(
+        160.0,
+        constraints.maxWidth,
+      );
+      return Center(child: SizedBox(width: width, child: player));
+    },
+  );
 }
 
 class _NoSignalBox extends StatelessWidget {

@@ -70,6 +70,29 @@ void main() {
     );
 
     expect(find.byIcon(Icons.emoji_events_outlined), findsNothing);
+    expect(find.text('Report'), findsNothing);
+  });
+
+  testWidgets('TC-LIVEFS-09 report chip shows only when wired and fires', (
+    tester,
+  ) async {
+    var reports = 0;
+    await tester.pumpWidget(
+      _app(
+        LiveViewerHeader(
+          title: 'A vs B',
+          subtitle: 'sub',
+          cheerCount: 0,
+          onCheer: () {},
+          onShare: () {},
+          onMore: () {},
+          onReport: () => reports++,
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Report'));
+    expect(reports, 1);
   });
 }
 

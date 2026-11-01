@@ -17,7 +17,12 @@ class MatchDiscussionMessage extends StatelessWidget {
     required this.text,
     required this.timeLabel,
     this.avatarUrl,
+    this.compact = false,
   });
+
+  /// Continuation of the previous message by the same author: only the bubble
+  /// is drawn, under the avatar column, so a burst of replies stays tight.
+  final bool compact;
 
   /// Blank when the feed could not resolve the author to a real account; the
   /// row then stays readable but inert instead of being a dead control.
@@ -31,7 +36,7 @@ class MatchDiscussionMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: compact ? 1 : 6),
       child: UserProfileTapTarget(
         userId: userId,
         name: name,
@@ -44,33 +49,44 @@ class MatchDiscussionMessage extends StatelessWidget {
             SizedBox(
               width: 44,
               height: 44,
-              child: Center(
-                child: RankAvatar(imageUrl: avatarUrl, name: name, size: 32),
-              ),
+              child: compact
+                  ? null
+                  : Center(
+                      child: RankAvatar(
+                        imageUrl: avatarUrl,
+                        name: name,
+                        size: 32,
+                      ),
+                    ),
             ),
             const SizedBox(width: 4),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textPrimary,
+                  if (!compact) ...[
+                    Row(
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: colors.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        timeLabel,
-                        style: TextStyle(fontSize: 10, color: colors.textMuted),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
+                        const SizedBox(width: 8),
+                        Text(
+                          timeLabel,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,

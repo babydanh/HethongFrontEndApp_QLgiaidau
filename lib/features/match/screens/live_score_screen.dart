@@ -43,6 +43,10 @@ import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_header.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_suggestions.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_chat_grouping.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_landscape_chat.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_new_messages_pill.dart';
+import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 
 class _HeartModel {
   final double startX;
@@ -126,6 +130,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   int _selectedViewerTab = 1;
   // Viewer layout: 0 = Chat, 1 = More videos.
   int _liveTab = 0;
+  bool _landscapeChatOpen = true;
+  bool _systemChromeTouched = false;
+  Timer? _orientationReleaseTimer;
+  final ScrollController _chatScroll = ScrollController();
+  // Chat length when the viewer scrolled up; newer rows stay hidden (and are
+  // counted on the pill) until they return to the bottom.
+  int? _chatBaseline;
+  int _lastChatLength = 0;
   int _cheerCount = 0;
   bool _loadingCheerCount = false;
   LiveOverlayKind? _pendingOverlayKind;
@@ -241,6 +253,69 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _fetchComments();
     _setupSocketComments();
     _loadCheerCount();
+    _chatScroll.addListener(_onChatScroll);
+  }
+
+  static const _chatBottomSlack = 80.0;
+
+  void _onChatScroll() {
+    if (!_chatScroll.hasClients) return;
+    final scrolledUp = _chatScroll.offset > _chatBottomSlack;
+    if (scrolledUp && _chatBaseline == null) {
+      setState(() => _chatBaseline = _lastChatLength);
+    } else if (!scrolledUp && _chatBaseline != null) {
+      setState(() => _chatBaseline = null);
+    }
+  }
+
+  void _jumpToLatestChat() {
+    if (!_chatScroll.hasClients) return;
+    _chatScroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
+  }
+
+  /// Portrait <-> landscape fullscreen for the video. Landscape locks the
+  /// orientation and hides the system bars; leaving restores both.
+  Future<void> _toggleFullscreen() async {
+    final entering =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+    _systemChromeTouched = true;
+    _orientationReleaseTimer?.cancel();
+    if (entering) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      await SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      return;
+    }
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    await SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+    ]);
+    // Give the rotation a moment, then let auto-rotate work again.
+    _orientationReleaseTimer = Timer(const Duration(milliseconds: 600), () {
+      SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    });
+  }
+
+  void _restoreSystemChrome() {
+    _orientationReleaseTimer?.cancel();
+    if (!_systemChromeTouched) return;
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+  }
+
+  Future<void> _reportMatch(MatchModel match) async {
+    final auth = ref.read(authProvider);
+    if (auth.status != AuthStatus.authenticated) {
+      context.push('/login');
+      return;
+    }
+    await ReportSheet.show(context, targetId: match.id, targetType: 'match');
   }
 
   @override
@@ -248,6 +323,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _maxScoreController.dispose();
     _timeLimitController.dispose();
     _tabController.dispose();
+    _chatScroll.dispose();
+    _restoreSystemChrome();
     _commentSub?.cancel();
     _cheerSub?.cancel();
     try {
@@ -696,10 +773,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
-    // Read-only portrait view: back/share/menu sit on the video instead of an
-    // AppBar (see _buildViewerState). Keep the AppBar while loading or empty
-    // so the user is never left without a back button.
-    final useViewerLayout = match != null && !canOpenScoring && !isLandscape;
+    // Read-only view: back/share/menu sit on the video instead of an AppBar
+    // (see _buildViewerState). Keep the AppBar while loading or empty so the
+    // user is never left without a back button.
+    final useViewerLayout = match != null && !canOpenScoring;
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
@@ -2370,17 +2447,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final params = (tournamentId: effectiveId, matchId: widget.matchId);
     // Same condition as `useViewerLayout` in build(): no AppBar there, so the
     // controls live on the video and the lower half is header + Chat/Videos.
-    final viewerLayout =
-        !canControl &&
-        MediaQuery.of(context).orientation == Orientation.portrait;
+    final viewerLayout = !canControl;
+    final landscape =
+        viewerLayout &&
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
-    return Column(
-      children: [
-        // ─── Live Video Stream Player Box (Mockup) ───
-        Container(
+    // ─── Live Video Stream Player Box (Mockup) ───
+    final videoBox = Container(
           width: double.infinity,
+          height: landscape ? double.infinity : null,
           padding: EdgeInsets.only(
-            top: viewerLayout ? MediaQuery.of(context).padding.top : 0,
+            top: viewerLayout && !landscape
+                ? MediaQuery.of(context).padding.top
+                : 0,
           ),
           decoration: BoxDecoration(
             color: Colors.black,
@@ -2401,6 +2480,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               LiveVideoBox(
                 matchId: widget.matchId,
                 showStreamStats: _canSeeStreamStats(effectiveId),
+                fill: landscape,
+                fullscreen: landscape,
+                onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
               ),
 
               // Bảng điểm đè khung hình, đúng bố cục web: HAI HÀNG CHỒNG ở
@@ -2560,7 +2642,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
             ],
           ),
-        ),
+        );
+
+    if (landscape) return _buildViewerLandscape(match, videoBox);
+
+    return Column(
+      children: [
+        videoBox,
 
         if (viewerLayout)
           ..._buildViewerBottom(match, effectiveId)
@@ -2713,6 +2801,20 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
             ),
           const SizedBox(width: 6),
+          if (MediaQuery.of(context).orientation == Orientation.landscape) ...[
+            round(
+              _landscapeChatOpen
+                  ? Icons.chat_bubble_rounded
+                  : Icons.chat_bubble_outline_rounded,
+              () => setState(() => _landscapeChatOpen = !_landscapeChatOpen),
+              _landscapeChatOpen ? l10n.liveChatHide : l10n.liveChatShow,
+            ),
+            round(
+              Icons.flag_outlined,
+              () => _reportMatch(match),
+              l10n.liveReportAction,
+            ),
+          ],
           round(
             Icons.share_outlined,
             () => _shareMatch(match),
@@ -2783,6 +2885,40 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
+  /// Landscape: the video fills the screen, the chat floats over its right side.
+  Widget _buildViewerLandscape(MatchModel match, Widget videoBox) {
+    final isAuth = ref.watch(authProvider).status == AuthStatus.authenticated;
+    return ColoredBox(
+      color: Colors.black,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: SafeArea(top: false, bottom: false, child: videoBox),
+          ),
+          if (_landscapeChatOpen)
+            LiveLandscapeChat(
+              lines: [
+                for (final c in _comments)
+                  LiveChatLine(
+                    id: c['id']?.toString() ?? '',
+                    name:
+                        (c['user'] as Map?)?['fullName']?.toString() ??
+                        AppLocalizations.of(context)!.liveViewerPlaceholder,
+                    text: c['commentText']?.toString() ?? '',
+                  ),
+              ],
+              canPost: isAuth,
+              controller: _commentTextController,
+              sending: _isSubmittingComment,
+              onSend: _postComment,
+              onCheer: _handleCheer,
+              onLogin: () => context.push('/login'),
+            ),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _buildViewerBottom(MatchModel match, String tournamentId) {
     final l10n = AppLocalizations.of(context)!;
     final tournamentName = (match.tournamentName ?? '').trim();
@@ -2808,6 +2944,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             onCheer: _handleCheer,
             onShare: () => _shareMatch(match),
             onMore: () => _showDetailsSheet(match),
+            onReport: () => _reportMatch(match),
             tournamentLabel: tournamentName,
             onOpenTournament: tournamentId.isEmpty
                 ? null
@@ -3949,6 +4086,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       return db.compareTo(da);
     });
 
+    _lastChatLength = mergedList.length;
+    // While scrolled up, rows newer than the baseline stay out of the list so
+    // what the viewer is reading does not move; they are counted on the pill.
+    final hiddenNewest = _chatBaseline == null
+        ? 0
+        : (mergedList.length - _chatBaseline!).clamp(0, mergedList.length);
+    final shownList = hiddenNewest == 0
+        ? mergedList
+        : mergedList.sublist(hiddenNewest);
+
     return Container(
       decoration: BoxDecoration(
         color: colors.bgCard,
@@ -4003,15 +4150,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ],
                     ),
                   )
-                : ListView.builder(
+                : Stack(
+                    children: [
+                  ListView.builder(
+                    controller: _chatScroll,
                     reverse: true,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
-                    itemCount: mergedList.length,
+                    itemCount: shownList.length,
                     itemBuilder: (context, index) {
-                      final item = mergedList[index];
+                      final item = shownList[index];
                       final isSystem = item['isSystem'] as bool? ?? false;
                       final timeStr = item['createdAt'] != null
                           ? (item['createdAt'] as DateTime)
@@ -4105,14 +4255,48 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                           (user?['id'] ?? user?['userId'])?.toString().trim() ??
                           '';
                       final commentText = item['commentText']?.toString() ?? '';
+                      // The next index is the older row (list is reversed).
+                      final older = index + 1 < shownList.length
+                          ? shownList[index + 1]
+                          : null;
+                      final olderIsComment =
+                          older != null && older['isSystem'] != true;
+                      final olderUser = olderIsComment
+                          ? (older['user'] as Map?)
+                          : null;
                       return MatchDiscussionMessage(
                         userId: commentUserId,
                         name: userName,
                         text: commentText,
                         timeLabel: timeStr,
                         avatarUrl: avatarUrl,
+                        compact: isChatContinuation(
+                          userId: commentUserId,
+                          at: item['createdAt'] as DateTime,
+                          olderUserId:
+                              (olderUser?['id'] ?? olderUser?['userId'])
+                                  ?.toString()
+                                  .trim(),
+                          olderAt: olderIsComment
+                              ? older['createdAt'] as DateTime
+                              : null,
+                        ),
                       );
                     },
+                  ),
+                  if (hiddenNewest > 0)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 8,
+                      child: Center(
+                        child: LiveNewMessagesPill(
+                          count: hiddenNewest,
+                          onTap: _jumpToLatestChat,
+                        ),
+                      ),
+                    ),
+                    ],
                   ),
           ),
           Container(

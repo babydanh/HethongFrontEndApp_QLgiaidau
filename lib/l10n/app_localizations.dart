@@ -13556,6 +13556,48 @@ abstract class AppLocalizations {
   /// **'Chưa có tín hiệu phát trực tiếp'**
   String get liveNoSignalLabel;
 
+  /// No description provided for @liveNewMessages.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} tin mới'**
+  String liveNewMessages(Object count);
+
+  /// No description provided for @liveBackToLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Về live'**
+  String get liveBackToLive;
+
+  /// No description provided for @liveEnterFullscreen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Toàn màn hình'**
+  String get liveEnterFullscreen;
+
+  /// No description provided for @liveExitFullscreen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thoát toàn màn hình'**
+  String get liveExitFullscreen;
+
+  /// No description provided for @liveReportAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo'**
+  String get liveReportAction;
+
+  /// No description provided for @liveChatHide.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn chat'**
+  String get liveChatHide;
+
+  /// No description provided for @liveChatShow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện chat'**
+  String get liveChatShow;
+
   /// No description provided for @liveScoreboardToggle.
   ///
   /// In vi, this message translates to:
