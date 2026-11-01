@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
@@ -45,6 +46,8 @@ import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_sug
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_chat_grouping.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_landscape_chat.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_match_details_sheet.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_match_sides.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_new_messages_pill.dart';
 import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 
@@ -2846,13 +2849,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// Match details (the old score tab) in a sheet; the video keeps playing
   /// behind it and the content follows live updates.
   void _showDetailsSheet(MatchModel initial) {
-    final l10n = AppLocalizations.of(context)!;
     final effectiveId = _effectiveTournamentId(initial);
     final params = (tournamentId: effectiveId, matchId: widget.matchId);
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: context.colors.bgDark,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) => DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.7,
@@ -2863,26 +2865,191 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             final match =
                 ref.watch(singleMatchProvider(params)).value ?? initial;
             final state = ref.watch(scorePanelNotifierProvider(params));
-            return ListView(
-              controller: scrollController,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                  child: Text(
-                    l10n.liveDetailsSheetTitle,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                _buildViewerScoreboard(match, state),
-              ],
+            final viewers = ref.watch(viewerCountProvider(widget.matchId));
+            final tournament = effectiveId.isEmpty
+                ? null
+                : ref.watch(tournamentProvider(effectiveId)).value;
+            return _buildDetailsSheet(
+              match: match,
+              state: state,
+              viewers: viewers.value,
+              tournament: tournament,
+              tournamentId: effectiveId,
+              sheetContext: sheetContext,
+              scrollController: scrollController,
             );
           },
         ),
       ),
     );
+  }
+
+  Widget _buildDetailsSheet({
+    required MatchModel match,
+    required ScorePanelState state,
+    required int? viewers,
+    required Tournament? tournament,
+    required String tournamentId,
+    required BuildContext sheetContext,
+    required ScrollController scrollController,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final scheduled = match.scheduledTime?.toLocal();
+    final isDoubles = isDoublesMatch(match);
+    final penalties = match.penalties;
+    return LiveMatchDetailsSheet(
+      sheetTitle: l10n.liveDetailsSheetTitle,
+      matchTitle: _viewerTitle(match),
+      stats: [
+        (
+          value: viewers == null ? '–' : '$viewers',
+          caption: l10n.liveStatWatching,
+        ),
+        (value: '$_cheerCount', caption: l10n.liveStatCheers),
+        (
+          value: scheduled == null
+              ? '--:--'
+              : DateFormat('HH:mm').format(scheduled),
+          caption: scheduled == null
+              ? l10n.liveNotScheduled
+              : DateFormat('dd/MM/yyyy').format(scheduled),
+        ),
+      ],
+      setsTitle: l10n.liveSetScoresTitle,
+      sets: _detailsSetChips(match, state),
+      eloTitle: (isDoubles ? l10n.liveDoublesElo : l10n.liveSinglesElo)
+          .toUpperCase(),
+      sideA: buildLiveEloSide(
+        match,
+        1,
+        isDoubles: isDoubles,
+        noElo: l10n.liveNoElo,
+        undetermined: l10n.matchNotDetermined,
+      ),
+      sideB: buildLiveEloSide(
+        match,
+        2,
+        isDoubles: isDoubles,
+        noElo: l10n.liveNoElo,
+        undetermined: l10n.matchNotDetermined,
+      ),
+      rows: _detailsRows(match, tournament, tournamentId, sheetContext),
+      extra: penalties.isEmpty ? null : _buildViewerPenaltyLog(match),
+      reportLabel: l10n.liveReportAction,
+      closeTooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+      onClose: () => Navigator.of(sheetContext).pop(),
+      onReport: () {
+        Navigator.of(sheetContext).pop();
+        _reportMatch(match);
+      },
+      scrollController: scrollController,
+    );
+  }
+
+  /// Closed sets plus the one being played (red), as "Set N · a-b".
+  List<LiveSetChipData> _detailsSetChips(
+    MatchModel match,
+    ScorePanelState state,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final all = state.finishedSets.isNotEmpty
+        ? state.finishedSets
+        : _scoreDetailsSets(match);
+    final finished = all.where((set) => set.isFinished).toList();
+    final chips = [
+      for (var i = 0; i < finished.length; i++)
+        LiveSetChipData(
+          label:
+              '${l10n.tennisInfoSet} ${i + 1} · ${finished[i].score1}-${finished[i].score2}',
+        ),
+    ];
+    if (match.isCompleted) return chips;
+    final live = _currentLiveScore(match, state);
+    return [
+      ...chips,
+      LiveSetChipData(
+        label:
+            '${l10n.tennisInfoSet} ${finished.length + 1} · ${live.score1}-${live.score2}',
+        current: true,
+      ),
+    ];
+  }
+
+  /// Tournament link, sport + rules, place, referee and penalties summary.
+  List<LiveInfoRowData> _detailsRows(
+    MatchModel match,
+    Tournament? tournament,
+    String tournamentId,
+    BuildContext sheetContext,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final kind = SportRuleKind.fromString(match.sportKey);
+    final tournamentRules = tournament?.sportRules;
+    final rules = tournamentRules != null && tournamentRules.isNotEmpty
+        ? {
+            ...tournamentRules,
+            if (match.sportRules != null && match.sportRules!.isNotEmpty)
+              ...match.sportRules!,
+          }
+        : match.sportRules;
+    final config = resolveSportConfig(rules, kind);
+    final isLite = isLiteScoringMode(
+      tournamentConfig: match.tournamentConfig,
+      sportRules: rules,
+      tournamentIsLite: tournament?.isLite == true,
+    );
+    final ruleText = [
+      _setupSportLabel(kind),
+      if (isLite)
+        l10n.liveOpenRules
+      else ...[
+        '${l10n.liveWinLabel} ${l10n.liveSetValue(config.setsToWin)}',
+        if (config.mustWinByTwo) l10n.liveDifferenceTwo,
+      ],
+    ].join(' · ');
+    final place = tournament != null
+        ? TournamentLocationFormatter.matchFullLocation(
+            tournament: tournament,
+            courtName: match.court,
+          )
+        : TournamentLocationFormatter.matchCourtLabel(match.court);
+    final round = MatchRoundLabel.formatRound(
+      match: match,
+      l10n: l10n,
+      includeMatchCode: false,
+    ).trim();
+    final tournamentName = (match.tournamentName ?? '').trim();
+    final referee = match.refereeName?.trim() ?? '';
+    return [
+      LiveInfoRowData(
+        icon: Icons.emoji_events_outlined,
+        text: [
+          if (tournamentName.isNotEmpty) tournamentName,
+          if (round.isNotEmpty) round,
+        ].join(' · '),
+        onTap: tournamentId.isEmpty
+            ? null
+            : () {
+                Navigator.of(sheetContext).pop();
+                context.push('/tournament/$tournamentId');
+              },
+      ),
+      LiveInfoRowData(icon: Icons.sports_rounded, text: ruleText),
+      LiveInfoRowData(
+        icon: Icons.location_on_outlined,
+        text: place.isNotEmpty ? place : l10n.liveCourtDefault,
+      ),
+      LiveInfoRowData(
+        icon: Icons.person_outline_rounded,
+        text:
+            '${l10n.liveRefereeLabel}: ${referee.isNotEmpty ? referee : l10n.liveUnknownValue}',
+      ),
+      if (match.penalties.isEmpty)
+        LiveInfoRowData(
+          icon: Icons.style_outlined,
+          text: '${l10n.livePenaltyLogTitle}: ${l10n.liveDetailsNoPenalties}',
+        ),
+    ];
   }
 
   /// Landscape: the video fills the screen, the chat floats over its right side.

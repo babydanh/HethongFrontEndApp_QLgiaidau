@@ -34,7 +34,9 @@ class LiveViewerSuggestions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final async = ref.watch(matchesProvider(tournamentId));
+    // The bracket projection also carries Lite matches, which the public flat
+    // feed behind matchesProvider leaves out (that made this tab empty).
+    final async = ref.watch(bracketMatchesProvider(tournamentId));
 
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),

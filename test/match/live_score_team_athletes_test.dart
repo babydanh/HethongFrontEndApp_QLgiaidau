@@ -116,10 +116,17 @@ void main() {
       ),
     );
 
-    expect(_circleText('N'), findsOneWidget);
-    expect(_circleText('T'), findsOneWidget);
-    expect(_circleText('C'), findsNothing);
-    expect(find.textContaining('Doubles ELO'), findsWidgets);
+    // The details sheet names both athletes of the pair and labels the
+    // head-to-head card as doubles ELO (the mockup has no avatar circles).
+    expect(
+      find.textContaining('Nguyễn Minh Anh', findRichText: true),
+      findsWidgets,
+    );
+    expect(
+      find.textContaining('Trần Quốc Bảo', findRichText: true),
+      findsWidgets,
+    );
+    expect(find.text('DOUBLES ELO'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

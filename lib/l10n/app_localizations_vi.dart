@@ -7315,6 +7315,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveReportAction => 'Báo cáo';
 
   @override
+  String get liveStatWatching => 'đang xem';
+
+  @override
+  String get liveStatCheers => 'cổ vũ';
+
+  @override
+  String get liveDetailsNoPenalties => 'chưa có';
+
+  @override
   String get liveChatHide => 'Ẩn chat';
 
   @override

@@ -13586,6 +13586,24 @@ abstract class AppLocalizations {
   /// **'Báo cáo'**
   String get liveReportAction;
 
+  /// No description provided for @liveStatWatching.
+  ///
+  /// In vi, this message translates to:
+  /// **'đang xem'**
+  String get liveStatWatching;
+
+  /// No description provided for @liveStatCheers.
+  ///
+  /// In vi, this message translates to:
+  /// **'cổ vũ'**
+  String get liveStatCheers;
+
+  /// No description provided for @liveDetailsNoPenalties.
+  ///
+  /// In vi, this message translates to:
+  /// **'chưa có'**
+  String get liveDetailsNoPenalties;
+
   /// No description provided for @liveChatHide.
   ///
   /// In vi, this message translates to:

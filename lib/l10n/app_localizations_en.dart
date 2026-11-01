@@ -7323,6 +7323,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveReportAction => 'Report';
 
   @override
+  String get liveStatWatching => 'watching';
+
+  @override
+  String get liveStatCheers => 'cheers';
+
+  @override
+  String get liveDetailsNoPenalties => 'none yet';
+
+  @override
   String get liveChatHide => 'Hide chat';
 
   @override

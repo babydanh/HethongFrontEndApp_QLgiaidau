@@ -63,7 +63,7 @@ Widget _app({
 }) {
   return ProviderScope(
     overrides: [
-      matchesProvider.overrideWith((ref, tournamentId) {
+      bracketMatchesProvider.overrideWith((ref, tournamentId) {
         return Stream.value(matches);
       }),
     ],
