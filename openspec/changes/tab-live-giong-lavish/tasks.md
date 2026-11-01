@@ -1,0 +1,22 @@
+## 1. Avatar chuẩn Web
+- [x] 1.1 `ParticipantSideLines`: avatar tròn 18px màu theo tên (bảng 8 màu và chữ đầu+cuối như Web), tên 12.5px, tích xanh 12px bên thắng. Tiêu chí: `flutter test --no-pub test/core/participants/participant_side_lines_test.dart` exit 0 (viết test đỏ trước).
+  - Files: sửa `lib/core/participants/participant_display.dart`; test `test/core/participants/participant_side_lines_test.dart`
+  - Giao: `Color avatarFallbackColor(String name)`, `String avatarInitials(String name)` công khai; `ParticipantSideLines({..., String? waitingFor})`
+  - Chủ file chung: task này giữ `participant_display.dart`
+  - Phụ thuộc: không
+
+## 2. Bảng trận
+- [x] 2.1 Chép CSS mockup vào `ResultsMatchBoard` và `ResultsMatchRow` (chip + số đếm, công cụ, đầu hộp pill, hàng trận, dòng phụ, "Chờ đội thắng"); chuỗi qua l10n vi/en + `flutter gen-l10n`. Tiêu chí: `flutter test --no-pub test/features/tournament/widgets/results_match_board_test.dart` exit 0.
+  - Files: sửa `lib/features/tournament/widgets/results_match_board.dart`, `results_match_row.dart`; tạo `lib/features/tournament/widgets/results_board_palette.dart`; sửa `lib/l10n/app_vi.arb`, `app_en.arb`; test `test/features/tournament/widgets/results_match_board_test.dart`
+  - Chủ file chung: task này giữ hai file arb và hai file board/row
+  - Phụ thuộc: 1.1
+
+- [x] 2.2 Sửa theo phản hồi điện thoại thật: bỏ icon bút/lịch ở hàng trận; bấm hàng mở nhập điểm (BTC), "+" ở cột điểm khi trận nhập được mà chưa có điểm; chạm dòng giờ mở xếp lịch; nhãn vòng không kèm mã trận; huy hiệu sân chỉ "Sân N". Tiêu chí: `flutter test --no-pub test/features/tournament/widgets/results_match_board_test.dart test/features/tournament/widgets/live_tab_test.dart` exit 0.
+  - Files: sửa `lib/features/tournament/widgets/results_match_board.dart`, `results_match_row.dart`; test `results_match_board_test.dart` (TC-BOARD-08..10), `live_tab_test.dart`
+  - Chủ file chung: task này giữ hai file board/row
+  - Phụ thuộc: 2.1
+
+## 3. Kiểm chứng
+- [x] 3.1 `flutter analyze --no-pub` file đã sửa; test hẹp; `app-run.py status`; chụp điện thoại thật so từng dòng bảng quy đổi. Tiêu chí: exit 0, lệch = 0 kèm ảnh.
+  - Kết quả 2026-11-01: analyze "No issues found" (exit 0); test hẹp 124 xanh (exit 0). CHƯA chụp điện thoại thật để so mockup: người dùng yêu cầu tích và gộp lên main, chấp nhận so máy thật sau khi lên main.
+  - Phụ thuộc: 2.1

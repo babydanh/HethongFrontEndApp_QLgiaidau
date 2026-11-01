@@ -446,9 +446,45 @@ String _initials(String name) {
   return String.fromCharCode(words.first.runes.first).toUpperCase();
 }
 
+/// Same palette as the Web `AVATAR_FALLBACK_COLORS` (white text stays >= 4.5).
+const List<Color> _avatarFallbackColors = [
+  Color(0xFF2563EB),
+  Color(0xFFC2410C),
+  Color(0xFF047857),
+  Color(0xFF7E22CE),
+  Color(0xFFBE123C),
+  Color(0xFF475569),
+  Color(0xFF0F766E),
+  Color(0xFFB45309),
+];
+
+/// Stable colour per name (case and spacing insensitive), identical to the Web
+/// `avatarColorOf` so one person looks the same on both clients.
+Color avatarFallbackColor(String? name) {
+  final key = normalizeParticipantText(name).toLowerCase();
+  var hash = 0;
+  for (final rune in key.runes) {
+    hash = (hash * 31 + rune) & 0xFFFFFFFF;
+  }
+  return _avatarFallbackColors[hash % _avatarFallbackColors.length];
+}
+
+/// First plus last word initial ("Nguyễn Hoàng Phong" -> "NP"); "?" when empty.
+/// Same rule as the Web `initialsOf`.
+String avatarInitials(String? name) {
+  final words = normalizeParticipantText(
+    name,
+  ).split(' ').where((w) => w.isNotEmpty).toList(growable: false);
+  if (words.isEmpty) return '?';
+  String first(String word) => String.fromCharCode(word.runes.first);
+  final last = words.length > 1 ? first(words.last) : '';
+  return '${first(words.first)}$last'.toUpperCase();
+}
+
 /// One side of a match stacked like the Web board: a named team is one square
 /// logo plus a single team-name line, otherwise one avatar + short-name line per
-/// player. [won] bolds the side and adds a tick.
+/// player. [won] bolds the side and adds a tick. An empty side says which match
+/// it waits for when [waitingFor] (a match code) is given.
 class ParticipantSideLines extends StatelessWidget {
   final String? teamName;
   final List<ParticipantPlayer> players;
@@ -457,6 +493,7 @@ class ParticipantSideLines extends StatelessWidget {
   final String? logoUrl;
   final bool teamOnly;
   final bool won;
+  final String? waitingFor;
 
   const ParticipantSideLines({
     super.key,
@@ -465,6 +502,7 @@ class ParticipantSideLines extends StatelessWidget {
     this.logoUrl,
     this.teamOnly = false,
     this.won = false,
+    this.waitingFor,
   });
 
   @override
@@ -476,15 +514,20 @@ class ParticipantSideLines extends StatelessWidget {
       teamOnly: teamOnly,
     );
     final style = TextStyle(
-      fontSize: 13,
+      fontSize: 12.5,
       color: colors.textPrimary,
       fontWeight: won ? FontWeight.w800 : FontWeight.w500,
     );
     if (!display.isTeam && display.players.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      final code = waitingFor;
       return Text(
-        AppLocalizations.of(context)!.matchNotDetermined,
+        code == null || code.isEmpty
+            ? l10n.matchNotDetermined
+            : l10n.resultsBoard_waitingWinner(code),
         style: style.copyWith(
-          color: colors.textMuted,
+          fontSize: 12,
+          color: _sideWaitingColor,
           fontWeight: FontWeight.w500,
         ),
         maxLines: 1,
@@ -503,17 +546,7 @@ class ParticipantSideLines extends StatelessWidget {
             for (var i = 0; i < display.players.length; i++)
               _SideLine(
                 key: ValueKey('side-lines-player-$i'),
-                leading: _PlayerAvatar(
-                  name: display.players[i].fullName,
-                  avatarUrl: display.players[i].avatarUrl,
-                  radius: _sideAvatarRadius,
-                  backgroundColor: colors.bgSurface,
-                  textStyle: style.copyWith(
-                    fontSize: 9.5,
-                    color: colors.textMuted,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                leading: _SideAvatar(player: display.players[i]),
                 text: abbreviateName(display.players[i].fullName),
                 style: style,
               ),
@@ -530,14 +563,51 @@ class ParticipantSideLines extends StatelessWidget {
         ),
         if (won) ...[
           const SizedBox(width: 4),
-          const Icon(Icons.check_rounded, size: 16, color: AppTheme.primary),
+          const Icon(Icons.check_rounded, size: 12, color: _sideTickColor),
         ],
       ],
     );
   }
 }
 
-const double _sideAvatarRadius = 10;
+/// Mockup `.pl.w svg` tick and `.wait` text colours.
+const Color _sideTickColor = Color(0xFF2563EB);
+const Color _sideWaitingColor = Color(0xFF94A3B8);
+
+/// Mockup `.av`: 18px circle.
+const double _sideAvatarRadius = 9;
+
+/// Mockup `.lg`: 22px square logo with 6px corners.
+const double _sideLogoSize = 22;
+
+/// Round avatar of one player: photo, or white initials on a name-based colour.
+class _SideAvatar extends StatelessWidget {
+  final ParticipantPlayer player;
+
+  const _SideAvatar({required this.player});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = player.avatarUrl;
+    return CircleAvatar(
+      radius: _sideAvatarRadius,
+      backgroundColor: avatarFallbackColor(player.fullName),
+      backgroundImage: url == null ? null : NetworkImage(url),
+      onBackgroundImageError: url == null ? null : (_, _) {},
+      child: url == null
+          ? Text(
+              avatarInitials(player.fullName),
+              style: const TextStyle(
+                fontSize: 8.5,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                height: 1,
+              ),
+            )
+          : null,
+    );
+  }
+}
 
 class _SideLine extends StatelessWidget {
   final Widget leading;
@@ -581,14 +651,15 @@ class _TeamLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initial = ColoredBox(
-      color: AppTheme.primary.withValues(alpha: 0.14),
+      color: avatarFallbackColor(name),
       child: Center(
         child: Text(
-          _initials(name),
+          avatarInitials(name),
           style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.primary,
+            fontSize: 9,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            height: 1,
           ),
         ),
       ),
@@ -596,10 +667,10 @@ class _TeamLogo extends StatelessWidget {
     final image = url;
     return SizedBox(
       key: const ValueKey('side-lines-team-logo'),
-      width: _sideAvatarRadius * 2,
-      height: _sideAvatarRadius * 2,
+      width: _sideLogoSize,
+      height: _sideLogoSize,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(6),
         child: image == null || image.isEmpty
             ? initial
             : Image.network(
