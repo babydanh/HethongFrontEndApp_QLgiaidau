@@ -25,11 +25,13 @@ import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart
 
 import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/global_search_screen.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_section_list.dart';
+import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
+import 'package:app_quanly_giaidau/providers/home_match_feed_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/home_skeletons.dart';
 
 // ═══════════════════════════════════════════════════════
 //  WAVE HEADER PAINTER
@@ -83,9 +85,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  final String _exploreContent = 'all';
-  final String _exploreBracket = 'all';
-  final String _exploreRanked = 'all';
   String _tournamentSport = 'all';
   String _tournamentStatus = 'all';
   String _rankingsSport = 'all';
@@ -680,6 +679,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             onRefresh: () async {
               _hasAutoSwitchedLiveTab = false;
               _userManuallySelectedLiveTab = false;
+              ref.invalidate(homeMatchFeedProvider);
               return ref.refresh(tournamentsProvider);
             },
             color: AppTheme.primary,
@@ -755,12 +755,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     SliverToBoxAdapter(child: _buildExploreSegmentTabBar(l10n)),
                     TournamentSectionList(
                       tournaments: allTournaments,
-                      filterStatus: _exploreStatus,
-                      searchQuery: _searchQueries[0] ?? '',
-                      contentFilter: _exploreContent,
-                      bracketFilter: _exploreBracket,
-                      rankedFilter: _exploreRanked,
-                      enabled: true,
+                      filter: MatchStatusFilter.parse(_exploreStatus),
                       emptyMessage: _exploreStatus == 'live'
                           ? l10n.noLiveMatches
                           : _exploreStatus == 'scheduled'
@@ -777,13 +772,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               },
               loading: () => CustomScrollView(
                 controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(
                     child: SizedBox(height: _pinnedHeaderHeight),
                   ),
-                  const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
+                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                  SliverToBoxAdapter(
+                    child: HomeBannerSkeleton(
+                      height: _bannerSlotHeight(context),
+                    ),
+                  ),
+                  SliverToBoxAdapter(child: _buildExploreSegmentTabBar(l10n)),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < 3; i++)
+                          const TournamentMatchesCardSkeleton(),
+                      ],
+                    ),
                   ),
                 ],
               ),

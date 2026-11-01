@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/home_skeletons.dart';
+import 'package:app_quanly_giaidau/providers/home_match_feed_provider.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -12,99 +17,88 @@ import 'package:flutter_test/flutter_test.dart';
 typedef _Page = ({List<MatchModel> matches, String? nextCursor});
 
 void main() {
-  testWidgets('card shows a match from a later page when page one has none', (
+  testWidgets('card shows the page it is given without calling the repository', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(360, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
+    _phone(tester);
     final repository = _PagedMatchRepository({
-      null: (matches: [_placeholderMatch], nextCursor: 'page-2'),
-      'page-2': (matches: [_visibleMatch], nextCursor: null),
+      null: (matches: [_visibleMatch], nextCursor: 'a'),
     });
 
     await tester.pumpWidget(_cardApp(repository));
     await tester.pumpAndSettle();
 
-    expect(repository.requests, [null, 'page-2']);
+    expect(repository.requests, isEmpty);
     expect(find.text('Team Alpha'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('card hides when no page has a renderable match', (tester) async {
-    tester.view.physicalSize = const Size(360, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-    final repository = _PagedMatchRepository({
-      null: (matches: [_placeholderMatch], nextCursor: 'page-2'),
-      'page-2': (matches: [_placeholderMatch], nextCursor: null),
-    });
-
-    await tester.pumpWidget(_cardApp(repository));
-    await tester.pumpAndSettle();
-
-    expect(repository.requests, [null, 'page-2']);
-    expect(find.text(_tournament.name.toUpperCase()), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('card hides after cursor pages with no renderable match', (
+  testWidgets('next page shows a skeleton while loading, then its matches', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(360, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-    final repository = _PagedMatchRepository({
-      null: (matches: [_placeholderMatch], nextCursor: 'p1'),
-      'p1': (matches: [_placeholderMatch], nextCursor: 'p2'),
-      'p2': (matches: [_placeholderMatch], nextCursor: 'p3'),
-      'p3': (matches: [_placeholderMatch], nextCursor: 'p4'),
-      'p4': (matches: [_placeholderMatch], nextCursor: 'p5'),
-      'p5': (matches: [_placeholderMatch], nextCursor: 'p6'),
-      'p6': (matches: [_visibleMatch], nextCursor: null),
-    });
-
-    await tester.pumpWidget(_cardApp(repository));
-    await tester.pumpAndSettle();
-
-    expect(repository.requests, [null, 'p1', 'p2', 'p3', 'p4', 'p5']);
-    expect(find.text(_tournament.name.toUpperCase()), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('card hides when manual paging lands on an empty page', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(360, 844);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
+    _phone(tester);
+    final gate = Completer<void>();
     final repository = _PagedMatchRepository({
       null: (matches: [_visibleMatch], nextCursor: 'a'),
-      'a': (matches: [_placeholderMatch], nextCursor: 'a'),
+      'a': (matches: [_secondPageMatch], nextCursor: null),
+    })..gate = gate;
+
+    await tester.pumpWidget(_cardApp(repository));
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pump();
+
+    expect(repository.requests, ['a']);
+    expect(find.byType(TournamentMatchRowsSkeleton), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TournamentMatchRowsSkeleton), findsNothing);
+    expect(find.text('Second Page Team'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a next page with only placeholders keeps the current page', (
+    tester,
+  ) async {
+    _phone(tester);
+    final repository = _PagedMatchRepository({
+      null: (matches: [_visibleMatch], nextCursor: 'a'),
+      'a': (matches: [_placeholderMatch], nextCursor: null),
     });
 
     await tester.pumpWidget(_cardApp(repository));
-    await tester.pumpAndSettle();
-
-    expect(repository.requests, [null]);
-    expect(find.text(_tournament.name.toUpperCase()), findsOneWidget);
     await tester.tap(find.byIcon(Icons.chevron_right_rounded));
     await tester.pumpAndSettle();
 
-    expect(repository.requests, [null, 'a']);
-    expect(find.text(_tournament.name.toUpperCase()), findsNothing);
+    expect(repository.requests, ['a']);
+    expect(find.text(_tournament.name.toUpperCase()), findsOneWidget);
+    expect(find.text('Team Alpha'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a failed next page keeps the current page and offers retry', (
+    tester,
+  ) async {
+    _phone(tester);
+    final repository = _PagedMatchRepository({
+      null: (matches: [_visibleMatch], nextCursor: 'a'),
+      'a': (matches: [_secondPageMatch], nextCursor: null),
+    })..failOnce = true;
+
+    await tester.pumpWidget(_cardApp(repository));
+    await tester.tap(find.byIcon(Icons.chevron_right_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Team Alpha'), findsWidgets);
+    expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.refresh_rounded));
+    await tester.pumpAndSettle();
+
+    expect(repository.requests, ['a', 'a']);
+    expect(find.text('Second Page Team'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
@@ -334,10 +328,34 @@ Widget _cardApp(IMatchRepository repository) {
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
-          child: LiveTournamentWithMatchesCard(tournament: _tournament),
+          child: LiveTournamentWithMatchesCard(
+            tournament: _tournament,
+            filter: MatchStatusFilter.scheduled,
+            initialPage: _firstPage(repository),
+          ),
         ),
       ),
     ),
+  );
+}
+
+void _phone(WidgetTester tester) {
+  tester.view.physicalSize = const Size(360, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+}
+
+/// The feed hands the card its first page; here it is the repository's page
+/// for the null cursor, already filtered the way the feed would.
+FeedPage _firstPage(IMatchRepository repository) {
+  final page = (repository as _PagedMatchRepository).pages[null]!;
+  return FeedPage(
+    FeedPageStatus.ready,
+    items: page.matches,
+    nextCursor: page.nextCursor,
   );
 }
 
@@ -369,6 +387,12 @@ final _visibleMatch = _match(
   team2Name: 'Team Beta',
 );
 
+final _secondPageMatch = _match(
+  id: 'second-page-match',
+  team2Id: 'team-gamma-id',
+  team2Name: 'Second Page Team',
+);
+
 MatchModel _match({
   required String id,
   required String team2Id,
@@ -394,6 +418,8 @@ class _PagedMatchRepository extends Fake implements IMatchRepository {
 
   final Map<String?, _Page> pages;
   final List<String?> requests = [];
+  Completer<void>? gate;
+  var failOnce = false;
 
   @override
   Future<
@@ -407,6 +433,11 @@ class _PagedMatchRepository extends Fake implements IMatchRepository {
     String? trigger,
   }) async {
     requests.add(cursor);
+    await gate?.future;
+    if (failOnce) {
+      failOnce = false;
+      throw StateError('boom');
+    }
     final page = pages[cursor]!;
     return (
       matches: page.matches,
