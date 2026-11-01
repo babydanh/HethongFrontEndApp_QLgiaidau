@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:flutter/material.dart';
 
 /// Khu vực đã áp dụng cho buổi: phường/xã trước, tỉnh/thành được suy ra.
@@ -644,7 +645,10 @@ class _SocialRegionListSheetState extends State<_SocialRegionListSheet> {
 
   Widget _optionsList(BuildContext context, AppLocalizations l10n) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: ListPageSkeleton(itemCount: 7, leadingAvatar: false),
+      );
     }
     if (_loadFailed || _empty) {
       return _message(

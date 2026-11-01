@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_nearby_filter.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_session_card_skeleton.dart';
 import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -68,9 +69,13 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
           // Content according to AsyncValue
           ...sessionsAsync.when(
             loading: () => [
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(child: CircularProgressIndicator()),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    for (var i = 0; i < 5; i++)
+                      const SocialSessionCardSkeleton(),
+                  ],
+                ),
               ),
             ],
             error: (error, _) => [

@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,6 +60,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     matchType: _matchType,
     genderRestriction: _isMixedDoubles ? null : _selectedGender,
     provinceCode: widget.provinceCode,
+  );
+
+  Widget _rankingRowsSkeleton() => SkeletonScope(
+    child: Column(
+      children: [for (var i = 0; i < 8; i++) const LeaderboardRowSkeleton()],
+    ),
   );
 
   @override
@@ -139,10 +147,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                       ? footballRankingsAsync.when(
                           data: (teams) =>
                               _buildFootballTeamList(teams, colors),
-                          loading: () => const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 40),
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
+                          loading: _rankingRowsSkeleton,
                           error: (e, _) => _emptyState(
                             context,
                             icon: Icons.cloud_off_rounded,
@@ -163,10 +168,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                             isAuth,
                             currentUserId,
                           ),
-                          loading: () => const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 40),
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
+                          loading: _rankingRowsSkeleton,
                           error: (e, _) => _emptyState(
                             context,
                             icon: Icons.cloud_off_rounded,
@@ -184,7 +186,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             );
             return content;
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                SizedBox(height: widget.standalone ? 20 : 100),
+                _rankingRowsSkeleton(),
+              ],
+            ),
+          ),
           error: (e, _) => _emptyState(
             context,
             icon: Icons.warning_amber_rounded,

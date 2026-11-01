@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:flutter/material.dart';
 
@@ -118,4 +119,44 @@ class TournamentMatchRowsSkeleton extends StatelessWidget {
             ),
           ),
   );
+}
+
+/// Card giải có banner ở tab Giải đấu: banner cao bằng banner thật, thân card
+/// có tên, dòng phụ và hai nhãn.
+class TournamentBannerCardSkeleton extends StatelessWidget {
+  const TournamentBannerCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    return SkeletonScope(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SkeletonBox(
+              height: AppResponsive.bannerHeight(
+                size.height,
+                viewportWidth: size.width,
+              ),
+              radius: 10,
+            ),
+            const SizedBox(height: 12),
+            const SkeletonLine(height: 16),
+            const SizedBox(height: 8),
+            const SkeletonLine(width: 180, height: 11),
+            const SizedBox(height: 10),
+            const Row(
+              children: [
+                SkeletonBox(width: 64, height: 18, radius: 4),
+                SizedBox(width: 8),
+                SkeletonBox(width: 80, height: 18, radius: 4),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
