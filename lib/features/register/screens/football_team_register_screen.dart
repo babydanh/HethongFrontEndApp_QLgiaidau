@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -354,7 +355,7 @@ class _FootballTeamRegisterScreenState
           ),
           const SizedBox(height: 8),
           if (_loading)
-            const Center(child: CircularProgressIndicator())
+            const ListPageSkeleton(itemCount: 3, leadingAvatar: false)
           else if (_teams.isEmpty)
             Card(
               child: Padding(

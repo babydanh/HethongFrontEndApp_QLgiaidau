@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -83,7 +84,7 @@ class SeriesScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _SeriesListSkeleton(),
         error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.seriesError(e.toString()))),
       ),
     );
@@ -156,4 +157,19 @@ class SeriesScreen extends ConsumerWidget {
       ),
     ).animate().fadeIn(duration: 300.ms);
   }
+}
+
+/// Skeleton danh sách giải đấu theo chuỗi: cùng hình dạng hàng với thẻ thật.
+class _SeriesListSkeleton extends StatelessWidget {
+  const _SeriesListSkeleton();
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    physics: const NeverScrollableScrollPhysics(),
+    child: Column(
+      children: [
+        for (var i = 0; i < 5; i++) const TournamentListItemSkeleton(),
+      ],
+    ),
+  );
 }

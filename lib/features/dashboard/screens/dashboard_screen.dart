@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
@@ -2202,15 +2203,17 @@ class _DashboardLoadingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: context.colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.border),
+    // Hình dạng khớp thẻ giải thật (_ManagedTournamentRow): 3 hàng cao ~64.
+    return const SkeletonScope(
+      child: Column(
+        children: [
+          SkeletonBox(height: 64, radius: 14),
+          SizedBox(height: 10),
+          SkeletonBox(height: 64, radius: 14),
+          SizedBox(height: 10),
+          SkeletonBox(height: 64, radius: 14),
+        ],
       ),
-      child: const Center(child: CircularProgressIndicator()),
     );
   }
 }

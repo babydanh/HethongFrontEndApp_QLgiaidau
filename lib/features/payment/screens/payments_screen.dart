@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/payment_model.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
@@ -66,7 +67,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       ),
       body: paymentsAsync.when(
         data: (payments) => _buildContent(context, ref, payments, l10n),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          child: ListPageSkeleton(),
+        ),
         error: (e, _) {
           final l10n = AppLocalizations.of(context)!;
           return Center(

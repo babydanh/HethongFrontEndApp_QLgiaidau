@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -126,7 +127,10 @@ class _LiteJoinScreenState extends ConsumerState<LiteJoinScreen> {
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(title: Text(l10n.lite_joinButton), centerTitle: true),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SingleChildScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              child: DetailPageSkeleton(),
+            )
           : tournament == null
           ? Center(child: Text(l10n.tournamentNotFound))
           : SingleChildScrollView(

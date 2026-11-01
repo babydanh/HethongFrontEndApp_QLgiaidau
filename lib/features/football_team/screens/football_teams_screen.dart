@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -132,7 +133,10 @@ class _FootballTeamsScreenState extends ConsumerState<FootballTeamsScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.footballTeams_title)),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          child: ListPageSkeleton(),
+        )
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(

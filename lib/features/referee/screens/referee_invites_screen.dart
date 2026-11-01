@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
@@ -37,7 +38,10 @@ class RefereeInvitesScreen extends ConsumerWidget {
         centerTitle: true,
       ),
       body: invitesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          child: ListPageSkeleton(),
+        ),
         error: (error, _) => _InviteErrorView(
           onRetry: () =>
               ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
