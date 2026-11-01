@@ -30,6 +30,11 @@ class ApiTournamentRepository implements ITournamentRepository {
   AppLocalizations get _l10n =>
       lookupAppLocalizations(PlatformDispatcher.instance.locale);
 
+  /// Starts an optional request now; a failure resolves to null so the caller
+  /// can keep going without it.
+  Future<T?> _optional<T>(Future<T> request) =>
+      request.then<T?>((value) => value, onError: (_) => null);
+
   @override
   Future<Tournament?> getById(String id, {String? inviteCode}) async {
     _log.debug('Fetching tournament by id via API: $id');
@@ -39,22 +44,23 @@ class ApiTournamentRepository implements ITournamentRepository {
           'invite': inviteCode.trim(),
       };
 
+      // Divisions and sponsors are optional extras: start them together with
+      // the detail request instead of waiting for each one in turn.
+      final divisionsRequest = _optional(
+        _dioClient.dio.get('/tournaments/$id/divisions'),
+      );
+      final sponsorsRequest = _optional(getPublicSponsors(id));
       final response = await _dioClient.dio.get(
         '/tournaments/$id',
         queryParameters: query.isEmpty ? null : query,
       );
-      Response<dynamic>? divResponse;
-      try {
-        divResponse = await _dioClient.dio.get('/tournaments/$id/divisions');
-      } catch (_) {
-        // Tournament details remain usable when the optional divisions call fails.
-      }
+      final divResponse = await divisionsRequest;
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
         if (data != null) {
           try {
-            final sponsors = await getPublicSponsors(id);
+            final sponsors = await sponsorsRequest ?? const [];
             data['sponsors'] = sponsors
                 .map(
                   (sponsor) => {

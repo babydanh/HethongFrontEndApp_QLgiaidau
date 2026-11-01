@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final homeProjectionProvider = StreamProvider.autoDispose
@@ -226,6 +227,27 @@ final bracketMatchesProvider = StreamProvider.family<List<MatchModel>, String>((
   }
 });
 
+/// Reads the Lite bracket projection. A failed or timed-out read keeps the
+/// last good list so a dropped poll never blanks matches already on screen;
+/// before any success it yields an empty list so the first paint stays bounded.
+Future<List<MatchModel>> Function() _liteSnapshotLoader(
+  ITournamentRepository repo,
+  String tournamentId, {
+  String? divisionId,
+}) {
+  var last = const <MatchModel>[];
+  return () async {
+    try {
+      last = await repo
+          .getBracketMatches(tournamentId, divisionId: divisionId)
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {
+      // Keep [last].
+    }
+    return last;
+  };
+}
+
 /// Lite tournaments are rendered from the bracket projection. The public flat
 /// `/matches?publicOnly=true` feed intentionally excludes Lite records, so a
 /// Lite screen must never fall back to that feed after a bracket read fails.
@@ -233,17 +255,10 @@ final bracketMatchesProvider = StreamProvider.family<List<MatchModel>, String>((
 /// background so a transient API failure does not leave the screen spinning.
 final liteBracketMatchesProvider =
     StreamProvider.family<List<MatchModel>, String>((ref, tournamentId) async* {
-      final repo = ref.watch(tournamentRepositoryProvider);
-
-      Future<List<MatchModel>> loadSnapshot() async {
-        try {
-          return await repo
-              .getBracketMatches(tournamentId)
-              .timeout(const Duration(seconds: 8), onTimeout: () => const []);
-        } catch (_) {
-          return const [];
-        }
-      }
+      final loadSnapshot = _liteSnapshotLoader(
+        ref.watch(tournamentRepositoryProvider),
+        tournamentId,
+      );
 
       yield await loadSnapshot();
       yield* Stream.periodic(const Duration(seconds: 15))
@@ -260,20 +275,11 @@ final liteBracketMatchesWithDivisionProvider =
       List<MatchModel>,
       ({String tournamentId, String? divisionId})
     >((ref, params) async* {
-      final repo = ref.watch(tournamentRepositoryProvider);
-
-      Future<List<MatchModel>> loadSnapshot() async {
-        try {
-          return await repo
-              .getBracketMatches(
-                params.tournamentId,
-                divisionId: params.divisionId,
-              )
-              .timeout(const Duration(seconds: 8), onTimeout: () => const []);
-        } catch (_) {
-          return const [];
-        }
-      }
+      final loadSnapshot = _liteSnapshotLoader(
+        ref.watch(tournamentRepositoryProvider),
+        params.tournamentId,
+        divisionId: params.divisionId,
+      );
 
       yield await loadSnapshot();
       yield* Stream.periodic(const Duration(seconds: 15))
