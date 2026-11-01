@@ -23,6 +23,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
 import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Nút viền đứt, dùng cho "Thêm nội dung" để khớp web. `OutlinedButton` của
 /// Flutter không vẽ được nét đứt nên phải tự vẽ; chiều cao 48dp để đạt chuẩn
@@ -1112,10 +1113,7 @@ class _CreatePublicQuickTournamentScreenState
         }
 
         if (categoriesAsync.isLoading && activeCategories.isEmpty) {
-          return const SizedBox(
-            height: 60,
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          );
+          return const BoneChipsLoading();
         }
 
         if (sports.isEmpty) {

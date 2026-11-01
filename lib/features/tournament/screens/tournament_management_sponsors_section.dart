@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class TournamentManagementSponsorsSection extends ConsumerStatefulWidget {
   const TournamentManagementSponsorsSection({
@@ -84,7 +85,7 @@ class _TournamentManagementSponsorsSectionState
     if (items == null && _loadError != null) {
       return TournamentManagementError(error: _loadError, onRetry: _retry);
     }
-    if (items == null) return const Center(child: CircularProgressIndicator());
+    if (items == null) return const BoneListLoading();
     return LavishSurface(
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),

@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_schedule_court_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Không gian toàn màn hình để xếp lịch: xoay ngang, không còn banner/tab của
 /// hub, và là chỗ chứa các thao tác hàng loạt.
@@ -149,7 +150,7 @@ class _ScheduleFullscreenScreenState
         centerTitle: true,
       ),
       body: matchesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const BoneMatchListLoading(),
         error: (error, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),

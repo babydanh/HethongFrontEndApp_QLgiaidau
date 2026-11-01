@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/live_session_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Backend DTO bounds for `CameraDeviceModel.name`. A name outside them is
 /// rejected by the server, so it is refused here instead of being sent.
@@ -255,7 +256,7 @@ class _TournamentManagementLivestreamSectionState
         LavishGroupHeader(l10n.tournamentManagementLivestreamSessions),
         sessions.when(
           skipLoadingOnRefresh: true,
-          loading: () => const _InlineSpinner(),
+          loading: () => const _InlineLoading(),
           error: (error, _) => TournamentManagementError(
             onRetry: _refreshSessions,
             error: error,
@@ -321,7 +322,7 @@ class _TournamentManagementLivestreamSectionState
           devices.when(
             skipLoadingOnRefresh: true,
             loading: () => _devicesExpanded
-                ? const _InlineSpinner()
+                ? const _InlineLoading()
                 : const SizedBox.shrink(),
             error: (error, _) => const SizedBox.shrink(),
             data: (items) {
@@ -494,14 +495,12 @@ class _LiveSessionTile extends StatelessWidget {
   }
 }
 
-class _InlineSpinner extends StatelessWidget {
-  const _InlineSpinner();
+class _InlineLoading extends StatelessWidget {
+  const _InlineLoading();
 
   @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.all(24),
-    child: Center(child: CircularProgressIndicator()),
-  );
+  Widget build(BuildContext context) =>
+      const BoneListLoading(itemCount: 2, leadingAvatar: false);
 }
 
 class _MutedLine extends StatelessWidget {

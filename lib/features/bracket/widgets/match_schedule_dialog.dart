@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 
 /// Opens the one-match schedule dialog (court, day, start time, duration).
 /// Resolves to true once the schedule was saved or cleared, null when dismissed
@@ -195,7 +196,7 @@ class _MatchScheduleDialogState extends ConsumerState<_MatchScheduleDialog> {
       title: Text(l10n.matchSchedule_title),
       content: SingleChildScrollView(
         child: courts == null
-            ? const Center(child: CircularProgressIndicator())
+            ? const _FormSkeleton()
             : ready
             ? _form(context, l10n, courts)
             : Text(_loadError ?? l10n.scheduleQuickNoCourts),
@@ -292,4 +293,27 @@ class _MatchScheduleDialogState extends ConsumerState<_MatchScheduleDialog> {
   static String _hhmm(int minute) =>
       '${(minute ~/ 60).toString().padLeft(2, '0')}:'
       '${(minute % 60).toString().padLeft(2, '0')}';
+}
+
+/// Khung form giả. Không dùng LayoutBuilder vì AlertDialog đo kích thước nội tại.
+class _FormSkeleton extends StatelessWidget {
+  const _FormSkeleton();
+
+  @override
+  Widget build(BuildContext context) => const ExcludeSemantics(
+    child: SkeletonScope(
+      child: SizedBox(
+        width: 280,
+        child: Column(
+          children: [
+            SkeletonBox(height: 48, radius: 12),
+            SizedBox(height: 12),
+            SkeletonBox(height: 48, radius: 12),
+            SizedBox(height: 12),
+            SkeletonBox(height: 48, radius: 12),
+          ],
+        ),
+      ),
+    ),
+  );
 }

@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/lite/screens/lite_management_screen.
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Preserves club Super Lite management and routes other tournament types to the shared hub.
 class TournamentManagementDispatcher extends ConsumerWidget {
@@ -88,7 +89,7 @@ class TournamentManagementDispatcher extends ConsumerWidget {
     return tournamentAsync.when(
       loading: () => _StateScaffold(
         title: l10n.unnamed,
-        child: const Center(child: CircularProgressIndicator()),
+        child: const BoneDetailLoading(),
       ),
       error: (error, _) => errorState(error),
       data: (tournament) {

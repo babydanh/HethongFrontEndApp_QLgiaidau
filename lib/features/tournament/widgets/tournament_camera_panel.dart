@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Camera management of one tournament: add / delete cameras and move them
 /// between courts, by picker or by dragging a camera card onto a court card
@@ -258,7 +259,7 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
           );
         }
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return const BoneListLoading(itemCount: 3, leadingAvatar: false);
         }
         return _buildBody(l10n, snapshot.data!);
       },
@@ -268,7 +269,7 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
   Widget _buildBody(AppLocalizations l10n, List<TournamentCourtRef> courts) {
     final camerasAsync = ref.watch(tournamentCamerasProvider(widget.tournamentId));
     return camerasAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const BoneListLoading(itemCount: 3, leadingAvatar: false),
       error: (error, _) =>
           TournamentManagementError(error: error, onRetry: _refresh),
       data: (cameras) => Column(

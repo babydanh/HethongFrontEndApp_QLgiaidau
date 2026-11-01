@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// "Kết quả" tab: the honour podium (champion, runner-up, third place) and a
 /// share icon. The match board lives in the "Đang diễn ra" tab.
@@ -42,12 +43,7 @@ class ResultsTab extends ConsumerWidget {
         }
         return _buildPodium(context, rawAwards);
       },
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
-        ),
-      ),
+      loading: () => const BonePodiumLoading(),
       error: (e, _) => _emptyState(context),
     );
 

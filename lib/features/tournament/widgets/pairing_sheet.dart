@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Sheet ghép cặp nội dung đôi (OpenSpec `quan-ly-giai-web-parity` task
 /// 3.6/3.7, đối chiếu Web `PairingParticipantsModal` + modal ghép tự động
@@ -552,7 +553,7 @@ class _PairingSheetState extends ConsumerState<PairingSheet> {
         padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(
           children: [
-            const CircularProgressIndicator(),
+            const BoneListLoading(itemCount: 4),
             const SizedBox(height: 12),
             Text(
               l10n.pairingLoading,

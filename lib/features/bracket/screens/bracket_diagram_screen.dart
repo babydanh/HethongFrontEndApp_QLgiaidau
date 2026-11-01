@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Full-screen bracket diagram for all 3 format types.
 /// Navigated to from the "Xem sơ đồ" button in BracketViewScreen.
@@ -174,7 +175,7 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         centerTitle: true,
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const BoneBracketLoading()
           : _error != null
           ? _buildEmpty(colors, l10n)
           : (_bracketMatches == null || _bracketMatches!.isEmpty)

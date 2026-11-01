@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/core/utils/bracket_generation_summary.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class AutoDrawScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -633,18 +634,18 @@ class _AutoDrawScreenState extends ConsumerState<AutoDrawScreen> {
                     ],
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const BoneListLoading(),
                 error: (e, _) => Center(
                   child: Text(l10n.autoDraw_matchLoadError(e.toString)),
                 ),
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const BoneListLoading(),
             error: (e, _) =>
                 Center(child: Text(l10n.autoDraw_error(e.toString))),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const BoneListLoading(),
         error: (e, _) => Center(child: Text(l10n.autoDraw_error(e.toString))),
       ),
     );

@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class TournamentManagementDivisionsSection extends ConsumerStatefulWidget {
   const TournamentManagementDivisionsSection({
@@ -68,7 +69,7 @@ class _TournamentManagementDivisionsSectionState
       future: _divisionsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting)
-          return const Center(child: CircularProgressIndicator());
+          return const BoneListLoading();
         if (snapshot.hasError)
           return TournamentManagementError(
             error: snapshot.error,
@@ -951,12 +952,7 @@ class _TournamentSeedsSectionState
               future: _participantsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting)
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
+                  return const BoneListLoading(itemCount: 3);
                 if (snapshot.hasError)
                   return TournamentManagementError(
                     error: snapshot.error,
