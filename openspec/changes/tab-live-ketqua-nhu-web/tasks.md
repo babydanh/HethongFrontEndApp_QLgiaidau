@@ -28,5 +28,5 @@
   - Phụ thuộc: 2.2, 3.1
 
 ## 4. Kiểm chứng
-- [ ] 4.1 `flutter analyze --no-pub` các file đã sửa; chạy test hẹp; `app-run.py status` không lỗi nhánh này; chụp màn thật khi điện thoại thức. Tiêu chí: exit 0.
+- [x] 4.1 `flutter analyze --no-pub` các file đã sửa; chạy test hẹp; `app-run.py status` không lỗi nhánh này; chụp màn thật khi điện thoại thức. Tiêu chí: exit 0.
   - Phụ thuộc: 3.2
