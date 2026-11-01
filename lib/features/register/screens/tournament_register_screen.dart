@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -961,9 +962,7 @@ class _TournamentRegisterScreenState
               return Center(child: Text(l10n.registerTournamentNotFound));
             }
             if (!isAuth) return _buildLoginPrompt(t);
-            if (_checkingRegistration) {
-              return const Center(child: CircularProgressIndicator());
-            }
+            if (_checkingRegistration) return const DetailPageSkeleton();
             // Invite gate: nếu là PRIVATE và chưa có mã mời
             final needsInvite =
                 (t.visibility == 'PRIVATE' ||
@@ -999,7 +998,7 @@ class _TournamentRegisterScreenState
                 if (_success) return _buildSuccess(t);
                 return _buildForm(t, AsyncValue.data(effectiveDivs));
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const DetailPageSkeleton(),
               error: (e, _) {
                 final fallbackDivs = [
                   TournamentDivisionOption(
@@ -1027,7 +1026,7 @@ class _TournamentRegisterScreenState
               },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const DetailPageSkeleton(),
           error: (e, _) => Center(child: Text(l10n.registerLoadError(e))),
         ),
       ),

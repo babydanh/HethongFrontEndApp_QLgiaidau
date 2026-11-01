@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -432,7 +433,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         ),
       ),
       body: state.loading && state.error == null && state.participants.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const SingleChildScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              child: DetailPageSkeleton(),
+            )
           : state.error != null && state.tournament == null
           ? Center(
               child: Padding(
@@ -2596,7 +2600,10 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final l10n = AppLocalizations.of(context)!;
 
     if (state.loading && state.participants.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: ListPageSkeleton(),
+      );
     }
 
     if (state.error != null && state.participants.isEmpty) {
@@ -4317,10 +4324,7 @@ class _LiteClubMemberPickerSheetState
                   ),
                   const SizedBox(height: 10),
                   if (_loading)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 32),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
+                    const ListPageSkeleton(itemCount: 4)
                   else if (_error != null)
                     _PickerMessage(
                       icon: Icons.cloud_off_rounded,

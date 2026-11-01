@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart' hide Border;
 import 'package:uuid/uuid.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
@@ -251,8 +252,9 @@ class TeamListScreen extends ConsumerWidget {
             managementRouteBase: _managementRouteBase,
           );
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
+        loading: () => const SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          child: ListPageSkeleton(),
         ),
         error: (e, _) => Center(child: Text(l10n.teamList_error(e.toString))),
       ),

@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:intl/intl.dart';
 
 // ─── Models ───
@@ -207,7 +208,12 @@ class SeriesDetailScreen extends ConsumerWidget {
           }
           return _SeriesDetailContent(detail: detail);
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SafeArea(
+          child: SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            child: DetailPageSkeleton(),
+          ),
+        ),
         error: (e, _) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/features/admin/widgets/admin_list_skeleton.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -68,7 +69,7 @@ class PendingClubsScreen extends ConsumerWidget {
                 _buildClubCard(context, clubs[i], colors, ref),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AdminListSkeleton(),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(32),

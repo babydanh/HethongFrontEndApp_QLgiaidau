@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:app_quanly_giaidau/features/admin/widgets/admin_list_skeleton.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
@@ -158,7 +159,7 @@ class _AdminTransactionsScreenState
               _buildTransactionCard(context, filtered[i], colors),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const AdminListSkeleton(),
       error: (e, _) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

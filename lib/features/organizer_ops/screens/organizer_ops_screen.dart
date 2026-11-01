@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
@@ -4256,10 +4257,7 @@ class _OpsInlineLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(32),
-      child: Center(child: CircularProgressIndicator()),
-    );
+    return const ListPageSkeleton(itemCount: 3);
   }
 }
 

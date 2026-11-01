@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
@@ -392,7 +393,10 @@ class _LitePairingScreenState extends ConsumerState<LitePairingScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: ListPageSkeleton(),
+      );
     }
     if (_error != null) {
       return Center(
