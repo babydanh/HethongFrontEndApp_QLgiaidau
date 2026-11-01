@@ -8,19 +8,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-/// Index (0..4) of the lifecycle step reached by a normalized tournament
-/// status: draft, publish, registration open, playing, finished. Null for a
-/// cancelled tournament (no step applies).
+/// Index (0..3) of the progress step reached by a normalized tournament
+/// status, as on the Web stepper: registration, schedule, in progress,
+/// finished. -1 for a draft (nothing lit yet); null for a cancelled
+/// tournament (no bar).
 int? lifecycleStepIndex(String status) => switch (status) {
-  AppConstants.statusDraft => 0,
-  AppConstants.statusRegistration ||
-  AppConstants.statusRegistrationClosed ||
-  AppConstants.statusDrawing => 2,
-  AppConstants.statusInProgress => 3,
-  AppConstants.statusCompleted => 4,
   AppConstants.statusCancelled => null,
-  // upcoming, pending approval and any other published-but-not-open state.
-  _ => 1,
+  AppConstants.statusDraft => -1,
+  AppConstants.statusRegistrationClosed || AppConstants.statusDrawing => 1,
+  AppConstants.statusInProgress => 2,
+  AppConstants.statusCompleted => 3,
+  // upcoming, registration open and any other published-but-not-playing state.
+  _ => 0,
 };
 
 /// `occupied/max` when every limited division is full (or, for a tournament
@@ -72,8 +71,10 @@ String lifecycleMoney(BuildContext context, num amount) =>
       decimalDigits: 0,
     ).format(amount);
 
-/// Five-step pill bar (design `.stp`): done steps green, the current one in
-/// the accent colour (`lifecycle-step-current`), the rest grey.
+/// Four-step progress bar like the Web stepper: registration, schedule, in
+/// progress, finished. Done steps are green with a check, the current one is
+/// accent-coloured (`lifecycle-step-current`), the rest grey. A draft shows
+/// the bar dimmed with no step lit.
 class LifecycleStepBar extends StatelessWidget {
   const LifecycleStepBar({super.key, required this.status});
 
@@ -85,68 +86,152 @@ class LifecycleStepBar extends StatelessWidget {
     final current = lifecycleStepIndex(status);
     if (current == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
-    final labels = [
-      l10n.lifecycleStepDraft,
-      l10n.lifecycleStepPublish,
-      l10n.lifecycleStepOpen,
-      l10n.lifecycleStepRunning,
-      l10n.lifecycleStepDone,
+    final steps = [
+      (l10n.lifecycleStepOpen, Icons.groups_outlined),
+      (l10n.lifecycleStepSchedule, Icons.account_tree_outlined),
+      (l10n.lifecycleStepRunning, Icons.play_arrow_rounded),
+      (l10n.lifecycleStepDone, Icons.emoji_events_outlined),
     ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 0),
-      child: Row(
-        children: [
-          for (var i = 0; i < labels.length; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            Expanded(
-              child: _Step(
-                label: labels[i],
-                done: i < current,
-                current: i == current,
+    return Opacity(
+      opacity: current < 0 ? 0.5 : 1,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+        child: Stack(
+          children: [
+            // Rail between the first and last circle (1/8 inset each side),
+            // filled up to the current step.
+            Positioned(
+              left: 0,
+              right: 0,
+              top: _stepDot / 2 - 1,
+              child: Row(
+                children: [
+                  const Spacer(),
+                  Expanded(
+                    flex: 6,
+                    child: _StepRail(
+                      progress: (current / (steps.length - 1)).clamp(0.0, 1.0),
+                    ),
+                  ),
+                  const Spacer(),
+                ],
               ),
             ),
+            Row(
+              children: [
+                for (var i = 0; i < steps.length; i++)
+                  Expanded(
+                    child: _Step(
+                      label: steps[i].$1,
+                      icon: steps[i].$2,
+                      done: i < current,
+                      current: i == current,
+                    ),
+                  ),
+              ],
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+const double _stepDot = 24;
+
+/// Thin line behind the step circles; the part up to [progress] is accent.
+class _StepRail extends StatelessWidget {
+  const _StepRail({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 2,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: LavishColors.of(context).line),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: progress,
+              child: const ColoredBox(color: LavishColors.accent),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// One equal-width pill; the label scales down so five fit a 320dp screen.
+/// One step: a circle (check when done) with its label underneath.
 class _Step extends StatelessWidget {
-  const _Step({required this.label, required this.done, required this.current});
+  const _Step({
+    required this.label,
+    required this.icon,
+    required this.done,
+    required this.current,
+  });
 
   final String label;
+  final IconData icon;
   final bool done;
   final bool current;
 
   @override
   Widget build(BuildContext context) {
     final colors = LavishColors.of(context);
-    final tone = done ? LavishTone.ok : LavishTone.neutral;
-    return Container(
+    final fill = done
+        ? LavishColors.ok
+        : current
+        ? LavishColors.accent
+        : colors.rowLine;
+    return Column(
       key: current ? const ValueKey('lifecycle-step-current') : null,
-      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 7),
-      decoration: BoxDecoration(
-        color: current ? LavishColors.accent : colors.soft(tone),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: _stepDot,
+          height: _stepDot,
+          decoration: BoxDecoration(
+            color: fill,
+            shape: BoxShape.circle,
+            border: Border.all(color: colors.surface, width: 2),
+            boxShadow: current
+                ? [
+                    BoxShadow(
+                      color: LavishColors.accent.withValues(alpha: 0.25),
+                      spreadRadius: 3,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Icon(
+            done ? Icons.check_rounded : icon,
+            size: 13,
+            color: done || current ? Colors.white : colors.faint,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
           label,
-          maxLines: 1,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 10.5,
-            fontWeight: FontWeight.w800,
+            fontSize: 11,
+            height: 1.15,
+            fontWeight: current ? FontWeight.w800 : FontWeight.w700,
             color: current
-                ? Colors.white
+                ? LavishColors.accent
                 : done
-                ? colors.pillText(LavishTone.ok)
+                ? colors.text
                 : colors.faint,
           ),
         ),
-      ),
+      ],
     );
   }
 }

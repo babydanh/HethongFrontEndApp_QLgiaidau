@@ -561,94 +561,89 @@ class _OverviewTabState extends State<OverviewTab> {
                       ),
                       Divider(height: 1, color: colors.border),
 
-                      if (!widget.compact) ...[
-                        // ─── ENTRY FEE ROW ───
-                        _editableItem(
-                          key: const ValueKey(
-                            'tournament-overview-entry-fee-edit',
+                      // ─── ENTRY FEE ROW ───
+                      _editableItem(
+                        key: const ValueKey(
+                          'tournament-overview-entry-fee-edit',
+                        ),
+                        onTap: widget.onEditFinance,
+                        sectionLabel: l10n.tournamentManagementFinance,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
                           ),
-                          onTap: widget.onEditFinance,
-                          sectionLabel: l10n.tournamentManagementFinance,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 11,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.primary.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.primary.withValues(
+                                          alpha: 0.1,
                                         ),
-                                        child: const Icon(
-                                          Icons.payments_outlined,
-                                          size: 16,
-                                          color: AppTheme.primary,
-                                        ),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
+                                      child: const Icon(
+                                        Icons.payments_outlined,
+                                        size: 16,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Lệ phí giải',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: colors.textPrimary,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          if ((t.entryFee ?? 0) > 0)
                                             Text(
-                                              'Lệ phí giải',
+                                              'Thanh toán trực tiếp / QR',
                                               style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                color: colors.textPrimary,
+                                                fontSize: 10.5,
+                                                color: colors.textMuted,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
-                                            if ((t.entryFee ?? 0) > 0)
-                                              Text(
-                                                'Thanh toán trực tiếp / QR',
-                                                style: TextStyle(
-                                                  fontSize: 10.5,
-                                                  color: colors.textMuted,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                          ],
-                                        ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _formatCurrency(t.entryFee),
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
-                                    color:
-                                        (t.entryFee != null && t.entryFee! > 0)
-                                        ? const Color(0xFFE11D48)
-                                        : const Color(0xFF10B981),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatCurrency(t.entryFee),
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                  color: (t.entryFee != null && t.entryFee! > 0)
+                                      ? const Color(0xFFE11D48)
+                                      : const Color(0xFF10B981),
                                 ),
-                                _editIndicator(widget.onEditFinance),
-                              ],
-                            ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              _editIndicator(widget.onEditFinance),
+                            ],
                           ),
                         ),
-                        Divider(height: 1, color: colors.border),
-                      ],
+                      ),
+                      Divider(height: 1, color: colors.border),
                       const SizedBox(height: 14),
 
                       if (t.description.trim().isNotEmpty) ...[

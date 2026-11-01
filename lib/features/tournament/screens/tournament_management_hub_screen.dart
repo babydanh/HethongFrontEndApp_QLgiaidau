@@ -320,18 +320,13 @@ class _TournamentManagementHubScreenState
         SliverToBoxAdapter(
           child: TournamentManagementSummary(
             tournament: tournament,
-            teamCount: teamCount,
             onEditInformation: () =>
                 _openSection(TournamentManagementSection.information),
-            onEditSchedule: () =>
-                _openSection(TournamentManagementSection.schedule),
-            onEditRegistration: () =>
-                _openSection(TournamentManagementSection.registration),
-            onEditFinance: () =>
-                _openSection(TournamentManagementSection.finance),
-            onOpenAthletes: () =>
-                _tabController.animateTo(_HubTab.athletes.index),
           ),
+        ),
+        // Step bar + the one next-step button, as at the top of the Web page.
+        SliverToBoxAdapter(
+          child: TournamentLifecycleCard(tournament: tournament),
         ),
         SliverToBoxAdapter(
           child: ResultsReconfirmCard(
@@ -514,6 +509,7 @@ class _TournamentManagementHubScreenState
           sliver: SliverToBoxAdapter(
             child: TournamentLifecycleCard(
               tournament: widget.tournament,
+              showLifecycle: false,
               onShare: _shareTournament,
               onDelete: _deleteTournament,
             ),

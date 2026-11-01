@@ -16854,16 +16854,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The form is locked because registration is closed or the tournament has started.';
 
   @override
-  String get lifecycleStepDraft => 'Draft';
+  String get lifecycleStepOpen => 'Registration';
 
   @override
-  String get lifecycleStepPublish => 'Publish';
+  String get lifecycleStepSchedule => 'Schedule';
 
   @override
-  String get lifecycleStepOpen => 'Reg. open';
-
-  @override
-  String get lifecycleStepRunning => 'Playing';
+  String get lifecycleStepRunning => 'In progress';
 
   @override
   String get lifecycleStepDone => 'Finished';

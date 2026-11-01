@@ -30266,28 +30266,22 @@ abstract class AppLocalizations {
   /// **'Form đã khoá vì đăng ký đã đóng hoặc giải đã bắt đầu.'**
   String get registrationFormLocked;
 
-  /// No description provided for @lifecycleStepDraft.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nháp'**
-  String get lifecycleStepDraft;
-
-  /// No description provided for @lifecycleStepPublish.
-  ///
-  /// In vi, this message translates to:
-  /// **'Xuất bản'**
-  String get lifecycleStepPublish;
-
   /// No description provided for @lifecycleStepOpen.
   ///
   /// In vi, this message translates to:
-  /// **'Mở ĐK'**
+  /// **'Đăng ký'**
   String get lifecycleStepOpen;
+
+  /// No description provided for @lifecycleStepSchedule.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch thi đấu'**
+  String get lifecycleStepSchedule;
 
   /// No description provided for @lifecycleStepRunning.
   ///
   /// In vi, this message translates to:
-  /// **'Đang đấu'**
+  /// **'Đang thi đấu'**
   String get lifecycleStepRunning;
 
   /// No description provided for @lifecycleStepDone.

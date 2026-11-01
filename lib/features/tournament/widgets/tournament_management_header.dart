@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
+import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
+/// Logo diameter; its lower half hangs below the banner image.
+const double _logoSize = 58;
+const double _logoOverlap = _logoSize / 2;
+
 /// Ảnh bìa có nút sửa nhận diện, dùng làm `flexibleSpace` của hub quản lý.
+/// Logo giải tròn đè lên mép dưới ảnh bìa (nửa dưới nằm ngoài ảnh).
 class TournamentManagementBanner extends StatelessWidget {
   final Tournament tournament;
   final String Function(String? url) resolveImageUrl;
@@ -38,7 +43,7 @@ class TournamentManagementBanner extends StatelessWidget {
     final imageUrl =
         _nonEmpty(tournament.bannerUrl) ?? _nonEmpty(tournament.logoUrl);
 
-    return Stack(
+    final banner = Stack(
       fit: StackFit.expand,
       children: [
         imageUrl == null
@@ -84,6 +89,44 @@ class TournamentManagementBanner extends StatelessWidget {
           ),
       ],
     );
+    final logoUrl = _nonEmpty(tournament.logoUrl);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: _logoOverlap),
+          child: banner,
+        ),
+        Positioned(
+          left: 16,
+          bottom: 0,
+          child: GestureDetector(
+            key: const ValueKey('tournament-overview-logo'),
+            onTap: onEdit,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TournamentAvatar(
+                imageUrl: logoUrl == null ? null : resolveImageUrl(logoUrl),
+                tournamentName: tournament.name,
+                sport: tournament.sport,
+                size: _logoSize,
+                borderWidth: 2,
+                borderColor: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   static String? _nonEmpty(String? value) {
@@ -92,25 +135,15 @@ class TournamentManagementBanner extends StatelessWidget {
   }
 }
 
-/// Tên giải, chip trạng thái/môn và dải 4 chỉ số, hiển thị dưới banner.
+/// Tên giải và chip trạng thái/môn, hiển thị dưới banner (logo đè mép banner).
 class TournamentManagementSummary extends StatelessWidget {
   final Tournament tournament;
-  final int teamCount;
   final VoidCallback? onEditInformation;
-  final VoidCallback? onEditSchedule;
-  final VoidCallback? onEditRegistration;
-  final VoidCallback? onEditFinance;
-  final VoidCallback? onOpenAthletes;
 
   const TournamentManagementSummary({
     super.key,
     required this.tournament,
-    required this.teamCount,
     this.onEditInformation,
-    this.onEditSchedule,
-    this.onEditRegistration,
-    this.onEditFinance,
-    this.onOpenAthletes,
   });
 
   @override
@@ -118,135 +151,74 @@ class TournamentManagementSummary extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final t = tournament;
-    final currency = NumberFormat('#,###', 'vi_VN');
-    final fee = t.entryFee ?? 0;
-    final deadline = t.registrationEndDate;
     final categoryName = t.category?.trim();
     final sportName = (categoryName != null && categoryName.isNotEmpty)
         ? categoryName
         : (AppConstants.sportNames[t.sport.trim().toLowerCase()] ?? t.sport);
-
-    final kpis = <Widget>[
-      _SummaryKpi(
-        itemKey: const ValueKey('tournament-overview-dates-edit'),
-        label: l10n.tournamentManagementKpiDates,
-        value: _dateRange(t.startDate, t.endDate),
-        onTap: onEditRegistration,
-      ),
-      _SummaryKpi(
-        itemKey: const ValueKey('tournament-overview-athletes-edit'),
-        label: l10n.tournamentManagementKpiAthletes,
-        value: t.maxTeams > 0 ? '$teamCount/${t.maxTeams}' : '$teamCount',
-        onTap: onOpenAthletes,
-      ),
-      _SummaryKpi(
-        itemKey: const ValueKey('tournament-overview-entry-fee-edit'),
-        label: l10n.tournamentManagementKpiFee,
-        value: fee <= 0
-            ? l10n.tournamentManagementKpiFree
-            : '${currency.format(fee)} đ',
-        onTap: onEditFinance,
-      ),
-      _SummaryKpi(
-        itemKey: const ValueKey('tournament-management-kpi-deadline'),
-        label: l10n.tournamentManagementKpiRegistrationDeadline,
-        value: deadline == null ? '—' : DateFormat('dd/MM').format(deadline),
-        onTap: onEditRegistration,
-      ),
-    ];
 
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 960),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    MergeSemantics(
-                      child: InkWell(
-                        key: const ValueKey('tournament-overview-name-edit'),
-                        onTap: onEditInformation,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                t.name,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: colors.textPrimary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Icon(
-                              Icons.edit_outlined,
-                              size: 16,
-                              color: AppTheme.primary,
-                              semanticLabel:
-                                  '${l10n.infoEdit} ${l10n.tournamentManagementGeneral}',
-                            ),
-                          ],
+              MergeSemantics(
+                child: InkWell(
+                  key: const ValueKey('tournament-overview-name-edit'),
+                  onTap: onEditInformation,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          t.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: colors.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _Chip(
-                          label: StatusHelper.getTournamentStatusLabel(
-                            t.status,
-                            l10n: l10n,
-                          ),
-                          color: StatusHelper.getTournamentStatusColor(
-                            t.status,
-                            context,
-                          ),
-                        ),
-                        _Chip(label: sportName, color: AppTheme.primary),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: colors.border),
-                    bottom: BorderSide(color: colors.border),
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.edit_outlined,
+                        size: 16,
+                        color: AppTheme.primary,
+                        semanticLabel:
+                            '${l10n.infoEdit} ${l10n.tournamentManagementGeneral}',
+                      ),
+                    ],
                   ),
                 ),
-                child: IntrinsicHeight(
-                  child: Row(children: _withDividers(kpis, colors.border)),
-                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _Chip(
+                    label: StatusHelper.getTournamentStatusLabel(
+                      t.status,
+                      l10n: l10n,
+                    ),
+                    color: StatusHelper.getTournamentStatusColor(
+                      t.status,
+                      context,
+                    ),
+                  ),
+                  _Chip(label: sportName, color: AppTheme.primary),
+                ],
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  List<Widget> _withDividers(List<Widget> tiles, Color dividerColor) {
-    return [
-      for (var i = 0; i < tiles.length; i++) ...[
-        if (i > 0) VerticalDivider(width: 1, thickness: 1, color: dividerColor),
-        Expanded(child: tiles[i]),
-      ],
-    ];
   }
 }
 
@@ -274,79 +246,4 @@ class _Chip extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SummaryKpi extends StatelessWidget {
-  final Key itemKey;
-  final String label;
-  final String value;
-  final VoidCallback? onTap;
-
-  const _SummaryKpi({
-    required this.itemKey,
-    required this.label,
-    required this.value,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return MergeSemantics(
-      child: InkWell(
-        key: itemKey,
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    value,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-String _dateRange(DateTime? start, DateTime? end) {
-  if (start == null) return '—';
-  final shortDate = DateFormat('dd/MM');
-  if (end == null || _isSameDay(start, end)) return shortDate.format(start);
-  if (start.year == end.year && start.month == end.month) {
-    return '${start.day.toString().padLeft(2, '0')}–${shortDate.format(end)}';
-  }
-  return '${shortDate.format(start)}–${shortDate.format(end)}';
-}
-
-bool _isSameDay(DateTime a, DateTime b) {
-  return a.year == b.year && a.month == b.month && a.day == b.day;
 }
