@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -31,24 +32,29 @@ class ShimmerBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(16),
+      child: Shimmer.fromColors(
+        baseColor: colors.bgSurface,
+        highlightColor: colors.bgCard,
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: colors.bgCard,
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const ShimmerPlaceholder(height: 48, borderRadius: 12),
-            const SizedBox(height: 16),
-            const ShimmerPlaceholder(height: 100, borderRadius: 16),
-            const SizedBox(height: 16),
-            const ShimmerPlaceholder(height: 180, borderRadius: 16),
-          ],
+              const SizedBox(height: 16),
+              const ShimmerPlaceholder(height: 48, borderRadius: 12),
+              const SizedBox(height: 16),
+              const ShimmerPlaceholder(height: 100, borderRadius: 16),
+              const SizedBox(height: 16),
+              const ShimmerPlaceholder(height: 180, borderRadius: 16),
+            ],
+          ),
         ),
       ),
     );
