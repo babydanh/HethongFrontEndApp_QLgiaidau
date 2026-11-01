@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -319,10 +320,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: matchesAsync.when(
-        loading: () => const Center(
-          child: Padding(
-            padding: EdgeInsets.all(40),
-            child: CircularProgressIndicator(),
+        loading: () => const SkeletonScope(
+          child: Column(
+            children: [
+              SkeletonBox(height: 88, radius: 14),
+              SizedBox(height: 12),
+              SkeletonBox(height: 88, radius: 14),
+              SizedBox(height: 12),
+              SkeletonBox(height: 88, radius: 14),
+            ],
           ),
         ),
         error: (err, stack) => _buildEmptyPlaceholder(

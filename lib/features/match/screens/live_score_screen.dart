@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -922,7 +924,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 return _buildLiveState(match, canOpenScoring: false);
               }
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const ScrollFreeSkeleton(child: DetailPageSkeleton()),
             error: (e, _) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
@@ -4274,9 +4276,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         children: [
           Expanded(
             child: _isLoadingComments && mergedList.isEmpty
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary),
-                  )
+                ? const ScrollFreeSkeleton(child: ChatMessagesSkeleton())
                 : mergedList.isEmpty
                 ? Center(
                     child: Column(

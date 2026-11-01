@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -39,7 +40,21 @@ class LiveViewerSuggestions extends ConsumerWidget {
     final async = ref.watch(bracketMatchesProvider(tournamentId));
 
     return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonScope(
+        child: SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.all(12),
+          child: Column(
+            children: [
+              SkeletonBox(height: 120, radius: 14),
+              SizedBox(height: 10),
+              SkeletonBox(height: 120, radius: 14),
+              SizedBox(height: 10),
+              SkeletonBox(height: 120, radius: 14),
+            ],
+          ),
+        ),
+      ),
       error: (_, _) => Center(child: Text(l10n.homeMatchesLoadError)),
       data: (matches) {
         final picked = pickLiveSuggestions(

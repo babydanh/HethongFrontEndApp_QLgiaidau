@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -1390,7 +1391,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             child: Stack(
               children: [
                 _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const ScrollFreeSkeleton(child: ChatMessagesSkeleton())
                     : _messages.isEmpty
                     ? Center(
                         child: Column(

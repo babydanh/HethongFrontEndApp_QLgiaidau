@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1257,12 +1258,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
   Widget _buildMembersList(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     if (_isLoadingMembers) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
+      return const ListPageSkeleton(itemCount: 4);
     }
 
     if (_participants.isEmpty) {

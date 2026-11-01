@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -383,7 +385,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                 // Conversations List
                 Expanded(
                   child: _isLoadingRooms
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const ScrollFreeSkeleton(
+                          child: ListPageSkeleton(itemCount: 8),
+                        )
                       : filteredRooms.isEmpty
                       ? Center(
                           child: Column(
@@ -805,7 +809,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             children: [
               Expanded(
                 child: _isLoadingSupport
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const ScrollFreeSkeleton(child: ChatMessagesSkeleton())
                     : _supportMessages.isEmpty
                     ? Center(
                         child: Column(

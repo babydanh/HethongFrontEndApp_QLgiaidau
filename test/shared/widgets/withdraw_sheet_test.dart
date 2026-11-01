@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +9,7 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 
 class _PendingRefundRepository extends Fake implements ITournamentRepository {
@@ -26,6 +29,7 @@ class _PendingRefundRepository extends Fake implements ITournamentRepository {
 }
 
 void main() {
+  _loadingMain();
   testWidgets(
     'shows pending refund copy when server reports an existing request',
     (tester) async {
@@ -81,4 +85,48 @@ void main() {
       expect(find.text(l10n.withdraw_existingRefundPending), findsOneWidget);
     },
   );
+}
+
+void _loadingMain() {
+  testWidgets('profile bank still loading shows a skeleton, not a spinner', (
+    tester,
+  ) async {
+    final pending = Completer<UserProfile>();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          tournamentRepositoryProvider.overrideWithValue(
+            _PendingRefundRepository(),
+          ),
+          userProfileProvider.overrideWith((ref) => pending.future),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('vi'),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => WithdrawSheet.show(
+                    context,
+                    tournamentId: 'tournament-1',
+                    hasPaid: true,
+                  ),
+                  child: const Text('Open withdrawal'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open withdrawal'));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.byType(BlockSkeleton), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
 }
