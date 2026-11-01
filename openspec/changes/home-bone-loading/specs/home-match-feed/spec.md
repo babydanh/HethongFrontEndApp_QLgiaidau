@@ -24,7 +24,7 @@ Feed MUST mở tối đa 6 giải mỗi bước, tối đa 3 request đồng th�
 
 #### Scenario: Hết giải
 - **WHEN** feed đã quét hết danh sách giải
-- **THEN** `phase` là `exhausted` hoặc `ready` không còn giải chưa quét và không gọi thêm
+- **THEN** `hasMore` là false, `isScanning` là false và feed không gọi thêm
 
 #### Scenario: Đổi bộ lọc liên tục
 - **WHEN** người dùng đổi bộ lọc 3 lần trong 1 giây
