@@ -10,7 +10,7 @@
   - Phụ thuộc: không
 
 ## 2. Màn chi tiết giải
-- [ ] 2.1 Skeleton thay vòng xoay; bỏ cổng `teamsAsync.when`; tab Live/Kết quả theo trạng thái giải; tóm tắt live/kết quả bằng provider riêng; huỷ `TabController` cũ sau frame. Tiêu chí: `flutter test --no-pub test/features/tournament/results_tab_test.dart test/features/tournament/tournament_open_speed_screen_test.dart` exit 0.
+- [x] 2.1 Skeleton thay vòng xoay; bỏ cổng `teamsAsync.when`; tab Live/Kết quả theo trạng thái giải; tóm tắt live/kết quả bằng provider riêng; huỷ `TabController` cũ sau frame. Tiêu chí: `flutter test --no-pub test/features/tournament/results_tab_test.dart test/features/tournament/tournament_open_speed_screen_test.dart` exit 0.
   - Files: sửa `lib/features/tournament/screens/tournament_intro_screen.dart`, `lib/providers/query_providers.dart` (thêm provider tóm tắt, chủ file chung: 1.3 xong trước), `lib/features/tournament/widgets/tournament_state_views.dart` (chỉ dùng lại); tạo test `test/features/tournament/tournament_open_speed_screen_test.dart`
   - Phụ thuộc: 1.3
 

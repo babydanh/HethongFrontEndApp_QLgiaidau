@@ -33,6 +33,24 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
+/// The two facts of a match list that the tab bar depends on. A record so that
+/// `select` only notifies when one of them actually changes.
+typedef _MatchSummary = ({int liveCount, bool hasCompleted});
+
+_MatchSummary _summarizeMatches(List<MatchModel>? matches) {
+  var liveCount = 0;
+  var hasCompleted = false;
+  for (final match in matches ?? const <MatchModel>[]) {
+    if (isLiveMatch(match)) liveCount++;
+    final isRealResult =
+        !(match.isBye || match.isByeMatch || match.isFullByeMatch) &&
+        match.hasTeams &&
+        match.isCompleted;
+    if (isRealResult) hasCompleted = true;
+  }
+  return (liveCount: liveCount, hasCompleted: hasCompleted);
+}
+
 class TournamentIntroScreen extends ConsumerStatefulWidget {
   final String tournamentId;
   final String? inviteCode;
@@ -117,7 +135,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     });
 
     _tabController = newController;
-    prev?.dispose();
+    // The old TabBar/TabBarView still reference [prev] until this frame ends.
+    if (prev != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => prev.dispose());
+    }
   }
 
   @override
@@ -140,6 +161,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final divisionsAsync = ref.watch(
       tournamentDivisionsProvider(widget.tournamentId),
     );
+    // Start the roster request together with the tournament detail instead of
+    // after it; only the Teams tab waits for it.
+    ref.watch(introTeamsProvider(widget.tournamentId));
     final authState = ref.watch(authProvider);
     final authRole = authState.role;
     final userProfile = ref.watch(userProfileProvider).value;
@@ -361,27 +385,32 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   );
 
   Widget _buildLoadingState() {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Stack(
         children: [
-          Positioned(left: 12, top: 8, child: _backButton(colors)),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(color: AppTheme.primary),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.tournamentLoading,
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+          const ShimmerBody(),
+          Positioned(left: 12, top: 8, child: _backButton(context.colors)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamsLoadError() {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.teamsLoadError,
+            style: TextStyle(color: colors.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () =>
+                ref.invalidate(introTeamsProvider(widget.tournamentId)),
+            child: Text(l10n.infoRetry),
           ),
         ],
       ),
@@ -618,10 +647,13 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     // The flat public-only endpoint intentionally excludes Lite tournaments.
     // Lite detail must use the bracket projection, which is also the source
     // used by the management screen and web bracket.
-    final matchesAsync = ref.watch(
-      tournament.isLite
-          ? liteBracketMatchesProvider(widget.tournamentId)
-          : matchesProvider(widget.tournamentId),
+    // Only these two facts decide the tab bar, so rebuild this screen when they
+    // change, not on every poll or socket emission of the match list.
+    final matchSummary = ref.watch(
+      (tournament.isLite
+              ? liteBracketMatchesProvider(widget.tournamentId)
+              : matchesProvider(widget.tournamentId))
+          .select((async) => _summarizeMatches(async.value)),
     );
 
     final isTeamSport =
@@ -629,20 +661,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament.sport.toLowerCase() == 'football' ||
         tournament.sport.toLowerCase() == 'bóng đá';
 
-    final allMatches = matchesAsync.value ?? const <MatchModel>[];
-    final liveMatches = allMatches.where(isLiveMatch).toList();
-
-    final completedMatches = allMatches.where((m) {
-      if (m.isBye || m.isByeMatch || m.isFullByeMatch) return false;
-      if (!m.hasTeams) return false;
-      return m.isCompleted;
-    }).toList();
-
-    final bool hasLive = liveMatches.isNotEmpty;
+    final bool hasLive = matchSummary.liveCount > 0;
     final bool showLiveTab =
         StatusHelper.isTournamentInProgress(tournament.status) || hasLive;
     final bool hasResults =
-        completedMatches.isNotEmpty ||
+        matchSummary.hasCompleted ||
         tournament.status.toLowerCase() == 'completed';
     final bool hasSponsors = tournament.sponsors.isNotEmpty;
 
@@ -692,7 +715,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '${liveMatches.length}',
+                    '${matchSummary.liveCount}',
                     style: const TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.bold,
@@ -921,6 +944,15 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       );
     }
 
+    // The roster only feeds the Teams tab: that tab shows its own placeholder
+    // while loading or after a failure, so the other tabs are never blocked.
+    final teamsTabIndex = tabIds.indexOf('teams');
+    if (teamsTabIndex >= 0 && !teamsAsync.hasValue) {
+      tabViews[teamsTabIndex] = teamsAsync.hasError
+          ? _buildTeamsLoadError()
+          : const ShimmerBody();
+    }
+
     final isClubLite = tournament.isClubLite;
     final topPadding = MediaQuery.of(context).padding.top;
 
@@ -961,15 +993,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
             ),
           ),
         ],
-        body: teamsAsync.when(
-          data: (_) => TabBarView(controller: controller, children: tabViews),
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
-          ),
-          error: (err, st) => Center(
-            child: Text('$err', style: TextStyle(color: colors.error)),
-          ),
-        ),
+        body: TabBarView(controller: controller, children: tabViews),
       ),
     );
   }
