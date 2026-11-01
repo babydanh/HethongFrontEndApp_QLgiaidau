@@ -17,5 +17,6 @@
   - Phụ thuộc: 2.1
 
 ## 3. Kiểm chứng
-- [ ] 3.1 `flutter analyze --no-pub` file đã sửa; test hẹp; `app-run.py status`; chụp điện thoại thật so từng dòng bảng quy đổi. Tiêu chí: exit 0, lệch = 0 kèm ảnh.
+- [x] 3.1 `flutter analyze --no-pub` file đã sửa; test hẹp; `app-run.py status`; chụp điện thoại thật so từng dòng bảng quy đổi. Tiêu chí: exit 0, lệch = 0 kèm ảnh.
+  - Kết quả 2026-11-01: analyze "No issues found" (exit 0); test hẹp 124 xanh (exit 0). CHƯA chụp điện thoại thật để so mockup: người dùng yêu cầu tích và gộp lên main, chấp nhận so máy thật sau khi lên main.
   - Phụ thuộc: 2.1
