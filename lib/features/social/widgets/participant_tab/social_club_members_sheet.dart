@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -144,10 +145,9 @@ class _SocialClubMembersSheetState
                         );
 
                         return membersAsync.when(
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(
-                              color: AppTheme.primary,
-                            ),
+                          loading: () => const SingleChildScrollView(
+                            physics: NeverScrollableScrollPhysics(),
+                            child: ListPageSkeleton(itemCount: 7),
                           ),
                           error: (err, _) => Center(
                             child: Padding(

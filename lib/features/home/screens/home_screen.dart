@@ -1263,9 +1263,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
           if (_isTournamentInitialLoading && currentList.isEmpty)
-            const SliverFillRemaining(
-              child: Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  for (var i = 0; i < 3; i++)
+                    const TournamentBannerCardSkeleton(),
+                ],
               ),
             )
           else if (currentList.isEmpty)
@@ -1381,14 +1384,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         color: colors.border.withValues(alpha: 0.5),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        allLoadedLabel,
-                        style: TextStyle(
-                          color: colors.textMuted.withValues(alpha: 0.6),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          allLoadedLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colors.textMuted.withValues(alpha: 0.6),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),

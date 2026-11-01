@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -178,7 +179,10 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
             style: TextStyle(color: colors.textPrimary),
           ),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          child: DetailPageSkeleton(),
+        ),
       ),
       error: (error, _) => Scaffold(
         backgroundColor: colors.bgDark,
