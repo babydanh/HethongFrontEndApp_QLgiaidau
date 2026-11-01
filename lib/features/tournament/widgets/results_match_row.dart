@@ -3,7 +3,6 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_board_palette.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +15,10 @@ const double _gap = 6;
 
 /// One match of the board, laid out like the Lavish mockup: code (red dot when
 /// live), the two sides with a "vs" line between them and their points on the
-/// same line, then a meta line. [onTap] is only set for live rows; [onScore] /
-/// [onSchedule] are the organiser buttons (null hides them).
+/// same line, then a meta line. No icons: like the Web, the row itself is the
+/// button. [onScore] (organisers, matches that take a score) makes the whole row
+/// open the score popup and shows a "+" where the score goes; [onSchedule]
+/// makes the time line open the schedule dialog; [onTap] opens the live room.
 class ResultsMatchRow extends StatelessWidget {
   const ResultsMatchRow({
     super.key,
@@ -49,8 +50,10 @@ class ResultsMatchRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final palette = ResultsBoardPalette.of(context);
     final live = isLiveMatch(match);
+    final addScore = onScore != null && !_hasPoints(match);
     return InkWell(
-      onTap: onTap,
+      key: onScore == null ? null : ValueKey('results-score-${match.id}'),
+      onTap: onScore ?? onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Column(
@@ -64,33 +67,28 @@ class ResultsMatchRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _SideLine(match: match, side: 1, waiting: waitingFor.$1),
-                      _VsLine(label: l10n.resultsBoard_vs, palette: palette),
-                      _SideLine(match: match, side: 2, waiting: waitingFor.$2),
+                      _SideLine(
+                        match: match,
+                        side: 1,
+                        waiting: waitingFor.$1,
+                        hidePoints: addScore,
+                      ),
+                      _VsLine(
+                        label: l10n.resultsBoard_vs,
+                        palette: palette,
+                        addScoreKey: addScore
+                            ? ValueKey('results-add-score-${match.id}')
+                            : null,
+                      ),
+                      _SideLine(
+                        match: match,
+                        side: 2,
+                        waiting: waitingFor.$2,
+                        hidePoints: addScore,
+                      ),
                     ],
                   ),
                 ),
-                if (onScore != null) ...[
-                  const SizedBox(width: 8),
-                  LavishIconBox(
-                    key: ValueKey('results-score-${match.id}'),
-                    size: 36,
-                    tooltip: l10n.resultsBoard_enterScore,
-                    onTap: onScore,
-                    child: const Icon(Icons.edit_outlined),
-                  ),
-                ],
-                if (onSchedule != null) ...[
-                  const SizedBox(width: 6),
-                  LavishIconBox(
-                    key: ValueKey('results-schedule-${match.id}'),
-                    size: 36,
-                    tone: LavishTone.warn,
-                    tooltip: l10n.matchSchedule_title,
-                    onTap: onSchedule,
-                    child: const Icon(Icons.event_outlined),
-                  ),
-                ],
               ],
             ),
             const SizedBox(height: 4),
@@ -101,6 +99,7 @@ class ResultsMatchRow extends StatelessWidget {
                 live: live,
                 roundLabel: roundLabel,
                 palette: palette,
+                onSchedule: onSchedule,
               ),
             ),
           ],
@@ -163,12 +162,23 @@ class _Code extends StatelessWidget {
   }
 }
 
+/// Points are shown once the match is live or closed and both sides exist.
+bool _hasPoints(MatchModel match) =>
+    match.hasTeams && (isLiveMatch(match) || isMatchClosed(match));
+
 /// `.vs`: tiny "vs" followed by a hairline, ending before the points column.
+/// With [addScoreKey] the points column holds one "+" (Web: empty score cell
+/// of a match that takes a score) level with this line.
 class _VsLine extends StatelessWidget {
-  const _VsLine({required this.label, required this.palette});
+  const _VsLine({
+    required this.label,
+    required this.palette,
+    required this.addScoreKey,
+  });
 
   final String label;
   final ResultsBoardPalette palette;
+  final Key? addScoreKey;
 
   @override
   Widget build(BuildContext context) {
@@ -179,24 +189,42 @@ class _VsLine extends StatelessWidget {
           Text(label, style: TextStyle(fontSize: 9.5, color: palette.faint)),
           const SizedBox(width: 6),
           Expanded(child: Container(height: 1, color: palette.chipBg)),
-          const SizedBox(width: _pointsWidth),
+          SizedBox(
+            width: _pointsWidth,
+            child: addScoreKey == null
+                ? null
+                : Text(
+                    '+',
+                    key: addScoreKey,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 1,
+                      fontWeight: FontWeight.w500,
+                      color: palette.faint,
+                    ),
+                  ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// One side of the match with its points in the right column.
+/// One side of the match with its points in the right column ([hidePoints]
+/// leaves the column empty because the "+" stands in for both sides).
 class _SideLine extends StatelessWidget {
   const _SideLine({
     required this.match,
     required this.side,
     required this.waiting,
+    required this.hidePoints,
   });
 
   final MatchModel match;
   final int side;
   final String? waiting;
+  final bool hidePoints;
 
   bool get _closed => isMatchClosed(match);
 
@@ -207,7 +235,7 @@ class _SideLine extends StatelessWidget {
 
   bool get _lost => _closed && match.winnerId.isNotEmpty && !_won;
 
-  bool get _showPoints => match.hasTeams && (isLiveMatch(match) || _closed);
+  bool get _showPoints => _hasPoints(match);
 
   String get _points {
     if (!_showPoints) return '–';
@@ -242,18 +270,20 @@ class _SideLine extends StatelessWidget {
         ),
         SizedBox(
           width: _pointsWidth,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              _points,
-              key: ValueKey('results-points-${match.id}-$side'),
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: _pointsColor(palette),
-              ),
-            ),
-          ),
+          child: hidePoints
+              ? null
+              : FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _points,
+                    key: ValueKey('results-points-${match.id}-$side'),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: _pointsColor(palette),
+                    ),
+                  ),
+                ),
         ),
       ],
     );
@@ -268,6 +298,7 @@ class _MetaLine extends StatelessWidget {
     required this.live,
     required this.roundLabel,
     required this.palette,
+    required this.onSchedule,
   });
 
   final MatchModel match;
@@ -275,14 +306,37 @@ class _MetaLine extends StatelessWidget {
   final String? roundLabel;
   final ResultsBoardPalette palette;
 
+  /// Organisers: tapping the line opens the schedule dialog.
+  final VoidCallback? onSchedule;
+
   @override
   Widget build(BuildContext context) {
+    final line = _line(context);
+    final action = onSchedule;
+    if (action == null) return line;
+    return InkWell(
+      key: ValueKey('results-schedule-${match.id}'),
+      onTap: action,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: line,
+      ),
+    );
+  }
+
+  /// "Sân 1 - Nhà thi đấu A" -> "Sân 1": the venue is not repeated on each row.
+  String _courtName() {
+    final short = TournamentLocationFormatter.matchShortCourt(
+      match.court.isNotEmpty ? match.court : match.courtName,
+    );
+    return short.split(' - ').first.trim();
+  }
+
+  Widget _line(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final id = match.id;
     final time = match.completedAt ?? match.scheduledTime;
-    final court = TournamentLocationFormatter.matchShortCourt(
-      match.court.isNotEmpty ? match.court : match.courtName,
-    );
+    final court = _courtName();
     final clock = time == null
         ? ''
         : DateFormat('HH:mm').format(time.toLocal());

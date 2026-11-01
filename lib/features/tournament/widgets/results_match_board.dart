@@ -19,6 +19,19 @@ import 'package:go_router/go_router.dart';
 
 enum _BoardFilter { all, live, upcoming, finished }
 
+/// Round name only: the match code already sits in the row's first column, so
+/// the label must not repeat it ("Bán kết", not "Bán kết - #BK02").
+String _roundLabel(
+  MatchModel match,
+  List<MatchModel> all,
+  AppLocalizations l10n,
+) => MatchRoundLabel.formatRound(
+  match: match,
+  allMatches: all,
+  l10n: l10n,
+  includeMatchCode: false,
+);
+
 bool _passes(_BoardFilter filter, MatchModel match) => switch (filter) {
   _BoardFilter.all => true,
   _BoardFilter.live => isLiveMatch(match),
@@ -150,10 +163,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final all = _divisionMatches();
-    final rounds = buildResultsRounds(
-      all,
-      (m) => MatchRoundLabel.formatRound(match: m, allMatches: all, l10n: l10n),
-    );
+    final rounds = buildResultsRounds(all, (m) => _roundLabel(m, all, l10n));
     final live = splitResultsMatches(all).live;
     if (rounds.isEmpty && live.isEmpty) return _empty(context, l10n);
 
@@ -168,16 +178,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
           isLive: true,
           rows: [
             for (final (i, m) in live.where(_matchesQuery).indexed)
-              _row(
-                m,
-                i,
-                all,
-                roundLabel: MatchRoundLabel.formatRound(
-                  match: m,
-                  allMatches: all,
-                  l10n: l10n,
-                ),
-              ),
+              _row(m, i, all, roundLabel: _roundLabel(m, all, l10n)),
           ],
         ),
       for (final round in rounds) ?_roundBox(round, all),

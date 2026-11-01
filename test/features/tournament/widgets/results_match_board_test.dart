@@ -288,13 +288,14 @@ void main() {
     expect(find.text('live-room'), findsOneWidget);
   });
 
-  testWidgets('organiser opens the chooser from the pencil of a pending row', (
+  testWidgets('organiser opens the chooser by tapping a pending row', (
     tester,
   ) async {
     await _pump(tester, [
       _match('todo1', round: 1, number: 1),
     ], canManage: true);
 
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
     await tester.tap(find.byKey(const ValueKey('results-score-todo1')));
     await tester.pumpAndSettle();
 
@@ -360,7 +361,7 @@ void main() {
     expect(_row('nested'), findsOneWidget);
   });
 
-  testWidgets('organiser sees a schedule button on pending rows only', (
+  testWidgets('organiser can schedule pending rows only, without an icon', (
     tester,
   ) async {
     await _pump(tester, [
@@ -374,33 +375,23 @@ void main() {
       ),
     ], canManage: true);
 
-    expect(
-      find.descendant(
-        of: _row('todo'),
-        matching: find.byIcon(Icons.event_outlined),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: _row('done'),
-        matching: find.byIcon(Icons.event_outlined),
-      ),
-      findsNothing,
-    );
-  });
-
-  testWidgets('a viewer never sees the schedule button', (tester) async {
-    await _pump(tester, [_match('todo', round: 1, number: 1)]);
+    expect(find.byKey(const ValueKey('results-schedule-todo')), findsOneWidget);
+    expect(find.byKey(const ValueKey('results-schedule-done')), findsNothing);
     expect(find.byIcon(Icons.event_outlined), findsNothing);
   });
 
-  testWidgets('schedule button opens the schedule dialog, not the chooser', (
+  testWidgets('a viewer never gets the schedule action', (tester) async {
+    await _pump(tester, [_match('todo', round: 1, number: 1)]);
+    expect(find.byKey(const ValueKey('results-schedule-todo')), findsNothing);
+    expect(find.byIcon(Icons.event_outlined), findsNothing);
+  });
+
+  testWidgets('tapping the time line opens the schedule dialog only', (
     tester,
   ) async {
     await _pump(tester, [_match('todo', round: 1, number: 1)], canManage: true);
 
-    await tester.tap(find.byIcon(Icons.event_outlined));
+    await tester.tap(find.byKey(const ValueKey('results-schedule-todo')));
     await tester.pumpAndSettle();
 
     expect(find.text('Xếp lịch trận'), findsOneWidget);
@@ -570,6 +561,66 @@ void main() {
 
       expect(find.text('Chờ đội thắng V1601'), findsOneWidget);
       expect(find.text('Chờ đội thắng V1602'), findsOneWidget);
+    });
+
+    testWidgets('TC-BOARD-08 organiser sees "+" where the score goes', (
+      tester,
+    ) async {
+      await _pump(tester, [todo], canManage: true);
+      expect(
+        find.byKey(const ValueKey('results-add-score-todo')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('results-points-todo-1')), findsNothing);
+
+      await _pump(tester, [todo]);
+      expect(
+        find.byKey(const ValueKey('results-add-score-todo')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('results-points-todo-1')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('TC-BOARD-09 the code is not repeated in round labels', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        _match(
+          'live1',
+          round: 1,
+          number: 1,
+          status: 'ONGOING',
+          matchCode: 'V1602',
+        ),
+        _match('todo', round: 1, number: 2, matchCode: 'V1603'),
+      ], canManage: true);
+
+      final badge = tester.widget<Text>(
+        find.byKey(const ValueKey('results-meta-badge-live1')),
+      );
+      expect(badge.data, isNot(contains('#')));
+      expect(badge.data, isNot(contains('V1602')));
+      expect(find.textContaining(' - #'), findsNothing);
+      expect(find.text('#V1602'), findsOneWidget);
+    });
+
+    testWidgets('TC-BOARD-10 the court badge drops the venue name', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        todo.copyWith(
+          court: 'Sân 1 - Nhà thi đấu A',
+          scheduledTime: DateTime(2026, 1, 1, 8, 30),
+        ),
+      ]);
+
+      final badge = tester.widget<Text>(
+        find.byKey(const ValueKey('results-meta-badge-todo')),
+      );
+      expect(badge.data, 'Sân 1');
     });
   });
 }

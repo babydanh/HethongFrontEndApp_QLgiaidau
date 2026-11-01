@@ -108,11 +108,12 @@ void main() {
     expect(_row('b'), findsNothing);
   });
 
-  testWidgets('score button only for organisers', (tester) async {
+  testWidgets('only organisers can tap a row to enter a score', (tester) async {
     await _pump(tester, [_match('a')]);
-    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    expect(find.byKey(const ValueKey('results-score-a')), findsNothing);
 
     await _pump(tester, [_match('a')], canManage: true);
-    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+    expect(find.byKey(const ValueKey('results-score-a')), findsOneWidget);
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
   });
 }
