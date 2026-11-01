@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/swiss_pairing_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Localized text for a [SwissApiException.code] / notifier `errorKey`.
 String swissApiErrorText(AppLocalizations l10n, String key) => switch (key) {
@@ -166,7 +167,7 @@ class _Placeholder extends StatelessWidget {
             ? Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircularProgressIndicator(),
+                  const BoneListLoading(itemCount: 4),
                   const SizedBox(height: AppSpacing.md),
                   Text(l10n.swissPairingLoading),
                 ],

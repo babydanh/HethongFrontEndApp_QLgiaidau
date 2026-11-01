@@ -16,6 +16,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.
 import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 enum _Kind { single, double, roundRobin, swiss }
 
@@ -340,10 +341,7 @@ class PublicBracketLoader extends ConsumerWidget {
             matches: matches,
             bracketType: bracketType,
           ),
-          loading: () => const SizedBox(
-            height: 120,
-            child: Center(child: CircularProgressIndicator()),
-          ),
+          loading: () => const BoneBracketLoading(),
           error: (error, _) => Padding(
             padding: const EdgeInsets.all(24),
             child: Center(

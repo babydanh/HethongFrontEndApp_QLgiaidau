@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/providers/match_recording_catalog_provider.da
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 Future<void> showMatchRecordingCatalogSheet(
   BuildContext context, {
@@ -402,7 +403,7 @@ class _LoadingMessage extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(),
+          const BoneListLoading(itemCount: 3),
           const SizedBox(height: AppTheme.spacingSM),
           Text(message, textAlign: TextAlign.center),
         ],

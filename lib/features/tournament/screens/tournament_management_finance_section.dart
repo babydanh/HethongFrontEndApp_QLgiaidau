@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class TournamentManagementFinanceSection extends ConsumerWidget {
   const TournamentManagementFinanceSection({
@@ -160,12 +161,7 @@ class _TournamentFinanceContentState
                   future: _feesFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(12),
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
+                      return const BoneBlockLoading(itemCount: 3);
                     }
                     if (snapshot.hasError) {
                       return TournamentManagementError(
@@ -824,12 +820,7 @@ class _PayoutHistorySheetState extends ConsumerState<_PayoutHistorySheet> {
                 future: _future,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
+                    return const BoneListLoading(itemCount: 3);
                   }
                   if (snapshot.hasError) {
                     return TournamentManagementError(

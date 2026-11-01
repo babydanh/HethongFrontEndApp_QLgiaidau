@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class TournamentManagementBrandsSection extends ConsumerStatefulWidget {
   const TournamentManagementBrandsSection({
@@ -108,10 +109,7 @@ class _TournamentManagementBrandsSectionState
           future: _galleryFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Padding(
-                padding: EdgeInsets.all(20),
-                child: Center(child: CircularProgressIndicator()),
-              );
+              return const BoneBlockLoading();
             }
             if (snapshot.hasError) {
               return TournamentManagementError(

@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Một vòng chọn được trong sheet cấu hình (port `RoundOption` của Web
 /// `DivisionRoundRulesSection`): stage thật từ `GET /tournaments/:id/bracket`
@@ -500,12 +501,7 @@ class _StageRoundConfigSheetState extends ConsumerState<StageRoundConfigSheet> {
 
   Widget _buildBody(AppLocalizations l10n) {
     if (_loading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const BoneListLoading(itemCount: 4, leadingAvatar: false);
     }
     if (_loadError != null) {
       return Column(

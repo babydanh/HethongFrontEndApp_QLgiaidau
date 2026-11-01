@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class TournamentManagementVenuesSection extends ConsumerStatefulWidget {
   const TournamentManagementVenuesSection({
@@ -49,7 +50,7 @@ class _TournamentManagementVenuesSectionState
       future: _venuesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const BoneListLoading();
         }
         if (snapshot.hasError) {
           return TournamentManagementError(

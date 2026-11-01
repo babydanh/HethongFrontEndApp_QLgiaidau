@@ -18,6 +18,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_strategy_
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Tab VĐV của hub quản lý: mỗi nội dung thi đấu là một row, bấm để mở ra danh
 /// sách đội (kèm duyệt/từ chối đăng ký chờ) và nút thêm VĐV. Chỉ mở một row
@@ -247,10 +248,7 @@ class _TournamentManagementAthletesTabState
       future: _participantsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            height: 240,
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return const SizedBox(height: 240, child: BoneListLoading());
         }
         if (snapshot.hasError) {
           return SizedBox(

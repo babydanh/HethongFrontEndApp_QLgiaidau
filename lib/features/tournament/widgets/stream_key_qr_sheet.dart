@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Backend DTO rule for the stream name (`^[A-Za-z0-9_-]+$`, 1..255).
 final _streamNamePattern = RegExp(r'^[A-Za-z0-9_-]+$');
@@ -248,12 +249,7 @@ class _StreamKeyQrSheetState extends ConsumerState<StreamKeyQrSheet> {
           ),
           const SizedBox(height: 12),
           if (_loading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
-              ),
-            )
+            const BoneBlockLoading(itemCount: 3, itemHeight: 48)
           else if (_loadError != null)
             Text(_loadError!, style: TextStyle(color: colors.error))
           else if (state != null)

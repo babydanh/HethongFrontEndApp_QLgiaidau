@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Standalone standings view for round-robin / group-stage tournaments.
 /// Extracted from BracketViewScreen._buildStandingsView.
@@ -362,7 +363,7 @@ class StandingsView extends ConsumerWidget {
           ],
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const BoneStandingsLoading(),
       error: (e, _) => Center(child: Text(l10n.standings_error(e.toString))),
     );
   }

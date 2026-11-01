@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.d
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Sân của giải: cần cả id để ghi lịch và tên để ghép vào cột lưới.
 typedef ScheduleCourt = ({String id, String name});
@@ -298,8 +299,8 @@ class _TournamentScheduleCourtGridState
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 40),
-            child: Center(child: CircularProgressIndicator()),
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: BoneListLoading(itemCount: 3, leadingAvatar: false),
           );
         }
         if (snapshot.hasError) {

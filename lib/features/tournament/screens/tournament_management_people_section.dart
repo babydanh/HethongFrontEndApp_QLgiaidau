@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/registration_form
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// Bộ lọc trạng thái VĐV của tab VĐV (task 3.1, đối chiếu bộ lọc của Web
 /// `RegistrationTab`): lọc danh sách đang có, không gọi lại API.
@@ -298,7 +299,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
       future: _participantsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting)
-          return const Center(child: CircularProgressIndicator());
+          return const BoneListLoading();
         if (snapshot.hasError)
           return TournamentManagementError(
             error: snapshot.error,
@@ -621,12 +622,7 @@ class _TournamentPermissionsState
             future: _rowsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(14),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+                return const BoneListLoading(itemCount: 3);
               }
               if (snapshot.hasError) {
                 return TournamentManagementError(

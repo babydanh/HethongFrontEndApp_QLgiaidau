@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 String _matchLabel(MatchModel match) =>
     '${match.team1Name} – ${match.team2Name}';
@@ -285,10 +286,7 @@ class _TournamentManagementCameraSectionState
             ),
             const SizedBox(height: AppTheme.spacingMD),
             if (snapshot.connectionState == ConnectionState.waiting)
-              const Padding(
-                padding: EdgeInsets.all(AppTheme.spacingLG),
-                child: Center(child: CircularProgressIndicator()),
-              )
+              const BoneListLoading(itemCount: 3, leadingAvatar: false)
             else if (courts.isEmpty)
               TournamentManagementEmpty(
                 title: l10n.tournamentManagementCameraNoCourts,
@@ -417,10 +415,7 @@ class _MatchPool extends StatelessWidget {
       title: l10n.tournamentManagementCameraMatchPool,
       subtitle: l10n.tournamentManagementCameraMatchPoolHint,
       child: isLoading && matches.isEmpty
-          ? const Padding(
-              padding: EdgeInsets.all(AppTheme.spacingMD),
-              child: Center(child: CircularProgressIndicator()),
-            )
+          ? const BoneListLoading(itemCount: 3, leadingAvatar: false)
           : matches.isEmpty
           ? TournamentManagementEmpty(
               title: l10n.tournamentManagementCameraMatchPoolEmpty,

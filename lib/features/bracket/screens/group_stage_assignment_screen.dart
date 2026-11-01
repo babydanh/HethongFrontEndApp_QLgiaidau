@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class GroupStageAssignmentScreen extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -334,14 +335,14 @@ class _GroupStageAssignmentScreenState
                   ],
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const BoneListLoading(),
               error: (error, stack) => Center(child: Text('$error')),
             ),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const BoneListLoading(),
             error: (error, stack) => Center(child: Text('$error')),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const BoneListLoading(),
         error: (error, stack) => Center(child: Text('$error')),
       ),
     );

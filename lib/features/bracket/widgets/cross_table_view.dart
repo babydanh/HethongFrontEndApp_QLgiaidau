@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class CrossTableView extends ConsumerStatefulWidget {
   final List<MatchModel> matches;
@@ -50,9 +51,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
 
     if (standings.isEmpty) {
       if (standingsAsync.isLoading && widget.matches.isEmpty) {
-        return const Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
-        );
+        return const BoneStandingsLoading();
       }
       return _buildEmptyState(context, l10n.crossTableEmpty);
     }

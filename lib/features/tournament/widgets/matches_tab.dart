@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class MatchesTab extends ConsumerStatefulWidget {
   final String tournamentId;
@@ -263,9 +264,7 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           ],
         );
       },
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: AppTheme.primary),
-      ),
+      loading: () => const BoneMatchListLoading(),
       error: (_, _) => Center(
         child: Text(
           l10n.matchesLoadError,
