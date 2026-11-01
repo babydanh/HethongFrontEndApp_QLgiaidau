@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -405,7 +406,7 @@ class _ClubStandaloneMatchDialogState
             // ─── Danh sách thành viên ───
             Expanded(
               child: _isLoadingMembers
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const CommunityListSkeleton(itemCount: 6)
                   : _loadError != null
                   ? Center(
                       child: Column(

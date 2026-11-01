@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/features/chat/read_receipt_state.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
@@ -999,7 +1000,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
 
   Widget _buildMessages(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const CommunityChatSkeleton();
     if (_error != null) return Center(child: Text(_error!));
     if (_messages.isEmpty) {
       return Center(child: Text(l10n.clubChat_empty));

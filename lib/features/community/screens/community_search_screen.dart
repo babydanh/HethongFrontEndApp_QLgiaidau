@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_search_models.dart';
 import 'package:app_quanly_giaidau/features/community/providers/community_search_provider.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -255,9 +256,7 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
       );
     }
     return resultAsync.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(color: AppTheme.primary),
-      ),
+      loading: () => const CommunityListSkeleton(),
       error: (_, _) => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -1202,12 +1203,9 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
 
             // ─── 3. DANH SÁCH TRẬN ĐẤU TIMELINE ───────────────────────
             if (_isLoading) ...[
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: CircularProgressIndicator(),
-                ),
-              ),
+              const MatchRowSkeleton(),
+              const MatchRowSkeleton(),
+              const MatchRowSkeleton(),
             ] else if (_errorMessage != null) ...[
               Center(
                 child: Padding(

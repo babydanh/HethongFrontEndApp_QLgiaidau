@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_sessions_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -212,10 +213,7 @@ class _CommunityClubMatchSessionRosterWidgetState
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     if (_loading) {
-      return const Padding(
-        padding: EdgeInsets.all(20),
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      );
+      return const ListPageSkeleton(itemCount: 3);
     }
     final session = _session;
     if (session == null) return const SizedBox.shrink();

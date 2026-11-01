@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -126,7 +127,7 @@ class _ClubInvitesScreenState extends ConsumerState<ClubInvitesScreen> {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const CommunityListSkeleton(itemCount: 5),
         error: (e, _) => _buildError(
           colors,
           l10n,

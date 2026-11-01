@@ -227,9 +227,9 @@ class _ClubTournamentsFullScreenViewState
 
     Widget body;
     if (isTourneysLoading && !hasData) {
-      body = const Center(child: CircularProgressIndicator());
+      body = const CommunityListSkeleton(itemCount: 5, leadingAvatar: false);
     } else if (isSessionsLoading && !hasData && !tourneysAsync.hasValue) {
-      body = const Center(child: CircularProgressIndicator());
+      body = const CommunityListSkeleton(itemCount: 5, leadingAvatar: false);
     } else if (!hasData) {
       if (tourneysAsync.hasError && sessionsAsync.hasError) {
         body = Center(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -122,7 +123,7 @@ class _ClubMatchSessionsScreenState
         label: Text(l10n.clubMatchSessionCreate),
       ),
       body: sessions.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const CommunityListSkeleton(itemCount: 5, leadingAvatar: false),
         error: (error, _) => Center(
           child: FilledButton.tonal(
             onPressed: () => ref
@@ -766,7 +767,7 @@ class _ClubMatchSessionDetailPageState
           // tearing down DefaultTabController between the API response and
           // the next frame after creating a mock participant.
           skipLoadingOnRefresh: true,
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const CommunityListSkeleton(),
           error: (_, _) => Center(child: Text(l10n.clubMatchSessionLoadFailed)),
           data: (value) => _buildDetailTabs(context, ref, value),
         ),

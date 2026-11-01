@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -239,7 +240,7 @@ class _EditClubScreenState extends ConsumerState<EditClubScreen> {
           _initFromClub(club);
           return _buildForm(colors, club);
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const CommunityFormSkeleton(),
         error: (e, _) => _buildError(
           colors,
           () => ref.invalidate(communityDetailProvider(widget.clubId)),

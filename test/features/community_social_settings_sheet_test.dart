@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/community_social_s
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 
 class FakeCommunityRepository extends Fake implements ICommunityRepository {
   final bool shouldFail;
@@ -33,6 +34,31 @@ class FakeCommunityRepository extends Fake implements ICommunityRepository {
 }
 
 void main() {
+  testWidgets('CommunitySocialSettingsSheet shows a skeleton while loading', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('vi'),
+        home: Scaffold(
+          body: CommunitySocialSettingsSheet(
+            repository: FakeCommunityRepository(),
+            communityId: 'test-community-id',
+          ),
+        ),
+      ),
+    );
+    // Không pumpAndSettle khi còn skeleton: animation vô hạn.
+    expect(find.byType(CommunitySettingsSheetSkeleton), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pumpAndSettle();
+    expect(find.byType(CommunitySettingsSheetSkeleton), findsNothing);
+  });
+
   testWidgets(
     'CommunitySocialSettingsSheet loads settings and renders without crashing',
     (tester) async {
