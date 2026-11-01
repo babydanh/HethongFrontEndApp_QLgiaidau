@@ -6,10 +6,10 @@ Mở một giải rồi chuyển sang giải khác trong App bị lag: các requ
 - Màn chi tiết giải: skeleton thay vòng xoay; không chặn `TabBarView` bằng `introTeamsProvider`; tab Đang diễn ra/Kết quả quyết định theo trạng thái giải, chỉ chấm đỏ/số trận chờ dữ liệu trận; dựng lại màn khi số trận live/kết quả đổi chứ không mỗi lần luồng trận phát.
 - Luồng trận: phát ngay dữ liệu đã lưu khi mở lại giải; bỏ qua sự kiện socket của giải khác.
 - Provider Lite giữ danh sách trận cuối khi một lần poll lỗi (không ghi đè bằng danh sách rỗng).
-- Bảng trận (`ResultsMatchBoard`): không tính lại vòng/nhãn mỗi lần build, danh sách trận dựng lazy, ô tìm có debounce.
+- Bảng trận (`ResultsMatchBoard`): không tính lại vòng/nhãn/số đếm mỗi lần build, ô tìm có debounce.
 
 ## Out of scope
-`autoDispose` cho provider bảng đấu (Riverpod 3 đã tự tạm dừng provider không có người nghe), parse JSON bằng isolate, cache ảnh đĩa, `CancelToken` cho phân trang trận, endpoint tóm tắt mới ở Backend, gộp `/divisions` trùng giữa các repo, tối ưu các tab Bảng đấu/Lịch/Đội.
+Danh sách trận dựng lazy (cần đổi bảng thành sliver, các lane lavish/kết quả đang sửa cùng file), `autoDispose` cho provider bảng đấu (Riverpod 3 đã tự tạm dừng provider không có người nghe), parse JSON bằng isolate, cache ảnh đĩa, `CancelToken` cho phân trang trận, endpoint tóm tắt mới ở Backend, gộp `/divisions` trùng giữa các repo, tối ưu các tab Bảng đấu/Lịch/Đội.
 
 ## Capabilities
 ### New Capabilities

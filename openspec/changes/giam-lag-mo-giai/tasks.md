@@ -15,8 +15,8 @@
   - Phụ thuộc: 1.3
 
 ## 3. Bảng trận
-- [ ] 3.1 `ResultsMatchBoard` không tính lại vòng/nhãn mỗi build, hàng trận dựng lazy, ô tìm debounce. Tiêu chí: `flutter test --no-pub test/features/tournament/widgets/results_match_board_test.dart test/features/tournament/widgets/live_tab_test.dart` exit 0.
-  - Files: sửa `lib/features/tournament/widgets/results_match_board.dart`, `lib/features/tournament/utils/results_rounds.dart`, `lib/features/tournament/widgets/live_tab.dart`
+- [x] 3.1 `ResultsMatchBoard` không tính lại vòng/nhãn/số đếm mỗi build, ô tìm debounce. Tiêu chí: `flutter test --no-pub test/features/tournament/widgets/results_match_board_open_speed_test.dart test/features/tournament/widgets/results_match_board_test.dart test/features/tournament/widgets/live_tab_test.dart` exit 0.
+  - Files: sửa `lib/features/tournament/widgets/results_match_board.dart`; tạo test `test/features/tournament/widgets/results_match_board_open_speed_test.dart`
   - Phụ thuộc: 2.1
 
 ## 4. Kiểm chứng
