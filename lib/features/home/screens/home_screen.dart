@@ -21,8 +21,6 @@ import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
-import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
-import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
 
 import 'package:app_quanly_giaidau/data/models/home_projection.dart';
@@ -31,6 +29,7 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/global_search_screen.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/tournament_section_list.dart';
 
 // ═══════════════════════════════════════════════════════
 //  WAVE HEADER PAINTER
@@ -754,7 +753,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       ),
                     ],
                     SliverToBoxAdapter(child: _buildExploreSegmentTabBar(l10n)),
-                    _TournamentSectionList(
+                    TournamentSectionList(
                       tournaments: allTournaments,
                       filterStatus: _exploreStatus,
                       searchQuery: _searchQueries[0] ?? '',
@@ -1487,184 +1486,3 @@ class _StatusFilterDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class _TournamentSectionList extends ConsumerWidget {
-  final List<Tournament> tournaments;
-  final String filterStatus;
-  final String searchQuery;
-  final String contentFilter;
-  final String bracketFilter;
-  final String rankedFilter;
-  final bool enabled;
-  final String emptyMessage;
-  final VoidCallback? onNoLiveMatches;
-
-  const _TournamentSectionList({
-    required this.tournaments,
-    required this.filterStatus,
-    this.searchQuery = '',
-    this.contentFilter = 'all',
-    this.bracketFilter = 'all',
-    this.rankedFilter = 'all',
-    this.enabled = true,
-    required this.emptyMessage,
-    this.onNoLiveMatches,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    if (!enabled) return const SliverToBoxAdapter(child: SizedBox.shrink());
-    if (tournaments.isEmpty) {
-      if (filterStatus == 'live' && searchQuery.isEmpty) {
-        onNoLiveMatches?.call();
-      }
-      if (searchQuery.isNotEmpty) {
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Center(
-              child: Text(
-                emptyMessage,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        );
-      }
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-
-    final activeTournaments = <Tournament>[];
-    var hasLoadingMatches = false;
-    var hasMatchError = false;
-    final failedMatchTournamentIds = <String>[];
-
-    for (final t in tournaments) {
-      final matchesAsync = ref.watch(matchesProvider(t.id));
-      if (matchesAsync.isLoading) {
-        hasLoadingMatches = true;
-        continue;
-      }
-      if (matchesAsync.hasError) {
-        hasMatchError = true;
-        failedMatchTournamentIds.add(t.id);
-        continue;
-      }
-      final matches = matchesAsync.value ?? const <MatchModel>[];
-      final valid = matches.where((m) {
-        final t1 = m.team1Name.trim().toUpperCase();
-        final t2 = m.team2Name.trim().toUpperCase();
-        final isT1Bye = t1 == 'BYE';
-        final isT2Bye = t2 == 'BYE';
-        final isT1Tbd =
-            !isT1Bye && (t1.isEmpty || t1 == 'TBD') && m.team1Id.trim().isEmpty;
-        final isT2Tbd =
-            !isT2Bye && (t2.isEmpty || t2 == 'TBD') && m.team2Id.trim().isEmpty;
-        if (isT1Bye || isT2Bye || (isT1Tbd && isT2Tbd)) return false;
-
-        final q = searchQuery.trim().toLowerCase();
-        final matchText = '${m.team1Name} ${m.team2Name} ${m.tournamentName}'
-            .toLowerCase();
-        if (q.isNotEmpty && !matchText.contains(q)) return false;
-
-        if (filterStatus == 'live') return m.isLive;
-        if (filterStatus == 'completed') {
-          final status = m.status.toUpperCase();
-          return m.isCompleted ||
-              status == 'COMPLETED' ||
-              status == 'FINISHED' ||
-              status == 'DONE' ||
-              status == 'ENDED' ||
-              m.completedAt != null;
-        }
-        if (filterStatus == 'scheduled') {
-          return m.isScheduled ||
-              (m.scheduledTime != null && !m.isLive && !m.isCompleted);
-        }
-        return true;
-      });
-
-      if (valid.isNotEmpty) {
-        activeTournaments.add(t);
-      }
-    }
-
-    if (activeTournaments.isEmpty &&
-        filterStatus == 'live' &&
-        !hasLoadingMatches &&
-        !hasMatchError &&
-        searchQuery.isEmpty) {
-      onNoLiveMatches?.call();
-    }
-
-    final statusMessage = hasLoadingMatches
-        ? l10n.homeMatchesLoading
-        : hasMatchError
-        ? l10n.homeMatchesLoadError
-        : emptyMessage;
-    final statusFeedback = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (hasLoadingMatches) ...[
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(height: 8),
-          ],
-          Text(
-            statusMessage,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF94A3B8),
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (hasMatchError && !hasLoadingMatches)
-            TextButton.icon(
-              key: const ValueKey('home-match-feed-retry'),
-              onPressed: () {
-                for (final tournamentId in failedMatchTournamentIds) {
-                  ref.invalidate(matchesProvider(tournamentId));
-                }
-              },
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.homeGlobalSearchRetry),
-            ),
-        ],
-      ),
-    );
-    final hasProviderFeedback = hasLoadingMatches || hasMatchError;
-
-    return SliverMainAxisGroup(
-      slivers: [
-        if (activeTournaments.isEmpty)
-          SliverToBoxAdapter(child: statusFeedback)
-        else
-          SliverPadding(
-            padding: EdgeInsets.zero,
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => LiveTournamentWithMatchesCard(
-                  tournament: activeTournaments[index],
-                  filterStatus: filterStatus,
-                ),
-                childCount: activeTournaments.length,
-              ),
-            ),
-          ),
-        if (activeTournaments.isNotEmpty && hasProviderFeedback)
-          SliverToBoxAdapter(child: statusFeedback),
-      ],
-    );
-  }
-}
