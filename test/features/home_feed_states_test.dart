@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/home_skeletons.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
@@ -19,17 +20,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('home match section keeps loading state visible', (tester) async {
+  testWidgets('home match section shows card skeletons while loading', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(360, 844);
     tester.view.devicePixelRatio = 1;
-    final matches = StreamController<List<MatchModel>>();
-    addTearDown(matches.close);
+    final gate = Completer<void>();
 
-    await tester.pumpWidget(_homeApp((ref, tournamentId) => matches.stream));
-    await tester.pump();
+    await tester.pumpWidget(_homeApp(gate: gate, cardMatches: [_scrollMatch(0)]));
+    await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Loading match data...'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(TournamentMatchesCardSkeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Loading match data...'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(TournamentMatchesCardSkeleton), findsNothing);
+    expect(find.text('Home team 0'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
+  testWidgets('home explore shows the whole page as skeleton until tournaments load', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    final tournaments = StreamController<List<Tournament>>();
+    addTearDown(tournaments.close);
+
+    await tester.pumpWidget(_homeApp(tournaments: tournaments.stream));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(HomeBannerSkeleton), findsOneWidget);
+    expect(find.byType(TournamentMatchesCardSkeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    // The status tabs stay real so the user can switch while it loads.
+    expect(find.text('Upcoming'), findsWidgets);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -42,14 +73,9 @@ void main() {
   ) async {
     tester.view.physicalSize = const Size(360, 844);
     tester.view.devicePixelRatio = 1;
-    var requests = 0;
+    final repository = _FakeMatchRepository(const [])..failing = true;
 
-    await tester.pumpWidget(
-      _homeApp((ref, tournamentId) {
-        requests++;
-        return Stream<List<MatchModel>>.error(StateError('synthetic failure'));
-      }),
-    );
+    await tester.pumpWidget(_homeApp(repository: repository));
     await tester.pumpAndSettle();
 
     expect(
@@ -59,9 +85,10 @@ void main() {
     expect(find.text('Try again'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
+    final before = repository.calls;
     await tester.tap(find.text('Try again'));
     await tester.pumpAndSettle();
-    expect(requests, greaterThan(1));
+    expect(repository.calls, greaterThan(before));
     expect(
       find.text('Unable to load match data. Please try again.'),
       findsOneWidget,
@@ -79,9 +106,7 @@ void main() {
     tester.view.physicalSize = const Size(360, 844);
     tester.view.devicePixelRatio = 1;
 
-    await tester.pumpWidget(
-      _homeApp((ref, tournamentId) => Stream.value(const <MatchModel>[])),
-    );
+    await tester.pumpWidget(_homeApp());
     await tester.pumpAndSettle();
 
     expect(find.text('No upcoming matches'), findsOneWidget);
@@ -92,6 +117,32 @@ void main() {
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
   });
+  testWidgets('pull to refresh reloads the match feed', (tester) async {
+    tester.view.physicalSize = const Size(360, 844);
+    tester.view.devicePixelRatio = 1;
+    final repository = _FakeMatchRepository([_scrollMatch(0)]);
+
+    await tester.pumpWidget(_homeApp(repository: repository));
+    await tester.pumpAndSettle();
+    final before = repository.calls;
+
+    unawaited(
+      tester
+          .state<RefreshIndicatorState>(find.byType(RefreshIndicator).first)
+          .show(),
+    );
+    await tester.pumpAndSettle();
+    // The feed waits one short beat before scanning, which settling skips.
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(repository.calls, greaterThan(before));
+    expect(find.text('Home team 0'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
   testWidgets('home keeps a successful scheduled match visible', (
     tester,
   ) async {
@@ -112,10 +163,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _homeApp(
-        (ref, tournamentId) => Stream.value([match]),
-        cardMatches: [match],
-      ),
+      _homeApp(cardMatches: [match]),
     );
     await tester.pumpAndSettle();
 
@@ -135,7 +183,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
 
       await tester.pumpWidget(
-        _homeApp((ref, tournamentId) => Stream.value(const <MatchModel>[])),
+        _homeApp(),
       );
       await tester.pumpAndSettle();
 
@@ -167,10 +215,7 @@ void main() {
 
     final matches = List.generate(8, _scrollMatch);
     await tester.pumpWidget(
-      _homeApp(
-        (ref, tournamentId) => Stream.value(matches),
-        cardMatches: matches,
-      ),
+      _homeApp(cardMatches: matches),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Upcoming').first);
@@ -218,7 +263,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
 
     await tester.pumpWidget(
-      _homeApp((ref, tournamentId) => Stream.value(const <MatchModel>[])),
+      _homeApp(),
     );
     await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
     await tester.pumpAndSettle();
@@ -231,18 +276,21 @@ void main() {
   });
 }
 
-Widget _homeApp(
-  Stream<List<MatchModel>> Function(Ref ref, String tournamentId) matches, {
+Widget _homeApp({
   List<MatchModel> cardMatches = const [],
+  _FakeMatchRepository? repository,
+  Completer<void>? gate,
+  Stream<List<Tournament>>? tournaments,
 }) {
+  final repo = repository ?? _FakeMatchRepository(cardMatches);
+  repo.gate = gate;
   return ProviderScope(
     overrides: [
-      matchRepositoryProvider.overrideWith(
-        (ref) => _FakeMatchRepository(cardMatches),
-      ),
+      matchRepositoryProvider.overrideWith((ref) => repo),
       authProvider.overrideWith(_PreviewAuthNotifier.new),
-      tournamentsProvider.overrideWith((ref) => Stream.value([_tournament])),
-      matchesProvider.overrideWith(matches),
+      tournamentsProvider.overrideWith(
+        (ref) => tournaments ?? Stream.value([_tournament]),
+      ),
       categoriesProvider.overrideWith(
         (ref) => Future.value([
           CategoryModel(
@@ -306,6 +354,9 @@ class _FakeMatchRepository extends Fake implements IMatchRepository {
   _FakeMatchRepository(this.matches);
 
   final List<MatchModel> matches;
+  Completer<void>? gate;
+  var failing = false;
+  var calls = 0;
 
   @override
   Future<
@@ -317,12 +368,17 @@ class _FakeMatchRepository extends Fake implements IMatchRepository {
     String? cursor,
     int limit = 4,
     String? trigger,
-  }) async => (
-    matches: matches,
-    nextCursor: null,
-    hasMore: false,
-    total: matches.length,
-  );
+  }) async {
+    calls++;
+    await gate?.future;
+    if (failing) throw StateError('synthetic failure');
+    return (
+      matches: matches,
+      nextCursor: null,
+      hasMore: false,
+      total: matches.length,
+    );
+  }
 }
 
 class _FakeRegionRepository implements IRegionRepository {

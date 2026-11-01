@@ -1,36 +1,29 @@
-import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/home_skeletons.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
+import 'package:app_quanly_giaidau/providers/home_match_feed_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Tournaments scanned per step. The home feed asks the API for matches of
-/// this many tournaments first and scans the next batch only when the user
-/// scrolls near the end, instead of fetching every tournament on open.
-const _tournamentPageSize = 6;
+/// Số card skeleton hiển thị khi feed đang quét mà chưa có card nào.
+const _skeletonCards = 3;
 
+/// Feed trận của tab Khám phá. Dữ liệu đến từ [homeMatchFeedProvider] (một
+/// nguồn, có trần request); widget này chỉ chọn hiển thị: skeleton khi đang
+/// quét, danh sách card, thông báo rỗng, hoặc lỗi kèm nút thử lại.
 class TournamentSectionList extends ConsumerStatefulWidget {
   final List<Tournament> tournaments;
-  final String filterStatus;
-  final String searchQuery;
-  final String contentFilter;
-  final String bracketFilter;
-  final String rankedFilter;
-  final bool enabled;
+  final MatchStatusFilter filter;
   final String emptyMessage;
   final VoidCallback? onNoLiveMatches;
 
   const TournamentSectionList({
     super.key,
     required this.tournaments,
-    required this.filterStatus,
-    this.searchQuery = '',
-    this.contentFilter = 'all',
-    this.bracketFilter = 'all',
-    this.rankedFilter = 'all',
-    this.enabled = true,
+    required this.filter,
     required this.emptyMessage,
     this.onNoLiveMatches,
   });
@@ -40,200 +33,209 @@ class TournamentSectionList extends ConsumerStatefulWidget {
       _TournamentSectionListState();
 }
 
-class _TournamentSectionListState extends ConsumerState<TournamentSectionList> {
-  int _scanLimit = _tournamentPageSize;
-  bool _scanScheduled = false;
+class _TournamentSectionListState extends ConsumerState<TournamentSectionList>
+    with WidgetsBindingObserver {
+  HomeMatchFeedNotifier? _feed;
 
   @override
-  void didUpdateWidget(covariant TournamentSectionList oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.filterStatus != widget.filterStatus ||
-        oldWidget.searchQuery != widget.searchQuery) {
-      _scanLimit = _tournamentPageSize;
-    }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
   }
 
-  /// Widens the scan by one batch after the current frame. Safe to call from
-  /// build: repeated calls within one frame collapse into a single step.
-  void _scanNextPage() {
-    if (_scanScheduled) return;
-    _scanScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scanScheduled = false;
-      if (!mounted) return;
-      setState(() => _scanLimit += _tournamentPageSize);
-    });
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _feed?.refresh();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    if (!widget.enabled) {
+    final tournaments = widget.tournaments;
+    final filter = widget.filter;
+    final emptyMessage = widget.emptyMessage;
+    final onNoLiveMatches = widget.onNoLiveMatches;
+    if (tournaments.isEmpty) {
+      _feed = null;
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
-    if (widget.tournaments.isEmpty) {
-      if (widget.filterStatus == 'live' && widget.searchQuery.isEmpty) {
-        widget.onNoLiveMatches?.call();
-      }
-      if (widget.searchQuery.isNotEmpty) {
+
+    final query = HomeMatchFeedQuery(
+      status: filter,
+      tournamentIds: [for (final t in tournaments) t.id],
+    );
+    final provider = homeMatchFeedProvider(query);
+    final feed = ref.watch(provider);
+    final notifier = ref.read(provider.notifier);
+    _feed = notifier;
+
+    ref.listen(provider, (_, next) {
+      final nothingLive =
+          filter == MatchStatusFilter.live &&
+          !next.isScanning &&
+          !next.hasVisible &&
+          !next.hasError;
+      if (nothingLive) onNoLiveMatches?.call();
+    });
+
+    final byId = {for (final t in tournaments) t.id: t};
+    final cards = [
+      for (final id in feed.visibleIds)
+        if (byId[id] != null) (tournament: byId[id]!, page: feed.pages[id]!),
+    ];
+    final variant = switch (filter) {
+      MatchStatusFilter.live => SkeletonCardVariant.live,
+      MatchStatusFilter.scheduled => SkeletonCardVariant.schedule,
+      _ => SkeletonCardVariant.result,
+    };
+
+    if (cards.isEmpty) {
+      if (feed.isScanning) {
         return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Center(
-              child: Text(
-                widget.emptyMessage,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+          child: Column(
+            children: [
+              for (var i = 0; i < _skeletonCards; i++)
+                TournamentMatchesCardSkeleton(variant: variant),
+            ],
           ),
         );
       }
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
+      return SliverToBoxAdapter(
+        child: _StatusMessage(
+          message: feed.hasError
+              ? AppLocalizations.of(context)!.homeMatchesLoadError
+              : emptyMessage,
+          action: feed.hasError
+              ? _FeedAction(
+                  icon: Icons.refresh_rounded,
+                  label: AppLocalizations.of(context)!.homeGlobalSearchRetry,
+                  onPressed: () {
+                    for (final id in feed.opened) {
+                      if (feed.pages[id]?.status == FeedPageStatus.error) {
+                        notifier.retry(id);
+                      }
+                    }
+                  },
+                )
+              : feed.hasMore
+              ? _FeedAction(
+                  label: AppLocalizations.of(
+                    context,
+                  )!.homeGlobalSearchLoadMore,
+                  onPressed: notifier.loadMore,
+                )
+              : null,
+        ),
+      );
     }
 
-    final activeTournaments = <Tournament>[];
-    var hasLoadingMatches = false;
-    var hasMatchError = false;
-    final failedMatchTournamentIds = <String>[];
+    final showTail = feed.hasMore || feed.isScanning;
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          if (index < cards.length) {
+            final card = cards[index];
+            return LiveTournamentWithMatchesCard(
+              key: ValueKey(card.tournament.id),
+              tournament: card.tournament,
+              filter: filter,
+              initialPage: card.page,
+            );
+          }
+          if (feed.isScanning) {
+            return TournamentMatchesCardSkeleton(variant: variant);
+          }
+          return _LoadMoreTail(onVisible: notifier.loadMore);
+        },
+        childCount: cards.length + (showTail ? 1 : 0),
+      ),
+    );
+  }
+}
 
-    final hasMoreToScan = _scanLimit < widget.tournaments.length;
-    for (final t in widget.tournaments.take(_scanLimit)) {
-      final matchesAsync = ref.watch(matchesProvider(t.id));
-      if (matchesAsync.isLoading) {
-        hasLoadingMatches = true;
-        continue;
-      }
-      if (matchesAsync.hasError) {
-        hasMatchError = true;
-        failedMatchTournamentIds.add(t.id);
-        continue;
-      }
-      final matches = matchesAsync.value ?? const <MatchModel>[];
-      final valid = matches.where((m) {
-        final t1 = m.team1Name.trim().toUpperCase();
-        final t2 = m.team2Name.trim().toUpperCase();
-        final isT1Bye = t1 == 'BYE';
-        final isT2Bye = t2 == 'BYE';
-        final isT1Tbd =
-            !isT1Bye && (t1.isEmpty || t1 == 'TBD') && m.team1Id.trim().isEmpty;
-        final isT2Tbd =
-            !isT2Bye && (t2.isEmpty || t2 == 'TBD') && m.team2Id.trim().isEmpty;
-        if (isT1Bye || isT2Bye || (isT1Tbd && isT2Tbd)) return false;
+class _FeedAction {
+  final IconData? icon;
+  final String label;
+  final VoidCallback onPressed;
 
-        final q = widget.searchQuery.trim().toLowerCase();
-        final matchText = '${m.team1Name} ${m.team2Name} ${m.tournamentName}'
-            .toLowerCase();
-        if (q.isNotEmpty && !matchText.contains(q)) return false;
+  const _FeedAction({this.icon, required this.label, required this.onPressed});
+}
 
-        if (widget.filterStatus == 'live') return m.isLive;
-        if (widget.filterStatus == 'completed') {
-          final status = m.status.toUpperCase();
-          return m.isCompleted ||
-              status == 'COMPLETED' ||
-              status == 'FINISHED' ||
-              status == 'DONE' ||
-              status == 'ENDED' ||
-              m.completedAt != null;
-        }
-        if (widget.filterStatus == 'scheduled') {
-          return m.isScheduled ||
-              (m.scheduledTime != null && !m.isLive && !m.isCompleted);
-        }
-        return true;
-      });
+class _StatusMessage extends StatelessWidget {
+  final String message;
+  final _FeedAction? action;
 
-      if (valid.isNotEmpty) {
-        activeTournaments.add(t);
-      }
-    }
+  const _StatusMessage({required this.message, this.action});
 
-    // Nothing to show yet but more tournaments remain: keep scanning instead
-    // of announcing an empty tab.
-    final isScanning =
-        hasLoadingMatches || (activeTournaments.isEmpty && hasMoreToScan);
-
-    if (activeTournaments.isEmpty &&
-        widget.filterStatus == 'live' &&
-        !isScanning &&
-        !hasMatchError &&
-        widget.searchQuery.isEmpty) {
-      widget.onNoLiveMatches?.call();
-    }
-
-    final statusMessage = isScanning
-        ? l10n.homeMatchesLoading
-        : hasMatchError
-        ? l10n.homeMatchesLoadError
-        : widget.emptyMessage;
-    final statusFeedback = Padding(
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final action = this.action;
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isScanning) ...[
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(height: 8),
-          ],
           Text(
-            statusMessage,
-            style: const TextStyle(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF94A3B8),
+              color: colors.textMuted,
               fontWeight: FontWeight.w500,
             ),
-            textAlign: TextAlign.center,
           ),
-          if (hasMatchError && !isScanning)
-            TextButton.icon(
-              key: const ValueKey('home-match-feed-retry'),
-              onPressed: () {
-                for (final tournamentId in failedMatchTournamentIds) {
-                  ref.invalidate(matchesProvider(tournamentId));
-                }
-              },
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.homeGlobalSearchRetry),
-            ),
+          if (action != null)
+            action.icon == null
+                ? TextButton(
+                    onPressed: action.onPressed,
+                    child: Text(action.label),
+                  )
+                : TextButton.icon(
+                    onPressed: action.onPressed,
+                    icon: Icon(action.icon),
+                    label: Text(action.label),
+                  ),
         ],
       ),
     );
-    final hasProviderFeedback = isScanning || hasMatchError;
-    // The sentinel row is built lazily, so it exists only once the user has
-    // scrolled close to the end of the cards (or no card is on screen).
-    final showScanSentinel = hasMoreToScan && !hasLoadingMatches;
-
-    return SliverMainAxisGroup(
-      slivers: [
-        if (activeTournaments.isEmpty)
-          SliverToBoxAdapter(child: statusFeedback),
-        if (activeTournaments.isNotEmpty || showScanSentinel)
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                if (index < activeTournaments.length) {
-                  return LiveTournamentWithMatchesCard(
-                    tournament: activeTournaments[index],
-                    filterStatus: widget.filterStatus,
-                  );
-                }
-                _scanNextPage();
-                return const SizedBox(height: 1);
-              },
-              childCount: activeTournaments.length + (showScanSentinel ? 1 : 0),
-            ),
-          ),
-        if (activeTournaments.isNotEmpty && hasProviderFeedback)
-          SliverToBoxAdapter(child: statusFeedback),
-      ],
-    );
   }
+}
+
+/// Dòng cuối danh sách: tự mở thêm một đợt giải khi được dựng lần đầu (tức là
+/// người dùng đã cuộn tới cuối), và có nút để mở thêm bằng tay. Phần tử này
+/// giữ nguyên khi danh sách không thêm card, nên không tự lặp.
+class _LoadMoreTail extends StatefulWidget {
+  final VoidCallback onVisible;
+
+  const _LoadMoreTail({required this.onVisible});
+
+  @override
+  State<_LoadMoreTail> createState() => _LoadMoreTailState();
+}
+
+class _LoadMoreTailState extends State<_LoadMoreTail> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onVisible();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Center(
+      child: TextButton(
+        onPressed: widget.onVisible,
+        child: Text(AppLocalizations.of(context)!.homeGlobalSearchLoadMore),
+      ),
+    ),
+  );
 }

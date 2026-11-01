@@ -1,85 +1,220 @@
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/home_skeletons.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
+import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_section_list.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _tournamentCount = 14;
-const _firstPage = 6;
+const _emptyMessage = 'nothing here';
 
 void main() {
-  testWidgets(
-    'TC-HOMEFEED-03 first frame scans only the first page of tournaments',
-    (tester) async {
-      final requested = <String>[];
+  testWidgets('first scan shows card skeletons, never a spinner', (tester) async {
+    final repo = _Repository(withMatch: {for (var i = 0; i < 6; i++) 't$i'});
 
-      await tester.pumpWidget(_app(requested, withMatches: false));
+    await tester.pumpWidget(_app(repo, count: 6));
+    await tester.pump();
 
-      // Watching every tournament at once is what made the tab fire a request
-      // storm the moment it opened.
-      expect(requested.toSet(), {for (var i = 0; i < _firstPage; i++) 't$i'});
-    },
-  );
-
-  testWidgets('TC-HOMEFEED-04 keeps scanning while no tournament has a match', (
-    tester,
-  ) async {
-    final requested = <String>[];
-
-    await tester.pumpWidget(_app(requested, withMatches: false));
-    await tester.pumpAndSettle();
-
-    // An empty tab must not stall at page one: nothing is on screen to scroll.
-    expect(requested.toSet().length, _tournamentCount);
+    expect(find.byType(TournamentMatchesCardSkeleton), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await _dispose(tester);
   });
 
-  testWidgets(
-    'TC-HOMEFEED-05 loads the next page only when scrolled near the end',
-    (tester) async {
-      tester.view.physicalSize = const Size(360, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-      final requested = <String>[];
+  testWidgets('only tournaments that have a match get a card', (tester) async {
+    final repo = _Repository(withMatch: {'t0', 't2', 't4'});
 
-      await tester.pumpWidget(_app(requested, withMatches: true));
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(_app(repo, count: 6));
+    await tester.pump(const Duration(seconds: 1));
 
-      expect(
-        requested.toSet().length,
-        lessThan(_tournamentCount),
-        reason: 'a full screen of cards must not pull every tournament',
-      );
+    expect(find.byType(LiveTournamentWithMatchesCard), findsNWidgets(3));
+    expect(find.byType(TournamentMatchesCardSkeleton), findsNothing);
+    await _dispose(tester);
+  });
 
-      for (var i = 0; i < 12; i++) {
-        await tester.drag(
-          find.byType(CustomScrollView),
-          const Offset(0, -2000),
-        );
-        await tester.pumpAndSettle();
-      }
+  testWidgets('cards need no extra request: the feed already fetched page one', (
+    tester,
+  ) async {
+    final repo = _Repository(withMatch: {for (var i = 0; i < 6; i++) 't$i'});
 
-      expect(requested.toSet().length, _tournamentCount);
-    },
-  );
+    await tester.pumpWidget(_app(repo, count: 6));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(repo.calls.toSet().length, 6);
+    expect(repo.calls.length, 6, reason: 'one call per tournament in total');
+    await _dispose(tester);
+  });
+
+  testWidgets('nothing matches: empty message, a Load more button, no loop', (
+    tester,
+  ) async {
+    final repo = _Repository(withMatch: {});
+
+    await tester.pumpWidget(_app(repo, count: 30));
+    await tester.pump(const Duration(seconds: 5));
+
+    expect(find.text(_emptyMessage), findsOneWidget);
+    expect(find.byType(TournamentMatchesCardSkeleton), findsNothing);
+    expect(find.text('Load more results'), findsOneWidget);
+    expect(repo.calls.toSet().length, 24);
+
+    final before = repo.calls.length;
+    await tester.pump(const Duration(seconds: 20));
+    expect(repo.calls.length, before, reason: 'no background scanning');
+    await _dispose(tester);
+  });
+
+  testWidgets('pressing Load more scans the next batch', (tester) async {
+    final repo = _Repository(withMatch: {});
+
+    await tester.pumpWidget(_app(repo, count: 30));
+    await tester.pump(const Duration(seconds: 5));
+    expect(repo.calls.toSet().length, 24);
+
+    await tester.tap(find.text('Load more results'));
+    await tester.pump(const Duration(seconds: 3));
+
+    expect(repo.calls.toSet().length, 30);
+    expect(find.text('Load more results'), findsNothing);
+    expect(find.text(_emptyMessage), findsOneWidget);
+    await _dispose(tester);
+  });
+
+  testWidgets('every tournament scanned and none matches: message only', (
+    tester,
+  ) async {
+    final repo = _Repository(withMatch: {});
+
+    await tester.pumpWidget(_app(repo, count: 5));
+    await tester.pump(const Duration(seconds: 3));
+
+    expect(find.text(_emptyMessage), findsOneWidget);
+    expect(find.text('Load more results'), findsNothing);
+    await _dispose(tester);
+  });
+
+  testWidgets('when every request fails the user can retry', (tester) async {
+    final repo = _Repository(withMatch: {})
+      ..failing = {for (var i = 0; i < 3; i++) 't$i'};
+
+    await tester.pumpWidget(_app(repo, count: 3));
+    await tester.pump(const Duration(seconds: 3));
+
+    expect(find.text('Unable to load match data. Please try again.'), findsOneWidget);
+    expect(find.text(_emptyMessage), findsNothing);
+
+    repo.failing = {};
+    repo.withMatch = {'t0', 't1', 't2'};
+    await tester.tap(find.byIcon(Icons.refresh_rounded));
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(find.byType(LiveTournamentWithMatchesCard), findsNWidgets(3));
+    await _dispose(tester);
+  });
+
+  testWidgets('scrolling to the end loads each remaining tournament once', (
+    tester,
+  ) async {
+    // A short window so six one-match cards overflow it: the tail is only
+    // built once the user scrolls near the end.
+    tester.view.physicalSize = const Size(360, 300);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    final repo = _Repository(withMatch: {for (var i = 0; i < 14; i++) 't$i'});
+
+    await tester.pumpWidget(_app(repo, count: 14));
+    await tester.pump(const Duration(seconds: 1));
+    expect(repo.calls.toSet().length, 6);
+
+    for (var i = 0; i < 10; i++) {
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -3000));
+      await tester.pump(const Duration(seconds: 1));
+    }
+
+    expect(repo.calls.toSet().length, 14);
+    expect(repo.calls.length, 14, reason: 'never requests a tournament twice');
+    await _dispose(tester);
+  });
+
+  testWidgets('resuming the app refreshes the cards already shown, once', (
+    tester,
+  ) async {
+    final repo = _Repository(withMatch: {'t0', 't1', 't2'});
+
+    await tester.pumpWidget(_app(repo, count: 3));
+    await tester.pump(const Duration(seconds: 1));
+    expect(repo.calls.length, 3);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(repo.calls.length, 6, reason: 'one pass over the 3 shown tournaments');
+    expect(find.byType(LiveTournamentWithMatchesCard), findsNWidgets(3));
+    await _dispose(tester);
+  });
+
+  testWidgets('live filter with nothing live tells the screen to switch tab', (
+    tester,
+  ) async {
+    final repo = _Repository(withMatch: {});
+    var told = 0;
+
+    await tester.pumpWidget(
+      _app(
+        repo,
+        count: 4,
+        filter: MatchStatusFilter.live,
+        onNoLiveMatches: () => told++,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 3));
+
+    expect(told, greaterThan(0));
+    await _dispose(tester);
+  });
+
+  testWidgets('live filter with a live card does not switch tab', (tester) async {
+    final repo = _Repository(withMatch: {'t0'})..matchStatus = 'live';
+    var told = 0;
+
+    await tester.pumpWidget(
+      _app(
+        repo,
+        count: 4,
+        filter: MatchStatusFilter.live,
+        onNoLiveMatches: () => told++,
+      ),
+    );
+    await tester.pump(const Duration(seconds: 3));
+
+    expect(told, 0);
+    await _dispose(tester);
+  });
 }
 
-Widget _app(List<String> requested, {required bool withMatches}) {
+/// Unmounting disposes the ProviderScope, which cancels the feed's timers.
+Future<void> _dispose(WidgetTester tester) =>
+    tester.pumpWidget(const SizedBox.shrink());
+
+Widget _app(
+  _Repository repo, {
+  required int count,
+  MatchStatusFilter filter = MatchStatusFilter.scheduled,
+  VoidCallback? onNoLiveMatches,
+}) {
   return ProviderScope(
-    overrides: [
-      matchRepositoryProvider.overrideWith((ref) => _PagedRepository()),
-      matchesProvider.overrideWith((ref, tournamentId) {
-        requested.add(tournamentId);
-        return Stream.value(withMatches ? [_match(tournamentId)] : const []);
-      }),
-    ],
+    overrides: [matchRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       theme: AppTheme.darkTheme,
       locale: const Locale('en'),
@@ -89,11 +224,10 @@ Widget _app(List<String> requested, {required bool withMatches}) {
         body: CustomScrollView(
           slivers: [
             TournamentSectionList(
-              tournaments: [
-                for (var i = 0; i < _tournamentCount; i++) _tournament('t$i'),
-              ],
-              filterStatus: 'scheduled',
-              emptyMessage: 'empty',
+              tournaments: [for (var i = 0; i < count; i++) _tournament('t$i')],
+              filter: filter,
+              emptyMessage: _emptyMessage,
+              onNoLiveMatches: onNoLiveMatches,
             ),
           ],
         ),
@@ -118,7 +252,7 @@ Tournament _tournament(String id) => Tournament(
   startDate: DateTime.utc(2026, 10, 1),
 );
 
-MatchModel _match(String tournamentId) => MatchModel(
+MatchModel _match(String tournamentId, String status) => MatchModel(
   id: 'match-$tournamentId',
   tournamentId: tournamentId,
   round: 1,
@@ -127,14 +261,20 @@ MatchModel _match(String tournamentId) => MatchModel(
   team2Id: 'team-beta-id',
   team1Name: 'Team Alpha',
   team2Name: 'Team Beta',
-  status: 'scheduled',
+  status: status,
   bracketPosition: const BracketPosition(round: 1, position: 1),
   updatedAt: DateTime.utc(2026, 9, 27),
 );
 
-/// Each card pages its own matches through the repository; one empty page is
-/// enough because the section list only needs the card to mount.
-class _PagedRepository extends Fake implements IMatchRepository {
+/// Any call other than `getTournamentMatchesPaged` throws (it is a Fake).
+class _Repository extends Fake implements IMatchRepository {
+  _Repository({required this.withMatch});
+
+  Set<String> withMatch;
+  Set<String> failing = {};
+  var matchStatus = 'scheduled';
+  final calls = <String>[];
+
   @override
   Future<
     ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})
@@ -146,11 +286,17 @@ class _PagedRepository extends Fake implements IMatchRepository {
     int limit = 4,
     String? trigger,
   }) async {
+    calls.add(tournamentId);
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    if (failing.contains(tournamentId)) throw StateError('boom');
+    final matches = withMatch.contains(tournamentId)
+        ? [_match(tournamentId, matchStatus)]
+        : <MatchModel>[];
     return (
-      matches: [_match(tournamentId)],
+      matches: matches,
       nextCursor: null,
       hasMore: false,
-      total: 1,
+      total: matches.length,
     );
   }
 }

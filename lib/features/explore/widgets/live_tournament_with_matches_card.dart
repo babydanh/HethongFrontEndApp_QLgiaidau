@@ -13,18 +13,25 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/cursor_pagination.dart';
+import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/home_skeletons.dart';
+import 'package:app_quanly_giaidau/providers/home_match_feed_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
 class LiveTournamentWithMatchesCard extends ConsumerStatefulWidget {
   final Tournament tournament;
-  final String? filterStatus; // 'live', 'completed', 'scheduled'
+  final MatchStatusFilter filter;
+
+  /// Trang đầu do feed trang chủ cấp; card chỉ tự gọi API cho các trang sau.
+  final FeedPage initialPage;
 
   const LiveTournamentWithMatchesCard({
     super.key,
     required this.tournament,
-    this.filterStatus,
+    required this.filter,
+    required this.initialPage,
   });
 
   @override
@@ -41,26 +48,42 @@ class _LiveTournamentWithMatchesCardState
   bool _isLoading = false;
   bool _hasLoadError = false;
   final Map<int, List<MatchModel>> _pageMatches = {};
-  final Map<int, String?> _pageCursors = {0: null};
+  final Map<int, String?> _pageCursors = {};
+
+  SkeletonCardVariant get _variant => switch (widget.filter) {
+    MatchStatusFilter.live => SkeletonCardVariant.live,
+    MatchStatusFilter.scheduled => SkeletonCardVariant.schedule,
+    _ => SkeletonCardVariant.result,
+  };
 
   @override
   void initState() {
     super.initState();
-    _loadPage(0);
+    _seedFirstPage();
   }
 
   @override
   void didUpdateWidget(covariant LiveTournamentWithMatchesCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.tournament.id != widget.tournament.id ||
-        oldWidget.filterStatus != widget.filterStatus) {
-      _pageMatches.clear();
-      _pageCursors.clear();
-      _pageCursors[0] = null;
-      _currentPageIndex = 0;
-      _hasLoadError = false;
-      _loadPage(0);
-    }
+    final sameSource =
+        oldWidget.tournament.id == widget.tournament.id &&
+        oldWidget.filter == widget.filter;
+    final refreshedFirstPage =
+        !identical(oldWidget.initialPage, widget.initialPage) &&
+        _currentPageIndex == 0;
+    if (!sameSource || refreshedFirstPage) _seedFirstPage();
+  }
+
+  void _seedFirstPage() {
+    _pageMatches
+      ..clear()
+      ..[0] = widget.initialPage.items;
+    _pageCursors
+      ..clear()
+      ..[1] = widget.initialPage.nextCursor;
+    _currentPageIndex = 0;
+    _isLoading = false;
+    _hasLoadError = false;
   }
 
   Future<void> _loadPage(int pageIndex) async {
@@ -69,22 +92,23 @@ class _LiveTournamentWithMatchesCardState
       return;
     }
     if (_isLoading) return;
-    if (pageIndex > 0 && (_pageCursors[pageIndex]?.trim().isNotEmpty != true)) {
-      return;
-    }
+    if (_pageCursors[pageIndex]?.trim().isNotEmpty != true) return;
 
-    setState(() => _isLoading = true);
-    _hasLoadError = false;
+    setState(() {
+      _isLoading = true;
+      _hasLoadError = false;
+    });
     try {
       final repo = ref.read(matchRepositoryProvider);
-      final requestCursor = _pageCursors[pageIndex];
+      final filter = widget.filter;
       final page = await fetchCursorPageWhere<MatchModel>(
-        startCursor: requestCursor,
-        accept: isRenderablePublicMatch,
+        startCursor: _pageCursors[pageIndex],
+        accept: (match) =>
+            isRenderablePublicMatch(match) && filter.accepts(match),
         fetchPage: (cursor) async {
           final result = await repo.getTournamentMatchesPaged(
             tournamentId: widget.tournament.id,
-            status: widget.filterStatus == 'all' ? null : widget.filterStatus,
+            status: filter.toServerParam(),
             cursor: cursor,
             limit: 4,
             trigger: 'home_tournament_card',
@@ -92,23 +116,24 @@ class _LiveTournamentWithMatchesCardState
           return (items: result.matches, nextCursor: result.nextCursor);
         },
       );
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasLoadError = false;
-
-          _pageMatches[pageIndex] = page.items;
-          _currentPageIndex = pageIndex;
-          final nextCursor = page.nextCursor;
-          if (nextCursor != null) {
-            _pageCursors[pageIndex + 1] = nextCursor;
-          } else {
-            _pageCursors.remove(pageIndex + 1);
-          }
-        });
-      }
-    } catch (err) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (page.items.isEmpty) {
+          // Hết trận hợp lệ: giữ trang hiện tại và tắt nút "trang sau".
+          _pageCursors.remove(pageIndex);
+          return;
+        }
+        _pageMatches[pageIndex] = page.items;
+        _currentPageIndex = pageIndex;
+        final nextCursor = page.nextCursor;
+        if (nextCursor != null) {
+          _pageCursors[pageIndex + 1] = nextCursor;
+        } else {
+          _pageCursors.remove(pageIndex + 1);
+        }
+      });
+    } catch (_) {
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -131,26 +156,6 @@ class _LiveTournamentWithMatchesCardState
     final hasNextCursor =
         _pageCursors[_currentPageIndex + 1]?.trim().isNotEmpty == true;
 
-    if (_hasLoadError && currentMatches.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              l10n.homeMatchesLoadError,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.textSecondary),
-            ),
-            TextButton.icon(
-              onPressed: () => _loadPage(0),
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(l10n.homeGlobalSearchRetry),
-            ),
-          ],
-        ),
-      );
-    }
     if (currentMatches.isEmpty && !_isLoading) {
       return const SizedBox.shrink();
     }
@@ -210,18 +215,9 @@ class _LiveTournamentWithMatchesCardState
           ),
 
           // ── Matches Content Area ──
-          if (_isLoading && currentMatches.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else if (widget.filterStatus == 'live')
+          if (_isLoading)
+            TournamentMatchRowsSkeleton(variant: _variant)
+          else if (widget.filter == MatchStatusFilter.live)
             SizedBox(
               height: 144,
               child: ListView.separated(
@@ -240,7 +236,7 @@ class _LiveTournamentWithMatchesCardState
               child: Column(
                 children: currentMatches.map((match) {
                   final Widget matchWidget;
-                  if (widget.filterStatus == 'scheduled') {
+                  if (widget.filter == MatchStatusFilter.scheduled) {
                     matchWidget = _buildHorizontalScheduleRow(
                       context,
                       match,
@@ -259,6 +255,26 @@ class _LiveTournamentWithMatchesCardState
                     child: matchWidget,
                   );
                 }).toList(),
+              ),
+            ),
+
+          if (_hasLoadError)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.homeMatchesLoadError,
+                      style: TextStyle(color: colors.textSecondary),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _loadPage(_currentPageIndex + 1),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: Text(l10n.homeGlobalSearchRetry),
+                  ),
+                ],
               ),
             ),
 
@@ -300,14 +316,6 @@ class _LiveTournamentWithMatchesCardState
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (_isLoading) ...[
-                const SizedBox(width: 8),
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(strokeWidth: 1.5),
-                ),
-              ],
             ],
           ),
           Row(
