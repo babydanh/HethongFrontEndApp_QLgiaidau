@@ -51,13 +51,13 @@
 - [x] 6b.1 `lib/features/community/**`: 19 spinner tải nội dung đổi sang skeleton, 20 ca test.
 - [x] 6b.2 `lib/features/tournament/**`, `lib/features/bracket/**`: skeleton `Bone*` dùng chung, 61 ca test.
 - [x] 6b.3 register, teams, football_team, series, referee, lite, organizer_ops, payment, dashboard, admin: 26 ca test mới.
-- [ ] 6b.4 profile, notification, chat, match (ngoài `matches_list_screen`), auth, `global_search_screen`, `lib/shared/**`.
+- [x] 6b.4 profile, notification, chat, match (ngoài `matches_list_screen`), auth, `global_search_screen`, `lib/shared/**`: 18 spinner tải nội dung đổi sang skeleton, +177 ca test chạy xanh; `app_router.dart` (phòng chat CLB) cũng đổi.
   - Giữ nguyên có chủ đích: vòng xoay trong nút/đang gửi/đang lưu/upload, màn chờ có chủ đích (PayOS, xác thực mã mời, đăng nhập), trình phát video, thanh "tải thêm" nhỏ ở đáy.
 
 ## 7. Kiểm chứng
-- [ ] 7.1 `flutter analyze --no-pub` trên `lib/core/widgets/skeleton lib/core/utils lib/providers lib/features/home lib/features/explore lib/features/rankings lib/features/social/screens lib/features/match/screens lib/data/repositories/api`; `flutter test --no-pub` đúng các file test ở mục 1-5; `openspec validate home-bone-loading --strict`. Tiêu chí: tất cả exit 0.
+- [x] 7.1 `flutter analyze --no-pub` toàn repo: 212 issue (0 lỗi), không issue nào do thay đổi này gây ra (đối chiếu từng dòng thay đổi so với `origin/main`; 3 `curly_braces` ở `tournament_management_*_section.dart` và 1 `depend_on_referenced_packages` cho `fake_async` trong test giống test có sẵn `swiss_pairing_notifier_test.dart`). `flutter test --no-pub` toàn bộ: 2467 ca pass, 2 bỏ qua, 0 lỗi (exit 0). `openspec validate home-bone-loading --strict` pass.
   - Phụ thuộc: 6.1
-- [ ] 7.2 Ghi bằng chứng số request: trong `home_match_feed_provider_test.dart` đã đếm lời gọi (mở 20 giải = 6; bộ lọc không khớp dừng ở 24; 0 lời gọi `getMatches`/`watchByTournament`). Dán số đếm vào mô tả PR, kèm ghi chú "chưa xem thật trên điện thoại" nếu máy cloud không chạy được app (không có `.env`). Tiêu chí: mô tả PR có ba số đếm đó.
+- [x] 7.2 Bằng chứng số request (đếm bằng repository giả; mọi lời gọi khác `getTournamentMatchesPaged` đều ném lỗi): mở tab với 20 giải = 6 lời gọi (`home_match_feed_provider_test.dart`); bộ lọc không khớp giải nào trong 30 giải dừng ở 24 giải và không còn request nền; 6 giải hiển thị chỉ tốn 6 lời gọi gồm cả card (`tournament_section_list_test.dart`); 0 lời gọi `getMatches`/`watchByTournament`; làm mới 120 giây (30 giây cho "Trực tiếp" khi có card live) thay vì 15 giây theo từng giải. Trước đây: mỗi giải quét mở một luồng kéo toàn bộ trận cộng một lần gọi riêng của card (>= 2 lần mỗi giải), tải lại 15 giây một lần, và bộ lọc không khớp quét hết mọi giải. CHƯA xem thật trên điện thoại (máy cloud không có `.env` thật và không chạy được app).
   - Phụ thuộc: 7.1
 - [ ] 7.3 Push nhánh `cloud/danh1-hi-ban-dang-o-thu-hfpe` (chỉ repo `app`), chạy các bước trước khi push trong luật máy cloud (`related-tests`, `openspec-gate`, `overlap`, `safe-push-check`, `e2e-impact`), tạo PR cho repo App (không có staging). Tiêu chí: PR tạo xong, CI `analyze` + `test` xanh; sau đó `cloud-xong hi-ban-dang-o-thu-hfpe`.
   - Phụ thuộc: 7.2
