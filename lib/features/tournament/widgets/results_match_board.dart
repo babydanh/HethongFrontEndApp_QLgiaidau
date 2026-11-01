@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
@@ -65,22 +67,68 @@ class ResultsMatchBoard extends ConsumerStatefulWidget {
 }
 
 class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
+  static const _searchDebounce = Duration(milliseconds: 250);
+
   _BoardFilter _filter = _BoardFilter.all;
-  String _query = '';
+  // Normalised search text; updated after a short pause, not on every key.
+  String _needle = '';
+  Timer? _searchTimer;
   final Map<String, GlobalKey> _roundKeys = {};
 
-  List<MatchModel> _divisionMatches() {
+  // Everything below is derived from the match list, the division and the
+  // locale. It is rebuilt only when one of them changes, so typing in the
+  // search box or switching a filter chip never recomputes round labels.
+  List<MatchModel>? _source;
+  String? _derivedDivisionId;
+  String? _derivedLocale;
+  List<MatchModel> _all = const [];
+  List<ResultsRound> _rounds = const [];
+  List<MatchModel> _live = const [];
+  Map<String, String> _liveRoundLabels = const {};
+  Map<_BoardFilter, int> _counts = const {};
+  final Map<String, (String?, String?)> _waiting = {};
+  final Map<String, String> _haystack = {};
+
+  @override
+  void dispose() {
+    _searchTimer?.cancel();
+    super.dispose();
+  }
+
+  List<MatchModel> _sourceMatches() {
     // `value` keeps the last data when a refresh fails.
     final async = ref.watch(
       widget.isLite
           ? liteBracketMatchesProvider(widget.tournamentId)
           : matchesProvider(widget.tournamentId),
     );
-    final all = async.value ?? const <MatchModel>[];
-    final id = widget.divisionId;
-    return id == null
-        ? all
-        : all.where((m) => matchDivisionId(m) == id).toList();
+    return async.value ?? const <MatchModel>[];
+  }
+
+  void _refreshDerived(List<MatchModel> source, AppLocalizations l10n) {
+    final divisionId = widget.divisionId;
+    if (identical(source, _source) &&
+        divisionId == _derivedDivisionId &&
+        l10n.localeName == _derivedLocale) {
+      return;
+    }
+    _source = source;
+    _derivedDivisionId = divisionId;
+    _derivedLocale = l10n.localeName;
+    final all = divisionId == null
+        ? source
+        : source.where((m) => matchDivisionId(m) == divisionId).toList();
+    final real = all.where((m) => !m.isBye).toList();
+    _all = all;
+    _rounds = buildResultsRounds(all, (m) => _roundLabel(m, all, l10n));
+    _live = splitResultsMatches(all).live;
+    _liveRoundLabels = {for (final m in _live) m.id: _roundLabel(m, all, l10n)};
+    _counts = {
+      for (final f in _BoardFilter.values)
+        f: real.where((m) => _passes(f, m)).length,
+    };
+    _waiting.clear();
+    _haystack.clear();
   }
 
   VoidCallback? _scoreAction(MatchModel match) =>
@@ -113,15 +161,29 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
       : null;
 
   bool _matchesQuery(MatchModel match) {
-    final query = normalizeParticipantText(_query).toLowerCase();
-    if (query.isEmpty) return true;
-    return [1, 2].any(
-      (side) => participantLabel(
-        teamName: matchSideTeamName(match, side),
-        players: matchSidePlayers(match, side),
-        teamOnly: isFootballMatch(match),
-      ).toLowerCase().contains(query),
+    if (_needle.isEmpty) return true;
+    final haystack = _haystack.putIfAbsent(
+      match.id,
+      () => [1, 2]
+          .map(
+            (side) => participantLabel(
+              teamName: matchSideTeamName(match, side),
+              players: matchSidePlayers(match, side),
+              teamOnly: isFootballMatch(match),
+            ).toLowerCase(),
+          )
+          .join('|'),
     );
+    return haystack.contains(_needle);
+  }
+
+  void _onSearchChanged(String value) {
+    _searchTimer?.cancel();
+    _searchTimer = Timer(_searchDebounce, () {
+      if (!mounted) return;
+      final needle = normalizeParticipantText(value).toLowerCase();
+      if (needle != _needle) setState(() => _needle = needle);
+    });
   }
 
   String _rowLabel(MatchModel match, int index) {
@@ -139,7 +201,10 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     match: match,
     label: _rowLabel(match, index),
     roundLabel: roundLabel,
-    waitingFor: (waitingForCode(match, 1, all), waitingForCode(match, 2, all)),
+    waitingFor: _waiting.putIfAbsent(
+      match.id,
+      () => (waitingForCode(match, 1, all), waitingForCode(match, 2, all)),
+    ),
     onTap: isLiveMatch(match)
         ? () => context.push(
             NavigationHelper.getLiveMatchRoute(widget.tournamentId, match.id),
@@ -162,9 +227,10 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final all = _divisionMatches();
-    final rounds = buildResultsRounds(all, (m) => _roundLabel(m, all, l10n));
-    final live = splitResultsMatches(all).live;
+    _refreshDerived(_sourceMatches(), l10n);
+    final all = _all;
+    final rounds = _rounds;
+    final live = _live;
     if (rounds.isEmpty && live.isEmpty) return _empty(context, l10n);
 
     final showLive =
@@ -178,7 +244,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
           isLive: true,
           rows: [
             for (final (i, m) in live.where(_matchesQuery).indexed)
-              _row(m, i, all, roundLabel: _roundLabel(m, all, l10n)),
+              _row(m, i, all, roundLabel: _liveRoundLabels[m.id]),
           ],
         ),
       for (final round in rounds) ?_roundBox(round, all),
@@ -187,7 +253,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _filterChips(l10n, all),
+        _filterChips(l10n),
         _searchRow(l10n, rounds),
         const SizedBox(height: 9),
         if (boxes.isEmpty)
@@ -212,8 +278,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     );
   }
 
-  Widget _filterChips(AppLocalizations l10n, List<MatchModel> all) {
-    final real = all.where((m) => !m.isBye).toList();
+  Widget _filterChips(AppLocalizations l10n) {
     final labels = {
       _BoardFilter.all: l10n.filterAll,
       _BoardFilter.live: l10n.resultsBoard_filterLive,
@@ -230,7 +295,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
               label: entry.value,
               count: entry.key == _BoardFilter.all
                   ? null
-                  : real.where((m) => _passes(entry.key, m)).length,
+                  : _counts[entry.key],
               selected: entry.key == _filter,
               onTap: () => setState(() => _filter = entry.key),
             ),
@@ -257,7 +322,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
         Expanded(
           child: TextField(
             key: const ValueKey('results-search'),
-            onChanged: (value) => setState(() => _query = value),
+            onChanged: _onSearchChanged,
             style: TextStyle(fontSize: 12, color: palette.text),
             decoration: InputDecoration(
               isDense: true,
