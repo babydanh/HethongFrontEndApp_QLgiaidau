@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 
+/// "Kết quả" tab: the honour podium (champion, runner-up, third place) and a
+/// share icon. The match board lives in the "Đang diễn ra" tab.
 class ResultsTab extends ConsumerWidget {
   final String tournamentId;
 
@@ -11,11 +13,8 @@ class ResultsTab extends ConsumerWidget {
   final String? selectedDivision;
   final String? matchType;
 
-  /// Lite tournaments read their matches from the bracket projection.
-  final bool isLite;
-
-  /// Organisers can open score entry from the match board.
-  final bool canManage;
+  /// Opens the share sheet; null hides the share icon.
+  final VoidCallback? onShare;
 
   const ResultsTab({
     super.key,
@@ -23,13 +22,11 @@ class ResultsTab extends ConsumerWidget {
     this.selectedDivisionId,
     this.selectedDivision,
     this.matchType,
-    this.isLite = false,
-    this.canManage = false,
+    this.onShare,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
     final resultAsync = ref.watch(
       tournamentResultProvider((
         tournamentId: tournamentId,
@@ -41,136 +38,9 @@ class ResultsTab extends ConsumerWidget {
       data: (data) {
         final rawAwards = data['awards'];
         if (rawAwards is! List || rawAwards.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colors.bgSurface,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.emoji_events_outlined,
-                    size: 40,
-                    color: Color(0xFF94A3B8),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Chưa có kết quả chính thức',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Kết quả sẽ được công bố khi các vòng chung kết hoàn tất',
-                  style: TextStyle(fontSize: 12, color: colors.textMuted),
-                ),
-              ],
-            ),
-          );
+          return _emptyState(context);
         }
-
-        // Parse awards
-        final awards = rawAwards
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
-
-        Map<String, dynamic>? gold;
-        Map<String, dynamic>? silver;
-        final List<Map<String, dynamic>> bronzes = [];
-        final List<Map<String, dynamic>> others = [];
-
-        for (final award in awards) {
-          final rank = (award['rank'] as num?)?.toInt() ?? 0;
-          if (rank == 1) {
-            gold = award;
-          } else if (rank == 2) {
-            silver = award;
-          } else if (rank == 3 || rank == 4) {
-            bronzes.add(award);
-          } else {
-            others.add(award);
-          }
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 2, bottom: 10),
-              child: Row(
-                children: [
-                  Text(
-                    'DANH SÁCH TRAO THƯỞNG',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textMuted,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 1.5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.bgSurface,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: colors.border.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    child: Text(
-                      '${(gold != null ? 1 : 0) + (silver != null ? 1 : 0) + bronzes.length + others.length}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            if (gold != null) ...[
-              _buildAwardCard(context, gold, 1, 'QUÁN QUÂN'),
-              const SizedBox(height: 6),
-            ],
-            if (silver != null) ...[
-              _buildAwardCard(context, silver, 2, 'Á QUÂN'),
-              const SizedBox(height: 6),
-            ],
-            for (int i = 0; i < bronzes.length; i++) ...[
-              _buildAwardCard(
-                context,
-                bronzes[i],
-                3,
-                bronzes.length > 1 ? 'ĐỒNG HẠNG 3' : 'HẠNG 3',
-              ),
-              const SizedBox(height: 6),
-            ],
-            for (final other in others) ...[
-              _buildAwardCard(
-                context,
-                other,
-                (other['rank'] as num?)?.toInt() ?? 0,
-                'HẠNG ${(other['rank'] as num?)?.toInt() ?? 0}',
-              ),
-              const SizedBox(height: 6),
-            ],
-          ],
-        );
+        return _buildPodium(context, rawAwards);
       },
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
@@ -178,58 +48,128 @@ class ResultsTab extends ConsumerWidget {
           child: CircularProgressIndicator(color: AppTheme.primary),
         ),
       ),
-      error: (e, _) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.bgSurface,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.emoji_events_outlined,
-                size: 40,
-                color: Color(0xFF94A3B8),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Chưa có kết quả chính thức',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Kết quả sẽ được công bố khi các vòng chung kết hoàn tất',
-              style: TextStyle(fontSize: 12, color: colors.textMuted),
-            ),
-          ],
-        ),
-      ),
+      error: (e, _) => _emptyState(context),
     );
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 140),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 140),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [if (onShare != null) _shareButton(context), awards],
+      ),
+    );
+  }
+
+  Widget _shareButton(BuildContext context) {
+    final colors = context.colors;
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: IconButton(
+        key: const ValueKey('results-share'),
+        tooltip: AppLocalizations.of(context)!.share,
+        onPressed: onShare,
+        icon: Icon(Icons.ios_share_rounded, size: 20, color: colors.textMuted),
+      ),
+    );
+  }
+
+  Widget _emptyState(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          ResultsMatchBoard(
-            tournamentId: tournamentId,
-            isLite: isLite,
-            divisionId: selectedDivisionId,
-            canManage: canManage,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.bgSurface,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.emoji_events_outlined,
+              size: 40,
+              color: Color(0xFF94A3B8),
+            ),
           ),
-          const SizedBox(height: 16),
-          awards,
+          const SizedBox(height: 12),
+          Text(
+            l10n.resultsTab_emptyTitle,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.resultsTab_emptySubtitle,
+            style: TextStyle(fontSize: 12, color: colors.textMuted),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPodium(BuildContext context, List<dynamic> rawAwards) {
+    final l10n = AppLocalizations.of(context)!;
+    final awards = rawAwards
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+
+    Map<String, dynamic>? gold;
+    Map<String, dynamic>? silver;
+    final List<Map<String, dynamic>> bronzes = [];
+    final List<Map<String, dynamic>> others = [];
+
+    for (final award in awards) {
+      final rank = (award['rank'] as num?)?.toInt() ?? 0;
+      if (rank == 1) {
+        gold = award;
+      } else if (rank == 2) {
+        silver = award;
+      } else if (rank == 3 || rank == 4) {
+        bronzes.add(award);
+      } else {
+        others.add(award);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (gold != null) ...[
+          _buildAwardCard(context, gold, 1, l10n.resultsTab_champion),
+          const SizedBox(height: 6),
+        ],
+        if (silver != null) ...[
+          _buildAwardCard(context, silver, 2, l10n.resultsTab_runnerUp),
+          const SizedBox(height: 6),
+        ],
+        for (int i = 0; i < bronzes.length; i++) ...[
+          _buildAwardCard(
+            context,
+            bronzes[i],
+            3,
+            bronzes.length > 1
+                ? l10n.resultsTab_jointThird
+                : l10n.resultsTab_thirdPlace,
+          ),
+          const SizedBox(height: 6),
+        ],
+        for (final other in others) ...[
+          _buildAwardCard(
+            context,
+            other,
+            (other['rank'] as num?)?.toInt() ?? 0,
+            l10n.resultsTab_rank((other['rank'] as num?)?.toInt() ?? 0),
+          ),
+          const SizedBox(height: 6),
+        ],
+      ],
     );
   }
 
@@ -332,7 +272,9 @@ class ResultsTab extends ConsumerWidget {
     final participant = award['participant'] is Map
         ? Map<String, dynamic>.from(award['participant'] as Map)
         : const <String, dynamic>{};
-    final teamName = participant['teamName']?.toString() ?? 'Chưa xác định';
+    final teamName =
+        participant['teamName']?.toString() ??
+        AppLocalizations.of(context)!.matchNotDetermined;
     final members = _visibleMembers(participant);
     final memberNames = members
         .map((member) => member['fullName']?.toString().trim() ?? '')
