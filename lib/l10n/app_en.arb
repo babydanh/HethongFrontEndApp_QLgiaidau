@@ -4909,6 +4909,7 @@
   "excelStatus": "Status:",
   "excelRound": "Round:",
   "excelMatchNumber": "Match number:",
+  "excelMatchCode": "Match code",
   "excelStartTime": "Start time:",
   "excelEndTime": "End time:",
   "excelNotStarted": "Not started",

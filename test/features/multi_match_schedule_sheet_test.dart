@@ -46,17 +46,23 @@ Widget _app(
 
 /// Trận chờ xếp lịch: không có sân, không có giờ, thời lượng mặc định theo
 /// minutesPerSet (15 phút, 1 set).
-MatchModel _waitingMatch(String id, int round, String team1, String team2) =>
-    MatchModel.fromJson({
-      'id': id,
-      'tournamentId': 't-1',
-      'divisionId': 'd-1',
-      'round': round,
-      'matchNumber': 1,
-      'status': 'SCHEDULED',
-      'team1Name': team1,
-      'team2Name': team2,
-    }, id);
+MatchModel _waitingMatch(
+  String id,
+  int round,
+  String team1,
+  String team2, {
+  String? matchCode,
+}) => MatchModel.fromJson({
+  'id': id,
+  'tournamentId': 't-1',
+  'divisionId': 'd-1',
+  'round': round,
+  'matchNumber': 1,
+  'status': 'SCHEDULED',
+  'team1Name': team1,
+  'team2Name': team2,
+  'matchCode': ?matchCode,
+}, id);
 
 Future<void> _open(WidgetTester tester, Widget app) async {
   await tester.pumpWidget(app);
@@ -186,6 +192,54 @@ void main() {
       expect(calls[2].durationMinutes, 30);
       expect(find.byType(MultiMatchScheduleSheet), findsNothing);
       expect(find.text('Đã xếp 3/3 trận nối tiếp.'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'TC-MC-SHEET-01: mã trận không tách vòng; bộ lọc vẫn gom cả vòng và tìm được theo mã',
+    (tester) async {
+      tester.view.physicalSize = const Size(420, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final waiting = [
+        _waitingMatch('m-1', 1, 'Đội A', 'Đội B', matchCode: 'DNTB-R1-T1'),
+        _waitingMatch('m-2', 1, 'Đội C', 'Đội D', matchCode: 'DNTB-R1-T2'),
+        _waitingMatch('m-3', 2, 'Đội E', 'Đội F', matchCode: 'DNTB-R2-T1'),
+      ];
+      await _open(
+        tester,
+        _app(DateTime(2026, 10, 26, 8), waiting, (_, _, _) async => true),
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('schedule-multi-round-filter')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Vòng 1 (2)'), findsWidgets);
+      await tester.tap(find.text('Vòng 1 (2)').last);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('schedule-picker-m-1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('schedule-picker-m-2')), findsOneWidget);
+      expect(find.byKey(const ValueKey('schedule-picker-m-3')), findsNothing);
+      // The row title still shows each match's own code.
+      expect(find.text('Vòng 1 - #DNTB-R1-T1'), findsOneWidget);
+      expect(find.text('Vòng 1 - #DNTB-R1-T2'), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('schedule-multi-round-filter')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tất cả vòng (3)').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('schedule-multi-search')),
+        '#dntb-r2-t1',
+      );
+      await tester.pump();
+      expect(find.byKey(const ValueKey('schedule-picker-m-3')), findsOneWidget);
+      expect(find.byKey(const ValueKey('schedule-picker-m-1')), findsNothing);
     },
   );
 

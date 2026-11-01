@@ -65,12 +65,16 @@ class _SilentMatchSocket extends Fake implements MatchSocketService {
 MatchModel _match({
   String status = 'LIVE',
   bool scoreboardVisible = true,
+  int round = 1,
+  String? matchCode,
+  bool h2hOverlayVisible = false,
 }) {
   return MatchModel(
     id: _matchId,
     tournamentId: _tournamentId,
-    round: 1,
+    round: round,
     matchNumber: 1,
+    matchCode: matchCode,
     team1Id: 'team-alpha',
     team2Id: 'team-beta',
     team1Name: 'Team Alpha',
@@ -78,10 +82,11 @@ MatchModel _match({
     score1: 3,
     score2: 1,
     status: status,
-    bracketPosition: const BracketPosition(round: 1, position: 1),
+    bracketPosition: BracketPosition(round: round, position: 1),
     updatedAt: DateTime.utc(2026, 10, 15),
     refereeName: 'Trong tai A',
     scoreboardVisible: scoreboardVisible,
+    h2hOverlayVisible: h2hOverlayVisible,
   );
 }
 
@@ -195,34 +200,56 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('bảng điểm đè khung hình không gây lỗi layout khi trận đang live', (
+  testWidgets(
+    'bảng điểm đè khung hình không gây lỗi layout khi trận đang live',
+    (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _viewerAuth,
+        match: _match(scoreboardVisible: true),
+        isViewer: true,
+      );
+
+      expect(find.text('Team Alpha'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets('TC-FEAT-08: live H2H overlay does not show the match code', (
     tester,
   ) async {
     await _pumpLiveScreen(
       tester,
       auth: _viewerAuth,
-      match: _match(scoreboardVisible: true),
-      isViewer: true,
+      match: _match(round: 0, matchCode: 'DNTB-K1-T3', h2hOverlayVisible: true),
     );
 
-    expect(find.text('Team Alpha'), findsOneWidget);
+    final h2hOverlay = find.byKey(const ValueKey('live-overlay-h2h'));
+    expect(h2hOverlay, findsOneWidget);
+    expect(
+      find.descendant(
+        of: h2hOverlay,
+        matching: find.textContaining('DNTB-K1-T3'),
+      ),
+      findsNothing,
+    );
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('admin của giải khác không thấy icon bấm điểm dù score-access true', (
-    tester,
-  ) async {
-    await _pumpLiveScreen(
-      tester,
-      auth: _adminAuth,
-      match: _match(),
-      isViewer: false,
-      scoreAccess: true,
-    );
+  testWidgets(
+    'admin của giải khác không thấy icon bấm điểm dù score-access true',
+    (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _adminAuth,
+        match: _match(),
+        isViewer: false,
+        scoreAccess: true,
+      );
 
-    expect(_appBarScoringIcon(), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+      expect(_appBarScoringIcon(), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('người có score-access true thấy icon bấm điểm', (tester) async {
     await _pumpLiveScreen(

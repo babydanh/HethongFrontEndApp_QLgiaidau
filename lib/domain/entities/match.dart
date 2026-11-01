@@ -158,6 +158,9 @@ class MatchModel {
   /// Null keeps compatibility with legacy payloads that only expose round.
   final int? leg;
   final int matchNumber;
+
+  /// Backend-issued display code (e.g. `DN1W2T3`); null on older payloads.
+  final String? matchCode;
   final String team1Id;
   final String team2Id;
   final String team1Name;
@@ -250,6 +253,7 @@ class MatchModel {
     required this.round,
     this.leg,
     required this.matchNumber,
+    this.matchCode,
     this.team1Id = '',
     this.team2Id = '',
     this.team1Name = 'TBD',
@@ -586,6 +590,7 @@ class MatchModel {
           ? (json['leg'] as num).toInt()
           : int.tryParse(json['leg']?.toString() ?? ''),
       matchNumber: parseInt(json['matchNumber'], fallback: 1),
+      matchCode: json['matchCode']?.toString(),
       team1Id:
           json['team1Id']?.toString() ??
           json['participant1Id']?.toString() ??
@@ -751,6 +756,7 @@ class MatchModel {
       'round': round,
       if (leg != null) 'leg': leg,
       'matchNumber': matchNumber,
+      if (matchCode != null) 'matchCode': matchCode,
       'team1Id': team1Id,
       'team2Id': team2Id,
       'team1Name': team1Name,
@@ -811,6 +817,7 @@ class MatchModel {
     int? round,
     int? leg,
     int? matchNumber,
+    String? matchCode,
     String? team1Id,
     String? team2Id,
     String? team1Name,
@@ -876,6 +883,7 @@ class MatchModel {
       round: round ?? this.round,
       leg: leg ?? this.leg,
       matchNumber: matchNumber ?? this.matchNumber,
+      matchCode: matchCode ?? this.matchCode,
       team1Id: team1Id ?? this.team1Id,
       team2Id: team2Id ?? this.team2Id,
       team1Name: team1Name ?? this.team1Name,

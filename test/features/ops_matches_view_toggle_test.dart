@@ -51,25 +51,30 @@ Tournament _tournament() => Tournament.fromJson({
   'updatedAt': '2026-01-01T00:00:00Z',
 }, _tournamentId);
 
-MatchModel _match() => MatchModel.fromJson({
-  'id': 'm-1',
-  'tournamentId': _tournamentId,
-  'divisionId': _divisionId,
-  'round': 1,
-  'matchNumber': 1,
-  'status': 'ONGOING',
-  'team1Name': 'Đội A',
-  'team2Name': 'Đội B',
-  'courtName': 'Sân 1',
-  'scheduledAt': DateTime(2026, 10, 24, 7, 30).toIso8601String(),
-}, 'm-1');
+MatchModel _match({String? matchCode, String? groupName, String? stageType}) =>
+    MatchModel.fromJson({
+      'id': 'm-1',
+      'tournamentId': _tournamentId,
+      'divisionId': _divisionId,
+      'round': 1,
+      'matchNumber': 1,
+      'matchCode': ?matchCode,
+      'stageType': ?stageType,
+      'groupName': ?groupName,
+      'status': 'ONGOING',
+      'team1Name': 'Đội A',
+      'team2Name': 'Đội B',
+      'courtName': 'Sân 1',
+      'scheduledAt': DateTime(2026, 10, 24, 7, 30).toIso8601String(),
+    }, 'm-1');
 
-MatchModel _scheduledMatch() => MatchModel.fromJson({
+MatchModel _scheduledMatch({String? matchCode}) => MatchModel.fromJson({
   'id': 'm-2',
   'tournamentId': _tournamentId,
   'divisionId': _divisionId,
   'round': 1,
   'matchNumber': 2,
+  'matchCode': ?matchCode,
   'status': 'SCHEDULED',
   'team1Name': 'Đội A',
   'team2Name': 'Đội B',
@@ -256,5 +261,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Đội A'), findsWidgets);
     expect(find.byKey(const ValueKey('ops-matches-view-list')), findsNothing);
+  });
+  testWidgets('TC-FEAT-07: ops list displays backend code with a prefix', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      matchesView: OrganizerOpsMatchesView.list,
+      matches: [_match(matchCode: 'DDNTB-K1-T3')],
+    );
+
+    expect(find.text('#DDNTB-K1-T3'), findsOneWidget);
+  });
+  testWidgets('TC-FEAT-09: localizes the generic group label in the Ops list', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      matchesView: OrganizerOpsMatchesView.list,
+      matches: [
+        _match(
+          matchCode: 'DNTB-K1-T3',
+          groupName: 'GROUP STAGE',
+          stageType: 'ROUND_ROBIN',
+        ),
+      ],
+    );
+
+    expect(find.textContaining('GROUP STAGE'), findsNothing);
+    expect(find.text('Vòng bảng - Lượt 1 - #DNTB-K1-T3'), findsOneWidget);
   });
 }

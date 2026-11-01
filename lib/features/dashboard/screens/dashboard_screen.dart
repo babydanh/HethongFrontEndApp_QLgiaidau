@@ -995,6 +995,7 @@ class _AssignedMatchesSection extends StatelessWidget {
                       !match.groupName.toUpperCase().contains('BRACKET') &&
                       !match.groupName.toUpperCase().contains('MAIN'))
                     match.groupName,
+                  match.localizedMatchLabel(l10n),
                   l10n.dashboard_roundLabel(match.roundNumber),
                 ].join(' • ');
                 return Padding(

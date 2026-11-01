@@ -26,6 +26,7 @@ const _bracketPayload = {
             'matches': [
               {
                 'id': 'bracket-match-1',
+                'matchCode': 'DN1W1T1',
                 'roundNumber': 1,
                 'matchOrder': 1,
                 'status': 'SCHEDULED',
@@ -112,4 +113,10 @@ void main() {
       expect(matches.map((m) => m.divisionId), ['div-stage', 'div-match']);
     },
   );
+
+  test('bracket match keeps matchCode, and tolerates it missing', () async {
+    final matches = await repository.getBracketMatches('tournament-1');
+
+    expect(matches.map((m) => m.matchCode), ['DN1W1T1', null]);
+  });
 }

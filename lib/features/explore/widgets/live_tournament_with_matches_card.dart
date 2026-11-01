@@ -417,6 +417,7 @@ class _LiveTournamentWithMatchesCardState
       allMatches: allMatches,
       tournament: widget.tournament,
       short: true,
+      includeMatchCode: false,
       l10n: l10n,
     );
 
@@ -747,6 +748,7 @@ class _LiveTournamentWithMatchesCardState
       match: match,
       tournament: widget.tournament,
       short: true,
+      includeMatchCode: false,
       l10n: l10n,
     );
 
@@ -956,6 +958,7 @@ class _LiveTournamentWithMatchesCardState
       allMatches: allMatches,
       tournament: widget.tournament,
       short: true,
+      includeMatchCode: false,
       l10n: l10n,
     );
 

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -109,7 +110,7 @@ class MatchRoundLabel {
     if (short || match.leg == null || match.leg! <= 1) {
       return title;
     }
-    return strings.crossTableLegTitle(title, match.leg ?? 1);
+    return strings.crossTableLegTitle(match.leg ?? 1, title);
   }
 
   static final RegExp _groupLetter = RegExp(
@@ -178,7 +179,7 @@ class MatchRoundLabel {
     return strings.matchRoundLosersRound(displayRound);
   }
 
-  /// Primary comprehensive round label formatter matching the Web format algorithm.
+  /// Primary round label formatter. Set [includeMatchCode] to false for overlays.
   static String formatRound({
     required MatchModel match,
     List<MatchModel>? allMatches,
@@ -186,6 +187,7 @@ class MatchRoundLabel {
     int? bracketSize,
     bool short = false,
     bool includeBranch = true,
+    bool includeMatchCode = true,
     AppLocalizations? l10n,
   }) {
     final strings =
@@ -198,25 +200,34 @@ class MatchRoundLabel {
 
     var branch = _normalize(match.bracketPosition.bracket);
     if (branch == 'MAIN') branch = 'WINNERS';
+    final matchCode = includeMatchCode ? matchCodeOrNull(match) : null;
+    String appendMatchCode(String label) =>
+        matchCode == null || label.contains('#$matchCode')
+        ? label
+        : '$label - #$matchCode';
 
     // 1. Grand Finals (Double Elimination)
     if (branch == 'GRAND_FINALS' ||
         branch == 'GRAND_FINAL' ||
         branch == 'FINAL') {
-      return short ? 'CK Tổng' : strings.matchRoundGrandFinal;
+      return appendMatchCode(short ? 'CK Tổng' : strings.matchRoundGrandFinal);
     }
     if (branch == 'GRAND_FINAL_RESET') {
-      return short ? 'CK Tổng 2' : strings.matchRoundGrandFinalReset;
+      return appendMatchCode(
+        short ? 'CK Tổng 2' : strings.matchRoundGrandFinalReset,
+      );
     }
 
     // 2. Swiss: plain "Round N", never knockout names.
     if (_normalize(match.stageType) == 'SWISS') {
-      return strings.swissRoundLabel(match.round);
+      return appendMatchCode(strings.swissRoundLabel(match.round));
     }
 
     // 3. Group stage / Round robin
     if (isGroupOrRoundRobin(match, bracketType)) {
-      return groupOrRoundRobinName(match, l10n: strings, short: short);
+      return appendMatchCode(
+        groupOrRoundRobinName(match, l10n: strings, short: short),
+      );
     }
 
     // 4. Knockout rounds resolution
@@ -320,7 +331,9 @@ class MatchRoundLabel {
       if (match.round > 0) {
         baseLabel = strings.matchTableRound(match.round);
       } else if (match.matchNumber > 0) {
-        baseLabel = 'Trận ${match.matchNumber}';
+        baseLabel = matchCode == null
+            ? 'Trận ${match.matchNumber}'
+            : '#$matchCode';
       } else {
         baseLabel = strings.matchTableRoundQualifying;
       }
@@ -328,10 +341,12 @@ class MatchRoundLabel {
 
     // Wrap branch
     if (includeBranch && branch == 'LOSERS') {
-      return short ? '$baseLabel (NT)' : 'Nhánh thua • $baseLabel';
+      return appendMatchCode(
+        short ? '$baseLabel (NT)' : 'Nhánh thua • $baseLabel',
+      );
     }
 
-    return baseLabel;
+    return appendMatchCode(baseLabel);
   }
 
   static String forMatch({

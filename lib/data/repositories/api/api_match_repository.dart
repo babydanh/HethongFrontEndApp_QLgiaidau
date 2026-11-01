@@ -692,6 +692,7 @@ class ApiMatchRepository implements IMatchRepository {
           ? (json['leg'] as num).toInt()
           : int.tryParse(json['leg']?.toString() ?? ''),
       matchNumber: json['matchOrder'] ?? json['matchNumber'] ?? 1,
+      matchCode: json['matchCode']?.toString(),
 
       team1Id:
           json['team1Id']?.toString() ??
@@ -946,6 +947,7 @@ class ApiMatchRepository implements IMatchRepository {
         payload.containsKey('participant1Score') ||
         payload.containsKey('participant2Score');
     return incoming.copyWith(
+      matchCode: incoming.matchCode ?? previous.matchCode,
       team1Id: incoming.team1Id.isEmpty ? previous.team1Id : incoming.team1Id,
       team2Id: incoming.team2Id.isEmpty ? previous.team2Id : incoming.team2Id,
       team1Name: incoming.team1Name == 'TBD'

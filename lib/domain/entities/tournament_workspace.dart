@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'dart:ui';
 
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -51,6 +52,9 @@ class TournamentAssignedMatch {
   final String groupName;
   final int roundNumber;
   final int matchOrder;
+
+  /// Backend-issued display code; null on older payloads.
+  final String? matchCode;
   final String status;
   final DateTime? scheduledAt;
   final String courtName;
@@ -66,6 +70,7 @@ class TournamentAssignedMatch {
     required this.groupName,
     required this.roundNumber,
     required this.matchOrder,
+    this.matchCode,
     required this.status,
     required this.scheduledAt,
     required this.courtName,
@@ -87,6 +92,7 @@ class TournamentAssignedMatch {
       groupName: json['groupName']?.toString() ?? '',
       roundNumber: _toInt(json['roundNumber']) ?? 1,
       matchOrder: _toInt(json['matchOrder']) ?? 1,
+      matchCode: json['matchCode']?.toString(),
       status: json['status']?.toString() ?? 'SCHEDULED',
       scheduledAt: DateParser.parseDateOptional(json['scheduledAt']),
       courtName: json['courtName']?.toString() ?? '',
@@ -99,8 +105,11 @@ class TournamentAssignedMatch {
     lookupAppLocalizations(PlatformDispatcher.instance.locale),
   );
 
-  String localizedMatchLabel(AppLocalizations l10n) =>
-      l10n.workspaceMatchLabel(matchOrder);
+  String localizedMatchLabel(AppLocalizations l10n) {
+    final code = buildMatchCode(matchCode);
+    if (code == null) return l10n.workspaceMatchLabel(matchOrder);
+    return '#$code';
+  }
 
   String get participantLabel => localizedParticipantLabel(
     lookupAppLocalizations(PlatformDispatcher.instance.locale),
@@ -254,7 +263,9 @@ class TournamentWorkspace {
       ],
       refereeTournaments: [
         ...refereeTournaments,
-        ...next.refereeTournaments.where((i) => !refereeTournaments.contains(i)),
+        ...next.refereeTournaments.where(
+          (i) => !refereeTournaments.contains(i),
+        ),
       ],
       refereeMatches: [
         ...refereeMatches,
