@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -289,7 +291,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                 _buildCategoryTabs(colors, l10n, totalUnread),
                 Expanded(
                   child: stateNotif.notifications.isEmpty && stateNotif.isLoading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const ScrollFreeSkeleton(
+                          child: ListPageSkeleton(itemCount: 8),
+                        )
                       : stateNotif.notifications.isEmpty &&
                             stateNotif.errorMessage != null
                       ? _buildError(stateNotif.errorMessage!, colors, l10n)

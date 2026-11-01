@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -532,7 +533,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           genderLocked,
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ScrollFreeSkeleton(child: FormSkeleton()),
       error: (e, _) => _buildErrorState(
         context,
         colors,
@@ -1144,7 +1145,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
         }
         return _buildForm(colors);
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ScrollFreeSkeleton(child: FormSkeleton()),
       error: (e, _) => _buildErrorState(
         context,
         colors,
@@ -1373,10 +1374,7 @@ class _OrganizerTab extends ConsumerWidget {
                 ],
               ]);
             },
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            loading: () => const RowTileSkeleton(),
             error: (_, _) => _buildErrorState(
               context,
               colors,
@@ -1458,12 +1456,7 @@ class _VerificationSection extends ConsumerWidget {
                 ),
               ],
             ],
-            loading: () => [
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ],
+            loading: () => [const RowTileSkeleton()],
             error: (_, _) => [
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -1834,10 +1827,7 @@ class _StrangerMessagesSettingsCardState
                 ),
               );
             },
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            loading: () => const RowTileSkeleton(),
             error: (_, _) => Padding(
               padding: const EdgeInsets.all(16),
               child: Text(

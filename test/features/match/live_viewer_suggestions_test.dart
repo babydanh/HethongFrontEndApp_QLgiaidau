@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_suggestions.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -55,16 +58,31 @@ void main() {
 
     expect(find.text('No other matches to watch yet'), findsOneWidget);
   });
+
+  testWidgets('loading shows card skeletons, not a spinner', (tester) async {
+    final never = StreamController<List<MatchModel>>();
+    addTearDown(never.close);
+    await tester.pumpWidget(
+      _app(matches: const [], onOpen: (_) {}, stream: never.stream),
+    );
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.byType(SkeletonBox), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 }
 
 Widget _app({
   required List<MatchModel> matches,
   required void Function(MatchModel) onOpen,
+  Stream<List<MatchModel>>? stream,
 }) {
   return ProviderScope(
     overrides: [
       bracketMatchesProvider.overrideWith((ref, tournamentId) {
-        return Stream.value(matches);
+        return stream ?? Stream.value(matches);
       }),
     ],
     child: MaterialApp(

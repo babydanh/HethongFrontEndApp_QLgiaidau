@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -2179,20 +2180,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Widget _loadingPlaceholder(AppColorsExtension colors) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border),
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: AppTheme.primary,
-        ),
-      ),
-    );
+    return const BlockSkeleton(height: 80);
   }
 
   String _formatNumberWithCommas(int n) {

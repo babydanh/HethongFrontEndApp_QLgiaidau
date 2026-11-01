@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -156,7 +157,7 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
         // Messages list
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+              ? const ScrollFreeSkeleton(child: ChatMessagesSkeleton())
               : _errorMessage != null
               ? Center(
                   child: Column(

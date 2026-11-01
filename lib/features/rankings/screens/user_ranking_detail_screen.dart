@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -35,11 +36,9 @@ class UserRankingDetailScreen extends ConsumerWidget {
                 );
           return _buildContent(context, ranking, l10n);
         },
-        loading: () => Center(
-          child: CircularProgressIndicator(
-            color: AppTheme.primary,
-            strokeWidth: 2.5,
-          ),
+        loading: () => const SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          child: SafeArea(child: DetailPageSkeleton()),
         ),
         error: (e, _) => Center(
           child: Padding(

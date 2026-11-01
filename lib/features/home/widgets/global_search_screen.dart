@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -1302,7 +1303,10 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
 
   Widget _buildResults(AppLocalizations l10n, AppColorsExtension colors) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: ListPageSkeleton(itemCount: 7),
+      );
     }
     if (_error != null) {
       return _messageState(

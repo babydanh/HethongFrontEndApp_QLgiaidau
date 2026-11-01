@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -234,10 +235,8 @@ class _OrganizerVerificationSheetState
 
                 if (_isLoadingTicket)
                   const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: CircularProgressIndicator(color: AppTheme.primary),
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: BlockSkeleton(height: 120),
                   )
                 else if (_existingTicket != null &&
                     _existingTicket!['status'] == 'PENDING') ...[

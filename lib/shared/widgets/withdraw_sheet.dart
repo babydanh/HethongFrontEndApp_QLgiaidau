@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -278,11 +279,9 @@ class _WithdrawSheetState extends ConsumerState<WithdrawSheet> {
             // Bank section: chỉ khi giải có phí
             if (widget.hasPaid) ...[
               if (!_profileBankLoaded)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(),
-                  ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: BlockSkeleton(height: 96),
                 )
               else if (_usingProfileBank)
                 _BankInfoCard(

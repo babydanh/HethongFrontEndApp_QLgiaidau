@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1299,21 +1300,7 @@ class _UserProfileBottomSheetState
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 40),
-      child: Center(
-        child: Column(
-          children: [
-            CircularProgressIndicator(color: AppTheme.primary),
-            const SizedBox(height: 12),
-            Text(
-              l10n.userProfileLoading,
-              style: TextStyle(fontSize: 12, color: colors.textMuted),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const ProfileSummarySkeleton();
   }
 
   Widget _buildErrorContent(
