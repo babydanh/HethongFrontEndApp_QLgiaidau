@@ -26,6 +26,9 @@ const _lockedStatuses = {'COMPLETED', 'FINISHED', 'DISPUTED', 'CANCELLED'};
 bool _isClosed(MatchModel match) =>
     _lockedStatuses.contains(match.normalizedStatus);
 
+/// A match whose result is final (completed, disputed or cancelled).
+bool isMatchClosed(MatchModel match) => _isClosed(match);
+
 /// A match accepts a score when it is real, has both sides and is not closed.
 bool canEnterScore(MatchModel match) {
   if (match.isBye) return false;
