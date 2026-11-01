@@ -32491,6 +32491,24 @@ abstract class AppLocalizations {
   /// **'Không có trận phù hợp'**
   String get resultsBoard_noMatch;
 
+  /// No description provided for @resultsBoard_vs.
+  ///
+  /// In vi, this message translates to:
+  /// **'vs'**
+  String get resultsBoard_vs;
+
+  /// No description provided for @resultsBoard_waitingWinner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ đội thắng {code}'**
+  String resultsBoard_waitingWinner(String code);
+
+  /// No description provided for @resultsBoard_matchCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận'**
+  String resultsBoard_matchCount(int count);
+
   /// No description provided for @resultsTab_emptyTitle.
   ///
   /// In vi, this message translates to:

@@ -18020,6 +18020,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get resultsBoard_noMatch => 'Không có trận phù hợp';
 
   @override
+  String get resultsBoard_vs => 'vs';
+
+  @override
+  String resultsBoard_waitingWinner(String code) {
+    return 'Chờ đội thắng $code';
+  }
+
+  @override
+  String resultsBoard_matchCount(int count) {
+    return '$count trận';
+  }
+
+  @override
   String get resultsTab_emptyTitle => 'Chưa có kết quả chính thức';
 
   @override

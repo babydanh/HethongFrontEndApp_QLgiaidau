@@ -18090,6 +18090,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsBoard_noMatch => 'No matching match';
 
   @override
+  String get resultsBoard_vs => 'vs';
+
+  @override
+  String resultsBoard_waitingWinner(String code) {
+    return 'Waiting for winner of $code';
+  }
+
+  @override
+  String resultsBoard_matchCount(int count) {
+    return '$count matches';
+  }
+
+  @override
   String get resultsTab_emptyTitle => 'No official results yet';
 
   @override

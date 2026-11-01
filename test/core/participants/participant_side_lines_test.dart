@@ -21,10 +21,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _harness(
-        const ParticipantSideLines(
-          teamName: 'Sam Set',
-          players: [_lan, _nga],
-        ),
+        const ParticipantSideLines(teamName: 'Sam Set', players: [_lan, _nga]),
       ),
     );
 
@@ -62,11 +59,7 @@ void main() {
   testWidgets('TC-SIDE-04 the winning side is bold and ticked', (tester) async {
     await tester.pumpWidget(
       _harness(
-        const ParticipantSideLines(
-          teamName: null,
-          players: [_lan],
-          won: true,
-        ),
+        const ParticipantSideLines(teamName: null, players: [_lan], won: true),
       ),
     );
 
@@ -93,6 +86,56 @@ void main() {
       _harness(const ParticipantSideLines(teamName: null, players: [_lan])),
     );
 
-    expect(find.text('P'), findsOneWidget);
+    expect(find.text('PL'), findsOneWidget);
+  });
+
+  testWidgets('TC-SIDE-07 avatar colour follows the name like the Web', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(const ParticipantSideLines(teamName: null, players: [_lan])),
+    );
+
+    final avatar = tester.widget<CircleAvatar>(find.byType(CircleAvatar));
+    expect(avatar.radius, 9);
+    expect(avatar.backgroundColor, avatarFallbackColor('Pham Thi Lan'));
+    expect(
+      avatarFallbackColor('  PHAM  thi lan '),
+      avatarFallbackColor('Pham Thi Lan'),
+    );
+    expect(avatarInitials('Nguyễn Hoàng Phong'), 'NP');
+    expect(avatarInitials('Lan'), 'L');
+    expect(avatarInitials(''), '?');
+  });
+
+  testWidgets('TC-SIDE-08 the tick of the winner is the Lavish blue', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        const ParticipantSideLines(teamName: null, players: [_lan], won: true),
+      ),
+    );
+
+    final tick = tester.widget<Icon>(find.byIcon(Icons.check_rounded));
+    expect(tick.color, const Color(0xFF2563EB));
+    expect(tick.size, 12);
+  });
+
+  testWidgets('TC-SIDE-09 an empty side names the match it waits for', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _harness(
+        const ParticipantSideLines(
+          teamName: null,
+          players: [],
+          waitingFor: 'V1601',
+        ),
+      ),
+    );
+
+    expect(find.text('Chờ đội thắng V1601'), findsOneWidget);
+    expect(find.text('Chưa xác định'), findsNothing);
   });
 }

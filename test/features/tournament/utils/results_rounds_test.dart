@@ -203,4 +203,52 @@ void main() {
       expect(defaultResultsRoundKey(const []), isNull);
     });
   });
+
+  group('waitingForCode', () {
+    MatchModel feeder(String id, int position, {String? code}) => MatchModel(
+      id: id,
+      round: 1,
+      matchNumber: position,
+      bracketPosition: BracketPosition(round: 1, position: position),
+      nextMatchId: 'final',
+      matchCode: code,
+      updatedAt: DateTime(2026, 1, 1),
+    );
+
+    MatchModel target({bool secondFilled = false}) => MatchModel(
+      id: 'final',
+      round: 2,
+      matchNumber: 1,
+      bracketPosition: const BracketPosition(round: 2, position: 1),
+      team2Name: secondFilled ? 'Sam Set' : '',
+      updatedAt: DateTime(2026, 1, 1),
+    );
+
+    test('two feeders fill side 1 and side 2 in bracket order', () {
+      final all = [
+        feeder('b', 2, code: 'V1602'),
+        feeder('a', 1, code: 'V1601'),
+        target(),
+      ];
+
+      expect(waitingForCode(target(), 1, all), 'V1601');
+      expect(waitingForCode(target(), 2, all), 'V1602');
+    });
+
+    test('a single feeder only explains the one empty side', () {
+      final all = [feeder('a', 1, code: 'V1601'), target(secondFilled: true)];
+
+      expect(waitingForCode(target(secondFilled: true), 1, all), 'V1601');
+      expect(waitingForCode(target(secondFilled: true), 2, all), isNull);
+      expect(
+        waitingForCode(target(), 1, [feeder('a', 1, code: 'V1601')]),
+        isNull,
+      );
+    });
+
+    test('no code or no feeder gives null instead of a made-up label', () {
+      expect(waitingForCode(target(), 1, [feeder('a', 1), target()]), isNull);
+      expect(waitingForCode(target(), 1, [target()]), isNull);
+    });
+  });
 }
