@@ -90,8 +90,8 @@ Future<void> _pump(WidgetTester tester, MatchModel match) async {
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
-  // Người xem mở vào tab Thảo luận; khối hai đội nằm ở tab Tỉ số.
-  await tester.tap(find.text('Score & Timeline'));
+  // Người xem mở vào tab Chat; khối hai đội nằm trong tấm "Xem thêm".
+  await tester.tap(find.text('More'));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
 }

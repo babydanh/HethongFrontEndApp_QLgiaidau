@@ -13508,6 +13508,48 @@ abstract class AppLocalizations {
   /// **'Phòng thảo luận'**
   String get liveDiscussionTab;
 
+  /// No description provided for @liveChatTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chat'**
+  String get liveChatTab;
+
+  /// No description provided for @liveMoreVideosTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Video khác'**
+  String get liveMoreVideosTab;
+
+  /// No description provided for @liveViewerMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm'**
+  String get liveViewerMore;
+
+  /// No description provided for @liveDetailsSheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiết trận'**
+  String get liveDetailsSheetTitle;
+
+  /// No description provided for @liveShareAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ'**
+  String get liveShareAction;
+
+  /// No description provided for @liveCheerLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cổ vũ'**
+  String get liveCheerLabel;
+
+  /// No description provided for @liveSuggestionsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận nào khác để xem'**
+  String get liveSuggestionsEmpty;
+
   /// No description provided for @liveNoSignalLabel.
   ///
   /// In vi, this message translates to:

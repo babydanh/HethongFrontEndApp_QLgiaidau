@@ -7282,6 +7282,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveDiscussionTab => 'Discussion';
 
   @override
+  String get liveChatTab => 'Chat';
+
+  @override
+  String get liveMoreVideosTab => 'More videos';
+
+  @override
+  String get liveViewerMore => 'More';
+
+  @override
+  String get liveDetailsSheetTitle => 'Match details';
+
+  @override
+  String get liveShareAction => 'Share';
+
+  @override
+  String get liveCheerLabel => 'Cheer';
+
+  @override
+  String get liveSuggestionsEmpty => 'No other matches to watch yet';
+
+  @override
   String get liveNoSignalLabel => 'No live signal yet';
 
   @override

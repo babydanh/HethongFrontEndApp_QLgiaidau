@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -39,6 +40,9 @@ import 'package:app_quanly_giaidau/features/match/widgets/match_discussion_messa
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_header.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_suggestions.dart';
+import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 
 class _HeartModel {
   final double startX;
@@ -120,6 +124,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
   late TabController _tabController;
   int _selectedViewerTab = 1;
+  // Viewer layout: 0 = Chat, 1 = More videos.
+  int _liveTab = 0;
+  int _cheerCount = 0;
+  bool _loadingCheerCount = false;
   LiveOverlayKind? _pendingOverlayKind;
   // Overlay bị nút đóng ẩn cục bộ; đổi cờ server sẽ xóa trạng thái này.
   LiveOverlayKind? _dismissedOverlay;
@@ -183,8 +191,24 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     });
   }
 
+  Future<void> _loadCheerCount() async {
+    if (_loadingCheerCount) return;
+    _loadingCheerCount = true;
+    try {
+      final count = await ref
+          .read(matchRepositoryProvider)
+          .getCheerCount(widget.matchId);
+      if (mounted) setState(() => _cheerCount = count);
+    } catch (_) {
+      // The count is cosmetic; keep the last known value.
+    } finally {
+      _loadingCheerCount = false;
+    }
+  }
+
   Future<void> _handleCheer() async {
     _spawnHeart();
+    setState(() => _cheerCount++);
     try {
       await ref.read(matchRepositoryProvider).cheerMatch(widget.matchId);
     } catch (_) {
@@ -216,6 +240,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     // Fetch comments and connect WebSocket for all users
     _fetchComments();
     _setupSocketComments();
+    _loadCheerCount();
   }
 
   @override
@@ -276,6 +301,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _cheerSub = socket.onCheerUpdate.listen((data) {
       if (!mounted) return;
       _spawnHeart();
+      _loadCheerCount();
     });
   }
 
@@ -670,9 +696,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
+    // Read-only portrait view: back/share/menu sit on the video instead of an
+    // AppBar (see _buildViewerState). Keep the AppBar while loading or empty
+    // so the user is never left without a back button.
+    final useViewerLayout = match != null && !canOpenScoring && !isLandscape;
+
     return Scaffold(
       backgroundColor: context.colors.bgDark,
-      appBar: AppBar(
+      appBar: useViewerLayout
+          ? null
+          : AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Row(
@@ -2335,12 +2368,20 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ? null
         : serverOverlay;
     final params = (tournamentId: effectiveId, matchId: widget.matchId);
+    // Same condition as `useViewerLayout` in build(): no AppBar there, so the
+    // controls live on the video and the lower half is header + Chat/Videos.
+    final viewerLayout =
+        !canControl &&
+        MediaQuery.of(context).orientation == Orientation.portrait;
 
     return Column(
       children: [
         // ─── Live Video Stream Player Box (Mockup) ───
         Container(
           width: double.infinity,
+          padding: EdgeInsets.only(
+            top: viewerLayout ? MediaQuery.of(context).padding.top : 0,
+          ),
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.zero,
@@ -2368,12 +2409,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               // ô điểm để người xem nhìn hai bên giống nhau.
               if (match.scoreboardVisible)
                 Positioned(
-                  top: 8,
+                  top: viewerLayout ? 48 : 8,
                   left: 8,
                   child: _liveScoreOverlay(match, currentScore),
                 ),
+              if (viewerLayout)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildViewerTopBar(match),
+                ),
               // TV Broadcast overlay for Camera source
-              Positioned(
+              if (!viewerLayout) Positioned(
                 top: 10,
                 right: 10,
                 child: Container(
@@ -2514,6 +2562,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
         ),
 
+        if (viewerLayout)
+          ..._buildViewerBottom(match, effectiveId)
+        else ...[
         // ─── Viewer Count Badge (Sockets Realtime) ───
         if (match.isLive)
           Align(
@@ -2608,7 +2659,211 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           )
         else
           Expanded(child: _buildChatTab(match)),
+        ],
       ],
+    );
+  }
+
+  // ─── Viewer layout (portrait, read-only) ───
+
+  String _viewerTitle(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
+    return '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} ${matchSideLabel(match, 2)}';
+  }
+
+  /// Back / LIVE / share / more, drawn over the top of the video.
+  Widget _buildViewerTopBar(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
+    Widget round(IconData icon, VoidCallback onTap, String tooltip) {
+      return IconButton(
+        tooltip: tooltip,
+        onPressed: onTap,
+        icon: Icon(icon, size: 20, color: Colors.white),
+        style: IconButton.styleFrom(backgroundColor: Colors.black45),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Row(
+        children: [
+          round(
+            Icons.arrow_back_ios_new_rounded,
+            () => context.pop(),
+            l10n.liveBack,
+          ),
+          const Spacer(),
+          if (match.isLive)
+            FadeTransition(
+              opacity: _livePulseAnim,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: context.colors.error,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  l10n.matchLiveStatus,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(width: 6),
+          round(
+            Icons.share_outlined,
+            () => _shareMatch(match),
+            l10n.liveShareAction,
+          ),
+          round(
+            Icons.more_vert_rounded,
+            () => _showDetailsSheet(match),
+            l10n.liveViewerMore,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _shareMatch(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
+    AppShareModal.show(
+      context: context,
+      title: _viewerTitle(match),
+      subtitle: (match.tournamentName ?? '').trim().isNotEmpty
+          ? match.tournamentName!.trim()
+          : l10n.matchLiveTitle,
+      webUrl: 'https://sporto.asia/live/${match.id}',
+      badgeText: match.isLive ? l10n.matchLiveStatus : null,
+    );
+  }
+
+  /// Match details (the old score tab) in a sheet; the video keeps playing
+  /// behind it and the content follows live updates.
+  void _showDetailsSheet(MatchModel initial) {
+    final l10n = AppLocalizations.of(context)!;
+    final effectiveId = _effectiveTournamentId(initial);
+    final params = (tournamentId: effectiveId, matchId: widget.matchId);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.colors.bgDark,
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        builder: (_, scrollController) => Consumer(
+          builder: (context, ref, _) {
+            final match =
+                ref.watch(singleMatchProvider(params)).value ?? initial;
+            final state = ref.watch(scorePanelNotifierProvider(params));
+            return ListView(
+              controller: scrollController,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: Text(
+                    l10n.liveDetailsSheetTitle,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                _buildViewerScoreboard(match, state),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildViewerBottom(MatchModel match, String tournamentId) {
+    final l10n = AppLocalizations.of(context)!;
+    final tournamentName = (match.tournamentName ?? '').trim();
+    final round = MatchRoundLabel.formatRound(
+      match: match,
+      l10n: l10n,
+      includeMatchCode: false,
+    ).trim();
+
+    return [
+      Consumer(
+        builder: (context, ref, _) {
+          final viewers = ref.watch(viewerCountProvider(widget.matchId)).value;
+          final subtitle = [
+            if (match.isLive && viewers != null) l10n.liveViewerCount(viewers),
+            if (tournamentName.isNotEmpty) tournamentName,
+            if (round.isNotEmpty) round,
+          ].join(' · ');
+          return LiveViewerHeader(
+            title: _viewerTitle(match),
+            subtitle: subtitle,
+            cheerCount: _cheerCount,
+            onCheer: _handleCheer,
+            onShare: () => _shareMatch(match),
+            onMore: () => _showDetailsSheet(match),
+            tournamentLabel: tournamentName,
+            onOpenTournament: tournamentId.isEmpty
+                ? null
+                : () => context.push('/tournament/$tournamentId'),
+          );
+        },
+      ),
+      Row(
+        children: [
+          _viewerTabLabel(l10n.liveChatTab, 0),
+          _viewerTabLabel(l10n.liveMoreVideosTab, 1),
+        ],
+      ),
+      Divider(height: 1, color: context.colors.border),
+      Expanded(
+        child: _liveTab == 0
+            ? _buildChatTab(match)
+            : LiveViewerSuggestions(
+                tournamentId: tournamentId,
+                currentMatchId: match.id,
+                onOpen: (next) => context.pushReplacement(
+                  NavigationHelper.getLiveMatchRoute(tournamentId, next.id),
+                ),
+              ),
+      ),
+    ];
+  }
+
+  Widget _viewerTabLabel(String text, int index) {
+    final selected = _liveTab == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _liveTab = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: selected ? AppTheme.primary : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: selected
+                  ? AppTheme.primary
+                  : context.colors.textSecondary,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

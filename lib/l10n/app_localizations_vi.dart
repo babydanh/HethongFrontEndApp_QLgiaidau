@@ -7274,6 +7274,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveDiscussionTab => 'Phòng thảo luận';
 
   @override
+  String get liveChatTab => 'Chat';
+
+  @override
+  String get liveMoreVideosTab => 'Video khác';
+
+  @override
+  String get liveViewerMore => 'Xem thêm';
+
+  @override
+  String get liveDetailsSheetTitle => 'Chi tiết trận';
+
+  @override
+  String get liveShareAction => 'Chia sẻ';
+
+  @override
+  String get liveCheerLabel => 'Cổ vũ';
+
+  @override
+  String get liveSuggestionsEmpty => 'Chưa có trận nào khác để xem';
+
+  @override
   String get liveNoSignalLabel => 'Chưa có tín hiệu phát trực tiếp';
 
   @override
