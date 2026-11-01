@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
@@ -161,12 +162,7 @@ class _CommunitySocialSettingsSheetState
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: _loading
-            ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(48),
-                  child: CircularProgressIndicator(),
-                ),
-              )
+            ? const CommunitySettingsSheetSkeleton()
             : ListView(
                 children: [
                   Center(

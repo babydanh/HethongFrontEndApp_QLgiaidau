@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -369,11 +370,16 @@ class _ClubRankingWidgetState extends ConsumerState<ClubRankingWidget>
     final l10n = AppLocalizations.of(context)!;
 
     if (_loading) {
-      return const Center(
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
+      return const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            LeaderboardRowSkeleton(),
+            LeaderboardRowSkeleton(),
+            LeaderboardRowSkeleton(),
+            LeaderboardRowSkeleton(),
+            LeaderboardRowSkeleton(),
+          ],
         ),
       );
     }

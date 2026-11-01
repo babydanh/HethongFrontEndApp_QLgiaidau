@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -137,8 +138,17 @@ class _ClubTournamentsScreenState extends ConsumerState<ClubTournamentsScreen> {
           // ── Tournament Content List ──
           Expanded(
             child: _isLoading && currentList.isEmpty
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary),
+                ? const SingleChildScrollView(
+                    physics: NeverScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
+                        TournamentListItemSkeleton(),
+                        TournamentListItemSkeleton(),
+                        TournamentListItemSkeleton(),
+                        TournamentListItemSkeleton(),
+                        TournamentListItemSkeleton(),
+                      ],
+                    ),
                   )
                 : RefreshIndicator(
                     onRefresh: _resetAndReload,

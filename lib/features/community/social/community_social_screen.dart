@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/features/community/social/community_feed_noti
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_composer_trigger.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_composer_sheet.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_card.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/tag_assign_sheet.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -591,10 +592,7 @@ class _Highlight extends StatelessWidget {
 class _FeedLoading extends StatelessWidget {
   const _FeedLoading();
   @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.all(AppTheme.spacingXL),
-    child: Center(child: CircularProgressIndicator()),
-  );
+  Widget build(BuildContext context) => const CommunityFeedSkeleton();
 }
 
 class _FeedEmpty extends StatelessWidget {

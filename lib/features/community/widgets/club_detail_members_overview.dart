@@ -43,7 +43,7 @@ extension _ClubDetailMembersOverview on _ClubDetailScreenState {
     });
 
     if (membersFeed.isLoading && membersFeed.members.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const CommunityListSkeleton();
     }
     if (membersFeed.errorMessage != null && membersFeed.members.isEmpty) {
       return Center(

@@ -248,7 +248,7 @@ extension _ClubDetailGalleryTab on _ClubDetailScreenState {
         // Nếu đã có data cũ (reload/refresh), không hiển thị loading vô hạn
         final previousData = galleryAsync.value;
         if (previousData != null && previousData.isNotEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const CommunityGallerySkeleton();
         }
         // Chưa có data → hiển thị "Chưa có ảnh" thay vì loading vĩnh viễn
         return Center(

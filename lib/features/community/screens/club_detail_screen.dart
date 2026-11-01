@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
@@ -508,8 +510,13 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
             }
             return _buildContent(club);
           },
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppTheme.primary),
+          loading: () => Scaffold(
+            backgroundColor: context.colors.bgDark,
+            appBar: AppBar(backgroundColor: context.colors.bgDark),
+            body: const SingleChildScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              child: DetailPageSkeleton(),
+            ),
           ),
           error: (e, st) {
             _log.error('Lỗi load club detail', e, st);

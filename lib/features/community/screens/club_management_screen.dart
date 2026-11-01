@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -163,7 +165,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
               ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const CommunityListSkeleton()
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView(
@@ -832,12 +834,7 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                 },
               );
             },
-            loading: () => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: CircularProgressIndicator(),
-              ),
-            ),
+            loading: () => const ListPageSkeleton(itemCount: 2, leadingAvatar: false),
             error: (e, st) => Text(
               l10n.club_loadTournamentsError,
               style: const TextStyle(color: Colors.red, fontSize: 11),
