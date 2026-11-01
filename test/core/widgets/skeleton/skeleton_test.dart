@@ -77,6 +77,10 @@ void main() {
       'rows schedule': () => const TournamentMatchRowsSkeleton(
         variant: SkeletonCardVariant.schedule,
       ),
+      'ListPageSkeleton': () => const ListPageSkeleton(),
+      'ListPageSkeleton no avatar': () =>
+          const ListPageSkeleton(itemCount: 3, leadingAvatar: false),
+      'DetailPageSkeleton': () => const DetailPageSkeleton(),
       'TournamentListItemSkeleton': () => const TournamentListItemSkeleton(),
       'LeaderboardRowSkeleton': () => const LeaderboardRowSkeleton(),
       'SocialPostSkeleton': () => const SocialPostSkeleton(),

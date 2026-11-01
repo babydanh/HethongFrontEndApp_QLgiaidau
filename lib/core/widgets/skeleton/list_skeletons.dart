@@ -92,3 +92,73 @@ class MatchRowSkeleton extends StatelessWidget {
     ),
   );
 }
+
+/// Danh sách chung cho màn nào chưa có skeleton riêng: [itemCount] hàng, mỗi
+/// hàng có (tuỳ chọn) ảnh tròn và hai dòng chữ. Không cuộn (`shrinkWrap`), nên
+/// đặt trong khung có chiều cao hoặc `Column`.
+class ListPageSkeleton extends StatelessWidget {
+  final int itemCount;
+  final bool leadingAvatar;
+
+  const ListPageSkeleton({
+    super.key,
+    this.itemCount = 6,
+    this.leadingAvatar = true,
+  });
+
+  @override
+  Widget build(BuildContext context) => SkeletonScope(
+    child: Column(
+      children: [
+        for (var i = 0; i < itemCount; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                if (leadingAvatar) ...[
+                  const SkeletonCircle(size: 44),
+                  const SizedBox(width: 12),
+                ],
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLine(height: 14),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: 140, height: 10),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
+/// Trang chi tiết chung: khối đầu trang, vài dòng mô tả và hai khối nội dung.
+class DetailPageSkeleton extends StatelessWidget {
+  const DetailPageSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) => const SkeletonScope(
+    child: Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SkeletonBox(height: 160, radius: 16),
+          SizedBox(height: 16),
+          SkeletonLine(height: 18),
+          SizedBox(height: 10),
+          SkeletonLine(width: 220, height: 12),
+          SizedBox(height: 20),
+          SkeletonBox(height: 96, radius: 14),
+          SizedBox(height: 12),
+          SkeletonBox(height: 96, radius: 14),
+        ],
+      ),
+    ),
+  );
+}
