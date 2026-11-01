@@ -29,7 +29,6 @@ class DoubleElimDiagram extends StatefulWidget {
   final bool isEditable;
   final bool canScoreMatch;
   final BracketSlotDropCallback? onSlotDrop;
-  final BracketSlotUnassignCallback? onUnassignSlot;
   final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   /// Chỉ-xem: chỉ cuộn ngang, chiều cao theo canvas (không chéo, không zoom)
@@ -46,7 +45,6 @@ class DoubleElimDiagram extends StatefulWidget {
     this.isEditable = false,
     this.canScoreMatch = false,
     this.onSlotDrop,
-    this.onUnassignSlot,
     this.onDoubleTapMatch,
     this.scrollOnly = false,
   });
@@ -209,139 +207,138 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
         }
 
         final content = RepaintBoundary(
-            child: Padding(
-              padding: const EdgeInsets.all(40),
-              child: SizedBox(
-                width: layout.width,
-                height: layout.height,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // ── Band background labels ──
-                    if (wRounds.isNotEmpty)
-                      Positioned(
-                        left: 0,
-                        top: layout.winnersTop - 80,
-                        child: _DeBandLabel(
-                          title: l10n.doubleElimWinnersTitle,
-                          subtitle: l10n.doubleElimWinnersSubtitle,
-                          color: const Color(0xFF0284C7),
-                          width: layout.winnersBandWidth,
-                        ),
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: SizedBox(
+              width: layout.width,
+              height: layout.height,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // ── Band background labels ──
+                  if (wRounds.isNotEmpty)
+                    Positioned(
+                      left: 0,
+                      top: layout.winnersTop - 80,
+                      child: _DeBandLabel(
+                        title: l10n.doubleElimWinnersTitle,
+                        subtitle: l10n.doubleElimWinnersSubtitle,
+                        color: const Color(0xFF0284C7),
+                        width: layout.winnersBandWidth,
                       ),
-                    if (lRounds.isNotEmpty)
-                      Positioned(
-                        left: 0,
-                        top: layout.losersTop - 80,
-                        child: _DeBandLabel(
-                          title: l10n.doubleElimLosersTitle,
-                          subtitle: l10n.doubleElimLosersSubtitle,
-                          color: colors.textSecondary,
-                          width: layout.losersBandWidth,
-                        ),
+                    ),
+                  if (lRounds.isNotEmpty)
+                    Positioned(
+                      left: 0,
+                      top: layout.losersTop - 80,
+                      child: _DeBandLabel(
+                        title: l10n.doubleElimLosersTitle,
+                        subtitle: l10n.doubleElimLosersSubtitle,
+                        color: colors.textSecondary,
+                        width: layout.losersBandWidth,
                       ),
-                    if (bands.finals.isNotEmpty)
-                      Positioned(
-                        left: layout.grandFinalX,
-                        top: layout.grandFinalTop - 36,
-                        width: _kCardW,
-                        child: _DeRoundHeader(label: l10n.doubleElimGrandFinal),
-                      ),
+                    ),
+                  if (bands.finals.isNotEmpty)
+                    Positioned(
+                      left: layout.grandFinalX,
+                      top: layout.grandFinalTop - 36,
+                      width: _kCardW,
+                      child: _DeRoundHeader(label: l10n.doubleElimGrandFinal),
+                    ),
 
-                    // ── Connector lines ──
-                    Positioned.fill(
-                      child: RepaintBoundary(
-                        child: CustomPaint(
-                          painter: _DoubleElimPainter(
-                            matches: widget.matches,
-                            positions: positions,
-                            cardW: _kCardW,
-                            cardH: _kCardH,
-                            primaryColor: colors.border.withValues(alpha: 0.8),
-                            loserColor: colors.border.withValues(alpha: 0.8),
-                          ),
+                  // ── Connector lines ──
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: _DoubleElimPainter(
+                          matches: widget.matches,
+                          positions: positions,
+                          cardW: _kCardW,
+                          cardH: _kCardH,
+                          primaryColor: colors.border.withValues(alpha: 0.8),
+                          loserColor: colors.border.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
+                  ),
 
-                    // ── Round headers — winners band ──
-                    ...wRounds.asMap().entries.map((e) {
-                      final ci = e.key;
-                      final round = e.value;
-                      final fromEnd = wRounds.length - (ci + 1);
-                      String label;
-                      if (fromEnd == 0) {
-                        label = l10n.doubleElimUpperGrandFinal;
-                      } else if (fromEnd == 1) {
-                        label = l10n.doubleElimUpperSemifinal;
-                      } else {
-                        label = MatchRoundLabel.doubleUpperHeader(
-                          fromEnd,
-                          l10n: l10n,
-                        );
-                      }
-                      return Positioned(
-                        left: layout.winnerColumnX(round),
-                        top: layout.winnersTop - 36,
-                        width: _kCardW,
-                        child: _DeRoundHeader(label: label),
+                  // ── Round headers — winners band ──
+                  ...wRounds.asMap().entries.map((e) {
+                    final ci = e.key;
+                    final round = e.value;
+                    final fromEnd = wRounds.length - (ci + 1);
+                    String label;
+                    if (fromEnd == 0) {
+                      label = l10n.doubleElimUpperGrandFinal;
+                    } else if (fromEnd == 1) {
+                      label = l10n.doubleElimUpperSemifinal;
+                    } else {
+                      label = MatchRoundLabel.doubleUpperHeader(
+                        fromEnd,
+                        l10n: l10n,
                       );
-                    }),
+                    }
+                    return Positioned(
+                      left: layout.winnerColumnX(round),
+                      top: layout.winnersTop - 36,
+                      width: _kCardW,
+                      child: _DeRoundHeader(label: label),
+                    );
+                  }),
 
-                    // ── Round headers — losers band ──
-                    ...lRounds.asMap().entries.map((e) {
-                      final ci = e.key;
-                      final round = e.value;
-                      final fromEnd = lRounds.length - (ci + 1);
-                      String label;
-                      if (fromEnd == 0) {
-                        label = l10n.doubleElimLowerGrandFinal;
-                      } else if (fromEnd == 1) {
-                        label = l10n.doubleElimLowerSemifinal;
-                      } else {
-                        label = MatchRoundLabel.doubleLowerHeader(
-                          fromEnd,
-                          round,
-                          l10n: l10n,
-                        );
-                      }
-                      return Positioned(
-                        left: layout.loserColumnX(round),
-                        top: layout.losersTop - 36,
-                        width: _kCardW,
-                        child: _DeRoundHeader(label: label),
+                  // ── Round headers — losers band ──
+                  ...lRounds.asMap().entries.map((e) {
+                    final ci = e.key;
+                    final round = e.value;
+                    final fromEnd = lRounds.length - (ci + 1);
+                    String label;
+                    if (fromEnd == 0) {
+                      label = l10n.doubleElimLowerGrandFinal;
+                    } else if (fromEnd == 1) {
+                      label = l10n.doubleElimLowerSemifinal;
+                    } else {
+                      label = MatchRoundLabel.doubleLowerHeader(
+                        fromEnd,
+                        round,
+                        l10n: l10n,
                       );
-                    }),
+                    }
+                    return Positioned(
+                      left: layout.loserColumnX(round),
+                      top: layout.losersTop - 36,
+                      width: _kCardW,
+                      child: _DeRoundHeader(label: label),
+                    );
+                  }),
 
-                    // ── Match cards ──
-                    ...widget.matches.map((match) {
-                      final pos = positions[match.id];
-                      if (pos == null) return const SizedBox.shrink();
-                      return Positioned(
-                        left: pos.dx,
-                        top: pos.dy,
-                        width: _kCardW,
-                        height: _kCardH,
-                        child: BracketMatchCard(
-                          match: match,
-                          tournamentId: widget.tournamentId,
-                          isReferee: widget.isReferee,
-                          isReadOnly: widget.isReadOnly,
-                          canScoreMatch: widget.canScoreMatch,
-                          isGrandFinal: match.nextMatchId.isEmpty,
-                          isSlotEditable: widget.isEditable && !_isUpdating,
-                          selectedSlot: _selectedSlot,
-                          onSlotTap: _handleSlotTap,
-                          onSlotDrop: widget.onSlotDrop,
-                          onUnassignSlot: widget.onUnassignSlot,
-                          onDoubleTapMatch: widget.onDoubleTapMatch,
-                        ),
-                      );
-                    }),
-                  ],
-                ),
+                  // ── Match cards ──
+                  ...widget.matches.map((match) {
+                    final pos = positions[match.id];
+                    if (pos == null) return const SizedBox.shrink();
+                    return Positioned(
+                      left: pos.dx,
+                      top: pos.dy,
+                      width: _kCardW,
+                      height: _kCardH,
+                      child: BracketMatchCard(
+                        match: match,
+                        tournamentId: widget.tournamentId,
+                        isReferee: widget.isReferee,
+                        isReadOnly: widget.isReadOnly,
+                        canScoreMatch: widget.canScoreMatch,
+                        isGrandFinal: match.nextMatchId.isEmpty,
+                        isSlotEditable: widget.isEditable && !_isUpdating,
+                        selectedSlot: _selectedSlot,
+                        onSlotTap: _handleSlotTap,
+                        onSlotDrop: widget.onSlotDrop,
+                        onDoubleTapMatch: widget.onDoubleTapMatch,
+                      ),
+                    );
+                  }),
+                ],
               ),
             ),
+          ),
         );
         if (widget.scrollOnly) {
           // Chỉ-xem: chỉ cuộn ngang. Cuộn dọc thuộc trang cha, không lồng hai

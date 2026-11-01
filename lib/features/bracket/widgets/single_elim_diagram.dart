@@ -23,7 +23,6 @@ class SingleElimDiagram extends StatefulWidget {
     BracketSlotDragData target,
   )?
   onSlotDrop;
-  final BracketSlotUnassignCallback? onUnassignSlot;
   final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   /// Chỉ-xem: chỉ cuộn ngang, chiều cao theo canvas (không chéo, không zoom)
@@ -40,7 +39,6 @@ class SingleElimDiagram extends StatefulWidget {
     this.isEditable = false,
     this.canScoreMatch = false,
     this.onSlotDrop,
-    this.onUnassignSlot,
     this.onDoubleTapMatch,
     this.scrollOnly = false,
   });
@@ -249,70 +247,66 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
         }
 
         final content = RepaintBoundary(
-            child: Padding(
-              padding: const EdgeInsets.all(40),
-              child: SizedBox(
-                width: canvasW,
-                height: canvasH,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned.fill(
-                      child: RepaintBoundary(
-                        child: CustomPaint(
-                          painter: _BracketConnectorPainter(
-                            matches: diagramMatches,
-                            positions: positions,
-                            lineColor: colors.border.withValues(alpha: 0.8),
-                            cardW: _kCardW,
-                            cardH: _kCardH,
-                            colGap: _kColGap,
-                          ),
+          child: Padding(
+            padding: const EdgeInsets.all(40),
+            child: SizedBox(
+              width: canvasW,
+              height: canvasH,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: _BracketConnectorPainter(
+                          matches: diagramMatches,
+                          positions: positions,
+                          lineColor: colors.border.withValues(alpha: 0.8),
+                          cardW: _kCardW,
+                          cardH: _kCardH,
+                          colGap: _kColGap,
                         ),
                       ),
                     ),
-                    ...sortedRounds.asMap().entries.map((entry) {
-                      final columnIndex = entry.key;
-                      final colX = columnIndex * (_kCardW + _kColGap);
-                      final roundName = _getRoundLabel(
-                        columnIndex,
-                        totalRounds,
-                      );
-                      return Positioned(
-                        left: colX,
-                        top: -42,
-                        width: _kCardW,
-                        child: _RoundHeader(label: roundName),
-                      );
-                    }),
-                    ...diagramMatches.map((match) {
-                      final pos = positions[match.id];
-                      if (pos == null) return const SizedBox.shrink();
-                      return Positioned(
-                        left: pos.dx,
-                        top: pos.dy,
-                        width: _kCardW,
-                        height: _kCardH,
-                        child: BracketMatchCard(
-                          match: match,
-                          tournamentId: widget.tournamentId,
-                          isReferee: widget.isReferee,
-                          isReadOnly: widget.isReadOnly,
-                          canScoreMatch: widget.canScoreMatch,
-                          isGrandFinal: match.id == finalMatchId,
-                          isSlotEditable: widget.isEditable && !_isUpdating,
-                          selectedSlot: _selectedSlot,
-                          onSlotTap: _handleSlotTap,
-                          onSlotDrop: widget.onSlotDrop,
-                          onUnassignSlot: widget.onUnassignSlot,
-                          onDoubleTapMatch: widget.onDoubleTapMatch,
-                        ),
-                      );
-                    }),
-                  ],
-                ),
+                  ),
+                  ...sortedRounds.asMap().entries.map((entry) {
+                    final columnIndex = entry.key;
+                    final colX = columnIndex * (_kCardW + _kColGap);
+                    final roundName = _getRoundLabel(columnIndex, totalRounds);
+                    return Positioned(
+                      left: colX,
+                      top: -42,
+                      width: _kCardW,
+                      child: _RoundHeader(label: roundName),
+                    );
+                  }),
+                  ...diagramMatches.map((match) {
+                    final pos = positions[match.id];
+                    if (pos == null) return const SizedBox.shrink();
+                    return Positioned(
+                      left: pos.dx,
+                      top: pos.dy,
+                      width: _kCardW,
+                      height: _kCardH,
+                      child: BracketMatchCard(
+                        match: match,
+                        tournamentId: widget.tournamentId,
+                        isReferee: widget.isReferee,
+                        isReadOnly: widget.isReadOnly,
+                        canScoreMatch: widget.canScoreMatch,
+                        isGrandFinal: match.id == finalMatchId,
+                        isSlotEditable: widget.isEditable && !_isUpdating,
+                        selectedSlot: _selectedSlot,
+                        onSlotTap: _handleSlotTap,
+                        onSlotDrop: widget.onSlotDrop,
+                        onDoubleTapMatch: widget.onDoubleTapMatch,
+                      ),
+                    );
+                  }),
+                ],
               ),
             ),
+          ),
         );
         if (widget.scrollOnly) {
           // Chỉ-xem: chỉ cuộn ngang. Cuộn dọc thuộc trang cha, không lồng hai

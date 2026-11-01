@@ -13,7 +13,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
-import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Full-screen bracket diagram for all 3 format types.
@@ -108,32 +108,6 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     context.go(opsPath);
   }
 
-  Future<void> _updateBracketSlots(
-    BracketSlotDragData source,
-    BracketSlotDragData target,
-  ) async {
-    if (source.matchId == target.matchId && source.slot == target.slot) return;
-    if (!source.hasParticipant || target.isBye) return;
-    final repo = ref.read(tournamentRepositoryProvider);
-    final operation = target.hasParticipant ? 'SWAP' : 'MOVE';
-    await repo.updateBracketSlots(
-      widget.tournamentId,
-      divisionId: widget.divisionId,
-      operations: [
-        {
-          'operation': operation,
-          'fromMatchId': source.matchId,
-          'fromSlot': source.slot,
-          'toMatchId': target.matchId,
-          'toSlot': target.slot,
-        },
-      ],
-      isLite: widget.isLite,
-    );
-    _invalidateMatchProviders();
-    await _fetchBracket();
-  }
-
   void _invalidateMatchProviders() {
     ref.invalidate(bracketMatchesProvider(widget.tournamentId));
     ref.invalidate(liteBracketMatchesProvider(widget.tournamentId));
@@ -147,53 +121,6 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     ref.invalidate(liteBracketMatchesWithDivisionProvider(params));
     ref.invalidate(matchesWithDivisionProvider(params));
     ref.invalidate(managedMatchesWithDivisionProvider(params));
-  }
-
-  Future<void> _unassignBracketSlot(BracketSlotDragData slot) async {
-    if (!slot.hasParticipant || !widget.canEditBracket) return;
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.lite_unassignBracketTitle),
-        content: Text(l10n.lite_unassignBracketContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.lite_keepPair),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.lite_unassignBracket),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    try {
-      await ref
-          .read(tournamentRepositoryProvider)
-          .updateBracketSlots(
-            widget.tournamentId,
-            divisionId: widget.divisionId,
-            operations: [
-              {
-                'operation': 'UNASSIGN',
-                'matchId': slot.matchId,
-                'slot': slot.slot,
-              },
-            ],
-            isLite: widget.isLite,
-          );
-      _invalidateMatchProviders();
-      await _fetchBracket();
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.singleElimUpdateError(error.toString()))),
-      );
-    }
   }
 
   @override
@@ -245,30 +172,6 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: colors.border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.pinch_rounded, size: 12, color: colors.textMuted),
-                  const SizedBox(width: 4),
-                  Text(
-                    l10n.bracketDiagramZoomHint,
-                    style: TextStyle(fontSize: 9, color: colors.textMuted),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -310,66 +213,62 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
       );
     }
 
-    if (isDouble) {
-      return DoubleElimDiagram(
-        matches: matches,
-        tournamentId: widget.tournamentId,
-        isReferee: widget.isReferee,
-        isReadOnly: widget.isReadOnly,
-        isEditable: widget.canEditBracket,
-        canScoreMatch: widget.canScoreMatch,
-        onSlotDrop: _updateBracketSlots,
-        onUnassignSlot: _unassignBracketSlot,
-        onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
-      );
-    }
-
     // For group_stage_knockout: filter only knockout stage matches.
     // The knockout stage may itself be a double-elimination bracket (the
     // /bracket API reports stage.type = DOUBLE_ELIMINATION), so pick the
     // diagram type from the actual match data, not the top-level bracketType.
-    if (isGroupStageKnockout) {
-      final knockoutMatches = matches.where(isKnockoutMatch).toList();
-      final isDouble = knockoutMatches.any(isDoubleEliminationMatch);
-      if (isDouble) {
-        return DoubleElimDiagram(
-          matches: knockoutMatches,
-          tournamentId: widget.tournamentId,
-          isReferee: widget.isReferee,
-          isReadOnly: widget.isReadOnly,
-          isEditable: widget.canEditBracket,
-          canScoreMatch: widget.canScoreMatch,
-          onSlotDrop: _updateBracketSlots,
-          onUnassignSlot: _unassignBracketSlot,
-          onDoubleTapMatch: widget.canEditBracket
-              ? _handleDoubleTapMatch
-              : null,
-        );
-      }
-      return SingleElimDiagram(
-        matches: knockoutMatches,
-        tournamentId: widget.tournamentId,
-        isReferee: widget.isReferee,
-        isReadOnly: widget.isReadOnly,
-        isEditable: widget.canEditBracket,
-        canScoreMatch: widget.canScoreMatch,
-        onSlotDrop: _updateBracketSlots,
-        onUnassignSlot: _unassignBracketSlot,
-        onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
-      );
-    }
+    final diagramMatches = isGroupStageKnockout
+        ? matches.where(isKnockoutMatch).toList()
+        : matches;
+    final useDouble = isGroupStageKnockout
+        ? diagramMatches.any(isDoubleEliminationMatch)
+        : isDouble;
 
-    // Default: single elimination — use all matches
-    return SingleElimDiagram(
-      matches: matches,
+    return BracketSlotEditingScope(
+      enabled: widget.canEditBracket,
       tournamentId: widget.tournamentId,
-      isReferee: widget.isReferee,
-      isReadOnly: widget.isReadOnly,
-      isEditable: widget.canEditBracket,
-      canScoreMatch: widget.canScoreMatch,
-      onSlotDrop: _updateBracketSlots,
-      onUnassignSlot: _unassignBracketSlot,
-      onDoubleTapMatch: widget.canEditBracket ? _handleDoubleTapMatch : null,
+      divisionId: widget.divisionId,
+      isLite: () => widget.isLite,
+      onApplied: () {
+        _invalidateMatchProviders();
+        _fetchBracket();
+      },
+      builder: (context, tray, onSlotDrop) {
+        final onDoubleTap = widget.canEditBracket
+            ? _handleDoubleTapMatch
+            : null;
+        final diagram = useDouble
+            ? DoubleElimDiagram(
+                matches: diagramMatches,
+                tournamentId: widget.tournamentId,
+                isReferee: widget.isReferee,
+                isReadOnly: widget.isReadOnly,
+                isEditable: widget.canEditBracket,
+                canScoreMatch: widget.canScoreMatch,
+                onSlotDrop: onSlotDrop,
+                onDoubleTapMatch: onDoubleTap,
+              )
+            : SingleElimDiagram(
+                matches: diagramMatches,
+                tournamentId: widget.tournamentId,
+                isReferee: widget.isReferee,
+                isReadOnly: widget.isReadOnly,
+                isEditable: widget.canEditBracket,
+                canScoreMatch: widget.canScoreMatch,
+                onSlotDrop: onSlotDrop,
+                onDoubleTapMatch: onDoubleTap,
+              );
+        if (tray == null) return diagram;
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: tray,
+            ),
+            Expanded(child: diagram),
+          ],
+        );
+      },
     );
   }
 

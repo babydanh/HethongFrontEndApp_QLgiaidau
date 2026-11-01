@@ -102,9 +102,7 @@ class PublicBracketView extends StatelessWidget {
         divisionId: divisionId,
         bracketType: bracketType,
         matches: matches,
-        knockoutMatches: matches
-            .where(isKnockoutMatch)
-            .toList(growable: false),
+        knockoutMatches: matches.where(isKnockoutMatch).toList(growable: false),
       );
     }
 
@@ -176,7 +174,8 @@ class SwissBracketView extends ConsumerWidget {
       children: [
         SwissStandingsView(
           standings: standings.take(_standingsLimit).toList(),
-          tiebreakOrder: config?.tiebreakOrder ?? SwissConfig.defaultTiebreakOrder,
+          tiebreakOrder:
+              config?.tiebreakOrder ?? SwissConfig.defaultTiebreakOrder,
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 16, 12, 4),

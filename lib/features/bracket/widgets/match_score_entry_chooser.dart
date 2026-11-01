@@ -26,10 +26,8 @@ class MatchScoreEntryChooser extends StatelessWidget {
   }) {
     return showDialog<void>(
       context: context,
-      builder: (_) => MatchScoreEntryChooser(
-        match: match,
-        tournamentId: tournamentId,
-      ),
+      builder: (_) =>
+          MatchScoreEntryChooser(match: match, tournamentId: tournamentId),
     );
   }
 
@@ -64,7 +62,10 @@ class MatchScoreEntryChooser extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.matchScoreEntryChooserDescription, style: TextStyle(color: colors.textSecondary)),
+          Text(
+            l10n.matchScoreEntryChooserDescription,
+            style: TextStyle(color: colors.textSecondary),
+          ),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
@@ -86,7 +87,13 @@ class MatchScoreEntryChooser extends StatelessWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text('VS', style: TextStyle(fontWeight: FontWeight.w800, color: colors.textMuted)),
+                  child: Text(
+                    'VS',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: colors.textMuted,
+                    ),
+                  ),
                 ),
                 Expanded(
                   child: ParticipantLabel(

@@ -305,126 +305,126 @@ class MatchTableRow extends StatelessWidget {
                           ),
                           // BYE has no opponent: do not render an empty second side.
                           if (!match.isBye) ...[
-                          const SizedBox(height: 10),
+                            const SizedBox(height: 10),
 
-                          // Team 2
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ParticipantLabel(
-                                  teamName: matchSideTeamName(match, 2),
-                                  players: matchSidePlayers(match, 2),
-                                  teamOnly: isFootballMatch(match),
-                                  compact: true,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight:
-                                        match.winnerId == match.team2Id ||
-                                            setsWon2 > setsWon1
-                                        ? FontWeight.w800
-                                        : FontWeight.w600,
-                                    color: colors.textPrimary,
+                            // Team 2
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ParticipantLabel(
+                                    teamName: matchSideTeamName(match, 2),
+                                    players: matchSidePlayers(match, 2),
+                                    teamOnly: isFootballMatch(match),
+                                    compact: true,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight:
+                                          match.winnerId == match.team2Id ||
+                                              setsWon2 > setsWon1
+                                          ? FontWeight.w800
+                                          : FontWeight.w600,
+                                      color: colors.textPrimary,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Điểm các set S1, S2, S3... của Team 2
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: sets.isNotEmpty
-                                    ? sets.map((s) {
-                                        final isSetWon = s.score2 > s.score1;
-                                        return Container(
-                                          constraints: const BoxConstraints(
-                                            minWidth: 26,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 3,
-                                          ),
-                                          margin: const EdgeInsets.only(
-                                            left: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isSetWon
-                                                ? AppTheme.primary.withValues(
-                                                    alpha: 0.12,
-                                                  )
-                                                : colors.bgSurface,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
+                                const SizedBox(width: 8),
+                                // Điểm các set S1, S2, S3... của Team 2
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: sets.isNotEmpty
+                                      ? sets.map((s) {
+                                          final isSetWon = s.score2 > s.score1;
+                                          return Container(
+                                            constraints: const BoxConstraints(
+                                              minWidth: 26,
                                             ),
-                                            border: Border.all(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 3,
+                                            ),
+                                            margin: const EdgeInsets.only(
+                                              left: 4,
+                                            ),
+                                            decoration: BoxDecoration(
                                               color: isSetWon
                                                   ? AppTheme.primary.withValues(
-                                                      alpha: 0.4,
+                                                      alpha: 0.12,
                                                     )
-                                                  : colors.border.withValues(
-                                                      alpha: 0.5,
-                                                    ),
+                                                  : colors.bgSurface,
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: isSetWon
+                                                    ? AppTheme.primary
+                                                          .withValues(
+                                                            alpha: 0.4,
+                                                          )
+                                                    : colors.border.withValues(
+                                                        alpha: 0.5,
+                                                      ),
+                                              ),
                                             ),
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            '${s.score2}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: isSetWon
-                                                  ? FontWeight.w900
-                                                  : FontWeight.w600,
-                                              color: isSetWon
-                                                  ? AppTheme.primary
-                                                  : colors.textSecondary,
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              '${s.score2}',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: isSetWon
+                                                    ? FontWeight.w900
+                                                    : FontWeight.w600,
+                                                color: isSetWon
+                                                    ? AppTheme.primary
+                                                    : colors.textSecondary,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      }).toList()
-                                    : [
-                                        Container(
-                                          constraints: const BoxConstraints(
-                                            minWidth: 26,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: setsWon2 > setsWon1
-                                                ? AppTheme.primary.withValues(
-                                                    alpha: 0.12,
-                                                  )
-                                                : colors.bgSurface,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
+                                          );
+                                        }).toList()
+                                      : [
+                                          Container(
+                                            constraints: const BoxConstraints(
+                                              minWidth: 26,
                                             ),
-                                            border: Border.all(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
                                               color: setsWon2 > setsWon1
                                                   ? AppTheme.primary.withValues(
-                                                      alpha: 0.4,
+                                                      alpha: 0.12,
                                                     )
-                                                  : colors.border,
+                                                  : colors.bgSurface,
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: setsWon2 > setsWon1
+                                                    ? AppTheme.primary
+                                                          .withValues(
+                                                            alpha: 0.4,
+                                                          )
+                                                    : colors.border,
+                                              ),
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              '$setsWon2',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: setsWon2 > setsWon1
+                                                    ? FontWeight.w900
+                                                    : FontWeight.w600,
+                                                color: setsWon2 > setsWon1
+                                                    ? AppTheme.primary
+                                                    : colors.textPrimary,
+                                              ),
                                             ),
                                           ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            '$setsWon2',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: setsWon2 > setsWon1
-                                                  ? FontWeight.w900
-                                                  : FontWeight.w600,
-                                              color: setsWon2 > setsWon1
-                                                  ? AppTheme.primary
-                                                  : colors.textPrimary,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                              ),
-                              if (_canUnassignParticipant(match.team2Id))
-                                _buildUnassignButton(context, 'participant2'),
-                            ],
-                          ),
+                                        ],
+                                ),
+                                if (_canUnassignParticipant(match.team2Id))
+                                  _buildUnassignButton(context, 'participant2'),
+                              ],
+                            ),
                           ],
                         ],
                       ),

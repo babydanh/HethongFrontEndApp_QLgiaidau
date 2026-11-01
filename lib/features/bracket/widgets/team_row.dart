@@ -115,18 +115,27 @@ class TeamRow extends StatelessWidget {
                           nameStyle ??
                           TextStyle(
                             fontSize: 11,
-                            fontWeight: isWinner ? FontWeight.w800 : FontWeight.w500,
+                            fontWeight: isWinner
+                                ? FontWeight.w800
+                                : FontWeight.w500,
                             color: isWinner
                                 ? textColor
-                                : (isBye ? colors.textMuted : colors.textSecondary),
-                            fontStyle: isBye ? FontStyle.italic : FontStyle.normal,
+                                : (isBye
+                                      ? colors.textMuted
+                                      : colors.textSecondary),
+                            fontStyle: isBye
+                                ? FontStyle.italic
+                                : FontStyle.normal,
                           ),
                     ),
                   ),
                   if (eloDelta != null) ...[
                     const SizedBox(width: 3),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 0.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 3,
+                        vertical: 0.5,
+                      ),
                       decoration: BoxDecoration(
                         color: eloDelta!.startsWith('-')
                             ? const Color(0xFFEF4444).withValues(alpha: 0.12)

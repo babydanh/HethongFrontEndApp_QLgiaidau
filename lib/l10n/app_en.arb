@@ -4972,6 +4972,8 @@
   "excelScore1": "Score 1",
   "excelScore2": "Score 2",
   "bracketDiagramZoomHint": "Pan & zoom",
+  "bracketTrayTitle": "Holding area",
+  "bracketTrayEmpty": "Drag a player/team here to hold them while rearranging the bracket.",
   "bracketDiagramEmptyTitle": "No bracket diagram yet",
   "bracketDiagramEmptyHint": "Complete the draw to create the bracket",
   "authCredentialsMissingResponse": "Authentication information was not found in the response",
