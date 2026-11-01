@@ -639,6 +639,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     }).toList();
 
     final bool hasLive = liveMatches.isNotEmpty;
+    final bool showLiveTab =
+        StatusHelper.isTournamentInProgress(tournament.status) || hasLive;
     final bool hasResults =
         completedMatches.isNotEmpty ||
         tournament.status.toLowerCase() == 'completed';
@@ -649,49 +651,56 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final List<Widget> tabViews = [];
     final List<String> tabIds = [];
 
-    // 1. Tab [🔴 Đang diễn ra (N)] nếu có trận Live
-    if (hasLive) {
+    // 1. Tab [Đang diễn ra]: như Web, hiện khi giải đang thi đấu hoặc có trận
+    // đang đấu; chấm đỏ + số trận chỉ khi thật sự có trận live.
+    if (showLiveTab) {
       tabHeaders.add(
         Tab(
           height: 28,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFEF4444),
-                ),
-              ),
-              const SizedBox(width: 5),
-              Text(
-                'Đang diễn ra',
-                style: TextStyle(
-                  color: colors.error,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 4.5,
-                  vertical: 0.5,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.error,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${liveMatches.length}',
-                  style: const TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              if (hasLive) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFEF4444),
                   ),
                 ),
+                const SizedBox(width: 5),
+              ],
+              Text(
+                'Đang diễn ra',
+                style: hasLive
+                    ? TextStyle(
+                        color: colors.error,
+                        fontWeight: FontWeight.w700,
+                      )
+                    : null,
               ),
+              if (hasLive) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4.5,
+                    vertical: 0.5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.error,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${liveMatches.length}',
+                    style: const TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -700,8 +709,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       tabViews.add(
         LiveTab(
           key: const ValueKey('live'),
-          liveMatches: liveMatches,
           tournamentId: widget.tournamentId,
+          isLite: tournament.isLite,
           divisions: tournament.divisions,
           selectedDivisionId: _selectedDivisionId,
           canManage: canManage,
@@ -744,8 +753,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       selectedDivisionId: _selectedDivisionId,
                       selectedDivision: _selectedDivision,
                       matchType: selectedMatchType,
-                      isLite: tournament.isLite,
-                      canManage: canManage,
+                      onShare: () => _shareTournament(tournament),
                     ),
                   ),
                 ],
@@ -756,8 +764,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 selectedDivisionId: _selectedDivisionId,
                 selectedDivision: _selectedDivision,
                 matchType: selectedMatchType,
-                isLite: tournament.isLite,
-                canManage: canManage,
+                onShare: () => _shareTournament(tournament),
               ),
       );
     }

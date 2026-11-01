@@ -445,3 +445,169 @@ String _initials(String name) {
   if (words.isEmpty) return '?';
   return String.fromCharCode(words.first.runes.first).toUpperCase();
 }
+
+/// One side of a match stacked like the Web board: a named team is one square
+/// logo plus a single team-name line, otherwise one avatar + short-name line per
+/// player. [won] bolds the side and adds a tick.
+class ParticipantSideLines extends StatelessWidget {
+  final String? teamName;
+  final List<ParticipantPlayer> players;
+
+  /// Team logo image; the team's initial is shown when null or unreadable.
+  final String? logoUrl;
+  final bool teamOnly;
+  final bool won;
+
+  const ParticipantSideLines({
+    super.key,
+    required this.teamName,
+    required this.players,
+    this.logoUrl,
+    this.teamOnly = false,
+    this.won = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final display = resolveParticipantDisplay(
+      teamName: teamName,
+      players: players,
+      teamOnly: teamOnly,
+    );
+    final style = TextStyle(
+      fontSize: 13,
+      color: colors.textPrimary,
+      fontWeight: won ? FontWeight.w800 : FontWeight.w500,
+    );
+    if (!display.isTeam && display.players.isEmpty) {
+      return Text(
+        AppLocalizations.of(context)!.matchNotDetermined,
+        style: style.copyWith(
+          color: colors.textMuted,
+          fontWeight: FontWeight.w500,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    }
+    final lines = display.isTeam
+        ? [
+            _SideLine(
+              leading: _TeamLogo(name: display.teamName!, url: logoUrl),
+              text: display.teamName!,
+              style: style,
+            ),
+          ]
+        : [
+            for (var i = 0; i < display.players.length; i++)
+              _SideLine(
+                key: ValueKey('side-lines-player-$i'),
+                leading: _PlayerAvatar(
+                  name: display.players[i].fullName,
+                  avatarUrl: display.players[i].avatarUrl,
+                  radius: _sideAvatarRadius,
+                  backgroundColor: colors.bgSurface,
+                  textStyle: style.copyWith(
+                    fontSize: 9.5,
+                    color: colors.textMuted,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                text: abbreviateName(display.players[i].fullName),
+                style: style,
+              ),
+          ];
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: lines,
+          ),
+        ),
+        if (won) ...[
+          const SizedBox(width: 4),
+          const Icon(Icons.check_rounded, size: 16, color: AppTheme.primary),
+        ],
+      ],
+    );
+  }
+}
+
+const double _sideAvatarRadius = 10;
+
+class _SideLine extends StatelessWidget {
+  final Widget leading;
+  final String text;
+  final TextStyle style;
+
+  const _SideLine({
+    super.key,
+    required this.leading,
+    required this.text,
+    required this.style,
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 1.5),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        leading,
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            text,
+            style: style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _TeamLogo extends StatelessWidget {
+  final String name;
+  final String? url;
+
+  const _TeamLogo({required this.name, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = ColoredBox(
+      color: AppTheme.primary.withValues(alpha: 0.14),
+      child: Center(
+        child: Text(
+          _initials(name),
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: AppTheme.primary,
+          ),
+        ),
+      ),
+    );
+    final image = url;
+    return SizedBox(
+      key: const ValueKey('side-lines-team-logo'),
+      width: _sideAvatarRadius * 2,
+      height: _sideAvatarRadius * 2,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(5),
+        child: image == null || image.isEmpty
+            ? initial
+            : Image.network(
+                image,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => initial,
+              ),
+      ),
+    );
+  }
+}

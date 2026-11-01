@@ -32467,6 +32467,72 @@ abstract class AppLocalizations {
   /// **'Nhập điểm'**
   String get resultsBoard_enterScore;
 
+  /// No description provided for @resultsBoard_filterLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đấu'**
+  String get resultsBoard_filterLive;
+
+  /// No description provided for @resultsBoard_searchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm tên VĐV'**
+  String get resultsBoard_searchHint;
+
+  /// No description provided for @resultsBoard_jumpToRound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tới vòng'**
+  String get resultsBoard_jumpToRound;
+
+  /// No description provided for @resultsBoard_noMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có trận phù hợp'**
+  String get resultsBoard_noMatch;
+
+  /// No description provided for @resultsTab_emptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có kết quả chính thức'**
+  String get resultsTab_emptyTitle;
+
+  /// No description provided for @resultsTab_emptySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả sẽ được công bố khi các vòng chung kết hoàn tất'**
+  String get resultsTab_emptySubtitle;
+
+  /// No description provided for @resultsTab_champion.
+  ///
+  /// In vi, this message translates to:
+  /// **'QUÁN QUÂN'**
+  String get resultsTab_champion;
+
+  /// No description provided for @resultsTab_runnerUp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Á QUÂN'**
+  String get resultsTab_runnerUp;
+
+  /// No description provided for @resultsTab_thirdPlace.
+  ///
+  /// In vi, this message translates to:
+  /// **'HẠNG 3'**
+  String get resultsTab_thirdPlace;
+
+  /// No description provided for @resultsTab_jointThird.
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐỒNG HẠNG 3'**
+  String get resultsTab_jointThird;
+
+  /// No description provided for @resultsTab_rank.
+  ///
+  /// In vi, this message translates to:
+  /// **'HẠNG {rank}'**
+  String resultsTab_rank(int rank);
+
   /// No description provided for @matchSchedule_title.
   ///
   /// In vi, this message translates to:

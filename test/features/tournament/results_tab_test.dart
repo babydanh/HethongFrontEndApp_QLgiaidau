@@ -176,6 +176,34 @@ void main() {
     expect(find.widgetWithText(Tab, 'Kết quả'), findsOneWidget);
   });
 
+  testWidgets('TC-LIVE-TAB-01 giải đang thi đấu hiện tab Đang diễn ra', (
+    tester,
+  ) async {
+    await _pumpIntro(tester, tournament: _inProgressTournament());
+
+    expect(find.widgetWithText(Tab, 'Đang diễn ra'), findsOneWidget);
+  });
+
+  testWidgets('TC-LIVE-TAB-02 giải đã kết thúc không có tab Đang diễn ra', (
+    tester,
+  ) async {
+    await _pumpIntro(tester);
+
+    expect(find.widgetWithText(Tab, 'Đang diễn ra'), findsNothing);
+  });
+
+  testWidgets('TC-RESULTS-SHARE-01 tab Kết quả có icon chia sẻ gọi onShare', (
+    tester,
+  ) async {
+    var shared = 0;
+    await _pumpResults(tester, _resultWithAward(), onShare: () => shared++);
+
+    await tester.tap(find.byKey(const ValueKey('results-share')));
+
+    expect(shared, 1);
+    expect(find.text('DANH SÁCH TRAO THƯỞNG'), findsNothing);
+  });
+
   testWidgets('hạng mục rỗng không hiện bục hoặc thẻ thứ hạng', (tester) async {
     await _pumpResults(tester, {'awards': <dynamic>[]});
 
@@ -188,8 +216,9 @@ void main() {
 
 Future<void> _pumpResults(
   WidgetTester tester,
-  Map<String, dynamic> result,
-) async {
+  Map<String, dynamic> result, {
+  VoidCallback? onShare,
+}) async {
   _phone(tester);
   await tester.pumpWidget(
     ProviderScope(
@@ -205,12 +234,13 @@ Future<void> _pumpResults(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('vi'),
-        home: const Scaffold(
+        home: Scaffold(
           body: ResultsTab(
             tournamentId: _tournamentId,
             selectedDivisionId: _divisionId,
             selectedDivision: 'Đôi Nam',
             matchType: 'DOUBLES',
+            onShare: onShare,
           ),
         ),
       ),

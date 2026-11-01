@@ -4,14 +4,13 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/live_match_summary_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 const _tid = 'tour-1';
 
@@ -33,6 +32,9 @@ MatchModel _match(
   DateTime? completedAt,
   String winnerId = '',
   Map<String, dynamic>? scoreDetails,
+  String? matchCode,
+  String? team1Name,
+  List<ParticipantPlayer>? team1Players,
 }) {
   return MatchModel(
     id: id,
@@ -49,7 +51,11 @@ MatchModel _match(
     completedAt: completedAt,
     winnerId: winnerId,
     scoreDetails: scoreDetails,
-    team1Players: [ParticipantPlayer(slot: 1, fullName: 'Nguyen Van $id')],
+    matchCode: matchCode,
+    team1Name: team1Name ?? 'TBD',
+    team1Players:
+        team1Players ??
+        [ParticipantPlayer(slot: 1, fullName: 'Nguyen Van $id')],
     team2Players: [ParticipantPlayer(slot: 1, fullName: 'Tran Thi $id')],
     updatedAt: DateTime(2026, 1, 1),
   );
@@ -67,20 +73,31 @@ Future<void> _pump(
         matchesProvider(_tid).overrideWith((ref) => Stream.value(matches)),
         tournamentManagementRepositoryProvider.overrideWithValue(_NoVenues()),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         theme: AppTheme.lightTheme,
         locale: const Locale('vi'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: ResultsMatchBoard(
-              tournamentId: _tid,
-              isLite: false,
-              divisionId: divisionId,
-              canManage: canManage,
+        routerConfig: GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => Scaffold(
+                body: SingleChildScrollView(
+                  child: ResultsMatchBoard(
+                    tournamentId: _tid,
+                    isLite: false,
+                    divisionId: divisionId,
+                    canManage: canManage,
+                  ),
+                ),
+              ),
             ),
-          ),
+            GoRoute(
+              path: '/live/:id',
+              builder: (_, _) => const Scaffold(body: Text('live-room')),
+            ),
+          ],
         ),
       ),
     ),
@@ -92,88 +109,30 @@ Future<void> _pump(
 Finder _row(String id) => find.byKey(ValueKey('results-row-$id'));
 
 void main() {
-  testWidgets('default round is the first one with a pending match', (
-    tester,
-  ) async {
+  testWidgets('every round gets its own box, in play order', (tester) async {
     await _pump(tester, [
-      _match(
-        'r1done',
-        round: 1,
-        number: 1,
-        status: 'COMPLETED',
-        completedAt: DateTime(2026, 1, 1, 9),
-      ),
-      _match('r1todo', round: 1, number: 2),
-      _match('r2todo', round: 2, number: 1),
+      _match('r1a', round: 1, number: 1),
+      _match('r2a', round: 2, number: 1),
       _match('bye', round: 1, number: 3, isBye: true),
     ]);
 
-    expect(_row('r1done'), findsOneWidget);
-    expect(_row('r1todo'), findsOneWidget);
-    expect(_row('r2todo'), findsNothing);
+    expect(_row('r1a'), findsOneWidget);
+    expect(_row('r2a'), findsOneWidget);
     expect(_row('bye'), findsNothing);
+    expect(find.byKey(const ValueKey('results-box-live')), findsNothing);
   });
 
-  testWidgets('switching round shows that round', (tester) async {
-    await _pump(tester, [
-      _match('r1todo', round: 1, number: 1),
-      _match('r1other', round: 1, number: 2),
-      _match('r2todo', round: 2, number: 1),
-    ]);
-
-    await tester.tap(
-      find
-          .descendant(
-            of: find.byKey(const ValueKey('results-round-select')),
-            matching: find.byType(LavishChipButton),
-          )
-          .last,
-    );
-    await tester.pumpAndSettle();
-
-    expect(_row('r2todo'), findsOneWidget);
-    expect(_row('r1todo'), findsNothing);
-  });
-
-  testWidgets('groups: chờ nhập điểm, đã xong, sắp tới; trận xong có pill Xong', (
-    tester,
-  ) async {
-    await _pump(tester, [
-      _match(
-        'done',
-        round: 1,
-        number: 1,
-        status: 'COMPLETED',
-        completedAt: DateTime(2026, 1, 1, 9),
-      ),
-      _match('todo', round: 1, number: 2),
-      _match('wait', round: 1, number: 3, team2Id: ''),
-    ]);
-
-    expect(find.text('CHỜ NHẬP ĐIỂM · 1'), findsOneWidget);
-    expect(find.text('ĐÃ XONG · 1'), findsOneWidget);
-    expect(find.text('SẮP TỚI · 1'), findsOneWidget);
-    expect(find.text('Xong'), findsOneWidget);
-  });
-
-  testWidgets('live block shows live matches of any round, once', (
+  testWidgets('a live match sits in the red live box once, not in its round', (
     tester,
   ) async {
     await _pump(tester, [
       _match('live1', round: 1, number: 1, status: 'ONGOING'),
-      _match('todo2', round: 2, number: 1),
       _match('todo1', round: 1, number: 2),
     ]);
 
-    expect(find.byType(LiveMatchSummaryCard), findsOneWidget);
-    // The live match is not repeated inside "Sắp tới".
-    expect(_row('live1'), findsNothing);
+    expect(find.byKey(const ValueKey('results-box-live')), findsOneWidget);
+    expect(_row('live1'), findsOneWidget);
     expect(_row('todo1'), findsOneWidget);
-  });
-
-  testWidgets('no live match hides the live block entirely', (tester) async {
-    await _pump(tester, [_match('todo1', round: 1, number: 1)]);
-    expect(find.byType(LiveMatchSummaryCard), findsNothing);
   });
 
   testWidgets('a live match that already has a winner is not shown as live', (
@@ -182,40 +141,186 @@ void main() {
     await _pump(tester, [
       _match('ghost', round: 1, number: 1, status: 'ONGOING', winnerId: 'a'),
     ]);
-    expect(find.byType(LiveMatchSummaryCard), findsNothing);
+    expect(find.byKey(const ValueKey('results-box-live')), findsNothing);
   });
 
-  testWidgets('organiser opens the chooser from a pending row', (tester) async {
+  testWidgets('chip Đã xong keeps finished rows and hides the live box', (
+    tester,
+  ) async {
+    await _pump(tester, [
+      _match('live1', round: 1, number: 1, status: 'ONGOING'),
+      _match(
+        'done',
+        round: 1,
+        number: 2,
+        status: 'COMPLETED',
+        completedAt: DateTime(2026, 1, 1, 9),
+      ),
+      _match('todo', round: 1, number: 3),
+    ]);
+
+    await tester.tap(find.byKey(const ValueKey('results-filter-finished')));
+    await tester.pumpAndSettle();
+
+    expect(_row('done'), findsOneWidget);
+    expect(_row('todo'), findsNothing);
+    expect(_row('live1'), findsNothing);
+    expect(find.byKey(const ValueKey('results-box-live')), findsNothing);
+  });
+
+  testWidgets('chip Sắp tới keeps only matches that have not started', (
+    tester,
+  ) async {
+    await _pump(tester, [
+      _match('live1', round: 1, number: 1, status: 'ONGOING'),
+      _match(
+        'done',
+        round: 1,
+        number: 2,
+        status: 'COMPLETED',
+        completedAt: DateTime(2026, 1, 1, 9),
+      ),
+      _match('todo', round: 1, number: 3),
+    ]);
+
+    await tester.tap(find.byKey(const ValueKey('results-filter-upcoming')));
+    await tester.pumpAndSettle();
+
+    expect(_row('todo'), findsOneWidget);
+    expect(_row('done'), findsNothing);
+    expect(_row('live1'), findsNothing);
+  });
+
+  testWidgets('search narrows the board by player name', (tester) async {
+    await _pump(tester, [
+      _match('abc', round: 1, number: 1),
+      _match('xyz', round: 1, number: 2),
+    ]);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('results-search')),
+      'nguyen van xyz',
+    );
+    await tester.pumpAndSettle();
+
+    expect(_row('xyz'), findsOneWidget);
+    expect(_row('abc'), findsNothing);
+  });
+
+  testWidgets('organiser sees #code, viewer sees the running number', (
+    tester,
+  ) async {
+    final matches = [_match('m1', round: 1, number: 1, matchCode: 'V1602')];
+
+    await _pump(tester, matches, canManage: true);
+    expect(find.text('#V1602'), findsOneWidget);
+
+    await _pump(tester, matches);
+    expect(find.text('#V1602'), findsNothing);
+    expect(
+      find.descendant(of: _row('m1'), matching: find.text('1')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a named team shows its logo, players show one line each', (
+    tester,
+  ) async {
+    await _pump(tester, [
+      _match(
+        'team',
+        round: 1,
+        number: 1,
+        team1Name: 'Sam Set',
+        team1Players: const [
+          ParticipantPlayer(slot: 1, fullName: 'Pham Thi Lan'),
+          ParticipantPlayer(slot: 2, fullName: 'Vu Thi Nga'),
+        ],
+      ),
+    ]);
+
+    expect(find.text('Sam Set'), findsOneWidget);
+    expect(find.byKey(const ValueKey('side-lines-team-logo')), findsOneWidget);
+    expect(find.byKey(const ValueKey('side-lines-player-0')), findsOneWidget);
+  });
+
+  testWidgets('a finished row shows both set scores next to each side', (
+    tester,
+  ) async {
+    await _pump(tester, [
+      MatchModel(
+        id: 'fin',
+        tournamentId: _tid,
+        round: 1,
+        matchNumber: 1,
+        bracketPosition: const BracketPosition(round: 1, position: 1),
+        team1Id: 'a',
+        team2Id: 'b',
+        status: 'COMPLETED',
+        divisionId: 'd1',
+        winnerId: 'a',
+        completedAt: DateTime(2026, 1, 1, 9),
+        sets: const [
+          SetScore(score1: 11, score2: 5),
+          SetScore(score1: 11, score2: 7),
+        ],
+        team1Players: const [ParticipantPlayer(slot: 1, fullName: 'An Binh')],
+        team2Players: const [
+          ParticipantPlayer(slot: 1, fullName: 'Cuong Dung'),
+        ],
+        updatedAt: DateTime(2026, 1, 1),
+      ),
+    ]);
+
+    expect(find.text('11  11'), findsOneWidget);
+    expect(find.text('5  7'), findsOneWidget);
+    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+  });
+
+  testWidgets('tapping a live row opens the live room', (tester) async {
+    await _pump(tester, [
+      _match('live1', round: 1, number: 1, status: 'ONGOING'),
+    ]);
+
+    await tester.tap(_row('live1'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('live-room'), findsOneWidget);
+  });
+
+  testWidgets('organiser opens the chooser from the pencil of a pending row', (
+    tester,
+  ) async {
     await _pump(tester, [
       _match('todo1', round: 1, number: 1),
     ], canManage: true);
 
-    await tester.tap(_row('todo1'));
+    await tester.tap(find.byKey(const ValueKey('results-score-todo1')));
     await tester.pumpAndSettle();
 
     expect(find.byType(MatchScoreEntryChooser), findsOneWidget);
   });
 
-  testWidgets('a viewer cannot open the chooser', (tester) async {
+  testWidgets('a viewer has no pencil and tapping a pending row does nothing', (
+    tester,
+  ) async {
     await _pump(tester, [_match('todo1', round: 1, number: 1)]);
 
+    expect(find.byKey(const ValueKey('results-score-todo1')), findsNothing);
     await tester.tap(_row('todo1'));
     await tester.pumpAndSettle();
 
     expect(find.byType(MatchScoreEntryChooser), findsNothing);
   });
 
-  testWidgets('a row without both teams is not tappable even for organisers', (
+  testWidgets('a row without both teams has no pencil even for organisers', (
     tester,
   ) async {
     await _pump(tester, [
       _match('wait', round: 1, number: 1, team2Id: ''),
     ], canManage: true);
 
-    await tester.tap(_row('wait'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(MatchScoreEntryChooser), findsNothing);
+    expect(find.byKey(const ValueKey('results-score-wait')), findsNothing);
   });
 
   testWidgets('only matches of the selected division are listed', (
@@ -236,7 +341,7 @@ void main() {
     await _pump(tester, [_match('bye', round: 1, number: 1, isBye: true)]);
 
     expect(find.text('Chưa có trận nào ở hạng mục này'), findsOneWidget);
-    expect(find.byKey(const ValueKey('results-round-select')), findsNothing);
+    expect(find.byKey(const ValueKey('results-search')), findsNothing);
   });
 
   testWidgets('a match whose division id lives in scoreDetails is listed', (

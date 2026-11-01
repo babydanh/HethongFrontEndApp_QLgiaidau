@@ -18078,6 +18078,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultsBoard_enterScore => 'Enter score';
 
   @override
+  String get resultsBoard_filterLive => 'Live';
+
+  @override
+  String get resultsBoard_searchHint => 'Search player';
+
+  @override
+  String get resultsBoard_jumpToRound => 'Go to round';
+
+  @override
+  String get resultsBoard_noMatch => 'No matching match';
+
+  @override
+  String get resultsTab_emptyTitle => 'No official results yet';
+
+  @override
+  String get resultsTab_emptySubtitle =>
+      'Results are published once the final rounds are complete';
+
+  @override
+  String get resultsTab_champion => 'CHAMPION';
+
+  @override
+  String get resultsTab_runnerUp => 'RUNNER-UP';
+
+  @override
+  String get resultsTab_thirdPlace => '3RD PLACE';
+
+  @override
+  String get resultsTab_jointThird => 'JOINT 3RD PLACE';
+
+  @override
+  String resultsTab_rank(int rank) {
+    return 'RANK $rank';
+  }
+
+  @override
   String get matchSchedule_title => 'Schedule match';
 
   @override

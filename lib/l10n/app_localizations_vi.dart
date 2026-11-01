@@ -18008,6 +18008,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get resultsBoard_enterScore => 'Nhập điểm';
 
   @override
+  String get resultsBoard_filterLive => 'Đang đấu';
+
+  @override
+  String get resultsBoard_searchHint => 'Tìm tên VĐV';
+
+  @override
+  String get resultsBoard_jumpToRound => 'Tới vòng';
+
+  @override
+  String get resultsBoard_noMatch => 'Không có trận phù hợp';
+
+  @override
+  String get resultsTab_emptyTitle => 'Chưa có kết quả chính thức';
+
+  @override
+  String get resultsTab_emptySubtitle =>
+      'Kết quả sẽ được công bố khi các vòng chung kết hoàn tất';
+
+  @override
+  String get resultsTab_champion => 'QUÁN QUÂN';
+
+  @override
+  String get resultsTab_runnerUp => 'Á QUÂN';
+
+  @override
+  String get resultsTab_thirdPlace => 'HẠNG 3';
+
+  @override
+  String get resultsTab_jointThird => 'ĐỒNG HẠNG 3';
+
+  @override
+  String resultsTab_rank(int rank) {
+    return 'HẠNG $rank';
+  }
+
+  @override
   String get matchSchedule_title => 'Xếp lịch trận';
 
   @override
