@@ -226,16 +226,19 @@ class ApiMatchRepository implements IMatchRepository {
       onListen: () {
         _socketService.connect(null, joinMatch: false);
         _socketService.joinTournament(tournamentId);
+        // Stale-while-revalidate: show what we already have, then refresh.
+        final stored = _matchesCache[cacheKey];
+        if (stored != null) controller.add(stored);
         unawaited(refresh());
-        socketSub = _socketService.onTournamentMatchUpdate.listen((_) {
-          unawaited(refresh());
-        });
-        scoreSub = _socketService.onScoreUpdate.listen((_) {
-          unawaited(refresh());
-        });
-        statusSub = _socketService.onMatchStatus.listen((_) {
-          unawaited(refresh());
-        });
+        void onSocketEvent(Map<String, dynamic> payload) {
+          if (_isForTournament(payload, tournamentId)) unawaited(refresh());
+        }
+
+        socketSub = _socketService.onTournamentMatchUpdate.listen(
+          onSocketEvent,
+        );
+        scoreSub = _socketService.onScoreUpdate.listen(onSocketEvent);
+        statusSub = _socketService.onMatchStatus.listen(onSocketEvent);
         refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
           unawaited(refresh(forceRefresh: false));
         });
@@ -249,6 +252,13 @@ class ApiMatchRepository implements IMatchRepository {
       },
     );
     return controller.stream;
+  }
+
+  /// A socket payload without a tournament id is kept (cannot be ruled out);
+  /// one that names another tournament is ignored.
+  bool _isForTournament(Map<String, dynamic> payload, String tournamentId) {
+    final id = payload['tournamentId']?.toString();
+    return id == null || id.isEmpty || id == tournamentId;
   }
 
   @override

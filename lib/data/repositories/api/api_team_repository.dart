@@ -232,17 +232,14 @@ class ApiTeamRepository implements ITeamRepository {
   Future<List<Team>> getAllByTournament(String tournamentId) async {
     _log.debug('Fetching all participants/teams for tournament: $tournamentId');
     try {
+      // Division names are optional: request them together with the roster.
+      final divisionsRequest = _dioClient.dio
+          .get('/tournaments/$tournamentId/divisions')
+          .then<dynamic>((value) => value, onError: (_) => null);
       final response = await _dioClient.dio.get(
         '/tournaments/$tournamentId/participants',
       );
-      dynamic divResponse;
-      try {
-        divResponse = await _dioClient.dio.get(
-          '/tournaments/$tournamentId/divisions',
-        );
-      } catch (_) {
-        divResponse = null;
-      }
+      final dynamic divResponse = await divisionsRequest;
 
       final Map<String, String> divNameMap = {};
       if (divResponse != null && divResponse.statusCode == 200) {
