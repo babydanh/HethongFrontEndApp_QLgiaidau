@@ -11,6 +11,11 @@
   - Chủ file chung: task này giữ hai file arb và hai file board/row
   - Phụ thuộc: 1.1
 
+- [x] 2.2 Sửa theo phản hồi điện thoại thật: bỏ icon bút/lịch ở hàng trận; bấm hàng mở nhập điểm (BTC), "+" ở cột điểm khi trận nhập được mà chưa có điểm; chạm dòng giờ mở xếp lịch; nhãn vòng không kèm mã trận; huy hiệu sân chỉ "Sân N". Tiêu chí: `flutter test --no-pub test/features/tournament/widgets/results_match_board_test.dart test/features/tournament/widgets/live_tab_test.dart` exit 0.
+  - Files: sửa `lib/features/tournament/widgets/results_match_board.dart`, `results_match_row.dart`; test `results_match_board_test.dart` (TC-BOARD-08..10), `live_tab_test.dart`
+  - Chủ file chung: task này giữ hai file board/row
+  - Phụ thuộc: 2.1
+
 ## 3. Kiểm chứng
 - [ ] 3.1 `flutter analyze --no-pub` file đã sửa; test hẹp; `app-run.py status`; chụp điện thoại thật so từng dòng bảng quy đổi. Tiêu chí: exit 0, lệch = 0 kèm ảnh.
   - Phụ thuộc: 2.1
