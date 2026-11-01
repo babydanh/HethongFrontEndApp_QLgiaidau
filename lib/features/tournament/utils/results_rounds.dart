@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/core/utils/match_code.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
 /// Pure helpers of the "Kết quả" tab, ported from the web `results.ts` so both
@@ -44,6 +46,32 @@ bool isLiveMatch(MatchModel match) =>
     match.hasTeams &&
     match.completedAt == null &&
     match.winnerId.isEmpty;
+
+bool _sideIsEmpty(MatchModel match, int side) =>
+    matchSidePlayers(match, side).isEmpty &&
+    matchSideTeamName(match, side) == null;
+
+/// Code of the match whose winner will fill the empty [side] (1 | 2) of
+/// [match], or null when that cannot be told for sure. Feeders are the matches
+/// whose `nextMatchId` points at [match], in bracket order: two feeders fill
+/// side 1 then side 2; a lone feeder only explains the single empty side.
+String? waitingForCode(MatchModel match, int side, List<MatchModel> all) {
+  if (!_sideIsEmpty(match, side)) return null;
+  final feeders =
+      all.where((m) => !m.isBye && m.nextMatchId == match.id).toList()..sort(
+        (a, b) =>
+            a.bracketPosition.position.compareTo(b.bracketPosition.position),
+      );
+  final MatchModel feeder;
+  if (feeders.length == 2) {
+    feeder = feeders[side - 1];
+  } else if (feeders.length == 1 && !_sideIsEmpty(match, 3 - side)) {
+    feeder = feeders.first;
+  } else {
+    return null;
+  }
+  return matchCodeOrNull(feeder);
+}
 
 /// Division a match belongs to. The API may only carry it inside the score or
 /// tournament config payload, so every list that filters by division must use

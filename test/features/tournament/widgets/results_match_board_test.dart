@@ -406,4 +406,170 @@ void main() {
     expect(find.text('Xếp lịch trận'), findsOneWidget);
     expect(find.byType(MatchScoreEntryChooser), findsNothing);
   });
+
+  group('Lavish mockup parity', () {
+    final live = _match('live1', round: 1, number: 1, status: 'ONGOING');
+    final todo = _match('todo', round: 1, number: 2);
+    final done = MatchModel(
+      id: 'fin',
+      tournamentId: _tid,
+      round: 1,
+      matchNumber: 3,
+      bracketPosition: const BracketPosition(round: 1, position: 3),
+      team1Id: 'a',
+      team2Id: 'b',
+      status: 'COMPLETED',
+      divisionId: 'd1',
+      winnerId: 'a',
+      completedAt: DateTime(2026, 1, 1, 9),
+      sets: const [SetScore(score1: 11, score2: 8)],
+      team1Players: const [ParticipantPlayer(slot: 1, fullName: 'An Binh')],
+      team2Players: const [ParticipantPlayer(slot: 1, fullName: 'Cuong Dung')],
+      updatedAt: DateTime(2026, 1, 1),
+    );
+
+    Color? pointsColor(WidgetTester tester, String id, int side) => tester
+        .widget<Text>(find.byKey(ValueKey('results-points-$id-$side')))
+        .style
+        ?.color;
+
+    testWidgets('TC-BOARD-01 chips carry the count of each state', (
+      tester,
+    ) async {
+      await _pump(tester, [live, todo, done]);
+
+      String count(String name) => tester
+          .widget<Text>(find.byKey(ValueKey('results-filter-count-$name')))
+          .data!;
+      expect(count('live'), '1');
+      expect(count('upcoming'), '1');
+      expect(count('finished'), '1');
+      expect(
+        find.byKey(const ValueKey('results-filter-count-all')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('TC-BOARD-02 "Tới vòng" stays next to the search box', (
+      tester,
+    ) async {
+      await _pump(tester, [todo]);
+
+      expect(find.byKey(const ValueKey('results-jump')), findsOneWidget);
+      expect(find.text('Tới vòng'), findsOneWidget);
+    });
+
+    testWidgets('TC-BOARD-03 each box head has a pill and a match count', (
+      tester,
+    ) async {
+      await _pump(tester, [live, todo, done]);
+
+      final liveBox = find.byKey(const ValueKey('results-box-live'));
+      expect(
+        find.descendant(of: liveBox, matching: find.text('Đang đấu')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: liveBox, matching: find.text('1 trận')),
+        findsOneWidget,
+      );
+      expect(find.text('2 trận'), findsOneWidget);
+    });
+
+    testWidgets('TC-BOARD-04 a live row has the red dot and a vs line', (
+      tester,
+    ) async {
+      await _pump(tester, [live, todo]);
+
+      expect(
+        find.byKey(const ValueKey('results-live-dot-live1')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('results-live-dot-todo')), findsNothing);
+      expect(
+        find.descendant(of: _row('live1'), matching: find.text('vs')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('TC-BOARD-05 live points are red, lost and empty ones faded', (
+      tester,
+    ) async {
+      await _pump(tester, [live, todo, done]);
+
+      expect(pointsColor(tester, 'live1', 1), const Color(0xFFE11D48));
+      expect(pointsColor(tester, 'fin', 1), const Color(0xFF0F172A));
+      expect(pointsColor(tester, 'fin', 2), const Color(0xFFCBD5E1));
+      expect(pointsColor(tester, 'todo', 1), const Color(0xFFCBD5E1));
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('results-points-todo-1')))
+            .data,
+        '–',
+      );
+    });
+
+    testWidgets('TC-BOARD-06 meta line: live = court + round badge', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        live.copyWith(court: 'Sân 2'),
+        todo.copyWith(
+          court: 'Sân 1',
+          scheduledTime: DateTime(2026, 1, 1, 8, 30),
+        ),
+      ]);
+
+      expect(
+        find.byKey(const ValueKey('results-meta-court-live1')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('results-meta-badge-live1')),
+        findsOneWidget,
+      );
+      final courtBadge = tester.widget<Text>(
+        find.byKey(const ValueKey('results-meta-badge-todo')),
+      );
+      expect(courtBadge.data, 'Sân 1');
+      expect(
+        find.byKey(const ValueKey('results-meta-time-todo')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('TC-BOARD-07 an empty side names the match it waits for', (
+      tester,
+    ) async {
+      final next = MatchModel(
+        id: 'next',
+        tournamentId: _tid,
+        round: 2,
+        matchNumber: 1,
+        bracketPosition: const BracketPosition(round: 2, position: 1),
+        divisionId: 'd1',
+        team1Name: '',
+        team2Name: '',
+        updatedAt: DateTime(2026, 1, 1),
+      );
+      await _pump(tester, [
+        _match(
+          'f1',
+          round: 1,
+          number: 1,
+          matchCode: 'V1601',
+        ).copyWith(nextMatchId: 'next'),
+        _match(
+          'f2',
+          round: 1,
+          number: 2,
+          matchCode: 'V1602',
+        ).copyWith(nextMatchId: 'next'),
+        next,
+      ]);
+
+      expect(find.text('Chờ đội thắng V1601'), findsOneWidget);
+      expect(find.text('Chờ đội thắng V1602'), findsOneWidget);
+    });
+  });
 }

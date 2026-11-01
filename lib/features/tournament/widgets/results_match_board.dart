@@ -9,7 +9,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/match_schedule_dialo
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_board_palette.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_row.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -18,6 +18,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 enum _BoardFilter { all, live, upcoming, finished }
+
+bool _passes(_BoardFilter filter, MatchModel match) => switch (filter) {
+  _BoardFilter.all => true,
+  _BoardFilter.live => isLiveMatch(match),
+  _BoardFilter.upcoming => !isMatchClosed(match) && !isLiveMatch(match),
+  _BoardFilter.finished => isMatchClosed(match),
+};
 
 /// Match board shared by the "Đang diễn ra" tab and the management view, the
 /// same shape as the Web `ResultsBoard`: filter chips, a player search, a
@@ -104,22 +111,22 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     );
   }
 
-  bool _passesFilter(MatchModel match) => switch (_filter) {
-    _BoardFilter.all => true,
-    _BoardFilter.live => isLiveMatch(match),
-    _BoardFilter.upcoming => !isMatchClosed(match) && !isLiveMatch(match),
-    _BoardFilter.finished => isMatchClosed(match),
-  };
-
   String _rowLabel(MatchModel match, int index) {
     final code = widget.canManage ? matchCodeOrNull(match) : null;
     return code == null ? '${index + 1}' : '#$code';
   }
 
-  ResultsMatchRow _row(MatchModel match, int index) => ResultsMatchRow(
+  ResultsMatchRow _row(
+    MatchModel match,
+    int index,
+    List<MatchModel> all, {
+    String? roundLabel,
+  }) => ResultsMatchRow(
     key: ValueKey('results-row-${match.id}'),
     match: match,
     label: _rowLabel(match, index),
+    roundLabel: roundLabel,
+    waitingFor: (waitingForCode(match, 1, all), waitingForCode(match, 2, all)),
     onTap: isLiveMatch(match)
         ? () => context.push(
             NavigationHelper.getLiveMatchRoute(widget.tournamentId, match.id),
@@ -158,21 +165,30 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
         _MatchBox(
           key: const ValueKey('results-box-live'),
           title: l10n.resultsBoard_filterLive,
-          tone: LavishTone.bad,
+          isLive: true,
           rows: [
-            for (final (i, m) in live.where(_matchesQuery).indexed) _row(m, i),
+            for (final (i, m) in live.where(_matchesQuery).indexed)
+              _row(
+                m,
+                i,
+                all,
+                roundLabel: MatchRoundLabel.formatRound(
+                  match: m,
+                  allMatches: all,
+                  l10n: l10n,
+                ),
+              ),
           ],
         ),
-      for (final round in rounds) ?_roundBox(round),
+      for (final round in rounds) ?_roundBox(round, all),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _filterChips(l10n),
-        const SizedBox(height: 8),
+        _filterChips(l10n, all),
         _searchRow(l10n, rounds),
-        const SizedBox(height: 10),
+        const SizedBox(height: 9),
         if (boxes.isEmpty)
           _message(context, l10n.resultsBoard_noMatch)
         else
@@ -181,19 +197,22 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     );
   }
 
-  Widget? _roundBox(ResultsRound round) {
+  Widget? _roundBox(ResultsRound round, List<MatchModel> all) {
     final matches = round.matches
-        .where((m) => !isLiveMatch(m) && _passesFilter(m) && _matchesQuery(m))
+        .where(
+          (m) => !isLiveMatch(m) && _passes(_filter, m) && _matchesQuery(m),
+        )
         .toList();
     if (matches.isEmpty) return null;
     return _MatchBox(
       key: _roundKeys.putIfAbsent(round.key, GlobalKey.new),
       title: round.label,
-      rows: [for (final (i, m) in matches.indexed) _row(m, i)],
+      rows: [for (final (i, m) in matches.indexed) _row(m, i, all)],
     );
   }
 
-  Widget _filterChips(AppLocalizations l10n) {
+  Widget _filterChips(AppLocalizations l10n, List<MatchModel> all) {
+    final real = all.where((m) => !m.isBye).toList();
     final labels = {
       _BoardFilter.all: l10n.filterAll,
       _BoardFilter.live: l10n.resultsBoard_filterLive,
@@ -205,11 +224,14 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
       child: Row(
         children: [
           for (final entry in labels.entries) ...[
-            LavishChipButton(
-              key: ValueKey('results-filter-${entry.key.name}'),
+            _FilterChip(
+              filterName: entry.key.name,
               label: entry.value,
+              count: entry.key == _BoardFilter.all
+                  ? null
+                  : real.where((m) => _passes(entry.key, m)).length,
               selected: entry.key == _filter,
-              onPressed: () => setState(() => _filter = entry.key),
+              onTap: () => setState(() => _filter = entry.key),
             ),
             const SizedBox(width: 6),
           ],
@@ -219,10 +241,15 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   }
 
   Widget _searchRow(AppLocalizations l10n, List<ResultsRound> rounds) {
-    final colors = LavishColors.of(context);
+    final palette = ResultsBoardPalette.of(context);
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: colors.line),
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: palette.chipLine),
+    );
+    final hint = TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: palette.faint,
     );
     return Row(
       children: [
@@ -230,28 +257,69 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
           child: TextField(
             key: const ValueKey('results-search'),
             onChanged: (value) => setState(() => _query = value),
-            style: TextStyle(fontSize: 13, color: colors.text),
+            style: TextStyle(fontSize: 12, color: palette.text),
             decoration: InputDecoration(
               isDense: true,
+              filled: true,
+              fillColor: palette.surface,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 9,
+                vertical: 9,
+              ),
               hintText: l10n.resultsBoard_searchHint,
-              prefixIcon: const Icon(Icons.search_rounded, size: 18),
+              hintStyle: hint,
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                size: 14,
+                color: palette.faint,
+              ),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 30,
+                minHeight: 14,
+              ),
               border: border,
               enabledBorder: border,
               focusedBorder: border,
             ),
           ),
         ),
-        if (rounds.length > 1)
-          PopupMenuButton<String>(
-            key: const ValueKey('results-jump'),
-            tooltip: l10n.resultsBoard_jumpToRound,
-            icon: const Icon(Icons.format_list_numbered_rounded),
-            onSelected: _jumpTo,
-            itemBuilder: (_) => [
-              for (final round in rounds)
-                PopupMenuItem(value: round.key, child: Text(round.label)),
-            ],
+        const SizedBox(width: 6),
+        PopupMenuButton<String>(
+          key: const ValueKey('results-jump'),
+          tooltip: l10n.resultsBoard_jumpToRound,
+          onSelected: _jumpTo,
+          itemBuilder: (_) => [
+            for (final round in rounds)
+              PopupMenuItem(value: round.key, child: Text(round.label)),
+          ],
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 36),
+            padding: const EdgeInsets.symmetric(horizontal: 9),
+            decoration: BoxDecoration(
+              color: palette.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: palette.chipLine),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.resultsBoard_jumpToRound,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: palette.muted,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down_rounded,
+                  size: 18,
+                  color: palette.muted,
+                ),
+              ],
+            ),
           ),
+        ),
       ],
     );
   }
@@ -272,56 +340,173 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   );
 }
 
-/// A bordered box with a title and a count, holding the rows of one round (or
-/// the live matches when [tone] is [LavishTone.bad]).
+/// Mockup `.ch`: 11.5px / 700 pill chip; the optional count is `<b>` at 70%
+/// opacity. The hit area is 44dp high while the pill keeps the mockup size.
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.filterName,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.count,
+  });
+
+  final String filterName;
+  final String label;
+  final int? count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = ResultsBoardPalette.of(context);
+    final foreground = selected ? Colors.white : palette.chipText;
+    final style = TextStyle(
+      fontSize: 11.5,
+      fontWeight: FontWeight.w700,
+      color: foreground,
+    );
+    return InkWell(
+      key: ValueKey('results-filter-$filterName'),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 44),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: selected ? ResultsBoardPalette.chipOn : palette.chipBg,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: selected ? ResultsBoardPalette.chipOn : palette.chipLine,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: style),
+                if (count != null) ...[
+                  const SizedBox(width: 3),
+                  Text(
+                    '$count',
+                    key: ValueKey('results-filter-count-$filterName'),
+                    style: style.copyWith(
+                      color: foreground.withValues(alpha: .7),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Mockup `.box`: white, 1px border, 12px radius; the `.bh` head holds a pill
+/// with the title and a "N trận" chip. Blue head for rounds, red for [isLive].
 class _MatchBox extends StatelessWidget {
   const _MatchBox({
     super.key,
     required this.title,
     required this.rows,
-    this.tone = LavishTone.neutral,
+    this.isLive = false,
   });
 
   final String title;
   final List<Widget> rows;
-  final LavishTone tone;
+  final bool isLive;
 
   @override
   Widget build(BuildContext context) {
-    final colors = LavishColors.of(context);
-    final accent = tone == LavishTone.neutral
-        ? colors.muted
-        : colors.solid(tone);
+    final palette = ResultsBoardPalette.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 9),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: tone == LavishTone.neutral ? colors.line : accent,
-        ),
+        border: Border.all(color: palette.line),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
-            child: Text(
-              '$title · ${rows.length}'.toUpperCase(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.66,
-                color: accent,
-              ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            color: isLive ? palette.headLiveBg : palette.headBg,
+            child: Row(
+              children: [
+                _HeadChip(
+                  label: title,
+                  background: isLive ? palette.pillLiveBg : palette.pillBg,
+                  border: isLive ? palette.pillLiveLine : palette.pillLine,
+                  color: isLive ? palette.pillLiveText : palette.pillText,
+                  fontSize: 11.5,
+                  weight: FontWeight.w800,
+                ),
+                const SizedBox(width: 8),
+                _HeadChip(
+                  label: l10n.resultsBoard_matchCount(rows.length),
+                  background: palette.countBg,
+                  border: palette.chipLine,
+                  color: palette.chipText,
+                  fontSize: 11,
+                  weight: FontWeight.w400,
+                ),
+              ],
             ),
           ),
           for (final row in rows) ...[
-            Divider(height: 1, color: colors.rowLine),
+            Divider(height: 1, color: palette.rowLine),
             row,
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// `.pill` / `.cnt` of a box head: a 1px bordered, fully rounded label.
+class _HeadChip extends StatelessWidget {
+  const _HeadChip({
+    required this.label,
+    required this.background,
+    required this.border,
+    required this.color,
+    required this.fontSize,
+    required this.weight,
+  });
+
+  final String label;
+  final Color background;
+  final Color border;
+  final Color color;
+  final double fontSize;
+  final FontWeight weight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 1),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: border),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: weight,
+            color: color,
+          ),
+        ),
       ),
     );
   }
