@@ -19,6 +19,7 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
@@ -49,6 +50,7 @@ Tournament _tournament(
   String description = '',
   DateTime? startDate,
   DateTime? registrationEndDate,
+  Map<String, dynamic>? contactInfo,
   List<Map<String, dynamic>> divisions = const [],
 }) => Tournament.fromJson({
   'name': name,
@@ -68,6 +70,7 @@ Tournament _tournament(
   if (startDate != null) 'startDate': startDate.toIso8601String(),
   if (registrationEndDate != null)
     'registrationEndDate': registrationEndDate.toIso8601String(),
+  'contactInfo': ?contactInfo,
   if (divisions.isNotEmpty) 'divisions': divisions,
   'createdAt': '2026-01-01T00:00:00Z',
   'updatedAt': '2026-01-01T00:00:00Z',
@@ -150,6 +153,29 @@ class _EmptyTournamentRepository implements ITournamentRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Records every tournament update the popups send.
+class _UpdateRecorder extends _EmptyTournamentRepository {
+  final updates = <Map<String, dynamic>>[];
+
+  @override
+  Future<void> update(String id, Map<String, dynamic> data) async {
+    updates.add(data);
+  }
+}
+
+class _OneVenueRepository extends _EmptyTournamentManagementRepository {
+  @override
+  Future<List<Map<String, dynamic>>> getVenues(String id) async => [
+    {
+      'id': 'venue-1',
+      'name': 'North Hall',
+      'locationAddress': '12 Lake Road',
+      'isDefault': true,
+      'courts': const [],
+    },
+  ];
 }
 
 class _DivisionParticipantsRepository implements ITournamentRepository {
@@ -309,9 +335,7 @@ Future<void> _openSettings(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('overview tournament title opens the information editor', (
-    tester,
-  ) async {
+  testWidgets('overview tournament title opens the name popup', (tester) async {
     tester.view.physicalSize = const Size(360, 1200);
     tester.view.devicePixelRatio = 1;
     await tester.pumpWidget(
@@ -322,20 +346,30 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final hub = find.byType(TournamentManagementHubScreen);
-    final l10n = AppLocalizations.of(tester.element(hub))!;
     await tester.tap(find.text('City Pickleball Cup'));
     await tester.pumpAndSettle();
 
-    expect(find.text(l10n.tournamentManagementName), findsOneWidget);
+    final popup = find.byType(BottomSheet);
+    expect(popup, findsOneWidget);
+    expect(
+      find.descendant(
+        of: popup,
+        matching: find.widgetWithText(TextField, 'City Pickleball Cup'),
+      ),
+      findsOneWidget,
+    );
   });
-  testWidgets('overview edit targets open their matching management sections', (
+  testWidgets('overview edit targets open their own popup, not a page', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 1200);
     tester.view.devicePixelRatio = 1;
 
-    Future<void> pumpHub() async {
+    for (final key in [
+      'tournament-overview-banner-edit',
+      'tournament-overview-location-edit',
+      'tournament-overview-entry-fee-edit',
+    ]) {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(
         _app(
@@ -349,36 +383,22 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-    }
-
-    final targets = <(String, String Function(AppLocalizations))>[
-      ('tournament-overview-banner-edit', (l) => l.manageSettingsInfoSection),
-      (
-        'tournament-overview-location-edit',
-        (l) => l.manageSettingsVenueSection,
-      ),
-      (
-        'tournament-overview-entry-fee-edit',
-        (l) => l.tournamentManagementFinance,
-      ),
-    ];
-
-    for (final (key, labelOf) in targets) {
-      await pumpHub();
-      final l10n = AppLocalizations.of(
-        tester.element(find.byType(TournamentManagementHubScreen)),
-      )!;
       final target = find.byKey(ValueKey(key));
       expect(target, findsOneWidget, reason: key);
       await tester.ensureVisible(target);
       await tester.tap(target);
       await tester.pumpAndSettle();
-      expect(find.text(labelOf(l10n)), findsWidgets, reason: key);
+      expect(find.byType(BottomSheet), findsOneWidget, reason: key);
     }
   });
 
-  group('TC-EDIT: an edit target opens exactly the thing that was tapped', () {
-    Future<void> pumpHub(WidgetTester tester, Tournament tournament) async {
+  group('TC-EDIT: tapping an item opens a popup for exactly that item', () {
+    Future<void> pumpHub(
+      WidgetTester tester,
+      Tournament tournament, {
+      ITournamentRepository? tournamentRepository,
+      TournamentManagementRepository? managementRepository,
+    }) async {
       tester.view.physicalSize = const Size(360, 1200);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -386,8 +406,10 @@ void main() {
       await tester.pumpWidget(
         _app(
           tournament,
-          managementRepository: _EmptyTournamentManagementRepository(),
-          tournamentRepository: _EmptyTournamentRepository(),
+          managementRepository:
+              managementRepository ?? _EmptyTournamentManagementRepository(),
+          tournamentRepository:
+              tournamentRepository ?? _EmptyTournamentRepository(),
         ),
       );
       await tester.pumpAndSettle();
@@ -401,33 +423,117 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('tournament name: the name field is focused at once', (
+    Finder inPopup(Finder finder) =>
+        find.descendant(of: find.byType(BottomSheet), matching: finder);
+
+    bool focused(WidgetTester tester, Finder textField) => tester
+        .widget<EditableText>(
+          find.descendant(of: textField, matching: find.byType(EditableText)),
+        )
+        .focusNode
+        .hasFocus;
+
+    testWidgets('name: a popup with only the name field, saved on its own', (
       tester,
     ) async {
-      await pumpHub(tester, _tournament('registration'));
+      final repo = _UpdateRecorder();
+      await pumpHub(tester, _tournament('registration'), tournamentRepository: repo);
       await tapKey(tester, 'tournament-overview-name-edit');
 
-      final nameInput = find.descendant(
-        of: find.byType(TextField).first,
-        matching: find.byType(EditableText),
-      );
-      expect(tester.widget<EditableText>(nameInput).focusNode.hasFocus, isTrue);
+      expect(find.byType(BottomSheet), findsOneWidget);
+      final fields = inPopup(find.byType(TextField));
+      expect(fields, findsOneWidget, reason: 'only the name, nothing else');
+      expect(focused(tester, fields), isTrue);
+
+      await tester.enterText(fields, 'New cup name');
+      await tester.pump();
+      await tester.tap(inPopup(find.byType(FilledButton)));
+      await tester.pumpAndSettle();
+
+      expect(repo.updates.single['name'], 'New cup name');
+      expect(find.byType(BottomSheet), findsNothing, reason: 'closes after save');
     });
 
-    testWidgets('banner pencil: the logo and banner group is the open one', (
+    testWidgets('banner and logo: the logo and banner picker in a popup', (
       tester,
     ) async {
       await pumpHub(tester, _tournament('registration'));
       await tapKey(tester, 'tournament-overview-banner-edit');
 
-      final group = find.ancestor(
-        of: find.byType(TournamentManagementBrandsSection),
-        matching: find.byType(Visibility),
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(
+        inPopup(find.byType(TournamentManagementBrandsSection)),
+        findsOneWidget,
       );
-      expect(tester.widget<Visibility>(group.first).visible, isTrue);
     });
 
-    testWidgets('each roadmap row opens its own date picker', (tester) async {
+    testWidgets('contact: phone and email in a popup, saved on their own', (
+      tester,
+    ) async {
+      final repo = _UpdateRecorder();
+      await pumpHub(
+        tester,
+        _tournament(
+          'registration',
+          contactInfo: {'phone': '0900000001', 'email': 'a@example.test'},
+        ),
+        tournamentRepository: repo,
+      );
+      await tapKey(tester, 'tournament-overview-contact-edit');
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      final phone = inPopup(find.byKey(const ValueKey('info-contact-phone')));
+      expect(phone, findsOneWidget);
+      expect(inPopup(find.byType(TextField)), findsNWidgets(2));
+
+      await tester.enterText(phone, '0900000002');
+      await tester.pump();
+      await tester.tap(inPopup(find.byType(FilledButton)));
+      await tester.pumpAndSettle();
+
+      final contact = repo.updates.single['contactInfo'] as Map;
+      expect(contact['phone'], '0900000002');
+      expect(find.byType(BottomSheet), findsNothing);
+    });
+
+    testWidgets('venue: the venue editor is open inside the popup', (
+      tester,
+    ) async {
+      await pumpHub(
+        tester,
+        _tournament('registration'),
+        managementRepository: _OneVenueRepository(),
+      );
+      await tapKey(tester, 'tournament-overview-location-edit');
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'North Hall'), findsOneWidget);
+    });
+
+    testWidgets('fee: a popup with the fee field focused, saved on its own', (
+      tester,
+    ) async {
+      final repo = _UpdateRecorder();
+      await pumpHub(tester, _tournament('registration'), tournamentRepository: repo);
+      await tapKey(tester, 'tournament-overview-entry-fee-edit');
+
+      expect(find.byType(BottomSheet), findsOneWidget);
+      final fee = inPopup(find.byType(TextField));
+      expect(fee, findsOneWidget);
+      expect(focused(tester, fee), isTrue);
+
+      await tester.enterText(fee, '50000');
+      await tester.pump();
+      await tester.tap(inPopup(find.byType(LavishButton)).last);
+      await tester.pumpAndSettle();
+
+      expect(repo.updates.single, {'entryFee': 50000});
+      expect(find.byType(BottomSheet), findsNothing);
+    });
+
+    testWidgets('each roadmap row opens a popup with its own date picker', (
+      tester,
+    ) async {
       final tournament = _tournament(
         'registration',
         startDate: DateTime(2030, 1, 1),
@@ -441,8 +547,33 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
         await pumpHub(tester, tournament);
         await tapKey(tester, key);
-        expect(find.byType(SocialDateTimePickerSheet), findsOneWidget, reason: key);
+        // The popup itself plus the date picker sheet it opens at once.
+        expect(find.byType(BottomSheet), findsNWidgets(2), reason: key);
+        expect(
+          find.byType(SocialDateTimePickerSheet),
+          findsOneWidget,
+          reason: key,
+        );
       }
+    });
+
+    testWidgets('closing the date picker without a choice closes the popup', (
+      tester,
+    ) async {
+      await pumpHub(
+        tester,
+        _tournament(
+          'registration',
+          startDate: DateTime(2030, 1, 1),
+          registrationEndDate: DateTime(2029, 12, 1),
+        ),
+      );
+      await tapKey(tester, 'tournament-overview-timeline-deadline-edit');
+      Navigator.of(tester.element(find.byType(SocialDateTimePickerSheet))).pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SocialDateTimePickerSheet), findsNothing);
+      expect(find.byType(BottomSheet), findsNothing);
     });
   });
 

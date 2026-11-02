@@ -24,6 +24,7 @@ class OverviewTab extends StatefulWidget {
   final bool compact;
   final VoidCallback? onEditInformation;
   final VoidCallback? onEditBranding;
+  final VoidCallback? onEditContact;
   final VoidCallback? onEditSchedule;
   final VoidCallback? onEditRegistration;
   final VoidCallback? onEditFinance;
@@ -50,6 +51,7 @@ class OverviewTab extends StatefulWidget {
     this.compact = false,
     this.onEditInformation,
     this.onEditBranding,
+    this.onEditContact,
     this.onEditSchedule,
     this.onEditRegistration,
     this.onEditFinance,
@@ -965,11 +967,26 @@ class _OverviewTabState extends State<OverviewTab> {
                       ],
                       if (contact != null) ...[
                         const SizedBox(height: 14),
-                        _buildSectionHeader(
-                          l10n.tournamentContactTitle.toUpperCase(),
+                        _editableItem(
+                          key: const ValueKey('tournament-overview-contact-edit'),
+                          onTap: widget.onEditContact,
+                          sectionLabel: l10n.tournamentContactTitle,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  _buildSectionHeader(
+                                    l10n.tournamentContactTitle.toUpperCase(),
+                                  ),
+                                  _editIndicator(widget.onEditContact),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              _buildContactRows(contact, l10n),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        _buildContactRows(contact, l10n),
                       ],
                     ],
                   ),
@@ -1041,6 +1058,15 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 
+  /// A manager's contact block is one tap target (opens its edit popup), and
+  /// selectable text would swallow that tap; everyone else can still copy.
+  Widget _contactText(TextSpan span) {
+    const style = TextStyle(fontSize: 13);
+    return widget.onEditContact == null
+        ? SelectableText.rich(span, style: style)
+        : Text.rich(span, style: style);
+  }
+
   Widget _buildContactRows(TournamentContact contact, AppLocalizations l10n) {
     final colors = context.colors;
     Widget row(IconData icon, String label, String value) => Padding(
@@ -1051,7 +1077,7 @@ class _OverviewTabState extends State<OverviewTab> {
           Icon(icon, size: 16, color: colors.textMuted),
           const SizedBox(width: 10),
           Expanded(
-            child: SelectableText.rich(
+            child: _contactText(
               TextSpan(
                 children: [
                   if (label.isNotEmpty)
@@ -1068,7 +1094,6 @@ class _OverviewTabState extends State<OverviewTab> {
                   ),
                 ],
               ),
-              style: const TextStyle(fontSize: 13),
             ),
           ),
         ],

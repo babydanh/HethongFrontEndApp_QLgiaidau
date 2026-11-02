@@ -18,11 +18,15 @@ class TournamentManagementFinanceSection extends ConsumerWidget {
     super.key,
     required this.tournament,
     this.focusEntryFee = false,
+    this.popup = false,
   });
   final Tournament tournament;
 
   /// Put the cursor in the entry fee field as soon as it appears.
   final bool focusEntryFee;
+
+  /// Shown in a popup: only the fee, closing itself after a save.
+  final bool popup;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,6 +53,7 @@ class TournamentManagementFinanceSection extends ConsumerWidget {
     return _TournamentFinanceContent(
       tournament: tournament,
       focusEntryFee: focusEntryFee,
+      popup: popup,
       canRequestPayout: canRequestPayout,
       payoutAccessMessage: accessMessage,
       onRetryAccess: user.hasError
@@ -98,10 +103,12 @@ class _TournamentFinanceContent extends ConsumerStatefulWidget {
     required this.canRequestPayout,
     required this.payoutAccessMessage,
     required this.focusEntryFee,
+    required this.popup,
     this.onRetryAccess,
   });
   final Tournament tournament;
   final bool focusEntryFee;
+  final bool popup;
   final bool canRequestPayout;
   final String? payoutAccessMessage;
   final VoidCallback? onRetryAccess;
@@ -186,7 +193,9 @@ class _TournamentFinanceContentState
                     );
                   },
                 ),
-                if (widget.canRequestPayout)
+                if (widget.popup)
+                  const SizedBox.shrink()
+                else if (widget.canRequestPayout)
                   _PayoutRows(
                     tournamentId: widget.tournament.id,
                     payoutsFuture: _payoutsFuture,
@@ -293,6 +302,7 @@ class _TournamentFinanceContentState
           ),
         ),
       );
+      if (widget.popup) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) setState(() => _feeError = true);
     } finally {

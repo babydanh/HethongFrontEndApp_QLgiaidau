@@ -47,6 +47,7 @@ enum TournamentManagementSection {
 enum TournamentManagementFocus {
   name,
   branding,
+  contact,
   venue,
   fee,
   registrationOpens,
@@ -63,6 +64,7 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     required this.actionRouteBase,
     this.unsavedChanges,
     this.focus,
+    this.popup = false,
   });
 
   final Tournament tournament;
@@ -70,6 +72,9 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
   final String opsWorkspaceRoute;
   final String actionRouteBase;
   final TournamentManagementFocus? focus;
+
+  /// Shown in a popup: only the focused item, closing itself after a save.
+  final bool popup;
 
   /// Set to true while the information page holds edits that are not saved,
   /// so the hub can ask before leaving the page.
@@ -84,6 +89,7 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
       group: _SettingsGroup.information,
       unsavedChanges: unsavedChanges,
       focus: focus,
+      popup: popup,
     ),
     TournamentManagementSection.schedule => TournamentManagementVenuesSection(
       tournamentId: tournament.id,
@@ -93,6 +99,7 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
       tournament: tournament,
       group: _SettingsGroup.registration,
       focus: focus,
+      popup: popup,
     ),
     TournamentManagementSection.permissions =>
       TournamentManagementPeopleSection(
@@ -107,6 +114,7 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     TournamentManagementSection.finance => TournamentManagementFinanceSection(
       tournament: tournament,
       focusEntryFee: focus == TournamentManagementFocus.fee,
+      popup: popup,
     ),
     TournamentManagementSection.livestream =>
       TournamentManagementLivestreamSection(
@@ -261,12 +269,14 @@ class _TournamentSettingsForm extends ConsumerStatefulWidget {
     required this.group,
     this.unsavedChanges,
     this.focus,
+    this.popup = false,
   });
 
   final Tournament tournament;
   final _SettingsGroup group;
   final ValueNotifier<bool>? unsavedChanges;
   final TournamentManagementFocus? focus;
+  final bool popup;
 
   @override
   ConsumerState<_TournamentSettingsForm> createState() =>
@@ -357,12 +367,14 @@ class _TournamentSettingsFormState
       _ => null,
     };
     if (field == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final editable = field == _RegistrationField.deadline
           ? _deadlineEditable
           : _settingsEditable;
-      if (editable) _pickRegistrationDate(field);
+      if (!editable) return;
+      final picked = await _pickRegistrationDate(field);
+      if (!picked && widget.popup && mounted) Navigator.of(context).pop();
     });
   }
 
@@ -450,6 +462,7 @@ class _TournamentSettingsFormState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (widget.popup) return _popupBody(l10n);
     final body = _isInformation
         ? _informationGroups(context, l10n)
         : TournamentManagementSectionCard(
@@ -479,6 +492,43 @@ class _TournamentSettingsFormState
     );
   }
 
+  /// Popup: only the tapped item and its own save button.
+  Widget _popupBody(AppLocalizations l10n) {
+    final dateField = switch (widget.focus) {
+      TournamentManagementFocus.registrationOpens => _RegistrationField.opens,
+      TournamentManagementFocus.registrationDeadline =>
+        _RegistrationField.deadline,
+      TournamentManagementFocus.tournamentOpening => _RegistrationField.opening,
+      _ => null,
+    };
+    if (widget.focus == TournamentManagementFocus.branding) {
+      return SingleChildScrollView(
+        child: TournamentManagementBrandsSection(tournament: widget.tournament),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (widget.focus == TournamentManagementFocus.name)
+                _nameField(l10n)
+              else if (widget.focus == TournamentManagementFocus.contact)
+                ..._contactFields(l10n)
+              else if (dateField != null)
+                _registrationDateRow(l10n, dateField),
+            ],
+          ),
+        ),
+        _StickySaveBar(error: _errorMessage, button: _saveButton(l10n)),
+      ],
+    );
+  }
+
   /// Bốn nhóm như Web; mỗi nhóm thu gọn/mở được, chỉ nhóm Chung mở sẵn.
   Widget _informationGroups(BuildContext context, AppLocalizations l10n) =>
       Column(
@@ -486,14 +536,11 @@ class _TournamentSettingsFormState
         children: [
           _InfoGroup(
             title: l10n.manageInfoGroupGeneral,
-            initiallyExpanded:
-                widget.focus != TournamentManagementFocus.branding,
+            initiallyExpanded: true,
             children: _generalFields(l10n),
           ),
           _InfoGroup(
             title: l10n.manageInfoGroupIdentity,
-            initiallyExpanded:
-                widget.focus == TournamentManagementFocus.branding,
             children: [
               TournamentManagementBrandsSection(tournament: widget.tournament),
             ],
@@ -588,16 +635,18 @@ class _TournamentSettingsFormState
     ),
   );
 
-  List<Widget> _generalFields(AppLocalizations l10n) => [
-    TextField(
-      controller: _nameController,
-      autofocus: widget.focus == TournamentManagementFocus.name,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: l10n.tournamentManagementName,
-        border: _fieldBorder(context),
-      ),
+  Widget _nameField(AppLocalizations l10n) => TextField(
+    controller: _nameController,
+    autofocus: widget.focus == TournamentManagementFocus.name,
+    textInputAction: TextInputAction.next,
+    decoration: InputDecoration(
+      labelText: l10n.tournamentManagementName,
+      border: _fieldBorder(context),
     ),
+  );
+
+  List<Widget> _generalFields(AppLocalizations l10n) => [
+    _nameField(l10n),
     const SizedBox(height: 12),
     // Rich text dùng chung với web: cùng Editor.js nên HTML xuất ra
     // giống hệt, mô tả không bị đổi hình dạng khi lưu từ app.
@@ -633,45 +682,13 @@ class _TournamentSettingsFormState
       _hint(context, l10n.tournamentManagementRegistrationLockedHint)
     else if (_closed)
       _hint(context, l10n.tournamentManagementRegistrationClosedHint),
-    _dateField(
-      context,
-      buttonKey: const ValueKey('registration-opens'),
-      label: l10n.tournamentManagementRegistrationStarts,
-      value: _registrationStartDate,
-      enabled: _settingsEditable,
-      error: _registrationOrderErrors(l10n)[_RegistrationField.opens],
-      onTap: () => _pickRegistrationDate(_RegistrationField.opens),
-    ),
+    _registrationDateRow(l10n, _RegistrationField.opens),
     const SizedBox(height: 12),
-    _dateField(
-      context,
-      buttonKey: const ValueKey('registration-deadline'),
-      label: l10n.tournamentManagementRegistrationEnds,
-      value: _registrationEndDate,
-      enabled: _deadlineEditable,
-      error: _registrationOrderErrors(l10n)[_RegistrationField.deadline],
-      onTap: () => _pickRegistrationDate(_RegistrationField.deadline),
-    ),
+    _registrationDateRow(l10n, _RegistrationField.deadline),
     const SizedBox(height: 12),
-    _dateField(
-      context,
-      buttonKey: const ValueKey('tournament-opening'),
-      label: l10n.tournamentManagementStartDate,
-      value: _startDate,
-      enabled: _settingsEditable,
-      error: _registrationOrderErrors(l10n)[_RegistrationField.opening],
-      onTap: () => _pickRegistrationDate(_RegistrationField.opening),
-    ),
+    _registrationDateRow(l10n, _RegistrationField.opening),
     const SizedBox(height: 12),
-    _dateField(
-      context,
-      buttonKey: const ValueKey('tournament-closing'),
-      label: l10n.tournamentManagementEndDate,
-      value: _endDate,
-      enabled: _settingsEditable,
-      error: _registrationOrderErrors(l10n)[_RegistrationField.closing],
-      onTap: () => _pickRegistrationDate(_RegistrationField.closing),
-    ),
+    _registrationDateRow(l10n, _RegistrationField.closing),
     const Divider(height: 32),
     SwitchListTile(
       key: const ValueKey('registration-public'),
@@ -969,9 +986,48 @@ class _TournamentSettingsFormState
   DateTime _laterOf(DateTime? first, DateTime second) =>
       first != null && first.isAfter(second) ? first : second;
 
-  Future<void> _pickRegistrationDate(_RegistrationField field) {
+  Widget _registrationDateRow(AppLocalizations l10n, _RegistrationField field) {
+    final (key, label, value, enabled) = switch (field) {
+      _RegistrationField.opens => (
+        'registration-opens',
+        l10n.tournamentManagementRegistrationStarts,
+        _registrationStartDate,
+        _settingsEditable,
+      ),
+      _RegistrationField.deadline => (
+        'registration-deadline',
+        l10n.tournamentManagementRegistrationEnds,
+        _registrationEndDate,
+        _deadlineEditable,
+      ),
+      _RegistrationField.opening => (
+        'tournament-opening',
+        l10n.tournamentManagementStartDate,
+        _startDate,
+        _settingsEditable,
+      ),
+      _RegistrationField.closing => (
+        'tournament-closing',
+        l10n.tournamentManagementEndDate,
+        _endDate,
+        _settingsEditable,
+      ),
+    };
+    return _dateField(
+      context,
+      buttonKey: ValueKey(key),
+      label: label,
+      value: value,
+      enabled: enabled,
+      error: _registrationOrderErrors(l10n)[field],
+      onTap: () => _pickRegistrationDate(field),
+    );
+  }
+
+  /// True when a date was chosen. In a popup the choice is saved at once.
+  Future<bool> _pickRegistrationDate(_RegistrationField field) async {
     final l10n = AppLocalizations.of(context)!;
-    return switch (field) {
+    final picked = await switch (field) {
       _RegistrationField.opens => _pickDate(
         _registrationStartDate,
         (value) => setState(() => _registrationStartDate = value),
@@ -1014,9 +1070,11 @@ class _TournamentSettingsFormState
         minDate: _startDate,
       ),
     };
+    if (picked && widget.popup && mounted) await _save();
+    return picked;
   }
 
-  Future<void> _pickDate(
+  Future<bool> _pickDate(
     DateTime? current,
     ValueChanged<DateTime> onSelected, {
     required String subtitle,
@@ -1033,8 +1091,9 @@ class _TournamentSettingsFormState
       maxDate: maxDate?.toLocal(),
       showEndOfDayChip: endOfDayChip,
     );
-    if (picked == null || !mounted) return;
+    if (picked == null || !mounted) return false;
     onSelected(picked);
+    return true;
   }
 
   Future<void> _save() async {
@@ -1062,6 +1121,7 @@ class _TournamentSettingsFormState
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));
+      if (widget.popup) Navigator.of(context).pop();
     } catch (error) {
       if (mounted) {
         setState(

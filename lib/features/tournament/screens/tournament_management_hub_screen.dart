@@ -20,6 +20,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_reconfirm_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_edit_popup.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -79,9 +80,6 @@ class _TournamentManagementHubScreenState
       TournamentManagementSection.information;
   TournamentManagementSection? _openedSection;
 
-  /// The exact thing tapped on the overview; cleared by any other way in.
-  TournamentManagementFocus? _focus;
-
   /// True while the open section page holds edits that are not saved yet.
   final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
@@ -116,10 +114,7 @@ class _TournamentManagementHubScreenState
     }
   }
 
-  void _openSection(
-    TournamentManagementSection section, {
-    TournamentManagementFocus? focus,
-  }) {
+  void _openSection(TournamentManagementSection section) {
     // Divisions have their own tab instead of a settings page.
     if (section == TournamentManagementSection.divisions) {
       _tabController.animateTo(_HubTab.divisions.index);
@@ -128,10 +123,20 @@ class _TournamentManagementHubScreenState
     final isTablet = !ResponsiveLayout.isMobile(context);
     setState(() {
       _selectedSection = section;
-      _focus = focus;
       if (!isTablet) _openedSection = section;
     });
     if (isTablet) _tabController.animateTo(_HubTab.settings.index);
+  }
+
+  /// Edits the tapped item in its own popup instead of opening a page.
+  void _editPopup(TournamentManagementFocus focus) {
+    showTournamentEditPopup(
+      context,
+      tournament: widget.tournament,
+      focus: focus,
+      opsWorkspaceRoute: widget.opsWorkspaceRoute,
+      actionRouteBase: widget.actionRouteBase,
+    );
   }
 
   /// Leaving a page with unsaved edits asks first; otherwise closes at once.
@@ -316,10 +321,8 @@ class _TournamentManagementHubScreenState
                     background: TournamentManagementBanner(
                       tournament: tournament,
                       resolveImageUrl: _resolveImageUrl,
-                      onEdit: () => _openSection(
-                        TournamentManagementSection.information,
-                        focus: TournamentManagementFocus.branding,
-                      ),
+                      onEdit: () =>
+                          _editPopup(TournamentManagementFocus.branding),
                     ),
                   ),
           ),
@@ -329,10 +332,8 @@ class _TournamentManagementHubScreenState
         SliverToBoxAdapter(
           child: TournamentManagementSummary(
             tournament: tournament,
-            onEditInformation: () => _openSection(
-              TournamentManagementSection.information,
-              focus: TournamentManagementFocus.name,
-            ),
+            onEditInformation: () =>
+                _editPopup(TournamentManagementFocus.name),
           ),
         ),
         // Step bar + the one next-step button, as at the top of the Web page.
@@ -383,24 +384,16 @@ class _TournamentManagementHubScreenState
                 overlapHandles: overlapHandles,
                 onEditInformation: () =>
                     _openSection(TournamentManagementSection.information),
-                onEditBranding: () => _openSection(
-                  TournamentManagementSection.information,
-                  focus: TournamentManagementFocus.branding,
-                ),
-                onEditSchedule: () => _openSection(
-                  TournamentManagementSection.schedule,
-                  focus: TournamentManagementFocus.venue,
-                ),
+                onEditBranding: () =>
+                    _editPopup(TournamentManagementFocus.branding),
+                onEditContact: () =>
+                    _editPopup(TournamentManagementFocus.contact),
+                onEditSchedule: () =>
+                    _editPopup(TournamentManagementFocus.venue),
                 onEditRegistration: () =>
                     _openSection(TournamentManagementSection.registration),
-                onEditTimelineDate: (focus) => _openSection(
-                  TournamentManagementSection.registration,
-                  focus: focus,
-                ),
-                onEditFinance: () => _openSection(
-                  TournamentManagementSection.finance,
-                  focus: TournamentManagementFocus.fee,
-                ),
+                onEditTimelineDate: _editPopup,
+                onEditFinance: () => _editPopup(TournamentManagementFocus.fee),
                 onToggleFounderHidden: _setFounderHidden,
               ),
               CustomScrollView(
@@ -559,7 +552,6 @@ class _TournamentManagementHubScreenState
         return TournamentManagementSectionScreen(
           tournament: tournament,
           section: _selectedSection,
-          focus: _focus,
           opsWorkspaceRoute: widget.opsWorkspaceRoute,
           actionRouteBase: widget.actionRouteBase,
           unsavedChanges: _unsavedChanges,
@@ -755,10 +747,7 @@ class _TournamentManagementHubScreenState
       ],
       onTap: () {
         if (isTablet) {
-          setState(() {
-            _selectedSection = section;
-            _focus = null;
-          });
+          setState(() => _selectedSection = section);
         } else {
           _openSection(section);
         }
