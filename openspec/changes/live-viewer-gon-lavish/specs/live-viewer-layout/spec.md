@@ -1,14 +1,14 @@
 ## ADDED Requirements
 
-### Requirement: Bảng điểm overlay dưới video cho người xem
-Trang xem live của người xem SHALL vẽ bảng điểm kiểu overlay Web (hai hàng chồng, vạch xanh, ô điểm vát) ở phía dưới video, và MUST tạm ẩn bảng điểm khi overlay H2H hoặc Sơ đồ đang hiện.
+### Requirement: Bảng điểm overlay góc trên trái video cho người xem
+Trang xem live của người xem SHALL vẽ bảng điểm kiểu overlay Web (hai hàng chồng, vạch xanh, ô điểm vát) ở góc trên trái video như Web, tên viết tắt IN HOA, và MUST tạm ẩn bảng điểm khi overlay Sơ đồ phủ kín khung đang hiện.
 
-#### Scenario: Không có overlay H2H hay Sơ đồ
-- **WHEN** người xem mở trận có bảng điểm bật và không có overlay khác
-- **THEN** bảng điểm hiện ở góc dưới trái video, không nằm dưới nút Quay lại
+#### Scenario: Không có overlay Sơ đồ
+- **WHEN** người xem mở trận có bảng điểm bật và Sơ đồ không hiện
+- **THEN** bảng điểm hiện ở góc trên trái video, các nút Quay lại/LIVE/Chia sẻ/Thêm nằm ở dải riêng phía trên video
 
-#### Scenario: H2H đang hiện
-- **WHEN** trọng tài bật overlay H2H
+#### Scenario: Sơ đồ đang hiện
+- **WHEN** trọng tài bật overlay Sơ đồ
 - **THEN** bảng điểm không hiện trong lúc đó
 
 ### Requirement: Popup Chi tiết trận gọn

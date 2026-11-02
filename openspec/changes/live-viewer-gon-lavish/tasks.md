@@ -1,5 +1,5 @@
 ## 1. Bảng điểm overlay
-- [x] 1.1 Widget `LiveScoreboardOverlay` kiểu Web, đặt dưới video cho người xem, ẩn khi H2H/Sơ đồ hiện. Tiêu chí: `flutter test --no-pub test/features/match/live_scoreboard_overlay_test.dart` → exit 0
+- [x] 1.1 Widget `LiveScoreboardOverlay` kiểu Web, đặt góc trên trái video cho người xem (tên viết tắt IN HOA, thanh nút tách khỏi video ở chế độ dọc), ẩn khi Sơ đồ hiện. Tiêu chí: `flutter test --no-pub test/features/match/live_scoreboard_overlay_test.dart` → exit 0
   - Files: tạo `lib/features/match/widgets/viewer/live_scoreboard_overlay.dart`; sửa `lib/features/match/screens/live_score_screen.dart` (`_liveScoreOverlay`, khối Positioned bảng điểm); test `test/features/match/live_scoreboard_overlay_test.dart`
   - Giao: `LiveScoreboardOverlay({team1, team2: Widget, score1, score2: int, finished: bool})` · Nhận: (không)
   - Chủ file chung: 1.1 giữ `live_score_screen.dart` trước 2.1, 3.1

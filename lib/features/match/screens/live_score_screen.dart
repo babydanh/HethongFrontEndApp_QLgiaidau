@@ -2479,7 +2479,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
             ],
           ),
-          child: Stack(
+          child: _withViewerTopBar(
+            viewerLayout && !landscape ? match : null,
+            Stack(
             children: [
               // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
               // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
@@ -2491,19 +2493,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
               ),
 
-              // Bảng điểm đè khung hình, kiểu hai hàng chồng của web. Người xem:
-              // nằm phía dưới video như overlay H2H / Sơ đồ (và nhường chỗ khi
-              // một trong hai đang hiện, vì cùng vùng đáy). Người điều khiển:
-              // giữ góc trên trái.
+              // Bảng điểm đè khung hình ở góc trên trái như web (cách mép 6).
+              // Người xem dọc: thanh Quay lại nằm trên video nên không đè.
+              // Ngang toàn màn hình: thanh còn đè video nên đẩy bảng xuống.
+              // Sơ đồ phủ kín khung nên bảng nhường chỗ khi nó hiện.
               if (match.scoreboardVisible &&
-                  (!viewerLayout || overlayToShow == null))
+                  (!viewerLayout || overlayToShow != LiveOverlayKind.bracket))
                 Positioned(
-                  top: viewerLayout ? null : 8,
-                  bottom: viewerLayout ? liveOverlayBottomInset : null,
-                  left: 8,
+                  top: !viewerLayout ? 8 : (landscape ? 48 : 6),
+                  left: viewerLayout ? 6 : 8,
                   child: _liveScoreOverlay(match, currentScore),
                 ),
-              if (viewerLayout)
+              if (viewerLayout && landscape)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -2650,6 +2651,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
             ],
           ),
+          ),
         );
 
     if (landscape) return _buildViewerLandscape(match, videoBox);
@@ -2765,6 +2767,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   String _viewerTitle(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
     return '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} ${matchSideLabel(match, 2)}';
+  }
+
+  /// Portrait viewer: the control bar sits in its own strip above the video so
+  /// the scoreboard can take the video's top-left corner like on the Web.
+  Widget _withViewerTopBar(MatchModel? match, Widget video) {
+    if (match == null) return video;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [_buildViewerTopBar(match), video],
+    );
   }
 
   /// Back / LIVE / share / more, drawn over the top of the video.
@@ -3362,15 +3374,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   }
 
 
-  /// Bảng điểm hai hàng chồng ở góc trên trái, giống hệt web
-  /// (`LiveScoreboardOverlay.tsx`): mỗi hàng là [tên viết tắt | ô điểm nền
-  /// trắng]. Không thu nhỏ so với web để hai bên nhìn giống nhau.
+  /// Bảng điểm hai hàng chồng ở góc trên trái, giống web
+  /// (`LiveScoreboardOverlay.tsx`): mỗi hàng là [tên viết tắt IN HOA | ô điểm
+  /// vát]. Chỉ chữ, không avatar, như web.
   Widget _liveScoreOverlay(MatchModel match, dynamic score) {
-    Widget sideName(int side) => ParticipantLabel(
-      teamName: matchSideTeamName(match, side),
-      players: matchSidePlayers(match, side),
-      teamOnly: isFootballMatch(match),
-      compact: true,
+    Widget sideName(int side) => Text(
+      participantLabel(
+        teamName: matchSideTeamName(match, side),
+        players: matchSidePlayers(match, side),
+        teamOnly: isFootballMatch(match),
+        abbreviated: true,
+      ).toUpperCase(),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: const TextStyle(
         color: Colors.white,
         fontSize: 11,
