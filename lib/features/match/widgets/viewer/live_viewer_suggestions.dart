@@ -6,16 +6,26 @@ import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Matches worth offering next: live ones first, then upcoming ones; the match
-/// being watched and finished/other statuses are left out.
+// Same live statuses as the Web "Đang diễn ra" tab (it also accepts PLAYING).
+const _liveStatuses = {'LIVE', 'ONGOING', 'IN_PROGRESS', 'PLAYING'};
+
+bool _isOfferable(MatchModel m) =>
+    !m.isByeMatch && !m.isCompleted && m.winnerId.isEmpty;
+
+/// Matches worth offering next, using the Web rules: no byes, nothing already
+/// completed or decided. Live ones first, then upcoming ones; the match being
+/// watched and other statuses are left out.
 List<MatchModel> pickLiveSuggestions(
   List<MatchModel> matches, {
   required String currentMatchId,
 }) {
-  final others = matches.where((m) => m.id != currentMatchId);
+  final others = matches.where(
+    (m) => m.id != currentMatchId && _isOfferable(m),
+  );
+  bool isLiveNow(MatchModel m) => _liveStatuses.contains(m.normalizedStatus);
   return [
-    ...others.where((m) => m.isLive),
-    ...others.where((m) => !m.isLive && m.isScheduled),
+    ...others.where(isLiveNow),
+    ...others.where((m) => !isLiveNow(m) && m.isScheduled),
   ];
 }
 

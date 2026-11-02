@@ -33,6 +33,34 @@ void main() {
     );
   });
 
+  test('TC-LIVEVIEW-08 a PLAYING match counts as live like on the Web', () {
+    final picked = pickLiveSuggestions([
+      _match('soon', 'scheduled'),
+      _match('now', 'playing'),
+    ], currentMatchId: 'me');
+
+    expect(picked.map((m) => m.id), ['now', 'soon']);
+  });
+
+  test('TC-LIVEVIEW-09 bye matches are never offered', () {
+    final picked = pickLiveSuggestions([
+      _match('bye-live', 'in_progress', isBye: true),
+      _match('bye-soon', 'scheduled', isBye: true),
+      _match('ok', 'scheduled'),
+    ], currentMatchId: 'me');
+
+    expect(picked.map((m) => m.id), ['ok']);
+  });
+
+  test('TC-LIVEVIEW-10 a match that already has a winner is not offered', () {
+    final picked = pickLiveSuggestions([
+      _match('won', 'in_progress', winnerId: 'a'),
+      _match('ok', 'in_progress'),
+    ], currentMatchId: 'me');
+
+    expect(picked.map((m) => m.id), ['ok']);
+  });
+
   testWidgets('TC-LIVEVIEW-06 renders cards and opens the tapped match', (
     tester,
   ) async {
@@ -101,7 +129,12 @@ Widget _app({
   );
 }
 
-MatchModel _match(String id, String status) => MatchModel(
+MatchModel _match(
+  String id,
+  String status, {
+  bool isBye = false,
+  String winnerId = '',
+}) => MatchModel(
   id: id,
   tournamentId: 't1',
   round: 1,
@@ -111,6 +144,8 @@ MatchModel _match(String id, String status) => MatchModel(
   team1Name: 'Alpha $id',
   team2Name: 'Beta $id',
   status: status,
+  isBye: isBye,
+  winnerId: winnerId,
   bracketPosition: const BracketPosition(round: 1, position: 1),
   updatedAt: DateTime.utc(2026, 11, 1),
 );
