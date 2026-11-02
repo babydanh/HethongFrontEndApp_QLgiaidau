@@ -42,6 +42,18 @@ enum TournamentManagementSection {
   liveOperations,
 }
 
+/// The exact thing a manager tapped on the overview; the section opens
+/// straight on it (focused field, open group or date picker).
+enum TournamentManagementFocus {
+  name,
+  branding,
+  venue,
+  fee,
+  registrationOpens,
+  registrationDeadline,
+  tournamentOpening,
+}
+
 class TournamentManagementSectionScreen extends ConsumerWidget {
   const TournamentManagementSectionScreen({
     super.key,
@@ -50,12 +62,14 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     required this.opsWorkspaceRoute,
     required this.actionRouteBase,
     this.unsavedChanges,
+    this.focus,
   });
 
   final Tournament tournament;
   final TournamentManagementSection section;
   final String opsWorkspaceRoute;
   final String actionRouteBase;
+  final TournamentManagementFocus? focus;
 
   /// Set to true while the information page holds edits that are not saved,
   /// so the hub can ask before leaving the page.
@@ -69,12 +83,16 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
       tournament: tournament,
       group: _SettingsGroup.information,
       unsavedChanges: unsavedChanges,
+      focus: focus,
     ),
-    TournamentManagementSection.schedule =>
-      TournamentManagementVenuesSection(tournamentId: tournament.id),
+    TournamentManagementSection.schedule => TournamentManagementVenuesSection(
+      tournamentId: tournament.id,
+      editFirstVenue: focus == TournamentManagementFocus.venue,
+    ),
     TournamentManagementSection.registration => _TournamentSettingsForm(
       tournament: tournament,
       group: _SettingsGroup.registration,
+      focus: focus,
     ),
     TournamentManagementSection.permissions =>
       TournamentManagementPeopleSection(
@@ -88,6 +106,7 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
     ),
     TournamentManagementSection.finance => TournamentManagementFinanceSection(
       tournament: tournament,
+      focusEntryFee: focus == TournamentManagementFocus.fee,
     ),
     TournamentManagementSection.livestream =>
       TournamentManagementLivestreamSection(
@@ -241,11 +260,13 @@ class _TournamentSettingsForm extends ConsumerStatefulWidget {
     required this.tournament,
     required this.group,
     this.unsavedChanges,
+    this.focus,
   });
 
   final Tournament tournament;
   final _SettingsGroup group;
   final ValueNotifier<bool>? unsavedChanges;
+  final TournamentManagementFocus? focus;
 
   @override
   ConsumerState<_TournamentSettingsForm> createState() =>
@@ -315,11 +336,34 @@ class _TournamentSettingsFormState
   @override
   void initState() {
     super.initState();
-    if (!_isInformation) return;
+    if (!_isInformation) {
+      _openFocusedDate();
+      return;
+    }
     _baseline = _current;
     _nameController.addListener(_syncDirty);
     _phoneController.addListener(_syncDirty);
     _emailController.addListener(_syncDirty);
+  }
+
+  /// Opens the picker of the roadmap row tapped on the overview, once the
+  /// page is up. Locked rows stay shut, exactly as their field is.
+  void _openFocusedDate() {
+    final field = switch (widget.focus) {
+      TournamentManagementFocus.registrationOpens => _RegistrationField.opens,
+      TournamentManagementFocus.registrationDeadline =>
+        _RegistrationField.deadline,
+      TournamentManagementFocus.tournamentOpening => _RegistrationField.opening,
+      _ => null,
+    };
+    if (field == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final editable = field == _RegistrationField.deadline
+          ? _deadlineEditable
+          : _settingsEditable;
+      if (editable) _pickRegistrationDate(field);
+    });
   }
 
   String get _savedVisibility =>
@@ -442,11 +486,14 @@ class _TournamentSettingsFormState
         children: [
           _InfoGroup(
             title: l10n.manageInfoGroupGeneral,
-            initiallyExpanded: true,
+            initiallyExpanded:
+                widget.focus != TournamentManagementFocus.branding,
             children: _generalFields(l10n),
           ),
           _InfoGroup(
             title: l10n.manageInfoGroupIdentity,
+            initiallyExpanded:
+                widget.focus == TournamentManagementFocus.branding,
             children: [
               TournamentManagementBrandsSection(tournament: widget.tournament),
             ],
@@ -544,6 +591,7 @@ class _TournamentSettingsFormState
   List<Widget> _generalFields(AppLocalizations l10n) => [
     TextField(
       controller: _nameController,
+      autofocus: widget.focus == TournamentManagementFocus.name,
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         labelText: l10n.tournamentManagementName,
@@ -592,16 +640,7 @@ class _TournamentSettingsFormState
       value: _registrationStartDate,
       enabled: _settingsEditable,
       error: _registrationOrderErrors(l10n)[_RegistrationField.opens],
-      onTap: () => _pickDate(
-        _registrationStartDate,
-        (value) => setState(() => _registrationStartDate = value),
-        subtitle: _pickerSubtitle(
-          l10n.tournamentManagementRegistrationStarts,
-          _registrationEndDate,
-          l10n.tournamentManagementDateLimitRegistrationStartMax,
-        ),
-        maxDate: _registrationEndDate,
-      ),
+      onTap: () => _pickRegistrationDate(_RegistrationField.opens),
     ),
     const SizedBox(height: 12),
     _dateField(
@@ -611,17 +650,7 @@ class _TournamentSettingsFormState
       value: _registrationEndDate,
       enabled: _deadlineEditable,
       error: _registrationOrderErrors(l10n)[_RegistrationField.deadline],
-      onTap: () => _pickDate(
-        _registrationEndDate,
-        (value) => setState(() => _registrationEndDate = value),
-        subtitle: _pickerSubtitle(
-          l10n.tournamentManagementRegistrationEnds,
-          _registrationStartDate,
-          l10n.tournamentManagementDateLimitDeadlineMin,
-        ),
-        minDate: _laterOf(_registrationStartDate, DateTime.now()),
-        endOfDayChip: true,
-      ),
+      onTap: () => _pickRegistrationDate(_RegistrationField.deadline),
     ),
     const SizedBox(height: 12),
     _dateField(
@@ -631,16 +660,7 @@ class _TournamentSettingsFormState
       value: _startDate,
       enabled: _settingsEditable,
       error: _registrationOrderErrors(l10n)[_RegistrationField.opening],
-      onTap: () => _pickDate(
-        _startDate,
-        (value) => setState(() => _startDate = value),
-        subtitle: _pickerSubtitle(
-          l10n.tournamentManagementStartDate,
-          _registrationEndDate,
-          l10n.tournamentManagementDateLimitOpeningMin,
-        ),
-        minDate: _registrationEndDate,
-      ),
+      onTap: () => _pickRegistrationDate(_RegistrationField.opening),
     ),
     const SizedBox(height: 12),
     _dateField(
@@ -650,16 +670,7 @@ class _TournamentSettingsFormState
       value: _endDate,
       enabled: _settingsEditable,
       error: _registrationOrderErrors(l10n)[_RegistrationField.closing],
-      onTap: () => _pickDate(
-        _endDate,
-        (value) => setState(() => _endDate = value),
-        subtitle: _pickerSubtitle(
-          l10n.tournamentManagementEndDate,
-          _startDate,
-          l10n.tournamentManagementDateLimitClosingMin,
-        ),
-        minDate: _startDate,
-      ),
+      onTap: () => _pickRegistrationDate(_RegistrationField.closing),
     ),
     const Divider(height: 32),
     SwitchListTile(
@@ -957,6 +968,53 @@ class _TournamentSettingsFormState
 
   DateTime _laterOf(DateTime? first, DateTime second) =>
       first != null && first.isAfter(second) ? first : second;
+
+  Future<void> _pickRegistrationDate(_RegistrationField field) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (field) {
+      _RegistrationField.opens => _pickDate(
+        _registrationStartDate,
+        (value) => setState(() => _registrationStartDate = value),
+        subtitle: _pickerSubtitle(
+          l10n.tournamentManagementRegistrationStarts,
+          _registrationEndDate,
+          l10n.tournamentManagementDateLimitRegistrationStartMax,
+        ),
+        maxDate: _registrationEndDate,
+      ),
+      _RegistrationField.deadline => _pickDate(
+        _registrationEndDate,
+        (value) => setState(() => _registrationEndDate = value),
+        subtitle: _pickerSubtitle(
+          l10n.tournamentManagementRegistrationEnds,
+          _registrationStartDate,
+          l10n.tournamentManagementDateLimitDeadlineMin,
+        ),
+        minDate: _laterOf(_registrationStartDate, DateTime.now()),
+        endOfDayChip: true,
+      ),
+      _RegistrationField.opening => _pickDate(
+        _startDate,
+        (value) => setState(() => _startDate = value),
+        subtitle: _pickerSubtitle(
+          l10n.tournamentManagementStartDate,
+          _registrationEndDate,
+          l10n.tournamentManagementDateLimitOpeningMin,
+        ),
+        minDate: _registrationEndDate,
+      ),
+      _RegistrationField.closing => _pickDate(
+        _endDate,
+        (value) => setState(() => _endDate = value),
+        subtitle: _pickerSubtitle(
+          l10n.tournamentManagementEndDate,
+          _startDate,
+          l10n.tournamentManagementDateLimitClosingMin,
+        ),
+        minDate: _startDate,
+      ),
+    };
+  }
 
   Future<void> _pickDate(
     DateTime? current,

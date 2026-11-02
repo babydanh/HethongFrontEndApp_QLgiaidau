@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/tournament_contact.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -26,6 +27,10 @@ class OverviewTab extends StatefulWidget {
   final VoidCallback? onEditSchedule;
   final VoidCallback? onEditRegistration;
   final VoidCallback? onEditFinance;
+
+  /// Roadmap rows: tapping one opens that date's picker. When null the whole
+  /// roadmap block falls back to [onEditRegistration].
+  final ValueChanged<TournamentManagementFocus>? onEditTimelineDate;
 
   /// Manager-only: shows the founder row even when hidden, with an eye toggle.
   /// Receives the new `hidden` value to persist.
@@ -48,6 +53,7 @@ class OverviewTab extends StatefulWidget {
     this.onEditSchedule,
     this.onEditRegistration,
     this.onEditFinance,
+    this.onEditTimelineDate,
     this.onToggleFounderHidden,
     this.overlapHandles = const [],
   });
@@ -798,7 +804,9 @@ class _OverviewTabState extends State<OverviewTab> {
                           key: const ValueKey(
                             'tournament-overview-timeline-edit',
                           ),
-                          onTap: widget.onEditRegistration,
+                          onTap: widget.onEditTimelineDate == null
+                              ? widget.onEditRegistration
+                              : null,
                           sectionLabel: l10n.tournamentManagementRegistration,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,7 +818,8 @@ class _OverviewTabState extends State<OverviewTab> {
                                       'LỘ TRÌNH GIẢI ĐẤU',
                                     ),
                                   ),
-                                  _editIndicator(widget.onEditRegistration),
+                                  if (widget.onEditTimelineDate == null)
+                                    _editIndicator(widget.onEditRegistration),
                                 ],
                               ),
                               const SizedBox(height: 8),
@@ -823,7 +832,10 @@ class _OverviewTabState extends State<OverviewTab> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _buildTimelineItem(
+                                    _timelineRow(
+                                      focus: TournamentManagementFocus
+                                          .registrationOpens,
+                                      editKey: 'opens',
                                       title: 'Mở đăng ký',
                                       subtitle: _formatDate(
                                         t.registrationStartDate,
@@ -836,7 +848,10 @@ class _OverviewTabState extends State<OverviewTab> {
                                             t.registrationStartDate!,
                                           ),
                                     ),
-                                    _buildTimelineItem(
+                                    _timelineRow(
+                                      focus: TournamentManagementFocus
+                                          .registrationDeadline,
+                                      editKey: 'deadline',
                                       title: 'Hạn chót đăng ký',
                                       subtitle: _formatDate(
                                         t.registrationEndDate,
@@ -849,7 +864,10 @@ class _OverviewTabState extends State<OverviewTab> {
                                             t.registrationEndDate!,
                                           ),
                                     ),
-                                    _buildTimelineItem(
+                                    _timelineRow(
+                                      focus: TournamentManagementFocus
+                                          .tournamentOpening,
+                                      editKey: 'opening',
                                       title: 'Khai mạc thi đấu',
                                       subtitle: _formatDate(t.startDate),
                                       isFirst: false,
@@ -1113,12 +1131,40 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 
+  /// One roadmap row; tapping it opens the picker of exactly that date.
+  Widget _timelineRow({
+    required TournamentManagementFocus focus,
+    required String editKey,
+    required String title,
+    required String subtitle,
+    required bool isFirst,
+    required bool isLast,
+    required bool isPassed,
+  }) {
+    final onEdit = widget.onEditTimelineDate;
+    final onTap = onEdit == null ? null : () => onEdit(focus);
+    return _editableItem(
+      key: ValueKey('tournament-overview-timeline-$editKey-edit'),
+      onTap: onTap,
+      sectionLabel: title,
+      child: _buildTimelineItem(
+        title: title,
+        subtitle: subtitle,
+        isFirst: isFirst,
+        isLast: isLast,
+        isPassed: isPassed,
+        trailing: _editIndicator(onTap),
+      ),
+    );
+  }
+
   Widget _buildTimelineItem({
     required String title,
     required String subtitle,
     required bool isFirst,
     required bool isLast,
     required bool isPassed,
+    Widget? trailing,
   }) {
     final colors = context.colors;
     final dotColor = isPassed
@@ -1190,6 +1236,7 @@ class _OverviewTabState extends State<OverviewTab> {
                       textAlign: TextAlign.end,
                     ),
                   ),
+                  ?trailing,
                 ],
               ),
             ),

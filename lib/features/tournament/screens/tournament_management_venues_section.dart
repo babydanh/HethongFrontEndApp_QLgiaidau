@@ -12,8 +12,12 @@ class TournamentManagementVenuesSection extends ConsumerStatefulWidget {
   const TournamentManagementVenuesSection({
     super.key,
     required this.tournamentId,
+    this.editFirstVenue = false,
   });
   final String tournamentId;
+
+  /// Open the editor of the default (else first) venue once the list loads.
+  final bool editFirstVenue;
 
   @override
   ConsumerState<TournamentManagementVenuesSection> createState() =>
@@ -32,6 +36,19 @@ class _TournamentManagementVenuesSectionState
     _venuesFuture = ref
         .read(tournamentManagementRepositoryProvider)
         .getVenues(widget.tournamentId);
+    if (widget.editFirstVenue) _editFirstVenueWhenLoaded();
+  }
+
+  void _editFirstVenueWhenLoaded() {
+    // A load error is already shown by the list's FutureBuilder.
+    _venuesFuture.then((venues) {
+      if (!mounted || venues.isEmpty) return;
+      final venue = venues.firstWhere(
+        (venue) => venue['isDefault'] == true,
+        orElse: () => venues.first,
+      );
+      _editVenue(venue);
+    }, onError: (_) {});
   }
 
   void _reload() {

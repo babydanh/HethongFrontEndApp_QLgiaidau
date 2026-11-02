@@ -19,6 +19,8 @@ import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
@@ -373,6 +375,75 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text(labelOf(l10n)), findsWidgets, reason: key);
     }
+  });
+
+  group('TC-EDIT: an edit target opens exactly the thing that was tapped', () {
+    Future<void> pumpHub(WidgetTester tester, Tournament tournament) async {
+      tester.view.physicalSize = const Size(360, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        _app(
+          tournament,
+          managementRepository: _EmptyTournamentManagementRepository(),
+          tournamentRepository: _EmptyTournamentRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> tapKey(WidgetTester tester, String key) async {
+      final target = find.byKey(ValueKey(key));
+      expect(target, findsOneWidget, reason: key);
+      await tester.ensureVisible(target);
+      await tester.tap(target);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('tournament name: the name field is focused at once', (
+      tester,
+    ) async {
+      await pumpHub(tester, _tournament('registration'));
+      await tapKey(tester, 'tournament-overview-name-edit');
+
+      final nameInput = find.descendant(
+        of: find.byType(TextField).first,
+        matching: find.byType(EditableText),
+      );
+      expect(tester.widget<EditableText>(nameInput).focusNode.hasFocus, isTrue);
+    });
+
+    testWidgets('banner pencil: the logo and banner group is the open one', (
+      tester,
+    ) async {
+      await pumpHub(tester, _tournament('registration'));
+      await tapKey(tester, 'tournament-overview-banner-edit');
+
+      final group = find.ancestor(
+        of: find.byType(TournamentManagementBrandsSection),
+        matching: find.byType(Visibility),
+      );
+      expect(tester.widget<Visibility>(group.first).visible, isTrue);
+    });
+
+    testWidgets('each roadmap row opens its own date picker', (tester) async {
+      final tournament = _tournament(
+        'registration',
+        startDate: DateTime(2030, 1, 1),
+        registrationEndDate: DateTime(2029, 12, 1),
+      );
+      for (final key in [
+        'tournament-overview-timeline-opens-edit',
+        'tournament-overview-timeline-deadline-edit',
+        'tournament-overview-timeline-opening-edit',
+      ]) {
+        await tester.pumpWidget(const SizedBox.shrink());
+        await pumpHub(tester, tournament);
+        await tapKey(tester, key);
+        expect(find.byType(SocialDateTimePickerSheet), findsOneWidget, reason: key);
+      }
+    });
   });
 
   testWidgets(

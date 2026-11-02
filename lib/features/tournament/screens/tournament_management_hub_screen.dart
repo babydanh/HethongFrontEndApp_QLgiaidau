@@ -79,6 +79,9 @@ class _TournamentManagementHubScreenState
       TournamentManagementSection.information;
   TournamentManagementSection? _openedSection;
 
+  /// The exact thing tapped on the overview; cleared by any other way in.
+  TournamentManagementFocus? _focus;
+
   /// True while the open section page holds edits that are not saved yet.
   final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
@@ -113,7 +116,10 @@ class _TournamentManagementHubScreenState
     }
   }
 
-  void _openSection(TournamentManagementSection section) {
+  void _openSection(
+    TournamentManagementSection section, {
+    TournamentManagementFocus? focus,
+  }) {
     // Divisions have their own tab instead of a settings page.
     if (section == TournamentManagementSection.divisions) {
       _tabController.animateTo(_HubTab.divisions.index);
@@ -122,6 +128,7 @@ class _TournamentManagementHubScreenState
     final isTablet = !ResponsiveLayout.isMobile(context);
     setState(() {
       _selectedSection = section;
+      _focus = focus;
       if (!isTablet) _openedSection = section;
     });
     if (isTablet) _tabController.animateTo(_HubTab.settings.index);
@@ -309,8 +316,10 @@ class _TournamentManagementHubScreenState
                     background: TournamentManagementBanner(
                       tournament: tournament,
                       resolveImageUrl: _resolveImageUrl,
-                      onEdit: () =>
-                          _openSection(TournamentManagementSection.information),
+                      onEdit: () => _openSection(
+                        TournamentManagementSection.information,
+                        focus: TournamentManagementFocus.branding,
+                      ),
                     ),
                   ),
           ),
@@ -320,8 +329,10 @@ class _TournamentManagementHubScreenState
         SliverToBoxAdapter(
           child: TournamentManagementSummary(
             tournament: tournament,
-            onEditInformation: () =>
-                _openSection(TournamentManagementSection.information),
+            onEditInformation: () => _openSection(
+              TournamentManagementSection.information,
+              focus: TournamentManagementFocus.name,
+            ),
           ),
         ),
         // Step bar + the one next-step button, as at the top of the Web page.
@@ -372,14 +383,24 @@ class _TournamentManagementHubScreenState
                 overlapHandles: overlapHandles,
                 onEditInformation: () =>
                     _openSection(TournamentManagementSection.information),
-                onEditBranding: () =>
-                    _openSection(TournamentManagementSection.information),
-                onEditSchedule: () =>
-                    _openSection(TournamentManagementSection.schedule),
+                onEditBranding: () => _openSection(
+                  TournamentManagementSection.information,
+                  focus: TournamentManagementFocus.branding,
+                ),
+                onEditSchedule: () => _openSection(
+                  TournamentManagementSection.schedule,
+                  focus: TournamentManagementFocus.venue,
+                ),
                 onEditRegistration: () =>
                     _openSection(TournamentManagementSection.registration),
-                onEditFinance: () =>
-                    _openSection(TournamentManagementSection.finance),
+                onEditTimelineDate: (focus) => _openSection(
+                  TournamentManagementSection.registration,
+                  focus: focus,
+                ),
+                onEditFinance: () => _openSection(
+                  TournamentManagementSection.finance,
+                  focus: TournamentManagementFocus.fee,
+                ),
                 onToggleFounderHidden: _setFounderHidden,
               ),
               CustomScrollView(
@@ -538,6 +559,7 @@ class _TournamentManagementHubScreenState
         return TournamentManagementSectionScreen(
           tournament: tournament,
           section: _selectedSection,
+          focus: _focus,
           opsWorkspaceRoute: widget.opsWorkspaceRoute,
           actionRouteBase: widget.actionRouteBase,
           unsavedChanges: _unsavedChanges,
@@ -733,7 +755,10 @@ class _TournamentManagementHubScreenState
       ],
       onTap: () {
         if (isTablet) {
-          setState(() => _selectedSection = section);
+          setState(() {
+            _selectedSection = section;
+            _focus = null;
+          });
         } else {
           _openSection(section);
         }

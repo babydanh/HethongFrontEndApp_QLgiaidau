@@ -29,7 +29,8 @@ Tournament _tournament({required String status, num entryFee = 100000}) =>
       'updatedAt': '2026-01-01T00:00:00Z',
     }, 'tournament-1');
 
-Widget _app({required Tournament tournament}) => ProviderScope(
+Widget _app({required Tournament tournament, bool focusEntryFee = false}) =>
+    ProviderScope(
   overrides: [
     tournamentManagementRepositoryProvider.overrideWithValue(
       _FinanceRepository(),
@@ -44,7 +45,10 @@ Widget _app({required Tournament tournament}) => ProviderScope(
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('en'),
     home: Scaffold(
-      body: TournamentManagementFinanceSection(tournament: tournament),
+      body: TournamentManagementFinanceSection(
+        tournament: tournament,
+        focusEntryFee: focusEntryFee,
+      ),
     ),
   ),
 );
@@ -71,6 +75,34 @@ void main() {
       decimalDigits: 0,
     );
     l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
+
+  testWidgets('TC-EDIT-05 focusEntryFee puts the cursor in the fee field', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(tournament: _tournament(status: 'DRAFT'), focusEntryFee: true),
+    );
+    await tester.pumpAndSettle();
+
+    final feeInput = find.descendant(
+      of: find.widgetWithText(TextField, '100000'),
+      matching: find.byType(EditableText),
+    );
+    expect(tester.widget<EditableText>(feeInput).focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('without focusEntryFee the fee field is not focused', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(tournament: _tournament(status: 'DRAFT')));
+    await tester.pumpAndSettle();
+
+    final feeInput = find.descendant(
+      of: find.widgetWithText(TextField, '100000'),
+      matching: find.byType(EditableText),
+    );
+    expect(tester.widget<EditableText>(feeInput).focusNode.hasFocus, isFalse);
   });
 
   testWidgets('TC-WP-01-08 nút mức nhanh cộng dồn và bảng phân tích đúng số', (
