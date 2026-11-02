@@ -51,7 +51,7 @@ void main() {
     await _dispose(tester);
   });
 
-  testWidgets('nothing matches: empty message, a Load more button, no loop', (
+  testWidgets('nothing matches: scans every tournament, then message only', (
     tester,
   ) async {
     final repo = _Repository(withMatch: {});
@@ -61,28 +61,12 @@ void main() {
 
     expect(find.text(_emptyMessage), findsOneWidget);
     expect(find.byType(TournamentMatchesCardSkeleton), findsNothing);
-    expect(find.text('Load more results'), findsOneWidget);
-    expect(repo.calls.toSet().length, 24);
+    expect(find.text('Load more results'), findsNothing);
+    expect(repo.calls.toSet().length, 30);
 
     final before = repo.calls.length;
     await tester.pump(const Duration(seconds: 20));
     expect(repo.calls.length, before, reason: 'no background scanning');
-    await _dispose(tester);
-  });
-
-  testWidgets('pressing Load more scans the next batch', (tester) async {
-    final repo = _Repository(withMatch: {});
-
-    await tester.pumpWidget(_app(repo, count: 30));
-    await tester.pump(const Duration(seconds: 5));
-    expect(repo.calls.toSet().length, 24);
-
-    await tester.tap(find.text('Load more results'));
-    await tester.pump(const Duration(seconds: 3));
-
-    expect(repo.calls.toSet().length, 30);
-    expect(find.text('Load more results'), findsNothing);
-    expect(find.text(_emptyMessage), findsOneWidget);
     await _dispose(tester);
   });
 
@@ -187,19 +171,12 @@ void main() {
   testWidgets('TC-FEED-01 live tab finds a live match past the 24th tournament', (
     tester,
   ) async {
-    // Newest-first list: 29 finished tournaments, then the one being played.
+    // Only the 30th tournament has a live match: the scan must not give up
+    // after 24 and tell the user nothing is live.
     final repo = _Repository(withMatch: {'t29'})..matchStatus = 'live';
 
     await tester.pumpWidget(
-      _app(
-        repo,
-        count: 30,
-        filter: MatchStatusFilter.live,
-        statuses: {
-          for (var i = 0; i < 29; i++) 't$i': 'completed',
-          't29': 'in_progress',
-        },
-      ),
+      _app(repo, count: 30, filter: MatchStatusFilter.live),
     );
     await tester.pump(const Duration(seconds: 5));
     // The list tail starts one more scan once built; let it settle.
@@ -264,7 +241,6 @@ Widget _app(
   required int count,
   MatchStatusFilter filter = MatchStatusFilter.scheduled,
   VoidCallback? onNoLiveMatches,
-  Map<String, String> statuses = const {},
 }) {
   return ProviderScope(
     overrides: [matchRepositoryProvider.overrideWithValue(repo)],
@@ -277,10 +253,7 @@ Widget _app(
         body: CustomScrollView(
           slivers: [
             TournamentSectionList(
-              tournaments: [
-                for (var i = 0; i < count; i++)
-                  _tournament('t$i', status: statuses['t$i'] ?? 'registration'),
-              ],
+              tournaments: [for (var i = 0; i < count; i++) _tournament('t$i')],
               filter: filter,
               emptyMessage: _emptyMessage,
               onNoLiveMatches: onNoLiveMatches,
@@ -292,13 +265,13 @@ Widget _app(
   );
 }
 
-Tournament _tournament(String id, {String status = 'registration'}) => Tournament(
+Tournament _tournament(String id) => Tournament(
   id: id,
   name: 'Tournament $id',
   sport: 'pickleball',
   format: 'single_elimination',
   bracketType: 'SINGLE_ELIMINATION',
-  status: status,
+  status: 'registration',
   adminToken: '',
   refereeToken: '',
   viewerToken: '',

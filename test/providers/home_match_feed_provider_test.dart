@@ -158,7 +158,7 @@ void main() {
     });
   });
 
-  test('a filter that matches nothing stops after 4 steps (24 tournaments)', () {
+  test('a filter that matches nothing scans every tournament, then stops', () {
     final repo = _FeedRepository(withMatch: {});
     _run((async) {
       final container = _container(repo);
@@ -167,15 +167,34 @@ void main() {
       async.elapse(const Duration(seconds: 10));
 
       final state = container.read(homeMatchFeedProvider(query));
-      expect(repo.calls.toSet(), _ids(24).toSet());
+      expect(repo.calls.toSet(), _ids(30).toSet());
       expect(state.isScanning, isFalse);
       expect(state.hasVisible, isFalse);
-      expect(state.hasMore, isTrue, reason: 'user can still press Load more');
+      expect(state.hasMore, isFalse);
 
       // No background work is left behind.
       final before = repo.calls.length;
       async.elapse(const Duration(seconds: 60));
       expect(repo.calls.length, before);
+    });
+  });
+
+  test('keeps scanning past 24 tournaments until the first match shows up', () {
+    final repo = _FeedRepository(withMatch: {'t29'})..matchStatus = 'live';
+    _run((async) {
+      final container = _container(repo);
+      final query = _query(40, MatchStatusFilter.live);
+      container.listen(homeMatchFeedProvider(query), (_, _) {});
+      async.elapse(const Duration(seconds: 10));
+
+      final state = container.read(homeMatchFeedProvider(query));
+      expect(state.visibleIds, ['t29']);
+      expect(state.isScanning, isFalse);
+      expect(
+        repo.calls.toSet(),
+        _ids(30).toSet(),
+        reason: 'stops at the step that found a card, not at the end',
+      );
     });
   });
 

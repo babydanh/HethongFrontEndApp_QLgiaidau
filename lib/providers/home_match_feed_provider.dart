@@ -5,9 +5,7 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/cursor_pagination.dart';
 import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
-import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,38 +27,6 @@ class HomeMatchFeedQuery {
   final List<String> tournamentIds;
 
   const HomeMatchFeedQuery({required this.status, required this.tournamentIds});
-
-  /// Sắp giải theo nơi có khả năng chứa trận của bộ lọc, vì feed chỉ tự quét
-  /// vài chục giải đầu. Cùng hạng thì giữ nguyên thứ tự gốc.
-  factory HomeMatchFeedQuery.forTournaments({
-    required MatchStatusFilter status,
-    required List<Tournament> tournaments,
-  }) {
-    final ordered = [...tournaments.indexed]
-      ..sort((a, b) {
-        final byRank = _scanRank(
-          status,
-          a.$2.status,
-        ).compareTo(_scanRank(status, b.$2.status));
-        return byRank != 0 ? byRank : a.$1.compareTo(b.$1);
-      });
-    return HomeMatchFeedQuery(
-      status: status,
-      tournamentIds: [for (final entry in ordered) entry.$2.id],
-    );
-  }
-
-  /// Hạng thấp được quét trước. Trận đang đấu hầu như chỉ có ở giải đang diễn
-  /// ra, trận đã xong chỉ có ở giải đã kết thúc; bộ lọc khác không đổi thứ tự.
-  static int _scanRank(MatchStatusFilter status, String tournamentStatus) {
-    final inProgress = StatusHelper.isTournamentInProgress(tournamentStatus);
-    final completed = StatusHelper.isTournamentCompleted(tournamentStatus);
-    return switch (status) {
-      MatchStatusFilter.live => inProgress ? 0 : (completed ? 2 : 1),
-      MatchStatusFilter.completed => completed ? 0 : 1,
-      _ => 0,
-    };
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -127,8 +93,9 @@ class HomeMatchFeedState {
 }
 
 /// Nguồn dữ liệu duy nhất của tab Trận đấu ở trang chủ: mỗi giải đúng một lần
-/// gọi lấy trang đầu, có trần số giải mỗi bước, số request cùng lúc và số bước
-/// tự nối tiếp; không socket và không timer theo từng giải.
+/// gọi lấy trang đầu, có trần số giải mỗi bước và số request cùng lúc; chưa có
+/// card nào thì tự quét tiếp tới khi thấy hoặc hết giải; không socket và không
+/// timer theo từng giải.
 final homeMatchFeedProvider = NotifierProvider.autoDispose
     .family<HomeMatchFeedNotifier, HomeMatchFeedState, HomeMatchFeedQuery>(
       HomeMatchFeedNotifier.new,
@@ -139,7 +106,6 @@ class HomeMatchFeedNotifier extends Notifier<HomeMatchFeedState> {
 
   static const _batchSize = 6;
   static const _maxConcurrent = 3;
-  static const _maxEmptySteps = 4;
   static const _firstPageSize = 4;
 
   /// Chờ một nhịp trước khi quét để đổi bộ lọc liên tục chỉ quét bộ lọc cuối.
@@ -155,7 +121,6 @@ class HomeMatchFeedNotifier extends Notifier<HomeMatchFeedState> {
 
   final _inFlight = <String>{};
   var _stepRunning = false;
-  var _emptySteps = 0;
   var _started = false;
   var _idleTicks = 0;
   var _gated = false;
@@ -217,10 +182,10 @@ class HomeMatchFeedNotifier extends Notifier<HomeMatchFeedState> {
     }
   }
 
-  /// Mở thêm tối đa 6 giải. Khi chưa có card nào thì tự nối tiếp, tối đa 4 bước.
-  Future<void> loadMore({bool auto = false}) async {
+  /// Mở thêm tối đa 6 giải. Khi chưa có card nào thì tự nối tiếp tới khi thấy
+  /// card hoặc hết giải, để không báo "không có" khi giải có trận nằm phía sau.
+  Future<void> loadMore() async {
     if (_stepRunning || !state.hasMore) return;
-    if (!auto) _emptySteps = 0;
     _stepRunning = true;
     final ids = query.tournamentIds
         .skip(state.opened.length)
@@ -241,10 +206,8 @@ class HomeMatchFeedNotifier extends Notifier<HomeMatchFeedState> {
     }
     if (!ref.mounted) return;
 
-    final keepGoing =
-        !state.hasVisible && state.hasMore && ++_emptySteps < _maxEmptySteps;
-    if (keepGoing) {
-      await loadMore(auto: true);
+    if (!state.hasVisible && state.hasMore) {
+      await loadMore();
       return;
     }
     state = state.copyWith(isScanning: false);

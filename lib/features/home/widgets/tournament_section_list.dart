@@ -65,9 +65,9 @@ class _TournamentSectionListState extends ConsumerState<TournamentSectionList>
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    final query = HomeMatchFeedQuery.forTournaments(
+    final query = HomeMatchFeedQuery(
       status: filter,
-      tournaments: tournaments,
+      tournamentIds: [for (final t in tournaments) t.id],
     );
     final provider = homeMatchFeedProvider(query);
     final feed = ref.watch(provider);
@@ -121,13 +121,6 @@ class _TournamentSectionListState extends ConsumerState<TournamentSectionList>
                       }
                     }
                   },
-                )
-              : feed.hasMore
-              ? _FeedAction(
-                  label: AppLocalizations.of(
-                    context,
-                  )!.homeGlobalSearchLoadMore,
-                  onPressed: notifier.loadMore,
                 )
               : null,
         ),
