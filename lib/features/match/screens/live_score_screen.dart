@@ -44,6 +44,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_header.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_scoreboard_overlay.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_suggestions.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_chat_grouping.dart';
@@ -2490,13 +2491,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
               ),
 
-              // Bảng điểm đè khung hình, đúng bố cục web: HAI HÀNG CHỒNG ở
-              // góc trên trái, mỗi hàng là [tên viết tắt | điểm nền trắng].
-              // Web không thu nhỏ gì, app cũng vậy — cùng kích thước chữ và
-              // ô điểm để người xem nhìn hai bên giống nhau.
-              if (match.scoreboardVisible)
+              // Bảng điểm đè khung hình, kiểu hai hàng chồng của web. Người xem:
+              // nằm phía dưới video như overlay H2H / Sơ đồ (và nhường chỗ khi
+              // một trong hai đang hiện, vì cùng vùng đáy). Người điều khiển:
+              // giữ góc trên trái.
+              if (match.scoreboardVisible &&
+                  (!viewerLayout || overlayToShow == null))
                 Positioned(
-                  top: viewerLayout ? 48 : 8,
+                  top: viewerLayout ? null : 8,
+                  bottom: viewerLayout ? liveOverlayBottomInset : null,
                   left: 8,
                   child: _liveScoreOverlay(match, currentScore),
                 ),
@@ -3363,91 +3366,25 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// (`LiveScoreboardOverlay.tsx`): mỗi hàng là [tên viết tắt | ô điểm nền
   /// trắng]. Không thu nhỏ so với web để hai bên nhìn giống nhau.
   Widget _liveScoreOverlay(MatchModel match, dynamic score) {
-    final finished = match.isCompleted == true;
-    // Positioned chỉ có left/top nên con nhận ràng buộc rộng vô hạn, còn
-    // Column stretch cần rộng hữu hạn: IntrinsicWidth chốt theo hàng rộng
-    // nhất; IntrinsicHeight chốt chiều cao từng hàng để ô điểm kéo đều.
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
-      child: IntrinsicWidth(
-        child: Container(
-          color: Colors.black.withValues(alpha: 0.75),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              IntrinsicHeight(
-                child: _liveScoreRow(
-                  match: match,
-                  side: 1,
-                  score: score.score1 as int,
-                  finished: finished,
-                ),
-              ),
-              IntrinsicHeight(
-                child: _liveScoreRow(
-                  match: match,
-                  side: 2,
-                  score: score.score2 as int,
-                  finished: finished,
-                ),
-              ),
-            ],
-          ),
-        ),
+    Widget sideName(int side) => ParticipantLabel(
+      teamName: matchSideTeamName(match, side),
+      players: matchSidePlayers(match, side),
+      teamOnly: isFootballMatch(match),
+      compact: true,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 11,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 0.3,
       ),
     );
-  }
 
-  Widget _liveScoreRow({
-    required MatchModel match,
-    required int side,
-    required int score,
-    required bool finished,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: 132,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: ParticipantLabel(
-                teamName: matchSideTeamName(match, side),
-                players: matchSidePlayers(match, side),
-                teamOnly: isFootballMatch(match),
-                compact: true,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ),
-          ),
-        ),
-        Container(
-          width: 36,
-          alignment: Alignment.center,
-          color: Colors.white.withValues(alpha: 0.95),
-          padding: const EdgeInsets.symmetric(vertical: 3),
-          child: Text(
-            '$score',
-            style: TextStyle(
-              color: finished
-                  ? const Color(0xFF94A3B8)
-                  : const Color(0xFF0F172A),
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ),
-      ],
+    return LiveScoreboardOverlay(
+      team1: sideName(1),
+      team2: sideName(2),
+      score1: score.score1 as int,
+      score2: score.score2 as int,
+      finished: match.isCompleted == true,
     );
   }
 
