@@ -4136,6 +4136,30 @@ abstract class AppLocalizations {
   /// **'Không lưu được sơ đồ sân. Đã giữ cài đặt của máy chủ.'**
   String get pickleballCourtSaveError;
 
+  /// No description provided for @pickleballCourtMenu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm thao tác'**
+  String get pickleballCourtMenu;
+
+  /// No description provided for @pickleballCourtFinishSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt set'**
+  String get pickleballCourtFinishSet;
+
+  /// No description provided for @pickleballCourtPickWinner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn đội thắng'**
+  String get pickleballCourtPickWinner;
+
+  /// No description provided for @pickleballCourtLoseServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mất giao'**
+  String get pickleballCourtLoseServe;
+
   /// No description provided for @tennisTiebreakInfo.
   ///
   /// In vi, this message translates to:

@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/pickleball_court_not
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_dialogs.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
@@ -22,9 +23,17 @@ class PickleballCourtPanel extends ConsumerStatefulWidget {
     super.key,
     required this.params,
     required this.canScore,
+    this.onForceWin,
+    this.axis,
   });
 
   final MatchControlParams params;
+
+  /// Xử thắng nhanh của màn gọi (null thì không có mục này trong menu).
+  final VoidCallback? onForceWin;
+
+  /// Hướng sân; null thì theo hướng màn hình (dọc khi cầm dọc).
+  final Axis? axis;
 
   /// Quyền ghi điểm: chỉ người có quyền mới chấm điểm và kéo thả trên sân.
   final bool canScore;
@@ -152,6 +161,70 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
         .pickleballSideOut();
   }
 
+  /// Mất giao bằng một nút: đôi đi từng bước (người giao 1 → 2 → đội kia) qua
+  /// `pickleballSwitchServer`; đánh đơn chuyển thẳng sang đội kia.
+  void _loseServe(CourtContext court) {
+    final score = ref.read(scorePanelNotifierProvider(widget.params).notifier);
+    if (court.isDoubles) {
+      score.pickleballSwitchServer();
+    } else {
+      score.pickleballSideOut();
+    }
+  }
+
+  /// Turning override on asks for the reason at once; cancelling puts the
+  /// switch back off. Turning it off needs nothing.
+  Future<void> _toggleOverride() async {
+    final score = ref.read(scorePanelNotifierProvider(widget.params));
+    final notifier = ref.read(
+      scorePanelNotifierProvider(widget.params).notifier,
+    );
+    if (score.overrideEnabled) {
+      notifier.setOverride(false, score.overrideReason);
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => OverrideReasonDialog(params: widget.params),
+    );
+    if (confirmed != true) notifier.setOverride(false, '');
+  }
+
+  Future<void> _confirmFinishSet() async {
+    if (ref.read(scorePanelNotifierProvider(widget.params)).isSubmitting) {
+      return;
+    }
+    final score = ref.read(scorePanelNotifierProvider(widget.params).notifier);
+    final message = score.finishSetConfirmMessage();
+    if (message == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => FinishSetDialog(params: widget.params, message: message),
+    );
+    if (confirmed != true || !mounted) return;
+    await score.finishSet();
+  }
+
+  /// Chọn đội thắng rồi lưu kết quả; lưu xong thì đóng màn chấm điểm, lỗi thì
+  /// giữ màn để cảnh báo hiện ở tab.
+  Future<void> _pickWinner() async {
+    if (ref.read(scorePanelNotifierProvider(widget.params)).isSubmitting) {
+      return;
+    }
+    final winner = await showDialog<int>(
+      context: context,
+      builder: (_) => PickWinnerDialog(params: widget.params),
+    );
+    if (winner == null || !mounted) return;
+    final score = ref.read(scorePanelNotifierProvider(widget.params).notifier);
+    await score.completeMatch(winner);
+    if (!mounted) return;
+    final latest = ref.read(scorePanelNotifierProvider(widget.params));
+    if (!latest.isSubmitting && latest.errorMessage == null) {
+      Navigator.of(context).pop();
+    }
+  }
+
   void _applyDrop(CourtDropAction action) {
     switch (action) {
       case SwapPlaces(:final team):
@@ -191,8 +264,19 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     final court = ref.watch(pickleballCourtNotifierProvider(widget.params));
     final match = ref.watch(singleMatchProvider(widget.params)).value;
 
+    // Lite is a free scorecard: the court runs as rally, with no serve turns.
+    final isLite = score.isOpenScoring;
     final isSideOut =
+        !isLite &&
         score.config.scoringModel == SportScoringModel.pickleballSideOut;
+    final axis =
+        widget.axis ??
+        (MediaQuery.orientationOf(context) == Orientation.landscape
+            ? Axis.horizontal
+            : Axis.vertical);
+    final scoreNotifier = ref.read(
+      scorePanelNotifierProvider(widget.params).notifier,
+    );
 
     // A cancelled match is over: the repository maps it to 'cancelled', which
     // is neither isCompleted nor isScheduled.
@@ -200,6 +284,7 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     final canChangeScore = canEdit && !(match?.isScheduled ?? false);
 
     return PickleballCourtView(
+      axis: axis,
       layout: resolveCourtLayout(court, courtContext),
       team1Players: match?.team1Members ?? const <String>[],
       team2Players: match?.team2Members ?? const <String>[],
@@ -207,8 +292,13 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       team2Score: courtContext.score2,
       isSideOut: isSideOut,
       isDoubles: courtContext.isDoubles,
-      receiverCanScore: score.isOpenScoring,
+      receiverCanScore: isLite,
       autoSwitchEnds: court.autoSwitchEnds,
+      overrideEnabled: score.overrideEnabled,
+      finishSetEnabled:
+          !score.isSubmitting &&
+          scoreNotifier.finishSetConfirmMessage() != null,
+      pickWinnerEnabled: !score.isSubmitting,
       onScoreChange: canChangeScore
           ? (team, increment) =>
                 _changeScore(team, increment, isSideOut: isSideOut)
@@ -217,6 +307,16 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
           ? (team) => _setServingTeam(team, courtContext)
           : null,
       onDrop: canEdit ? _applyDrop : null,
+      onSwitchEnds: canEdit ? () => unawaited(_apply(swapEndsNow)) : null,
+      // A save in progress locks both icons (and the handlers refuse): a
+      // second tap would save twice.
+      onFinishSet: canChangeScore ? _confirmFinishSet : null,
+      onPickWinner: canChangeScore ? _pickWinner : null,
+      onLoseServe: canChangeScore && isSideOut
+          ? () => _loseServe(courtContext)
+          : null,
+      onToggleOverride: canEdit && !isLite ? _toggleOverride : null,
+      onForceWin: canEdit ? widget.onForceWin : null,
       onUndo: canEdit && court.history.isNotEmpty
           ? () => unawaited(_apply((state, _) => undoCourtChange(state)))
           : null,

@@ -2146,6 +2146,18 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được sơ đồ sân. Đã giữ cài đặt của máy chủ.';
 
   @override
+  String get pickleballCourtMenu => 'Thêm thao tác';
+
+  @override
+  String get pickleballCourtFinishSet => 'Chốt set';
+
+  @override
+  String get pickleballCourtPickWinner => 'Chọn đội thắng';
+
+  @override
+  String get pickleballCourtLoseServe => 'Mất giao';
+
+  @override
   String tennisTiebreakInfo(Object points) {
     return 'TIEBREAK · Mỗi pha bóng được 1 điểm, chạm $points và cách 2 để thắng set';
   }

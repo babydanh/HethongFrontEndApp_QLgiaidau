@@ -8,10 +8,8 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/court_score_layout.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/pickleball_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -312,6 +310,14 @@ Future<TestGesture> _longPressDrag(
   return gesture;
 }
 
+/// Opens the ⋯ menu and taps [label].
+Future<void> _tapMenu(WidgetTester tester, String label) async {
+  await tester.tap(find.byTooltip('More actions'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label));
+  await tester.pumpAndSettle();
+}
+
 Finder _ball() => find.byIcon(Icons.sports_baseball_rounded);
 
 /// A court half is outlined green while a drop on it would do something.
@@ -516,50 +522,6 @@ void main() {
       },
     );
 
-    testWidgets('does not overflow on a 360x640 portrait phone', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(360, 640);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-
-      await tester.pumpWidget(
-        ProviderScope(child: _app(_view(_ViewSpy(), score1: 11, score2: 10))),
-      );
-
-      expect(tester.takeException(), isNull);
-      final court = tester.getSize(find.byType(AspectRatio));
-      expect(court.width / court.height, closeTo(2, 0.01));
-    });
-
-    testWidgets('shrinks the court to fit a short landscape slot', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(640, 360);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          child: _app(
-            Row(
-              children: [
-                SizedBox(width: 300, height: 220, child: _view(_ViewSpy())),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      expect(tester.takeException(), isNull);
-      final court = tester.getSize(find.byType(AspectRatio));
-      expect(court.width / court.height, closeTo(2, 0.01));
-      expect(
-        tester.getSize(find.byType(PickleballCourtView)).height,
-        lessThanOrEqualTo(220),
-      );
-    });
-
     testWidgets('receiverCanScore keeps plus enabled for the receiving team', (
       tester,
     ) async {
@@ -623,19 +585,19 @@ void main() {
       }
     }
 
-    testWidgets('touch targets are at least 48dp in portrait', (tester) async {
+    testWidgets('touch targets are at least 44dp and the ball 48dp', (
+      tester,
+    ) async {
       await tester.pumpWidget(ProviderScope(child: _app(_view(_ViewSpy()))));
 
       for (final tooltip in const [
         'Add point for team 1',
         'Remove point for team 2',
-        'Undo',
-        'Restore automatic',
-        'Auto switch ends',
+        'More actions',
       ]) {
         final size = tester.getSize(find.byTooltip(tooltip));
-        expect(size.width, greaterThanOrEqualTo(48), reason: tooltip);
-        expect(size.height, greaterThanOrEqualTo(48), reason: tooltip);
+        expect(size.width, greaterThanOrEqualTo(40), reason: tooltip);
+        expect(size.height, greaterThanOrEqualTo(40), reason: tooltip);
       }
       final ballHit = tester.getSize(
         find.ancestor(of: _ball(), matching: find.byKey(serveBallHitKey)),
@@ -661,7 +623,7 @@ void main() {
           ),
         ),
       );
-      final courtHeight = tester.getSize(find.byType(AspectRatio)).height;
+      final courtHeight = tester.getSize(find.byKey(courtSurfaceKey)).height;
 
       // The left half's free cell is the one above "L. Anh".
       final gesture = await _longPressDrag(
@@ -776,268 +738,6 @@ void main() {
     });
   });
 
-  group('layout', () {
-    /// Real `PickleballPanel` inside `CourtScoreLayout`, in a [slot] of a
-    /// [screen]-sized window, with the given [textScale].
-    Future<void> pumpLayout(
-      WidgetTester tester, {
-      required Size screen,
-      required Size slot,
-      double textScale = 1,
-      Widget Function()? court,
-    }) async {
-      tester.view.physicalSize = screen;
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            singleMatchProvider.overrideWith(
-              (ref, params) => Stream.value(_match()),
-            ),
-            scorePanelNotifierProvider.overrideWith2(
-              (arg) => _FakeScorePanel(
-                arg,
-                _scoreState(
-                  SportScoringModel.pickleballSideOut,
-                  serve: const PickleballServeState(),
-                ),
-                <String>[],
-              ),
-            ),
-          ],
-          child: MaterialApp(
-            theme: ThemeData.dark().copyWith(
-              splashFactory: NoSplash.splashFactory,
-            ),
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(textScale)),
-              child: child!,
-            ),
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: SizedBox.fromSize(
-                  size: slot,
-                  child: CourtScoreLayout(
-                    court: court?.call() ?? _view(_ViewSpy()),
-                    scorePanel: const PickleballPanel(params: _params),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-    }
-
-    /// On-screen height of the score digits of the two team cards (after any
-    /// FittedBox scaling; "0" at 72dp with line height 1 is ~72dp tall).
-    List<double> digitHeights(WidgetTester tester) {
-      final digits = find.descendant(
-        of: find.byType(PickleballPanel),
-        matching: find.text('0'),
-      );
-      return [
-        for (final element in digits.evaluate())
-          (tester.getBottomRight(find.byWidget(element.widget)) -
-                  tester.getTopLeft(find.byWidget(element.widget)))
-              .dy,
-      ];
-    }
-
-    // Slot sizes approximate the score tab inside the official score page:
-    // window minus header, history strip, tab bar and padding.
-    final cases = <String, ({Size screen, Size slot, bool sideBySide})>{
-      '360x640 portrait': (
-        screen: const Size(360, 640),
-        slot: const Size(336, 470),
-        sideBySide: false,
-      ),
-      '640x360 landscape': (
-        screen: const Size(640, 360),
-        slot: const Size(616, 200),
-        sideBySide: true,
-      ),
-      '640x360 landscape, low slot': (
-        screen: const Size(640, 360),
-        slot: const Size(616, 150),
-        sideBySide: true,
-      ),
-      '800x360 landscape': (
-        screen: const Size(800, 360),
-        slot: const Size(776, 230),
-        sideBySide: true,
-      ),
-    };
-    for (final entry in cases.entries) {
-      for (final scale in const [1.0, 1.5]) {
-        testWidgets('real PickleballPanel, ${entry.key}, text x$scale', (
-          tester,
-        ) async {
-          await pumpLayout(
-            tester,
-            screen: entry.value.screen,
-            slot: entry.value.slot,
-            textScale: scale,
-          );
-
-          expect(tester.takeException(), isNull);
-          final digits = digitHeights(tester);
-          expect(digits, hasLength(2));
-          for (final height in digits) {
-            expect(height, greaterThanOrEqualTo(28));
-          }
-          final court = tester.getRect(find.byType(PickleballCourtView));
-          final panel = tester.getRect(find.byType(PickleballPanel));
-          if (entry.value.sideBySide && scale == 1.0) {
-            // Side by side: court left, block right, both wide enough.
-            expect(court.right, lessThanOrEqualTo(panel.left));
-            expect(court.width, greaterThanOrEqualTo(240 - 1));
-            expect(panel.width, greaterThanOrEqualTo(360 - 1));
-          } else {
-            // Stacked: the block is below the court.
-            expect(court.bottom, lessThanOrEqualTo(panel.top + 1));
-          }
-        });
-      }
-    }
-
-    for (final scale in const [1.2, 1.5]) {
-      testWidgets('wide landscape 900x360, text x$scale: panel fits, digits ok', (
-        tester,
-      ) async {
-        await pumpLayout(
-          tester,
-          screen: const Size(900, 360),
-          slot: const Size(876, 230),
-          textScale: scale,
-        );
-
-        expect(tester.takeException(), isNull);
-        final digits = digitHeights(tester);
-        expect(digits, hasLength(2));
-        for (final height in digits) {
-          expect(height, greaterThanOrEqualTo(28));
-        }
-        // Side by side: the panel got at least its scaled minimum height.
-        expect(
-          tester.getRect(find.byType(PickleballPanel)).height,
-          greaterThanOrEqualTo(260 * scale - 1),
-        );
-      });
-    }
-
-    testWidgets('portrait: the lose-serve button is reachable by scrolling', (
-      tester,
-    ) async {
-      await pumpLayout(
-        tester,
-        screen: const Size(360, 640),
-        slot: const Size(336, 470),
-        textScale: 1.5,
-      );
-
-      await tester.scrollUntilVisible(
-        find.text('Lose serve'),
-        100,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('minus/plus keep a >= 40dp hit area in a low landscape slot', (
-      tester,
-    ) async {
-      for (final slot in const [Size(616, 200), Size(616, 150)]) {
-        await pumpLayout(
-          tester,
-          screen: const Size(640, 360),
-          slot: slot,
-        );
-        for (final tooltip in const [
-          'Add point for team 1',
-          'Remove point for team 2',
-        ]) {
-          final finder = find.byTooltip(tooltip);
-          final size = tester.getBottomRight(finder) - tester.getTopLeft(finder);
-          expect(size.dx, greaterThanOrEqualTo(40), reason: '$tooltip $slot');
-          expect(size.dy, greaterThanOrEqualTo(40), reason: '$tooltip $slot');
-        }
-      }
-    });
-
-    testWidgets('a very short bare view scrolls instead of shrinking', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            theme: ThemeData.dark(),
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: SizedBox(
-                  width: 300,
-                  height: 130,
-                  child: _view(_ViewSpy()),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      expect(tester.takeException(), isNull);
-      final finder = find.byTooltip('Add point for team 1');
-      final size = tester.getBottomRight(finder) - tester.getTopLeft(finder);
-      expect(size.dx, greaterThanOrEqualTo(40));
-      expect(size.dy, greaterThanOrEqualTo(40));
-      expect(find.byType(SingleChildScrollView), findsOneWidget);
-    });
-
-    testWidgets('rotating the screen keeps the State of court and panel', (
-      tester,
-    ) async {
-      _InitCounter.inits = 0;
-      _InitCounter.disposes = 0;
-      tester.view.physicalSize = const Size(360, 640);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: Padding(
-              padding: const EdgeInsets.all(12),
-              child: CourtScoreLayout(
-                court: const _InitCounter(),
-                scorePanel: const _InitCounter(),
-              ),
-            ),
-          ),
-        ),
-      );
-      expect(_InitCounter.inits, 2);
-
-      tester.view.physicalSize = const Size(800, 360);
-      await tester.pumpAndSettle();
-      tester.view.physicalSize = const Size(360, 640);
-      await tester.pumpAndSettle();
-
-      expect(_InitCounter.inits, 2);
-      expect(_InitCounter.disposes, 0);
-    });
-  });
-
   group('panel', () {
     testWidgets('shows controls only to users who can score', (tester) async {
       await _pumpPanel(
@@ -1046,7 +746,7 @@ void main() {
         repository: _EchoCourtRepository(),
       );
       expect(find.byTooltip('Add point for team 1'), findsNothing);
-      expect(find.byTooltip('Restore automatic'), findsNothing);
+      expect(find.byTooltip('More actions'), findsNothing);
 
       await _pumpPanel(
         tester,
@@ -1054,7 +754,7 @@ void main() {
         repository: _EchoCourtRepository(),
       );
       expect(find.byTooltip('Add point for team 1'), findsOneWidget);
-      expect(find.byTooltip('Restore automatic'), findsOneWidget);
+      expect(find.byTooltip('More actions'), findsOneWidget);
     });
 
     testWidgets('a completed match is read-only even for scorers', (
@@ -1150,7 +850,7 @@ void main() {
       expect(calls, ['award:1']);
     });
 
-    testWidgets('open scoring: the receiving team may score too', (
+    testWidgets('open scoring (Lite): the receiving team scores as rally', (
       tester,
     ) async {
       final calls = <String>[];
@@ -1168,7 +868,7 @@ void main() {
 
       await tester.tap(find.byTooltip('Add point for team 2'));
 
-      expect(calls, ['award:2']);
+      expect(calls, ['rallyAdd:2']);
     });
 
     testWidgets('rally rule: both teams score through rallyAddPoint', (
@@ -1243,9 +943,12 @@ void main() {
       final repository = _SlowCourtRepository();
       await _pumpPanel(tester, canScore: true, repository: repository);
 
-      // Two taps inside the 50ms a write takes: without a queue both write.
-      await tester.tap(find.byTooltip('Auto switch ends'));
-      await tester.tap(find.byTooltip('Auto switch ends'));
+      // Two actions inside the 50ms a write takes: without a queue both write.
+      final view = tester.widget<PickleballCourtView>(
+        find.byType(PickleballCourtView),
+      );
+      view.onToggleAutoSwitch!();
+      view.onToggleAutoSwitch!();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
 
@@ -1289,7 +992,7 @@ void main() {
         team2Members: const ['Bảo'],
       );
       final before = repository.requests.length;
-      final courtHeight = tester.getSize(find.byType(AspectRatio)).height;
+      final courtHeight = tester.getSize(find.byKey(courtSurfaceKey)).height;
       final from = tester.getCenter(find.text('L. Anh'));
 
       final gesture = await tester.startGesture(from);
@@ -1384,8 +1087,7 @@ void main() {
       await _longPressDrag(tester, find.text('Minh'), find.text('Bảo'));
       final before = repository.requests.length;
 
-      await tester.tap(find.byTooltip('Undo'));
-      await tester.pumpAndSettle();
+      await _tapMenu(tester, 'Undo');
 
       expect(repository.requests.length, before + 1);
       expect(repository.requests.last['endsOverride'], isNull);

@@ -55,11 +55,15 @@ final pickleballCourtContextProvider = Provider.autoDispose
       final rally = panel.rally ?? const RallySetState();
       // The match rule decides side-out: the serve state only appears after the
       // first tap on the scoring panel, so until then team 1 serves by default.
+      // Lite is open scoring: no serve turns, so it runs as rally whatever the
+      // rule or a serve state saved by an earlier side-out session say.
       final sideOutRule =
+          !panel.isOpenScoring &&
           panel.config.scoringModel == SportScoringModel.pickleballSideOut;
-      final serve =
-          panel.pickleball ??
-          (sideOutRule ? const PickleballServeState() : null);
+      final serve = panel.isOpenScoring
+          ? null
+          : panel.pickleball ??
+                (sideOutRule ? const PickleballServeState() : null);
       final team1PlayerCount = (match.team1Members?.length ?? 0) >= 2 ? 2 : 1;
       final team2PlayerCount = (match.team2Members?.length ?? 0) >= 2 ? 2 : 1;
       final config = panel.config;
@@ -94,8 +98,10 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
   int _pendingWrites = 0;
   int _writeSeq = 0;
   bool _disposed = false;
+
   /// Lần đồng bộ đầu tiên (mở màn): chỉ suy lượt tại chỗ, không ghi server.
   bool _hasSynced = false;
+
   /// Các lỗi ghi đã báo trong phiên; cùng một loại chỉ báo một lần.
   final Set<String> _reportedErrors = <String>{};
 
