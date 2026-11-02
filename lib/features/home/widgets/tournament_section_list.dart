@@ -140,10 +140,11 @@ class _TournamentSectionListState extends ConsumerState<TournamentSectionList>
               initialPage: card.page,
             );
           }
-          if (feed.isScanning) {
-            return TournamentMatchesCardSkeleton(variant: variant);
-          }
-          return _LoadMoreTail(onVisible: notifier.loadMore);
+          return _LoadMoreTail(
+            variant: variant,
+            scanning: feed.isScanning,
+            onVisible: notifier.loadMore,
+          );
         },
         childCount: cards.length + (showTail ? 1 : 0),
       ),
@@ -200,13 +201,21 @@ class _StatusMessage extends StatelessWidget {
   }
 }
 
-/// Dòng cuối danh sách: tự mở thêm một đợt giải khi được dựng lần đầu (tức là
-/// người dùng đã cuộn tới cuối), và có nút để mở thêm bằng tay. Phần tử này
-/// giữ nguyên khi danh sách không thêm card, nên không tự lặp.
+/// Dòng cuối danh sách: luôn là một skeleton đứng yên, không có nút. Mở thêm
+/// một đợt giải khi được dựng (tức là người dùng đã cuộn tới cuối) và mở tiếp
+/// mỗi khi dựng lại thấy không còn đợt nào đang chạy, nên không
+/// chớp giữa skeleton và nút. Cuộn đi chỗ khác thì dòng này không được dựng và
+/// việc quét dừng lại.
 class _LoadMoreTail extends StatefulWidget {
+  final SkeletonCardVariant variant;
+  final bool scanning;
   final VoidCallback onVisible;
 
-  const _LoadMoreTail({required this.onVisible});
+  const _LoadMoreTail({
+    required this.variant,
+    required this.scanning,
+    required this.onVisible,
+  });
 
   @override
   State<_LoadMoreTail> createState() => _LoadMoreTailState();
@@ -216,19 +225,24 @@ class _LoadMoreTailState extends State<_LoadMoreTail> {
   @override
   void initState() {
     super.initState();
+    _loadNextBatch();
+  }
+
+  @override
+  void didUpdateWidget(_LoadMoreTail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // A batch can finish between two frames, so ask whenever a rebuild finds
+    // the feed idle instead of waiting to see the scanning flag flip.
+    if (!widget.scanning) _loadNextBatch();
+  }
+
+  void _loadNextBatch() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.onVisible();
     });
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Center(
-      child: TextButton(
-        onPressed: widget.onVisible,
-        child: Text(AppLocalizations.of(context)!.homeGlobalSearchLoadMore),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      TournamentMatchesCardSkeleton(variant: widget.variant);
 }

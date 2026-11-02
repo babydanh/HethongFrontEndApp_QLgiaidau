@@ -213,6 +213,39 @@ void main() {
     await _dispose(tester);
   });
 
+  testWidgets('TC-FEED-03 scanning the rest never flashes a Load more button', (
+    tester,
+  ) async {
+    // One card on screen keeps the list tail visible while 29 more tournaments
+    // are scanned batch after batch; the tail must stay one steady skeleton.
+    final repo = _Repository(withMatch: {'t0'});
+
+    await tester.pumpWidget(_app(repo, count: 30));
+    var buttonFrames = 0;
+    var skeletonlessFrames = 0;
+    for (var i = 0; i < 300; i++) {
+      await tester.pump(const Duration(milliseconds: 25));
+      if (find.text('Load more results').evaluate().isNotEmpty) buttonFrames++;
+      final scanning = repo.calls.toSet().length < 30;
+      final hasSkeleton = find
+          .byType(TournamentMatchesCardSkeleton)
+          .evaluate()
+          .isNotEmpty;
+      if (scanning &&
+          !hasSkeleton &&
+          find.byType(LiveTournamentWithMatchesCard).evaluate().isNotEmpty) {
+        skeletonlessFrames++;
+      }
+    }
+
+    expect(buttonFrames, 0, reason: 'no Load more button flashes in between');
+    expect(skeletonlessFrames, 0, reason: 'tail never disappears mid-scan');
+    expect(repo.calls.toSet().length, 30, reason: 'every tournament scanned');
+    expect(find.byType(LiveTournamentWithMatchesCard), findsOneWidget);
+    expect(find.byType(TournamentMatchesCardSkeleton), findsNothing);
+    await _dispose(tester);
+  });
+
   testWidgets('live filter with a live card does not switch tab', (tester) async {
     final repo = _Repository(withMatch: {'t0'})..matchStatus = 'live';
     var told = 0;
