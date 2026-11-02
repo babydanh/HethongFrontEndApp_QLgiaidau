@@ -5,7 +5,7 @@ Trang xem live của người xem SHALL vẽ bảng điểm kiểu overlay Web (
 
 #### Scenario: Không có overlay Sơ đồ
 - **WHEN** người xem mở trận có bảng điểm bật và Sơ đồ không hiện
-- **THEN** bảng điểm hiện ở góc trên trái video, các nút Quay lại/LIVE/Chia sẻ/Thêm nằm ở dải riêng phía trên video
+- **THEN** bảng điểm hiện ở góc trên trái video, cùng hàng với nút Quay lại và nằm ngay sau nút đó, không xuống hàng
 
 #### Scenario: Sơ đồ đang hiện
 - **WHEN** trọng tài bật overlay Sơ đồ
