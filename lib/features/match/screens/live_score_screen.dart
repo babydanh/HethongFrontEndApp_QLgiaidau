@@ -2491,20 +2491,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
               ),
 
-              // Bảng điểm đè khung hình ở góc trên trái. Người xem: cùng hàng
-              // với thanh nút, ngay sau nút Quay lại (rộng 48 + lề 6), chừa
-              // chỗ bên phải cho LIVE / Chia sẻ / Thêm (ngang còn thêm Chat,
-              // Báo cáo). Sơ đồ phủ kín khung nên bảng nhường chỗ khi nó hiện.
+              // Bảng điểm đè khung hình, kiểu hai hàng chồng của web (theo bản
+              // vẽ Lavish app-live-viewer-popup). Người xem: góc dưới trái
+              // video cùng chỗ với overlay H2H / Sơ đồ, nên tạm ẩn khi một
+              // trong hai đang hiện; thanh Quay lại giữ nguyên trên video.
+              // Người điều khiển: giữ góc trên trái.
               if (match.scoreboardVisible &&
-                  (!viewerLayout || overlayToShow != LiveOverlayKind.bracket))
+                  (!viewerLayout || overlayToShow == null))
                 Positioned(
-                  top: viewerLayout ? 4 : 8,
-                  left: viewerLayout ? 56 : 8,
-                  right: viewerLayout ? (landscape ? 260 : 150) : null,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: _liveScoreOverlay(match, currentScore),
-                  ),
+                  top: viewerLayout ? null : 8,
+                  bottom: viewerLayout ? liveOverlayBottomInset : null,
+                  left: 8,
+                  child: _liveScoreOverlay(match, currentScore),
                 ),
               if (viewerLayout)
                 Positioned(
