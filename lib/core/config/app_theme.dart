@@ -385,7 +385,7 @@ class AppTheme {
         ),
         titleTextStyle: GoogleFonts.inter(
           fontSize: 18,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: colors.textPrimary,
         ),
         contentTextStyle: GoogleFonts.inter(
