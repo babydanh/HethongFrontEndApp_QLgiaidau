@@ -137,4 +137,39 @@ void main() {
       expect(latest, {'phone': '0900000001'});
     },
   );
+
+  testWidgets(
+    'TC-CONTACT-09: the founder switch flips hidden, starts off when the flag is missing',
+    (tester) async {
+      await pumpForm(tester, {'phone': '0900000001'});
+      final toggle = find.byKey(const ValueKey('info-contact-show-founder'));
+      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
+
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(latest['hidden'], false);
+      expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(latest['hidden'], true);
+    },
+  );
+
+  testWidgets(
+    'TC-CONTACT-10: manual source is always public, so no founder switch',
+    (tester) async {
+      await pumpForm(tester, {
+        'displayMode': 'MANUAL',
+        'organizerName': 'Ban to chuc A',
+        'phone': '0900000001',
+      });
+
+      expect(
+        find.byKey(const ValueKey('info-contact-show-founder')),
+        findsNothing,
+      );
+    },
+  );
 }

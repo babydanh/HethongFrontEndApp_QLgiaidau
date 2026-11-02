@@ -7222,5 +7222,6 @@
   "contactFormValueRequired": "Please enter the contact value.",
   "contactFormLabelRequired": "Please enter the contact label.",
   "contactFormDuplicate": "Must not repeat the phone or email.",
-  "contactFormEmptyHint": "No contact details yet. Tap to add."
+  "contactFormEmptyHint": "No contact details yet. Tap to add.",
+  "contactFormShowFounder": "Show the founder and contact to viewers"
 }

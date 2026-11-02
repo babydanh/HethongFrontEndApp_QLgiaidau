@@ -18190,4 +18190,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactFormEmptyHint => 'No contact details yet. Tap to add.';
+
+  @override
+  String get contactFormShowFounder =>
+      'Show the founder and contact to viewers';
 }

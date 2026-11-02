@@ -18121,4 +18121,8 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get contactFormEmptyHint => 'Chưa có thông tin liên hệ. Bấm để thêm.';
+
+  @override
+  String get contactFormShowFounder =>
+      'Hiện người sáng lập và liên hệ cho người xem';
 }

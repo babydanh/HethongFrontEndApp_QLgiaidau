@@ -32676,6 +32676,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa có thông tin liên hệ. Bấm để thêm.'**
   String get contactFormEmptyHint;
+
+  /// No description provided for @contactFormShowFounder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện người sáng lập và liên hệ cho người xem'**
+  String get contactFormShowFounder;
 }
 
 class _AppLocalizationsDelegate

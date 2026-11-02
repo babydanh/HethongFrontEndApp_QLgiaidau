@@ -7250,5 +7250,6 @@
   "contactFormValueRequired": "Vui lòng nhập giá trị liên hệ.",
   "contactFormLabelRequired": "Vui lòng nhập nhãn liên hệ.",
   "contactFormDuplicate": "Không được trùng với điện thoại hoặc email.",
-  "contactFormEmptyHint": "Chưa có thông tin liên hệ. Bấm để thêm."
+  "contactFormEmptyHint": "Chưa có thông tin liên hệ. Bấm để thêm.",
+  "contactFormShowFounder": "Hiện người sáng lập và liên hệ cho người xem"
 }

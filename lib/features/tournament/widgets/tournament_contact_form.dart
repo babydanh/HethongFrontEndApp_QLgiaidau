@@ -48,6 +48,8 @@ class _TournamentContactFormState extends State<TournamentContactForm> {
 
   bool get _manual => _text('displayMode').toUpperCase() == _manualMode;
 
+  bool get _hidden => _info['hidden'] != false;
+
   @override
   void dispose() {
     _name.dispose();
@@ -182,6 +184,19 @@ class _TournamentContactFormState extends State<TournamentContactForm> {
             l10n.contactEmail,
             (value) => _put('email', value),
             keyboardType: TextInputType.emailAddress,
+          ),
+          // Same flag as the eye on the Overview founder row: a missing flag
+          // means hidden, only an explicit `false` shows the founder.
+          SwitchListTile(
+            key: const ValueKey('info-contact-show-founder'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              l10n.contactFormShowFounder,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+            subtitle: _hidden ? Text(l10n.tournamentContactHiddenHint) : null,
+            value: !_hidden,
+            onChanged: (show) => _commit({..._info, 'hidden': !show}),
           ),
         ],
         const SizedBox(height: 16),
