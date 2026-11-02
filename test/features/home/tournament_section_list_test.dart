@@ -184,6 +184,58 @@ void main() {
     await _dispose(tester);
   });
 
+  testWidgets('TC-FEED-01 live tab finds a live match past the 24th tournament', (
+    tester,
+  ) async {
+    // Newest-first list: 29 finished tournaments, then the one being played.
+    final repo = _Repository(withMatch: {'t29'})..matchStatus = 'live';
+
+    await tester.pumpWidget(
+      _app(
+        repo,
+        count: 30,
+        filter: MatchStatusFilter.live,
+        statuses: {
+          for (var i = 0; i < 29; i++) 't$i': 'completed',
+          't29': 'in_progress',
+        },
+      ),
+    );
+    await tester.pump(const Duration(seconds: 5));
+    // The list tail starts one more scan once built; let it settle.
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(find.byType(LiveTournamentWithMatchesCard), findsOneWidget);
+    expect(find.text(_emptyMessage), findsNothing);
+    await _dispose(tester);
+  });
+
+  testWidgets('TC-FEED-02 a slow first tournament never makes cards jump above', (
+    tester,
+  ) async {
+    final repo = _Repository(withMatch: {'t0', 't1', 't2'})
+      ..latency = {'t0': const Duration(milliseconds: 400)};
+
+    await tester.pumpWidget(_app(repo, count: 3));
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(
+      find.byType(LiveTournamentWithMatchesCard),
+      findsNothing,
+      reason: 't1 and t2 wait for t0 so nothing is inserted above a shown card',
+    );
+    expect(find.byType(TournamentMatchesCardSkeleton), findsWidgets);
+
+    await tester.pump(const Duration(seconds: 1));
+    final titles = tester
+        .widgetList<LiveTournamentWithMatchesCard>(
+          find.byType(LiveTournamentWithMatchesCard),
+        )
+        .map((card) => card.tournament.id);
+    expect(titles, ['t0', 't1', 't2']);
+    await _dispose(tester);
+  });
+
   testWidgets('live filter with a live card does not switch tab', (tester) async {
     final repo = _Repository(withMatch: {'t0'})..matchStatus = 'live';
     var told = 0;
@@ -212,6 +264,7 @@ Widget _app(
   required int count,
   MatchStatusFilter filter = MatchStatusFilter.scheduled,
   VoidCallback? onNoLiveMatches,
+  Map<String, String> statuses = const {},
 }) {
   return ProviderScope(
     overrides: [matchRepositoryProvider.overrideWithValue(repo)],
@@ -224,7 +277,10 @@ Widget _app(
         body: CustomScrollView(
           slivers: [
             TournamentSectionList(
-              tournaments: [for (var i = 0; i < count; i++) _tournament('t$i')],
+              tournaments: [
+                for (var i = 0; i < count; i++)
+                  _tournament('t$i', status: statuses['t$i'] ?? 'registration'),
+              ],
               filter: filter,
               emptyMessage: _emptyMessage,
               onNoLiveMatches: onNoLiveMatches,
@@ -236,13 +292,13 @@ Widget _app(
   );
 }
 
-Tournament _tournament(String id) => Tournament(
+Tournament _tournament(String id, {String status = 'registration'}) => Tournament(
   id: id,
   name: 'Tournament $id',
   sport: 'pickleball',
   format: 'single_elimination',
   bracketType: 'SINGLE_ELIMINATION',
-  status: 'registration',
+  status: status,
   adminToken: '',
   refereeToken: '',
   viewerToken: '',
@@ -275,6 +331,9 @@ class _Repository extends Fake implements IMatchRepository {
   var matchStatus = 'scheduled';
   final calls = <String>[];
 
+  /// Per-tournament response time; anything missing answers in 10 ms.
+  Map<String, Duration> latency = {};
+
   @override
   Future<
     ({List<MatchModel> matches, String? nextCursor, bool hasMore, int total})
@@ -287,7 +346,9 @@ class _Repository extends Fake implements IMatchRepository {
     String? trigger,
   }) async {
     calls.add(tournamentId);
-    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await Future<void>.delayed(
+      latency[tournamentId] ?? const Duration(milliseconds: 10),
+    );
     if (failing.contains(tournamentId)) throw StateError('boom');
     final matches = withMatch.contains(tournamentId)
         ? [_match(tournamentId, matchStatus)]

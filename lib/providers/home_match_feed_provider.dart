@@ -5,7 +5,9 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/cursor_pagination.dart';
 import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,6 +29,38 @@ class HomeMatchFeedQuery {
   final List<String> tournamentIds;
 
   const HomeMatchFeedQuery({required this.status, required this.tournamentIds});
+
+  /// Sắp giải theo nơi có khả năng chứa trận của bộ lọc, vì feed chỉ tự quét
+  /// vài chục giải đầu. Cùng hạng thì giữ nguyên thứ tự gốc.
+  factory HomeMatchFeedQuery.forTournaments({
+    required MatchStatusFilter status,
+    required List<Tournament> tournaments,
+  }) {
+    final ordered = [...tournaments.indexed]
+      ..sort((a, b) {
+        final byRank = _scanRank(
+          status,
+          a.$2.status,
+        ).compareTo(_scanRank(status, b.$2.status));
+        return byRank != 0 ? byRank : a.$1.compareTo(b.$1);
+      });
+    return HomeMatchFeedQuery(
+      status: status,
+      tournamentIds: [for (final entry in ordered) entry.$2.id],
+    );
+  }
+
+  /// Hạng thấp được quét trước. Trận đang đấu hầu như chỉ có ở giải đang diễn
+  /// ra, trận đã xong chỉ có ở giải đã kết thúc; bộ lọc khác không đổi thứ tự.
+  static int _scanRank(MatchStatusFilter status, String tournamentStatus) {
+    final inProgress = StatusHelper.isTournamentInProgress(tournamentStatus);
+    final completed = StatusHelper.isTournamentCompleted(tournamentStatus);
+    return switch (status) {
+      MatchStatusFilter.live => inProgress ? 0 : (completed ? 2 : 1),
+      MatchStatusFilter.completed => completed ? 0 : 1,
+      _ => 0,
+    };
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -60,6 +94,20 @@ class HomeMatchFeedState {
     for (final id in opened)
       if (pages[id]?.status == FeedPageStatus.ready) id,
   ];
+
+  /// Id được vẽ ra. Khi đang quét, một card chỉ hiện sau khi mọi giải đứng
+  /// trước nó đã trả lời, để câu trả lời đến muộn không chèn card lên trên card
+  /// đã hiện (làm danh sách nhảy).
+  List<String> get revealedIds {
+    if (!isScanning) return visibleIds;
+    final ids = <String>[];
+    for (final id in opened) {
+      final status = pages[id]?.status;
+      if (status == FeedPageStatus.loading) break;
+      if (status == FeedPageStatus.ready) ids.add(id);
+    }
+    return ids;
+  }
 
   bool get hasVisible => visibleIds.isNotEmpty;
 

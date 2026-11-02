@@ -65,9 +65,9 @@ class _TournamentSectionListState extends ConsumerState<TournamentSectionList>
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    final query = HomeMatchFeedQuery(
+    final query = HomeMatchFeedQuery.forTournaments(
       status: filter,
-      tournamentIds: [for (final t in tournaments) t.id],
+      tournaments: tournaments,
     );
     final provider = homeMatchFeedProvider(query);
     final feed = ref.watch(provider);
@@ -85,7 +85,7 @@ class _TournamentSectionListState extends ConsumerState<TournamentSectionList>
 
     final byId = {for (final t in tournaments) t.id: t};
     final cards = [
-      for (final id in feed.visibleIds)
+      for (final id in feed.revealedIds)
         if (byId[id] != null) (tournament: byId[id]!, page: feed.pages[id]!),
     ];
     final variant = switch (filter) {
