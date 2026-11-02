@@ -73,7 +73,10 @@ class _CameraRepository implements ICourtCameraRepository {
       throw UnimplementedError();
 }
 
-Future<_VenuesRepository> _pump(WidgetTester tester) async {
+Future<_VenuesRepository> _pump(
+  WidgetTester tester, {
+  bool editFirstVenue = false,
+}) async {
   final venues = _VenuesRepository();
   tester.view.physicalSize = const Size(390, 1400);
   tester.view.devicePixelRatio = 1;
@@ -89,8 +92,11 @@ Future<_VenuesRepository> _pump(WidgetTester tester) async {
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
-          body: TournamentManagementVenuesSection(tournamentId: 't-1'),
+        home: Scaffold(
+          body: TournamentManagementVenuesSection(
+            tournamentId: 't-1',
+            editFirstVenue: editFirstVenue,
+          ),
         ),
       ),
     ),
@@ -104,6 +110,21 @@ AppLocalizations _l10n(WidgetTester tester) => AppLocalizations.of(
 )!;
 
 void main() {
+  testWidgets('TC-EDIT-04 editFirstVenue opens the default venue editor at once', (
+    tester,
+  ) async {
+    await _pump(tester, editFirstVenue: true);
+
+    expect(find.widgetWithText(TextField, 'North Hall'), findsOneWidget);
+    expect(find.widgetWithText(TextField, '12 Lake Road'), findsOneWidget);
+  });
+
+  testWidgets('without editFirstVenue no editor is opened', (tester) async {
+    await _pump(tester);
+
+    expect(find.byType(TextField), findsNothing);
+  });
+
   testWidgets('each court is one row with a camera status and no URL', (
     tester,
   ) async {

@@ -17,8 +17,12 @@ class TournamentManagementFinanceSection extends ConsumerWidget {
   const TournamentManagementFinanceSection({
     super.key,
     required this.tournament,
+    this.focusEntryFee = false,
   });
   final Tournament tournament;
+
+  /// Put the cursor in the entry fee field as soon as it appears.
+  final bool focusEntryFee;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,6 +48,7 @@ class TournamentManagementFinanceSection extends ConsumerWidget {
         : null;
     return _TournamentFinanceContent(
       tournament: tournament,
+      focusEntryFee: focusEntryFee,
       canRequestPayout: canRequestPayout,
       payoutAccessMessage: accessMessage,
       onRetryAccess: user.hasError
@@ -92,9 +97,11 @@ class _TournamentFinanceContent extends ConsumerStatefulWidget {
     required this.tournament,
     required this.canRequestPayout,
     required this.payoutAccessMessage,
+    required this.focusEntryFee,
     this.onRetryAccess,
   });
   final Tournament tournament;
+  final bool focusEntryFee;
   final bool canRequestPayout;
   final String? payoutAccessMessage;
   final VoidCallback? onRetryAccess;
@@ -173,6 +180,7 @@ class _TournamentFinanceContentState
                       values: snapshot.data ?? const {},
                       tournament: widget.tournament,
                       controller: _entryFeeController,
+                      autofocus: widget.focusEntryFee,
                       isSaving: _isSavingFee,
                       hasError: _feeError,
                     );
@@ -337,12 +345,14 @@ class _FeeConfiguration extends StatelessWidget {
     required this.values,
     required this.tournament,
     required this.controller,
+    required this.autofocus,
     required this.isSaving,
     required this.hasError,
   });
   final Map<String, dynamic> values;
   final Tournament tournament;
   final TextEditingController controller;
+  final bool autofocus;
   final bool isSaving;
   final bool hasError;
 
@@ -375,6 +385,7 @@ class _FeeConfiguration extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
           child: TextField(
             controller: controller,
+            autofocus: autofocus,
             enabled: canEditEntryFee && !isSaving,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
