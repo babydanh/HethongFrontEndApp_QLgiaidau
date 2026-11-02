@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 
@@ -9,7 +10,7 @@ Future<bool?> showConfirmDialog({
   String cancelText = 'Hủy',
   Color? confirmColor,
 }) {
-  return showDialog<bool>(
+  return showPopupDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(title),

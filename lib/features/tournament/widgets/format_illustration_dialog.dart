@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/format_illustration_stage.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,7 @@ Future<void> showFormatIllustrationDialog(
   BuildContext context, {
   required String bracketType,
   required String formatName,
-}) => showDialog<void>(
+}) => showPopupDialog<void>(
   context: context,
   builder: (_) => _FormatIllustrationDialog(
     bracketType: bracketType,

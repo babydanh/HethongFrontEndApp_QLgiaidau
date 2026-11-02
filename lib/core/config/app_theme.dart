@@ -371,6 +371,40 @@ class AppTheme {
         ),
         behavior: SnackBarBehavior.floating,
       ),
+      // One look for every dialog and bottom sheet: flat, hairline border,
+      // generous radius, no Material 3 tint.
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.bgCard,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: colors.border),
+        ),
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
+        contentTextStyle: GoogleFonts.inter(
+          fontSize: 14,
+          height: 1.45,
+          color: colors.textSecondary,
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: colors.bgCard,
+        modalBackgroundColor: colors.bgCard,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        dragHandleColor: colors.textMuted.withValues(alpha: 0.4),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: colors.bgCard,
         selectedItemColor: primary,

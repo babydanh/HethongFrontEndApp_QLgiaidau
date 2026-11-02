@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
@@ -275,7 +276,7 @@ class _TournamentManagementVenuesSectionState
     String initialName = '',
     String initialAddress = '',
     bool initialCourtFields = false,
-  }) => showDialog<_VenueValues>(
+  }) => showPopupDialog<_VenueValues>(
     context: context,
     builder: (context) => _VenueDialog(
       title: title,
@@ -290,7 +291,7 @@ class _TournamentManagementVenuesSectionState
     required String label,
   }) async {
     final controller = TextEditingController();
-    final value = await showDialog<String>(
+    final value = await showPopupDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),

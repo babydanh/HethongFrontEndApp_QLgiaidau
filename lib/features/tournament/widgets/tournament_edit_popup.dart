@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -23,6 +24,7 @@ Future<void> showTournamentEditPopup(
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
+    sheetAnimationStyle: popupSheetAnimation,
     builder: (sheetContext) {
       final content = TournamentManagementSectionScreen(
         tournament: tournament,
