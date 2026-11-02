@@ -68,6 +68,7 @@ Future<void> showTournamentEditPopup(
 bool _isTall(TournamentManagementFocus focus) => switch (focus) {
   TournamentManagementFocus.venue ||
   TournamentManagementFocus.fee ||
+  TournamentManagementFocus.contact ||
   TournamentManagementFocus.branding => true,
   _ => false,
 };

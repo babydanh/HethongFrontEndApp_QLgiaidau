@@ -18062,4 +18062,63 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get matchSchedule_error =>
       'Không lưu được lịch. Kiểm tra mạng rồi thử lại.';
+
+  @override
+  String get contactFormSource => 'Nguồn liên hệ Ban tổ chức';
+
+  @override
+  String get contactFormSourceManual => 'Nhập thông tin BTC';
+
+  @override
+  String get contactFormSourceProfile => 'Dùng hồ sơ tài khoản';
+
+  @override
+  String get contactFormOrganizerName => 'Tên BTC';
+
+  @override
+  String get contactFormOrganizerNameRequired => 'Vui lòng nhập tên BTC.';
+
+  @override
+  String get contactFormLinks => 'Liên kết mạng xã hội & liên hệ khác';
+
+  @override
+  String get contactFormNoLinks => 'Chưa có liên kết nào.';
+
+  @override
+  String get contactFormType => 'Loại liên hệ';
+
+  @override
+  String get contactFormTypeCustom => 'Khác (tự nhập nhãn)';
+
+  @override
+  String get contactFormCustomLabel => 'Nhãn liên hệ';
+
+  @override
+  String get contactFormCustomLabelHint => 'Telegram, Viber,...';
+
+  @override
+  String get contactFormValue => 'Đường dẫn / giá trị';
+
+  @override
+  String get contactFormValueHint =>
+      'https://facebook.com/... hoặc link liên kết';
+
+  @override
+  String get contactFormAdd => 'Thêm';
+
+  @override
+  String get contactFormRemove => 'Xóa';
+
+  @override
+  String get contactFormValueRequired => 'Vui lòng nhập giá trị liên hệ.';
+
+  @override
+  String get contactFormLabelRequired => 'Vui lòng nhập nhãn liên hệ.';
+
+  @override
+  String get contactFormDuplicate =>
+      'Không được trùng với điện thoại hoặc email.';
+
+  @override
+  String get contactFormEmptyHint => 'Chưa có thông tin liên hệ. Bấm để thêm.';
 }

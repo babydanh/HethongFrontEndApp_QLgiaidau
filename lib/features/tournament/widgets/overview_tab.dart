@@ -965,7 +965,8 @@ class _OverviewTabState extends State<OverviewTab> {
                           ),
                         ),
                       ],
-                      if (contact != null) ...[
+                      // A manager with no contact yet still gets the block, to add one.
+                      if (contact != null || widget.onEditContact != null) ...[
                         const SizedBox(height: 14),
                         _editableItem(
                           key: const ValueKey('tournament-overview-contact-edit'),
@@ -983,7 +984,16 @@ class _OverviewTabState extends State<OverviewTab> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              _buildContactRows(contact, l10n),
+                              if (contact != null)
+                                _buildContactRows(contact, l10n)
+                              else
+                                Text(
+                                  l10n.contactFormEmptyHint,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colors.textMuted,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -1111,6 +1121,12 @@ class _OverviewTabState extends State<OverviewTab> {
             Icons.mail_outline_rounded,
             l10n.tournamentContactEmail,
             contact.email,
+          ),
+        for (final link in contact.links.entries)
+          row(
+            Icons.link_rounded,
+            '${link.key[0].toUpperCase()}${link.key.substring(1)}',
+            link.value,
           ),
         if (contact.hiddenFromViewers)
           Padding(

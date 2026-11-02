@@ -5,6 +5,7 @@ class TournamentContact {
     required this.phone,
     required this.email,
     required this.hiddenFromViewers,
+    this.links = const {},
   });
 
   /// Only filled in MANUAL display mode.
@@ -14,9 +15,30 @@ class TournamentContact {
 
   /// True when a manager sees contact details that viewers cannot.
   final bool hiddenFromViewers;
+
+  /// Extra channels (Facebook, Zalo, custom...) by label; always public.
+  final Map<String, String> links;
 }
 
 String _text(Object? value) => value is String ? value.trim() : '';
+
+const _contactMetadataKeys = {'displaymode', 'organizername', 'hidden'};
+
+/// Keys of `contactInfo` that are settings, not contact channels (same set as
+/// the Web form).
+bool isContactMetadataKey(String key) =>
+    _contactMetadataKeys.contains(key.toLowerCase());
+
+/// Contact channels beyond phone and email (Facebook, Zalo, custom...), keyed
+/// by their label, in saved order.
+Map<String, String> contactLinks(Map<String, dynamic>? info) => {
+  for (final entry in (info ?? const <String, dynamic>{}).entries)
+    if (entry.key != 'phone' &&
+        entry.key != 'email' &&
+        !isContactMetadataKey(entry.key) &&
+        _text(entry.value).isNotEmpty)
+      entry.key: _text(entry.value),
+};
 
 /// Decides which contact block to draw from `Tournament.contactInfo`.
 ///
@@ -31,25 +53,30 @@ TournamentContact? visibleContact(
 }) {
   if (info == null) return null;
   final manual = _text(info['displayMode']).toUpperCase() == 'MANUAL';
+  final links = contactLinks(info);
   final phone = _text(info['phone']);
   if (manual) {
     final name = _text(info['organizerName']);
-    if (name.isEmpty && phone.isEmpty) return null;
+    if (name.isEmpty && phone.isEmpty && links.isEmpty) return null;
     return TournamentContact(
       organizerName: name,
       phone: phone,
       email: '',
       hiddenFromViewers: false,
+      links: links,
     );
   }
   final hidden = info['hidden'] != false;
-  if (hidden && !isManager) return null;
+  final showProfile = !hidden || isManager;
   final email = _text(info['email']);
-  if (phone.isEmpty && email.isEmpty) return null;
+  final shownPhone = showProfile ? phone : '';
+  final shownEmail = showProfile ? email : '';
+  if (shownPhone.isEmpty && shownEmail.isEmpty && links.isEmpty) return null;
   return TournamentContact(
     organizerName: '',
-    phone: phone,
-    email: email,
-    hiddenFromViewers: hidden,
+    phone: shownPhone,
+    email: shownEmail,
+    hiddenFromViewers: hidden && (shownPhone.isNotEmpty || shownEmail.isNotEmpty),
+    links: links,
   );
 }

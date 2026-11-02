@@ -18132,4 +18132,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get matchSchedule_error =>
       'Could not save the schedule. Check your connection and try again.';
+
+  @override
+  String get contactFormSource => 'Organizer contact source';
+
+  @override
+  String get contactFormSourceManual => 'Enter organizer details';
+
+  @override
+  String get contactFormSourceProfile => 'Use account profile';
+
+  @override
+  String get contactFormOrganizerName => 'Organizer name';
+
+  @override
+  String get contactFormOrganizerNameRequired =>
+      'Please enter the organizer name.';
+
+  @override
+  String get contactFormLinks => 'Social links & other contacts';
+
+  @override
+  String get contactFormNoLinks => 'No links yet.';
+
+  @override
+  String get contactFormType => 'Contact type';
+
+  @override
+  String get contactFormTypeCustom => 'Other (custom label)';
+
+  @override
+  String get contactFormCustomLabel => 'Contact label';
+
+  @override
+  String get contactFormCustomLabelHint => 'Telegram, Viber,...';
+
+  @override
+  String get contactFormValue => 'Link / value';
+
+  @override
+  String get contactFormValueHint => 'https://facebook.com/... or any link';
+
+  @override
+  String get contactFormAdd => 'Add';
+
+  @override
+  String get contactFormRemove => 'Remove';
+
+  @override
+  String get contactFormValueRequired => 'Please enter the contact value.';
+
+  @override
+  String get contactFormLabelRequired => 'Please enter the contact label.';
+
+  @override
+  String get contactFormDuplicate => 'Must not repeat the phone or email.';
+
+  @override
+  String get contactFormEmptyHint => 'No contact details yet. Tap to add.';
 }

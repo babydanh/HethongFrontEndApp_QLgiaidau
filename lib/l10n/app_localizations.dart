@@ -32562,6 +32562,120 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không lưu được lịch. Kiểm tra mạng rồi thử lại.'**
   String get matchSchedule_error;
+
+  /// No description provided for @contactFormSource.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nguồn liên hệ Ban tổ chức'**
+  String get contactFormSource;
+
+  /// No description provided for @contactFormSourceManual.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập thông tin BTC'**
+  String get contactFormSourceManual;
+
+  /// No description provided for @contactFormSourceProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng hồ sơ tài khoản'**
+  String get contactFormSourceProfile;
+
+  /// No description provided for @contactFormOrganizerName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên BTC'**
+  String get contactFormOrganizerName;
+
+  /// No description provided for @contactFormOrganizerNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên BTC.'**
+  String get contactFormOrganizerNameRequired;
+
+  /// No description provided for @contactFormLinks.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên kết mạng xã hội & liên hệ khác'**
+  String get contactFormLinks;
+
+  /// No description provided for @contactFormNoLinks.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có liên kết nào.'**
+  String get contactFormNoLinks;
+
+  /// No description provided for @contactFormType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại liên hệ'**
+  String get contactFormType;
+
+  /// No description provided for @contactFormTypeCustom.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác (tự nhập nhãn)'**
+  String get contactFormTypeCustom;
+
+  /// No description provided for @contactFormCustomLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhãn liên hệ'**
+  String get contactFormCustomLabel;
+
+  /// No description provided for @contactFormCustomLabelHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Telegram, Viber,...'**
+  String get contactFormCustomLabelHint;
+
+  /// No description provided for @contactFormValue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đường dẫn / giá trị'**
+  String get contactFormValue;
+
+  /// No description provided for @contactFormValueHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'https://facebook.com/... hoặc link liên kết'**
+  String get contactFormValueHint;
+
+  /// No description provided for @contactFormAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm'**
+  String get contactFormAdd;
+
+  /// No description provided for @contactFormRemove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get contactFormRemove;
+
+  /// No description provided for @contactFormValueRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập giá trị liên hệ.'**
+  String get contactFormValueRequired;
+
+  /// No description provided for @contactFormLabelRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập nhãn liên hệ.'**
+  String get contactFormLabelRequired;
+
+  /// No description provided for @contactFormDuplicate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không được trùng với điện thoại hoặc email.'**
+  String get contactFormDuplicate;
+
+  /// No description provided for @contactFormEmptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thông tin liên hệ. Bấm để thêm.'**
+  String get contactFormEmptyHint;
 }
 
 class _AppLocalizationsDelegate

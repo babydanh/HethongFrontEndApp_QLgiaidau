@@ -484,7 +484,10 @@ void main() {
       expect(find.byType(BottomSheet), findsOneWidget);
       final phone = inPopup(find.byKey(const ValueKey('info-contact-phone')));
       expect(phone, findsOneWidget);
-      expect(inPopup(find.byType(TextField)), findsNWidgets(2));
+      // Same fields as the Web tab: source, phone, email and the add-link form.
+      expect(inPopup(find.byKey(const ValueKey('info-contact-mode'))), findsOneWidget);
+      expect(inPopup(find.byKey(const ValueKey('info-contact-email'))), findsOneWidget);
+      expect(inPopup(find.byKey(const ValueKey('info-contact-link-value'))), findsOneWidget);
 
       await tester.enterText(phone, '0900000002');
       await tester.pump();
@@ -2114,6 +2117,52 @@ void main() {
           inInclusiveRange(0.0, 24.0),
           reason:
               'sau khi kéo thêm $dy: đáy khung=$frameBottom, đỉnh tên giải=$titleTop',
+        );
+      }
+    },
+  );
+
+  testWidgets(
+    'TC-EDIT-BANNER: banner edit button and logo stay inside the visible banner after a small scroll',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      tester.view.padding = const FakeViewPadding(top: 44);
+      addTearDown(tester.view.resetPadding);
+
+      await tester.pumpWidget(
+        _app(
+          _tournament(
+            'in_progress',
+            bannerUrl: 'https://images.example/tournament-banner.jpg',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final dy in [0.0, -30.0, -60.0]) {
+        if (dy != 0.0) {
+          await tester.dragFrom(const Offset(200, 300), Offset(0, dy));
+          await tester.pumpAndSettle();
+        }
+        final frameBottom = tester
+            .getRect(find.byType(FlexibleSpaceBar))
+            .bottom;
+        final editBottom = tester
+            .getRect(find.byKey(const ValueKey('tournament-overview-banner-edit')))
+            .bottom;
+        final logoBottom = tester
+            .getRect(find.byKey(const ValueKey('tournament-overview-logo')))
+            .bottom;
+        expect(
+          editBottom,
+          lessThanOrEqualTo(frameBottom + 0.5),
+          reason: 'edit button cut off after drag $dy',
+        );
+        expect(
+          logoBottom,
+          lessThanOrEqualTo(frameBottom + 0.5),
+          reason: 'logo cut off after drag $dy',
         );
       }
     },

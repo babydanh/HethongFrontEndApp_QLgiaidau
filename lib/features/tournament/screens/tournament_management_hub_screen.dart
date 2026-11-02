@@ -318,6 +318,9 @@ class _TournamentManagementHubScreenState
             flexibleSpace: isClubLite
                 ? null
                 : FlexibleSpaceBar(
+                    // Pinned, not parallax: the parallax shift slides the banner's
+                    // lower edge (logo, edit button) out of the visible frame.
+                    collapseMode: CollapseMode.pin,
                     background: TournamentManagementBanner(
                       tournament: tournament,
                       resolveImageUrl: _resolveImageUrl,

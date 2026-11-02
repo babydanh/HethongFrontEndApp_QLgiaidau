@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
@@ -17,6 +19,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_contact_form.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
@@ -181,8 +184,7 @@ typedef _InfoValues = ({
   String description,
   bool hideCardText,
   String prize,
-  String phone,
-  String email,
+  String contact,
 });
 
 /// One collapsible group of the information page: the design's `.hd` header
@@ -293,12 +295,9 @@ class _TournamentSettingsFormState
   // TextEditingController vì RichTextField là WebView, không nhận controller.
   late String _description = widget.tournament.description;
   late String _prize = widget.tournament.prizeDescription ?? '';
-  late final TextEditingController _phoneController = TextEditingController(
-    text: _contactText('phone'),
-  );
-  late final TextEditingController _emailController = TextEditingController(
-    text: _contactText('email'),
-  );
+  // The whole `contactInfo` JSON: the server replaces it, so keys the form
+  // does not show (hidden...) travel along untouched.
+  late Map<String, dynamic> _contactInfo = {...?widget.tournament.contactInfo};
   late String _visibility = _savedVisibility;
   late String _registrationMode = _savedRegistrationMode;
   late String _pairingMode = _savedPairingMode;
@@ -320,23 +319,12 @@ class _TournamentSettingsFormState
     description: _description.trim(),
     hideCardText: _hideFeaturedCardText,
     prize: _prize.trim(),
-    phone: _phoneController.text.trim(),
-    email: _emailController.text.trim(),
+    contact: jsonEncode(_contactInfo),
   );
 
   bool get _isInformation => widget.group == _SettingsGroup.information;
 
   bool get _dirty => _isInformation && _current != _baseline;
-
-  /// Email is not part of the contact block in MANUAL display mode (Web rule).
-  bool get _contactIsManual =>
-      widget.tournament.contactInfo?['displayMode']?.toString().toUpperCase() ==
-      'MANUAL';
-
-  String _contactText(String key) {
-    final value = widget.tournament.contactInfo?[key];
-    return value is String ? value.trim() : '';
-  }
 
   void _syncDirty() {
     widget.unsavedChanges?.value = _dirty;
@@ -352,8 +340,6 @@ class _TournamentSettingsFormState
     }
     _baseline = _current;
     _nameController.addListener(_syncDirty);
-    _phoneController.addListener(_syncDirty);
-    _emailController.addListener(_syncDirty);
   }
 
   /// Opens the picker of the roadmap row tapped on the overview, once the
@@ -453,8 +439,6 @@ class _TournamentSettingsFormState
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
     if (_dirty) widget.unsavedChanges?.value = false;
     super.dispose();
   }
@@ -510,18 +494,20 @@ class _TournamentSettingsFormState
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (widget.focus == TournamentManagementFocus.name)
-                _nameField(l10n)
-              else if (widget.focus == TournamentManagementFocus.contact)
-                ..._contactFields(l10n)
-              else if (dateField != null)
-                _registrationDateRow(l10n, dateField),
-            ],
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.focus == TournamentManagementFocus.name)
+                  _nameField(l10n)
+                else if (widget.focus == TournamentManagementFocus.contact)
+                  _contactForm()
+                else if (dateField != null)
+                  _registrationDateRow(l10n, dateField),
+              ],
+            ),
           ),
         ),
         _StickySaveBar(error: _errorMessage, button: _saveButton(l10n)),
@@ -561,34 +547,18 @@ class _TournamentSettingsFormState
           ),
           _InfoGroup(
             title: l10n.manageInfoGroupContact,
-            children: _contactFields(l10n),
+            children: [_contactForm()],
           ),
         ],
       );
 
-  List<Widget> _contactFields(AppLocalizations l10n) => [
-    TextField(
-      key: const ValueKey('info-contact-phone'),
-      controller: _phoneController,
-      keyboardType: TextInputType.phone,
-      decoration: InputDecoration(
-        labelText: l10n.contactPhone,
-        border: _fieldBorder(context),
-      ),
-    ),
-    if (!_contactIsManual) ...[
-      const SizedBox(height: 12),
-      TextField(
-        key: const ValueKey('info-contact-email'),
-        controller: _emailController,
-        keyboardType: TextInputType.emailAddress,
-        decoration: InputDecoration(
-          labelText: l10n.contactEmail,
-          border: _fieldBorder(context),
-        ),
-      ),
-    ],
-  ];
+  Widget _contactForm() => TournamentContactForm(
+    initial: _contactInfo,
+    onChanged: (value) {
+      _contactInfo = value;
+      _syncDirty();
+    },
+  );
 
   bool _hasOrderErrors(AppLocalizations l10n) =>
       widget.group == _SettingsGroup.registration &&
@@ -842,10 +812,19 @@ class _TournamentSettingsFormState
   }
 
   /// Kiểm tra theo đúng thứ tự của web; `null` khi hợp lệ.
+  bool get _manualContactWithoutName {
+    final info = _contactInfo;
+    final name = info['organizerName'];
+    return info['displayMode'] == 'MANUAL' &&
+        (name is! String || name.trim().isEmpty);
+  }
+
   String? _validate(AppLocalizations l10n) => switch (widget.group) {
     _SettingsGroup.information =>
       _nameController.text.trim().isEmpty
           ? l10n.tournamentManagementRequiredFields
+          : _manualContactWithoutName
+          ? l10n.contactFormOrganizerNameRequired
           : null,
     _SettingsGroup.registration => _registrationError(l10n),
   };
@@ -908,9 +887,8 @@ class _TournamentSettingsFormState
         if (current.prize != _baseline.prize) {
           payload['prizeDescription'] = current.prize;
         }
-        if (current.phone != _baseline.phone ||
-            current.email != _baseline.email) {
-          payload['contactInfo'] = _contactPayload(current);
+        if (current.contact != _baseline.contact) {
+          payload['contactInfo'] = Map<String, dynamic>.of(_contactInfo);
         }
       case _SettingsGroup.registration:
         _addDateUpdate(
@@ -944,17 +922,6 @@ class _TournamentSettingsFormState
         }
     }
     return payload;
-  }
-
-  /// The server replaces the whole `contactInfo` JSON, so every other key
-  /// (hidden, displayMode, custom fields) is sent back untouched.
-  Map<String, dynamic> _contactPayload(_InfoValues current) {
-    final info = <String, dynamic>{...?widget.tournament.contactInfo};
-    void put(String key, String value) =>
-        value.isEmpty ? info.remove(key) : info[key] = value;
-    put('phone', current.phone);
-    if (!_contactIsManual) put('email', current.email);
-    return info;
   }
 
   Widget _dateField(
