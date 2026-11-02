@@ -6,8 +6,6 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/tennis_score_panel.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/pickleball_panel.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/court_score_layout.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/badminton_score_panel.dart';
@@ -145,16 +143,23 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
           tournamentIsLite: tournamentAsync?.value?.isLite == true,
         ) ||
         config.isOpenScoring;
-    final usePickleballSideOutPanel =
-        !isLite &&
-        kind == SportRuleKind.pickleball &&
-        config.scoringModel == SportScoringModel.pickleballSideOut;
+    // Pickleball scores on the court itself: points, set and match controls
+    // all sit on it, so the shared bottom bar is not drawn.
+    final courtMode = kind == SportRuleKind.pickleball;
 
     return Scaffold(
       backgroundColor: colors.bgCard,
       body: SafeArea(
         child: OrientationBuilder(
           builder: (context, orientation) {
+            // A short landscape screen puts the finished sets on the title row.
+            final compactHeader =
+                courtMode && orientation == Orientation.landscape;
+            final hasFinishedSets = ref.watch(
+              scorePanelNotifierProvider(
+                params,
+              ).select((state) => state.finishedSets.isNotEmpty),
+            );
             Widget content = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -177,6 +182,10 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (compactHeader && hasFinishedSets)
+                          Expanded(
+                            child: _setHistoryStrip(params, colors, inline: true),
+                          ),
                         IconButton(
                           icon: Icon(
                             Icons.info_outline_rounded,
@@ -222,74 +231,11 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 const Divider(height: 1, thickness: 1),
 
                 // Dải hiển thị điểm các set đã chốt ở đầu màn hình
-                Consumer(
-                  builder: (context, ref, _) {
-                    final state = ref.watch(scorePanelNotifierProvider(params));
-                    final historySets = state.finishedSets;
-                    if (historySets.isEmpty) {
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        color: colors.bgSurface,
-                        child: Text(
-                          'Chưa chốt set nào',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: colors.textMuted,
-                          ),
-                        ),
-                      );
-                    }
-                    return Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      color: colors.bgSurface,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            for (int i = 0; i < historySets.length; i++) ...[
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 9,
-                                  vertical: 3.5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.bgCard,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: colors.border.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Set ${i + 1}: ${historySets[i].score1}-${historySets[i].score2}',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: historySets[i].score1 >
-                                            historySets[i].score2
-                                        ? const Color(0xFF2563EB)
-                                        : const Color(0xFFEA580C),
-                                  ),
-                                ),
-                              ),
-                              if (i < historySets.length - 1)
-                                const SizedBox(width: 6),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(height: 1, thickness: 1),
+                if (!compactHeader) ...[
+                  _setHistoryStrip(params, colors),
+                  const Divider(height: 1, thickness: 1),
+                ],
+
 
                 // 2. CENTER SCORE ARENA (BẢNG TÍNH ĐIỂM CHÍNH - GIÃN FULL CHIỀU CAO NGHỆ THUẬT)
                 Expanded(
@@ -328,7 +274,6 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                 context,
                                 params,
                                 kind,
-                                usePickleballSideOutPanel,
                                 isLite,
                               ),
                               _buildFoulTab(
@@ -346,9 +291,10 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     ),
                   ),
                 ),
-                const Divider(height: 1, thickness: 1),
-
                 // 4. BOTTOM REFEREE CONTROL BAR (HÌNH PHẠT, NGOẠI LỆ VÀ NÚT XỬ LÝ TRỌNG TÀI)
+                // Pickleball puts these on the court (net icons and ⋯ menu).
+                if (!courtMode) ...[
+                const Divider(height: 1, thickness: 1),
                 Consumer(
                   builder: (context, ref, _) {
                     final l10n = AppLocalizations.of(context)!;
@@ -730,6 +676,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     );
                   },
                 ),
+                ],
               ],
             );
             return content;
@@ -739,14 +686,99 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     );
   }
 
+  /// Finished sets as chips. [inline] drops the background and the empty
+  /// hint so the chips fit on the title row of a landscape screen.
+  Widget _setHistoryStrip(
+    ({String tournamentId, String matchId}) params,
+    AppColorsExtension colors, {
+    bool inline = false,
+  }) {
+    return Consumer(
+                  builder: (context, ref, _) {
+                    final state = ref.watch(scorePanelNotifierProvider(params));
+                    final historySets = state.finishedSets;
+                    if (historySets.isEmpty) {
+                      if (inline) return const SizedBox.shrink();
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
+                        ),
+                        color: colors.bgSurface,
+                        child: Text(
+                          'Chưa chốt set nào',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      );
+                    }
+                    return Container(
+                      width: double.infinity,
+                      padding: inline
+                          ? EdgeInsets.zero
+                          : const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                      color: inline ? null : colors.bgSurface,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            for (int i = 0; i < historySets.length; i++) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 9,
+                                  vertical: 3.5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: colors.bgCard,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: colors.border.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Set ${i + 1}: ${historySets[i].score1}-${historySets[i].score2}',
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: historySets[i].score1 >
+                                            historySets[i].score2
+                                        ? const Color(0xFF2563EB)
+                                        : const Color(0xFFEA580C),
+                                  ),
+                                ),
+                              ),
+                              if (i < historySets.length - 1)
+                                const SizedBox(width: 6),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+  }
+
   Widget _buildScoreTab(
     BuildContext context,
     ({String tournamentId, String matchId}) params,
     SportRuleKind kind,
-    bool usePickleballSideOutPanel,
     bool isLite,
   ) {
-    final scorePanel = kind == SportRuleKind.football
+    // Pickleball: the court carries the score and every set / match control.
+    final scorePanel = kind == SportRuleKind.pickleball
+        ? PickleballCourtPanel(
+            params: params,
+            canScore: ref.watch(authProvider).canScore,
+            onForceWin: widget.onForceWin,
+          )
+        : kind == SportRuleKind.football
         ? FootballScorePanel(
             params: params,
             team1Name: widget.match.team1Name,
@@ -756,29 +788,16 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
         ? TennisScorePanel(params: params, isReadOnly: false)
         : isLite
         ? RallyScorePanel(params: params, isReadOnly: false)
-        : usePickleballSideOutPanel
-        ? PickleballPanel(params: params, isReadOnly: false)
         : kind == SportRuleKind.badminton
         ? BadmintonScorePanel(params: params, isReadOnly: false)
         : kind == SportRuleKind.tableTennis
         ? TableTennisScorePanel(params: params, isReadOnly: false)
         : RallyScorePanel(params: params, isReadOnly: false);
-    final courtPanel = kind == SportRuleKind.pickleball && !isLite
-        ? PickleballCourtPanel(
-            params: params,
-            canScore: ref.watch(authProvider).canScore,
-          )
-        : null;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
         children: [
-          Expanded(
-            // Pickleball: court + scoring block; side by side in landscape.
-            child: courtPanel != null
-                ? CourtScoreLayout(court: courtPanel, scorePanel: scorePanel)
-                : scorePanel,
-          ),
+          Expanded(child: scorePanel),
           const SizedBox(height: 6),
           Consumer(
             builder: (context, ref, _) {

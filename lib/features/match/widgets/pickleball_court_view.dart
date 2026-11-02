@@ -4,9 +4,14 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
+
+export 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart'
+    show courtNetControlsKey, courtNetKey;
 
 /// Tên hiển thị của VĐV ở [index] trong đội; thiếu tên thì dùng "VĐV n".
 String courtPlayerDisplayName(
@@ -21,26 +26,20 @@ String courtPlayerDisplayName(
   return l10n.pickleballCourtPlayerLabel(index + 1);
 }
 
-// Court palette follows the Web mock; it is a fixed "painted court" look and
-// does not change with the app theme.
-const _courtColor = Color(0xFF8EBDF0);
-const _kitchenColor = Color(0xFFB7D4F7);
-const _netColor = Color(0xFF94A3B8);
-const _navy = Color(0xFF12306B);
-const _servingChipColor = Color(0xFFFFF7D1);
-const _ballColor = Color(0xFFFACC15);
-const _lineColor = Colors.white;
-const _lineWidth = 3.0;
-
 /// Key of the 48dp hit area around the serving ball.
 const serveBallHitKey = Key('serveBallHit');
+
+/// Key of the painted court (cells, kitchens and net).
+const courtSurfaceKey = Key('courtSurface');
 
 /// Resolves a drop to an action, or null when the drop must do nothing.
 typedef _ResolveDrop =
     CourtDropAction? Function(CourtDragSource source, CourtDropTarget target);
 
-/// Sơ đồ sân pickleball nằm ngang (2:1): thanh điểm, hai nửa sân ngăn bởi lưới,
-/// kéo thả người và trái bóng bằng nhấn giữ, icon hoàn tác / khôi phục.
+/// Sơ đồ sân pickleball: dọc (hai đội trên/dưới) khi [axis] là dọc, ngang 2:1
+/// khi [axis] là ngang. Điểm nằm trong dải bếp của mỗi nửa; lưới giữ lời hô và
+/// các icon (⋯, chốt set, cúp, mất giao). Kéo thả người và trái bóng bằng nhấn
+/// giữ.
 ///
 /// Chỉ vẽ từ [CourtLayout]; luật cú thả nằm ở [resolveCourtDrop], việc áp dụng
 /// nằm ở người gọi qua các callback. Callback null = không có quyền/không áp
@@ -53,38 +52,41 @@ class PickleballCourtView extends StatelessWidget {
     required this.team2Players,
     required this.team1Score,
     required this.team2Score,
+    this.axis = Axis.horizontal,
     this.isSideOut = false,
     this.isDoubles = true,
     this.receiverCanScore = false,
     this.autoSwitchEnds = true,
+    this.overrideEnabled = false,
+    this.finishSetEnabled = true,
+    this.pickWinnerEnabled = true,
     this.onScoreChange,
     this.onSetServingTeam,
     this.onDrop,
+    this.onSwitchEnds,
     this.onUndo,
     this.onRestoreAutomatic,
     this.onToggleAutoSwitch,
+    this.onFinishSet,
+    this.onPickWinner,
+    this.onLoseServe,
+    this.onToggleOverride,
+    this.onForceWin,
   });
 
-  static const _pillHeight = 48.0;
-  static const _toolsHeight = 48.0;
-  static const _gap = 8.0;
   static const _motion = Duration(milliseconds: 240);
 
-  /// Narrowest court drawn at its own size; a smaller slot scales it down.
-  static const _minCourtWidth = 240.0;
+  /// Narrowest horizontal court; a shorter slot scrolls instead of shrinking it.
+  static const _minHorizontalWidth = 240.0;
 
-  /// The block is scaled down to fit a short slot, but never below this
-  /// factor (buttons stay >= ~40dp: 44 * 0.92); a shorter slot scrolls instead.
-  static const _minScale = 0.92;
+  /// A vertical court is never shorter than this; a shorter slot scrolls.
+  static const _minVerticalHeight = 360.0;
 
-  /// Call text (score-score-server) is dropped below this court width.
-  static const _callMinWidth = 300.0;
+  /// A vertical court is at most this many times taller than wide.
+  static const _verticalMaxAspect = 1.2;
 
-  /// Upper bound of the height the view needs for a court [width] wide
-  /// (pills, court and tools), so a parent can reserve room for it.
-  static double naturalHeight(double width) =>
-      _pillHeight + _gap + width / 2 + _gap + _toolsHeight;
-
+  /// Hướng xếp hai nửa sân: dọc khi cầm dọc, ngang khi cầm ngang.
+  final Axis axis;
   final CourtLayout layout;
   final List<String> team1Players;
   final List<String> team2Players;
@@ -100,6 +102,13 @@ class PickleballCourtView extends StatelessWidget {
   /// Side-out but open scoring: the receiving team may score as well.
   final bool receiverCanScore;
   final bool autoSwitchEnds;
+  final bool overrideEnabled;
+
+  /// Chốt set bị khoá khi set chưa kết thúc được (vd. 0-0).
+  final bool finishSetEnabled;
+
+  /// Cúp bị khoá khi đang lưu kết quả.
+  final bool pickWinnerEnabled;
 
   /// Null thì ẩn nút − và +.
   final void Function(int team, bool increment)? onScoreChange;
@@ -110,14 +119,19 @@ class PickleballCourtView extends StatelessWidget {
 
   /// Null thì tắt kéo thả.
   final void Function(CourtDropAction action)? onDrop;
+  final VoidCallback? onSwitchEnds;
   final VoidCallback? onUndo;
   final VoidCallback? onRestoreAutomatic;
   final VoidCallback? onToggleAutoSwitch;
+  final VoidCallback? onFinishSet;
+  final VoidCallback? onPickWinner;
 
-  bool get _showTools =>
-      onUndo != null ||
-      onRestoreAutomatic != null ||
-      onToggleAutoSwitch != null;
+  /// Null ở rally và Lite: không có lượt giao để mất.
+  final VoidCallback? onLoseServe;
+
+  /// Null ở Lite: không có ngoại lệ.
+  final VoidCallback? onToggleOverride;
+  final VoidCallback? onForceWin;
 
   int _scoreOf(int team) => team == 1 ? team1Score : team2Score;
 
@@ -139,389 +153,138 @@ class PickleballCourtView extends StatelessWidget {
     onDrop?.call(action);
   }
 
-  /// Scales the block down to fit, or scrolls it when it is too short.
-  static Widget _fitOrScroll({required bool scrolls, required Widget child}) =>
-      scrolls
-      ? SingleChildScrollView(child: Center(child: child))
-      : FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.topCenter,
-          child: child,
-        );
+  Size _courtSize(BoxConstraints constraints) {
+    if (axis == Axis.vertical) {
+      final height = constraints.hasBoundedHeight
+          ? math.max(constraints.maxHeight, _minVerticalHeight)
+          : constraints.maxWidth * 1.5;
+      return Size(
+        math.min(constraints.maxWidth, height / _verticalMaxAspect),
+        height,
+      );
+    }
+    final width = constraints.hasBoundedHeight
+        ? math.min(
+            constraints.maxWidth,
+            math.max(_minHorizontalWidth, constraints.maxHeight * 2),
+          )
+        : constraints.maxWidth;
+    return Size(width, width / 2);
+  }
+
+  String? get _callText {
+    final serving = layout.servingScore;
+    final receiving = layout.receivingScore;
+    if (serving == null || receiving == null) return null;
+    final server = layout.callServerNumber;
+    return server == null
+        ? '$serving-$receiving'
+        : '$serving-$receiving-$server';
+  }
 
   @override
   Widget build(BuildContext context) {
     final motion = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : _motion;
-    final leftTeam = layout.team1First ? 1 : 2;
-    final rightTeam = 3 - leftTeam;
-
+    final firstTeam = layout.team1First ? 1 : 2;
     return LayoutBuilder(
       builder: (context, constraints) {
-        // In a short (landscape) slot shrink the court so pills, court and
-        // tools fit the height; the court keeps its 2:1 ratio and never goes
-        // below [_minCourtWidth]. A slot still too short is scaled down by at
-        // most [_minScale]; below that the block scrolls instead.
-        final chrome =
-            _pillHeight + _gap + (_showTools ? _gap + _toolsHeight : 0);
-        final fitWidth = constraints.hasBoundedHeight
-            ? math.max(_minCourtWidth, (constraints.maxHeight - chrome) * 2)
-            : double.infinity;
-        final width = math.min(constraints.maxWidth, fitWidth);
+        final size = _courtSize(constraints);
+        final court = SizedBox(
+          width: size.width,
+          height: size.height,
+          child: _CourtSurface(
+            axis: axis,
+            layout: layout,
+            firstTeam: firstTeam,
+            secondTeam: 3 - firstTeam,
+            team1Players: team1Players,
+            team2Players: team2Players,
+            scoreOf: _scoreOf,
+            lockReceiverPlus: isSideOut && !receiverCanScore,
+            onScoreChange: onScoreChange,
+            callText: _callText,
+            net: CourtNetActions(
+              menu: CourtMenuActions(
+                onSwitchEnds: onSwitchEnds,
+                onUndo: onUndo,
+                onRestoreAutomatic: onRestoreAutomatic,
+                onToggleAutoSwitch: onToggleAutoSwitch,
+                autoSwitchEnds: autoSwitchEnds,
+                onToggleOverride: onToggleOverride,
+                overrideEnabled: overrideEnabled,
+                onForceWin: onForceWin,
+              ),
+              onFinishSet: onFinishSet,
+              finishSetEnabled: finishSetEnabled,
+              onPickWinner: onPickWinner,
+              pickWinnerEnabled: pickWinnerEnabled,
+              onLoseServe: onLoseServe,
+            ),
+            motion: motion,
+            dragEnabled: onDrop != null,
+            resolve: _resolve,
+            onDrop: _handleDrop,
+          ),
+        );
         final scrolls =
             constraints.hasBoundedHeight &&
-            constraints.maxHeight < (chrome + _minCourtWidth / 2) * _minScale;
+            size.height > constraints.maxHeight + 0.5;
         return Align(
-          alignment: Alignment.topCenter,
-          child: _fitOrScroll(
-            scrolls: scrolls,
-            child: SizedBox(
-              width: width,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _ScoreBar(
-                    leftTeam: leftTeam,
-                    rightTeam: rightTeam,
-                    scoreOf: _scoreOf,
-                    layout: layout,
-                    showCall: width >= _callMinWidth,
-                    lockReceiverPlus: isSideOut && !receiverCanScore,
-                    onScoreChange: onScoreChange,
-                  ),
-                  const SizedBox(height: _gap),
-                  AspectRatio(
-                    aspectRatio: 2,
-                    child: _CourtSurface(
-                      layout: layout,
-                      leftTeam: leftTeam,
-                      rightTeam: rightTeam,
-                      team1Players: team1Players,
-                      team2Players: team2Players,
-                      motion: motion,
-                      dragEnabled: onDrop != null,
-                      resolve: _resolve,
-                      onDrop: _handleDrop,
-                    ),
-                  ),
-                  if (_showTools) ...[
-                    const SizedBox(height: _gap),
-                    _CourtTools(
-                      autoSwitchEnds: autoSwitchEnds,
-                      onUndo: onUndo,
-                      onRestoreAutomatic: onRestoreAutomatic,
-                      onToggleAutoSwitch: onToggleAutoSwitch,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
+          alignment: Alignment.center,
+          child: scrolls ? SingleChildScrollView(child: court) : court,
         );
       },
     );
   }
 }
 
-class _ScoreBar extends StatelessWidget {
-  const _ScoreBar({
-    required this.leftTeam,
-    required this.rightTeam,
-    required this.scoreOf,
-    required this.layout,
-    required this.showCall,
-    required this.lockReceiverPlus,
-    required this.onScoreChange,
-  });
-
-  final int leftTeam;
-  final int rightTeam;
-  final int Function(int team) scoreOf;
-  final CourtLayout layout;
-  final bool showCall;
-
-  /// Plus is disabled for the team that is not serving.
-  final bool lockReceiverPlus;
-  final void Function(int team, bool increment)? onScoreChange;
-
-  Widget _pill(int team) => _ScorePill(
-    team: team,
-    score: scoreOf(team),
-    isServing: layout.servingTeam == team,
-    plusEnabled: !lockReceiverPlus || layout.servingTeam == team,
-    onScoreChange: onScoreChange,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final servingScore = layout.servingScore;
-    final receivingScore = layout.receivingScore;
-    final call = layout.callServerNumber;
-    final callText = !showCall || servingScore == null || receivingScore == null
-        ? null
-        : call == null
-        ? '$servingScore-$receivingScore'
-        : '$servingScore-$receivingScore-$call';
-
-    return SizedBox(
-      height: PickleballCourtView._pillHeight,
-      child: Row(
-        children: [
-          Expanded(child: _pill(leftTeam)),
-          if (callText != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Semantics(
-                label: '${l10n.pickleballCourtCallLabel}: $callText',
-                excludeSemantics: true,
-                child: Text(
-                  callText,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colors.textSecondary,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-            )
-          else
-            const SizedBox(width: 12),
-          Expanded(child: _pill(rightTeam)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ScorePill extends StatelessWidget {
-  const _ScorePill({
-    required this.team,
-    required this.score,
-    required this.isServing,
-    required this.plusEnabled,
-    required this.onScoreChange,
-  });
-
-  /// Drawn size of the round buttons; their hit area is larger.
-  static const _visualSize = 32.0;
-
-  /// Below this pill width the hit area is 44dp instead of 48dp so the score
-  /// still fits (short landscape slot).
-  static const _roomyWidth = 130.0;
-
-  final int team;
-  final int score;
-  final bool isServing;
-  final bool plusEnabled;
-  final void Function(int team, bool increment)? onScoreChange;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final change = onScoreChange;
-
-    return Container(
-      height: PickleballCourtView._pillHeight,
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      // Border painted over the pill so it does not shrink the 48dp hit area.
-      foregroundDecoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: isServing ? _ballColor : colors.border,
-          width: isServing ? 2 : 1,
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final hit = constraints.maxWidth >= _roomyWidth ? 48.0 : 44.0;
-          return Row(
-            children: [
-              if (change != null)
-                _RoundButton(
-                  icon: Icons.remove_rounded,
-                  tooltip: l10n.pickleballCourtRemovePoint(team),
-                  hitSize: hit,
-                  onPressed: score > 0 ? () => change(team, false) : null,
-                ),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '$score',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: colors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-              ),
-              if (change != null)
-                _RoundButton(
-                  icon: Icons.add_rounded,
-                  tooltip: l10n.pickleballCourtAddPoint(team),
-                  hitSize: hit,
-                  filled: true,
-                  onPressed: plusEnabled ? () => change(team, true) : null,
-                ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Round 32dp button inside a larger hit area, so the drawing stays small but
-/// the touch target is not.
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({
-    required this.icon,
-    required this.tooltip,
-    required this.hitSize,
-    required this.onPressed,
-    this.filled = false,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final double hitSize;
-  final bool filled;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final enabled = onPressed != null;
-    final foreground = filled ? Colors.white : colors.textPrimary;
-    return IconButton(
-      tooltip: tooltip,
-      onPressed: onPressed,
-      padding: EdgeInsets.zero,
-      constraints: BoxConstraints.tightFor(width: hitSize, height: hitSize),
-      style: IconButton.styleFrom(
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        minimumSize: Size.square(hitSize),
-      ),
-      icon: Container(
-        width: _ScorePill._visualSize,
-        height: _ScorePill._visualSize,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: filled
-              ? AppTheme.primary.withValues(alpha: enabled ? 1 : 0.3)
-              : null,
-          border: filled ? null : Border.all(color: colors.border),
-        ),
-        child: Icon(
-          icon,
-          size: 20,
-          color: enabled ? foreground : foreground.withValues(alpha: 0.38),
-        ),
-      ),
-    );
-  }
-}
-
-class _CourtTools extends StatelessWidget {
-  const _CourtTools({
-    required this.autoSwitchEnds,
-    required this.onUndo,
-    required this.onRestoreAutomatic,
-    required this.onToggleAutoSwitch,
-  });
-
-  /// 48dp touch target whatever the platform default tap target is.
-  static final _toolStyle = IconButton.styleFrom(
-    tapTargetSize: MaterialTapTargetSize.padded,
-    minimumSize: const Size.square(48),
-  );
-
-  final bool autoSwitchEnds;
-  final VoidCallback? onUndo;
-  final VoidCallback? onRestoreAutomatic;
-  final VoidCallback? onToggleAutoSwitch;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return SizedBox(
-      height: PickleballCourtView._toolsHeight,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            tooltip: l10n.pickleballCourtUndo,
-            onPressed: onUndo,
-            style: _toolStyle,
-            icon: const Icon(Icons.undo_rounded),
-          ),
-          IconButton(
-            tooltip: l10n.pickleballCourtRestoreAutomatic,
-            onPressed: onRestoreAutomatic,
-            style: _toolStyle,
-            icon: const Icon(Icons.restart_alt_rounded),
-          ),
-          IconButton(
-            tooltip: l10n.pickleballCourtAutoSwitch,
-            onPressed: onToggleAutoSwitch,
-            isSelected: autoSwitchEnds,
-            style: _toolStyle.copyWith(
-              foregroundColor: WidgetStatePropertyAll(
-                autoSwitchEnds ? AppTheme.primary : colors.textSecondary,
-              ),
-              backgroundColor: WidgetStatePropertyAll(
-                autoSwitchEnds
-                    ? AppTheme.primary.withValues(alpha: 0.16)
-                    : null,
-              ),
-            ),
-            icon: const Icon(Icons.swap_horiz_rounded),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _CourtSurface extends StatelessWidget {
   const _CourtSurface({
+    required this.axis,
     required this.layout,
-    required this.leftTeam,
-    required this.rightTeam,
+    required this.firstTeam,
+    required this.secondTeam,
     required this.team1Players,
     required this.team2Players,
+    required this.scoreOf,
+    required this.lockReceiverPlus,
+    required this.onScoreChange,
+    required this.callText,
+    required this.net,
     required this.motion,
     required this.dragEnabled,
     required this.resolve,
     required this.onDrop,
   });
 
+  final Axis axis;
   final CourtLayout layout;
-  final int leftTeam;
-  final int rightTeam;
+  final int firstTeam;
+  final int secondTeam;
   final List<String> team1Players;
   final List<String> team2Players;
+  final int Function(int team) scoreOf;
+  final bool lockReceiverPlus;
+  final void Function(int team, bool increment)? onScoreChange;
+  final String? callText;
+  final CourtNetActions net;
   final Duration motion;
   final bool dragEnabled;
   final _ResolveDrop resolve;
   final void Function(CourtDropAction action) onDrop;
 
-  Widget _half(int team, {required bool isLeft}) => Expanded(
+  Widget _half(int team, {required bool isFirst}) => Expanded(
     child: _CourtHalf(
+      axis: axis,
       team: team,
-      isLeft: isLeft,
+      isFirst: isFirst,
       layout: layout,
       players: team == 1 ? team1Players : team2Players,
+      score: scoreOf(team),
+      plusEnabled: !lockReceiverPlus || layout.servingTeam == team,
+      onScoreChange: onScoreChange,
       motion: motion,
       dragEnabled: dragEnabled,
       resolve: resolve,
@@ -538,10 +301,10 @@ class _CourtSurface extends StatelessWidget {
     final action = resolve(
       CourtDragSource(
         kind: CourtDragKind.player,
-        team: leftTeam,
+        team: firstTeam,
         playerIndex: 0,
       ),
-      CourtDropTarget.half(team: rightTeam),
+      CourtDropTarget.half(team: secondTeam),
     );
     if (action == null) return const {};
     return {
@@ -558,55 +321,57 @@ class _CourtSurface extends StatelessWidget {
       explicitChildNodes: true,
       label: l10n.pickleballCourtLabel,
       customSemanticsActions: _switchEndsAction(l10n),
-      child: _court(),
-    );
-  }
-
-  Widget _court() {
-    return Container(
-      decoration: BoxDecoration(
-        color: _courtColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _lineColor, width: _lineWidth),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Row(
-        children: [
-          _half(leftTeam, isLeft: true),
-          Container(
-            width: 14,
-            decoration: const BoxDecoration(
-              color: _netColor,
-              border: Border.symmetric(
-                vertical: BorderSide(color: _lineColor, width: 2),
-              ),
-            ),
-          ),
-          _half(rightTeam, isLeft: false),
-        ],
+      child: Container(
+        key: courtSurfaceKey,
+        decoration: BoxDecoration(
+          color: courtColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: courtLineColor, width: courtLineWidth),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Flex(
+          direction: axis,
+          children: [
+            _half(firstTeam, isFirst: true),
+            CourtNetBand(courtAxis: axis, callText: callText, actions: net),
+            _half(secondTeam, isFirst: false),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// One half of the court. Cells face the net: on the left half the left cell is
-/// on top and the right cell below; on the right half the other way round.
+/// One half of the court. Cells face the net. Horizontal court: on the left
+/// half the left cell is on top, on the right half the right cell is on top.
+/// Vertical court: the top half faces down (its right cell is on the screen's
+/// left), the bottom half faces up (its right cell is on the screen's right).
 class _CourtHalf extends StatefulWidget {
   const _CourtHalf({
+    required this.axis,
     required this.team,
-    required this.isLeft,
+    required this.isFirst,
     required this.layout,
     required this.players,
+    required this.score,
+    required this.plusEnabled,
+    required this.onScoreChange,
     required this.motion,
     required this.dragEnabled,
     required this.resolve,
     required this.onDrop,
   });
 
+  final Axis axis;
   final int team;
-  final bool isLeft;
+
+  /// Left half (horizontal court) or top half (vertical court).
+  final bool isFirst;
   final CourtLayout layout;
   final List<String> players;
+  final int score;
+  final bool plusEnabled;
+  final void Function(int team, bool increment)? onScoreChange;
   final Duration motion;
   final bool dragEnabled;
   final _ResolveDrop resolve;
@@ -723,39 +488,69 @@ class _CourtHalfState extends State<_CourtHalf> {
     );
   }
 
+  /// Order of the two cells inside the half, in reading order of the cell box.
+  List<CourtCell> get _cellOrder {
+    final rightFirst = widget.axis == Axis.vertical
+        ? widget.isFirst
+        : !widget.isFirst;
+    return rightFirst
+        ? const [CourtCell.right, CourtCell.left]
+        : const [CourtCell.left, CourtCell.right];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cells = widget.isLeft
-        ? const [CourtCell.left, CourtCell.right]
-        : const [CourtCell.right, CourtCell.left];
-    final cellsColumn = Expanded(
-      flex: 76,
-      child: Column(
-        children: [
-          _cell(cells[0]),
-          Container(height: _lineWidth, color: _lineColor),
-          _cell(cells[1]),
-        ],
-      ),
-    );
-    final kitchen = Expanded(
-      flex: 24,
-      child: Container(
-        decoration: BoxDecoration(
-          color: _kitchenColor,
-          border: Border(
-            left: widget.isLeft
-                ? const BorderSide(color: _lineColor, width: _lineWidth)
-                : BorderSide.none,
-            right: widget.isLeft
-                ? BorderSide.none
-                : const BorderSide(color: _lineColor, width: _lineWidth),
-          ),
+    final vertical = widget.axis == Axis.vertical;
+    final cells = _cellOrder;
+    final palette = courtPaletteOf(widget.team);
+    final divider = vertical
+        ? Container(width: courtLineWidth, color: courtLineColor)
+        : Container(height: courtLineWidth, color: courtLineColor);
+    final cellsBox = Expanded(
+      flex: vertical ? 70 : 62,
+      child: ColoredBox(
+        color: palette.court,
+        child: Flex(
+          direction: vertical ? Axis.horizontal : Axis.vertical,
+          children: [_cell(cells[0]), divider, _cell(cells[1])],
         ),
       ),
     );
-    final body = Row(
-      children: widget.isLeft ? [cellsColumn, kitchen] : [kitchen, cellsColumn],
+    final scoreStrip = CourtKitchenScore(
+      courtAxis: widget.axis,
+      team: widget.team,
+      accent: palette.accent,
+      score: widget.score,
+      isServing: widget.layout.servingTeam == widget.team,
+      plusEnabled: widget.plusEnabled,
+      onScoreChange: widget.onScoreChange,
+      motion: widget.motion,
+    );
+    // The kitchen touches the net: it is the second child of the first half
+    // and the first child of the second half.
+    final lineAtNet = BorderSide(color: courtLineColor, width: courtLineWidth);
+    final kitchen = Expanded(
+      flex: vertical ? 30 : 38,
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: palette.kitchen,
+          border: vertical
+              ? Border(
+                  top: widget.isFirst ? lineAtNet : BorderSide.none,
+                  bottom: widget.isFirst ? BorderSide.none : lineAtNet,
+                )
+              : Border(
+                  left: widget.isFirst ? lineAtNet : BorderSide.none,
+                  right: widget.isFirst ? BorderSide.none : lineAtNet,
+                ),
+        ),
+        child: scoreStrip,
+      ),
+    );
+    final body = Flex(
+      direction: widget.axis,
+      children: widget.isFirst ? [cellsBox, kitchen] : [kitchen, cellsBox],
     );
     if (!widget.dragEnabled) return body;
 
@@ -919,9 +714,11 @@ class _PlayerChip extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isServing ? _servingChipColor : Colors.white,
+          color: isServing ? courtServingChipColor : Colors.white,
           borderRadius: BorderRadius.circular(999),
-          border: isServing ? Border.all(color: _ballColor, width: 2) : null,
+          border: isServing
+              ? Border.all(color: courtBallColor, width: 2)
+              : null,
           boxShadow: const [
             BoxShadow(
               color: Color(0x4412306B),
@@ -935,7 +732,7 @@ class _PlayerChip extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: _navy,
+            color: courtNavy,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -990,7 +787,7 @@ class _ServeBall extends StatelessWidget {
     width: size,
     height: size,
     decoration: BoxDecoration(
-      color: _ballColor,
+      color: courtBallColor,
       shape: BoxShape.circle,
       border: Border.all(color: Colors.white, width: 2),
       boxShadow: const [
@@ -1001,7 +798,11 @@ class _ServeBall extends StatelessWidget {
         ),
       ],
     ),
-    child: const Icon(Icons.sports_baseball_rounded, size: 16, color: _navy),
+    child: const Icon(
+      Icons.sports_baseball_rounded,
+      size: 16,
+      color: courtNavy,
+    ),
   );
 }
 

@@ -2151,6 +2151,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not save the court. Server settings were kept.';
 
   @override
+  String get pickleballCourtMenu => 'More actions';
+
+  @override
+  String get pickleballCourtFinishSet => 'Finish set';
+
+  @override
+  String get pickleballCourtPickWinner => 'Pick the winner';
+
+  @override
+  String get pickleballCourtLoseServe => 'Lose serve';
+
+  @override
   String tennisTiebreakInfo(Object points) {
     return 'TIEBREAK · Each rally scores 1 point, first to $points by 2 wins the set';
   }
