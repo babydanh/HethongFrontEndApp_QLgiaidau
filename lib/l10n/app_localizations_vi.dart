@@ -7280,10 +7280,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveMoreVideosTab => 'Video khác';
 
   @override
-  String get liveViewerMore => 'Xem thêm';
+  String get liveViewerMore => 'Chi tiết';
 
   @override
   String get liveDetailsSheetTitle => 'Chi tiết trận';
+
+  @override
+  String get liveDetailsTournament => 'Giải';
+
+  @override
+  String get liveDetailsPlace => 'Địa điểm';
+
+  @override
+  String get liveDetailsRules => 'Luật';
+
+  @override
+  String get liveDetailsTime => 'Thời gian';
 
   @override
   String get liveShareAction => 'Chia sẻ';
@@ -7345,7 +7357,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveOverlayMatchEnded => 'Trận đã kết thúc';
 
   @override
-  String get liveH2hTitle => 'HEAD TO HEAD';
+  String get liveH2hTitle => 'ĐỐI ĐẦU';
 
   @override
   String get liveH2hTournamentLabel => 'GIẢI ĐẤU:';

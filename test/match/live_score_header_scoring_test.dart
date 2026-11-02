@@ -210,7 +210,8 @@ void main() {
         isViewer: true,
       );
 
-      expect(find.text('Team Alpha'), findsOneWidget);
+      // The scoreboard writes the short name in upper case, like the Web.
+      expect(find.text('TEAM ALPHA'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_side_avatars.dart';
 import 'package:flutter/material.dart';
 
 /// One set pill in the "set scores" strip.
@@ -11,44 +12,56 @@ class LiveSetChipData {
   final bool current;
 }
 
-/// One side of the head-to-head ELO card.
+/// One side of the match head of the details sheet.
 class LiveEloSideData {
   const LiveEloSideData({
     required this.name,
-    required this.elo,
+    this.elo,
     this.athletes = '',
+    this.avatars = const [],
   });
 
   final String name;
-  final String elo;
+
+  /// Shown under the name only when there is a number ("1500").
+  final String? elo;
 
   /// Athlete names ("A / B"); shown under [name] when they add information.
   final String athletes;
+
+  /// One avatar for a single athlete / team, two for a pair.
+  final List<LiveAvatarData> avatars;
 }
 
-/// One icon + text line of the info list; tappable when [onTap] is set.
+/// One icon + label + value line of the info list; tappable when [onTap] is
+/// set. A blank [text] means "no data": the row is not drawn.
 class LiveInfoRowData {
-  const LiveInfoRowData({required this.icon, required this.text, this.onTap});
+  const LiveInfoRowData({
+    required this.icon,
+    required this.label,
+    required this.text,
+    this.onTap,
+  });
 
   final IconData icon;
+  final String label;
   final String text;
   final VoidCallback? onTap;
 }
 
-/// "Match details" bottom sheet of the viewer live screen (YouTube-style
-/// description sheet): title, three headline numbers, set scores, ELO
-/// head-to-head, info lines and the report action.
+/// "Match details" bottom sheet of the viewer live screen: the score head of
+/// both sides, set chips, a flat info list and a small outlined report button.
+/// Anything without data (ELO, referee, penalties) is simply not drawn.
 class LiveMatchDetailsSheet extends StatelessWidget {
   const LiveMatchDetailsSheet({
     super.key,
     required this.sheetTitle,
-    required this.matchTitle,
-    required this.stats,
-    required this.setsTitle,
-    required this.sets,
-    required this.eloTitle,
     required this.sideA,
     required this.sideB,
+    required this.score1,
+    required this.score2,
+    required this.live,
+    required this.sets,
     required this.rows,
     required this.reportLabel,
     required this.closeTooltip,
@@ -59,15 +72,14 @@ class LiveMatchDetailsSheet extends StatelessWidget {
   });
 
   final String sheetTitle;
-  final String matchTitle;
-
-  /// Exactly the headline numbers, each as (value, caption).
-  final List<({String value, String caption})> stats;
-  final String setsTitle;
-  final List<LiveSetChipData> sets;
-  final String eloTitle;
   final LiveEloSideData sideA;
   final LiveEloSideData sideB;
+  final int score1;
+  final int score2;
+
+  /// Red score while the match is being played.
+  final bool live;
+  final List<LiveSetChipData> sets;
   final List<LiveInfoRowData> rows;
   final String reportLabel;
   final String closeTooltip;
@@ -78,13 +90,14 @@ class LiveMatchDetailsSheet extends StatelessWidget {
   /// Optional block under the info lines (e.g. the penalty log).
   final Widget? extra;
 
-  static const _minTap = 48.0;
+  static const _minTap = 44.0;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final dark = Theme.of(context).brightness == Brightness.dark;
     final danger = dark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C);
+    final shownRows = rows.where((r) => r.text.trim().isNotEmpty).toList();
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -141,57 +154,70 @@ class LiveMatchDetailsSheet extends StatelessWidget {
                 16 + MediaQuery.of(context).padding.bottom,
               ),
               children: [
-                Text(
-                  matchTitle,
-                  style: TextStyle(
-                    fontSize: 17,
-                    height: 1.3,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
-                  ),
+                _MatchHead(
+                  a: sideA,
+                  b: sideB,
+                  score1: score1,
+                  score2: score2,
+                  live: live,
                 ),
-                const SizedBox(height: 14),
-                _StatsRow(stats: stats),
                 if (sets.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  _SectionLabel(setsTitle),
+                  const SizedBox(height: 12),
                   Wrap(
+                    alignment: WrapAlignment.center,
                     spacing: 6,
                     runSpacing: 6,
                     children: [for (final s in sets) _SetChip(data: s)],
                   ),
                 ],
-                const SizedBox(height: 18),
-                _SectionLabel(eloTitle),
-                _EloCard(a: sideA, b: sideB),
-                const SizedBox(height: 14),
-                for (final row in rows) _InfoRow(data: row, minHeight: _minTap),
+                if (shownRows.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Divider(height: 1, color: colors.border),
+                  for (final row in shownRows)
+                    _InfoRow(data: row, minHeight: _minTap),
+                ],
                 ?extra,
-                const SizedBox(height: 6),
-                InkWell(
-                  onTap: onReport,
-                  borderRadius: BorderRadius.circular(10),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: _minTap),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 28,
-                          child: Icon(
-                            Icons.flag_outlined,
-                            size: 20,
-                            color: danger,
+                const SizedBox(height: 12),
+                Center(
+                  child: InkWell(
+                    onTap: onReport,
+                    borderRadius: BorderRadius.circular(999),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: _minTap),
+                      child: Center(
+                        widthFactor: 1,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: danger.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.flag_outlined,
+                                size: 16,
+                                color: danger,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                reportLabel,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: danger,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          reportLabel,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: danger,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -204,63 +230,112 @@ class LiveMatchDetailsSheet extends StatelessWidget {
   }
 }
 
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.stats});
+/// Avatar + name (+ ELO when known) on both sides, big score in the middle.
+class _MatchHead extends StatelessWidget {
+  const _MatchHead({
+    required this.a,
+    required this.b,
+    required this.score1,
+    required this.score2,
+    required this.live,
+  });
 
-  final List<({String value, String caption})> stats;
+  final LiveEloSideData a;
+  final LiveEloSideData b;
+  final int score1;
+  final int score2;
+  final bool live;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final scoreColor = live ? const Color(0xFFEF4444) : colors.textPrimary;
+    final scoreStyle = TextStyle(
+      fontSize: 26,
+      fontWeight: FontWeight.w900,
+      color: scoreColor,
+    );
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final s in stats)
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  s.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
-                  ),
+        Expanded(child: _Side(data: a)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('$score1', style: scoreStyle),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  '–',
+                  style: TextStyle(fontSize: 22, color: colors.border),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  s.caption,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                ),
-              ],
-            ),
+              ),
+              Text('$score2', style: scoreStyle),
+            ],
           ),
+        ),
+        Expanded(child: _Side(data: b)),
       ],
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+class _Side extends StatelessWidget {
+  const _Side({required this.data});
 
-  final String text;
+  final LiveEloSideData data;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          letterSpacing: 0.8,
-          fontWeight: FontWeight.w700,
-          color: context.colors.textSecondary,
+    final colors = context.colors;
+    final elo = data.elo;
+    return Column(
+      children: [
+        LiveSideAvatars(
+          avatars: data.avatars.isEmpty
+              ? [LiveAvatarData(name: data.name)]
+              : data.avatars,
+          diameter: 34,
+          borderColor: colors.bgDark,
+          borderWidth: 2,
         ),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          data.name,
+          textAlign: TextAlign.center,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.5,
+            height: 1.2,
+            fontWeight: FontWeight.w800,
+            color: colors.textPrimary,
+          ),
+        ),
+        if (data.athletes.isNotEmpty && data.athletes != data.name)
+          Text(
+            data.athletes,
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              height: 1.25,
+              color: colors.textSecondary,
+            ),
+          ),
+        if (elo != null && elo.isNotEmpty)
+          Text(
+            '$elo ELO',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: colors.textSecondary,
+            ),
+          ),
+      ],
     );
   }
 }
@@ -275,110 +350,20 @@ class _SetChip extends StatelessWidget {
     final colors = context.colors;
     final tone = data.current ? const Color(0xFFEF4444) : AppTheme.primary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: tone.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: tone.withValues(alpha: 0.55)),
       ),
       child: Text(
         data.label,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
           color: colors.textPrimary,
         ),
       ),
-    );
-  }
-}
-
-class _EloCard extends StatelessWidget {
-  const _EloCard({required this.a, required this.b});
-
-  final LiveEloSideData a;
-  final LiveEloSideData b;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: _EloSide(data: a, end: false)),
-          Container(
-            width: 1,
-            height: 56,
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            color: colors.border,
-          ),
-          Expanded(child: _EloSide(data: b, end: true)),
-        ],
-      ),
-    );
-  }
-}
-
-/// Headline (team or athletes), athletes under a team name, then the ELO.
-class _EloSide extends StatelessWidget {
-  const _EloSide({required this.data, required this.end});
-
-  final LiveEloSideData data;
-  final bool end;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final align = end ? TextAlign.end : TextAlign.start;
-    return Column(
-      crossAxisAlignment: end
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
-      children: [
-        Text(
-          data.name,
-          textAlign: align,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.25,
-            fontWeight: FontWeight.w800,
-            color: colors.textPrimary,
-          ),
-        ),
-        if (data.athletes.isNotEmpty && data.athletes != data.name) ...[
-          const SizedBox(height: 3),
-          Text(
-            data.athletes,
-            textAlign: align,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.3,
-              color: colors.textSecondary,
-            ),
-          ),
-        ],
-        const SizedBox(height: 8),
-        Text(
-          data.elo,
-          textAlign: align,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.primary,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -397,18 +382,21 @@ class _InfoRow extends StatelessWidget {
       constraints: BoxConstraints(minHeight: minHeight),
       child: Row(
         children: [
-          SizedBox(
-            width: 28,
-            child: Icon(data.icon, size: 20, color: colors.textSecondary),
+          Icon(data.icon, size: 18, color: colors.textSecondary),
+          const SizedBox(width: 10),
+          Text(
+            data.label,
+            style: TextStyle(fontSize: 13, color: colors.textSecondary),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               data.text,
+              textAlign: TextAlign.end,
               style: TextStyle(
-                fontSize: 14,
-                height: 1.35,
-                fontWeight: link ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 13.5,
+                height: 1.3,
+                fontWeight: FontWeight.w700,
                 color: link ? AppTheme.primary : colors.textPrimary,
               ),
             ),

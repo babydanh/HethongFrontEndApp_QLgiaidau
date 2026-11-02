@@ -13523,7 +13523,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveViewerMore.
   ///
   /// In vi, this message translates to:
-  /// **'Xem thêm'**
+  /// **'Chi tiết'**
   String get liveViewerMore;
 
   /// No description provided for @liveDetailsSheetTitle.
@@ -13531,6 +13531,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chi tiết trận'**
   String get liveDetailsSheetTitle;
+
+  /// No description provided for @liveDetailsTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải'**
+  String get liveDetailsTournament;
+
+  /// No description provided for @liveDetailsPlace.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm'**
+  String get liveDetailsPlace;
+
+  /// No description provided for @liveDetailsRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật'**
+  String get liveDetailsRules;
+
+  /// No description provided for @liveDetailsTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian'**
+  String get liveDetailsTime;
 
   /// No description provided for @liveShareAction.
   ///
@@ -13649,7 +13673,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveH2hTitle.
   ///
   /// In vi, this message translates to:
-  /// **'HEAD TO HEAD'**
+  /// **'ĐỐI ĐẦU'**
   String get liveH2hTitle;
 
   /// No description provided for @liveH2hTournamentLabel.

@@ -16,6 +16,39 @@ Duration liveOverlayMotionDuration(BuildContext context) {
       : const Duration(milliseconds: 240);
 }
 
+/// Leaving is quicker than entering (160 ms); zero with reduced motion.
+Duration liveOverlayReverseDuration(BuildContext context) {
+  return MediaQuery.disableAnimationsOf(context)
+      ? Duration.zero
+      : const Duration(milliseconds: 160);
+}
+
+/// Enter/leave transition shared by the on-video overlays: fade plus an
+/// optional slide ([slideFrom], a fraction of the child's size) and/or a
+/// small scale ([scaleFrom]). Use as `AnimatedSwitcher.transitionBuilder`.
+Widget liveOverlayTransition(
+  Widget child,
+  Animation<double> animation, {
+  Offset slideFrom = Offset.zero,
+  double scaleFrom = 1,
+}) {
+  final eased = animation.drive(CurveTween(curve: liveOverlayMotionCurve));
+  Widget result = FadeTransition(opacity: animation, child: child);
+  if (slideFrom != Offset.zero) {
+    result = SlideTransition(
+      position: eased.drive(Tween(begin: slideFrom, end: Offset.zero)),
+      child: result,
+    );
+  }
+  if (scaleFrom != 1) {
+    result = ScaleTransition(
+      scale: eased.drive(Tween(begin: scaleFrom, end: 1.0)),
+      child: result,
+    );
+  }
+  return result;
+}
+
 /// Overlay cần hiện theo cờ server. Server ép loại trừ; nếu cả hai cờ đều true
 /// (ngoài hợp đồng) thì hiện Sơ đồ. Trận đã kết thúc thì ẩn cả hai.
 LiveOverlayKind? liveOverlayToShow({

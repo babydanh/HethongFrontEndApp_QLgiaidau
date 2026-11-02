@@ -46,7 +46,6 @@ void main() {
       m,
       1,
       isDoubles: isDoublesMatch(m),
-      noElo: '-',
       undetermined: '?',
     );
 
@@ -64,7 +63,6 @@ void main() {
       m,
       1,
       isDoubles: true,
-      noElo: '-',
       undetermined: '?',
     );
 
@@ -83,13 +81,12 @@ void main() {
       m,
       1,
       isDoubles: true,
-      noElo: '-',
       undetermined: '?',
     );
 
     expect(a.name, 'An Nguyễn / Bình Trần');
     expect(a.athletes, isEmpty);
-    expect(a.elo, '-');
+    expect(a.elo, isNull);
   });
 
   test('TC-LIVESIDE-04 singles show the athlete and the athlete own ELO', () {
@@ -103,14 +100,12 @@ void main() {
       m,
       1,
       isDoubles: isDoublesMatch(m),
-      noElo: '-',
       undetermined: '?',
     );
     final b = buildLiveEloSide(
       m,
       2,
       isDoubles: false,
-      noElo: '-',
       undetermined: '?',
     );
 
@@ -128,12 +123,27 @@ void main() {
       m,
       1,
       isDoubles: false,
-      noElo: 'n/a',
       undetermined: 'TBD!',
     );
 
     expect(a.name, 'TBD!');
     expect(a.athletes, isEmpty);
-    expect(a.elo, 'n/a');
+    expect(a.elo, isNull);
+  });
+
+  test('TC-LIVESIDE-06 a single athlete keeps the photo, a pair gets two avatars', () {
+    final solo = _match(
+      team1: [
+        const MatchMemberInfo(fullName: 'An Nguyễn', avatarUrl: 'https://x/a.png'),
+      ],
+    );
+    final pair = _match(team1: [_p('An Nguyễn'), _p('Bình Trần')]);
+
+    final a = buildLiveEloSide(solo, 1, isDoubles: false, undetermined: '?');
+    final b = buildLiveEloSide(pair, 1, isDoubles: true, undetermined: '?');
+
+    expect(a.avatars.map((e) => e.url), ['https://x/a.png']);
+    expect(b.avatars.length, 2);
+    expect(b.avatars.every((e) => e.url == null), isTrue);
   });
 }

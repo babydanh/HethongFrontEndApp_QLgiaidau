@@ -123,13 +123,14 @@ void main() {
     expect(find.byType(LiveLandscapeChat), findsOneWidget);
   });
 
-  testWidgets('TC-LIVEFS-12 portrait: Report chip under the video, no AppBar', (
+  testWidgets('TC-LIVEFS-12 portrait: no Report chip under the video, no AppBar', (
     tester,
   ) async {
     await _pump(tester, const Size(390, 844));
 
     expect(find.byType(AppBar), findsNothing);
-    expect(find.text('Report'), findsOneWidget);
+    // Report now lives in the details sheet, not as a chip under the video.
+    expect(find.text('Report'), findsNothing);
     expect(find.byType(LiveLandscapeChat), findsNothing);
     expect(tester.takeException(), isNull);
   });

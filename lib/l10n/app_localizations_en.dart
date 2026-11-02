@@ -7288,10 +7288,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveMoreVideosTab => 'More videos';
 
   @override
-  String get liveViewerMore => 'More';
+  String get liveViewerMore => 'Details';
 
   @override
   String get liveDetailsSheetTitle => 'Match details';
+
+  @override
+  String get liveDetailsTournament => 'Tournament';
+
+  @override
+  String get liveDetailsPlace => 'Place';
+
+  @override
+  String get liveDetailsRules => 'Rules';
+
+  @override
+  String get liveDetailsTime => 'Time';
 
   @override
   String get liveShareAction => 'Share';

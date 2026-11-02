@@ -91,7 +91,7 @@ Future<void> _pump(WidgetTester tester, MatchModel match) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
   // Người xem mở vào tab Chat; khối hai đội nằm trong tấm "Xem thêm".
-  await tester.tap(find.text('More'));
+  await tester.tap(find.text('Details'));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
 }
@@ -116,8 +116,8 @@ void main() {
       ),
     );
 
-    // The details sheet names both athletes of the pair and labels the
-    // head-to-head card as doubles ELO (the mockup has no avatar circles).
+    // The details sheet names both athletes of the pair; the ELO card is gone
+    // (ELO only shows as a small line when the data has a number).
     expect(
       find.textContaining('Nguyễn Minh Anh', findRichText: true),
       findsWidgets,
@@ -126,7 +126,7 @@ void main() {
       find.textContaining('Trần Quốc Bảo', findRichText: true),
       findsWidgets,
     );
-    expect(find.text('DOUBLES ELO'), findsOneWidget);
+    expect(find.text('DOUBLES ELO'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

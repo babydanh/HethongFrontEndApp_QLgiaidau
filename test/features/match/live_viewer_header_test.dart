@@ -5,14 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('TC-LIVEVIEW-01 shows title, subtitle and cheer count', (
+  testWidgets('TC-LIVEVIEW-01 shows title, info parts and cheer count', (
     tester,
   ) async {
     await tester.pumpWidget(
       _app(
         LiveViewerHeader(
           title: 'Alpha vs Beta',
-          subtitle: '12 watching · Cup · Round 1',
+          viewersLabel: '12 watching',
+          roundLabel: 'Round 1',
+          tournamentLabel: 'Cup ABC',
+          onOpenTournament: () {},
           cheerCount: 1234,
           onCheer: () {},
           onShare: () {},
@@ -22,11 +25,12 @@ void main() {
     );
 
     expect(find.text('Alpha vs Beta'), findsOneWidget);
-    expect(find.text('12 watching · Cup · Round 1'), findsOneWidget);
+    expect(find.text('12 watching'), findsOneWidget);
+    expect(find.text('Round 1'), findsOneWidget);
     expect(find.text('1234'), findsOneWidget);
   });
 
-  testWidgets('TC-LIVEVIEW-02 chips and "more" fire their callbacks', (
+  testWidgets('TC-LIVEVIEW-02 buttons, tournament link and details fire', (
     tester,
   ) async {
     var cheers = 0, shares = 0, mores = 0, tournaments = 0;
@@ -34,7 +38,6 @@ void main() {
       _app(
         LiveViewerHeader(
           title: 'A vs B',
-          subtitle: 'sub',
           cheerCount: 0,
           onCheer: () => cheers++,
           onShare: () => shares++,
@@ -48,19 +51,18 @@ void main() {
     await tester.tap(find.text('Cheer'));
     await tester.tap(find.text('Share'));
     await tester.tap(find.text('Cup ABC'));
-    await tester.tap(find.text('More'));
+    await tester.tap(find.text('Details'));
 
     expect([cheers, shares, tournaments, mores], [1, 1, 1, 1]);
   });
 
-  testWidgets('TC-LIVEVIEW-03 hides the tournament chip when there is none', (
+  testWidgets('TC-LIVEVIEW-03 only cheer and share are buttons', (
     tester,
   ) async {
     await tester.pumpWidget(
       _app(
         LiveViewerHeader(
           title: 'A vs B',
-          subtitle: 'sub',
           cheerCount: 0,
           onCheer: () {},
           onShare: () {},
@@ -69,30 +71,11 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.emoji_events_outlined), findsNothing);
+    // No tournament -> no link; the report action lives in the details sheet.
     expect(find.text('Report'), findsNothing);
-  });
-
-  testWidgets('TC-LIVEFS-09 report chip shows only when wired and fires', (
-    tester,
-  ) async {
-    var reports = 0;
-    await tester.pumpWidget(
-      _app(
-        LiveViewerHeader(
-          title: 'A vs B',
-          subtitle: 'sub',
-          cheerCount: 0,
-          onCheer: () {},
-          onShare: () {},
-          onMore: () {},
-          onReport: () => reports++,
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Report'));
-    expect(reports, 1);
+    expect(find.byIcon(Icons.emoji_events_outlined), findsNothing);
+    expect(find.text('Cheer'), findsOneWidget);
+    expect(find.text('Share'), findsOneWidget);
   });
 }
 

@@ -252,6 +252,82 @@ void main() {
     expect(reduced, Duration.zero);
   });
 
+  testWidgets('overlay enters with fade + slide and leaves faster', (
+    tester,
+  ) async {
+    Widget host(bool shown) => MaterialApp(
+      home: Scaffold(
+        body: Builder(
+          builder: (context) => AnimatedSwitcher(
+            duration: liveOverlayMotionDuration(context),
+            reverseDuration: liveOverlayReverseDuration(context),
+            transitionBuilder: (child, animation) => liveOverlayTransition(
+              child,
+              animation,
+              slideFrom: const Offset(0, 0.25),
+            ),
+            child: shown
+                ? const Text('overlay', key: ValueKey('on'))
+                : const SizedBox.shrink(key: ValueKey('off')),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(host(false));
+    await tester.pumpWidget(host(true));
+    await tester.pump(const Duration(milliseconds: 60));
+
+    final fade = tester.widget<FadeTransition>(
+      find.ancestor(
+        of: find.text('overlay'),
+        matching: find.byType(FadeTransition),
+      ).first,
+    );
+    final slide = tester.widget<SlideTransition>(
+      find.ancestor(
+        of: find.text('overlay'),
+        matching: find.byType(SlideTransition),
+      ).first,
+    );
+    expect(fade.opacity.value, inExclusiveRange(0, 1));
+    expect(slide.position.value.dy, greaterThan(0));
+
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FadeTransition>(
+            find.ancestor(
+              of: find.text('overlay'),
+              matching: find.byType(FadeTransition),
+            ).first,
+          )
+          .opacity
+          .value,
+      1,
+    );
+  });
+
+  testWidgets('reduced motion removes the overlay animation', (tester) async {
+    late Duration forward;
+    late Duration reverse;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: Builder(
+          builder: (context) {
+            forward = liveOverlayMotionDuration(context);
+            reverse = liveOverlayReverseDuration(context);
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+
+    expect(forward, Duration.zero);
+    expect(reverse, Duration.zero);
+  });
+
   testWidgets('close button calls back on tap and meets the 44 px target', (
     tester,
   ) async {
