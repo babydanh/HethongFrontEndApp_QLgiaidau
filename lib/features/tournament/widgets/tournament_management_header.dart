@@ -103,25 +103,13 @@ class TournamentManagementBanner extends StatelessWidget {
           child: GestureDetector(
             key: const ValueKey('tournament-overview-logo'),
             onTap: onEdit,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TournamentAvatar(
-                imageUrl: logoUrl == null ? null : resolveImageUrl(logoUrl),
-                tournamentName: tournament.name,
-                sport: tournament.sport,
-                size: _logoSize,
-                borderWidth: 2,
-                borderColor: Colors.white,
-              ),
+            child: TournamentAvatar(
+              imageUrl: logoUrl == null ? null : resolveImageUrl(logoUrl),
+              tournamentName: tournament.name,
+              sport: tournament.sport,
+              size: _logoSize,
+              borderWidth: 2,
+              borderColor: Colors.white,
             ),
           ),
         ),

@@ -1193,17 +1193,30 @@ class _TournamentLifecycleCardState
             occupied: fullCapacity.occupied,
             max: fullCapacity.max,
           ),
-        ?primary,
-        // Đã đóng hết: vẫn cần lối mở lại cả giải; chỉ là nút viền, không phải nút chính.
-        if (status == AppConstants.statusRegistrationClosed)
+        if (primary != null)
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
-            child: LavishButton(
-              kind: LavishButtonKind.outline,
-              label: l10n.tournamentManagementReopenRegistration,
-              onPressed: _isActing
-                  ? null
-                  : () => _reopen(id, l10n.tournamentManagementReopenConfirm),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+            child: Row(
+              children: [
+                Expanded(child: primary),
+                // Đã đóng hết: vẫn cần lối mở lại cả giải; chỉ là nút viền, không phải nút chính.
+                if (status == AppConstants.statusRegistrationClosed) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: LavishButton(
+                      dense: true,
+                      kind: LavishButtonKind.outline,
+                      label: l10n.tournamentManagementReopenRegistration,
+                      onPressed: _isActing
+                          ? null
+                          : () => _reopen(
+                              id,
+                              l10n.tournamentManagementReopenConfirm,
+                            ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         // The fee is configured by the Backend and paid on the Web: the App
@@ -1232,17 +1245,6 @@ class _TournamentLifecycleCardState
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
             child: _InlineError(text: error),
-          ),
-        if (primary != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
-            child: Text(
-              l10n.tournamentManagementServerAuthorizationNote,
-              style: TextStyle(
-                fontSize: 12,
-                color: LavishColors.of(context).muted,
-              ),
-            ),
           ),
         ..._otherRows(l10n),
       ],
@@ -1369,12 +1371,10 @@ class _TournamentLifecycleCardState
     String label,
     VoidCallback onPressed, {
     bool blocked = false,
-  }) => Padding(
-    padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-    child: LavishButton(
-      label: label,
-      onPressed: _isActing || blocked ? null : onPressed,
-    ),
+  }) => LavishButton(
+    dense: true,
+    label: label,
+    onPressed: _isActing || blocked ? null : onPressed,
   );
 }
 

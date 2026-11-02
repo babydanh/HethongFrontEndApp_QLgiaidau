@@ -297,6 +297,43 @@ void main() {
     expect(find.text('Đã đủ 16/16 đội'), findsNothing);
   });
 
+  testWidgets('TC-LIFE-10 đã đóng đăng ký: hai nút gọn cạnh nhau, không dòng chú thích', (
+    tester,
+  ) async {
+    _tallView(tester);
+    await tester.pumpWidget(
+      _wrap(
+        TournamentLifecycleCard(
+          tournament: _tournament(status: AppConstants.statusRegistrationClosed),
+        ),
+        repo: _Repo(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Các điều khiển này'), findsNothing);
+
+    final start = find.ancestor(
+      of: find.text('Khai mạc giải'),
+      matching: find.byType(FilledButton),
+    );
+    final reopen = find.ancestor(
+      of: find.text('Mở lại đăng ký'),
+      matching: find.byType(OutlinedButton),
+    );
+    // The visible slab is the button's Material; the tap area around it stays 48.
+    for (final button in [start, reopen]) {
+      final slab = find.descendant(of: button, matching: find.byType(Material));
+      expect(tester.getSize(slab.first).height, lessThanOrEqualTo(38));
+      expect(tester.getSize(button).height, greaterThanOrEqualTo(44));
+    }
+    expect(
+      tester.getTopLeft(start).dy,
+      tester.getTopLeft(reopen).dy,
+      reason: 'the two buttons share one row',
+    );
+  });
+
   testWidgets('nháp còn phí công bố: nút Công bố bị khoá kèm lý do và số phí', (
     tester,
   ) async {

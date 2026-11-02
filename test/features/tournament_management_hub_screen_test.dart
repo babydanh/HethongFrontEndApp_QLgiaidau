@@ -409,6 +409,19 @@ void main() {
         find.byKey(const ValueKey('tournament-overview-logo')),
         findsOneWidget,
       );
+      // No drop shadow on the logo: it hangs at the edge of the banner box,
+      // where a shadow is cut off into a hard horizontal line.
+      final logoShadows = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(
+              of: find.byKey(const ValueKey('tournament-overview-logo')),
+              matching: find.byType(DecoratedBox),
+            ),
+          )
+          .map((box) => box.decoration)
+          .whereType<BoxDecoration>()
+          .expand((decoration) => decoration.boxShadow ?? const <BoxShadow>[]);
+      expect(logoShadows, isEmpty);
       expect(tester.takeException(), isNull);
     },
   );

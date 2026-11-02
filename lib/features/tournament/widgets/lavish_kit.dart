@@ -472,6 +472,7 @@ class LavishButton extends StatelessWidget {
     this.icon,
     this.busy = false,
     this.buttonKey,
+    this.dense = false,
   });
 
   /// Key of the inner Material button (the widget key stays on the wrapper).
@@ -482,15 +483,23 @@ class LavishButton extends StatelessWidget {
   final Widget? icon;
   final bool busy;
 
+  /// Slimmer button (34px, 8px padding) that keeps a full 48px tap area.
+  final bool dense;
+
   @override
   Widget build(BuildContext context) {
     final c = LavishColors.of(context);
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
     );
-    const padding = EdgeInsets.all(11);
+    final padding = dense
+        ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+        : const EdgeInsets.all(11);
     const textStyle = TextStyle(fontSize: 13, fontWeight: FontWeight.w800);
-    const minimum = Size(0, 42);
+    final minimum = Size(0, dense ? 34 : 42);
+    final tapTarget = dense
+        ? MaterialTapTargetSize.padded
+        : MaterialTapTargetSize.shrinkWrap;
     final content = Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -520,7 +529,7 @@ class LavishButton extends StatelessWidget {
           shape: shape,
           padding: padding,
           minimumSize: minimum,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          tapTargetSize: tapTarget,
           textStyle: textStyle,
         ),
         child: content,
@@ -543,7 +552,7 @@ class LavishButton extends StatelessWidget {
         shape: shape,
         padding: padding,
         minimumSize: minimum,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        tapTargetSize: tapTarget,
         textStyle: textStyle,
       ),
       child: content,
