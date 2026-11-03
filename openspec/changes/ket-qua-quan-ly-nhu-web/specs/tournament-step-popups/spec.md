@@ -20,7 +20,7 @@ Số việc cần làm, trạng thái và phần trăm của từng bước SHAL
 
 #### Scenario: Nội dung chưa có VĐV
 - **WHEN** giải có 3 nội dung, trong đó 1 nội dung đã đóng đăng ký nhưng chưa có VĐV
-- **THEN** bước "Đăng ký" liệt kê việc "nội dung chưa có VĐV" với số 1 và trạng thái "Thiếu"
+- **THEN** bước "Đăng ký" liệt kê việc "nội dung chưa có VĐV" với số 1 và trạng thái "Cần chú ý" (như Web: "Thiếu" chỉ dùng khi giải chưa có nội dung nào)
 
 #### Scenario: Số liệu đang tải hoặc lỗi
 - **WHEN** danh sách VĐV hoặc trận chưa tải xong hoặc tải lỗi
