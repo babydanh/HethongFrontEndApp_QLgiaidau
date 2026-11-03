@@ -18106,6 +18106,19 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được điểm. Kiểm tra mạng rồi thử lại.';
 
   @override
+  String get resultsScore_playedAt => 'Ngày giờ thi đấu';
+
+  @override
+  String get resultsScore_playedAtHint => 'dd/mm/yyyy HH:mm';
+
+  @override
+  String get resultsScore_playedAtInvalid =>
+      'Nhập dạng dd/mm/yyyy hoặc dd/mm/yyyy HH:mm';
+
+  @override
+  String get resultsScore_playedAtPick => 'Chọn ngày giờ';
+
+  @override
   String get resultsTab_emptyTitle => 'Chưa có kết quả chính thức';
 
   @override

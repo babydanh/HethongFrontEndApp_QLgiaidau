@@ -15,6 +15,7 @@ abstract class IMatchRepository {
     String tournamentId, {
     String? divisionId,
   });
+
   /// Trận cho màn quản lý của BTC, lấy từ route quản lý có đăng nhập
   /// (`GET /tournaments/:id/manage/matches`), không dùng nguồn công khai.
   Stream<List<MatchModel>> watchManagedByTournament(
@@ -116,6 +117,7 @@ abstract class IMatchRepository {
     String? overrideReason,
     int? expectedRevision,
     bool useLiteParticipantAccess = false,
+    ({String date, String? time})? playedAt,
   });
 
   /// Ghi cài đặt sân pickleball lên server (`PATCH /matches/:id/court-state`).

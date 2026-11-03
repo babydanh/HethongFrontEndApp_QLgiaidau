@@ -221,6 +221,15 @@ String resultsMatchCourt(MatchModel match) {
   return short.split(' - ').first.trim();
 }
 
+/// HH:mm of the match: the time the organiser typed when saving the score,
+/// else the system finish or schedule time; empty when none exists.
+String resultsMatchClock(MatchModel match) {
+  final typed = match.playedTime;
+  if (typed != null) return typed;
+  final time = match.completedAt ?? match.scheduledTime;
+  return time == null ? '' : DateFormat('HH:mm').format(time.toLocal());
+}
+
 /// Points are shown once the match is live or closed and both sides exist.
 bool _hasPoints(MatchModel match) =>
     match.hasTeams && (isLiveMatch(match) || isMatchClosed(match));
@@ -413,11 +422,8 @@ class _MetaLine extends StatelessWidget {
   Widget _line(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final id = match.id;
-    final time = match.completedAt ?? match.scheduledTime;
     final court = resultsMatchCourt(match);
-    final clock = time == null
-        ? ''
-        : DateFormat('HH:mm').format(time.toLocal());
+    final clock = resultsMatchClock(match);
     final plain = live ? court : clock;
     final badge = live ? (roundLabel ?? '') : court;
     final referee = match.refereeName?.trim() ?? '';

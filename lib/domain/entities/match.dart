@@ -198,6 +198,11 @@ class MatchModel {
   /// Monotonic version from backend (optimistic lock + realtime ordering, NOTE-7).
   final int? revision;
   final String? refereeName;
+
+  /// Wall-clock date (YYYY-MM-DD) and time (HH:mm) the organiser typed when
+  /// saving the score; separate from the system `completedAt`.
+  final String? playedDate;
+  final String? playedTime;
   final String? refereeId;
   final List<Penalty> penalties;
   final String? tournamentName;
@@ -284,6 +289,8 @@ class MatchModel {
     required this.updatedAt,
     this.revision,
     this.refereeName,
+    this.playedDate,
+    this.playedTime,
     this.refereeId,
     this.penalties = const [],
     this.tournamentName,
@@ -670,6 +677,8 @@ class MatchModel {
       durationMinutes: durationMinutesFromJson(json),
       updatedAt: DateParser.parseDate(json['updatedAt']),
       refereeName: json['refereeName'],
+      playedDate: _clipText(json['playedDate'], 10),
+      playedTime: _clipText(json['playedTime'], 5),
       revision: json['revision'] as int?,
       refereeId: json['refereeId']?.toString(),
       penalties: rawPenalties
@@ -786,6 +795,8 @@ class MatchModel {
       if (revision != null) 'revision': revision,
       if (clubMatchSessionId != null) 'clubMatchSessionId': clubMatchSessionId,
       if (refereeName != null) 'refereeName': refereeName,
+      if (playedDate != null) 'playedDate': playedDate,
+      if (playedTime != null) 'playedTime': playedTime,
       if (refereeId != null) 'refereeId': refereeId,
       'penalties': penalties.map((p) => p.toJson()).toList(),
       if (tournamentName != null) 'tournamentName': tournamentName,
@@ -846,6 +857,8 @@ class MatchModel {
     DateTime? updatedAt,
     int? revision,
     String? refereeName,
+    String? playedDate,
+    String? playedTime,
     String? refereeId,
     List<Penalty>? penalties,
     String? tournamentName,
@@ -912,6 +925,8 @@ class MatchModel {
       updatedAt: updatedAt ?? this.updatedAt,
       revision: revision ?? this.revision,
       refereeName: refereeName ?? this.refereeName,
+      playedDate: playedDate ?? this.playedDate,
+      playedTime: playedTime ?? this.playedTime,
       refereeId: refereeId ?? this.refereeId,
       penalties: penalties ?? this.penalties,
       tournamentName: tournamentName ?? this.tournamentName,
@@ -1028,4 +1043,11 @@ SetScore _cardSetScore(Map rawSet) {
     score1: readScore(rawSet['team1Score'] ?? rawSet['score1'] ?? rawSet['p1']),
     score2: readScore(rawSet['team2Score'] ?? rawSet['score2'] ?? rawSet['p2']),
   );
+}
+
+/// First [length] characters of a non-empty value ("2026-11-03T00:00" -> date).
+String? _clipText(Object? value, int length) {
+  final text = value?.toString().trim() ?? '';
+  if (text.isEmpty) return null;
+  return text.length > length ? text.substring(0, length) : text;
 }

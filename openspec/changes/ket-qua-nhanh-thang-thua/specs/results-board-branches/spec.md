@@ -75,3 +75,23 @@ Tapping a match that accepts a score SHALL, for organisers and referees, open a 
 #### Scenario: Network failure
 - **WHEN** the save request fails
 - **THEN** the popup stays open, shows the error, and the Save button works again
+
+### Requirement: Match date and time in the score popup
+The score popup SHALL show a "Ngày giờ thi đấu" field in the form dd/mm/yyyy HH:mm with a calendar button, and SHALL send the typed date and time with the score. The time part is optional. The time the organiser saved SHALL replace the schedule time on the match row and in the popup header.
+
+#### Scenario: Seed
+- **WHEN** the popup opens for a match that stores a played date and time
+- **THEN** the field shows them
+- **AND** a match without a stored date starts at today with no time
+
+#### Scenario: Save with date and time
+- **WHEN** an organiser types 04/11/2026 09:15 and saves a finished match
+- **THEN** the request carries playedDate 2026-11-04 and playedTime 09:15
+
+#### Scenario: Date without time
+- **WHEN** the organiser types only a date
+- **THEN** the request carries that date and a null time
+
+#### Scenario: Unreadable value
+- **WHEN** the field holds text that is not a real date and time
+- **THEN** the popup says so and the Save button stays disabled

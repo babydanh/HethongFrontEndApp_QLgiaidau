@@ -32641,6 +32641,30 @@ abstract class AppLocalizations {
   /// **'Không lưu được điểm. Kiểm tra mạng rồi thử lại.'**
   String get resultsScore_error;
 
+  /// No description provided for @resultsScore_playedAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày giờ thi đấu'**
+  String get resultsScore_playedAt;
+
+  /// No description provided for @resultsScore_playedAtHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'dd/mm/yyyy HH:mm'**
+  String get resultsScore_playedAtHint;
+
+  /// No description provided for @resultsScore_playedAtInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập dạng dd/mm/yyyy hoặc dd/mm/yyyy HH:mm'**
+  String get resultsScore_playedAtInvalid;
+
+  /// No description provided for @resultsScore_playedAtPick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày giờ'**
+  String get resultsScore_playedAtPick;
+
   /// No description provided for @resultsTab_emptyTitle.
   ///
   /// In vi, this message translates to:

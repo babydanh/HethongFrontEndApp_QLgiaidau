@@ -139,6 +139,28 @@ void main() {
     });
   });
 
+  group('played time (TC-RBR-34)', () {
+    final scheduled = DateTime(2026, 11, 3, 14, 0);
+
+    testWidgets('the time the organiser typed wins over the schedule', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _match('m', scheduledTime: scheduled).copyWith(playedTime: '09:15'),
+      );
+      expect(find.text('09:15'), findsOneWidget);
+      expect(find.text('14:00'), findsNothing);
+    });
+
+    testWidgets('without a typed time the schedule still shows', (
+      tester,
+    ) async {
+      await _pump(tester, _match('m', scheduledTime: scheduled));
+      expect(find.text('14:00'), findsOneWidget);
+    });
+  });
+
   group('sides (TC-RBR-33)', () {
     testWidgets('doubles stack both players, a team shows its logo', (
       tester,

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/played_at.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_board_palette.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_row.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 const _defaultSets = 3;
 const _maxSets = 7;
@@ -64,12 +64,22 @@ class _ResultsScoreSheet extends ConsumerStatefulWidget {
 class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
   final List<TextEditingController> _side1 = [];
   final List<TextEditingController> _side2 = [];
+  late final TextEditingController _played;
   bool _saving = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _played = TextEditingController(
+      text: formatPlayedAt(
+        seedPlayedAt(
+          playedDate: widget.match.playedDate,
+          playedTime: widget.match.playedTime,
+          today: DateTime.now(),
+        ),
+      ),
+    );
     final history = widget.match.scoreHistory;
     final count = history.length > _defaultSets ? history.length : _defaultSets;
     for (var i = 0; i < count; i++) {
@@ -85,10 +95,49 @@ class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
 
   @override
   void dispose() {
-    for (final c in [..._side1, ..._side2]) {
+    for (final c in [..._side1, ..._side2, _played]) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  /// Typed date and time; null when the field is empty or unreadable.
+  PlayedAt? get _playedAt => parsePlayedAt(_played.text);
+
+  bool get _playedInvalid =>
+      _played.text.trim().isNotEmpty && _playedAt == null;
+
+  /// Calendar button: pick a date, then a time (cancelling the time keeps the
+  /// previous one).
+  Future<void> _pickPlayedAt() async {
+    final current =
+        _playedAt ??
+        seedPlayedAt(playedDate: null, playedTime: null, today: DateTime.now());
+    final day = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(current.date) ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (day == null || !mounted) return;
+    final parts = current.time?.split(':');
+    final time = await showTimePicker(
+      context: context,
+      initialTime: parts == null
+          ? TimeOfDay.now()
+          : TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1])),
+    );
+    if (!mounted) return;
+    String two(int v) => v.toString().padLeft(2, '0');
+    setState(() {
+      _error = null;
+      _played.text = formatPlayedAt((
+        date: '${day.year}-${two(day.month)}-${two(day.day)}',
+        time: time == null
+            ? current.time
+            : '${two(time.hour)}:${two(time.minute)}',
+      ));
+    });
   }
 
   /// Sets with a score on both sides; empty or half-filled sets are ignored.
@@ -115,7 +164,7 @@ class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
   Future<void> _save() async {
     final sets = _sets();
     final (wonA, wonB) = computeMatchSetsWon(sets);
-    if (_saving || sets.isEmpty || wonA == wonB) return;
+    if (_saving || sets.isEmpty || wonA == wonB || _playedInvalid) return;
     setState(() {
       _saving = true;
       _error = null;
@@ -133,6 +182,7 @@ class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
             winnerId: wonA > wonB ? match.team1Id : match.team2Id,
             expectedRevision: match.revision,
             useLiteParticipantAccess: widget.isLite,
+            playedAt: _playedAt,
           );
       if (mounted) Navigator.of(context).pop(true);
     } catch (error) {
@@ -179,6 +229,13 @@ class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
             const SizedBox(height: 4),
             _meta(l10n, colors),
             const SizedBox(height: 12),
+            _playedAtField(l10n),
+            if (_playedInvalid)
+              _message(
+                l10n.resultsScore_playedAtInvalid,
+                'results-score-played-error',
+              ),
+            const SizedBox(height: 12),
             _setHeader(l10n, colors),
             _sideRow(1),
             const Divider(height: 14),
@@ -187,7 +244,10 @@ class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
             if (tied) _message(l10n.resultsScore_tied, 'results-score-tied'),
             if (_error != null) _message(_error!, 'results-score-error'),
             const SizedBox(height: 8),
-            _buttons(l10n, canSave: hasSets && !tied && !_saving),
+            _buttons(
+              l10n,
+              canSave: hasSets && !tied && !_saving && !_playedInvalid,
+            ),
           ],
         ),
       ),
@@ -196,10 +256,9 @@ class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
 
   Widget _meta(AppLocalizations l10n, AppColorsExtension colors) {
     final match = widget.match;
-    final time = match.completedAt ?? match.scheduledTime;
     final referee = match.refereeName?.trim() ?? '';
     final items = [
-      if (time != null) DateFormat('HH:mm').format(time.toLocal()),
+      resultsMatchClock(match),
       resultsMatchCourt(match),
       if (referee.isNotEmpty) l10n.resultsBoard_referee(referee),
     ].where((text) => text.isNotEmpty);
@@ -212,6 +271,32 @@ class _ResultsScoreSheetState extends ConsumerState<_ResultsScoreSheet> {
             style: TextStyle(fontSize: 12, color: colors.textSecondary),
           ),
       ],
+    );
+  }
+
+  Widget _playedAtField(AppLocalizations l10n) {
+    return TextField(
+      key: const ValueKey('results-score-played-at'),
+      controller: _played,
+      enabled: !_saving,
+      keyboardType: TextInputType.datetime,
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'[0-9/: ]')),
+        LengthLimitingTextInputFormatter(16),
+      ],
+      onChanged: (_) => setState(() => _error = null),
+      decoration: InputDecoration(
+        isDense: true,
+        labelText: l10n.resultsScore_playedAt,
+        hintText: l10n.resultsScore_playedAtHint,
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
+          key: const ValueKey('results-score-played-pick'),
+          tooltip: l10n.resultsScore_playedAtPick,
+          icon: const Icon(Icons.calendar_month_rounded),
+          onPressed: _saving ? null : _pickPlayedAt,
+        ),
+      ),
     );
   }
 

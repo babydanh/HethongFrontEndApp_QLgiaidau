@@ -1243,6 +1243,7 @@ class ApiMatchRepository implements IMatchRepository {
     String? overrideReason,
     int? expectedRevision,
     bool useLiteParticipantAccess = false,
+    ({String date, String? time})? playedAt,
   }) async {
     _log.info(
       'Updating score details for match $matchId: sets=$p1SetsWon-$p2SetsWon',
@@ -1259,6 +1260,11 @@ class ApiMatchRepository implements IMatchRepository {
     if (overrideReason != null) payload['overrideReason'] = overrideReason;
     if (expectedRevision != null) {
       payload['expectedRevision'] = expectedRevision;
+    }
+    // Tournament score DTO only; the club-session endpoints do not take it.
+    if (playedAt != null && tournamentId.isNotEmpty) {
+      payload['playedDate'] = playedAt.date;
+      payload['playedTime'] = playedAt.time;
     }
 
     try {

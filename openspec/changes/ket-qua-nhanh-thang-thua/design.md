@@ -13,6 +13,8 @@
 10. **Tranh chấp không còn màu riêng.** Trận tranh chấp là trận đã đóng nên dùng viền "xong"; `MatchTone` chỉ còn live, done, cancel, ready, wait.
 11. **Nút "+" to.** Vòng tròn 32 dp, vùng bấm 44 dp, nằm giữa hai bên (căn giữa theo chiều dọc cột Kết quả), màu xanh dương của chip đang chọn; khi đã có điểm thì cột hiện điểm như cũ.
 
+12. **Ngày giờ thi đấu như Web.** Backend đã nhận `playedDate` (YYYY-MM-DD) và `playedTime` (HH:mm, null = chưa nhập giờ) trên `PATCH /matches/:id/score` và `/lite-score`, và trả lại trong trận. App thêm hai trường vào `MatchModel`, tham số `playedAt` vào `updateScoreDetails`, và ô chữ `dd/mm/yyyy HH:mm` + nút lịch trong popup. Không đoán giờ: không có giá trị đã lưu thì ô bắt đầu bằng hôm nay, giờ để trống. Giờ đã nhập thắng giờ hệ thống ở dòng trận và đầu popup (`resultsMatchClock`). Không đổi Backend.
+
 ## Phương án đã loại
 
 - Sửa `BracketPosition` để giữ `MAIN` riêng: chạm model dùng khắp nơi, rủi ro lớn hơn nhu cầu.

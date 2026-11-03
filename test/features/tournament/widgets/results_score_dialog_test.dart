@@ -14,12 +14,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 class _Call {
-  _Call(this.matchId, this.p1, this.p2, this.sets, this.winnerId);
+  _Call(
+    this.matchId,
+    this.p1,
+    this.p2,
+    this.sets,
+    this.winnerId,
+    this.playedAt,
+  );
   final String matchId;
   final int p1;
   final int p2;
   final List<SetScoreData> sets;
   final String? winnerId;
+  final ({String date, String? time})? playedAt;
 }
 
 class _FakeMatches extends Fake implements IMatchRepository {
@@ -39,14 +47,17 @@ class _FakeMatches extends Fake implements IMatchRepository {
     String? overrideReason,
     int? expectedRevision,
     bool useLiteParticipantAccess = false,
+    ({String date, String? time})? playedAt,
   }) async {
-    calls.add(_Call(matchId, p1SetsWon, p2SetsWon, scoreDetails, winnerId));
+    calls.add(
+      _Call(matchId, p1SetsWon, p2SetsWon, scoreDetails, winnerId, playedAt),
+    );
     await gate?.future;
     if (failWith != null) throw failWith!;
   }
 }
 
-MatchModel _match() => MatchModel(
+MatchModel _match({String? playedDate, String? playedTime}) => MatchModel(
   id: 'm1',
   round: 1,
   matchNumber: 1,
@@ -56,6 +67,8 @@ MatchModel _match() => MatchModel(
   status: 'SCHEDULED',
   courtName: 'Sân 2',
   refereeName: 'Hoang Nam',
+  playedDate: playedDate,
+  playedTime: playedTime,
   scheduledTime: DateTime(2026, 11, 3, 14, 0),
   team1Players: [
     ParticipantPlayer(slot: 1, fullName: 'Nguyen Van A'),
@@ -65,7 +78,7 @@ MatchModel _match() => MatchModel(
   updatedAt: DateTime(2026, 1, 1),
 );
 
-Future<_FakeMatches> _pump(WidgetTester tester) async {
+Future<_FakeMatches> _pump(WidgetTester tester, {MatchModel? match}) async {
   final repo = _FakeMatches();
   await tester.pumpWidget(
     ProviderScope(
@@ -84,7 +97,7 @@ Future<_FakeMatches> _pump(WidgetTester tester) async {
                   child: TextButton(
                     onPressed: () => showResultsScoreDialog(
                       context,
-                      match: _match(),
+                      match: match ?? _match(),
                       tournamentId: 't1',
                       label: '#V1',
                       liveRoute: '/live/m1',
@@ -211,5 +224,99 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('results-score-live')));
     await tester.pumpAndSettle();
     expect(find.text('live-room'), findsOneWidget);
+  });
+
+  group('played-at field', () {
+    Finder field() => find.byKey(const ValueKey('results-score-played-at'));
+    String fieldText(WidgetTester tester) =>
+        tester.widget<TextField>(field()).controller!.text;
+    MatchModel stored() =>
+        _match(playedDate: '2026-11-03', playedTime: '14:30');
+
+    testWidgets('TC-RBR-60 is seeded from the stored date and time', (
+      tester,
+    ) async {
+      await _pump(tester, match: stored());
+      expect(fieldText(tester), '03/11/2026 14:30');
+    });
+
+    testWidgets('TC-RBR-61 without a stored date it starts at today, no time', (
+      tester,
+    ) async {
+      await _pump(tester);
+      final now = DateTime.now();
+      String two(int v) => v.toString().padLeft(2, '0');
+      expect(
+        fieldText(tester),
+        '${two(now.day)}/${two(now.month)}/${now.year}',
+      );
+    });
+
+    testWidgets('TC-RBR-62 sends the typed date and time with the score', (
+      tester,
+    ) async {
+      final repo = await _pump(tester, match: stored());
+      await tester.enterText(field(), '04/11/2026 09:15');
+      await _type(tester, [(21, 18), (21, 15)]);
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(repo.calls.single.playedAt, (date: '2026-11-04', time: '09:15'));
+    });
+
+    testWidgets('TC-RBR-63 a date without a time sends time null', (
+      tester,
+    ) async {
+      final repo = await _pump(tester, match: stored());
+      await tester.enterText(field(), '04/11/2026');
+      await _type(tester, [(21, 18)]);
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(repo.calls.single.playedAt, (date: '2026-11-04', time: null));
+    });
+
+    testWidgets('TC-RBR-64 an unreadable value blocks Save and says why', (
+      tester,
+    ) async {
+      await _pump(tester, match: stored());
+      await tester.enterText(field(), '31/02/2026');
+      await _type(tester, [(21, 18)]);
+      expect(_saveEnabled(tester), isFalse);
+      expect(
+        find.byKey(const ValueKey('results-score-played-error')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('TC-RBR-65 a cleared field sends no played-at', (tester) async {
+      final repo = await _pump(tester, match: stored());
+      await tester.enterText(field(), '');
+      await _type(tester, [(21, 18)]);
+      await tester.tap(_save);
+      await tester.pumpAndSettle();
+      expect(repo.calls.single.playedAt, isNull);
+    });
+
+    testWidgets('TC-RBR-66 the calendar button picks a date, then a time', (
+      tester,
+    ) async {
+      await _pump(tester, match: stored());
+      await tester.tap(find.byKey(const ValueKey('results-score-played-pick')));
+      await tester.pumpAndSettle();
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TimePickerDialog), findsOneWidget);
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(fieldText(tester), '03/11/2026 14:30');
+    });
+
+    testWidgets('TC-RBR-67 the header shows the typed time, not the schedule', (
+      tester,
+    ) async {
+      await _pump(tester, match: stored());
+      expect(find.text('14:30'), findsOneWidget);
+      expect(find.text('14:00'), findsNothing);
+    });
   });
 }

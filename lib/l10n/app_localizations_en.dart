@@ -18176,6 +18176,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not save the score. Check your connection and try again.';
 
   @override
+  String get resultsScore_playedAt => 'Match date and time';
+
+  @override
+  String get resultsScore_playedAtHint => 'dd/mm/yyyy HH:mm';
+
+  @override
+  String get resultsScore_playedAtInvalid =>
+      'Use dd/mm/yyyy or dd/mm/yyyy HH:mm';
+
+  @override
+  String get resultsScore_playedAtPick => 'Pick date and time';
+
+  @override
   String get resultsTab_emptyTitle => 'No official results yet';
 
   @override

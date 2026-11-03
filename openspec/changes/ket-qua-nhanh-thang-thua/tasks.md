@@ -52,6 +52,13 @@
   - Phụ thuộc: sau 4.1 (cùng file board), sau 2.1
   - Cách làm: tách logic tính set thắng/bên thắng thành hàm thuần trong cùng file để test; nút Lưu khoá khi hoà set hoặc đang gửi (chống bấm đúp); lỗi mạng giữ popup, hiện lỗi, mở lại nút; nút "Vào trang Live" `context.push(liveRoute)`. Nếu gặp luật điểm phức tạp hơn "số set", dừng và báo, chỉ giữ nút "Vào trang Live".
 
+- [x] 6.2 Ô "Ngày giờ thi đấu" trong popup như `PlayedAtField` của Web; giờ đã nhập hiện ở dòng trận và đầu popup. Tiêu chí: `flutter test --no-pub test/features/tournament/utils/played_at_test.dart test/features/tournament/widgets/results_score_dialog_test.dart test/features/tournament/widgets/results_match_row_test.dart` → exit 0 (TC-RBR-34, TC-RBR-50..57, TC-RBR-60..67)
+  - Files: tạo `lib/features/tournament/utils/played_at.dart`; sửa `lib/domain/entities/match.dart` (`playedDate`, `playedTime`), `lib/domain/repositories/match_repository.dart:108`, `lib/data/repositories/api/api_match_repository.dart:1235` (`playedAt`), `lib/features/tournament/widgets/results_score_dialog.dart`, `lib/features/tournament/widgets/results_match_row.dart` (`resultsMatchClock`), `lib/l10n/app_vi.arb`, `app_en.arb` (+ sinh lại `app_localizations*.dart`); test `test/features/tournament/utils/played_at_test.dart` (mới), `results_score_dialog_test.dart`, `results_match_row_test.dart`
+  - Giao: `typedef PlayedAt = ({String date, String? time})`; `PlayedAt? parsePlayedAt(String)`; `String formatPlayedAt(PlayedAt)`; `PlayedAt seedPlayedAt({playedDate, playedTime, today})`; `String resultsMatchClock(MatchModel)`; tham số `playedAt` của `updateScoreDetails` · Nhận: Backend `UpdateMatchScoreDto.playedDate/playedTime` và `MatchResponseDto.playedDate/playedTime` (đã có trên `origin/main`, không đổi Backend)
+  - Chủ file chung: 6.2 giữ `played_at.dart`; mượn `results_score_dialog.dart`, `results_match_row.dart`, `app_*.arb` sau 6.1
+  - Phụ thuộc: sau 6.1
+  - Cách làm: một ô chữ `dd/mm/yyyy HH:mm` (giờ không bắt buộc) và nút lịch mở chọn ngày rồi chọn giờ. Mặc định là giá trị đã lưu, không có thì hôm nay và để trống giờ (không đoán giờ). Ô trống thì không gửi `playedAt` (Backend giữ nguyên); ô sai thì khoá Lưu. Chỉ gửi khi có `tournamentId` (endpoint CLB không nhận).
+
 ## 7. Kiểm tra cuối
 
 - [x] 7.1 Phân tích tĩnh, test liên quan, kiểm phạm vi ảnh hưởng. Tiêu chí: `flutter analyze --no-pub lib/features/tournament/widgets lib/features/tournament/utils lib/l10n` → exit 0 (thư mục `lib/features/tournament` còn 10 info cũ ở file khác, không thuộc change này); `flutter test --no-pub` cho đúng các file test ở 1.1, 3.1, 5.1, 6.1 và `test/features/tournament/management_results_tab_test.dart` → exit 0; `openspec validate ket-qua-nhanh-thang-thua --strict` → exit 0
