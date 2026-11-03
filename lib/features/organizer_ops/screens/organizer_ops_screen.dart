@@ -608,6 +608,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   }) {
     return showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
       isDismissible: true,
       enableDrag: false,

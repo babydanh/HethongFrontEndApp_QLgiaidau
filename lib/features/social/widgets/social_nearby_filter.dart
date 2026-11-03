@@ -46,6 +46,7 @@ class SocialNearbyFilter extends ConsumerWidget {
               : null,
           onPressed: () => showModalBottomSheet<void>(
             context: context,
+            showDragHandle: true,
             isScrollControlled: true,
             useSafeArea: true,
             shape: const RoundedRectangleBorder(

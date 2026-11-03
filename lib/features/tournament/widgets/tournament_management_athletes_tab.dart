@@ -104,6 +104,7 @@ class _TournamentManagementAthletesTabState
     if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
       isDismissible: true,
       enableDrag: false,

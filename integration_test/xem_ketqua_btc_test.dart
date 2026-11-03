@@ -20,35 +20,54 @@ void main() {
 
   setUpAll(initXem);
 
-  testWidgets('xem: tab ket qua BTC va hop xep lich', (tester) async {
-    final shooter = XemShooter(tester, binding);
-    await shooter.pump(
-      xemApp(
-        overrides: [
-          matchesProvider(_tid).overrideWith((ref) => Stream.value(_matches())),
-          matchRepositoryProvider.overrideWithValue(_MatchRepository()),
-          tournamentManagementRepositoryProvider.overrideWithValue(
-            _ManagementRepository(),
-          ),
-          tournamentProvider(_tid).overrideWith((ref) => Stream.value(null)),
-        ],
-        home: const Scaffold(
-          body: SingleChildScrollView(
-            child: ResultsMatchBoard(
-              tournamentId: _tid,
-              isLite: false,
-              divisionId: 'd1',
-              canManage: true,
-            ),
-          ),
+  Widget board() => xemApp(
+    overrides: [
+      // The organiser board reads the management feed, not the public one.
+      managedMatchesWithDivisionProvider((
+        tournamentId: _tid,
+        divisionId: null,
+      )).overrideWith((ref) => Stream.value(_matches())),
+      matchesProvider(_tid).overrideWith((ref) => Stream.value(_matches())),
+      matchRepositoryProvider.overrideWithValue(_MatchRepository()),
+      tournamentManagementRepositoryProvider.overrideWithValue(
+        _ManagementRepository(),
+      ),
+      tournamentProvider(_tid).overrideWith((ref) => Stream.value(null)),
+    ],
+    home: const Scaffold(
+      body: SingleChildScrollView(
+        child: ResultsMatchBoard(
+          tournamentId: _tid,
+          isLite: false,
+          divisionId: 'd1',
+          canManage: true,
         ),
       ),
-    );
+    ),
+  );
+
+  testWidgets('xem: tab ket qua BTC va hop xep lich', (tester) async {
+    final shooter = XemShooter(tester, binding);
+    await shooter.pump(board());
     await shooter.snap('ket-qua-bang-tran-dang-dien-ra');
 
-    await tester.tap(find.byIcon(Icons.event_outlined).first);
+    await tester.tap(find.byKey(const ValueKey('results-schedule-todo1')));
     await settle(tester);
     await shooter.snap('ket-qua-hop-xep-lich');
+  });
+
+  testWidgets('xem: popup nhap diem co ngay gio', (tester) async {
+    final shooter = XemShooter(tester, binding);
+    await shooter.pump(board());
+
+    await tester.tap(find.byKey(const ValueKey('results-add-score-todo2')));
+    await settle(tester);
+    expect(find.byKey(const ValueKey('results-score-sheet')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('results-score-played-at')),
+      findsOneWidget,
+    );
+    await shooter.snap('ket-qua-popup-nhap-diem');
   });
 }
 

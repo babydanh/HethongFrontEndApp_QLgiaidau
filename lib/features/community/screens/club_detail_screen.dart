@@ -315,10 +315,7 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
     final colors = context.colors;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      showDragHandle: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {

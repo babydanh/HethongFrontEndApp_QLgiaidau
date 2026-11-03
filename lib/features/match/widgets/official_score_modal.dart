@@ -1275,10 +1275,6 @@ void _showMatchInfoDialog(
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      backgroundColor: colors.bgCard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-      ),
       title: Row(
         children: [
           Icon(Icons.info_outline_rounded, color: AppTheme.primary, size: 22),

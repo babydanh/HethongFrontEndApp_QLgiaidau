@@ -23,11 +23,8 @@ class SocialClubMembersSheet extends ConsumerStatefulWidget {
   ) {
     return showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: context.colors.bgCard,
       builder: (_) =>
           SocialClubMembersSheet(session: session, slotNumber: slotNumber),
     );

@@ -249,8 +249,6 @@ class AppShareModal {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: colors.bgCard,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

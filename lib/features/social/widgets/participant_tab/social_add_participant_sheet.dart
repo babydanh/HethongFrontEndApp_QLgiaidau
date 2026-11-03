@@ -23,10 +23,7 @@ class SocialAddParticipantSheet extends StatelessWidget {
   ) {
     return showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: context.colors.bgCard,
+      showDragHandle: true,
       builder: (_) => SocialAddParticipantSheet(
         parentContext: context,
         session: session,

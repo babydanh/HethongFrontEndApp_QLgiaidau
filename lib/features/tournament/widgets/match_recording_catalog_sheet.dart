@@ -17,6 +17,7 @@ Future<void> showMatchRecordingCatalogSheet(
 }) async {
   await showModalBottomSheet<void>(
     context: context,
+    showDragHandle: true,
     isScrollControlled: true,
     useSafeArea: true,
     builder: (_) =>

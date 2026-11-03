@@ -232,6 +232,7 @@ class _TournamentManagementSponsorsSectionState
     final visible = items.where((sponsor) => sponsor.isShownPublicly).toList();
     showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
       builder: (sheetContext) => SizedBox(
         height: MediaQuery.sizeOf(sheetContext).height * 0.8,

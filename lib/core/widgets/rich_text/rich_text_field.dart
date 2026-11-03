@@ -113,6 +113,7 @@ class RichTextField extends StatelessWidget {
   void _openEditor(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
       useSafeArea: true,
       // Cao ~92% màn hình: đủ rộng cho editor và không che mất nút lưu.

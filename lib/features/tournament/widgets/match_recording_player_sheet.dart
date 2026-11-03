@@ -18,6 +18,7 @@ Future<void> showMatchRecordingPlayerSheet(
 }) async {
   await showModalBottomSheet<void>(
     context: context,
+    showDragHandle: true,
     isScrollControlled: true,
     useSafeArea: true,
     builder: (_) => MatchRecordingPlayerSheet(matchId: matchId, period: period),

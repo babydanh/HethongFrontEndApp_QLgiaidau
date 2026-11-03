@@ -610,6 +610,7 @@ Future<void> _showMoveSheet(BuildContext context, _Ctx ctx, String id) {
   final people = ctx.people;
   return showModalBottomSheet<void>(
     context: context,
+    showDragHandle: true,
     isScrollControlled: true,
     useSafeArea: true,
     builder: (sheet) => SafeArea(

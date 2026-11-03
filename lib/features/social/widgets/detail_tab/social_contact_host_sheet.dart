@@ -20,9 +20,7 @@ class SocialContactHostSheet extends StatelessWidget {
   }) {
     return showModalBottomSheet<void>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      showDragHandle: true,
       builder: (_) =>
           SocialContactHostSheet(session: session, onOpenChat: onOpenChat),
     );

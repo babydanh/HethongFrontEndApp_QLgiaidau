@@ -78,6 +78,7 @@ class _SocialRegionInlineFieldsState extends State<SocialRegionInlineFields> {
 
     final picked = await showModalBottomSheet<Region>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: context.colors.bgDark,

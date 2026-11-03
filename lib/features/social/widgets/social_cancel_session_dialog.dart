@@ -13,10 +13,6 @@ class SocialCancelSessionDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return AlertDialog(
-      backgroundColor: colors.bgCard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-      ),
       title: Text(
         'Xác nhận hủy kèo',
         style: TextStyle(

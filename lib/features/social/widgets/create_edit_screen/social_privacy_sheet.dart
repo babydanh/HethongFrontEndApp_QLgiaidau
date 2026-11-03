@@ -9,10 +9,7 @@ class SocialPrivacySheet extends StatelessWidget {
   static Future<String?> show(BuildContext context, String selectedPrivacy) {
     return showModalBottomSheet<String>(
       context: context,
-      backgroundColor: context.colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      showDragHandle: true,
       builder: (_) => SocialPrivacySheet(selectedPrivacy: selectedPrivacy),
     );
   }

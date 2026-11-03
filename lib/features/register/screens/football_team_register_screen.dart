@@ -490,6 +490,7 @@ class _FootballTeamRegisterScreenState
         : 'NONE';
     final role = await showModalBottomSheet<String>(
       context: context,
+      showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

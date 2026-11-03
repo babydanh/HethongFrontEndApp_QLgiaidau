@@ -139,10 +139,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     final colors = context.colors;
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      showDragHandle: true,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
@@ -300,8 +297,6 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: colors.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
@@ -743,6 +738,7 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       builder: (ctx) => SafeArea(
         child: Wrap(
           children: [

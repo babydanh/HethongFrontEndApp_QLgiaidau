@@ -21,11 +21,8 @@ class SocialExternalParticipantModal extends ConsumerStatefulWidget {
   ) {
     return showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: context.colors.bgCard,
       builder: (_) => SocialExternalParticipantModal(
         session: session,
         slotNumber: slotNumber,

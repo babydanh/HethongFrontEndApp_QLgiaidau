@@ -26,8 +26,6 @@ void showOrganizerRequiredDialog(
   showPopupDialog(
     context: context,
     builder: (dialogCtx) => AlertDialog(
-      backgroundColor: colors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Row(
         children: [
           Container(

@@ -457,11 +457,12 @@ class _PodiumSlot extends StatelessWidget {
     2: Color(0xFFEAECF0),
     3: Color(0xFFFDEADD),
   };
-  // Label colours the design renders for its `.p1` / `.p2` / `.p3` steps.
+  // Label colours follow the medal: gold and bronze warm, silver neutral slate
+  // (each keeps at least 4.5:1 contrast on its fill).
   static const _ink = {
-    1: Color(0xFFB42318),
-    2: Color(0xFFB54708),
-    3: Color(0xFF175CD3),
+    1: Color(0xFF93370D),
+    2: Color(0xFF344054),
+    3: Color(0xFFB54708),
   };
   static const _height = {1: 96.0, 2: 78.0, 3: 64.0};
 

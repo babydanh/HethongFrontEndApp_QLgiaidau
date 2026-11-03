@@ -20,11 +20,8 @@ class SocialFindPlayersSheet extends StatelessWidget {
   }) {
     return showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
-      backgroundColor: context.colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (_) => SocialFindPlayersSheet(
         session: session,
         onShareToChat: onShareToChat,

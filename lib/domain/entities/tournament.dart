@@ -361,7 +361,7 @@ class Tournament {
           final parsed = TournamentSponsor.fromJson(
             Map<String, dynamic>.from(sponsor),
           );
-          if (parsed.displayName.isNotEmpty && parsed.logoUrl.isNotEmpty) {
+          if (parsed.displayName.isNotEmpty) {
             parsedSponsors.add(parsed);
           }
         }

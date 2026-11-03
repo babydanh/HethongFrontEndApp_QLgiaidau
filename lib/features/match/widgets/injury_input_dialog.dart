@@ -35,8 +35,6 @@ class _InjuryInputDialogState extends State<InjuryInputDialog> {
         _selectedTeam != null && _descController.text.trim().isNotEmpty;
 
     return AlertDialog(
-      backgroundColor: context.colors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
       title: Row(
         children: [
           Icon(Icons.local_hospital_rounded, color: context.colors.warning),

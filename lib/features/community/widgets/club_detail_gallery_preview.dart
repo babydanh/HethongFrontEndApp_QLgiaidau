@@ -35,7 +35,6 @@ extension _ClubDetailGalleryPreview on _ClubDetailScreenState {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n.clubDetailDeleteImageTitle,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),

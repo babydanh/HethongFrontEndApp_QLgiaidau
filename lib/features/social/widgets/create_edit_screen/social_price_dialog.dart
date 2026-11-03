@@ -39,10 +39,6 @@ class _SocialPriceDialogState extends State<SocialPriceDialog> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return AlertDialog(
-      backgroundColor: colors.bgCard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-      ),
       title: Text(
         'Phí tham gia kèo (VNĐ)',
         style: TextStyle(

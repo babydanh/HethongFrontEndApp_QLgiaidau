@@ -220,6 +220,7 @@ class FootballScorePanel extends ConsumerWidget {
   ) async {
     final team = await showModalBottomSheet<bool>(
       context: context,
+      showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -223,10 +223,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     final l10n = AppLocalizations.of(context)!;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: context.colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      showDragHandle: true,
       builder: (sheetContext) {
         final l10n = AppLocalizations.of(sheetContext)!;
         return SafeArea(

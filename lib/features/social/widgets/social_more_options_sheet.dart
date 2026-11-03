@@ -27,10 +27,7 @@ class SocialMoreOptionsSheet extends StatelessWidget {
   }) async {
     final action = await showModalBottomSheet<_SocialMoreOptionsAction>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: context.colors.bgCard,
+      showDragHandle: true,
       builder: (_) => SocialMoreOptionsSheet(
         session: session,
         isHost: isHost,

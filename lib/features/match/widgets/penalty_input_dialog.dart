@@ -65,8 +65,6 @@ class _PenaltyInputDialogState extends State<PenaltyInputDialog> {
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     return AlertDialog(
-      backgroundColor: context.colors.bgCard,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusXL)),
       insetPadding: EdgeInsets.symmetric(
         horizontal: isLandscape ? 24.0 : 40.0,
         vertical: isLandscape ? 8.0 : 24.0,

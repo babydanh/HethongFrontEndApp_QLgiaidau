@@ -157,10 +157,8 @@ class ApiTournamentRepository implements ITournamentRepository {
             (item) =>
                 TournamentSponsor.fromJson(Map<String, dynamic>.from(item)),
           )
-          .where(
-            (sponsor) =>
-                sponsor.displayName.isNotEmpty && sponsor.logoUrl.isNotEmpty,
-          )
+          // A missing logo is fine: the tab shows the initials instead.
+          .where((sponsor) => sponsor.displayName.isNotEmpty)
           .toList();
     } catch (e, stack) {
       _log.error('Error fetching public sponsors: $tournamentId', e, stack);

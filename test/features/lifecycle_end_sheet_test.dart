@@ -300,6 +300,28 @@ void main() {
     );
   });
 
+  testWidgets('TC-POP-02 podium label colours follow the medal tone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 1300);
+    tester.view.devicePixelRatio = 1;
+    await _openEndSheet(
+      tester,
+      _EndRepository(),
+      [_match('m-1', status: 'COMPLETED', divisionId: 'div-1')],
+      awards: [_award(2, 'Team B'), _award(1, 'Team A'), _award(3, 'Team C')],
+    );
+
+    HSLColor inkOf(String name) =>
+        HSLColor.fromColor(tester.widget<Text>(find.text(name)).style!.color!);
+
+    // Gold and bronze are warm (red to orange-brown), silver is a neutral slate.
+    for (final warm in [inkOf('Team A'), inkOf('Team C')]) {
+      expect(warm.hue, inInclusiveRange(10, 40));
+    }
+    expect(inkOf('Team B').saturation, lessThan(0.3));
+  });
+
   testWidgets('without results the podium slots stay empty, no crash', (
     tester,
   ) async {

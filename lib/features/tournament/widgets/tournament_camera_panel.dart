@@ -191,6 +191,7 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
   ) async {
     final picked = await showModalBottomSheet<(TournamentCameraModel?,)>(
       context: context,
+      showDragHandle: true,
       isScrollControlled: true,
       builder: (_) => _CameraPickSheet(court: court, cameras: cameras),
     );
@@ -229,6 +230,7 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
     final l10n = AppLocalizations.of(context)!;
     final delete = await showModalBottomSheet<bool>(
       context: context,
+      showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: ListTile(
           key: ValueKey('camera-delete-${camera.id}'),

@@ -9,10 +9,7 @@ class SocialDurationSheet extends StatelessWidget {
   static Future<double?> show(BuildContext context, double selectedHours) {
     return showModalBottomSheet<double>(
       context: context,
-      backgroundColor: context.colors.bgCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      showDragHandle: true,
       builder: (_) => SocialDurationSheet(selectedHours: selectedHours),
     );
   }
