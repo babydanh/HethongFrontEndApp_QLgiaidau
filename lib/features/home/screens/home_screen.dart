@@ -1131,12 +1131,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               child: Align(
                 alignment: Alignment.topCenter,
                 child: FeaturedTournamentBannerCard(
-                  tournament: HomeFeaturedTournament(
-                    id: items[i].id,
-                    name: items[i].name,
-                    bannerUrl: items[i].bannerUrl,
-                    sport: items[i].sport,
-                    status: items[i].status,
+                  tournament: HomeFeaturedTournament.fromTournament(
+                    items[i],
                     registrationStatus: registrationStatusById[items[i].id],
                   ),
                   onTap: () => context.push("/intro/${items[i].id}"),

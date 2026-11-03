@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+
 class HomeFeaturedTournament {
   final String id;
   final String name;
@@ -18,6 +20,23 @@ class HomeFeaturedTournament {
     this.registrationStatus,
     this.hideFeaturedCardText = false,
   });
+
+  /// Card for a tournament from the public list (the source Web also reads),
+  /// so the organizer's hide-title flag travels with it.
+  factory HomeFeaturedTournament.fromTournament(
+    Tournament tournament, {
+    String? registrationStatus,
+  }) {
+    return HomeFeaturedTournament(
+      id: tournament.id,
+      name: tournament.name,
+      bannerUrl: tournament.bannerUrl,
+      sport: tournament.sport,
+      status: tournament.status,
+      registrationStatus: registrationStatus,
+      hideFeaturedCardText: tournament.hideFeaturedCardText,
+    );
+  }
 
   factory HomeFeaturedTournament.fromJson(Map<String, dynamic> json) {
     return HomeFeaturedTournament(
