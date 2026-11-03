@@ -101,7 +101,7 @@ void main() {
     expect(find.text('Giai A'), findsOneWidget);
   });
 
-  testWidgets('TC-HIDECARD-04: the card hides the title but keeps its badges', (
+  testWidgets('TC-HIDECARD-04: the card hides the title and its sport and status badges', (
     tester,
   ) async {
     await _pumpCard(
@@ -117,6 +117,6 @@ void main() {
 
     expect(find.text('Giai A'), findsNothing);
     expect(find.byType(FeaturedTournamentBannerCard), findsOneWidget);
-    expect(find.text('REGISTRATION OPEN'), findsOneWidget);
+    expect(find.text('REGISTRATION OPEN'), findsNothing);
   });
 }

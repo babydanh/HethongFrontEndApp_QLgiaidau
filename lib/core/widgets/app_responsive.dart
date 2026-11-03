@@ -157,10 +157,7 @@ class AppResponsive {
 
   /// Tỉ lệ banner của thẻ giải trong DANH SÁCH (tab Giải đấu), mọi hướng.
   /// Thẻ nổi bật và trang chi tiết vẫn dùng tỉ lệ theo hướng ở trên.
-  static const double bannerListCardRatio = 0.14;
-
-  /// Biên dưới riêng cho thẻ trong danh sách (thấp hơn [bannerMinHeight]).
-  static const double bannerListCardMinHeight = 100;
+  static const double bannerListCardRatio = 0.20;
 
   /// Tỉ lệ cỡ chữ tiêu đề overlay / chiều cao banner
   /// (17px trên banner 185px cũ).

@@ -115,38 +115,41 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                Positioned(
-                  left: 10,
-                  right: 10,
-                  top: 8,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (sport != null)
-                        Flexible(
-                          child: _CompactTopSportBadge(
-                            label: _sportLabel(l10n),
-                            sportKey: sport,
+                // Sport and status chips hide together with the title: a card whose
+                // text is hidden shows only the picture.
+                if (showTitle)
+                  Positioned(
+                    left: 10,
+                    right: 10,
+                    top: 8,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (sport != null)
+                          Flexible(
+                            child: _CompactTopSportBadge(
+                              label: _sportLabel(l10n),
+                              sportKey: sport,
+                            ),
+                          )
+                        else
+                          const Spacer(),
+                        if (sport != null && registrationStatus != null)
+                          const SizedBox(width: 8),
+                        if (registrationStatus != null)
+                          Flexible(
+                            child: _CompactTopStatusBadge(
+                              label: registrationStatus == 'OPEN'
+                                  ? l10n.registrationOpenTag
+                                  : l10n.registrationClosedTag,
+                              color: registrationStatus == 'OPEN'
+                                  ? AppTheme.primary
+                                  : Colors.blueGrey,
+                            ),
                           ),
-                        )
-                      else
-                        const Spacer(),
-                      if (sport != null && registrationStatus != null)
-                        const SizedBox(width: 8),
-                      if (registrationStatus != null)
-                        Flexible(
-                          child: _CompactTopStatusBadge(
-                            label: registrationStatus == 'OPEN'
-                                ? l10n.registrationOpenTag
-                                : l10n.registrationClosedTag,
-                            color: registrationStatus == 'OPEN'
-                                ? AppTheme.primary
-                                : Colors.blueGrey,
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
                 if (showTitle)
                   Positioned(
                     left: 14,

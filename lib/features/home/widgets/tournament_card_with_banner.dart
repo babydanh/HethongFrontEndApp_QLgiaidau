@@ -247,7 +247,6 @@ class _TournamentCardWithBannerState
       viewport.height,
       viewportWidth: viewport.width,
       ratio: AppResponsive.bannerListCardRatio,
-      min: AppResponsive.bannerListCardMinHeight,
     );
 
     return GestureDetector(
@@ -278,7 +277,7 @@ class _TournamentCardWithBannerState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Banner Header — bám 14% chiều cao viewport ở mọi hướng
+                  // Banner Header — bám 20% chiều cao viewport ở mọi hướng
                   // (thẻ trong danh sách), không phải pixel cứng.
                   SizedBox(
                     height: bannerHeight,

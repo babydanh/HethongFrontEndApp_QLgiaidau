@@ -324,7 +324,7 @@ void main() {
       expect(font14 / box14.height, equals(font16 / box16.height));
     });
 
-    testWidgets('card danh sách giải dùng tỉ lệ riêng 14% ở mọi hướng', (
+    testWidgets('card danh sách giải dùng tỉ lệ riêng 20% ở mọi hướng', (
       tester,
     ) async {
       for (final surface in [_laptop14, _laptop16]) {
@@ -361,7 +361,7 @@ void main() {
         );
         expect(
           banner.height / surface.height,
-          closeTo(0.14, 1e-6),
+          closeTo(0.20, 1e-6),
           reason: 'banner height phải bám viewport tại $surface',
         );
         expect(tester.takeException(), isNull);
@@ -374,7 +374,7 @@ void main() {
     });
 
     testWidgets(
-      'TC-BANNER-LIST-01 card danh sách trên điện thoại dọc chỉ cao 14%, logo bám mép banner',
+      'TC-BANNER-LIST-01 card danh sách trên điện thoại dọc chỉ cao 20%, logo bám mép banner',
       (tester) async {
         tester.view.physicalSize = _phonePortrait;
         tester.view.devicePixelRatio = 1;
@@ -411,7 +411,7 @@ void main() {
               )
               .first,
         );
-        expect(banner.height / _phonePortrait.height, closeTo(0.14, 1e-6));
+        expect(banner.height / _phonePortrait.height, closeTo(0.20, 1e-6));
         // The logo straddles the banner's lower edge instead of sitting at a
         // fixed offset, so it never lands on the date block below.
         final bannerBox = find
