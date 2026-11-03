@@ -715,6 +715,45 @@ void main() {
     );
   });
 
+  testWidgets('TC-HIDE-SWISS-01: tạo mới ẩn Thụy Sĩ, nội dung Swiss đã có vẫn hiện', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const swissTile = ValueKey('division-editor-bracket-SWISS');
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) =>
+            DivisionEditorSheet.show(context, tournament: _tournament()),
+      ),
+    );
+    expect(
+      find.byKey(const ValueKey('division-editor-bracket-ROUND_ROBIN')),
+      findsOneWidget,
+    );
+    expect(find.byKey(swissTile), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    await _open(
+      tester,
+      _app(
+        _MgmtRepo(),
+        _StageRepo(),
+        (context) => DivisionEditorSheet.show(
+          context,
+          tournament: _tournament(),
+          division: _swissDivision(),
+        ),
+      ),
+    );
+    expect(find.byKey(swissTile), findsOneWidget);
+  });
+
   testWidgets('sửa: nút xoá nội dung đóng sheet rồi gọi onDelete; tạo mới thì không có', (
     tester,
   ) async {
