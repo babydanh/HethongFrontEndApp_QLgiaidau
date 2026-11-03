@@ -1,12 +1,9 @@
 import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_edit_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-
-/// Fraction of the screen height taken by popups that hold a list or an
-/// upload area (venues, entry fee, logo and banner).
-const _tallPopupHeightFactor = 0.7;
 
 /// Opens the one thing tapped on the overview in its own bottom sheet, so the
 /// manager edits it in place instead of landing on a settings page.
@@ -18,62 +15,31 @@ Future<void> showTournamentEditPopup(
   required String actionRouteBase,
 }) {
   final l10n = AppLocalizations.of(context)!;
-  final tall = _isTall(focus);
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
     sheetAnimationStyle: popupSheetAnimation,
-    builder: (sheetContext) {
-      final content = TournamentManagementSectionScreen(
+    builder: (_) => TournamentEditSheet(
+      title: _titleOf(l10n, focus),
+      fillHeight: _needsBoundedHeight(focus),
+      child: TournamentManagementSectionScreen(
         tournament: tournament,
         section: _sectionOf(focus),
         focus: focus,
         popup: true,
         opsWorkspaceRoute: opsWorkspaceRoute,
         actionRouteBase: actionRouteBase,
-      );
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Text(
-                _titleOf(l10n, focus),
-                style: Theme.of(
-                  sheetContext,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-            if (tall)
-              SizedBox(
-                height:
-                    MediaQuery.sizeOf(sheetContext).height *
-                    _tallPopupHeightFactor,
-                child: content,
-              )
-            else
-              Flexible(child: content),
-          ],
-        ),
-      );
-    },
+      ),
+    ),
   );
 }
 
-bool _isTall(TournamentManagementFocus focus) => switch (focus) {
-  TournamentManagementFocus.venue ||
-  TournamentManagementFocus.fee ||
-  TournamentManagementFocus.contact ||
-  TournamentManagementFocus.branding => true,
-  _ => false,
-};
+/// Venues and entry fee lay themselves out with `Expanded`.
+bool _needsBoundedHeight(TournamentManagementFocus focus) =>
+    focus == TournamentManagementFocus.venue ||
+    focus == TournamentManagementFocus.fee;
 
 TournamentManagementSection _sectionOf(TournamentManagementFocus focus) =>
     switch (focus) {
@@ -85,7 +51,8 @@ TournamentManagementSection _sectionOf(TournamentManagementFocus focus) =>
       TournamentManagementFocus.fee => TournamentManagementSection.finance,
       TournamentManagementFocus.registrationOpens ||
       TournamentManagementFocus.registrationDeadline ||
-      TournamentManagementFocus.tournamentOpening =>
+      TournamentManagementFocus.tournamentOpening ||
+      TournamentManagementFocus.tournamentClosing =>
         TournamentManagementSection.registration,
     };
 
@@ -102,4 +69,6 @@ String _titleOf(AppLocalizations l10n, TournamentManagementFocus focus) =>
         l10n.tournamentManagementRegistrationEnds,
       TournamentManagementFocus.tournamentOpening =>
         l10n.tournamentManagementStartDate,
+      TournamentManagementFocus.tournamentClosing =>
+        l10n.tournamentManagementEndDate,
     };

@@ -220,6 +220,9 @@ class _OverviewTabState extends State<OverviewTab> {
       isManager: widget.onToggleFounderHidden != null,
     );
     final isClubLite = t.isClubLite;
+    // A manager can always set the closing date; viewers only see a set one.
+    final showClosingRow =
+        t.endDate != null || widget.onEditTimelineDate != null;
     final locationStr = TournamentLocationFormatter.tournamentFullLocation(t);
     final sportKey = t.sport.trim().toLowerCase();
     final categoryName = t.category?.trim();
@@ -873,11 +876,24 @@ class _OverviewTabState extends State<OverviewTab> {
                                       title: 'Khai mạc thi đấu',
                                       subtitle: _formatDate(t.startDate),
                                       isFirst: false,
-                                      isLast: true,
+                                      isLast: !showClosingRow,
                                       isPassed:
                                           t.startDate != null &&
                                           DateTime.now().isAfter(t.startDate!),
                                     ),
+                                    if (showClosingRow)
+                                      _timelineRow(
+                                        focus: TournamentManagementFocus
+                                            .tournamentClosing,
+                                        editKey: 'closing',
+                                        title: 'Kết thúc giải đấu',
+                                        subtitle: _formatDate(t.endDate),
+                                        isFirst: false,
+                                        isLast: true,
+                                        isPassed:
+                                            t.endDate != null &&
+                                            DateTime.now().isAfter(t.endDate!),
+                                      ),
                                   ],
                                 ),
                               ),

@@ -12,6 +12,9 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 const double _logoSize = 58;
 const double _logoOverlap = _logoSize / 2;
 
+/// Round action buttons over the banner (edit, eye).
+const double _bannerButtonSize = 44;
+
 /// Ảnh bìa có nút sửa nhận diện, dùng làm `flexibleSpace` của hub quản lý.
 /// Logo giải tròn đè lên mép dưới ảnh bìa (nửa dưới nằm ngoài ảnh).
 class TournamentManagementBanner extends StatelessWidget {
@@ -19,11 +22,16 @@ class TournamentManagementBanner extends StatelessWidget {
   final String Function(String? url) resolveImageUrl;
   final VoidCallback? onEdit;
 
+  /// Manager-only eye that hides/shows the text on the featured card.
+  /// Receives the new `hideFeaturedCardText` value to persist.
+  final ValueChanged<bool>? onToggleCardText;
+
   const TournamentManagementBanner({
     super.key,
     required this.tournament,
     required this.resolveImageUrl,
     this.onEdit,
+    this.onToggleCardText,
   });
 
   @override
@@ -66,6 +74,32 @@ class TournamentManagementBanner extends StatelessWidget {
             ),
           ),
         ),
+        if (onToggleCardText != null)
+          Positioned(
+            right: 12 + _bannerButtonSize + 8,
+            bottom: 12,
+            child: Material(
+              shape: const CircleBorder(),
+              color: colors.bgCard.withValues(alpha: 0.92),
+              child: IconButton(
+                key: const ValueKey('tournament-banner-card-text-eye'),
+                constraints: const BoxConstraints(
+                  minWidth: _bannerButtonSize,
+                  minHeight: _bannerButtonSize,
+                ),
+                tooltip: l10n.tournamentManagementHideFeaturedCardText,
+                icon: Icon(
+                  tournament.hideFeaturedCardText
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
+                ),
+                onPressed: () =>
+                    onToggleCardText!(!tournament.hideFeaturedCardText),
+              ),
+            ),
+          ),
         if (onEdit != null)
           Positioned(
             right: 12,

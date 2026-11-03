@@ -22,6 +22,18 @@ class TournamentContact {
 
 String _text(Object? value) => value is String ? value.trim() : '';
 
+/// Fields to PATCH into `contactInfo` when the manager flips the founder eye.
+/// Showing the founder in MANUAL mode also goes back to PROFILE: MANUAL never
+/// shows the founder, so `hidden=false` alone would change nothing.
+Map<String, dynamic> founderVisibilityPatch(
+  Map<String, dynamic>? info, {
+  required bool hidden,
+}) {
+  final patch = <String, dynamic>{...?info, 'hidden': hidden};
+  if (!hidden) patch['displayMode'] = 'PROFILE';
+  return patch;
+}
+
 const _contactMetadataKeys = {'displaymode', 'organizername', 'hidden'};
 
 /// Keys of `contactInfo` that are settings, not contact channels (same set as

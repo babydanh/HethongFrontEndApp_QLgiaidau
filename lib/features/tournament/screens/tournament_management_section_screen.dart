@@ -57,6 +57,7 @@ enum TournamentManagementFocus {
   registrationOpens,
   registrationDeadline,
   tournamentOpening,
+  tournamentClosing,
 }
 
 class TournamentManagementSectionScreen extends ConsumerWidget {
@@ -351,6 +352,7 @@ class _TournamentSettingsFormState
       TournamentManagementFocus.registrationDeadline =>
         _RegistrationField.deadline,
       TournamentManagementFocus.tournamentOpening => _RegistrationField.opening,
+      TournamentManagementFocus.tournamentClosing => _RegistrationField.closing,
       _ => null,
     };
     if (field == null) return;
@@ -484,6 +486,7 @@ class _TournamentSettingsFormState
       TournamentManagementFocus.registrationDeadline =>
         _RegistrationField.deadline,
       TournamentManagementFocus.tournamentOpening => _RegistrationField.opening,
+      TournamentManagementFocus.tournamentClosing => _RegistrationField.closing,
       _ => null,
     };
     if (widget.focus == TournamentManagementFocus.branding) {
@@ -1041,6 +1044,7 @@ class _TournamentSettingsFormState
           l10n.tournamentManagementDateLimitClosingMin,
         ),
         minDate: _startDate,
+        endOfDayChip: true,
       ),
     };
     if (picked && widget.popup && mounted) await _save();

@@ -29,6 +29,7 @@ import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/tournament_contact.dart';
 
 class TournamentManagementHubScreen extends ConsumerStatefulWidget {
   const TournamentManagementHubScreen({
@@ -177,7 +178,10 @@ class _TournamentManagementHubScreenState
       await ref.read(tournamentManagementRepositoryProvider).updateTournament(
         id,
         {
-          'contactInfo': {...?widget.tournament.contactInfo, 'hidden': hidden},
+          'contactInfo': founderVisibilityPatch(
+            widget.tournament.contactInfo,
+            hidden: hidden,
+          ),
         },
       );
     } on Exception {
@@ -185,6 +189,31 @@ class _TournamentManagementHubScreenState
       return;
     }
     // The hub may have been closed while the request was in flight.
+    if (!mounted) return;
+    ref.invalidate(tournamentProvider(id));
+  }
+
+  /// Banner eye: hides or shows the text on the tournament's featured card.
+  Future<void> _setCardTextHidden(bool hide) async {
+    final id = widget.tournament.id;
+    final messenger = ScaffoldMessenger.of(context);
+    final errorText = AppLocalizations.of(
+      context,
+    )!.tournamentManagementSaveError;
+    try {
+      await ref.read(tournamentManagementRepositoryProvider).updateTournament(
+        id,
+        {
+          'tournamentConfig': {
+            ...widget.tournament.tournamentConfig,
+            'hideFeaturedCardText': hide,
+          },
+        },
+      );
+    } on Exception {
+      messenger.showSnackBar(SnackBar(content: Text(errorText)));
+      return;
+    }
     if (!mounted) return;
     ref.invalidate(tournamentProvider(id));
   }
@@ -335,6 +364,7 @@ class _TournamentManagementHubScreenState
                       resolveImageUrl: _resolveImageUrl,
                       onEdit: () =>
                           _editPopup(TournamentManagementFocus.branding),
+                      onToggleCardText: _setCardTextHidden,
                     ),
                   ),
           ),
