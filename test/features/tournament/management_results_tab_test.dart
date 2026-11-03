@@ -108,8 +108,11 @@ void main() {
         .map((tab) => tab.text)
         .toList();
     expect(tabs, hasLength(7));
-    expect(tabs.last, l10n.tournamentManagementTabResults);
-    expect(tabs.last, 'Kết quả');
+    // Kết quả follows Lịch thi đấu; Cài đặt stays last.
+    expect(tabs[4], l10n.tournamentManagementSchedule);
+    expect(tabs[5], l10n.tournamentManagementTabResults);
+    expect(tabs[5], 'Kết quả');
+    expect(tabs.last, l10n.tournamentManagementTabSettings);
   });
 
   testWidgets(

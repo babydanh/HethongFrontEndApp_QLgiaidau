@@ -139,7 +139,8 @@ void main() {
 
     expect(find.byKey(const ValueKey('step-popup-body')), findsNothing);
     final tabBar = tester.widget<TabBar>(find.byType(TabBar));
-    expect(tabBar.controller!.index, tabBar.tabs.length - 1);
+    // Kết quả sits right after Lịch thi đấu, with Cài đặt last.
+    expect(tabBar.controller!.index, tabBar.tabs.length - 2);
     final board = tester.widget<ResultsMatchBoard>(
       find.byType(ResultsMatchBoard),
     );

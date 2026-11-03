@@ -24,6 +24,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/so
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_dispatcher.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -688,6 +689,14 @@ void main() {
           .whereType<BoxDecoration>()
           .expand((decoration) => decoration.boxShadow ?? const <BoxShadow>[]);
       expect(logoShadows, isEmpty);
+      // TC-HUB-CHIPS-01: status and sport chips sit to the right of the logo,
+      // in the same band, instead of on a row of their own.
+      final logoRect = tester.getRect(
+        find.byKey(const ValueKey('tournament-overview-logo')),
+      );
+      final chipsRect = tester.getRect(find.byType(TournamentManagementChips));
+      expect(chipsRect.left, greaterThanOrEqualTo(logoRect.right));
+      expect(chipsRect.bottom, lessThanOrEqualTo(logoRect.bottom));
       expect(tester.takeException(), isNull);
     },
   );
@@ -1988,8 +1997,8 @@ void main() {
       l10n.tournamentManagementTabAthletes,
       l10n.tournamentManagementTabBracket,
       l10n.tournamentManagementSchedule,
-      l10n.tournamentManagementTabSettings,
       l10n.tournamentManagementTabResults,
+      l10n.tournamentManagementTabSettings,
     ]);
 
     await _openTab(tester, l10n.tournamentManagementTabDivisions);

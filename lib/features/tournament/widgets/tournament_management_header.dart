@@ -131,6 +131,14 @@ class TournamentManagementBanner extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: _logoOverlap),
           child: banner,
         ),
+        // Status and sport chips sit beside the logo, in the strip under the
+        // banner image, so the summary below needs no row of its own for them.
+        Positioned(
+          left: 16 + _logoSize + 10,
+          right: 16,
+          bottom: 4,
+          child: TournamentManagementChips(tournament: tournament),
+        ),
         Positioned(
           left: 16,
           bottom: 0,
@@ -157,7 +165,35 @@ class TournamentManagementBanner extends StatelessWidget {
   }
 }
 
-/// Tên giải và chip trạng thái/môn, hiển thị dưới banner (logo đè mép banner).
+/// Chip trạng thái và môn thi đấu, đặt cạnh logo giải.
+class TournamentManagementChips extends StatelessWidget {
+  final Tournament tournament;
+
+  const TournamentManagementChips({super.key, required this.tournament});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final t = tournament;
+    final categoryName = t.category?.trim();
+    final sportName = (categoryName != null && categoryName.isNotEmpty)
+        ? categoryName
+        : (AppConstants.sportNames[t.sport.trim().toLowerCase()] ?? t.sport);
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        _Chip(
+          label: StatusHelper.getTournamentStatusLabel(t.status, l10n: l10n),
+          color: StatusHelper.getTournamentStatusColor(t.status, context),
+        ),
+        _Chip(label: sportName, color: AppTheme.primary),
+      ],
+    );
+  }
+}
+
+/// Tên giải, hiển thị dưới banner (logo và chip đè mép banner).
 class TournamentManagementSummary extends StatelessWidget {
   final Tournament tournament;
   final VoidCallback? onEditInformation;
@@ -173,10 +209,6 @@ class TournamentManagementSummary extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final t = tournament;
-    final categoryName = t.category?.trim();
-    final sportName = (categoryName != null && categoryName.isNotEmpty)
-        ? categoryName
-        : (AppConstants.sportNames[t.sport.trim().toLowerCase()] ?? t.sport);
 
     return Align(
       alignment: Alignment.topCenter,
@@ -217,24 +249,6 @@ class TournamentManagementSummary extends StatelessWidget {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  _Chip(
-                    label: StatusHelper.getTournamentStatusLabel(
-                      t.status,
-                      l10n: l10n,
-                    ),
-                    color: StatusHelper.getTournamentStatusColor(
-                      t.status,
-                      context,
-                    ),
-                  ),
-                  _Chip(label: sportName, color: AppTheme.primary),
-                ],
               ),
             ],
           ),

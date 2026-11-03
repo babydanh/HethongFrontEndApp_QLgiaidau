@@ -31,6 +31,7 @@ import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_brand_fallback.dart';
 
@@ -1074,6 +1075,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       images.add(tournament.logoUrl!);
     }
 
+    final showLogoBadge =
+        (tournament.bannerUrl?.isNotEmpty ?? false) &&
+        (tournament.logoUrl?.isNotEmpty ?? false);
     final double bannerContentHeight = isClubLite ? 0.0 : 180.0;
     final double totalBannerHeight = bannerContentHeight + topPadding;
 
@@ -1199,6 +1203,22 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       ),
                     ),
                   ),
+                  // With a banner the logo is not the cover, so it needs its own
+                  // badge; without one the logo already is the cover.
+                  if (showLogoBadge)
+                    Positioned(
+                      left: 16,
+                      bottom: 12,
+                      child: TournamentAvatar(
+                        key: const ValueKey('tournament-intro-logo'),
+                        imageUrl: _resolveImageUrl(tournament.logoUrl),
+                        tournamentName: tournament.name,
+                        sport: tournament.sport,
+                        size: 58,
+                        borderWidth: 2,
+                        borderColor: Colors.white,
+                      ),
+                    ),
                 ],
               ),
             ),

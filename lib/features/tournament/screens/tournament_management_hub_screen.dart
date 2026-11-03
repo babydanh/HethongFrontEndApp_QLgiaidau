@@ -472,8 +472,8 @@ class _TournamentManagementHubScreenState
                 Tab(text: l10n.tournamentManagementTabAthletes),
                 Tab(text: l10n.tournamentManagementTabBracket),
                 Tab(text: l10n.tournamentManagementSchedule),
-                Tab(text: l10n.tournamentManagementTabSettings),
                 Tab(text: l10n.tournamentManagementTabResults),
+                Tab(text: l10n.tournamentManagementTabSettings),
               ],
             ),
           ),
@@ -568,8 +568,8 @@ class _TournamentManagementHubScreenState
                 },
                 overlapHandles: overlapHandles,
               ),
-              _buildSettingsTab(context, overlapHandles),
               _buildResultsTab(tournament, overlapHandles),
+              _buildSettingsTab(context, overlapHandles),
             ],
           );
         },
@@ -1198,8 +1198,8 @@ enum _HubTab {
   athletes,
   bracket,
   schedule,
-  settings,
   results,
+  settings,
 }
 
 class _SectionDetails {
