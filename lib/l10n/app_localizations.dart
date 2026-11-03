@@ -20094,23 +20094,29 @@ abstract class AppLocalizations {
   /// **'Nhánh thua'**
   String get playoff_tabLosers;
 
-  /// No description provided for @playoff_pageIndicator.
+  /// No description provided for @playoff_prevRound.
   ///
   /// In vi, this message translates to:
-  /// **'Trang {current} / {total}'**
-  String playoff_pageIndicator(int current, int total);
+  /// **'Vòng trước'**
+  String get playoff_prevRound;
 
-  /// No description provided for @playoff_prevPage.
+  /// No description provided for @playoff_nextRound.
   ///
   /// In vi, this message translates to:
-  /// **'Trang trước'**
-  String get playoff_prevPage;
+  /// **'Vòng sau'**
+  String get playoff_nextRound;
 
-  /// No description provided for @playoff_nextPage.
+  /// No description provided for @playoff_waitWinner.
   ///
   /// In vi, this message translates to:
-  /// **'Trang sau'**
-  String get playoff_nextPage;
+  /// **'Thắng {code}'**
+  String playoff_waitWinner(String code);
+
+  /// No description provided for @playoff_waitLoser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thua {code}'**
+  String playoff_waitLoser(String code);
 
   /// No description provided for @crossTableEmpty.
   ///

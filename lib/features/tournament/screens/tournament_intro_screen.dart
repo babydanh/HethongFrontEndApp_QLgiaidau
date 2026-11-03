@@ -896,6 +896,8 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           tournamentId: widget.tournamentId,
           divisionId: division?.id ?? _selectedDivisionId,
           bracketType: division?.bracketType ?? tournament.bracketType,
+          // Admin / organizer score from the bracket, like the management view.
+          canScoreMatch: isAdmin || canManage,
         );
     tabViews.add(
       SingleChildScrollView(

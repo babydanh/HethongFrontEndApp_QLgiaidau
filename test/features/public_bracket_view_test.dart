@@ -353,8 +353,8 @@ void main() {
 
       expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
       expect(find.byType(SingleElimDiagram), findsNothing);
-      expect(find.text('Nhánh thắng'), findsOneWidget);
-      expect(find.text('Nhánh thua'), findsOneWidget);
+      expect(find.textContaining('Nhánh thắng'), findsOneWidget);
+      expect(find.textContaining('Nhánh thua'), findsOneWidget);
     },
   );
 

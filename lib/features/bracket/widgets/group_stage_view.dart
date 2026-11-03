@@ -30,6 +30,7 @@ class GroupStageView extends ConsumerStatefulWidget {
     super.key,
     required this.matches,
     required this.tournamentId,
+    this.canScoreMatch = false,
     this.divisionId,
     this.bracketType,
     this.configuredLegs = 1,
@@ -37,6 +38,7 @@ class GroupStageView extends ConsumerStatefulWidget {
 
   final List<MatchModel> matches;
   final String tournamentId;
+  final bool canScoreMatch;
   final String? divisionId;
   final String? bracketType;
   final int configuredLegs;
@@ -95,6 +97,7 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
         for (final name in groupNames)
           _GroupCard(
             tournamentId: widget.tournamentId,
+            canScoreMatch: widget.canScoreMatch,
             name: name,
             title: groupDisplayName(name, l10n.groupStage_groupPrefix),
             standings: grouped[name]!,
@@ -121,6 +124,7 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
 class _GroupCard extends StatelessWidget {
   const _GroupCard({
     required this.tournamentId,
+    this.canScoreMatch = false,
     required this.name,
     required this.title,
     required this.standings,
@@ -134,6 +138,7 @@ class _GroupCard extends StatelessWidget {
   });
 
   final String tournamentId;
+  final bool canScoreMatch;
   final String name;
   final String title;
   final List<Standing> standings;
@@ -231,6 +236,7 @@ class _GroupCard extends StatelessWidget {
           switch (mode) {
             _Mode.matrix => _MatrixTable(
               tournamentId: tournamentId,
+              canScoreMatch: canScoreMatch,
               title: title,
               standings: standings,
               matches: legMatches,
@@ -242,6 +248,7 @@ class _GroupCard extends StatelessWidget {
             ),
             _Mode.rounds => _LegMatchList(
               tournamentId: tournamentId,
+              canScoreMatch: canScoreMatch,
               title: title,
               leg: currentLeg,
               matches: legMatches,
@@ -471,12 +478,14 @@ Widget _sideLines(Standing team, {bool teamOnly = false}) {
 class _MatrixTable extends StatelessWidget {
   const _MatrixTable({
     required this.tournamentId,
+    this.canScoreMatch = false,
     required this.title,
     required this.standings,
     required this.matches,
   });
 
   final String tournamentId;
+  final bool canScoreMatch;
   final String title;
   final List<Standing> standings;
   final List<MatchModel> matches;
@@ -519,6 +528,7 @@ class _MatrixTable extends StatelessWidget {
                 context,
                 match: cell.match,
                 tournamentId: tournamentId,
+                canScore: canScoreMatch,
                 title: l10n.groupStage_sheetTitle(
                   title,
                   legForMatch(cell.match, standings.length),
@@ -736,12 +746,14 @@ class _StandingsTable extends StatelessWidget {
 class _LegMatchList extends StatelessWidget {
   const _LegMatchList({
     required this.tournamentId,
+    this.canScoreMatch = false,
     required this.title,
     required this.leg,
     required this.matches,
   });
 
   final String tournamentId;
+  final bool canScoreMatch;
   final String title;
   final int leg;
   final List<MatchModel> matches;
@@ -760,6 +772,7 @@ class _LegMatchList extends StatelessWidget {
                 context,
                 match: m,
                 tournamentId: tournamentId,
+                canScore: canScoreMatch,
                 title: l10n.groupStage_sheetTitle(title, leg),
               ),
             ),

@@ -4,19 +4,30 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_data.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 /// Bottom sheet with the full detail of one group match: full names, scores
-/// per set, court, time and a shortcut to the live screen.
+/// per set, court, time and a shortcut to the live screen. Viewers who may
+/// score ([canScore]: admin / organizer) get the score-entry popup instead, like
+/// the management bracket cards.
 Future<void> showGroupMatchSheet(
   BuildContext context, {
   required MatchModel match,
   required String tournamentId,
   required String title,
+  bool canScore = false,
 }) {
+  if (canScore && match.hasTeams && !match.isBye) {
+    return MatchScoreEntryChooser.show(
+      context,
+      match: match,
+      tournamentId: tournamentId,
+    );
+  }
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

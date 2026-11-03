@@ -36,12 +36,17 @@ class PublicBracketView extends StatelessWidget {
     required this.matches,
     this.divisionId,
     this.bracketType,
+    this.canScoreMatch = false,
   });
 
   final String tournamentId;
   final String? divisionId;
   final List<MatchModel> matches;
   final String? bracketType;
+
+  /// Viewer may enter scores (admin / organizer): a tapped match opens the
+  /// score-entry popup instead of the read-only detail.
+  final bool canScoreMatch;
 
   _Kind _kindOf(List<MatchModel> all) {
     final raw = (bracketType ?? '').trim().toLowerCase();
@@ -102,6 +107,7 @@ class PublicBracketView extends StatelessWidget {
         tournamentId: tournamentId,
         divisionId: divisionId,
         bracketType: bracketType,
+        canScoreMatch: canScoreMatch,
         matches: matches,
         knockoutMatches: matches.where(isKnockoutMatch).toList(growable: false),
       );
@@ -124,15 +130,18 @@ class PublicBracketView extends StatelessWidget {
         tournamentId: tournamentId,
         divisionId: divisionId,
         bracketType: bracketType,
+        canScoreMatch: canScoreMatch,
       ),
       _Kind.double => DoubleElimDiagram(
         matches: knockoutOnly,
         tournamentId: tournamentId,
+        canScoreMatch: canScoreMatch,
         scrollOnly: true,
       ),
       _Kind.single => SingleElimDiagram(
         matches: knockoutOnly,
         tournamentId: tournamentId,
+        canScoreMatch: canScoreMatch,
         scrollOnly: true,
       ),
     };
@@ -209,11 +218,13 @@ class _GroupPlayoffTabs extends StatefulWidget {
     required this.bracketType,
     required this.matches,
     required this.knockoutMatches,
+    required this.canScoreMatch,
   });
 
   final String tournamentId;
   final String? divisionId;
   final String? bracketType;
+  final bool canScoreMatch;
   final List<MatchModel> matches;
   final List<MatchModel> knockoutMatches;
 
@@ -284,6 +295,7 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
             tournamentId: widget.tournamentId,
             divisionId: widget.divisionId,
             bracketType: widget.bracketType,
+            canScoreMatch: widget.canScoreMatch,
           )
         else if (widget.knockoutMatches.isEmpty)
           Padding(
@@ -300,11 +312,13 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
           PlayoffDoubleElimView(
             matches: widget.knockoutMatches,
             tournamentId: widget.tournamentId,
+            canScoreMatch: widget.canScoreMatch,
           )
         else
           SingleElimDiagram(
             matches: widget.knockoutMatches,
             tournamentId: widget.tournamentId,
+            canScoreMatch: widget.canScoreMatch,
             scrollOnly: true,
           ),
       ],
@@ -320,11 +334,13 @@ class PublicBracketLoader extends ConsumerWidget {
     required this.tournamentId,
     required this.divisionId,
     this.bracketType,
+    this.canScoreMatch = false,
   });
 
   final String tournamentId;
   final String? divisionId;
   final String? bracketType;
+  final bool canScoreMatch;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -343,6 +359,7 @@ class PublicBracketLoader extends ConsumerWidget {
             divisionId: divisionId,
             matches: matches,
             bracketType: bracketType,
+            canScoreMatch: canScoreMatch,
           ),
           loading: () => const BoneBracketLoading(),
           error: (error, _) => Padding(

@@ -10963,15 +10963,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playoff_tabLosers => 'Nhánh thua';
 
   @override
-  String playoff_pageIndicator(int current, int total) {
-    return 'Trang $current / $total';
+  String get playoff_prevRound => 'Vòng trước';
+
+  @override
+  String get playoff_nextRound => 'Vòng sau';
+
+  @override
+  String playoff_waitWinner(String code) {
+    return 'Thắng $code';
   }
 
   @override
-  String get playoff_prevPage => 'Trang trước';
-
-  @override
-  String get playoff_nextPage => 'Trang sau';
+  String playoff_waitLoser(String code) {
+    return 'Thua $code';
+  }
 
   @override
   String get crossTableEmpty => 'Chưa có dữ liệu đội thi đấu';

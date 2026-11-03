@@ -10992,15 +10992,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playoff_tabLosers => 'Losers bracket';
 
   @override
-  String playoff_pageIndicator(int current, int total) {
-    return 'Page $current / $total';
+  String get playoff_prevRound => 'Previous round';
+
+  @override
+  String get playoff_nextRound => 'Next round';
+
+  @override
+  String playoff_waitWinner(String code) {
+    return 'Winner $code';
   }
 
   @override
-  String get playoff_prevPage => 'Previous page';
-
-  @override
-  String get playoff_nextPage => 'Next page';
+  String playoff_waitLoser(String code) {
+    return 'Loser $code';
+  }
 
   @override
   String get crossTableEmpty => 'No team data yet';
