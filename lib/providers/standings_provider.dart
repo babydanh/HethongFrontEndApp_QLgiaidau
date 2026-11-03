@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -136,6 +137,8 @@ Standing _standingFromApi(
   return Standing(
     id: (s['teamId'] ?? s['participantId'] ?? s['id'])?.toString() ?? '',
     teamName: s['teamName']?.toString() ?? '',
+    // Singles/doubles rows carry no team name; the names live in players[].
+    players: toParticipantPlayers(s),
     group: groupName,
     played: _asInt(s['played']),
     won: _asInt(s['won']),

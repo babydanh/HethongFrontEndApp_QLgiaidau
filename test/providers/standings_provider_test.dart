@@ -199,6 +199,24 @@ void main() {
       expect(result.every((s) => s.rank == null && s.buchholz == 0), isTrue);
     });
 
+    test('TC-STANDINGS-PLAYERS-01 keeps the player names when the row has no team name', () async {
+      final result = await _loadStandings({
+        'groups': <Object>[],
+        'standings': [
+          {
+            'participantId': 'p1',
+            'teamName': null,
+            'players': [
+              {'fullName': 'Lam Gia Khanh'},
+              {'fullName': 'Vo Thanh Dat'},
+            ],
+          },
+        ],
+      });
+      expect(result.single.teamName, isEmpty);
+      expect(result.single.players.map((p) => p.fullName), ['Lam Gia Khanh', 'Vo Thanh Dat']);
+    });
+
     test('empty endpoint falls back to the client-side calculation', () async {
       final result = await _loadStandings(
         <Object>[],
