@@ -77,10 +77,14 @@ String lifecycleMoney(BuildContext context, num amount) =>
 /// accent-coloured (`lifecycle-step-current`), the rest grey. A draft shows
 /// the bar dimmed with no step lit.
 class LifecycleStepBar extends StatelessWidget {
-  const LifecycleStepBar({super.key, required this.status});
+  const LifecycleStepBar({super.key, required this.status, this.onStepTap});
 
   /// Normalized tournament status.
   final String status;
+
+  /// Tapped step index (0..3, as in [lifecycleStepIndex]); null keeps the bar
+  /// read-only.
+  final ValueChanged<int>? onStepTap;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +131,7 @@ class LifecycleStepBar extends StatelessWidget {
                       icon: steps[i].$2,
                       done: i < current,
                       current: i == current,
+                      onTap: onStepTap == null ? null : () => onStepTap!(i),
                     ),
                   ),
               ],
@@ -174,12 +179,14 @@ class _Step extends StatelessWidget {
     required this.icon,
     required this.done,
     required this.current,
+    this.onTap,
   });
 
   final String label;
   final IconData icon;
   final bool done;
   final bool current;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +196,7 @@ class _Step extends StatelessWidget {
         : current
         ? LavishColors.accent
         : colors.rowLine;
-    return Column(
+    final content = Column(
       key: current ? const ValueKey('lifecycle-step-current') : null,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -233,6 +240,12 @@ class _Step extends StatelessWidget {
           ),
         ),
       ],
+    );
+    if (onTap == null) return content;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: content,
     );
   }
 }

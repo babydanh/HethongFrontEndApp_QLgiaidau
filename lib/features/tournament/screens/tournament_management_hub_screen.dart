@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart'
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/tournament_step_summary.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
@@ -20,6 +21,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_reconfirm_card.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/step_detail_popup.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_edit_popup.dart';
@@ -27,6 +29,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/step_summary_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,6 +96,10 @@ class _TournamentManagementHubScreenState
   ResultsBoardFilter _resultsFilter = ResultsBoardFilter.all;
   int _resultsRequest = 0;
 
+  /// True from the tap on a progress step until its popup is closed, so a
+  /// double tap opens one popup only.
+  bool _stepPopupBusy = false;
+
   /// True while the open section page holds edits that are not saved yet.
   final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
@@ -140,6 +147,49 @@ class _TournamentManagementHubScreenState
       _resultsRequest++;
     });
     _tabController.animateTo(_HubTab.results.index);
+  }
+
+  /// Opens the popup of the tapped progress step (0..3) with fresh numbers.
+  Future<void> _openStep(int index) async {
+    if (_stepPopupBusy || index < 0 || index >= StepKey.values.length) return;
+    _stepPopupBusy = true;
+    var reload = false;
+    try {
+      final summary = await loadStepSummary(ref, widget.tournament);
+      if (!mounted) return;
+      await showStepDetailPopup(
+        context,
+        step: StepKey.values[index],
+        summary: summary,
+        onGo: _goToStepTarget,
+        onRetry: () => reload = true,
+      );
+    } finally {
+      _stepPopupBusy = false;
+    }
+    // "Tải lại": the popup is closed now, so read the numbers again and reopen.
+    if (reload && mounted) {
+      ref.invalidate(organizerParticipantsProvider(widget.tournament.id));
+      ref.invalidate(
+        managedMatchesWithDivisionProvider((
+          tournamentId: widget.tournament.id,
+          divisionId: null,
+        )),
+      );
+      await _openStep(index);
+    }
+  }
+
+  /// Handles "Đi tới" / "Mở" from a step popup: same tab names in both enums.
+  void _goToStepTarget(StepTarget target) {
+    if (!mounted) return;
+    if (target.tab == StepHubTab.results) {
+      _goToResults(filter: target.resultsFilter, divisionId: target.divisionId);
+      return;
+    }
+    final divisionId = target.divisionId;
+    if (divisionId != null) _selectDivision(divisionId);
+    _tabController.animateTo(_HubTab.values.byName(target.tab.name).index);
   }
 
   void _openSection(TournamentManagementSection section) {
@@ -398,7 +448,10 @@ class _TournamentManagementHubScreenState
         ),
         // Step bar + the one next-step button, as at the top of the Web page.
         SliverToBoxAdapter(
-          child: TournamentLifecycleCard(tournament: tournament),
+          child: TournamentLifecycleCard(
+            tournament: tournament,
+            onStepTap: _openStep,
+          ),
         ),
         SliverToBoxAdapter(
           child: ResultsReconfirmCard(
