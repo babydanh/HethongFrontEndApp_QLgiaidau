@@ -1799,13 +1799,10 @@ void main() {
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await _openTab(tester, l10n.tournamentManagementTabAthletes);
-    // Row đóng: chưa có phần tham gia nào được dựng.
-    expect(find.byType(TournamentManagementPeopleSection), findsNothing);
-
-    final row = find.byKey(const ValueKey('athlete-division-row-div-empty'));
-    await tester.ensureVisible(row);
-    await tester.tap(row);
-    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('athlete-division-body-div-empty')),
+      findsOneWidget,
+    );
 
     expect(find.byType(TournamentManagementPeopleSection), findsOneWidget);
     expect(
@@ -2072,7 +2069,7 @@ void main() {
 
       final tabBarRect = tester.getRect(find.byType(TabBar).first);
       final firstRow = find.byKey(
-        const ValueKey('athlete-division-row-div-mixed'),
+        const ValueKey('athlete-division-div-mixed'),
       );
       expect(firstRow, findsOneWidget);
       final rowRect = tester.getRect(firstRow);
@@ -2364,15 +2361,15 @@ void main() {
     }
 
     final rowMixed = find.byKey(
-      const ValueKey('athlete-division-row-div-mixed'),
+      const ValueKey('athlete-division-div-mixed'),
     );
-    final rowMen = find.byKey(const ValueKey('athlete-division-row-div-men'));
+    final rowMen = find.byKey(const ValueKey('athlete-division-div-men'));
     final bodyMixed = find.byKey(
       const ValueKey('athlete-division-body-div-mixed'),
     );
     final bodyMen = find.byKey(const ValueKey('athlete-division-body-div-men'));
 
-    testWidgets('shows one row per division and no old segment or chips', (
+    testWidgets('shows one chip per division, the first one open, no old segment', (
       tester,
     ) async {
       await pumpAthletes(tester);
@@ -2384,21 +2381,17 @@ void main() {
       expect(rowMen, findsOneWidget);
       expect(find.text('Đôi Nam Nữ'), findsOneWidget);
       expect(find.text('Đơn nam'), findsOneWidget);
-      // Không row nào mở lúc đầu, và segment cũ không còn.
-      expect(bodyMixed, findsNothing);
+      // Nội dung đầu tiên mở sẵn, nội dung kia chưa dựng; segment cũ không còn.
+      expect(bodyMixed, findsOneWidget);
       expect(bodyMen, findsNothing);
       expect(find.text(l10n.opsRoster), findsNothing);
-      expect(find.text(l10n.tournamentManagementRegistration), findsNothing);
     });
 
-    testWidgets('tapping a row expands it and shows only its own teams', (
+    testWidgets('a chosen division shows only its own teams', (
       tester,
     ) async {
       await pumpAthletes(tester);
 
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
 
       expect(bodyMixed, findsOneWidget);
       expect(find.text('Danh – Luân'), findsOneWidget);
@@ -2406,15 +2399,12 @@ void main() {
       expect(find.text('Cường'), findsNothing);
     });
 
-    testWidgets('opening another row closes the previous one', (tester) async {
+    testWidgets('choosing another chip replaces the previous division', (
+      tester,
+    ) async {
       await pumpAthletes(tester);
-
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
       expect(bodyMixed, findsOneWidget);
 
-      await tester.ensureVisible(rowMen);
       await tester.tap(rowMen);
       await tester.pumpAndSettle();
 
@@ -2422,20 +2412,15 @@ void main() {
       expect(bodyMixed, findsNothing);
     });
 
-    testWidgets('tapping the open row again collapses it', (tester) async {
+    testWidgets('tapping the selected chip again keeps its division open', (
+      tester,
+    ) async {
       await pumpAthletes(tester);
+      expect(bodyMixed, findsOneWidget);
 
-      await tester.ensureVisible(rowMixed);
       await tester.tap(rowMixed);
       await tester.pumpAndSettle();
       expect(bodyMixed, findsOneWidget);
-
-      // Mở row có thể làm trang cuộn; đưa row về vùng bấm được rồi bấm lại.
-      await tester.ensureVisible(rowMixed);
-      await tester.pumpAndSettle();
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
-      expect(bodyMixed, findsNothing);
     });
 
     testWidgets('expanded row shows the Excel import and template buttons', (
@@ -2443,9 +2428,6 @@ void main() {
     ) async {
       await pumpAthletes(tester);
 
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
 
       expect(
         find.byKey(const ValueKey('athletes-import-excel')),
@@ -2462,9 +2444,6 @@ void main() {
         tester.element(find.byType(TournamentManagementHubScreen)),
       )!;
 
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
 
       final importButton = find.byKey(const ValueKey('athletes-import-excel'));
       await tester.ensureVisible(importButton);
@@ -2479,9 +2458,6 @@ void main() {
     ) async {
       await pumpAthletes(tester);
 
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
 
       expect(find.text('An – Bình'), findsOneWidget);
       expect(
@@ -2496,12 +2472,7 @@ void main() {
 
     final teamPairKey = const ValueKey('athlete-team-row-p-1');
 
-    Future<void> openMixed(WidgetTester tester) async {
-      await pumpAthletes(tester);
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
-    }
+    Future<void> openMixed(WidgetTester tester) => pumpAthletes(tester);
 
     testWidgets('doubles team opens the detail sheet with members', (
       tester,
@@ -2564,7 +2535,6 @@ void main() {
       tester,
     ) async {
       await pumpAthletes(tester);
-      await tester.ensureVisible(rowMen);
       await tester.tap(rowMen);
       await tester.pumpAndSettle();
 
@@ -2632,11 +2602,7 @@ void main() {
         tester.element(find.byType(TournamentManagementHubScreen)),
       )!;
       await _openTab(tester, l10n.tournamentManagementTabAthletes);
-      final row = find.byKey(const ValueKey('athlete-division-row-div-fb'));
-      await tester.ensureVisible(row);
-      await tester.tap(row);
-      await tester.pumpAndSettle();
-
+      // One division: the strip is hidden and its body is open already.
       final team = find.byKey(const ValueKey('athlete-team-row-p-fb'));
       await tester.ensureVisible(team);
       await tester.tap(team);
@@ -2695,7 +2661,7 @@ void main() {
       expect(bordered, findsNothing);
 
       // Nội dung nới ra sát mép: bỏ padding ngang 16 của tab.
-      final rowRect = tester.getRect(rowMixed);
+      final rowRect = tester.getRect(bodyMixed);
       final screen =
           tester.view.physicalSize.width / tester.view.devicePixelRatio;
       expect(rowRect.left, lessThanOrEqualTo(0.5));
@@ -2742,9 +2708,6 @@ void main() {
       )!;
       await _openTab(tester, l10n.tournamentManagementTabAthletes);
 
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
 
       // Nút VĐV ảo mở đúng sheet ảo, chưa sinh gì.
       final moreButton = find.byKey(const ValueKey('athletes-more'));
@@ -2814,9 +2777,6 @@ void main() {
       )!;
       await _openTab(tester, l10n.tournamentManagementTabAthletes);
 
-      await tester.ensureVisible(rowMixed);
-      await tester.tap(rowMixed);
-      await tester.pumpAndSettle();
       final addButton = find.text(l10n.opsAddAthlete);
       await tester.ensureVisible(addButton);
       await tester.tap(addButton);

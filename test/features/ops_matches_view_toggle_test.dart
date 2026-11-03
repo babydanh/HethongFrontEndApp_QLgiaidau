@@ -88,6 +88,7 @@ Future<void> _pump(
   List<MatchModel>? matches,
   List<String> divisionIds = const [_divisionId],
   bool withCourts = true,
+  String? selectedDivisionId,
 }) async {
   tester.view.physicalSize = const Size(720, 1200);
   tester.view.devicePixelRatio = 1;
@@ -145,6 +146,7 @@ Future<void> _pump(
         home: OrganizerOpsScreen(
           tournamentId: _tournamentId,
           initialDivisionId: _divisionId,
+          selectedDivisionId: selectedDivisionId,
           view: OrganizerOpsView.matches,
           initialMatchesView: matchesView,
         ),
@@ -153,6 +155,18 @@ Future<void> _pump(
   );
   await tester.pumpAndSettle();
 }
+
+Finder _scheduleChip(String id) =>
+    find.byKey(ValueKey('schedule-division-$id'));
+
+Matcher _chipSemantics({required bool selected, required String label}) =>
+    matchesSemantics(
+      isSelected: selected,
+      isButton: true,
+      hasSelectedState: true,
+      hasTapAction: true,
+      label: label,
+    );
 
 void main() {
   testWidgets('hub passes grid: court grid is the default matches view', (
@@ -190,7 +204,7 @@ void main() {
     expect(find.byKey(const ValueKey('ops-matches-view-grid')), findsNothing);
   });
 
-  testWidgets('grid keeps the court grid and division picker with no matches', (
+  testWidgets('grid keeps the court grid and division strip with no matches', (
     tester,
   ) async {
     await _pump(
@@ -201,9 +215,11 @@ void main() {
     );
 
     expect(find.byType(TournamentScheduleCourtGrid), findsOneWidget);
+    expect(_scheduleChip(_divisionId), findsOneWidget);
+    expect(_scheduleChip(_secondDivisionId), findsOneWidget);
     expect(
       find.byKey(const ValueKey('schedule-division-dropdown')),
-      findsOneWidget,
+      findsNothing,
     );
   });
 
@@ -221,8 +237,9 @@ void main() {
   });
 
   testWidgets(
-    'no courts: division picker sits above the notice and changes division',
+    'no courts: division strip sits above the notice and changes division',
     (tester) async {
+      final semantics = tester.ensureSemantics();
       await _pump(
         tester,
         matchesView: OrganizerOpsMatchesView.grid,
@@ -233,17 +250,43 @@ void main() {
 
       expect(find.byIcon(Icons.stadium_outlined), findsOneWidget);
 
-      await tester.tap(
-        find.byKey(const ValueKey('schedule-division-dropdown')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Youth').last);
+      await tester.tap(_scheduleChip(_secondDivisionId));
       await tester.pumpAndSettle();
 
-      final dropdown = tester.widget<DropdownButton<String>>(
-        find.byKey(const ValueKey('schedule-division-dropdown')),
+      expect(
+        tester.getSemantics(_scheduleChip(_secondDivisionId)),
+        _chipSemantics(selected: true, label: 'Youth'),
       );
-      expect(dropdown.value, _secondDivisionId);
+      semantics.dispose();
+    },
+  );
+
+  testWidgets(
+    'TC-DIVSHARE-03: the host-chosen division is the selected chip and follows later changes',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      await _pump(
+        tester,
+        matchesView: OrganizerOpsMatchesView.grid,
+        divisionIds: const [_divisionId, _secondDivisionId],
+        selectedDivisionId: _secondDivisionId,
+      );
+      expect(
+        tester.getSemantics(_scheduleChip(_secondDivisionId)),
+        _chipSemantics(selected: true, label: 'Youth'),
+      );
+
+      await _pump(
+        tester,
+        matchesView: OrganizerOpsMatchesView.grid,
+        divisionIds: const [_divisionId, _secondDivisionId],
+        selectedDivisionId: _divisionId,
+      );
+      expect(
+        tester.getSemantics(_scheduleChip(_divisionId)),
+        _chipSemantics(selected: true, label: 'Open'),
+      );
+      semantics.dispose();
     },
   );
 

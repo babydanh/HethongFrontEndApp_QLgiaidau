@@ -42,6 +42,7 @@ class OrganizerOpsScreen extends ConsumerStatefulWidget {
     super.key,
     required this.tournamentId,
     this.initialDivisionId,
+    this.selectedDivisionId,
     this.view,
     this.onDivisionChanged,
     this.initialFocusMatchId,
@@ -52,6 +53,10 @@ class OrganizerOpsScreen extends ConsumerStatefulWidget {
 
   final String tournamentId;
   final String? initialDivisionId;
+
+  /// Division chosen by the host (the management hub shares one choice across
+  /// its tabs); the screen follows it whenever it changes.
+  final String? selectedDivisionId;
   final OrganizerOpsView? view;
   final ValueChanged<String?>? onDivisionChanged;
   final String? initialFocusMatchId;
@@ -93,7 +98,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedDivisionId = widget.initialDivisionId;
+    _selectedDivisionId = widget.selectedDivisionId ?? widget.initialDivisionId;
     _focusedMatchId = widget.initialFocusMatchId;
     if (_focusedMatchId != null) _opsMatchFilter = 'all';
     _selectedTab = widget.view?.index ?? OrganizerOpsView.matches.index;
@@ -101,6 +106,16 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     // Lưới phải thấy cả trận chưa đấu để xếp lịch, nên mặc định "tất cả" khi
     // vào bằng lưới; người dùng vẫn đổi bộ lọc được như thường.
     if (_matchesView == OrganizerOpsMatchesView.grid) _opsMatchFilter = 'all';
+  }
+
+  @override
+  void didUpdateWidget(OrganizerOpsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final hosted = widget.selectedDivisionId;
+    if (hosted == null || hosted == oldWidget.selectedDivisionId) return;
+    if (hosted == _selectedDivisionId) return;
+    _selectedDivisionId = hosted;
+    _opsMatchFilter = 'all';
   }
 
   @override

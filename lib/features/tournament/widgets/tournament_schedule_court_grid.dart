@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/court_schedule_cascade.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -318,17 +319,8 @@ class _TournamentScheduleCourtGridState
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               children: [
-                if (widget.divisions.length > 1 &&
-                    widget.onDivisionSelected != null) ...[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 180),
-                      child: _divisionDropdown(context),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                ],
+                _divisionStrip(),
+                const SizedBox(height: AppSpacing.md),
                 Icon(
                   Icons.stadium_outlined,
                   size: 40,
@@ -382,6 +374,7 @@ class _TournamentScheduleCourtGridState
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _divisionStrip(),
             _toolbar(
               context,
               l10n,
@@ -926,16 +919,6 @@ class _TournamentScheduleCourtGridState
               ),
             ),
             const Spacer(),
-            if (widget.divisions.length > 1 &&
-                widget.onDivisionSelected != null) ...[
-              Flexible(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 180),
-                  child: _divisionDropdown(context),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-            ],
             if (_hasRangeActions) ...[
               LavishIconBox(
                 key: const ValueKey('schedule-select-mode-button'),
@@ -1062,32 +1045,19 @@ class _TournamentScheduleCourtGridState
     );
   }
 
-  Widget _divisionDropdown(BuildContext context) {
-    final colors = context.colors;
-    return DropdownButton<String>(
-      key: const ValueKey('schedule-division-dropdown'),
-      value: widget.selectedDivisionId,
-      isDense: true,
-      isExpanded: true,
-      underline: const SizedBox.shrink(),
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        color: colors.textPrimary,
-      ),
+  /// The shared division strip; nothing to pick (or nobody to tell) hides it.
+  Widget _divisionStrip() {
+    final onSelected = widget.onDivisionSelected;
+    if (onSelected == null) return const SizedBox.shrink();
+    return DivisionStrip(
+      keyPrefix: 'schedule-division',
       items: [
         for (final division in widget.divisions)
-          DropdownMenuItem(
-            value: division.id,
-            child: Text(
-              division.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          DivisionStripItem(id: division.id, name: division.name),
       ],
-      onChanged: (value) {
-        if (value != null) widget.onDivisionSelected!(value);
+      selectedId: widget.selectedDivisionId,
+      onChanged: (id) {
+        if (id != null) onSelected(id);
       },
     );
   }

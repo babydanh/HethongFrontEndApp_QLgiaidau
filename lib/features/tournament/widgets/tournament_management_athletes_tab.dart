@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/organizer_ops/screens/mock_participa
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/roster_import_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_people_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_strategy_picker.dart';
@@ -21,13 +22,23 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
-/// Tab VĐV của hub quản lý: mỗi nội dung thi đấu là một row, bấm để mở ra danh
-/// sách đội (kèm duyệt/từ chối đăng ký chờ) và nút thêm VĐV. Chỉ mở một row
-/// một lúc, giống `expandedTeamId` của trang đội trên web.
+/// Tab VĐV của hub quản lý: chọn nội dung thi đấu bằng `DivisionStrip` dùng
+/// chung, bên dưới là danh sách đội của nội dung đó (kèm duyệt/từ chối đăng ký
+/// chờ) và nút thêm VĐV.
 class TournamentManagementAthletesTab extends ConsumerStatefulWidget {
-  const TournamentManagementAthletesTab({super.key, required this.tournament});
+  const TournamentManagementAthletesTab({
+    super.key,
+    required this.tournament,
+    this.selectedDivisionId,
+    this.onDivisionChanged,
+  });
 
   final Tournament tournament;
+
+  /// Nội dung do host chọn (hub dùng chung một lựa chọn cho các tab); null thì
+  /// tab tự giữ lựa chọn, mặc định nội dung đầu tiên.
+  final String? selectedDivisionId;
+  final ValueChanged<String>? onDivisionChanged;
 
   @override
   ConsumerState<TournamentManagementAthletesTab> createState() =>
@@ -36,10 +47,10 @@ class TournamentManagementAthletesTab extends ConsumerStatefulWidget {
 
 class _TournamentManagementAthletesTabState
     extends ConsumerState<TournamentManagementAthletesTab> {
-  static const _expandDuration = Duration(milliseconds: 200);
+  static const _switchDuration = Duration(milliseconds: 180);
 
   late Future<List<OrganizerOpsParticipant>> _participantsFuture;
-  String? _expandedDivisionId;
+  String? _chosenDivisionId;
 
   /// Check-in flips reported by the rows, so the header count stays in step.
   final Map<String, bool> _presence = {};
@@ -60,11 +71,21 @@ class _TournamentManagementAthletesTabState
     _participantsFuture = _load();
   });
 
-  void _toggle(String divisionId) => setState(
-    () => _expandedDivisionId = _expandedDivisionId == divisionId
-        ? null
-        : divisionId,
-  );
+  void _select(String? divisionId) {
+    if (divisionId == null) return;
+    setState(() => _chosenDivisionId = divisionId);
+    widget.onDivisionChanged?.call(divisionId);
+  }
+
+  /// Host choice first, then the user's own, then the first division; a choice
+  /// that is no longer in the tournament falls through.
+  TournamentDivision? _activeDivision(List<TournamentDivision> divisions) {
+    for (final id in [widget.selectedDivisionId, _chosenDivisionId]) {
+      final match = divisions.where((division) => division.id == id);
+      if (match.isNotEmpty) return match.first;
+    }
+    return divisions.isEmpty ? null : divisions.first;
+  }
 
   Future<void> _addAthlete(
     TournamentDivision division,
@@ -261,33 +282,57 @@ class _TournamentManagementAthletesTabState
           );
         }
         final participants = snapshot.data ?? const <OrganizerOpsParticipant>[];
-        // Không padding ngang: row nội dung sát mép, ngăn cách bằng đường kẻ.
+        final active = _activeDivision(divisions);
+        final duration = MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : _switchDuration;
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final division in divisions)
-                _DivisionRow(
-                  division: division,
-                  participants: participants
-                      .where((item) => item.divisionId == division.id)
-                      .toList(growable: false),
-                  tournament: widget.tournament,
-                  expanded: _expandedDivisionId == division.id,
-                  duration: _expandDuration,
-                  onToggle: () => _toggle(division.id),
-                  onAddAthlete: (list) => _addAthlete(division, list),
-                  onImportExcel: () => _importRoster(division),
-                  onDownloadTemplate: _downloadTemplate,
-                  onOpenMockParticipants: () => _openMockParticipants(division),
-                  onOpenWildcard: () => _openWildcard(division),
-                  onOpenPairing: () => _openPairing(division),
-                  onAutoPair: () => _autoPair(division),
-                  presence: _presence,
-                  onPresenceChanged: (id, present) =>
-                      setState(() => _presence[id] = present),
-                ),
+              DivisionStrip(
+                keyPrefix: 'athlete-division',
+                items: [
+                  for (final division in divisions)
+                    DivisionStripItem(
+                      id: division.id,
+                      name: division.name,
+                      count: participants
+                          .where((item) => item.divisionId == division.id)
+                          .length,
+                      capacity: (division.maxParticipants ?? 0) > 0
+                          ? division.maxParticipants
+                          : null,
+                    ),
+                ],
+                selectedId: active?.id,
+                onChanged: _select,
+              ),
+              AnimatedSwitcher(
+                duration: duration,
+                child: active == null
+                    ? const SizedBox.shrink()
+                    : _DivisionBody(
+                        key: ValueKey('athlete-division-body-${active.id}'),
+                        division: active,
+                        participants: participants
+                            .where((item) => item.divisionId == active.id)
+                            .toList(growable: false),
+                        tournament: widget.tournament,
+                        onAddAthlete: (list) => _addAthlete(active, list),
+                        onImportExcel: () => _importRoster(active),
+                        onDownloadTemplate: _downloadTemplate,
+                        onOpenMockParticipants: () =>
+                            _openMockParticipants(active),
+                        onOpenWildcard: () => _openWildcard(active),
+                        onOpenPairing: () => _openPairing(active),
+                        onAutoPair: () => _autoPair(active),
+                        presence: _presence,
+                        onPresenceChanged: (id, present) =>
+                            setState(() => _presence[id] = present),
+                      ),
+              ),
             ],
           ),
         );
@@ -296,14 +341,14 @@ class _TournamentManagementAthletesTabState
   }
 }
 
-class _DivisionRow extends StatelessWidget {
-  const _DivisionRow({
+/// Body of the chosen division: attendance summary, the action boxes and the
+/// teams (with pending approvals).
+class _DivisionBody extends StatelessWidget {
+  const _DivisionBody({
+    super.key,
     required this.division,
     required this.participants,
     required this.tournament,
-    required this.expanded,
-    required this.duration,
-    required this.onToggle,
     required this.onAddAthlete,
     required this.onImportExcel,
     required this.onDownloadTemplate,
@@ -318,9 +363,6 @@ class _DivisionRow extends StatelessWidget {
   final TournamentDivision division;
   final List<OrganizerOpsParticipant> participants;
   final Tournament tournament;
-  final bool expanded;
-  final Duration duration;
-  final VoidCallback onToggle;
   final void Function(List<OrganizerOpsParticipant>) onAddAthlete;
   final VoidCallback onImportExcel;
   final VoidCallback onDownloadTemplate;
@@ -340,7 +382,6 @@ class _DivisionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final max = division.maxParticipants;
     final count = participants.length;
     final pending = participants.where(_isPending).length;
     final present = participants
@@ -349,143 +390,80 @@ class _DivisionRow extends StatelessWidget {
     final waitingPartner = participants
         .where((item) => item.teamStatus.toUpperCase() == 'PENDING_PARTNER')
         .length;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.border)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Semantics(
-            button: true,
-            expanded: expanded,
-            label: division.name,
-            child: InkWell(
-              key: ValueKey('athlete-division-row-${division.id}'),
-              onTap: onToggle,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            division.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: colors.textPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            '${l10n.athletesPresentCount} $present/$count',
-                            style: TextStyle(
-                              color: colors.textSecondary,
-                              fontSize: 11.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    LavishPill(max != null && max > 0 ? '$count/$max' : '$count'),
-                    if (pending > 0) ...[
-                      const SizedBox(width: 8),
-                      Tooltip(
-                        message: l10n.tournamentManagementPendingApplications,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.warning.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '$pending',
-                            style: TextStyle(
-                              color: colors.warning,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(width: 6),
-                    AnimatedRotation(
-                      turns: expanded ? 0.5 : 0,
-                      duration: duration,
-                      curve: Curves.easeOutCubic,
-                      child: Icon(
-                        Icons.expand_more_rounded,
-                        color: expanded ? AppTheme.primary : colors.textMuted,
-                      ),
-                    ),
-                  ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${l10n.athletesPresentCount} $present/$count',
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 11.5,
+                  ),
                 ),
               ),
-            ),
-          ),
-          AnimatedSize(
-            duration: duration,
-            curve: Curves.easeOutCubic,
-            alignment: Alignment.topCenter,
-            child: expanded
-                ? Padding(
-                    key: ValueKey('athlete-division-body-${division.id}'),
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-                          child: _AthleteActionRow(
-                            showPairing: division.isDoubles,
-                            waitingPartner: waitingPartner,
-                            onImportExcel: onImportExcel,
-                            onOpenPairing: onOpenPairing,
-                            onAutoPair: onAutoPair,
-                            onAddAthlete: () => onAddAthlete(participants),
-                            onDownloadTemplate: onDownloadTemplate,
-                            onOpenWildcard: onOpenWildcard,
-                            onOpenMockParticipants: onOpenMockParticipants,
-                          ),
-                        ),
-                        TournamentManagementPeopleSection(
-                          tournament: tournament,
-                          showRegistration: true,
-                          divisionId: division.id,
-                          divisionName: division.name,
-                          embedded: true,
-                          onPresenceChanged: onPresenceChanged,
-                          // Như web: nội dung đôi hoặc môn đồng đội (teamSize).
-                          pairFormat:
-                              tournament.teamSize != null ||
-                              const {
-                                'DOUBLES',
-                                'MIXED_DOUBLES',
-                              }.contains(division.matchType.toUpperCase()),
-                        ),
-                      ],
+              if (pending > 0)
+                Tooltip(
+                  message: l10n.tournamentManagementPendingApplications,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
                     ),
-                  )
-                : const SizedBox(width: double.infinity),
+                    decoration: BoxDecoration(
+                      color: colors.warning.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$pending',
+                      style: TextStyle(
+                        color: colors.warning,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+          child: _AthleteActionRow(
+            showPairing: division.isDoubles,
+            waitingPartner: waitingPartner,
+            onImportExcel: onImportExcel,
+            onOpenPairing: onOpenPairing,
+            onAutoPair: onAutoPair,
+            onAddAthlete: () => onAddAthlete(participants),
+            onDownloadTemplate: onDownloadTemplate,
+            onOpenWildcard: onOpenWildcard,
+            onOpenMockParticipants: onOpenMockParticipants,
+          ),
+        ),
+        TournamentManagementPeopleSection(
+          tournament: tournament,
+          showRegistration: true,
+          divisionId: division.id,
+          divisionName: division.name,
+          embedded: true,
+          onPresenceChanged: onPresenceChanged,
+          // Như web: nội dung đôi hoặc môn đồng đội (teamSize).
+          pairFormat:
+              tournament.teamSize != null ||
+              const {
+                'DOUBLES',
+                'MIXED_DOUBLES',
+              }.contains(division.matchType.toUpperCase()),
+        ),
+      ],
     );
   }
 }
-
 
 /// Design 2b: one row of equal boxes, icon above a one-line label; the main
 /// action (add athlete) is filled and the rarely used ones sit in the more box.

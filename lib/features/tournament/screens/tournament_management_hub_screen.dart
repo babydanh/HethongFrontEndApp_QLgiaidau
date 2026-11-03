@@ -80,6 +80,10 @@ class _TournamentManagementHubScreenState
       TournamentManagementSection.information;
   TournamentManagementSection? _openedSection;
 
+  /// Division picked in any of the bracket, schedule or athletes tabs; they
+  /// all show it. Null until someone picks one (each tab then defaults itself).
+  String? _divisionId;
+
   /// True while the open section page holds edits that are not saved yet.
   final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
@@ -112,6 +116,11 @@ class _TournamentManagementHubScreenState
         _isTabBarPinned = tabPinned;
       });
     }
+  }
+
+  void _selectDivision(String id) {
+    if (id == _divisionId) return;
+    setState(() => _divisionId = id);
   }
 
   void _openSection(TournamentManagementSection section) {
@@ -422,6 +431,8 @@ class _TournamentManagementHubScreenState
                   SliverToBoxAdapter(
                     child: TournamentManagementAthletesTab(
                       tournament: tournament,
+                      selectedDivisionId: _divisionId,
+                      onDivisionChanged: _selectDivision,
                     ),
                   ),
                 ],
@@ -436,6 +447,8 @@ class _TournamentManagementHubScreenState
                       tournamentId: tournament.id,
                       isEmbedded: true,
                       canEditBracket: true,
+                      selectedDivisionId: _divisionId,
+                      onDivisionChanged: _selectDivision,
                       onManageDivisions: () =>
                           _openSection(TournamentManagementSection.divisions),
                     ),
@@ -447,6 +460,10 @@ class _TournamentManagementHubScreenState
                 isEmbedded: true,
                 view: OrganizerOpsView.matches,
                 initialMatchesView: OrganizerOpsMatchesView.grid,
+                selectedDivisionId: _divisionId,
+                onDivisionChanged: (id) {
+                  if (id != null) _selectDivision(id);
+                },
                 overlapHandles: overlapHandles,
               ),
               _buildSettingsTab(context, overlapHandles),

@@ -48,6 +48,14 @@ class BracketViewScreen extends ConsumerStatefulWidget {
 
   /// Organizers only: shows a "Quản lý" chip that opens the divisions screen.
   final VoidCallback? onManageDivisions;
+
+  /// Division chosen by the host (the management hub shares one choice across
+  /// its tabs). Unlike [divisionId], which pins the screen to one division and
+  /// hides the strip, the strip stays and follows this value.
+  final String? selectedDivisionId;
+
+  /// Called with the division id when a chip is tapped.
+  final ValueChanged<String>? onDivisionChanged;
   final ScrollController? scrollController;
 
   const BracketViewScreen({
@@ -62,6 +70,8 @@ class BracketViewScreen extends ConsumerStatefulWidget {
     this.isLite = false,
     this.isEmbedded = false,
     this.onManageDivisions,
+    this.selectedDivisionId,
+    this.onDivisionChanged,
     this.scrollController,
   });
 
@@ -165,6 +175,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   /// Giải đang xem: divisionId từ caller, rồi giải người dùng chọn, rồi giải đầu tiên.
   String? get _activeDivisionId {
     if (_hasRequestedDivision) return widget.divisionId;
+    final hosted = widget.selectedDivisionId;
+    if (hosted != null && _divisions.any((division) => division.id == hosted)) {
+      return hosted;
+    }
     if (_selectedDivisionId != null) return _selectedDivisionId;
     final divisions = _divisions;
     return divisions.isEmpty ? null : divisions.first.id;
@@ -187,6 +201,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         onChanged: (id) {
           if (id == null) return;
           setState(() => _selectedDivisionId = id);
+          widget.onDivisionChanged?.call(id);
         },
         onManage: widget.onManageDivisions,
       ),

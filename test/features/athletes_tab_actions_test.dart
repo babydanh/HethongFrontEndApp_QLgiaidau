@@ -155,8 +155,10 @@ Future<void> _pumpPeople(
 
 Future<void> _pumpTab(
   WidgetTester tester,
-  _ManagementRepository management,
-) async {
+  _ManagementRepository management, {
+  String? selectedDivisionId,
+  ValueChanged<String>? onDivisionChanged,
+}) async {
   tester.view.physicalSize = const Size(390, 1400);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -184,6 +186,8 @@ Future<void> _pumpTab(
           body: SingleChildScrollView(
             child: TournamentManagementAthletesTab(
               tournament: _tournament('in_progress'),
+              selectedDivisionId: selectedDivisionId,
+              onDivisionChanged: onDivisionChanged,
             ),
           ),
         ),
@@ -281,7 +285,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('athlete-team-row-p-wait')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('athlete-team-row-p-wait')),
+      findsOneWidget,
+    );
     expect(find.byKey(const ValueKey('athlete-team-row-p-ok')), findsNothing);
   });
 
@@ -290,7 +297,7 @@ void main() {
   ) async {
     final repo = _ManagementRepository();
     await _pumpTab(tester, repo);
-    await tester.tap(find.byKey(const ValueKey('athlete-division-row-div-d')));
+    await tester.tap(find.byKey(const ValueKey('athlete-division-div-d')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('athletes-auto-pair')));
@@ -325,7 +332,7 @@ void main() {
     await _pumpTab(tester, repo);
     final l10n = AppLocalizations.of(tester.element(find.byType(Scaffold)))!;
     expect(find.text('${l10n.athletesPresentCount} 0/3'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('athlete-division-row-div-d')));
+    await tester.tap(find.byKey(const ValueKey('athlete-division-div-d')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('athlete-team-row-p-ok')));
@@ -342,11 +349,56 @@ void main() {
     expect(find.text('${l10n.athletesPresentCount} 1/3'), findsOneWidget);
   });
 
+  testWidgets(
+    'TC-DIVSHARE-04: the host-chosen division is open and a chip tap is reported',
+    (tester) async {
+      final reported = <String>[];
+      await _pumpTab(
+        tester,
+        _ManagementRepository(),
+        selectedDivisionId: 'div-s',
+        onDivisionChanged: reported.add,
+      );
+
+      // Singles is open (no pairing boxes) although doubles comes first.
+      expect(
+        find.byKey(const ValueKey('athlete-division-body-div-s')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('athlete-division-body-div-d')),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('athletes-pairing')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('athlete-division-div-d')));
+      await tester.pumpAndSettle();
+
+      expect(reported, ['div-d']);
+    },
+  );
+
+  testWidgets(
+    'TC-DIVSHARE-08: a host-chosen division that no longer exists falls back to the first one',
+    (tester) async {
+      await _pumpTab(
+        tester,
+        _ManagementRepository(),
+        selectedDivisionId: 'div-deleted',
+      );
+
+      expect(
+        find.byKey(const ValueKey('athlete-division-body-div-d')),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('singles division has neither pairing nor auto-pair boxes', (
     tester,
   ) async {
     await _pumpTab(tester, _ManagementRepository());
-    await tester.tap(find.byKey(const ValueKey('athlete-division-row-div-s')));
+    await tester.tap(find.byKey(const ValueKey('athlete-division-div-s')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('athletes-auto-pair')), findsNothing);

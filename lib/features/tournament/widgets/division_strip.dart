@@ -82,9 +82,12 @@ class _DivisionStripState extends State<DivisionStrip> {
   void _scrollToSelected() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final target = _selectedKey.currentContext;
-      if (!mounted || target == null) return;
-      Scrollable.ensureVisible(
-        target,
+      final box = target?.findRenderObject();
+      if (!mounted || target == null || box == null) return;
+      // Only the strip's own scrollable: Scrollable.ensureVisible also scrolls
+      // ancestors (the hub's tab PageView) and would reveal the next tab.
+      Scrollable.of(target).position.ensureVisible(
+        box,
         alignment: 0.5,
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,

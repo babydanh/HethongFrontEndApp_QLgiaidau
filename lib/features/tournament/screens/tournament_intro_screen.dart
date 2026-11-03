@@ -24,6 +24,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart
 import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_accordion.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
@@ -768,7 +769,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         tournament.divisions.length > 1
             ? Column(
                 children: [
-                  _buildDivisionsSelectorList(tournament, colors),
+                  _buildResultsDivisionStrip(tournament),
                   Expanded(
                     child: ResultsTab(
                       key: ValueKey('results-$_selectedDivisionId'),
@@ -995,6 +996,33 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
         ],
         body: TabBarView(controller: controller, children: tabViews),
       ),
+    );
+  }
+
+  /// Results tab picker: the same [DivisionStrip] the management tabs use.
+  Widget _buildResultsDivisionStrip(Tournament tournament) {
+    return DivisionStrip(
+      keyPrefix: 'results-division',
+      items: [
+        for (final division in tournament.divisions)
+          DivisionStripItem(
+            id: division.id,
+            name: division.name,
+            count: division.participantCount,
+            capacity: (division.maxParticipants ?? 0) > 0
+                ? division.maxParticipants
+                : null,
+          ),
+      ],
+      selectedId: _selectedDivisionId,
+      onChanged: (id) {
+        if (id == null || id == _selectedDivisionId) return;
+        final division = tournament.divisions.firstWhere((d) => d.id == id);
+        setState(() {
+          _selectedDivisionId = division.id;
+          _selectedDivision = division.name;
+        });
+      },
     );
   }
 
