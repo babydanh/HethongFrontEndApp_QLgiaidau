@@ -18455,7 +18455,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupStage_modeStandings => 'Standings';
 
   @override
-  String get groupStage_modeRounds => 'By round';
+  String get groupStage_modeRounds => 'By leg';
 
   @override
   String get groupStage_stt => 'No.';
@@ -18465,16 +18465,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupStage_wl => 'W / L';
-
-  @override
-  String groupStage_round(int round) {
-    return 'Round $round';
-  }
-
-  @override
-  String groupStage_rest(String name) {
-    return 'Rest: $name';
-  }
 
   @override
   String get groupStage_statusDone => 'Finished';
@@ -18503,7 +18493,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String groupStage_sheetTitle(String group, int round) {
-    return '$group · Round $round';
+  String groupStage_sheetTitle(String group, int leg) {
+    return '$group · Leg $leg';
   }
 }

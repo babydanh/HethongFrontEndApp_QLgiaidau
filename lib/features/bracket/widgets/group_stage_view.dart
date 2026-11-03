@@ -240,10 +240,10 @@ class _GroupCard extends StatelessWidget {
               football: allMatches.any(isFootballMatch),
               advancingCount: advancingCount,
             ),
-            _Mode.rounds => _RoundsList(
+            _Mode.rounds => _LegMatchList(
               tournamentId: tournamentId,
               title: title,
-              standings: standings,
+              leg: currentLeg,
               matches: legMatches,
             ),
           },
@@ -521,7 +521,7 @@ class _MatrixTable extends StatelessWidget {
                 tournamentId: tournamentId,
                 title: l10n.groupStage_sheetTitle(
                   title,
-                  roundInLeg(cell.match, standings.length),
+                  legForMatch(cell.match, standings.length),
                 ),
               ),
         child: cell == null || cell.lines.isEmpty
@@ -731,66 +731,44 @@ class _StandingsTable extends StatelessWidget {
   }
 }
 
-class _RoundsList extends StatelessWidget {
-  const _RoundsList({
+/// Matches of the selected leg, in play order. The Web names group matches by
+/// leg only ("Bảng A • Lượt 1"); the internal round number is never shown.
+class _LegMatchList extends StatelessWidget {
+  const _LegMatchList({
     required this.tournamentId,
     required this.title,
-    required this.standings,
+    required this.leg,
     required this.matches,
   });
 
   final String tournamentId;
   final String title;
-  final List<Standing> standings;
+  final int leg;
   final List<MatchModel> matches;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final byRound = <int, List<MatchModel>>{};
-    for (final m in matches) {
-      byRound.putIfAbsent(roundInLeg(m, standings.length), () => []).add(m);
-    }
-    final rounds = byRound.keys.toList()..sort();
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final round in rounds) ...[
-            Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 6),
-              child: Text(
-                l10n.groupStage_round(round),
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                ),
+          for (final m in matches)
+            RoundMatchCard(
+              match: m,
+              onTap: () => showGroupMatchSheet(
+                context,
+                match: m,
+                tournamentId: tournamentId,
+                title: l10n.groupStage_sheetTitle(title, leg),
               ),
             ),
-            for (final m in byRound[round]!)
-              RoundMatchCard(
-                match: m,
-                onTap: () => showGroupMatchSheet(
-                  context,
-                  match: m,
-                  tournamentId: tournamentId,
-                  title: l10n.groupStage_sheetTitle(title, round),
-                ),
-              ),
-            if (restingTeam(standings, byRound[round]!) case final rest?)
-              _RestCard(team: rest),
-          ],
         ],
       ),
     );
   }
 }
 
-/// Match card of the by-round list; shared with the playoff view.
 class RoundMatchCard extends StatelessWidget {
   const RoundMatchCard({super.key, required this.match, required this.onTap});
 
@@ -886,33 +864,6 @@ class RoundMatchCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _RestCard extends StatelessWidget {
-  const _RestCard({required this.team});
-
-  final Standing team;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: Text(
-        l10n.groupStage_rest(
-          participantLabel(teamName: team.teamName, players: team.players),
-        ),
-        style: TextStyle(fontSize: 12, color: colors.textMuted),
       ),
     );
   }

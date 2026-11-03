@@ -33124,7 +33124,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupStage_modeRounds.
   ///
   /// In vi, this message translates to:
-  /// **'Theo vòng'**
+  /// **'Theo lượt'**
   String get groupStage_modeRounds;
 
   /// No description provided for @groupStage_stt.
@@ -33144,18 +33144,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'T / B'**
   String get groupStage_wl;
-
-  /// No description provided for @groupStage_round.
-  ///
-  /// In vi, this message translates to:
-  /// **'Vòng {round}'**
-  String groupStage_round(int round);
-
-  /// No description provided for @groupStage_rest.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nghỉ: {name}'**
-  String groupStage_rest(String name);
 
   /// No description provided for @groupStage_statusDone.
   ///
@@ -33208,8 +33196,8 @@ abstract class AppLocalizations {
   /// No description provided for @groupStage_sheetTitle.
   ///
   /// In vi, this message translates to:
-  /// **'{group} · Vòng {round}'**
-  String groupStage_sheetTitle(String group, int round);
+  /// **'{group} · Lượt {leg}'**
+  String groupStage_sheetTitle(String group, int leg);
 }
 
 class _AppLocalizationsDelegate

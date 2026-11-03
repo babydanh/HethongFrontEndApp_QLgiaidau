@@ -18384,7 +18384,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupStage_modeStandings => 'Bảng xếp hạng';
 
   @override
-  String get groupStage_modeRounds => 'Theo vòng';
+  String get groupStage_modeRounds => 'Theo lượt';
 
   @override
   String get groupStage_stt => 'STT';
@@ -18394,16 +18394,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupStage_wl => 'T / B';
-
-  @override
-  String groupStage_round(int round) {
-    return 'Vòng $round';
-  }
-
-  @override
-  String groupStage_rest(String name) {
-    return 'Nghỉ: $name';
-  }
 
   @override
   String get groupStage_statusDone => 'Đã xong';
@@ -18432,7 +18422,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String groupStage_sheetTitle(String group, int round) {
-    return '$group · Vòng $round';
+  String groupStage_sheetTitle(String group, int leg) {
+    return '$group · Lượt $leg';
   }
 }

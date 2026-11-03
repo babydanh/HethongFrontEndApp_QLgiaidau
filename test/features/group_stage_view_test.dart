@@ -127,34 +127,38 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('TC-GSV-11 tapping a played cell opens the sheet with full names',
-      (tester) async {
-    await _pump(tester, [_match(id: 'm1', winnerId: 't1')]);
+  testWidgets(
+    'TC-GSV-11 tapping a played cell opens the sheet with full names',
+    (tester) async {
+      await _pump(tester, [_match(id: 'm1', winnerId: 't1')]);
 
-    await tester.tap(find.text('11-8'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('11-8'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Bảng A · Vòng 1'), findsOneWidget);
-    expect(find.text(_an), findsOneWidget);
-    expect(find.text(_dung), findsOneWidget);
-    expect(find.text('THẮNG'), findsOneWidget);
-    expect(find.text('THUA'), findsOneWidget);
-    expect(find.text('Xem trận'), findsOneWidget);
-    expect(find.text('Đã xong'), findsOneWidget);
-  });
+      expect(find.text('Bảng A · Lượt 1'), findsOneWidget);
+      expect(find.text(_an), findsOneWidget);
+      expect(find.text(_dung), findsOneWidget);
+      expect(find.text('THẮNG'), findsOneWidget);
+      expect(find.text('THUA'), findsOneWidget);
+      expect(find.text('Xem trận'), findsOneWidget);
+      expect(find.text('Đã xong'), findsOneWidget);
+    },
+  );
 
-  testWidgets('TC-GSV-12 unplayed cell shows a dash and still opens the sheet',
-      (tester) async {
-    await _pump(tester, [_match(id: 'm1', done: false)]);
+  testWidgets(
+    'TC-GSV-12 unplayed cell shows a dash and still opens the sheet',
+    (tester) async {
+      await _pump(tester, [_match(id: 'm1', done: false)]);
 
-    expect(find.text('-'), findsNWidgets(2));
-    await tester.tap(find.text('-').first);
-    await tester.pumpAndSettle();
+      expect(find.text('-'), findsNWidgets(2));
+      await tester.tap(find.text('-').first);
+      await tester.pumpAndSettle();
 
-    expect(find.text('Sắp diễn ra'), findsOneWidget);
-    expect(find.text('Chưa xếp sân'), findsOneWidget);
-    expect(find.text('THẮNG'), findsNothing);
-  });
+      expect(find.text('Sắp diễn ra'), findsOneWidget);
+      expect(find.text('Chưa xếp sân'), findsOneWidget);
+      expect(find.text('THẮNG'), findsNothing);
+    },
+  );
 
   testWidgets('TC-GSV-13 modes: standings columns and by-round list', (
     tester,
@@ -166,9 +170,9 @@ void main() {
     expect(find.text('Điểm'), findsOneWidget);
     expect(find.text('Hiệu số'), findsOneWidget);
 
-    await tester.tap(find.text('Theo vòng'));
+    await tester.tap(find.text('Theo lượt'));
     await tester.pumpAndSettle();
-    expect(find.text('Vòng 1'), findsOneWidget);
+    expect(find.textContaining('Vòng'), findsNothing);
     expect(find.text('Đã xong'), findsOneWidget);
 
     await tester.tap(find.text('Bảng chéo'));

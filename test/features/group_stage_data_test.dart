@@ -1,5 +1,4 @@
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -54,30 +53,24 @@ void main() {
     });
   });
 
-  group('TC-GSV-02 legs and rounds', () {
-    test('round restarts inside each leg (4 teams → 3 rounds per leg)', () {
-      expect(legForMatch(_m('a', 't1', 't2', round: 3), 4), 1);
-      expect(legForMatch(_m('b', 't1', 't2', round: 4), 4), 2);
-      expect(roundInLeg(_m('b', 't1', 't2', round: 5), 4), 2);
-    });
+  group('TC-GSV-02 legs', () {
+    test(
+      'leg from the round when the API sends no leg (4 teams → 3 per leg)',
+      () {
+        expect(legForMatch(_m('a', 't1', 't2', round: 3), 4), 1);
+        expect(legForMatch(_m('b', 't1', 't2', round: 4), 4), 2);
+      },
+    );
 
     test('persisted leg wins over the round calculation', () {
       expect(legForMatch(_m('a', 't1', 't2', round: 1, leg: 2), 4), 2);
     });
   });
 
-  group('TC-GSV-03 names and rest team', () {
+  group('TC-GSV-03 group names', () {
     test('bare group code gets the Bảng prefix once', () {
       expect(groupDisplayName('A', 'Bảng'), 'Bảng A');
       expect(groupDisplayName('Bảng B', 'Bảng'), 'Bảng B');
-    });
-
-    test('odd group: the team missing from the round rests', () {
-      final standings = [
-        for (final id in ['t1', 't2', 't3']) Standing(id: id, teamName: id),
-      ];
-      expect(restingTeam(standings, [_m('a', 't1', 't2')])!.id, 't3');
-      expect(restingTeam(standings.take(2).toList(), []), isNull);
     });
   });
 }

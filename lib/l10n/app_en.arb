@@ -7316,14 +7316,10 @@
   "groupStage_groupPrefix": "Group",
   "groupStage_modeMatrix": "Cross table",
   "groupStage_modeStandings": "Standings",
-  "groupStage_modeRounds": "By round",
+  "groupStage_modeRounds": "By leg",
   "groupStage_stt": "No.",
   "groupStage_participantHeader": "Player / Team",
   "groupStage_wl": "W / L",
-  "groupStage_round": "Round {round}",
-  "@groupStage_round": {"placeholders": {"round": {"type": "int"}}},
-  "groupStage_rest": "Rest: {name}",
-  "@groupStage_rest": {"placeholders": {"name": {"type": "String"}}},
   "groupStage_statusDone": "Finished",
   "groupStage_statusLive": "Live",
   "groupStage_statusUpcoming": "Upcoming",
@@ -7333,6 +7329,6 @@
   "groupStage_lost": "LOST",
   "groupStage_setLabel": "Set {n}",
   "@groupStage_setLabel": {"placeholders": {"n": {"type": "int"}}},
-  "groupStage_sheetTitle": "{group} · Round {round}",
-  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "round": {"type": "int"}}}
+  "groupStage_sheetTitle": "{group} · Leg {leg}",
+  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "leg": {"type": "int"}}}
 }

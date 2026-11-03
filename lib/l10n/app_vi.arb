@@ -7344,14 +7344,10 @@
   "groupStage_groupPrefix": "Bảng",
   "groupStage_modeMatrix": "Bảng chéo",
   "groupStage_modeStandings": "Bảng xếp hạng",
-  "groupStage_modeRounds": "Theo vòng",
+  "groupStage_modeRounds": "Theo lượt",
   "groupStage_stt": "STT",
   "groupStage_participantHeader": "VĐV / Đội",
   "groupStage_wl": "T / B",
-  "groupStage_round": "Vòng {round}",
-  "@groupStage_round": {"placeholders": {"round": {"type": "int"}}},
-  "groupStage_rest": "Nghỉ: {name}",
-  "@groupStage_rest": {"placeholders": {"name": {"type": "String"}}},
   "groupStage_statusDone": "Đã xong",
   "groupStage_statusLive": "Đang đấu",
   "groupStage_statusUpcoming": "Sắp diễn ra",
@@ -7361,6 +7357,6 @@
   "groupStage_lost": "THUA",
   "groupStage_setLabel": "Set {n}",
   "@groupStage_setLabel": {"placeholders": {"n": {"type": "int"}}},
-  "groupStage_sheetTitle": "{group} · Vòng {round}",
-  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "round": {"type": "int"}}}
+  "groupStage_sheetTitle": "{group} · Lượt {leg}",
+  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "leg": {"type": "int"}}}
 }

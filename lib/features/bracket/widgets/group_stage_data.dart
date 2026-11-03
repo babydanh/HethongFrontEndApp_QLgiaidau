@@ -115,12 +115,6 @@ int legForMatch(MatchModel match, int participantCount) {
   return ((round - 1) ~/ _roundsPerLeg(participantCount)) + 1;
 }
 
-/// Round number restarting at 1 inside each leg ("Vòng 2" of leg 2).
-int roundInLeg(MatchModel match, int participantCount) {
-  final round = match.round < 1 ? 1 : match.round;
-  return ((round - 1) % _roundsPerLeg(participantCount)) + 1;
-}
-
 /// "Bảng A" for a bare group code ("A"); names that already say it stay as is.
 String groupDisplayName(String name, String prefix) {
   final trimmed = name.trim();
@@ -189,14 +183,4 @@ Map<String, GroupMatrixCell> buildMatrixCells(List<MatchModel> matches) {
     );
   }
   return cells;
-}
-
-/// The team that sits out a round in an odd-sized group, else null.
-Standing? restingTeam(List<Standing> standings, List<MatchModel> roundMatches) {
-  if (standings.length.isEven) return null;
-  final playing = {
-    for (final m in roundMatches) ...[m.team1Id, m.team2Id],
-  };
-  final resting = standings.where((s) => !playing.contains(s.id)).toList();
-  return resting.length == 1 ? resting.first : null;
 }
