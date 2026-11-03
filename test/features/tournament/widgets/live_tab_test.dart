@@ -49,6 +49,10 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         matchesProvider(_tid).overrideWith((ref) => Stream.value(matches)),
+        managedMatchesWithDivisionProvider((
+          tournamentId: _tid,
+          divisionId: null,
+        )).overrideWith((ref) => Stream.value(matches)),
         tournamentManagementRepositoryProvider.overrideWithValue(_NoVenues()),
       ],
       child: MaterialApp(

@@ -1204,9 +1204,13 @@ class TournamentLifecycleCard extends ConsumerStatefulWidget {
     this.showLifecycle = true,
     this.onShare,
     this.onDelete,
+    this.onStepTap,
   });
 
   final Tournament tournament;
+
+  /// Tapped step of the progress bar (index 0..3); null keeps the bar read-only.
+  final ValueChanged<int>? onStepTap;
 
   /// False renders only the "Khác" group (the step bar and the next-step
   /// button then live in the page header instead).
@@ -1310,7 +1314,7 @@ class _TournamentLifecycleCardState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LifecycleStepBar(status: status),
+        LifecycleStepBar(status: status, onStepTap: widget.onStepTap),
         if (fullCapacity != null)
           LifecycleCapacityBanner(
             occupied: fullCapacity.occupied,

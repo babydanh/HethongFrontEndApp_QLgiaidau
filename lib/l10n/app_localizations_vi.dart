@@ -18150,4 +18150,160 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get contactFormEmptyHint => 'Chưa có thông tin liên hệ. Bấm để thêm.';
+
+  @override
+  String get tournamentManagementTabResults => 'Kết quả';
+
+  @override
+  String get resultsBoard_unfinished => 'Chưa xong';
+
+  @override
+  String get resultsBoard_late => 'Trễ giờ';
+
+  @override
+  String get resultsBoard_disputed => 'Tranh chấp';
+
+  @override
+  String get stepPopup_goTo => 'Đi tới';
+
+  @override
+  String get stepPopup_loadingReason => 'Đang tải số liệu';
+
+  @override
+  String get stepPopup_todoDone => 'Đã đủ, không còn việc cần làm';
+
+  @override
+  String get stepPopup_todoNotYet => 'Chưa tới bước này, chưa có việc cần làm';
+
+  @override
+  String get stepPopup_divisionsTitle => 'Theo từng nội dung';
+
+  @override
+  String get stepPopup_searchPlaceholder => 'Tìm nội dung...';
+
+  @override
+  String get stepPopup_onlyMissing => 'Chỉ hiện thiếu';
+
+  @override
+  String stepPopup_all(int count) {
+    return 'Tất cả ($count)';
+  }
+
+  @override
+  String get stepPopup_emptyFiltered => 'Không có nội dung nào khớp';
+
+  @override
+  String get stepPopup_noDivisions => 'Chưa có nội dung nào';
+
+  @override
+  String stepPopup_percentSr(int percent) {
+    return 'Hoàn thành $percent%';
+  }
+
+  @override
+  String stepPopup_subtitleTodos(String state, int count) {
+    return '$state · $count việc cần làm';
+  }
+
+  @override
+  String get stepPopup_statusDone => 'Đủ';
+
+  @override
+  String get stepPopup_statusAttention => 'Cần chú ý';
+
+  @override
+  String get stepPopup_statusMissing => 'Thiếu';
+
+  @override
+  String get stepPopup_statusCurrent => 'Đang chạy';
+
+  @override
+  String get stepPopup_statusUpcoming => 'Chưa tới';
+
+  @override
+  String get stepPopup_statusLoading => 'Đang tải';
+
+  @override
+  String get stepPopup_statusDisabled => 'Chưa mở';
+
+  @override
+  String get stepPopup_retry => 'Tải lại';
+
+  @override
+  String get stepPopup_open => 'Mở';
+
+  @override
+  String stepPopup_openLabel(String name) {
+    return 'Mở $name';
+  }
+
+  @override
+  String get stepTodo_venue => 'Chọn địa điểm';
+
+  @override
+  String get stepTodo_dates => 'Sửa ngày giải';
+
+  @override
+  String get stepTodo_deadline => 'Đặt hạn đăng ký';
+
+  @override
+  String stepTodo_emptyDivisions(int count) {
+    return '$count nội dung chưa có VĐV';
+  }
+
+  @override
+  String stepTodo_unpaid(int count) {
+    return '$count VĐV chưa thanh toán';
+  }
+
+  @override
+  String stepTodo_teamsWaiting(int count) {
+    return '$count đội chờ duyệt';
+  }
+
+  @override
+  String stepTodo_openDuringPlay(int count) {
+    return '$count nội dung còn mở đăng ký';
+  }
+
+  @override
+  String stepTodo_noBracket(String name) {
+    return 'Tạo sơ đồ: $name';
+  }
+
+  @override
+  String stepTodo_noCourt(int count) {
+    return '$count trận chưa có sân';
+  }
+
+  @override
+  String stepTodo_noTime(int count) {
+    return '$count trận chưa có giờ';
+  }
+
+  @override
+  String stepTodo_disputed(int count) {
+    return '$count trận tranh chấp';
+  }
+
+  @override
+  String stepTodo_late(int count) {
+    return '$count trận trễ giờ';
+  }
+
+  @override
+  String stepTodo_swissNextRound(String name) {
+    return 'Tạo vòng tiếp theo: $name';
+  }
+
+  @override
+  String stepTodo_unfinishedMatches(int count) {
+    return '$count trận chưa xong';
+  }
+
+  @override
+  String get stepTodo_endDateExpected => 'Nhập ngày kết thúc dự kiến';
+
+  @override
+  String get stepTodo_loadFailed => 'Tải lại dữ liệu';
 }

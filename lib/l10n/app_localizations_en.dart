@@ -18220,4 +18220,161 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactFormEmptyHint => 'No contact details yet. Tap to add.';
+
+  @override
+  String get tournamentManagementTabResults => 'Results';
+
+  @override
+  String get resultsBoard_unfinished => 'Unfinished';
+
+  @override
+  String get resultsBoard_late => 'Running late';
+
+  @override
+  String get resultsBoard_disputed => 'Disputed';
+
+  @override
+  String get stepPopup_goTo => 'Go to';
+
+  @override
+  String get stepPopup_loadingReason => 'Loading numbers';
+
+  @override
+  String get stepPopup_todoDone => 'All set, nothing left to do';
+
+  @override
+  String get stepPopup_todoNotYet =>
+      'This step has not started, nothing to do yet';
+
+  @override
+  String get stepPopup_divisionsTitle => 'By division';
+
+  @override
+  String get stepPopup_searchPlaceholder => 'Search divisions...';
+
+  @override
+  String get stepPopup_onlyMissing => 'Only show missing';
+
+  @override
+  String stepPopup_all(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String get stepPopup_emptyFiltered => 'No division matches';
+
+  @override
+  String get stepPopup_noDivisions => 'No divisions yet';
+
+  @override
+  String stepPopup_percentSr(int percent) {
+    return '$percent% complete';
+  }
+
+  @override
+  String stepPopup_subtitleTodos(String state, int count) {
+    return '$state · $count to do';
+  }
+
+  @override
+  String get stepPopup_statusDone => 'Complete';
+
+  @override
+  String get stepPopup_statusAttention => 'Needs attention';
+
+  @override
+  String get stepPopup_statusMissing => 'Missing';
+
+  @override
+  String get stepPopup_statusCurrent => 'Running';
+
+  @override
+  String get stepPopup_statusUpcoming => 'Not yet';
+
+  @override
+  String get stepPopup_statusLoading => 'Loading';
+
+  @override
+  String get stepPopup_statusDisabled => 'Not open';
+
+  @override
+  String get stepPopup_retry => 'Reload';
+
+  @override
+  String get stepPopup_open => 'Open';
+
+  @override
+  String stepPopup_openLabel(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String get stepTodo_venue => 'Choose a venue';
+
+  @override
+  String get stepTodo_dates => 'Fix the dates';
+
+  @override
+  String get stepTodo_deadline => 'Set a registration deadline';
+
+  @override
+  String stepTodo_emptyDivisions(int count) {
+    return '$count divisions have no players';
+  }
+
+  @override
+  String stepTodo_unpaid(int count) {
+    return '$count players not paid';
+  }
+
+  @override
+  String stepTodo_teamsWaiting(int count) {
+    return '$count teams waiting for approval';
+  }
+
+  @override
+  String stepTodo_openDuringPlay(int count) {
+    return '$count divisions still open for registration';
+  }
+
+  @override
+  String stepTodo_noBracket(String name) {
+    return 'Create the bracket: $name';
+  }
+
+  @override
+  String stepTodo_noCourt(int count) {
+    return '$count matches without a court';
+  }
+
+  @override
+  String stepTodo_noTime(int count) {
+    return '$count matches without a time';
+  }
+
+  @override
+  String stepTodo_disputed(int count) {
+    return '$count disputed matches';
+  }
+
+  @override
+  String stepTodo_late(int count) {
+    return '$count matches running late';
+  }
+
+  @override
+  String stepTodo_swissNextRound(String name) {
+    return 'Create the next round: $name';
+  }
+
+  @override
+  String stepTodo_unfinishedMatches(int count) {
+    return '$count unfinished matches';
+  }
+
+  @override
+  String get stepTodo_endDateExpected => 'Enter the expected end date';
+
+  @override
+  String get stepTodo_loadFailed => 'Reload the data';
 }

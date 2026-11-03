@@ -13,11 +13,15 @@ import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart'
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/tournament_step_summary.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_reconfirm_card.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/step_detail_popup.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_edit_popup.dart';
@@ -25,6 +29,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_report
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/step_summary_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -85,6 +90,16 @@ class _TournamentManagementHubScreenState
   /// all show it. Null until someone picks one (each tab then defaults itself).
   String? _divisionId;
 
+  /// Chip the "Kết quả" board opens on, and a counter that rebuilds the board
+  /// each time something asks for it (so the chip also applies when the tab is
+  /// already open).
+  ResultsBoardFilter _resultsFilter = ResultsBoardFilter.all;
+  int _resultsRequest = 0;
+
+  /// True from the tap on a progress step until its popup is closed, so a
+  /// double tap opens one popup only.
+  bool _stepPopupBusy = false;
+
   /// True while the open section page holds edits that are not saved yet.
   final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
@@ -122,6 +137,59 @@ class _TournamentManagementHubScreenState
   void _selectDivision(String id) {
     if (id == _divisionId) return;
     setState(() => _divisionId = id);
+  }
+
+  /// Opens the "Kết quả" tab, optionally on one chip and one division.
+  void _goToResults({ResultsBoardFilter? filter, String? divisionId}) {
+    setState(() {
+      if (divisionId != null) _divisionId = divisionId;
+      _resultsFilter = filter ?? ResultsBoardFilter.all;
+      _resultsRequest++;
+    });
+    _tabController.animateTo(_HubTab.results.index);
+  }
+
+  /// Opens the popup of the tapped progress step (0..3) with fresh numbers.
+  Future<void> _openStep(int index) async {
+    if (_stepPopupBusy || index < 0 || index >= StepKey.values.length) return;
+    _stepPopupBusy = true;
+    var reload = false;
+    try {
+      final summary = await loadStepSummary(ref, widget.tournament);
+      if (!mounted) return;
+      await showStepDetailPopup(
+        context,
+        step: StepKey.values[index],
+        summary: summary,
+        onGo: _goToStepTarget,
+        onRetry: () => reload = true,
+      );
+    } finally {
+      _stepPopupBusy = false;
+    }
+    // "Tải lại": the popup is closed now, so read the numbers again and reopen.
+    if (reload && mounted) {
+      ref.invalidate(organizerParticipantsProvider(widget.tournament.id));
+      ref.invalidate(
+        managedMatchesWithDivisionProvider((
+          tournamentId: widget.tournament.id,
+          divisionId: null,
+        )),
+      );
+      await _openStep(index);
+    }
+  }
+
+  /// Handles "Đi tới" / "Mở" from a step popup: same tab names in both enums.
+  void _goToStepTarget(StepTarget target) {
+    if (!mounted) return;
+    if (target.tab == StepHubTab.results) {
+      _goToResults(filter: target.resultsFilter, divisionId: target.divisionId);
+      return;
+    }
+    final divisionId = target.divisionId;
+    if (divisionId != null) _selectDivision(divisionId);
+    _tabController.animateTo(_HubTab.values.byName(target.tab.name).index);
   }
 
   void _openSection(TournamentManagementSection section) {
@@ -380,7 +448,10 @@ class _TournamentManagementHubScreenState
         ),
         // Step bar + the one next-step button, as at the top of the Web page.
         SliverToBoxAdapter(
-          child: TournamentLifecycleCard(tournament: tournament),
+          child: TournamentLifecycleCard(
+            tournament: tournament,
+            onStepTap: _openStep,
+          ),
         ),
         SliverToBoxAdapter(
           child: ResultsReconfirmCard(
@@ -402,6 +473,7 @@ class _TournamentManagementHubScreenState
                 Tab(text: l10n.tournamentManagementTabBracket),
                 Tab(text: l10n.tournamentManagementSchedule),
                 Tab(text: l10n.tournamentManagementTabSettings),
+                Tab(text: l10n.tournamentManagementTabResults),
               ],
             ),
           ),
@@ -497,10 +569,63 @@ class _TournamentManagementHubScreenState
                 overlapHandles: overlapHandles,
               ),
               _buildSettingsTab(context, overlapHandles),
+              _buildResultsTab(tournament, overlapHandles),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildResultsTab(
+    Tournament tournament,
+    List<SliverOverlapAbsorberHandle> overlapHandles,
+  ) {
+    final divisions = tournament.divisions;
+    final hosted = _divisionId;
+    final activeId = divisions.any((d) => d.id == hosted)
+        ? hosted
+        : (divisions.isEmpty ? null : divisions.first.id);
+    return CustomScrollView(
+      slivers: [
+        ...overlapHandles.map(
+          (handle) => SliverOverlapInjector(handle: handle),
+        ),
+        if (divisions.length > 1)
+          SliverToBoxAdapter(
+            child: DivisionStrip(
+              keyPrefix: 'results-division',
+              items: [
+                for (final d in divisions)
+                  DivisionStripItem(
+                    id: d.id,
+                    name: d.name,
+                    count: d.participantCount,
+                    capacity: (d.maxParticipants ?? 0) > 0
+                        ? d.maxParticipants
+                        : null,
+                  ),
+              ],
+              selectedId: activeId,
+              onChanged: (id) {
+                if (id != null) _selectDivision(id);
+              },
+            ),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 140),
+          sliver: SliverToBoxAdapter(
+            child: ResultsMatchBoard(
+              key: ValueKey('results-board-$activeId-$_resultsRequest'),
+              tournamentId: tournament.id,
+              isLite: false,
+              canManage: true,
+              divisionId: activeId,
+              initialFilter: _resultsFilter,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1067,7 +1192,15 @@ class _TournamentManagementHubScreenState
   }
 }
 
-enum _HubTab { overview, divisions, athletes, bracket, schedule, settings }
+enum _HubTab {
+  overview,
+  divisions,
+  athletes,
+  bracket,
+  schedule,
+  settings,
+  results,
+}
 
 class _SectionDetails {
   const _SectionDetails(this.icon, this.title, this.subtitle, this.color);
