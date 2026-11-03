@@ -20082,6 +20082,36 @@ abstract class AppLocalizations {
   /// **'Sơ đồ thi đấu'**
   String get bracketDiagramDefaultTitle;
 
+  /// No description provided for @playoff_tabWinners.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhánh thắng'**
+  String get playoff_tabWinners;
+
+  /// No description provided for @playoff_tabLosers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhánh thua'**
+  String get playoff_tabLosers;
+
+  /// No description provided for @playoff_pageIndicator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang {current} / {total}'**
+  String playoff_pageIndicator(int current, int total);
+
+  /// No description provided for @playoff_prevPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang trước'**
+  String get playoff_prevPage;
+
+  /// No description provided for @playoff_nextPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang sau'**
+  String get playoff_nextPage;
+
   /// No description provided for @crossTableEmpty.
   ///
   /// In vi, this message translates to:

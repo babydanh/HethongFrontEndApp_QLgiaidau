@@ -4388,6 +4388,12 @@
   "bracketDiagramDoubleEliminationTitle": "Sơ đồ nhánh thắng / thua",
   "bracketDiagramGroupKnockoutTitle": "Sơ đồ vòng loại",
   "bracketDiagramDefaultTitle": "Sơ đồ thi đấu",
+  "playoff_tabWinners": "Nhánh thắng",
+  "playoff_tabLosers": "Nhánh thua",
+  "playoff_pageIndicator": "Trang {current} / {total}",
+  "@playoff_pageIndicator": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "playoff_prevPage": "Trang trước",
+  "playoff_nextPage": "Trang sau",
   "crossTableEmpty": "Chưa có dữ liệu đội thi đấu",
   "crossTableError": "Lỗi: {error}",
   "@crossTableError": {

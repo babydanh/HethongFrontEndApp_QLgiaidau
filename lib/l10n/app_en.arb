@@ -4359,6 +4359,12 @@
   "bracketDiagramDoubleEliminationTitle": "Winners / losers bracket",
   "bracketDiagramGroupKnockoutTitle": "Qualification bracket",
   "bracketDiagramDefaultTitle": "Competition bracket",
+  "playoff_tabWinners": "Winners bracket",
+  "playoff_tabLosers": "Losers bracket",
+  "playoff_pageIndicator": "Page {current} / {total}",
+  "@playoff_pageIndicator": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "playoff_prevPage": "Previous page",
+  "playoff_nextPage": "Next page",
   "crossTableEmpty": "No team data yet",
   "crossTableError": "Error: {error}",
   "@crossTableError": {

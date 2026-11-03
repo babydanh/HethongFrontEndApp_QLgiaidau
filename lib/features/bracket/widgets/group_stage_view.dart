@@ -208,17 +208,17 @@ class _GroupCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _ModeChip(
+                ModeChip(
                   label: l10n.groupStage_modeMatrix,
                   selected: mode == _Mode.matrix,
                   onTap: () => onMode(_Mode.matrix),
                 ),
-                _ModeChip(
+                ModeChip(
                   label: l10n.groupStage_modeStandings,
                   selected: mode == _Mode.standings,
                   onTap: () => onMode(_Mode.standings),
                 ),
-                _ModeChip(
+                ModeChip(
                   label: l10n.groupStage_modeRounds,
                   selected: mode == _Mode.rounds,
                   onTap: () => onMode(_Mode.rounds),
@@ -253,8 +253,10 @@ class _GroupCard extends StatelessWidget {
   }
 }
 
-class _ModeChip extends StatelessWidget {
-  const _ModeChip({
+/// Pill used to switch views; shared with the playoff view.
+class ModeChip extends StatelessWidget {
+  const ModeChip({
+    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
@@ -770,7 +772,7 @@ class _RoundsList extends StatelessWidget {
               ),
             ),
             for (final m in byRound[round]!)
-              _RoundMatchCard(
+              RoundMatchCard(
                 match: m,
                 onTap: () => showGroupMatchSheet(
                   context,
@@ -788,8 +790,9 @@ class _RoundsList extends StatelessWidget {
   }
 }
 
-class _RoundMatchCard extends StatelessWidget {
-  const _RoundMatchCard({required this.match, required this.onTap});
+/// Match card of the by-round list; shared with the playoff view.
+class RoundMatchCard extends StatelessWidget {
+  const RoundMatchCard({super.key, required this.match, required this.onTap});
 
   final MatchModel match;
   final VoidCallback onTap;

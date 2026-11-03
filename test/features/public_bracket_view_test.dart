@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -308,6 +309,55 @@ void main() {
     },
   );
 
+  testWidgets(
+    'TC-PLF-05 group stage + double-elim playoff uses the paged view',
+    (tester) async {
+      final matches = [
+        _match('g1', groupName: 'A', stageType: 'GROUP'),
+        _match(
+          'w1',
+          round: 1,
+          position: 0,
+          bracket: 'winners',
+          stageType: 'DOUBLE_ELIMINATION',
+        ),
+        _match(
+          'l1',
+          round: 1,
+          position: 0,
+          bracket: 'losers',
+          stageType: 'DOUBLE_ELIMINATION',
+        ),
+      ];
+      await tester.pumpWidget(
+        _host(
+          PublicBracketView(
+            tournamentId: 't-1',
+            divisionId: 'division-1',
+            matches: matches,
+            bracketType: 'group_stage_knockout',
+          ),
+          overrides: [
+            standingsWithDivisionProvider((
+              tournamentId: 't-1',
+              divisionId: 'division-1',
+            )).overrideWith((ref) => Stream.value(const <Standing>[])),
+            tournamentProvider('t-1').overrideWith((ref) => Stream.value(null)),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Playoff'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
+      expect(find.byType(SingleElimDiagram), findsNothing);
+      expect(find.text('Nhánh thắng'), findsOneWidget);
+      expect(find.text('Nhánh thua'), findsOneWidget);
+    },
+  );
+
   testWidgets('TC-FEAT-02 group stage + knockout with no matches keeps tabs', (
     tester,
   ) async {
@@ -324,9 +374,7 @@ void main() {
             tournamentId: 't-1',
             divisionId: 'division-1',
           )).overrideWith((ref) => Stream.value(const <Standing>[])),
-          tournamentProvider(
-            't-1',
-          ).overrideWith((ref) => Stream.value(null)),
+          tournamentProvider('t-1').overrideWith((ref) => Stream.value(null)),
         ],
       ),
     );
@@ -346,7 +394,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('no matches yet shows an empty state, no diagram', (tester) async {
+  testWidgets('no matches yet shows an empty state, no diagram', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         const PublicBracketView(

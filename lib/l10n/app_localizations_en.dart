@@ -10986,6 +10986,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketDiagramDefaultTitle => 'Competition bracket';
 
   @override
+  String get playoff_tabWinners => 'Winners bracket';
+
+  @override
+  String get playoff_tabLosers => 'Losers bracket';
+
+  @override
+  String playoff_pageIndicator(int current, int total) {
+    return 'Page $current / $total';
+  }
+
+  @override
+  String get playoff_prevPage => 'Previous page';
+
+  @override
+  String get playoff_nextPage => 'Next page';
+
+  @override
   String get crossTableEmpty => 'No team data yet';
 
   @override

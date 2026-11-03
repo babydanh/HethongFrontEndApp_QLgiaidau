@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
@@ -294,6 +295,11 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
                 style: TextStyle(color: colors.textSecondary),
               ),
             ),
+          )
+        else if (widget.knockoutMatches.any(isDoubleEliminationMatch))
+          PlayoffDoubleElimView(
+            matches: widget.knockoutMatches,
+            tournamentId: widget.tournamentId,
           )
         else
           SingleElimDiagram(

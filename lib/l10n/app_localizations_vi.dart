@@ -10957,6 +10957,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bracketDiagramDefaultTitle => 'Sơ đồ thi đấu';
 
   @override
+  String get playoff_tabWinners => 'Nhánh thắng';
+
+  @override
+  String get playoff_tabLosers => 'Nhánh thua';
+
+  @override
+  String playoff_pageIndicator(int current, int total) {
+    return 'Trang $current / $total';
+  }
+
+  @override
+  String get playoff_prevPage => 'Trang trước';
+
+  @override
+  String get playoff_nextPage => 'Trang sau';
+
+  @override
   String get crossTableEmpty => 'Chưa có dữ liệu đội thi đấu';
 
   @override
