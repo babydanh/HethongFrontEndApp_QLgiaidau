@@ -55,9 +55,6 @@ import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_match_side
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_new_messages_pill.dart';
 import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 
-/// Height of the viewer top bar drawn over the video (48 button + 2·2 padding)
-/// plus a small gap, so the scoreboard starts right below it.
-const double _viewerTopBarInset = 56;
 
 class _HeartModel {
   final double startX;
@@ -2277,17 +2274,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         viewerLayout &&
         MediaQuery.of(context).orientation == Orientation.landscape;
 
-    // Portrait viewer: the header sits ABOVE the picture, so nothing hides the
-    // top of the video and the scoreboard can hug the picture's top-left.
-    // Fullscreen landscape has no room above, so the header floats over it.
-    final topBarOverVideo = viewerLayout && landscape;
-    Widget withHeaderAbove(Widget video) => viewerLayout && !landscape
-        ? Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [_buildViewerTopBar(match), video],
-          )
-        : video;
-
     // ─── Live Video Stream Player Box (Mockup) ───
     final videoBox = Container(
           width: double.infinity,
@@ -2309,7 +2295,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
             ],
           ),
-          child: withHeaderAbove(Stack(
+          child: Stack(
             children: [
               // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
               // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
@@ -2321,13 +2307,25 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
               ),
 
+              // Thanh nút người xem nổi trên đầu video; bảng điểm vẽ SAU nó
+              // nên nằm trong video và đè lên nút quay lại.
+              if (viewerLayout)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildViewerTopBar(match),
+                ),
+
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
-              // hình video, tạm ẩn khi overlay H2H / Sơ đồ đang hiện. Chỉ khi
-              // thanh nút đè lên video (toàn màn hình ngang) mới hạ xuống dưới nó.
+              // hình video, tạm ẩn khi overlay H2H / Sơ đồ đang hiện. Người
+              // xem chỉ nhìn, nên chạm xuyên qua để nút quay lại bên dưới vẫn bấm được.
               Positioned(
-                top: topBarOverVideo ? _viewerTopBarInset : 8,
+                top: 8,
                 left: 8,
-                child: AnimatedSwitcher(
+                child: IgnorePointer(
+                  ignoring: viewerLayout,
+                  child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
                   reverseDuration: liveOverlayReverseDuration(context),
                   switchInCurve: liveOverlayMotionCurve,
@@ -2348,15 +2346,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       : const SizedBox.shrink(
                           key: ValueKey('live-scoreboard-off'),
                         ),
+                  ),
                 ),
               ),
-              if (topBarOverVideo)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _buildViewerTopBar(match),
-                ),
               // TV Broadcast overlay for Camera source
               if (!viewerLayout) Positioned(
                 top: 10,
@@ -2510,7 +2502,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
             ],
-          )),
+          ),
         );
 
     if (landscape) return _buildViewerLandscape(match, videoBox);

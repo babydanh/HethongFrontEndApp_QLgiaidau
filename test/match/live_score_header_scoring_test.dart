@@ -218,7 +218,7 @@ void main() {
     },
   );
   testWidgets(
-    'TC-LIVEVIEW-11 viewer scoreboard sits top-left inside the video, below the header',
+    'TC-LIVEVIEW-11 viewer scoreboard sits top-left inside the video, over the back button',
     (tester) async {
       await _pumpLiveScreen(
         tester,
@@ -228,21 +228,20 @@ void main() {
       );
 
       final board = find.byType(LiveScoreboardOverlay);
-      final headerBottom = tester
-          .getBottomLeft(
-            find.ancestor(
-              of: find.byIcon(Icons.arrow_back_ios_new_rounded),
-              matching: find.byType(IconButton),
-            ),
-          )
-          .dy;
+      final backButton = tester.getRect(
+        find.ancestor(
+          of: find.byIcon(Icons.arrow_back_ios_new_rounded),
+          matching: find.byType(IconButton),
+        ),
+      );
       final videoRect = tester.getRect(find.byType(LiveVideoBox));
 
       expect(board, findsOneWidget);
-      expect(tester.getTopLeft(board).dy, greaterThanOrEqualTo(headerBottom));
+      // The header floats over the picture and the board is drawn on top of it,
+      // so the board covers the back button inside the video.
+      expect(videoRect.contains(backButton.topLeft), isTrue);
+      expect(tester.getRect(board).overlaps(backButton), isTrue);
       expect(tester.getTopLeft(board).dx, lessThan(videoRect.left + 16));
-      // Hugs the top of the picture: the header sits above the video, so the
-      // board needs no extra gap to dodge it.
       expect(tester.getTopLeft(board).dy - videoRect.top, lessThanOrEqualTo(12));
       expect(tester.getTopLeft(board).dy, lessThan(videoRect.center.dy));
       expect(
