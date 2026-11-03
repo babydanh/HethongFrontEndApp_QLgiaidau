@@ -121,7 +121,7 @@ void main() {
       // Team 2 plays on the right: its score is left of its chips, after the net.
       expect(score2.dx, lessThan(_at(tester, 'Hà').dx));
       expect(score2.dx, greaterThan(net));
-      expect(court.width, closeTo(court.height * 2, 1));
+      expect(court.width, greaterThan(0));
     });
 
     testWidgets('vertical: the number is between the cells and the net', (
@@ -469,7 +469,43 @@ void main() {
       expect(tester.takeException(), isNull);
       final court = tester.getRect(find.byKey(courtSurfaceKey));
       expect(court.height, lessThanOrEqualTo(220));
-      expect(court.width, closeTo(court.height * 2, 1));
+      expect(court.size, const Size(768, 220));
+    });
+  });
+
+  group('the court fills its slot, no blank margin', () {
+    testWidgets('horizontal on a landscape phone (844x390)', (tester) async {
+      await _pump(tester, _view(_Spy()), size: const Size(844, 390));
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getRect(find.byKey(courtSurfaceKey)),
+        const Rect.fromLTWH(16, 16, 812, 358),
+      );
+    });
+
+    testWidgets('vertical on a portrait phone (360x640)', (tester) async {
+      await _pump(tester, _view(_Spy(), axis: Axis.vertical));
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getRect(find.byKey(courtSurfaceKey)),
+        const Rect.fromLTWH(16, 16, 328, 608),
+      );
+    });
+
+    testWidgets('vertical in a wide, short slot (800x600)', (tester) async {
+      await _pump(
+        tester,
+        _view(_Spy(), axis: Axis.vertical),
+        size: const Size(800, 600),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getRect(find.byKey(courtSurfaceKey)).size,
+        const Size(768, 568),
+      );
     });
   });
 }

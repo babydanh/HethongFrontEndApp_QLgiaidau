@@ -76,14 +76,11 @@ class PickleballCourtView extends StatelessWidget {
 
   static const _motion = Duration(milliseconds: 240);
 
-  /// Narrowest horizontal court; a shorter slot scrolls instead of shrinking it.
-  static const _minHorizontalWidth = 240.0;
+  /// A horizontal court is never shorter than this; a shorter slot scrolls.
+  static const _minHorizontalHeight = 120.0;
 
   /// A vertical court is never shorter than this; a shorter slot scrolls.
   static const _minVerticalHeight = 360.0;
-
-  /// A vertical court is at most this many times taller than wide.
-  static const _verticalMaxAspect = 1.2;
 
   /// Hướng xếp hai nửa sân: dọc khi cầm dọc, ngang khi cầm ngang.
   final Axis axis;
@@ -153,23 +150,17 @@ class PickleballCourtView extends StatelessWidget {
     onDrop?.call(action);
   }
 
+  /// The court fills its slot: halves, cells and the net band are all flexible,
+  /// so any aspect ratio works and no blank margin is left around it. Only an
+  /// unbounded height falls back to a default shape, and a slot below the
+  /// minimum height scrolls.
   Size _courtSize(BoxConstraints constraints) {
-    if (axis == Axis.vertical) {
-      final height = constraints.hasBoundedHeight
-          ? math.max(constraints.maxHeight, _minVerticalHeight)
-          : constraints.maxWidth * 1.5;
-      return Size(
-        math.min(constraints.maxWidth, height / _verticalMaxAspect),
-        height,
-      );
-    }
-    final width = constraints.hasBoundedHeight
-        ? math.min(
-            constraints.maxWidth,
-            math.max(_minHorizontalWidth, constraints.maxHeight * 2),
-          )
-        : constraints.maxWidth;
-    return Size(width, width / 2);
+    final vertical = axis == Axis.vertical;
+    final minHeight = vertical ? _minVerticalHeight : _minHorizontalHeight;
+    final height = constraints.hasBoundedHeight
+        ? math.max(constraints.maxHeight, minHeight)
+        : constraints.maxWidth * (vertical ? 1.5 : 0.5);
+    return Size(constraints.maxWidth, height);
   }
 
   String? get _callText {
