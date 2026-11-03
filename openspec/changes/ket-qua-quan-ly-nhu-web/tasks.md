@@ -8,7 +8,7 @@
 
 ## 1. Tab Kết quả
 
-- [ ] 1.1 Mở rộng bộ lọc của bảng trận lên bảy chip và cho mở sẵn một chip. Luật "Chưa xong", "Trễ giờ", "Tranh chấp" đối chiếu Web `src/features/organizer/operations/results.ts` (đọc từ `origin/main`). Tiêu chí: `flutter test --no-pub test/features/tournament/widgets/results_match_board_test.dart` → exit 0 (thêm TC-RESULTS-01..04: số trận trên chip, lọc Tranh chấp, lọc Trễ giờ, `initialFilter`)
+- [x] 1.1 Mở rộng bộ lọc của bảng trận lên bảy chip và cho mở sẵn một chip. Luật "Chưa xong", "Trễ giờ", "Tranh chấp" đối chiếu Web `src/features/organizer/operations/results.ts` (đọc từ `origin/main`). Tiêu chí: `flutter test --no-pub test/features/tournament/widgets/results_match_board_test.dart` → exit 0 (thêm TC-RESULTS-01..04: số trận trên chip, lọc Tranh chấp, lọc Trễ giờ, `initialFilter`)
   - Files: sửa `lib/features/tournament/widgets/results_match_board.dart` (enum `_BoardFilter` dòng 22, `_passes` dòng 37, constructor dòng 49-60), `lib/features/tournament/utils/results_rounds.dart` (thêm hàm thuần); test `test/features/tournament/widgets/results_match_board_test.dart`
   - Giao: `enum ResultsBoardFilter { all, live, upcoming, finished, unfinished, late, disputed }` (công khai, thay `_BoardFilter`); `ResultsMatchBoard({super.key, required String tournamentId, required bool isLite, required bool canManage, String? divisionId, ResultsBoardFilter initialFilter = ResultsBoardFilter.all})`; `bool isLateMatch(MatchModel match, DateTime now)`; `bool isDisputedMatch(MatchModel match)` · Nhận: 0.1 (chuỗi chip)
   - Chủ file chung: 1.1 giữ `results_match_board.dart` và `results_rounds.dart`

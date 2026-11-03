@@ -31,6 +31,29 @@ bool _isClosed(MatchModel match) =>
 /// A match whose result is final (completed, disputed or cancelled).
 bool isMatchClosed(MatchModel match) => _isClosed(match);
 
+/// A match whose result is under dispute (Web "Tranh chấp").
+bool isDisputedMatch(MatchModel match) => match.normalizedStatus == 'DISPUTED';
+
+/// Web "Trễ giờ" (`timingOf(...).late`): a real match still to be played, not
+/// disputed, scheduled for today (Vietnam time) and at least one minute past
+/// its start. Yesterday's unplayed matches are not "waiting to be called".
+bool isLateMatch(MatchModel match, DateTime now) {
+  final scheduled = match.scheduledTime;
+  if (scheduled == null || match.isBye) return false;
+  if (match.isLive || isMatchClosed(match)) return false;
+  if (!_sameVietnamDay(scheduled, now)) return false;
+  return now.difference(scheduled).inMinutes >= 1;
+}
+
+bool _sameVietnamDay(DateTime a, DateTime b) {
+  const offset = Duration(hours: 7);
+  final left = a.toUtc().add(offset);
+  final right = b.toUtc().add(offset);
+  return left.year == right.year &&
+      left.month == right.month &&
+      left.day == right.day;
+}
+
 /// A match accepts a score when it is real, has both sides and is not closed.
 bool canEnterScore(MatchModel match) {
   if (match.isBye) return false;

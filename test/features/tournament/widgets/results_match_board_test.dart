@@ -66,6 +66,8 @@ Future<void> _pump(
   List<MatchModel> matches, {
   bool canManage = false,
   String? divisionId = 'd1',
+  ResultsBoardFilter initialFilter = ResultsBoardFilter.all,
+  DateTime Function()? clock,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -89,6 +91,8 @@ Future<void> _pump(
                     isLite: false,
                     divisionId: divisionId,
                     canManage: canManage,
+                    initialFilter: initialFilter,
+                    clock: clock ?? DateTime.now,
                   ),
                 ),
               ),
@@ -621,6 +625,137 @@ void main() {
         find.byKey(const ValueKey('results-meta-badge-todo')),
       );
       expect(badge.data, 'Sân 1');
+    });
+  });
+
+  group('management chips (Web ResultsBoard parity)', () {
+    // 2026-11-03 08:00 in Vietnam (UTC+7).
+    final now = DateTime.utc(2026, 11, 3, 1);
+    final disputedA = _match('dis-a', round: 1, number: 1, status: 'DISPUTED');
+    final disputedB = _match('dis-b', round: 1, number: 2, status: 'DISPUTED');
+    final done = _match(
+      'done',
+      round: 1,
+      number: 3,
+      status: 'COMPLETED',
+      completedAt: DateTime.utc(2026, 11, 3),
+    );
+    final cancelled = _match('cx', round: 1, number: 4, status: 'CANCELLED');
+    final todo = _match('todo', round: 1, number: 5);
+
+    String count(WidgetTester tester, String name) => tester
+        .widget<Text>(find.byKey(ValueKey('results-filter-count-$name')))
+        .data!;
+
+    testWidgets('TC-RESULTS-01 managers get seven chips, viewers keep four', (
+      tester,
+    ) async {
+      await _pump(tester, [todo], canManage: true);
+      for (final name in [
+        'all',
+        'live',
+        'upcoming',
+        'finished',
+        'unfinished',
+        'late',
+        'disputed',
+      ]) {
+        expect(find.byKey(ValueKey('results-filter-$name')), findsOneWidget);
+      }
+
+      await _pump(tester, [todo]);
+      for (final name in ['unfinished', 'late', 'disputed']) {
+        expect(find.byKey(ValueKey('results-filter-$name')), findsNothing);
+      }
+    });
+
+    testWidgets('TC-RESULTS-02 Disputed chip counts and lists only disputes', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        disputedA,
+        disputedB,
+        done,
+        cancelled,
+        todo,
+      ], canManage: true);
+
+      expect(count(tester, 'disputed'), '2');
+      // Like the Web progress card: completed + cancelled, disputes excluded.
+      expect(count(tester, 'finished'), '2');
+      expect(count(tester, 'unfinished'), '1');
+
+      // The seventh chip sits past the edge of the horizontal chip strip.
+      final disputedChip = find.byKey(const ValueKey('results-filter-disputed'));
+      await tester.ensureVisible(disputedChip);
+      await tester.pumpAndSettle();
+      await tester.tap(disputedChip);
+      await tester.pumpAndSettle();
+
+      expect(_row('dis-a'), findsOneWidget);
+      expect(_row('dis-b'), findsOneWidget);
+      expect(_row('done'), findsNothing);
+      expect(_row('todo'), findsNothing);
+    });
+
+    testWidgets('TC-RESULTS-03 Late means upcoming and past its time today', (
+      tester,
+    ) async {
+      final late = _match(
+        'late',
+        round: 1,
+        number: 1,
+        scheduledTime: DateTime.utc(2026, 11, 3, 0, 30),
+      );
+      final yesterday = _match(
+        'yesterday',
+        round: 1,
+        number: 2,
+        scheduledTime: DateTime.utc(2026, 11, 2, 0, 30),
+      );
+      final later = _match(
+        'later',
+        round: 1,
+        number: 3,
+        scheduledTime: DateTime.utc(2026, 11, 3, 2),
+      );
+      final playing = _match(
+        'playing',
+        round: 1,
+        number: 4,
+        status: 'ONGOING',
+        scheduledTime: DateTime.utc(2026, 11, 3, 0),
+      );
+      await _pump(
+        tester,
+        [late, yesterday, later, playing, disputedA],
+        canManage: true,
+        clock: () => now,
+      );
+
+      expect(count(tester, 'late'), '1');
+
+      await tester.tap(find.byKey(const ValueKey('results-filter-late')));
+      await tester.pumpAndSettle();
+
+      expect(_row('late'), findsOneWidget);
+      expect(_row('yesterday'), findsNothing);
+      expect(_row('later'), findsNothing);
+      expect(_row('playing'), findsNothing);
+    });
+
+    testWidgets('TC-RESULTS-04 initialFilter opens with that chip selected', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        [disputedA, todo],
+        canManage: true,
+        initialFilter: ResultsBoardFilter.disputed,
+      );
+
+      expect(_row('dis-a'), findsOneWidget);
+      expect(_row('todo'), findsNothing);
     });
   });
 }
