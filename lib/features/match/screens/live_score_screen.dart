@@ -2250,6 +2250,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         creatorId == profile.id;
   }
 
+  /// True once the live stream or the replay that `LiveVideoBox` shows exists.
+  /// Mirrors its order: the replay is only looked up after the live answer
+  /// came back empty, so no extra request is made while a stream is playing.
+  bool _isVideoShowing() {
+    final playback = ref.watch(matchPlaybackProvider(widget.matchId));
+    if (playback.asData?.value != null) return true;
+    if (!playback.hasValue) return false;
+    return ref.watch(matchReplayProvider(widget.matchId)).asData?.value != null;
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  VIEWER STATE — Người xem
   // ═══════════════════════════════════════════════════════════
@@ -2257,19 +2267,22 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final l10n = AppLocalizations.of(context)!;
     final currentScore = _currentLiveScore(match);
     final effectiveId = _effectiveTournamentId(match);
+    // Same condition as `useViewerLayout` in build(): no AppBar there, so the
+    // controls live on the video and the lower half is header + Chat/Videos.
+    final viewerLayout = !canControl;
+    // Overlays are part of the picture: a viewer sees them only while a live
+    // stream or a replay is actually showing, never over "no signal".
+    final videoShowing = !viewerLayout || _isVideoShowing();
     // Cờ server quyết định overlay; nút đóng chỉ ẩn cục bộ overlay đó.
     final serverOverlay = liveOverlayToShow(
       h2hVisible: match.h2hOverlayVisible,
       bracketVisible: match.bracketOverlayVisible,
       matchEnded: match.isCompleted,
     );
-    final overlayToShow = serverOverlay == _dismissedOverlay
+    final overlayToShow = !videoShowing || serverOverlay == _dismissedOverlay
         ? null
         : serverOverlay;
     final params = (tournamentId: effectiveId, matchId: widget.matchId);
-    // Same condition as `useViewerLayout` in build(): no AppBar there, so the
-    // controls live on the video and the lower half is header + Chat/Videos.
-    final viewerLayout = !canControl;
     final landscape =
         viewerLayout &&
         MediaQuery.of(context).orientation == Orientation.landscape;
@@ -2338,6 +2351,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                       ),
                   child:
                       match.scoreboardVisible &&
+                          videoShowing &&
                           (!viewerLayout || overlayToShow == null)
                       ? KeyedSubtree(
                           key: const ValueKey('live-scoreboard-on'),

@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/socket_providers.dart';
 import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
@@ -92,12 +93,20 @@ MatchModel _match({
   );
 }
 
+final _livePlayback = MatchPlaybackModel.fromJson(<String, Object?>{
+  'matchId': _matchId,
+  'streamStatus': 'LIVE',
+  'playbackUrl': 'https://media.example.test/live/stream.flv',
+  'cameraName': 'Sân 1',
+});
+
 Future<void> _pumpLiveScreen(
   WidgetTester tester, {
   required AuthState auth,
   required MatchModel match,
   bool isViewer = true,
   bool? scoreAccess,
+  bool withVideo = true,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -113,7 +122,10 @@ Future<void> _pumpLiveScreen(
         singleMatchProvider.overrideWith((ref, params) => Stream.value(match)),
         tournamentProvider.overrideWith((ref, id) => Stream.value(null)),
         viewerCountProvider.overrideWith((ref, id) => Stream.value(0)),
-        matchPlaybackProvider.overrideWith((ref, id) => Future.value(null)),
+        matchPlaybackProvider.overrideWith(
+          (ref, id) => Future.value(withVideo ? _livePlayback : null),
+        ),
+        matchReplayProvider.overrideWith((ref, id) => Future.value(null)),
         matchScoreAccessProvider.overrideWith(
           (ref, id) => Future.value(scoreAccess),
         ),
@@ -251,6 +263,23 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('TC-LIVEVIEW-18 viewer sees no overlay while there is no video', (
+    tester,
+  ) async {
+    await _pumpLiveScreen(
+      tester,
+      auth: _viewerAuth,
+      match: _match(scoreboardVisible: true, h2hOverlayVisible: true),
+      isViewer: true,
+      withVideo: false,
+    );
+
+    expect(find.text('No live signal yet'), findsOneWidget);
+    expect(find.byType(LiveScoreboardOverlay), findsNothing);
+    expect(find.byKey(const ValueKey('live-overlay-h2h')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('TC-FEAT-08: live H2H overlay does not show the match code', (
     tester,
