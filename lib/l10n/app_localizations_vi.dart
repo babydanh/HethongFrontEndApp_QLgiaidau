@@ -18069,6 +18069,43 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get resultsBoard_colPair => 'Cặp đấu';
+
+  @override
+  String get resultsBoard_colResult => 'Kết quả';
+
+  @override
+  String resultsBoard_referee(String name) {
+    return 'TT: $name';
+  }
+
+  @override
+  String resultsScore_title(String code) {
+    return 'Nhập điểm $code';
+  }
+
+  @override
+  String resultsScore_set(int n) {
+    return 'Set $n';
+  }
+
+  @override
+  String get resultsScore_addSet => 'Thêm set';
+
+  @override
+  String get resultsScore_save => 'Lưu';
+
+  @override
+  String get resultsScore_openLive => 'Vào trang Live';
+
+  @override
+  String get resultsScore_tied => 'Hai bên đang bằng số set';
+
+  @override
+  String get resultsScore_error =>
+      'Không lưu được điểm. Kiểm tra mạng rồi thử lại.';
+
+  @override
   String get resultsTab_emptyTitle => 'Chưa có kết quả chính thức';
 
   @override

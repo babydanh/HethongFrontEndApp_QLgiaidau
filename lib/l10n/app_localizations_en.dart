@@ -18139,6 +18139,43 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get resultsBoard_colPair => 'Match-up';
+
+  @override
+  String get resultsBoard_colResult => 'Result';
+
+  @override
+  String resultsBoard_referee(String name) {
+    return 'Ref: $name';
+  }
+
+  @override
+  String resultsScore_title(String code) {
+    return 'Enter score $code';
+  }
+
+  @override
+  String resultsScore_set(int n) {
+    return 'Set $n';
+  }
+
+  @override
+  String get resultsScore_addSet => 'Add set';
+
+  @override
+  String get resultsScore_save => 'Save';
+
+  @override
+  String get resultsScore_openLive => 'Open Live page';
+
+  @override
+  String get resultsScore_tied => 'Both sides have the same number of sets';
+
+  @override
+  String get resultsScore_error =>
+      'Could not save the score. Check your connection and try again.';
+
+  @override
   String get resultsTab_emptyTitle => 'No official results yet';
 
   @override

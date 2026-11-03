@@ -13,11 +13,52 @@ const double _codeWidth = 44;
 const double _pointsWidth = 56;
 const double _gap = 6;
 
+/// Width of the status border on the left of a row; the column header and the
+/// row content are both inset by it so they stay aligned.
+const double _toneWidth = 3;
+
+/// `# · Cặp đấu · Kết quả` strip under a box head, aligned with the row grid.
+class ResultsColumnHeader extends StatelessWidget {
+  const ResultsColumnHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = ResultsBoardPalette.of(context);
+    final style = TextStyle(
+      fontSize: 10.5,
+      fontWeight: FontWeight.w700,
+      color: palette.faint,
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10 + _toneWidth, 4, 10, 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: _codeWidth + _gap,
+            child: Text('#', style: style),
+          ),
+          Expanded(child: Text(l10n.resultsBoard_colPair, style: style)),
+          SizedBox(
+            width: _pointsWidth,
+            child: Text(
+              l10n.resultsBoard_colResult,
+              textAlign: TextAlign.center,
+              style: style,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// One match of the board, laid out like the Lavish mockup: code (red dot when
 /// live), the two sides with a "vs" line between them and their points on the
 /// same line, then a meta line. No icons: like the Web, the row itself is the
 /// button. [onScore] (organisers, matches that take a score) makes the whole row
-/// open the score popup and shows a "+" where the score goes; [onSchedule]
+/// open the score popup and shows a round "+" button between the two sides;
+/// [onSchedule]
 /// makes the time line open the schedule dialog; [onTap] opens the live room.
 class ResultsMatchRow extends StatelessWidget {
   const ResultsMatchRow({
@@ -54,55 +95,65 @@ class ResultsMatchRow extends StatelessWidget {
     return InkWell(
       key: onScore == null ? null : ValueKey('results-score-${match.id}'),
       onTap: onScore ?? onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                _Code(match: match, label: label, live: live),
-                const SizedBox(width: _gap),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _SideLine(
-                        match: match,
-                        side: 1,
-                        waiting: waitingFor.$1,
-                        hidePoints: addScore,
-                      ),
-                      _VsLine(
-                        label: l10n.resultsBoard_vs,
-                        palette: palette,
-                        addScoreKey: addScore
-                            ? ValueKey('results-add-score-${match.id}')
-                            : null,
-                      ),
-                      _SideLine(
-                        match: match,
-                        side: 2,
-                        waiting: waitingFor.$2,
-                        hidePoints: addScore,
-                      ),
-                    ],
+      child: Container(
+        key: ValueKey('results-tone-${match.id}'),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: ResultsBoardPalette.toneBorder(matchTone(match)),
+              width: _toneWidth,
+            ),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  _Code(match: match, label: label, live: live),
+                  const SizedBox(width: _gap),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _SideLine(
+                          match: match,
+                          side: 1,
+                          waiting: waitingFor.$1,
+                          hidePoints: addScore,
+                        ),
+                        _VsLine(
+                          label: l10n.resultsBoard_vs,
+                          palette: palette,
+                          reservePoints: !addScore,
+                        ),
+                        _SideLine(
+                          match: match,
+                          side: 2,
+                          waiting: waitingFor.$2,
+                          hidePoints: addScore,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.only(left: _codeWidth + _gap),
-              child: _MetaLine(
-                match: match,
-                live: live,
-                roundLabel: roundLabel,
-                palette: palette,
-                onSchedule: onSchedule,
+                  if (addScore) _AddScoreButton(matchId: match.id),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: _codeWidth + _gap),
+                child: _MetaLine(
+                  match: match,
+                  live: live,
+                  roundLabel: roundLabel,
+                  palette: palette,
+                  onSchedule: onSchedule,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -162,23 +213,30 @@ class _Code extends StatelessWidget {
   }
 }
 
+/// "Sân 1 - Nhà thi đấu A" -> "Sân 1": the venue is not repeated on each row.
+String resultsMatchCourt(MatchModel match) {
+  final short = TournamentLocationFormatter.matchShortCourt(
+    match.court.isNotEmpty ? match.court : match.courtName,
+  );
+  return short.split(' - ').first.trim();
+}
+
 /// Points are shown once the match is live or closed and both sides exist.
 bool _hasPoints(MatchModel match) =>
     match.hasTeams && (isLiveMatch(match) || isMatchClosed(match));
 
-/// `.vs`: tiny "vs" followed by a hairline, ending before the points column.
-/// With [addScoreKey] the points column holds one "+" (Web: empty score cell
-/// of a match that takes a score) level with this line.
+/// `.vs`: tiny "vs" followed by a hairline, ending before the points column
+/// when [reservePoints] is set.
 class _VsLine extends StatelessWidget {
   const _VsLine({
     required this.label,
     required this.palette,
-    required this.addScoreKey,
+    required this.reservePoints,
   });
 
   final String label;
   final ResultsBoardPalette palette;
-  final Key? addScoreKey;
+  final bool reservePoints;
 
   @override
   Widget build(BuildContext context) {
@@ -189,30 +247,59 @@ class _VsLine extends StatelessWidget {
           Text(label, style: TextStyle(fontSize: 9.5, color: palette.faint)),
           const SizedBox(width: 6),
           Expanded(child: Container(height: 1, color: palette.chipBg)),
-          SizedBox(
-            width: _pointsWidth,
-            child: addScoreKey == null
-                ? null
-                : Text(
-                    '+',
-                    key: addScoreKey,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 20,
-                      height: 1,
-                      fontWeight: FontWeight.w500,
-                      color: palette.faint,
-                    ),
-                  ),
-          ),
+          if (reservePoints) const SizedBox(width: _pointsWidth),
         ],
       ),
     );
   }
 }
 
+/// Round "+" in the result column, centred between the two sides. The key sits
+/// on the 44dp touch target; the visible disc is 32dp. The whole row opens the
+/// score popup, so the button needs no handler of its own.
+class _AddScoreButton extends StatelessWidget {
+  const _AddScoreButton({required this.matchId});
+
+  final String matchId;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = AppLocalizations.of(context)!.resultsBoard_enterScore;
+    return SizedBox(
+      width: _pointsWidth,
+      child: Center(
+        child: Semantics(
+          button: true,
+          label: label,
+          excludeSemantics: true,
+          child: SizedBox(
+            key: ValueKey('results-add-score-$matchId'),
+            width: 44,
+            height: 44,
+            child: Center(
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: ResultsBoardPalette.chipOn,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  size: 22,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// One side of the match with its points in the right column ([hidePoints]
-/// leaves the column empty because the "+" stands in for both sides).
+/// drops the column because the "+" button stands in for both sides).
 class _SideLine extends StatelessWidget {
   const _SideLine({
     required this.match,
@@ -268,23 +355,22 @@ class _SideLine extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(
-          width: _pointsWidth,
-          child: hidePoints
-              ? null
-              : FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    _points,
-                    key: ValueKey('results-points-${match.id}-$side'),
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: _pointsColor(palette),
-                    ),
-                  ),
+        if (!hidePoints)
+          SizedBox(
+            width: _pointsWidth,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                _points,
+                key: ValueKey('results-points-${match.id}-$side'),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: _pointsColor(palette),
                 ),
-        ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -324,25 +410,18 @@ class _MetaLine extends StatelessWidget {
     );
   }
 
-  /// "Sân 1 - Nhà thi đấu A" -> "Sân 1": the venue is not repeated on each row.
-  String _courtName() {
-    final short = TournamentLocationFormatter.matchShortCourt(
-      match.court.isNotEmpty ? match.court : match.courtName,
-    );
-    return short.split(' - ').first.trim();
-  }
-
   Widget _line(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final id = match.id;
     final time = match.completedAt ?? match.scheduledTime;
-    final court = _courtName();
+    final court = resultsMatchCourt(match);
     final clock = time == null
         ? ''
         : DateFormat('HH:mm').format(time.toLocal());
     final plain = live ? court : clock;
     final badge = live ? (roundLabel ?? '') : court;
-    if (plain.isEmpty && badge.isEmpty) {
+    final referee = match.refereeName?.trim() ?? '';
+    if (plain.isEmpty && badge.isEmpty && referee.isEmpty) {
       return Text(
         l10n.resultsBoard_unscheduled,
         key: ValueKey('results-meta-none-$id'),
@@ -374,6 +453,12 @@ class _MetaLine extends StatelessWidget {
               key: ValueKey('results-meta-badge-$id'),
               style: _style(palette).copyWith(color: palette.badgeText),
             ),
+          ),
+        if (referee.isNotEmpty)
+          Text(
+            l10n.resultsBoard_referee(referee),
+            key: ValueKey('results-meta-referee-$id'),
+            style: _style(palette),
           ),
       ],
     );

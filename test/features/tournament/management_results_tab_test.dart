@@ -132,9 +132,13 @@ void main() {
       expect(board.divisionId, 'div-1');
       expect(find.byKey(const ValueKey('results-row-m1')), findsOneWidget);
       expect(find.byKey(const ValueKey('results-row-m2')), findsOneWidget);
-      // Managers get the three extra chips.
-      for (final name in ['unfinished', 'late', 'disputed']) {
-        expect(find.byKey(ValueKey('results-filter-$name')), findsOneWidget);
+      // Managers get one extra chip; late and disputed have none of their own.
+      expect(
+        find.byKey(const ValueKey('results-filter-unfinished')),
+        findsOneWidget,
+      );
+      for (final name in ['late', 'disputed']) {
+        expect(find.byKey(ValueKey('results-filter-$name')), findsNothing);
       }
       expect(tester.takeException(), isNull);
     },

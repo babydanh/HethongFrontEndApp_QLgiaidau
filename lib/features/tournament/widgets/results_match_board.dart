@@ -8,11 +8,11 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_schedule_dialog.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_board_palette.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_row.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_score_dialog.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -105,6 +105,12 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   String _needle = '';
   Timer? _searchTimer;
   final Map<String, GlobalKey> _roundKeys = {};
+  // Boxes the viewer folded or opened by hand (or "Tới vòng" did); a missing
+  // key falls back to [isRoundBoxOpen]'s default.
+  Map<String, bool> _boxChoice = const {};
+  // Scroll to the picked round waits for the other boxes to finish folding.
+  static const _foldSettle = Duration(milliseconds: 220);
+  Timer? _jumpTimer;
 
   // Everything below is derived from the match list, the division and the
   // locale. It is rebuilt only when one of them changes, so typing in the
@@ -126,6 +132,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   @override
   void dispose() {
     _searchTimer?.cancel();
+    _jumpTimer?.cancel();
     super.dispose();
   }
 
@@ -173,23 +180,43 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
       for (final f in ResultsBoardFilter.values)
         if (f != ResultsBoardFilter.late)
           f: real
-              .where(
-                (m) => _passes(f, m, manage: widget.canManage, now: now),
-              )
+              .where((m) => _passes(f, m, manage: widget.canManage, now: now))
               .length,
     };
     _waiting.clear();
     _haystack.clear();
   }
 
-  VoidCallback? _scoreAction(MatchModel match) =>
+  VoidCallback? _scoreAction(MatchModel match, String label) =>
       widget.canManage && canEnterScore(match)
-      ? () => MatchScoreEntryChooser.show(
-          context,
-          match: match,
-          tournamentId: widget.tournamentId,
-        )
+      ? () => _openScore(match, label)
       : null;
+
+  Future<void> _openScore(MatchModel match, String label) async {
+    final saved = await showResultsScoreDialog(
+      context,
+      match: match,
+      tournamentId: widget.tournamentId,
+      label: label,
+      liveRoute: NavigationHelper.getLiveMatchRoute(
+        widget.tournamentId,
+        match.id,
+      ),
+      isLite: widget.isLite,
+    );
+    if (saved != true || !mounted) return;
+    ref.invalidate(
+      managedMatchesWithDivisionProvider((
+        tournamentId: widget.tournamentId,
+        divisionId: null,
+      )),
+    );
+    ref.invalidate(
+      widget.isLite
+          ? liteBracketMatchesProvider(widget.tournamentId)
+          : matchesProvider(widget.tournamentId),
+    );
+  }
 
   Future<void> _openSchedule(MatchModel match) async {
     final saved = await showMatchScheduleDialog(
@@ -261,18 +288,28 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
             NavigationHelper.getLiveMatchRoute(widget.tournamentId, match.id),
           )
         : null,
-    onScore: _scoreAction(match),
+    onScore: _scoreAction(match, _rowLabel(match, index)),
     onSchedule: _scheduleAction(match),
   );
 
+  /// "Tới vòng": open only [roundKey], fold the other rounds, then scroll to it
+  /// once the folding has settled (the boxes above it change height).
   void _jumpTo(String roundKey) {
-    final target = _roundKeys[roundKey]?.currentContext;
-    if (target == null) return;
-    Scrollable.ensureVisible(
-      target,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
+    setState(
+      () => _boxChoice = openOnlyRound([
+        for (final r in _rounds) r.key,
+      ], roundKey),
     );
+    _jumpTimer?.cancel();
+    _jumpTimer = Timer(_foldSettle, () {
+      final target = _roundKeys[roundKey]?.currentContext;
+      if (!mounted || target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   @override
@@ -288,18 +325,36 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
         (_filter == ResultsBoardFilter.all ||
             _filter == ResultsBoardFilter.live) &&
         live.any(_matchesQuery);
+    final visible = _visibleRounds();
+    final defaultKey = defaultResultsRoundKey([
+      for (final (round, _) in visible) round,
+    ]);
+    final searching = _needle.isNotEmpty;
     final boxes = [
       if (showLive)
         _MatchBox(
           key: const ValueKey('results-box-live'),
+          boxKey: 'live',
           title: l10n.resultsBoard_filterLive,
           isLive: true,
+          open: _boxChoice['live'] ?? true,
+          onToggle: () => _toggleBox('live', _boxChoice['live'] ?? true),
           rows: [
             for (final (i, m) in live.where(_matchesQuery).indexed)
               _row(m, i, all, roundLabel: _liveRoundLabels[m.id]),
           ],
         ),
-      for (final round in rounds) ?_roundBox(round, all),
+      for (final (round, matches) in visible)
+        _roundBox(
+          round,
+          matches,
+          all,
+          open: isRoundBoxOpen(
+            choice: _boxChoice[round.key],
+            isDefault: round.key == defaultKey,
+            searching: searching,
+          ),
+        ),
     ];
 
     return Column(
@@ -316,26 +371,49 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     );
   }
 
-  Widget? _roundBox(ResultsRound round, List<MatchModel> all) {
+  /// Rounds with at least one match that passes the filter chip and the search.
+  List<(ResultsRound, List<MatchModel>)> _visibleRounds() {
     // Live matches have their own box, except under "Chưa xong" where they
     // are unfinished matches like the rest and stay in their round.
     final liveInRound = _filter == ResultsBoardFilter.unfinished;
     final now = widget.clock();
-    final matches = round.matches
-        .where(
-          (m) =>
-              (liveInRound || !isLiveMatch(m)) &&
-              _passes(_filter, m, manage: widget.canManage, now: now) &&
-              _matchesQuery(m),
-        )
-        .toList();
-    if (matches.isEmpty) return null;
+    return [
+      for (final round in _rounds)
+        if (round.matches
+                .where(
+                  (m) =>
+                      (liveInRound || !isLiveMatch(m)) &&
+                      _passes(_filter, m, manage: widget.canManage, now: now) &&
+                      _matchesQuery(m),
+                )
+                .toList()
+            case final matches when matches.isNotEmpty)
+          (round, matches),
+    ];
+  }
+
+  Widget _roundBox(
+    ResultsRound round,
+    List<MatchModel> matches,
+    List<MatchModel> all, {
+    required bool open,
+  }) {
     return _MatchBox(
       key: _roundKeys.putIfAbsent(round.key, GlobalKey.new),
+      boxKey: round.key,
       title: round.label,
-      rows: [for (final (i, m) in matches.indexed) _row(m, i, all)],
+      branch: round.branch,
+      open: open,
+      onToggle: () => _toggleBox(round.key, open),
+      rows: open
+          ? [for (final (i, m) in matches.indexed) _row(m, i, all)]
+          : const [],
+      matchCount: matches.length,
     );
   }
+
+  void _toggleBox(String key, bool wasOpen) =>
+      setState(() => _boxChoice = {..._boxChoice, key: !wasOpen});
 
   Widget _filterChips(AppLocalizations l10n) {
     final labels = {
@@ -343,17 +421,18 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
       ResultsBoardFilter.live: l10n.resultsBoard_filterLive,
       ResultsBoardFilter.upcoming: l10n.resultsBoard_upcoming,
       ResultsBoardFilter.finished: l10n.resultsBoard_finished,
-      if (widget.canManage) ...{
+      if (widget.canManage)
         ResultsBoardFilter.unfinished: l10n.resultsBoard_unfinished,
+      // No chip of their own; shown only while the progress popup preset one.
+      if (widget.canManage && _filter == ResultsBoardFilter.late)
         ResultsBoardFilter.late: l10n.resultsBoard_late,
+      if (widget.canManage && _filter == ResultsBoardFilter.disputed)
         ResultsBoardFilter.disputed: l10n.resultsBoard_disputed,
-      },
     };
     final now = widget.clock();
     int? countOf(ResultsBoardFilter f) => switch (f) {
       ResultsBoardFilter.all => null,
-      ResultsBoardFilter.late =>
-        _real.where((m) => isLateMatch(m, now)).length,
+      ResultsBoardFilter.late => _real.where((m) => isLateMatch(m, now)).length,
       _ => _counts[f],
     };
     return SingleChildScrollView(
@@ -423,9 +502,12 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
           key: const ValueKey('results-jump'),
           tooltip: l10n.resultsBoard_jumpToRound,
           onSelected: _jumpTo,
-          itemBuilder: (_) => [
+          itemBuilder: (context) => [
             for (final round in rounds)
-              PopupMenuItem(value: round.key, child: Text(round.label)),
+              PopupMenuItem(
+                value: round.key,
+                child: _jumpItem(context, round, l10n),
+              ),
           ],
           child: Container(
             constraints: const BoxConstraints(minHeight: 36),
@@ -455,6 +537,25 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  /// Menu entry: the branch icon, the round name and how many matches wait.
+  Widget _jumpItem(
+    BuildContext context,
+    ResultsRound round,
+    AppLocalizations l10n,
+  ) {
+    final tone = ResultsBoardPalette.branchTone(context, round.branch);
+    final label = round.pending > 0
+        ? l10n.resultsBoard_roundOption(round.label, round.pending)
+        : round.label;
+    return Row(
+      children: [
+        Icon(tone.icon, size: 16, color: tone.pillText),
+        const SizedBox(width: 8),
+        Expanded(child: Text(label)),
       ],
     );
   }
@@ -540,24 +641,39 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-/// Mockup `.box`: white, 1px border, 12px radius; the `.bh` head holds a pill
-/// with the title and a "N trận" chip. Blue head for rounds, red for [isLive].
+/// Mockup `.box`: white, 1px border, 12px radius. The head is one button that
+/// folds the box: a branch icon, a pill with the title, a "N trận" chip and a
+/// chevron. Its colours follow the bracket [branch] (Web `BOX_TONE`); the red
+/// head is for the live box. A folded box builds no rows.
 class _MatchBox extends StatelessWidget {
   const _MatchBox({
     super.key,
+    required this.boxKey,
     required this.title,
     required this.rows,
+    required this.open,
+    required this.onToggle,
+    this.branch = ResultsBranch.main,
     this.isLive = false,
+    this.matchCount,
   });
 
+  final String boxKey;
   final String title;
   final List<Widget> rows;
+  final bool open;
+  final VoidCallback onToggle;
+  final ResultsBranch branch;
   final bool isLive;
+
+  /// Matches in the box when [rows] is empty because the box is folded.
+  final int? matchCount;
+
+  static const _fold = Duration(milliseconds: 200);
 
   @override
   Widget build(BuildContext context) {
     final palette = ResultsBoardPalette.of(context);
-    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.only(bottom: 9),
       decoration: BoxDecoration(
@@ -569,36 +685,92 @@ class _MatchBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            color: isLive ? palette.headLiveBg : palette.headBg,
-            child: Row(
-              children: [
-                _HeadChip(
-                  label: title,
-                  background: isLive ? palette.pillLiveBg : palette.pillBg,
-                  border: isLive ? palette.pillLiveLine : palette.pillLine,
-                  color: isLive ? palette.pillLiveText : palette.pillText,
-                  fontSize: 11.5,
-                  weight: FontWeight.w800,
-                ),
-                const SizedBox(width: 8),
-                _HeadChip(
-                  label: l10n.resultsBoard_matchCount(rows.length),
-                  background: palette.countBg,
-                  border: palette.chipLine,
-                  color: palette.chipText,
-                  fontSize: 11,
-                  weight: FontWeight.w400,
-                ),
-              ],
+          _head(context, palette),
+          AnimatedSize(
+            duration: _fold,
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: open
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const ResultsColumnHeader(),
+                      for (final row in rows) ...[
+                        Divider(height: 1, color: palette.rowLine),
+                        row,
+                      ],
+                    ],
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _head(BuildContext context, ResultsBoardPalette palette) {
+    final l10n = AppLocalizations.of(context)!;
+    final tone = ResultsBoardPalette.branchTone(context, branch);
+    final pillColor = isLive ? palette.pillLiveText : tone.pillText;
+    return Material(
+      key: ValueKey('results-box-head-$boxKey'),
+      color: isLive ? palette.headLiveBg : tone.head,
+      child: Semantics(
+        expanded: open,
+        child: InkWell(
+          key: ValueKey('results-box-toggle-$boxKey'),
+          onTap: onToggle,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              child: Row(
+                children: [
+                  if (isLive)
+                    Icon(Icons.circle, size: 9, color: ResultsBoardPalette.live)
+                  else
+                    Icon(tone.icon, size: 17, color: pillColor),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        _HeadChip(
+                          label: title,
+                          background: isLive ? palette.pillLiveBg : tone.pill,
+                          border: isLive ? palette.pillLiveLine : tone.pillLine,
+                          color: pillColor,
+                          fontSize: 11.5,
+                          weight: FontWeight.w800,
+                        ),
+                        const SizedBox(width: 8),
+                        _HeadChip(
+                          label: l10n.resultsBoard_matchCount(
+                            matchCount ?? rows.length,
+                          ),
+                          background: palette.countBg,
+                          border: palette.chipLine,
+                          color: palette.chipText,
+                          fontSize: 11,
+                          weight: FontWeight.w400,
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: open ? 0 : -0.25,
+                    duration: _fold,
+                    curve: Curves.easeOutCubic,
+                    child: Icon(
+                      Icons.expand_more_rounded,
+                      size: 22,
+                      color: palette.muted,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          for (final row in rows) ...[
-            Divider(height: 1, color: palette.rowLine),
-            row,
-          ],
-        ],
+        ),
       ),
     );
   }

@@ -32581,6 +32581,66 @@ abstract class AppLocalizations {
   /// **'{count} trận'**
   String resultsBoard_matchCount(int count);
 
+  /// No description provided for @resultsBoard_colPair.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cặp đấu'**
+  String get resultsBoard_colPair;
+
+  /// No description provided for @resultsBoard_colResult.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả'**
+  String get resultsBoard_colResult;
+
+  /// No description provided for @resultsBoard_referee.
+  ///
+  /// In vi, this message translates to:
+  /// **'TT: {name}'**
+  String resultsBoard_referee(String name);
+
+  /// No description provided for @resultsScore_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập điểm {code}'**
+  String resultsScore_title(String code);
+
+  /// No description provided for @resultsScore_set.
+  ///
+  /// In vi, this message translates to:
+  /// **'Set {n}'**
+  String resultsScore_set(int n);
+
+  /// No description provided for @resultsScore_addSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm set'**
+  String get resultsScore_addSet;
+
+  /// No description provided for @resultsScore_save.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get resultsScore_save;
+
+  /// No description provided for @resultsScore_openLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào trang Live'**
+  String get resultsScore_openLive;
+
+  /// No description provided for @resultsScore_tied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hai bên đang bằng số set'**
+  String get resultsScore_tied;
+
+  /// No description provided for @resultsScore_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lưu được điểm. Kiểm tra mạng rồi thử lại.'**
+  String get resultsScore_error;
+
   /// No description provided for @resultsTab_emptyTitle.
   ///
   /// In vi, this message translates to:

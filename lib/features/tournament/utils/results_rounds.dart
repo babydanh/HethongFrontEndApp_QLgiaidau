@@ -5,6 +5,14 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 /// Pure helpers of the "Kết quả" tab, ported from the web `results.ts` so both
 /// clients share one rule set. No Flutter, no providers, no network.
 
+/// Bracket branch a round belongs to (Web `ResultsBranch`). [main] is a plain
+/// single-elimination round; [winners] only exists inside double elimination.
+enum ResultsBranch { main, winners, losers, grandFinal }
+
+/// Row tone of a match (Web `matchTone`). A disputed match is closed, so it
+/// reads as [done].
+enum MatchTone { live, done, cancel, ready, wait }
+
 /// One round of a division: real matches only (BYE excluded), in play order.
 class ResultsRound {
   const ResultsRound({
@@ -12,6 +20,7 @@ class ResultsRound {
     required this.label,
     required this.matches,
     required this.pending,
+    this.branch = ResultsBranch.main,
   });
 
   /// Round label, also the selector value.
@@ -21,6 +30,7 @@ class ResultsRound {
 
   /// Matches that still wait for a score.
   final int pending;
+  final ResultsBranch branch;
 }
 
 const _lockedStatuses = {'COMPLETED', 'FINISHED', 'DISPUTED', 'CANCELLED'};
@@ -107,41 +117,103 @@ String? matchDivisionId(MatchModel match) {
   return id == null || id.isEmpty ? null : id;
 }
 
+/// Branch of [match]. The bracket position folds MAIN and WINNERS into
+/// `winners`, so the stage type tells a double-elimination winners round from a
+/// plain single-elimination one.
+ResultsBranch branchOfMatch(MatchModel match) {
+  return switch (match.bracketPosition.bracket) {
+    'losers' => ResultsBranch.losers,
+    'grand_final' || 'grand_final_reset' => ResultsBranch.grandFinal,
+    'winners' when _isDoubleElimination(match) => ResultsBranch.winners,
+    _ => ResultsBranch.main,
+  };
+}
+
+bool _isDoubleElimination(MatchModel match) =>
+    (match.stageType ?? '').toUpperCase() == 'DOUBLE_ELIMINATION';
+
+/// Colour role of a match row: live, cancelled, closed, ready for a score, or
+/// still waiting for a side.
+MatchTone matchTone(MatchModel match) {
+  if (isLiveMatch(match)) return MatchTone.live;
+  if (match.normalizedStatus == 'CANCELLED') return MatchTone.cancel;
+  if (isMatchClosed(match)) return MatchTone.done;
+  return canEnterScore(match) ? MatchTone.ready : MatchTone.wait;
+}
+
+/// Whether a round box is open: a viewer's [choice] wins, otherwise the
+/// [isDefault] round is open and a search opens every box that still has a match.
+bool isRoundBoxOpen({
+  required bool? choice,
+  required bool isDefault,
+  required bool searching,
+}) => choice ?? (searching || isDefault);
+
+/// Box choices after "Tới vòng": [picked] is open and every other key folded.
+Map<String, bool> openOnlyRound(Iterable<String> keys, String picked) => {
+  for (final key in keys) key: key == picked,
+};
+
 /// Groups [all] by round label. [labelOf] sees every match (BYE included) so
 /// the caller can count bracket slots correctly; BYE rows are dropped here.
 List<ResultsRound> buildResultsRounds(
   List<MatchModel> all,
   String Function(MatchModel) labelOf,
 ) {
-  final byLabel = <String, List<MatchModel>>{};
-  final order = <String, int>{};
+  final groups = <String, _RoundGroup>{};
   for (final match in all) {
     if (match.isBye) continue;
+    final branch = branchOfMatch(match);
     final label = labelOf(match);
-    byLabel.putIfAbsent(label, () => []).add(match);
-    final current = order[label];
-    order[label] = current == null || match.round < current
-        ? match.round
-        : current;
+    // Two losers rounds can share a label, so each losers round is its own box.
+    final key = branch == ResultsBranch.losers
+        ? 'losers|${match.round}'
+        : label;
+    final group = groups.putIfAbsent(
+      key,
+      () => _RoundGroup(key, label, branch, match.round),
+    );
+    group.matches.add(match);
+    if (match.round < group.order) group.order = match.round;
   }
 
-  final labels = byLabel.keys.toList()
+  final sorted = groups.values.toList()
     ..sort((a, b) {
-      final byRound = order[a]!.compareTo(order[b]!);
-      return byRound != 0 ? byRound : a.compareTo(b);
+      final byBranch = _branchRank(a.branch).compareTo(_branchRank(b.branch));
+      if (byBranch != 0) return byBranch;
+      final byRound = a.order.compareTo(b.order);
+      return byRound != 0 ? byRound : a.label.compareTo(b.label);
     });
 
   return [
-    for (final label in labels)
+    for (final group in sorted)
       ResultsRound(
-        key: label,
-        label: label,
-        pending: byLabel[label]!.where(canEnterScore).length,
-        matches: [...byLabel[label]!]
+        key: group.key,
+        label: group.label,
+        branch: group.branch,
+        pending: group.matches.where(canEnterScore).length,
+        matches: [...group.matches]
           ..sort((a, b) => a.matchNumber.compareTo(b.matchNumber)),
       ),
   ];
 }
+
+class _RoundGroup {
+  _RoundGroup(this.key, this.label, this.branch, this.order);
+
+  final String key;
+  final String label;
+  final ResultsBranch branch;
+  int order;
+  final List<MatchModel> matches = [];
+}
+
+/// Winners and plain rounds first, then losers, then the grand final.
+int _branchRank(ResultsBranch branch) => switch (branch) {
+  ResultsBranch.main || ResultsBranch.winners => 0,
+  ResultsBranch.losers => 1,
+  ResultsBranch.grandFinal => 2,
+};
 
 int? _epoch(DateTime? value) => value?.millisecondsSinceEpoch;
 

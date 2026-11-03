@@ -16,12 +16,19 @@ MatchModel _match(
   String? divisionId,
   Map<String, dynamic>? scoreDetails,
   Map<String, dynamic>? tournamentConfig,
+  String bracket = 'winners',
+  String? stageType,
 }) {
   return MatchModel(
     id: id,
     round: round,
     matchNumber: number,
-    bracketPosition: BracketPosition(round: round, position: number),
+    bracketPosition: BracketPosition(
+      bracket: bracket,
+      round: round,
+      position: number,
+    ),
+    stageType: stageType,
     team1Id: team1Id,
     team2Id: team2Id,
     status: status,
@@ -249,6 +256,119 @@ void main() {
     test('no code or no feeder gives null instead of a made-up label', () {
       expect(waitingForCode(target(), 1, [feeder('a', 1), target()]), isNull);
       expect(waitingForCode(target(), 1, [target()]), isNull);
+    });
+  });
+
+  group('branchOfMatch (TC-RBR-01)', () {
+    test('losers and grand final come from the bracket position', () {
+      expect(
+        branchOfMatch(_match('a', bracket: 'losers')),
+        ResultsBranch.losers,
+      );
+      expect(
+        branchOfMatch(_match('a', bracket: 'grand_final')),
+        ResultsBranch.grandFinal,
+      );
+      expect(
+        branchOfMatch(_match('a', bracket: 'grand_final_reset')),
+        ResultsBranch.grandFinal,
+      );
+    });
+
+    test('winners only counts inside double elimination, else main', () {
+      expect(
+        branchOfMatch(_match('a', stageType: 'DOUBLE_ELIMINATION')),
+        ResultsBranch.winners,
+      );
+      expect(
+        branchOfMatch(_match('a', stageType: 'SINGLE_ELIMINATION')),
+        ResultsBranch.main,
+      );
+      expect(branchOfMatch(_match('a')), ResultsBranch.main);
+    });
+  });
+
+  group('buildResultsRounds by branch (TC-RBR-02)', () {
+    test('orders winners, losers, grand final and splits losers rounds', () {
+      const stage = 'DOUBLE_ELIMINATION';
+      final rounds = buildResultsRounds([
+        _match('gf', round: 9, bracket: 'grand_final', stageType: stage),
+        _match('l2', round: 4, bracket: 'losers', stageType: stage),
+        _match('l1', round: 2, bracket: 'losers', stageType: stage),
+        _match('w2', round: 3, stageType: stage),
+        _match('w1', round: 1, stageType: stage),
+      ], (m) => m.bracketPosition.bracket == 'losers' ? 'Same' : 'R${m.round}');
+
+      expect(rounds.map((r) => r.key), [
+        'R1',
+        'R3',
+        'losers|2',
+        'losers|4',
+        'R9',
+      ]);
+      expect(rounds.map((r) => r.branch), [
+        ResultsBranch.winners,
+        ResultsBranch.winners,
+        ResultsBranch.losers,
+        ResultsBranch.losers,
+        ResultsBranch.grandFinal,
+      ]);
+    });
+
+    test('single elimination keeps one key per label on the main branch', () {
+      final rounds = buildResultsRounds([
+        _match('a', round: 1),
+        _match('b', round: 2),
+      ], _label);
+      expect(rounds.map((r) => r.key), ['R1', 'R2']);
+      expect(rounds.every((r) => r.branch == ResultsBranch.main), isTrue);
+    });
+  });
+
+  group('matchTone (TC-RBR-03)', () {
+    test('maps status to the row tone', () {
+      expect(matchTone(_match('a', status: 'LIVE')), MatchTone.live);
+      expect(matchTone(_match('a', status: 'COMPLETED')), MatchTone.done);
+      expect(matchTone(_match('a', status: 'DISPUTED')), MatchTone.done);
+      expect(matchTone(_match('a', status: 'CANCELLED')), MatchTone.cancel);
+      expect(matchTone(_match('a')), MatchTone.ready);
+      expect(matchTone(_match('a', team2Id: '')), MatchTone.wait);
+    });
+  });
+
+  group('round box open state (TC-RBR-04)', () {
+    test('a viewer choice always wins', () {
+      expect(
+        isRoundBoxOpen(choice: true, isDefault: false, searching: false),
+        isTrue,
+      );
+      expect(
+        isRoundBoxOpen(choice: false, isDefault: true, searching: true),
+        isFalse,
+      );
+    });
+
+    test('without a choice: default round or any round while searching', () {
+      expect(
+        isRoundBoxOpen(choice: null, isDefault: true, searching: false),
+        isTrue,
+      );
+      expect(
+        isRoundBoxOpen(choice: null, isDefault: false, searching: false),
+        isFalse,
+      );
+      expect(
+        isRoundBoxOpen(choice: null, isDefault: false, searching: true),
+        isTrue,
+      );
+    });
+
+    test('openOnlyRound opens the picked key and folds the rest', () {
+      expect(openOnlyRound(['a', 'b', 'c'], 'b'), {
+        'a': false,
+        'b': true,
+        'c': false,
+      });
     });
   });
 }

@@ -3,7 +3,6 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -35,13 +34,20 @@ MatchModel _match(
   String? matchCode,
   String? team1Name,
   List<ParticipantPlayer>? team1Players,
+  String bracket = 'winners',
+  String? stageType,
 }) {
   return MatchModel(
     id: id,
     tournamentId: _tid,
     round: round,
     matchNumber: number,
-    bracketPosition: BracketPosition(round: round, position: number),
+    bracketPosition: BracketPosition(
+      bracket: bracket,
+      round: round,
+      position: number,
+    ),
+    stageType: stageType,
     team1Id: team1Id,
     team2Id: team2Id,
     status: status,
@@ -116,6 +122,19 @@ Future<void> _pump(
 
 Finder _row(String id) => find.byKey(ValueKey('results-row-$id'));
 
+/// Every box-head button, in board order.
+Finder get _toggles => find.byWidgetPredicate(
+  (w) =>
+      w.key is ValueKey<String> &&
+      (w.key! as ValueKey<String>).value.startsWith('results-box-toggle-'),
+);
+
+/// Opens the box at [index] (board order) and waits for the unfold.
+Future<void> _toggleBox(WidgetTester tester, int index) async {
+  await tester.tap(_toggles.at(index));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('every round gets its own box, in play order', (tester) async {
     await _pump(tester, [
@@ -124,7 +143,11 @@ void main() {
       _match('bye', round: 1, number: 3, isBye: true),
     ]);
 
+    expect(_toggles, findsNWidgets(2));
+    // Only the first round that waits for a score starts open.
     expect(_row('r1a'), findsOneWidget);
+    expect(_row('r2a'), findsNothing);
+    await _toggleBox(tester, 1);
     expect(_row('r2a'), findsOneWidget);
     expect(_row('bye'), findsNothing);
     expect(find.byKey(const ValueKey('results-box-live')), findsNothing);
@@ -296,7 +319,7 @@ void main() {
     expect(find.text('live-room'), findsOneWidget);
   });
 
-  testWidgets('organiser opens the chooser by tapping a pending row', (
+  testWidgets('organiser opens the score popup by tapping a pending row', (
     tester,
   ) async {
     await _pump(tester, [
@@ -307,7 +330,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('results-score-todo1')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(MatchScoreEntryChooser), findsOneWidget);
+    expect(find.byKey(const ValueKey('results-score-sheet')), findsOneWidget);
   });
 
   testWidgets('a viewer has no pencil and tapping a pending row does nothing', (
@@ -319,7 +342,7 @@ void main() {
     await tester.tap(_row('todo1'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(MatchScoreEntryChooser), findsNothing);
+    expect(find.byKey(const ValueKey('results-score-sheet')), findsNothing);
   });
 
   testWidgets('a row without both teams has no pencil even for organisers', (
@@ -403,7 +426,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Xếp lịch trận'), findsOneWidget);
-    expect(find.byType(MatchScoreEntryChooser), findsNothing);
+    expect(find.byKey(const ValueKey('results-score-sheet')), findsNothing);
   });
 
   group('Lavish mockup parity', () {
@@ -567,6 +590,7 @@ void main() {
         next,
       ]);
 
+      await _toggleBox(tester, 1);
       expect(find.text('Chờ đội thắng V1601'), findsOneWidget);
       expect(find.text('Chờ đội thắng V1602'), findsOneWidget);
     });
@@ -651,7 +675,7 @@ void main() {
         .widget<Text>(find.byKey(ValueKey('results-filter-count-$name')))
         .data!;
 
-    testWidgets('TC-RESULTS-01 managers get seven chips, viewers keep four', (
+    testWidgets('TC-RESULTS-01 managers get five chips, viewers keep four', (
       tester,
     ) async {
       await _pump(tester, [todo], canManage: true);
@@ -661,10 +685,11 @@ void main() {
         'upcoming',
         'finished',
         'unfinished',
-        'late',
-        'disputed',
       ]) {
         expect(find.byKey(ValueKey('results-filter-$name')), findsOneWidget);
+      }
+      for (final name in ['late', 'disputed']) {
+        expect(find.byKey(ValueKey('results-filter-$name')), findsNothing);
       }
 
       await _pump(tester, [todo]);
@@ -676,26 +701,19 @@ void main() {
     testWidgets('TC-RESULTS-02 Disputed chip counts and lists only disputes', (
       tester,
     ) async {
-      await _pump(tester, [
-        disputedA,
-        disputedB,
-        done,
-        cancelled,
-        todo,
-      ], canManage: true);
+      await _pump(
+        tester,
+        [disputedA, disputedB, done, cancelled, todo],
+        canManage: true,
+        initialFilter: ResultsBoardFilter.disputed,
+      );
 
       expect(count(tester, 'disputed'), '2');
       // Like the Web progress card: completed + cancelled, disputes excluded.
       expect(count(tester, 'finished'), '2');
       expect(count(tester, 'unfinished'), '1');
 
-      // The seventh chip sits past the edge of the horizontal chip strip.
-      final disputedChip = find.byKey(const ValueKey('results-filter-disputed'));
-      await tester.ensureVisible(disputedChip);
       await tester.pumpAndSettle();
-      await tester.tap(disputedChip);
-      await tester.pumpAndSettle();
-
       expect(_row('dis-a'), findsOneWidget);
       expect(_row('dis-b'), findsOneWidget);
       expect(_row('done'), findsNothing);
@@ -735,11 +753,10 @@ void main() {
         [late, yesterday, later, playing, disputedA],
         canManage: true,
         clock: () => now,
+        initialFilter: ResultsBoardFilter.late,
       );
 
       expect(count(tester, 'late'), '1');
-
-      await tester.tap(find.byKey(const ValueKey('results-filter-late')));
       await tester.pumpAndSettle();
 
       expect(_row('late'), findsOneWidget);
@@ -760,6 +777,199 @@ void main() {
 
       expect(_row('dis-a'), findsOneWidget);
       expect(_row('todo'), findsNothing);
+    });
+  });
+
+  group('branch boxes and fold (TC-RBR)', () {
+    const double8 = 'DOUBLE_ELIMINATION';
+
+    Finder head(String key) => find.byKey(ValueKey('results-box-head-$key'));
+    Color headColor(WidgetTester tester, String key) =>
+        tester.widget<Material>(head(key)).color!;
+
+    MatchModel losers(String id, int round) => _match(
+      id,
+      round: round,
+      number: 1,
+      bracket: 'losers',
+      stageType: double8,
+    );
+
+    testWidgets('TC-RBR-10 winners, losers and grand final differ in colour', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        _match('w1', round: 1, number: 1, stageType: double8),
+        losers('l1', 2),
+        _match(
+          'gf',
+          round: 9,
+          number: 1,
+          bracket: 'grand_final',
+          stageType: double8,
+        ),
+      ]);
+      final heads = find.byWidgetPredicate(
+        (w) =>
+            w.key is ValueKey<String> &&
+            (w.key! as ValueKey<String>).value.startsWith('results-box-head-'),
+      );
+      expect(heads, findsNWidgets(3));
+      final colours = {
+        for (final e in tester.widgetList<Material>(heads)) e.color,
+      };
+      expect(colours, hasLength(3));
+      expect(find.byIcon(Icons.trending_up_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.trending_down_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.emoji_events_rounded), findsOneWidget);
+    });
+
+    testWidgets('TC-RBR-11 only the first round that waits for a score opens', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        _match('r1a', round: 1, number: 1, status: 'COMPLETED'),
+        _match('r1b', round: 1, number: 2, status: 'COMPLETED'),
+        _match('r2', round: 2, number: 1),
+      ]);
+      expect(_row('r1a'), findsNothing);
+      expect(_row('r1b'), findsNothing);
+      expect(_row('r2'), findsOneWidget);
+    });
+
+    testWidgets('TC-RBR-12 tapping a head folds and opens its box', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        _match('r1a', round: 1, number: 1),
+        _match('r1b', round: 1, number: 2),
+        _match('r2', round: 2, number: 1),
+      ]);
+      expect(_row('r2'), findsNothing);
+      await _toggleBox(tester, 1);
+      expect(_row('r2'), findsOneWidget);
+      await _toggleBox(tester, 1);
+      expect(_row('r2'), findsNothing);
+    });
+
+    testWidgets('TC-RBR-13 a search opens every box that still has a match', (
+      tester,
+    ) async {
+      await _pump(tester, [
+        _match('r1', round: 1, number: 1),
+        _match('r1b', round: 1, number: 2),
+        _match('r2', round: 2, number: 1),
+      ]);
+      await tester.enterText(
+        find.byKey(const ValueKey('results-search')),
+        'van',
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      expect(_row('r1'), findsOneWidget);
+      expect(_row('r2'), findsOneWidget);
+    });
+
+    testWidgets('TC-RBR-14 an open box shows the column header row', (
+      tester,
+    ) async {
+      await _pump(tester, [_match('r1', round: 1, number: 1)]);
+      expect(find.text('Cặp đấu'), findsOneWidget);
+      expect(find.text('Kết quả'), findsOneWidget);
+    });
+
+    testWidgets('TC-RBR-15 the red live box folds too', (tester) async {
+      await _pump(tester, [
+        _match('live1', round: 1, number: 1, status: 'ONGOING'),
+      ]);
+      expect(_row('live1'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('results-box-toggle-live')));
+      await tester.pumpAndSettle();
+      expect(_row('live1'), findsNothing);
+    });
+
+    testWidgets('TC-RBR-16 each losers round is its own box', (tester) async {
+      await _pump(tester, [losers('l1', 2), losers('l2', 4)]);
+      expect(head('losers|2'), findsOneWidget);
+      expect(head('losers|4'), findsOneWidget);
+      expect(headColor(tester, 'losers|2'), headColor(tester, 'losers|4'));
+    });
+
+    testWidgets('TC-RBR-17 no late or disputed chip unless it is preset', (
+      tester,
+    ) async {
+      await _pump(tester, [_match('r1', round: 1, number: 1)], canManage: true);
+      expect(find.byKey(const ValueKey('results-filter-late')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('results-filter-disputed')),
+        findsNothing,
+      );
+      await _pump(
+        tester,
+        [_match('r1', round: 1, number: 1)],
+        canManage: true,
+        initialFilter: ResultsBoardFilter.disputed,
+      );
+      expect(
+        find.byKey(const ValueKey('results-filter-disputed')),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('"Tới vòng" (TC-RBR-2x)', () {
+    final threeRounds = [
+      _match('r1a', round: 1, number: 1),
+      _match('r1b', round: 1, number: 2),
+      _match('r1c', round: 1, number: 3),
+      _match('r1d', round: 1, number: 4),
+      _match('r2a', round: 2, number: 1),
+      _match('r2b', round: 2, number: 2),
+      _match('r3', round: 3, number: 1),
+    ];
+
+    Future<void> openMenu(WidgetTester tester) async {
+      await tester.tap(find.byKey(const ValueKey('results-jump')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('TC-RBR-20 the menu lists every round with its pending count', (
+      tester,
+    ) async {
+      await _pump(tester, threeRounds);
+      await openMenu(tester);
+      expect(find.byType(PopupMenuItem<String>), findsNWidgets(3));
+      expect(find.textContaining('· 4 chờ'), findsOneWidget);
+      expect(find.textContaining('· 2 chờ'), findsOneWidget);
+      expect(find.textContaining('· 1 chờ'), findsOneWidget);
+    });
+
+    testWidgets('TC-RBR-21 picking a round opens it and folds the others', (
+      tester,
+    ) async {
+      await _pump(tester, threeRounds);
+      expect(_row('r1a'), findsOneWidget);
+      expect(_row('r3'), findsNothing);
+
+      await openMenu(tester);
+      await tester.tap(find.byType(PopupMenuItem<String>).last);
+      await tester.pumpAndSettle();
+
+      expect(_row('r3'), findsOneWidget);
+      expect(_row('r1a'), findsNothing);
+      expect(_row('r2a'), findsNothing);
+    });
+
+    testWidgets('TC-RBR-22 the picked round is scrolled into view', (
+      tester,
+    ) async {
+      await _pump(tester, threeRounds);
+      await openMenu(tester);
+      await tester.tap(find.byType(PopupMenuItem<String>).last);
+      await tester.pumpAndSettle();
+      final top = tester.getTopLeft(_row('r3')).dy;
+      expect(top, greaterThanOrEqualTo(0));
+      expect(top, lessThan(tester.view.physicalSize.height));
     });
   });
 }
