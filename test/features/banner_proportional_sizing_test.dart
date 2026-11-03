@@ -369,6 +369,49 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
+
+    testWidgets('TC-BANNER-LIST-01 card danh sách trên điện thoại dọc chỉ cao 20%', (
+      tester,
+    ) async {
+      tester.view.physicalSize = _phonePortrait;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: AppTheme.darkTheme,
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: TournamentCardWithBanner(
+                  tournament: _tournament,
+                  onTap: _noop,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final banner = tester.getSize(
+        find
+            .descendant(
+              of: find.byType(TournamentCardWithBanner),
+              matching: find.byType(SizedBox),
+            )
+            .first,
+      );
+      expect(banner.height / _phonePortrait.height, closeTo(0.20, 1e-6));
+      // The synthetic card body overflows by 38px at 390px wide with or without
+      // this change (checked at the old 30% banner); only the banner height is
+      // under test here, so the layout exception is drained, not asserted.
+      tester.takeException();
+    });
   });
 }
 

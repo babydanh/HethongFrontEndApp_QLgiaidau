@@ -155,6 +155,10 @@ class AppResponsive {
   /// 12.9"), nên "banner chiếm cùng một tỉ lệ màn hình" vẫn đúng.
   static const double bannerMaxHeight = 320;
 
+  /// Tỉ lệ banner của thẻ giải trong DANH SÁCH (tab Giải đấu, home), mọi hướng.
+  /// Thẻ nổi bật và trang chi tiết vẫn dùng tỉ lệ theo hướng ở trên.
+  static const double bannerListCardRatio = 0.20;
+
   /// Tỉ lệ cỡ chữ tiêu đề overlay / chiều cao banner
   /// (17px trên banner 185px cũ).
   static const double bannerTitleRatio = 0.092;
@@ -170,6 +174,8 @@ class AppResponsive {
   /// Chiều cao banner = tỉ lệ theo hướng màn hình × chiều cao viewport,
   /// giới hạn [bannerMinHeight]–[bannerMaxHeight].
   ///
+  /// - [ratio] — ép một tỉ lệ riêng (ví dụ thẻ trong danh sách dùng
+  ///   [bannerListCardRatio]); bỏ trống thì theo hướng màn hình.
   /// - [viewportWidth] — quyết định nhánh dọc/ngang. Bỏ trống thì coi như DỌC
   ///   vì đó là hướng phổ biến của app; call site quên truyền chỉ lệch ở
   ///   chế độ ngang, không vỡ layout.
@@ -193,11 +199,15 @@ class AppResponsive {
     double? viewportWidth,
     double min = bannerMinHeight,
     double max = bannerMaxHeight,
+    double? ratio,
   }) {
     final isLandscape = viewportWidth != null && viewportWidth > viewportHeight;
-    final ratio =
-        isLandscape ? bannerLandscapeViewportRatio : bannerPortraitViewportRatio;
-    return (viewportHeight * ratio).clamp(min, max);
+    final usedRatio =
+        ratio ??
+        (isLandscape
+            ? bannerLandscapeViewportRatio
+            : bannerPortraitViewportRatio);
+    return (viewportHeight * usedRatio).clamp(min, max);
   }
 
   /// Cỡ chữ trong banner — scale TUYẾN TÍNH theo [bannerHeight].

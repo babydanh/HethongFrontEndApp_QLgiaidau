@@ -266,12 +266,13 @@ class _TournamentCardWithBannerState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Banner Header — bám % chiều cao viewport theo hướng màn
-                  // hình (dọc 30%, ngang 20%), không phải pixel cứng.
+                  // Banner Header — bám 20% chiều cao viewport ở mọi hướng
+                  // (thẻ trong danh sách), không phải pixel cứng.
                   SizedBox(
                     height: AppResponsive.bannerHeight(
                       MediaQuery.sizeOf(context).height,
                       viewportWidth: MediaQuery.sizeOf(context).width,
+                      ratio: AppResponsive.bannerListCardRatio,
                     ),
                     child: Stack(
                       fit: StackFit.expand,
