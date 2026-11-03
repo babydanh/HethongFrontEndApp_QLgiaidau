@@ -6,6 +6,9 @@ class HomeFeaturedTournament {
   final String? status;
   final String? registrationStatus;
 
+  /// Organizer chose to keep the headline off the featured card.
+  final bool hideFeaturedCardText;
+
   const HomeFeaturedTournament({
     required this.id,
     required this.name,
@@ -13,6 +16,7 @@ class HomeFeaturedTournament {
     this.sport,
     this.status,
     this.registrationStatus,
+    this.hideFeaturedCardText = false,
   });
 
   factory HomeFeaturedTournament.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,7 @@ class HomeFeaturedTournament {
       sport: _optionalHomeString(json['sport']),
       status: _optionalHomeString(json['status']),
       registrationStatus: _optionalHomeString(json['registrationStatus']),
+      hideFeaturedCardText: json['hideFeaturedCardText'] == true,
     );
   }
 }

@@ -60,6 +60,7 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
     final hasBanner = bannerUrl.isNotEmpty;
     final sport = tournament.sport;
     final registrationStatus = tournament.registrationStatus;
+    final showTitle = !tournament.hideFeaturedCardText;
     final viewportSize = MediaQuery.sizeOf(context);
 
     return GestureDetector(
@@ -96,22 +97,24 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
               else
                 _FallbackBanner(colors: colors),
               ...[
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.3),
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.75),
-                        ],
-                        stops: const [0.0, 0.45, 1.0],
+                // The dark scrim only exists to keep the title readable.
+                if (showTitle)
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.3),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.75),
+                          ],
+                          stops: const [0.0, 0.45, 1.0],
+                        ),
                       ),
                     ),
                   ),
-                ),
                 Positioned(
                   left: 10,
                   right: 10,
@@ -144,40 +147,41 @@ class FeaturedTournamentBannerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Positioned(
-                  left: 14,
-                  right: 14,
-                  bottom: 12,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        tournament.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: AppResponsive.bannerFontSize(
-                            viewportSize.height,
-                            viewportWidth: viewportSize.width,
-                            ratio: AppResponsive.bannerTitleRatio * 0.85,
-                          ),
-                          height: 1.2,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.2,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black,
-                              blurRadius: 10,
-                              offset: Offset(0, 2),
+                if (showTitle)
+                  Positioned(
+                    left: 14,
+                    right: 14,
+                    bottom: 12,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          tournament.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: AppResponsive.bannerFontSize(
+                              viewportSize.height,
+                              viewportWidth: viewportSize.width,
+                              ratio: AppResponsive.bannerTitleRatio * 0.85,
                             ),
-                          ],
+                            height: 1.2,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black,
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
               ],
             ],
           ),
