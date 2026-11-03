@@ -93,6 +93,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('TC-INTRO-LOGO-03 a logo without a banner still shows as a badge', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _tournament(logoUrl: 'https://images.example/logo.png'),
+    );
+
+    expect(find.byKey(logoKey), findsOneWidget);
+    // The logo is not also stretched over the cover: it is loaded once.
+    final loaded = tester
+        .widgetList<Image>(find.byType(Image))
+        .where((i) => i.image.toString().contains('logo.png'));
+    expect(loaded.length, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('TC-INTRO-LOGO-02 no logo means no logo badge on the banner', (
     tester,
   ) async {

@@ -155,9 +155,12 @@ class AppResponsive {
   /// 12.9"), nên "banner chiếm cùng một tỉ lệ màn hình" vẫn đúng.
   static const double bannerMaxHeight = 320;
 
-  /// Tỉ lệ banner của thẻ giải trong DANH SÁCH (tab Giải đấu, home), mọi hướng.
+  /// Tỉ lệ banner của thẻ giải trong DANH SÁCH (tab Giải đấu), mọi hướng.
   /// Thẻ nổi bật và trang chi tiết vẫn dùng tỉ lệ theo hướng ở trên.
-  static const double bannerListCardRatio = 0.20;
+  static const double bannerListCardRatio = 0.14;
+
+  /// Biên dưới riêng cho thẻ trong danh sách (thấp hơn [bannerMinHeight]).
+  static const double bannerListCardMinHeight = 100;
 
   /// Tỉ lệ cỡ chữ tiêu đề overlay / chiều cao banner
   /// (17px trên banner 185px cũ).

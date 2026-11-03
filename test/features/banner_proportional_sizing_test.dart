@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
+import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -38,32 +39,32 @@ void main() {
       // Đây là điều cũ đã hỏng: 185px cho tỉ lệ 24.1% vs 17.1%.
       expect(h14, closeTo(153.6, 1e-9));
       expect(h16, 216.0);
-      expect(
-        h14 / _laptop14.height,
-        closeTo(h16 / _laptop16.height, 1e-12),
-      );
+      expect(h14 / _laptop14.height, closeTo(h16 / _laptop16.height, 1e-12));
     });
 
-    test('màn hình dọc cao hơn hẳn, và không thấp hơn bản AspectRatio(16/9) cũ', () {
-      // 20% của 844 chỉ là 169px — THẤP HƠN bản 16/9 cũ (~219px), đó là lý do
-      // banner bị bẹp. Dọc nay lấy 30% = 253px, cao hơn cả bản cũ.
-      final phone = AppResponsive.bannerHeight(
-        _phonePortrait.height,
-        viewportWidth: _phonePortrait.width,
-      );
-      expect(phone, closeTo(253.2, 1e-9));
-      expect(phone / _phonePortrait.height, closeTo(0.30, 1e-9));
-      expect(phone, greaterThan(_phonePortrait.width * 9 / 16));
+    test(
+      'màn hình dọc cao hơn hẳn, và không thấp hơn bản AspectRatio(16/9) cũ',
+      () {
+        // 20% của 844 chỉ là 169px — THẤP HƠN bản 16/9 cũ (~219px), đó là lý do
+        // banner bị bẹp. Dọc nay lấy 30% = 253px, cao hơn cả bản cũ.
+        final phone = AppResponsive.bannerHeight(
+          _phonePortrait.height,
+          viewportWidth: _phonePortrait.width,
+        );
+        expect(phone, closeTo(253.2, 1e-9));
+        expect(phone / _phonePortrait.height, closeTo(0.30, 1e-9));
+        expect(phone, greaterThan(_phonePortrait.width * 9 / 16));
 
-      // iPad dọc 1024px: 30% = 307px, vẫn nằm trong vùng không bị clamp.
-      expect(
-        AppResponsive.bannerHeight(
-          _tabletPortrait.height,
-          viewportWidth: _tabletPortrait.width,
-        ),
-        closeTo(307.2, 1e-9),
-      );
-    });
+        // iPad dọc 1024px: 30% = 307px, vẫn nằm trong vùng không bị clamp.
+        expect(
+          AppResponsive.bannerHeight(
+            _tabletPortrait.height,
+            viewportWidth: _tabletPortrait.width,
+          ),
+          closeTo(307.2, 1e-9),
+        );
+      },
+    );
 
     test('cùng một máy, hai hướng thì hai chiều cao khác nhau', () {
       final portrait = AppResponsive.bannerHeight(
@@ -323,7 +324,7 @@ void main() {
       expect(font14 / box14.height, equals(font16 / box16.height));
     });
 
-    testWidgets('card danh sách giải ở home dùng cùng tỉ lệ 20%', (
+    testWidgets('card danh sách giải dùng tỉ lệ riêng 14% ở mọi hướng', (
       tester,
     ) async {
       for (final surface in [_laptop14, _laptop16]) {
@@ -351,14 +352,16 @@ void main() {
         await tester.pumpAndSettle();
 
         final banner = tester.getSize(
-          find.descendant(
-            of: find.byType(TournamentCardWithBanner),
-            matching: find.byType(SizedBox),
-          ).first,
+          find
+              .descendant(
+                of: find.byType(TournamentCardWithBanner),
+                matching: find.byType(SizedBox),
+              )
+              .first,
         );
         expect(
           banner.height / surface.height,
-          closeTo(0.20, 1e-6),
+          closeTo(0.14, 1e-6),
           reason: 'banner height phải bám viewport tại $surface',
         );
         expect(tester.takeException(), isNull);
@@ -370,48 +373,62 @@ void main() {
       tester.view.resetDevicePixelRatio();
     });
 
-    testWidgets('TC-BANNER-LIST-01 card danh sách trên điện thoại dọc chỉ cao 20%', (
-      tester,
-    ) async {
-      tester.view.physicalSize = _phonePortrait;
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'TC-BANNER-LIST-01 card danh sách trên điện thoại dọc chỉ cao 14%, logo bám mép banner',
+      (tester) async {
+        tester.view.physicalSize = _phonePortrait;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            theme: AppTheme.darkTheme,
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: TournamentCardWithBanner(
-                  tournament: _tournament,
-                  onTap: _noop,
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              theme: AppTheme.darkTheme,
+              locale: const Locale('en'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: TournamentCardWithBanner(
+                    tournament: _tournament.copyWith(
+                      logoUrl: 'https://images.example/logo.png',
+                    ),
+                    onTap: _noop,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      final banner = tester.getSize(
-        find
+        final banner = tester.getSize(
+          find
+              .descendant(
+                of: find.byType(TournamentCardWithBanner),
+                matching: find.byType(SizedBox),
+              )
+              .first,
+        );
+        expect(banner.height / _phonePortrait.height, closeTo(0.14, 1e-6));
+        // The logo straddles the banner's lower edge instead of sitting at a
+        // fixed offset, so it never lands on the date block below.
+        final bannerBox = find
             .descendant(
               of: find.byType(TournamentCardWithBanner),
               matching: find.byType(SizedBox),
             )
-            .first,
-      );
-      expect(banner.height / _phonePortrait.height, closeTo(0.20, 1e-6));
-      // The synthetic card body overflows by 38px at 390px wide with or without
-      // this change (checked at the old 30% banner); only the banner height is
-      // under test here, so the layout exception is drained, not asserted.
-      tester.takeException();
-    });
+            .first;
+        final bannerTop = tester.getTopLeft(bannerBox).dy;
+        final logo = tester.getRect(find.byType(TournamentAvatar));
+        expect(logo.center.dy - bannerTop, closeTo(banner.height, 1.5));
+        // The synthetic card body overflows by 38px at 390px wide with or without
+        // this change (checked at the old 30% banner); only the banner height is
+        // under test here, so the layout exception is drained, not asserted.
+        tester.takeException();
+      },
+    );
   });
 }
 

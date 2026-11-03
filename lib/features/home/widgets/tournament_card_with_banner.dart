@@ -12,6 +12,9 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/status_badge.dart
 import 'package:app_quanly_giaidau/core/widgets/tournament_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
+/// Diameter of the logo badge that straddles the banner's lower edge.
+const double _logoSize = 42;
+
 class TournamentCardWithBanner extends ConsumerStatefulWidget {
   final Tournament tournament;
   final VoidCallback onTap;
@@ -237,6 +240,15 @@ class _TournamentCardWithBannerState
 
     final resolvedLogoUrl = _resolveImageUrl(widget.tournament.logoUrl);
     final hasLogo = resolvedLogoUrl.isNotEmpty;
+    final viewport = MediaQuery.sizeOf(context);
+    // One height for the banner and for the logo that straddles its lower
+    // edge: a fixed logo offset drifts onto the date block when this changes.
+    final bannerHeight = AppResponsive.bannerHeight(
+      viewport.height,
+      viewportWidth: viewport.width,
+      ratio: AppResponsive.bannerListCardRatio,
+      min: AppResponsive.bannerListCardMinHeight,
+    );
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -266,14 +278,10 @@ class _TournamentCardWithBannerState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Banner Header — bám 20% chiều cao viewport ở mọi hướng
+                  // Banner Header — bám 14% chiều cao viewport ở mọi hướng
                   // (thẻ trong danh sách), không phải pixel cứng.
                   SizedBox(
-                    height: AppResponsive.bannerHeight(
-                      MediaQuery.sizeOf(context).height,
-                      viewportWidth: MediaQuery.sizeOf(context).width,
-                      ratio: AppResponsive.bannerListCardRatio,
-                    ),
+                    height: bannerHeight,
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -560,7 +568,7 @@ class _TournamentCardWithBannerState
               // Floating Logo Avatar (Chỉ hiển thị khi giải có logo tải lên, không có logo thì ẩn)
               if (hasLogo)
                 Positioned(
-                  top: 163,
+                  top: bannerHeight - _logoSize / 2,
                   left: 14,
                   child: Container(
                     decoration: BoxDecoration(
@@ -577,7 +585,7 @@ class _TournamentCardWithBannerState
                       imageUrl: widget.tournament.logoUrl,
                       tournamentName: widget.tournament.name,
                       sport: widget.tournament.sport,
-                      size: 42,
+                      size: _logoSize,
                       borderWidth: 2.5,
                       borderColor: colors.bgCard,
                     ),

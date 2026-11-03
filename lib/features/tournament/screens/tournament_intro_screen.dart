@@ -1069,15 +1069,9 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     if (tournament.bannerUrl != null && tournament.bannerUrl!.isNotEmpty) {
       images.add(tournament.bannerUrl!);
     }
-    if (tournament.logoUrl != null &&
-        tournament.logoUrl!.isNotEmpty &&
-        !images.contains(tournament.logoUrl)) {
-      images.add(tournament.logoUrl!);
-    }
-
-    final showLogoBadge =
-        (tournament.bannerUrl?.isNotEmpty ?? false) &&
-        (tournament.logoUrl?.isNotEmpty ?? false);
+    // The logo never stands in for the cover (a QR or a square logo stretched
+    // over the whole banner); it always gets its own badge instead.
+    final showLogoBadge = tournament.logoUrl?.isNotEmpty ?? false;
     final double bannerContentHeight = isClubLite ? 0.0 : 180.0;
     final double totalBannerHeight = bannerContentHeight + topPadding;
 
@@ -1203,8 +1197,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       ),
                     ),
                   ),
-                  // With a banner the logo is not the cover, so it needs its own
-                  // badge; without one the logo already is the cover.
                   if (showLogoBadge)
                     Positioned(
                       left: 16,
