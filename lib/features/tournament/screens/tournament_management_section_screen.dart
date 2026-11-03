@@ -22,6 +22,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_contact_form.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/shared/widgets/date_time_field.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -552,13 +553,18 @@ class _TournamentSettingsFormState
         ],
       );
 
-  Widget _contactForm() => TournamentContactForm(
-    initial: _contactInfo,
-    onChanged: (value) {
-      _contactInfo = value;
-      _syncDirty();
-    },
-  );
+  Widget _contactForm() {
+    final profile = ref.watch(userProfileProvider).asData?.value;
+    return TournamentContactForm(
+      initial: _contactInfo,
+      profileName: profile?.fullName,
+      profileAvatarUrl: profile?.avatarUrl,
+      onChanged: (value) {
+        _contactInfo = value;
+        _syncDirty();
+      },
+    );
+  }
 
   bool _hasOrderErrors(AppLocalizations l10n) =>
       widget.group == _SettingsGroup.registration &&

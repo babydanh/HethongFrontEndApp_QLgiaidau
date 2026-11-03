@@ -32611,18 +32611,6 @@ abstract class AppLocalizations {
   /// **'Không lưu được lịch. Kiểm tra mạng rồi thử lại.'**
   String get matchSchedule_error;
 
-  /// No description provided for @contactFormSource.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nguồn liên hệ Ban tổ chức'**
-  String get contactFormSource;
-
-  /// No description provided for @contactFormSourceManual.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nhập thông tin BTC'**
-  String get contactFormSourceManual;
-
   /// No description provided for @contactFormSourceProfile.
   ///
   /// In vi, this message translates to:
@@ -32644,14 +32632,8 @@ abstract class AppLocalizations {
   /// No description provided for @contactFormLinks.
   ///
   /// In vi, this message translates to:
-  /// **'Liên kết mạng xã hội & liên hệ khác'**
+  /// **'Liên kết'**
   String get contactFormLinks;
-
-  /// No description provided for @contactFormNoLinks.
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có liên kết nào.'**
-  String get contactFormNoLinks;
 
   /// No description provided for @contactFormType.
   ///
@@ -32662,7 +32644,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactFormTypeCustom.
   ///
   /// In vi, this message translates to:
-  /// **'Khác (tự nhập nhãn)'**
+  /// **'Khác'**
   String get contactFormTypeCustom;
 
   /// No description provided for @contactFormCustomLabel.
@@ -32680,13 +32662,13 @@ abstract class AppLocalizations {
   /// No description provided for @contactFormValue.
   ///
   /// In vi, this message translates to:
-  /// **'Đường dẫn / giá trị'**
+  /// **'Giá trị'**
   String get contactFormValue;
 
   /// No description provided for @contactFormValueHint.
   ///
   /// In vi, this message translates to:
-  /// **'https://facebook.com/... hoặc link liên kết'**
+  /// **'Dán đường dẫn…'**
   String get contactFormValueHint;
 
   /// No description provided for @contactFormAdd.
@@ -32724,12 +32706,6 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa có thông tin liên hệ. Bấm để thêm.'**
   String get contactFormEmptyHint;
-
-  /// No description provided for @contactFormShowFounder.
-  ///
-  /// In vi, this message translates to:
-  /// **'Hiện người sáng lập và liên hệ cho người xem'**
-  String get contactFormShowFounder;
 }
 
 class _AppLocalizationsDelegate

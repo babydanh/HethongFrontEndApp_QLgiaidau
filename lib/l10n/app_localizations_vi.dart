@@ -18088,12 +18088,6 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không lưu được lịch. Kiểm tra mạng rồi thử lại.';
 
   @override
-  String get contactFormSource => 'Nguồn liên hệ Ban tổ chức';
-
-  @override
-  String get contactFormSourceManual => 'Nhập thông tin BTC';
-
-  @override
   String get contactFormSourceProfile => 'Dùng hồ sơ tài khoản';
 
   @override
@@ -18103,16 +18097,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contactFormOrganizerNameRequired => 'Vui lòng nhập tên BTC.';
 
   @override
-  String get contactFormLinks => 'Liên kết mạng xã hội & liên hệ khác';
-
-  @override
-  String get contactFormNoLinks => 'Chưa có liên kết nào.';
+  String get contactFormLinks => 'Liên kết';
 
   @override
   String get contactFormType => 'Loại liên hệ';
 
   @override
-  String get contactFormTypeCustom => 'Khác (tự nhập nhãn)';
+  String get contactFormTypeCustom => 'Khác';
 
   @override
   String get contactFormCustomLabel => 'Nhãn liên hệ';
@@ -18121,11 +18112,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get contactFormCustomLabelHint => 'Telegram, Viber,...';
 
   @override
-  String get contactFormValue => 'Đường dẫn / giá trị';
+  String get contactFormValue => 'Giá trị';
 
   @override
-  String get contactFormValueHint =>
-      'https://facebook.com/... hoặc link liên kết';
+  String get contactFormValueHint => 'Dán đường dẫn…';
 
   @override
   String get contactFormAdd => 'Thêm';
@@ -18145,8 +18135,4 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get contactFormEmptyHint => 'Chưa có thông tin liên hệ. Bấm để thêm.';
-
-  @override
-  String get contactFormShowFounder =>
-      'Hiện người sáng lập và liên hệ cho người xem';
 }

@@ -18158,12 +18158,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not save the schedule. Check your connection and try again.';
 
   @override
-  String get contactFormSource => 'Organizer contact source';
-
-  @override
-  String get contactFormSourceManual => 'Enter organizer details';
-
-  @override
   String get contactFormSourceProfile => 'Use account profile';
 
   @override
@@ -18174,16 +18168,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Please enter the organizer name.';
 
   @override
-  String get contactFormLinks => 'Social links & other contacts';
-
-  @override
-  String get contactFormNoLinks => 'No links yet.';
+  String get contactFormLinks => 'Links';
 
   @override
   String get contactFormType => 'Contact type';
 
   @override
-  String get contactFormTypeCustom => 'Other (custom label)';
+  String get contactFormTypeCustom => 'Other';
 
   @override
   String get contactFormCustomLabel => 'Contact label';
@@ -18192,10 +18183,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactFormCustomLabelHint => 'Telegram, Viber,...';
 
   @override
-  String get contactFormValue => 'Link / value';
+  String get contactFormValue => 'Value';
 
   @override
-  String get contactFormValueHint => 'https://facebook.com/... or any link';
+  String get contactFormValueHint => 'Paste a link…';
 
   @override
   String get contactFormAdd => 'Add';
@@ -18214,8 +18205,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contactFormEmptyHint => 'No contact details yet. Tap to add.';
-
-  @override
-  String get contactFormShowFounder =>
-      'Show the founder and contact to viewers';
 }

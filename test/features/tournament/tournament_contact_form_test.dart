@@ -9,8 +9,9 @@ void main() {
 
   Future<void> pumpForm(
     WidgetTester tester,
-    Map<String, dynamic> initial,
-  ) async {
+    Map<String, dynamic> initial, {
+    String? profileName = 'danh',
+  }) async {
     latest = {...initial};
     await tester.pumpWidget(
       MaterialApp(
@@ -26,6 +27,7 @@ void main() {
           body: SingleChildScrollView(
             child: TournamentContactForm(
               initial: initial,
+              profileName: profileName,
               onChanged: (value) => latest = value,
             ),
           ),
@@ -34,38 +36,57 @@ void main() {
     );
   }
 
-  Future<void> tapText(WidgetTester tester, String text) async {
-    final target = find.text(text);
+  Future<void> tapKey(WidgetTester tester, String key) async {
+    final target = find.byKey(ValueKey(key));
     await tester.ensureVisible(target);
     await tester.tap(target);
     await tester.pumpAndSettle();
   }
 
+  bool modeIsProfile(WidgetTester tester) => tester
+      .widget<Switch>(
+        find.descendant(
+          of: find.byKey(const ValueKey('info-contact-mode')),
+          matching: find.byType(Switch),
+        ),
+      )
+      .value;
+
   testWidgets(
-    'TC-CONTACT-01: profile source shows phone and email, no organizer name',
+    'TC-CONTACT-01: profile source shows the account card, phone and email, no organizer name',
     (tester) async {
       await pumpForm(tester, {
         'phone': '0900000001',
         'email': 'a@example.test',
       });
 
+      expect(modeIsProfile(tester), isTrue);
+      expect(
+        find.byKey(const ValueKey('info-contact-profile')),
+        findsOneWidget,
+      );
+      expect(find.text('danh'), findsOneWidget);
       expect(find.byKey(const ValueKey('info-contact-phone')), findsOneWidget);
       expect(find.byKey(const ValueKey('info-contact-email')), findsOneWidget);
       expect(find.byKey(const ValueKey('info-contact-name')), findsNothing);
+      // The old two-button source selector is gone.
+      expect(find.byType(SegmentedButton<String>), findsNothing);
     },
   );
 
   testWidgets(
-    'TC-CONTACT-02: switching to manual asks for the organizer name and drops the email',
+    'TC-CONTACT-02: turning the switch off asks for the organizer name and drops the email',
     (tester) async {
       await pumpForm(tester, {
         'phone': '0900000001',
         'email': 'a@example.test',
       });
-      await tapText(tester, 'Nhập thông tin BTC');
+      await tapKey(tester, 'info-contact-mode');
 
+      expect(modeIsProfile(tester), isFalse);
       expect(find.byKey(const ValueKey('info-contact-name')), findsOneWidget);
       expect(find.byKey(const ValueKey('info-contact-email')), findsNothing);
+      expect(find.byKey(const ValueKey('info-contact-profile')), findsNothing);
       expect(latest['displayMode'], 'MANUAL');
       expect(latest.containsKey('email'), isFalse);
 
@@ -79,7 +100,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-CONTACT-03: adding a social link stores it under its type and lists it',
+    'TC-CONTACT-03: adding a social link with the tick stores it under its type and lists it',
     (tester) async {
       await pumpForm(tester, {'phone': '0900000001'});
 
@@ -87,26 +108,27 @@ void main() {
         find.byKey(const ValueKey('info-contact-link-value')),
         'https://facebook.com/example.test',
       );
-      await tapText(tester, 'Thêm');
+      await tapKey(tester, 'info-contact-link-add');
 
       expect(latest['facebook'], 'https://facebook.com/example.test');
       expect(
         find.byKey(const ValueKey('info-contact-link-remove-facebook')),
         findsOneWidget,
       );
+      expect(find.text('https://facebook.com/example.test'), findsOneWidget);
     },
   );
 
   testWidgets('TC-CONTACT-04: a listed link can be removed', (tester) async {
     await pumpForm(tester, {'zalo': '0900000009', 'phone': '0900000001'});
-    final remove = find.byKey(const ValueKey('info-contact-link-remove-zalo'));
-    await tester.ensureVisible(remove);
-    await tester.tap(remove);
-    await tester.pumpAndSettle();
+    await tapKey(tester, 'info-contact-link-remove-zalo');
 
     expect(latest.containsKey('zalo'), isFalse);
     expect(latest['phone'], '0900000001');
-    expect(remove, findsNothing);
+    expect(
+      find.byKey(const ValueKey('info-contact-link-remove-zalo')),
+      findsNothing,
+    );
   });
 
   testWidgets(
@@ -114,22 +136,22 @@ void main() {
     (tester) async {
       await pumpForm(tester, {'phone': '0900000001'});
 
-      await tapText(tester, 'Thêm');
+      await tapKey(tester, 'info-contact-link-add');
       expect(find.text('Vui lòng nhập giá trị liên hệ.'), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const ValueKey('info-contact-link-value')),
         'value',
       );
-      await tapText(tester, 'Khác (tự nhập nhãn)');
-      await tapText(tester, 'Thêm');
+      await tapKey(tester, 'info-contact-link-type-custom');
+      await tapKey(tester, 'info-contact-link-add');
       expect(find.text('Vui lòng nhập nhãn liên hệ.'), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const ValueKey('info-contact-link-label')),
         'Email',
       );
-      await tapText(tester, 'Thêm');
+      await tapKey(tester, 'info-contact-link-add');
       expect(
         find.text('Không được trùng với điện thoại hoặc email.'),
         findsOneWidget,
@@ -139,37 +161,72 @@ void main() {
   );
 
   testWidgets(
-    'TC-CONTACT-09: the founder switch flips hidden, starts off when the flag is missing',
+    'TC-CONTACT-06: picking another type changes the key the link is stored under',
     (tester) async {
       await pumpForm(tester, {'phone': '0900000001'});
-      final toggle = find.byKey(const ValueKey('info-contact-show-founder'));
-      expect(tester.widget<SwitchListTile>(toggle).value, isFalse);
 
-      await tester.ensureVisible(toggle);
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
-      expect(latest['hidden'], false);
-      expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+      await tapKey(tester, 'info-contact-link-type-zalo');
+      await tester.enterText(
+        find.byKey(const ValueKey('info-contact-link-value')),
+        '0900000009',
+      );
+      await tapKey(tester, 'info-contact-link-add');
 
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
-      expect(latest['hidden'], true);
+      expect(latest['zalo'], '0900000009');
+      expect(latest.containsKey('facebook'), isFalse);
     },
   );
 
   testWidgets(
-    'TC-CONTACT-10: manual source is always public, so no founder switch',
+    'TC-CONTACT-07: no "no links" notice and no separate add button',
     (tester) async {
-      await pumpForm(tester, {
-        'displayMode': 'MANUAL',
-        'organizerName': 'Ban to chuc A',
-        'phone': '0900000001',
-      });
+      await pumpForm(tester, {'phone': '0900000001'});
+
+      expect(find.text('Chưa có liên kết nào.'), findsNothing);
+      expect(find.text('Thêm'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'TC-CONTACT-09: the popup keeps the hidden flag untouched and has no founder switch',
+    (tester) async {
+      await pumpForm(tester, {'phone': '0900000001', 'hidden': false});
 
       expect(
         find.byKey(const ValueKey('info-contact-show-founder')),
         findsNothing,
       );
+      await tester.enterText(
+        find.byKey(const ValueKey('info-contact-phone')),
+        '0900000002',
+      );
+      await tester.pump();
+      expect(latest['hidden'], false);
+      expect(latest['phone'], '0900000002');
+    },
+  );
+
+  testWidgets('TC-CONTACT-10: manual source has no account card', (
+    tester,
+  ) async {
+    await pumpForm(tester, {
+      'displayMode': 'MANUAL',
+      'organizerName': 'Ban to chuc A',
+      'phone': '0900000001',
+    });
+
+    expect(modeIsProfile(tester), isFalse);
+    expect(find.byKey(const ValueKey('info-contact-profile')), findsNothing);
+  });
+
+  testWidgets(
+    'TC-CONTACT-11: a single-word account name shows its initial; a hidden founder says so',
+    (tester) async {
+      await pumpForm(tester, {'phone': '0900000001'}, profileName: 'odi695');
+
+      expect(find.text('odi695'), findsOneWidget);
+      expect(find.text('O'), findsOneWidget);
+      expect(find.text('Đang ẩn với người xem'), findsOneWidget);
     },
   );
 }
