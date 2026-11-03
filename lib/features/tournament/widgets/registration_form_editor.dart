@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
@@ -173,7 +174,7 @@ class _RegistrationFormEditorScreenState
     final l10n = AppLocalizations.of(context)!;
     final label = _displayLabel(l10n, field);
     final answered = widget.answeredFieldIds.contains(field['id']);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showPopupDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.registrationFormDeleteTitle),

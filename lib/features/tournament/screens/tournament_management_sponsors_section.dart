@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
@@ -247,7 +248,7 @@ class _TournamentManagementSponsorsSectionState
     final nextOrder =
         items.fold<int>(-1, (top, item) => math.max(top, item.displayOrder)) +
         1;
-    await showDialog<void>(
+    await showPopupDialog<void>(
       context: context,
       builder: (dialogContext) {
         final messenger = ScaffoldMessenger.of(dialogContext);

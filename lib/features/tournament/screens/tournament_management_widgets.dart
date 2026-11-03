@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -166,7 +167,7 @@ Future<bool> confirmTournamentManagementAction(
 }) async {
   final colors = context.colors;
   var acknowledged = requiredAcknowledgement == null;
-  final result = await showDialog<bool>(
+  final result = await showPopupDialog<bool>(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setDialogState) => AlertDialog(

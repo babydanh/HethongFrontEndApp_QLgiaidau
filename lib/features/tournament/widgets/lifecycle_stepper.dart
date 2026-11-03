@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -289,7 +290,7 @@ Future<bool> showDeleteTournamentDialog(
   BuildContext context, {
   required String tournamentName,
 }) async {
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showPopupDialog<bool>(
     context: context,
     builder: (_) => _DeleteTournamentDialog(tournamentName: tournamentName),
   );

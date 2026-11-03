@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,7 @@ void showOrganizerRequiredDialog(
   final colors = context.colors;
   final l10n = AppLocalizations.of(context)!;
 
-  showDialog(
+  showPopupDialog(
     context: context,
     builder: (dialogCtx) => AlertDialog(
       backgroundColor: colors.bgCard,

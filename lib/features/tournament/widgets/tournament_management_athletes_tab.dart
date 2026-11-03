@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -185,7 +186,7 @@ class _TournamentManagementAthletesTabState
   /// the open division only. Double taps are ignored while it runs.
   Future<void> _autoPair(TournamentDivision division) async {
     if (_autoPairing) return;
-    final strategy = await showDialog<PairingStrategy>(
+    final strategy = await showPopupDialog<PairingStrategy>(
       context: context,
       builder: (_) => const _AutoPairDialog(),
     );
