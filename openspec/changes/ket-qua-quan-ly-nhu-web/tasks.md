@@ -1,6 +1,6 @@
 ## 0. Chuỗi hiển thị (chủ chung hai file arb)
 
-- [ ] 0.1 Thêm toàn bộ chuỗi vi/en cho tab Kết quả và popup tiến trình: `tournamentManagementTabResults`, nhóm `resultsBoard_*` (3 chip mới, "Chưa có trận nào."), nhóm `stepPopup_*` (tiêu đề, trạng thái Đủ/Cần chú ý/Thiếu/Đang chạy/Chưa tới/Đang tải/Chưa mở, "Đi tới", "Mở", "Tải lại", "Tìm nội dung...", "Chỉ hiện thiếu", các câu rỗng) và nhóm `stepSummary_*` (các dòng số liệu từng bước). Tên và nội dung lấy từ Web `messages/vi.json` (`OrganizerManage.resultsBoard.*`, `OrganizerTournamentStepper.*`). Tiêu chí: `flutter gen-l10n` → exit 0, không có cảnh báo thiếu bản dịch en
+- [x] 0.1 Thêm toàn bộ chuỗi vi/en cho tab Kết quả và popup tiến trình: `tournamentManagementTabResults`, nhóm `resultsBoard_*` (3 chip mới, "Chưa có trận nào."), nhóm `stepPopup_*` (tiêu đề, trạng thái Đủ/Cần chú ý/Thiếu/Đang chạy/Chưa tới/Đang tải/Chưa mở, "Đi tới", "Mở", "Tải lại", "Tìm nội dung...", "Chỉ hiện thiếu", các câu rỗng) và nhóm `stepSummary_*` (các dòng số liệu từng bước). Tên và nội dung lấy từ Web `messages/vi.json` (`OrganizerManage.resultsBoard.*`, `OrganizerTournamentStepper.*`). Tiêu chí: `flutter gen-l10n` → exit 0, không có cảnh báo thiếu bản dịch en
   - Files: sửa `lib/l10n/app_vi.arb`, `lib/l10n/app_en.arb`; sinh lại `lib/l10n/app_localizations.dart`, `app_localizations_en.dart`, `app_localizations_vi.dart` (file sinh có trong git, commit cùng)
   - Giao: các key trên cho 1.2, 2.2 · Nhận: không
   - Chủ file chung: 0.1 giữ hai file arb; các task sau KHÔNG sửa arb, thiếu key thì quay lại 0.1

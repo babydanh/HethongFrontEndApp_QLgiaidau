@@ -32736,6 +32736,258 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa có thông tin liên hệ. Bấm để thêm.'**
   String get contactFormEmptyHint;
+
+  /// No description provided for @tournamentManagementTabResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả'**
+  String get tournamentManagementTabResults;
+
+  /// No description provided for @resultsBoard_unfinished.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xong'**
+  String get resultsBoard_unfinished;
+
+  /// No description provided for @resultsBoard_late.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trễ giờ'**
+  String get resultsBoard_late;
+
+  /// No description provided for @resultsBoard_disputed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tranh chấp'**
+  String get resultsBoard_disputed;
+
+  /// No description provided for @stepPopup_goTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đi tới'**
+  String get stepPopup_goTo;
+
+  /// No description provided for @stepPopup_loadingReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải số liệu'**
+  String get stepPopup_loadingReason;
+
+  /// No description provided for @stepPopup_todoDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đủ, không còn việc cần làm'**
+  String get stepPopup_todoDone;
+
+  /// No description provided for @stepPopup_todoNotYet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa tới bước này, chưa có việc cần làm'**
+  String get stepPopup_todoNotYet;
+
+  /// No description provided for @stepPopup_divisionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo từng nội dung'**
+  String get stepPopup_divisionsTitle;
+
+  /// No description provided for @stepPopup_searchPlaceholder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm nội dung...'**
+  String get stepPopup_searchPlaceholder;
+
+  /// No description provided for @stepPopup_onlyMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ hiện thiếu'**
+  String get stepPopup_onlyMissing;
+
+  /// No description provided for @stepPopup_all.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả ({count})'**
+  String stepPopup_all(int count);
+
+  /// No description provided for @stepPopup_emptyFiltered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có nội dung nào khớp'**
+  String get stepPopup_emptyFiltered;
+
+  /// No description provided for @stepPopup_noDivisions.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có nội dung nào'**
+  String get stepPopup_noDivisions;
+
+  /// No description provided for @stepPopup_percentSr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành {percent}%'**
+  String stepPopup_percentSr(int percent);
+
+  /// No description provided for @stepPopup_subtitleTodos.
+  ///
+  /// In vi, this message translates to:
+  /// **'{state} · {count} việc cần làm'**
+  String stepPopup_subtitleTodos(String state, int count);
+
+  /// No description provided for @stepPopup_statusDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đủ'**
+  String get stepPopup_statusDone;
+
+  /// No description provided for @stepPopup_statusAttention.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần chú ý'**
+  String get stepPopup_statusAttention;
+
+  /// No description provided for @stepPopup_statusMissing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiếu'**
+  String get stepPopup_statusMissing;
+
+  /// No description provided for @stepPopup_statusCurrent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chạy'**
+  String get stepPopup_statusCurrent;
+
+  /// No description provided for @stepPopup_statusUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa tới'**
+  String get stepPopup_statusUpcoming;
+
+  /// No description provided for @stepPopup_statusLoading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải'**
+  String get stepPopup_statusLoading;
+
+  /// No description provided for @stepPopup_statusDisabled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa mở'**
+  String get stepPopup_statusDisabled;
+
+  /// No description provided for @stepPopup_retry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lại'**
+  String get stepPopup_retry;
+
+  /// No description provided for @stepPopup_open.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở'**
+  String get stepPopup_open;
+
+  /// No description provided for @stepPopup_openLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở {name}'**
+  String stepPopup_openLabel(String name);
+
+  /// No description provided for @stepTodo_venue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn địa điểm'**
+  String get stepTodo_venue;
+
+  /// No description provided for @stepTodo_dates.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa ngày giải'**
+  String get stepTodo_dates;
+
+  /// No description provided for @stepTodo_deadline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt hạn đăng ký'**
+  String get stepTodo_deadline;
+
+  /// No description provided for @stepTodo_emptyDivisions.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} nội dung chưa có VĐV'**
+  String stepTodo_emptyDivisions(int count);
+
+  /// No description provided for @stepTodo_unpaid.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} VĐV chưa thanh toán'**
+  String stepTodo_unpaid(int count);
+
+  /// No description provided for @stepTodo_teamsWaiting.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} đội chờ duyệt'**
+  String stepTodo_teamsWaiting(int count);
+
+  /// No description provided for @stepTodo_openDuringPlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} nội dung còn mở đăng ký'**
+  String stepTodo_openDuringPlay(int count);
+
+  /// No description provided for @stepTodo_noBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo sơ đồ: {name}'**
+  String stepTodo_noBracket(String name);
+
+  /// No description provided for @stepTodo_noCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận chưa có sân'**
+  String stepTodo_noCourt(int count);
+
+  /// No description provided for @stepTodo_noTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận chưa có giờ'**
+  String stepTodo_noTime(int count);
+
+  /// No description provided for @stepTodo_disputed.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận tranh chấp'**
+  String stepTodo_disputed(int count);
+
+  /// No description provided for @stepTodo_late.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận trễ giờ'**
+  String stepTodo_late(int count);
+
+  /// No description provided for @stepTodo_swissNextRound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo vòng tiếp theo: {name}'**
+  String stepTodo_swissNextRound(String name);
+
+  /// No description provided for @stepTodo_unfinishedMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận chưa xong'**
+  String stepTodo_unfinishedMatches(int count);
+
+  /// No description provided for @stepTodo_endDateExpected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập ngày kết thúc dự kiến'**
+  String get stepTodo_endDateExpected;
+
+  /// No description provided for @stepTodo_loadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải lại dữ liệu'**
+  String get stepTodo_loadFailed;
 }
 
 class _AppLocalizationsDelegate
