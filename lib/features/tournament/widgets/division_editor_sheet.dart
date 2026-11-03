@@ -728,23 +728,25 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
         ),
         const SizedBox(height: 8),
         _choiceGrid([
+          // Swiss is hidden for new divisions; one already on Swiss keeps its tile.
           for (final bracketType in _bracketTypes)
-            (
-              // Nhãn dài chiếm cả hàng như Web (`col-span-2` dưới `sm`).
-              full:
-                  bracketType == 'DOUBLE_ELIMINATION' ||
-                  bracketType == 'GROUP_STAGE_KNOCKOUT',
-              tile: LavishChoiceTile(
-                key: ValueKey('division-editor-bracket-$bracketType'),
-                label: _bracketLabel(l10n, bracketType),
-                selected: _bracketType == bracketType,
-                icon: _bracketIcon(bracketType),
-                onPressed: locked
-                    ? null
-                    : () => _selectBracketType(bracketType),
-                trailing: _illustrationTrigger(l10n, bracketType),
+            if (bracketType != 'SWISS' || _bracketType == 'SWISS')
+              (
+                // Nhãn dài chiếm cả hàng như Web (`col-span-2` dưới `sm`).
+                full:
+                    bracketType == 'DOUBLE_ELIMINATION' ||
+                    bracketType == 'GROUP_STAGE_KNOCKOUT',
+                tile: LavishChoiceTile(
+                  key: ValueKey('division-editor-bracket-$bracketType'),
+                  label: _bracketLabel(l10n, bracketType),
+                  selected: _bracketType == bracketType,
+                  icon: _bracketIcon(bracketType),
+                  onPressed: locked
+                      ? null
+                      : () => _selectBracketType(bracketType),
+                  trailing: _illustrationTrigger(l10n, bracketType),
+                ),
               ),
-            ),
         ]),
       ],
     );
@@ -900,7 +902,9 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
           key: const ValueKey('division-editor-elo-switch'),
           title: l10n.divisionEditorEloLimit,
           value: _eloEnabled,
-          onChanged: _busy ? null : (value) => setState(() => _eloEnabled = value),
+          onChanged: _busy
+              ? null
+              : (value) => setState(() => _eloEnabled = value),
         ),
         if (_eloEnabled) _eloFields(l10n),
         _inset(
@@ -1039,7 +1043,9 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
                 label: l10n.divisionEditorEloMax,
                 controller: _maxElo,
                 enabled: !_busy,
-                errorText: _eloInvalid ? l10n.divisionEditorEloRangeError : null,
+                errorText: _eloInvalid
+                    ? l10n.divisionEditorEloRangeError
+                    : null,
               ),
             ),
           ],
@@ -1136,27 +1142,26 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
 
   // Web shows only the first 2 presets (`getQuickPresets(..., 2)`); the
   // description is the tooltip (Web uses the title attribute).
-  Widget _presetChips(AppLocalizations l10n) => _chipBlock(
-    l10n.divisionEditorPresets,
-    [
-      for (final preset in getSportRulePresets(_sportKind).take(2))
-        Tooltip(
-          message: divisionEditorPresetDescription(l10n, preset.id),
-          child: LavishChoiceTile(
-            key: ValueKey('division-editor-preset-${preset.id}'),
-            label:
-                '${divisionEditorPresetLabel(l10n, preset.id)} · ${preset.setsToWin}×${preset.pointsPerSet}',
-            selected:
-                _setsToWin == preset.setsToWin &&
-                _pointsPerSet == preset.pointsPerSet &&
-                _winByTwo == preset.winByTwo,
-            onPressed: _busy || widget.lockContent
-                ? null
-                : () => _applyPreset(preset),
-          ),
+  Widget _presetChips(
+    AppLocalizations l10n,
+  ) => _chipBlock(l10n.divisionEditorPresets, [
+    for (final preset in getSportRulePresets(_sportKind).take(2))
+      Tooltip(
+        message: divisionEditorPresetDescription(l10n, preset.id),
+        child: LavishChoiceTile(
+          key: ValueKey('division-editor-preset-${preset.id}'),
+          label:
+              '${divisionEditorPresetLabel(l10n, preset.id)} · ${preset.setsToWin}×${preset.pointsPerSet}',
+          selected:
+              _setsToWin == preset.setsToWin &&
+              _pointsPerSet == preset.pointsPerSet &&
+              _winByTwo == preset.winByTwo,
+          onPressed: _busy || widget.lockContent
+              ? null
+              : () => _applyPreset(preset),
         ),
-    ],
-  );
+      ),
+  ]);
 
   Widget _scoreFields(AppLocalizations l10n) => _inset(
     Column(
@@ -1252,10 +1257,8 @@ class _DivisionEditorSheetState extends ConsumerState<DivisionEditorSheet> {
   );
 
   /// Side inset of a field row: toggle rows carry their own 14dp.
-  Widget _inset(Widget child) => Padding(
-    padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
-    child: child,
-  );
+  Widget _inset(Widget child) =>
+      Padding(padding: const EdgeInsets.fromLTRB(14, 8, 14, 4), child: child);
 
   /// Web `fieldClass`: 8dp-rounded box with a grey hairline, no floating label.
   InputDecoration _fieldDecoration({
