@@ -101,10 +101,10 @@ StepSummary _build(
   now: _now,
 );
 
-StepState _step(StepSummary s, StepKey key) =>
+StepProgress _step(StepSummary s, StepKey key) =>
     s.steps.firstWhere((step) => step.key == key);
 
-StepTodo? _todo(StepState step, String key) {
+StepTodo? _todo(StepProgress step, String key) {
   for (final todo in step.todos) {
     if (todo.key == key) return todo;
   }
@@ -327,7 +327,7 @@ void main() {
   });
 
   test(
-    'TC-STEP-09 division rows put problems first and open the right tab',
+    'TC-STEP-08b division rows put problems first and open the right tab',
     () {
       final summary = _build(
         _tournament('registration_closed', registrationEnd: _past),

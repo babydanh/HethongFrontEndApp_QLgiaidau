@@ -68,8 +68,8 @@ class StepTodo {
   final StepTarget target;
 }
 
-class StepState {
-  const StepState({
+class StepProgress {
+  const StepProgress({
     required this.key,
     required this.state,
     required this.percent,
@@ -103,7 +103,7 @@ class StepDivisionRow {
 class StepSummary {
   const StepSummary({required this.steps, required this.divisions});
 
-  final List<StepState> steps;
+  final List<StepProgress> steps;
   final List<StepDivisionRow> divisions;
 }
 
@@ -273,7 +273,7 @@ StepTodo _countTodo(
   params: params,
 );
 
-StepState _registrationStep({
+StepProgress _registrationStep({
   required Tournament tournament,
   required String status,
   required SummaryLoad participantsLoad,
@@ -345,7 +345,7 @@ StepState _registrationStep({
   } else {
     state = open ? StepStatus.current : StepStatus.done;
   }
-  return StepState(
+  return StepProgress(
     key: StepKey.registration,
     state: state,
     percent: ready ? toPercent(closedCount, relevant.length) : 0,
@@ -353,7 +353,7 @@ StepState _registrationStep({
   );
 }
 
-StepState _scheduleStep({
+StepProgress _scheduleStep({
   required Tournament tournament,
   required SummaryLoad load,
   required List<_Facts> facts,
@@ -409,7 +409,7 @@ StepState _scheduleStep({
         ? StepStatus.done
         : StepStatus.attention;
   }
-  return StepState(
+  return StepProgress(
     key: StepKey.schedule,
     state: state,
     percent: load == SummaryLoad.ready
@@ -423,9 +423,9 @@ StepTarget _resultsTarget(ResultsBoardFilter filter) =>
     StepTarget(StepHubTab.results, resultsFilter: filter);
 
 /// Gate shared by the two playing steps: null means there is data to count.
-StepState? _playGate(StepKey key, SummaryLoad load, List<_Facts> facts) {
+StepProgress? _playGate(StepKey key, SummaryLoad load, List<_Facts> facts) {
   if (load == SummaryLoad.loading) {
-    return StepState(
+    return StepProgress(
       key: key,
       state: StepStatus.loading,
       percent: 0,
@@ -433,7 +433,7 @@ StepState? _playGate(StepKey key, SummaryLoad load, List<_Facts> facts) {
     );
   }
   if (facts.every((f) => f.cancelled)) {
-    return StepState(
+    return StepProgress(
       key: key,
       state: StepStatus.missing,
       percent: 0,
@@ -443,7 +443,7 @@ StepState? _playGate(StepKey key, SummaryLoad load, List<_Facts> facts) {
   return null;
 }
 
-StepState _inProgressStep(SummaryLoad load, List<_Facts> facts) {
+StepProgress _inProgressStep(SummaryLoad load, List<_Facts> facts) {
   final gate = _playGate(StepKey.inProgress, load, facts);
   if (gate != null) return gate;
   final live = facts.where((f) => !f.cancelled).toList();
@@ -462,7 +462,7 @@ StepState _inProgressStep(SummaryLoad load, List<_Facts> facts) {
       _countTodo('late', late, _resultsTarget(ResultsBoardFilter.late)),
     if (load == SummaryLoad.error) _loadFailed,
   ];
-  return StepState(
+  return StepProgress(
     key: StepKey.inProgress,
     state: todos.isNotEmpty
         ? StepStatus.attention
@@ -472,7 +472,7 @@ StepState _inProgressStep(SummaryLoad load, List<_Facts> facts) {
   );
 }
 
-StepState _completedStep({
+StepProgress _completedStep({
   required Tournament tournament,
   required SummaryLoad load,
   required List<_Facts> facts,
@@ -521,7 +521,7 @@ StepState _completedStep({
   } else {
     state = StepStatus.current;
   }
-  return StepState(
+  return StepProgress(
     key: StepKey.completed,
     state: state,
     percent: load == SummaryLoad.error
@@ -531,8 +531,8 @@ StepState _completedStep({
   );
 }
 
-StepState _idle(StepKey key, StepStatus state) =>
-    StepState(key: key, state: state, percent: 0, todos: const []);
+StepProgress _idle(StepKey key, StepStatus state) =>
+    StepProgress(key: key, state: state, percent: 0, todos: const []);
 
 int _toneRank(_Facts f, bool openDuringPlay) {
   if (f.cancelled) return 4;
@@ -617,24 +617,24 @@ StepSummary buildStepSummary({
   final rows = _divisionRows(facts, openDuringPlay);
   final matchStepLoad = _worst([participantsLoad, matchesLoad]);
 
-  StepState registration() => _registrationStep(
+  StepProgress registration() => _registrationStep(
     tournament: tournament,
     status: status,
     participantsLoad: participantsLoad,
     facts: facts,
     now: now,
   );
-  StepState schedule() =>
+  StepProgress schedule() =>
       _scheduleStep(tournament: tournament, load: matchStepLoad, facts: facts);
-  StepState playing() => _inProgressStep(matchStepLoad, facts);
-  StepState closing() => _completedStep(
+  StepProgress playing() => _inProgressStep(matchStepLoad, facts);
+  StepProgress closing() => _completedStep(
     tournament: tournament,
     load: matchStepLoad,
     facts: facts,
     now: now,
   );
 
-  List<StepState> steps;
+  List<StepProgress> steps;
   switch (status) {
     case AppConstants.statusUpcoming ||
         AppConstants.statusRegistration ||
@@ -664,7 +664,7 @@ StepSummary buildStepSummary({
 
 /// A completed tournament is read-only: every step is green with no todos,
 /// except a step still loading, missing, or failed to load.
-List<StepState> _finishedSteps(List<StepState> steps, SummaryLoad load) {
+List<StepProgress> _finishedSteps(List<StepProgress> steps, SummaryLoad load) {
   return [
     for (final s in steps)
       if (s.state == StepStatus.loading || s.state == StepStatus.missing)
@@ -672,14 +672,14 @@ List<StepState> _finishedSteps(List<StepState> steps, SummaryLoad load) {
       else if (load == SummaryLoad.error && s.state == StepStatus.attention)
         s
       else if (load == SummaryLoad.loading)
-        StepState(
+        StepProgress(
           key: s.key,
           state: StepStatus.loading,
           percent: 0,
           todos: const [],
         )
       else
-        StepState(
+        StepProgress(
           key: s.key,
           state: StepStatus.done,
           percent: 100,
