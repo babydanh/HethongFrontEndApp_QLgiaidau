@@ -1989,6 +1989,7 @@ void main() {
       l10n.tournamentManagementTabBracket,
       l10n.tournamentManagementSchedule,
       l10n.tournamentManagementTabSettings,
+      l10n.tournamentManagementTabResults,
     ]);
 
     await _openTab(tester, l10n.tournamentManagementTabDivisions);

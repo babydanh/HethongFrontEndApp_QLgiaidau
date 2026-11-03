@@ -130,12 +130,22 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   }
 
   List<MatchModel> _sourceMatches() {
-    // `value` keeps the last data when a refresh fails.
-    final async = ref.watch(
-      widget.isLite
-          ? liteBracketMatchesProvider(widget.tournamentId)
-          : matchesProvider(widget.tournamentId),
-    );
+    // `value` keeps the last data when a refresh fails. Organisers read the
+    // management feed (`/manage/matches`), like the Web board, not the public
+    // one.
+    final AsyncValue<List<MatchModel>> async;
+    if (widget.isLite) {
+      async = ref.watch(liteBracketMatchesProvider(widget.tournamentId));
+    } else if (widget.canManage) {
+      async = ref.watch(
+        managedMatchesWithDivisionProvider((
+          tournamentId: widget.tournamentId,
+          divisionId: null,
+        )),
+      );
+    } else {
+      async = ref.watch(matchesProvider(widget.tournamentId));
+    }
     return async.value ?? const <MatchModel>[];
   }
 

@@ -13,10 +13,12 @@ import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart'
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_end_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_stepper.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_match_board.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_reconfirm_card.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_athletes_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_management_header.dart';
@@ -85,6 +87,12 @@ class _TournamentManagementHubScreenState
   /// all show it. Null until someone picks one (each tab then defaults itself).
   String? _divisionId;
 
+  /// Chip the "Kết quả" board opens on, and a counter that rebuilds the board
+  /// each time something asks for it (so the chip also applies when the tab is
+  /// already open).
+  ResultsBoardFilter _resultsFilter = ResultsBoardFilter.all;
+  int _resultsRequest = 0;
+
   /// True while the open section page holds edits that are not saved yet.
   final ValueNotifier<bool> _unsavedChanges = ValueNotifier<bool>(false);
   bool _isCollapsed = false;
@@ -122,6 +130,16 @@ class _TournamentManagementHubScreenState
   void _selectDivision(String id) {
     if (id == _divisionId) return;
     setState(() => _divisionId = id);
+  }
+
+  /// Opens the "Kết quả" tab, optionally on one chip and one division.
+  void _goToResults({ResultsBoardFilter? filter, String? divisionId}) {
+    setState(() {
+      if (divisionId != null) _divisionId = divisionId;
+      _resultsFilter = filter ?? ResultsBoardFilter.all;
+      _resultsRequest++;
+    });
+    _tabController.animateTo(_HubTab.results.index);
   }
 
   void _openSection(TournamentManagementSection section) {
@@ -402,6 +420,7 @@ class _TournamentManagementHubScreenState
                 Tab(text: l10n.tournamentManagementTabBracket),
                 Tab(text: l10n.tournamentManagementSchedule),
                 Tab(text: l10n.tournamentManagementTabSettings),
+                Tab(text: l10n.tournamentManagementTabResults),
               ],
             ),
           ),
@@ -497,10 +516,63 @@ class _TournamentManagementHubScreenState
                 overlapHandles: overlapHandles,
               ),
               _buildSettingsTab(context, overlapHandles),
+              _buildResultsTab(tournament, overlapHandles),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildResultsTab(
+    Tournament tournament,
+    List<SliverOverlapAbsorberHandle> overlapHandles,
+  ) {
+    final divisions = tournament.divisions;
+    final hosted = _divisionId;
+    final activeId = divisions.any((d) => d.id == hosted)
+        ? hosted
+        : (divisions.isEmpty ? null : divisions.first.id);
+    return CustomScrollView(
+      slivers: [
+        ...overlapHandles.map(
+          (handle) => SliverOverlapInjector(handle: handle),
+        ),
+        if (divisions.length > 1)
+          SliverToBoxAdapter(
+            child: DivisionStrip(
+              keyPrefix: 'results-division',
+              items: [
+                for (final d in divisions)
+                  DivisionStripItem(
+                    id: d.id,
+                    name: d.name,
+                    count: d.participantCount,
+                    capacity: (d.maxParticipants ?? 0) > 0
+                        ? d.maxParticipants
+                        : null,
+                  ),
+              ],
+              selectedId: activeId,
+              onChanged: (id) {
+                if (id != null) _selectDivision(id);
+              },
+            ),
+          ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 140),
+          sliver: SliverToBoxAdapter(
+            child: ResultsMatchBoard(
+              key: ValueKey('results-board-$activeId-$_resultsRequest'),
+              tournamentId: tournament.id,
+              isLite: false,
+              canManage: true,
+              divisionId: activeId,
+              initialFilter: _resultsFilter,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1067,7 +1139,15 @@ class _TournamentManagementHubScreenState
   }
 }
 
-enum _HubTab { overview, divisions, athletes, bracket, schedule, settings }
+enum _HubTab {
+  overview,
+  divisions,
+  athletes,
+  bracket,
+  schedule,
+  settings,
+  results,
+}
 
 class _SectionDetails {
   const _SectionDetails(this.icon, this.title, this.subtitle, this.color);
