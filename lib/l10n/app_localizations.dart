@@ -33048,6 +33048,114 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tải lại dữ liệu'**
   String get stepTodo_loadFailed;
+
+  /// No description provided for @groupStage_groupPrefix.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng'**
+  String get groupStage_groupPrefix;
+
+  /// No description provided for @groupStage_modeMatrix.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng chéo'**
+  String get groupStage_modeMatrix;
+
+  /// No description provided for @groupStage_modeStandings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng xếp hạng'**
+  String get groupStage_modeStandings;
+
+  /// No description provided for @groupStage_modeRounds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo vòng'**
+  String get groupStage_modeRounds;
+
+  /// No description provided for @groupStage_stt.
+  ///
+  /// In vi, this message translates to:
+  /// **'STT'**
+  String get groupStage_stt;
+
+  /// No description provided for @groupStage_participantHeader.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV / Đội'**
+  String get groupStage_participantHeader;
+
+  /// No description provided for @groupStage_wl.
+  ///
+  /// In vi, this message translates to:
+  /// **'T / B'**
+  String get groupStage_wl;
+
+  /// No description provided for @groupStage_round.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {round}'**
+  String groupStage_round(int round);
+
+  /// No description provided for @groupStage_rest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ: {name}'**
+  String groupStage_rest(String name);
+
+  /// No description provided for @groupStage_statusDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xong'**
+  String get groupStage_statusDone;
+
+  /// No description provided for @groupStage_statusLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đấu'**
+  String get groupStage_statusLive;
+
+  /// No description provided for @groupStage_statusUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get groupStage_statusUpcoming;
+
+  /// No description provided for @groupStage_noCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xếp sân'**
+  String get groupStage_noCourt;
+
+  /// No description provided for @groupStage_viewMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trận'**
+  String get groupStage_viewMatch;
+
+  /// No description provided for @groupStage_won.
+  ///
+  /// In vi, this message translates to:
+  /// **'THẮNG'**
+  String get groupStage_won;
+
+  /// No description provided for @groupStage_lost.
+  ///
+  /// In vi, this message translates to:
+  /// **'THUA'**
+  String get groupStage_lost;
+
+  /// No description provided for @groupStage_setLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Set {n}'**
+  String groupStage_setLabel(int n);
+
+  /// No description provided for @groupStage_sheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'{group} · Vòng {round}'**
+  String groupStage_sheetTitle(String group, int round);
 }
 
 class _AppLocalizationsDelegate

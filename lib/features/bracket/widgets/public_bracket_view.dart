@@ -10,10 +10,9 @@ import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
@@ -24,7 +23,7 @@ enum _Kind { single, double, roundRobin, swiss }
 /// vòng. Chọn đúng loại sơ đồ như `BracketViewScreen`:
 /// - loại trực tiếp  -> [SingleElimDiagram]
 /// - nhánh thắng-thua -> [DoubleElimDiagram]
-/// - vòng tròn       -> [CrossTableView]
+/// - vòng tròn       -> [GroupStageView]
 /// - vòng bảng + knockout -> chỉ phần knockout.
 ///
 /// Sơ đồ chỉ cuộn ngang (`scrollOnly`), không zoom, không kéo chéo. Chiều cao
@@ -119,13 +118,11 @@ class PublicBracketView extends StatelessWidget {
         divisionId: divisionId,
         matches: matches,
       ),
-      _Kind.roundRobin => Padding(
-        padding: const EdgeInsets.all(12),
-        child: CrossTableView(
-          matches: matches,
-          tournamentId: tournamentId,
-          divisionId: divisionId,
-        ),
+      _Kind.roundRobin => GroupStageView(
+        matches: matches,
+        tournamentId: tournamentId,
+        divisionId: divisionId,
+        bracketType: bracketType,
       ),
       _Kind.double => DoubleElimDiagram(
         matches: knockoutOnly,
@@ -281,7 +278,7 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
           ),
         ),
         if (_selectedTab == 0)
-          StandingsView(
+          GroupStageView(
             matches: widget.matches,
             tournamentId: widget.tournamentId,
             divisionId: widget.divisionId,

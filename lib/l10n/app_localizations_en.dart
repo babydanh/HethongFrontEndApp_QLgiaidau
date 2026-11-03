@@ -18414,4 +18414,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stepTodo_loadFailed => 'Reload the data';
+
+  @override
+  String get groupStage_groupPrefix => 'Group';
+
+  @override
+  String get groupStage_modeMatrix => 'Cross table';
+
+  @override
+  String get groupStage_modeStandings => 'Standings';
+
+  @override
+  String get groupStage_modeRounds => 'By round';
+
+  @override
+  String get groupStage_stt => 'No.';
+
+  @override
+  String get groupStage_participantHeader => 'Player / Team';
+
+  @override
+  String get groupStage_wl => 'W / L';
+
+  @override
+  String groupStage_round(int round) {
+    return 'Round $round';
+  }
+
+  @override
+  String groupStage_rest(String name) {
+    return 'Rest: $name';
+  }
+
+  @override
+  String get groupStage_statusDone => 'Finished';
+
+  @override
+  String get groupStage_statusLive => 'Live';
+
+  @override
+  String get groupStage_statusUpcoming => 'Upcoming';
+
+  @override
+  String get groupStage_noCourt => 'No court yet';
+
+  @override
+  String get groupStage_viewMatch => 'View match';
+
+  @override
+  String get groupStage_won => 'WON';
+
+  @override
+  String get groupStage_lost => 'LOST';
+
+  @override
+  String groupStage_setLabel(int n) {
+    return 'Set $n';
+  }
+
+  @override
+  String groupStage_sheetTitle(String group, int round) {
+    return '$group · Round $round';
+  }
 }

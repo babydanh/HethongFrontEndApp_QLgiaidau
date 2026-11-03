@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_data.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
@@ -47,7 +48,10 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
         standingsAsync.asData?.value ?? standingsAsync.value ?? const [];
     final standings = loadedStandings.isNotEmpty
         ? loadedStandings
-        : _buildFallbackStandingsFromMatches(widget.matches, l10n);
+        : buildFallbackStandingsFromMatches(
+            widget.matches,
+            l10n.crossTableDefaultGroup,
+          );
 
     if (standings.isEmpty) {
       if (standingsAsync.isLoading && widget.matches.isEmpty) {
@@ -56,7 +60,10 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
       return _buildEmptyState(context, l10n.crossTableEmpty);
     }
 
-    final groupedStandings = _groupStandings(standings, l10n);
+    final groupedStandings = groupStandings(
+      standings,
+      l10n.crossTableDefaultGroup,
+    );
     final matchSnapshot = ref
         .watch(
           matchesWithDivisionProvider((
@@ -75,7 +82,7 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
       itemBuilder: (context, index) {
         final groupName = groupNames[index];
         final groupRows = groupedStandings[groupName]!;
-        final allGroupMatches = _matchesForGroup(
+        final allGroupMatches = matchesForGroup(
           groupRows,
           groupName,
           groupNames.length == 1,
@@ -84,14 +91,14 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
         final maxLeg = allGroupMatches.fold<int>(
           widget.configuredLegs.clamp(1, 5),
           (currentMax, match) {
-            final leg = _legForMatch(match, groupRows.length);
+            final leg = legForMatch(match, groupRows.length);
             return leg > currentMax ? leg : currentMax;
           },
         );
         final currentLeg = (_groupLegs[groupName] ?? 1).clamp(1, maxLeg);
         final groupMatches = allGroupMatches
             .where(
-              (match) => _legForMatch(match, groupRows.length) == currentLeg,
+              (match) => legForMatch(match, groupRows.length) == currentLeg,
             )
             .toList();
 
@@ -117,114 +124,6 @@ class _CrossTableViewState extends ConsumerState<CrossTableView> {
         );
       },
     );
-  }
-
-  List<Standing> _buildFallbackStandingsFromMatches(
-    List<MatchModel> matches,
-    AppLocalizations l10n,
-  ) {
-    final standingsMap = <String, Standing>{};
-    for (final m in matches) {
-      final grp = (m.groupName != null && m.groupName!.isNotEmpty)
-          ? m.groupName!
-          : l10n.crossTableDefaultGroup;
-      for (final side in const [1, 2]) {
-        final teamId = side == 1 ? m.team1Id : m.team2Id;
-        final name = matchSideTeamName(m, side);
-        final players = matchSidePlayers(m, side);
-        if (teamId.isEmpty ||
-            name == 'BYE' ||
-            (name == null && players.isEmpty)) {
-          continue;
-        }
-        standingsMap.putIfAbsent(
-          teamId,
-          () => Standing(
-            id: teamId,
-            teamName: name ?? '',
-            group: grp,
-            players: players,
-          ),
-        );
-      }
-    }
-    return standingsMap.values.toList();
-  }
-
-  Map<String, List<Standing>> _groupStandings(
-    List<Standing> standings,
-    AppLocalizations l10n,
-  ) {
-    final grouped = <String, List<Standing>>{};
-    for (final standing in standings) {
-      final groupName = standing.group.trim().isNotEmpty
-          ? standing.group.trim()
-          : l10n.crossTableDefaultGroup;
-      grouped.putIfAbsent(groupName, () => []).add(standing);
-    }
-    return grouped;
-  }
-
-  List<MatchModel> _matchesForGroup(
-    List<Standing> standings,
-    String groupName,
-    bool allowLegacyParticipantFallback,
-    List<MatchModel> matches,
-  ) {
-    final participantIds = standings.map((s) => s.id).toSet();
-    final normalizedGroupName = groupName.trim().toLowerCase();
-
-    return matches.where((match) {
-      if (match.isBye) return false;
-
-      if (_isKnockoutMatch(match)) return false;
-
-      final matchGroup = (match.groupName ?? '').trim().toLowerCase();
-      final sameGroupByName = matchGroup == normalizedGroupName;
-      final sameGroupByParticipant =
-          participantIds.contains(match.team1Id) &&
-          participantIds.contains(match.team2Id);
-
-      return sameGroupByName ||
-          (allowLegacyParticipantFallback &&
-              matchGroup.isEmpty &&
-              sameGroupByParticipant);
-    }).toList()..sort((a, b) {
-      final roundCompare = a.round.compareTo(b.round);
-      return roundCompare != 0
-          ? roundCompare
-          : a.matchNumber.compareTo(b.matchNumber);
-    });
-  }
-
-  bool _isKnockoutMatch(MatchModel match) {
-    final stage = '${match.stageName ?? ''} ${match.stageType ?? ''}'
-        .toLowerCase();
-    return stage.contains('knockout') ||
-        stage.contains('playoff') ||
-        stage.contains('elimination') ||
-        stage.contains('loại trực tiếp') ||
-        stage.contains('nhánh thắng') ||
-        stage.contains('nhánh thua') ||
-        stage.contains('grand final') ||
-        stage.contains('semi') ||
-        stage.contains('quarter');
-  }
-
-  int _legForMatch(MatchModel match, int participantCount) {
-    // Prefer the persisted encounter leg. The round-based calculation remains
-    // only for legacy payloads that predate the leg field.
-    if (match.leg != null && match.leg! > 0) return match.leg!;
-
-    // Backend stores roundNumber continuously across legs (for example
-    // rounds 1..3 are leg 1 and 4..6 are leg 2). Treating roundNumber as the
-    // leg made the second leg reuse the first leg's matrix/score selection.
-    final slots = participantCount.isOdd
-        ? participantCount + 1
-        : participantCount;
-    final roundsPerLeg = (slots - 1).clamp(1, 1000);
-    final round = match.round < 1 ? 1 : match.round;
-    return ((round - 1) ~/ roundsPerLeg) + 1;
   }
 
   Widget _buildEmptyState(BuildContext context, String message) {

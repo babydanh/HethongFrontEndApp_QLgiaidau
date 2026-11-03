@@ -18343,4 +18343,66 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get stepTodo_loadFailed => 'Tải lại dữ liệu';
+
+  @override
+  String get groupStage_groupPrefix => 'Bảng';
+
+  @override
+  String get groupStage_modeMatrix => 'Bảng chéo';
+
+  @override
+  String get groupStage_modeStandings => 'Bảng xếp hạng';
+
+  @override
+  String get groupStage_modeRounds => 'Theo vòng';
+
+  @override
+  String get groupStage_stt => 'STT';
+
+  @override
+  String get groupStage_participantHeader => 'VĐV / Đội';
+
+  @override
+  String get groupStage_wl => 'T / B';
+
+  @override
+  String groupStage_round(int round) {
+    return 'Vòng $round';
+  }
+
+  @override
+  String groupStage_rest(String name) {
+    return 'Nghỉ: $name';
+  }
+
+  @override
+  String get groupStage_statusDone => 'Đã xong';
+
+  @override
+  String get groupStage_statusLive => 'Đang đấu';
+
+  @override
+  String get groupStage_statusUpcoming => 'Sắp diễn ra';
+
+  @override
+  String get groupStage_noCourt => 'Chưa xếp sân';
+
+  @override
+  String get groupStage_viewMatch => 'Xem trận';
+
+  @override
+  String get groupStage_won => 'THẮNG';
+
+  @override
+  String get groupStage_lost => 'THUA';
+
+  @override
+  String groupStage_setLabel(int n) {
+    return 'Set $n';
+  }
+
+  @override
+  String groupStage_sheetTitle(String group, int round) {
+    return '$group · Vòng $round';
+  }
 }

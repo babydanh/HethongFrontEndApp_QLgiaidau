@@ -495,6 +495,9 @@ class ParticipantSideLines extends StatelessWidget {
   final bool won;
   final String? waitingFor;
 
+  /// Short initials-style names for narrow cells; false shows full names.
+  final bool abbreviate;
+
   const ParticipantSideLines({
     super.key,
     required this.teamName,
@@ -503,6 +506,7 @@ class ParticipantSideLines extends StatelessWidget {
     this.teamOnly = false,
     this.won = false,
     this.waitingFor,
+    this.abbreviate = true,
   });
 
   @override
@@ -547,7 +551,9 @@ class ParticipantSideLines extends StatelessWidget {
               _SideLine(
                 key: ValueKey('side-lines-player-$i'),
                 leading: _SideAvatar(player: display.players[i]),
-                text: abbreviateName(display.players[i].fullName),
+                text: abbreviate
+                    ? abbreviateName(display.players[i].fullName)
+                    : display.players[i].fullName,
                 style: style,
               ),
           ];

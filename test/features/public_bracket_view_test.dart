@@ -4,11 +4,11 @@ import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/standings_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -207,8 +207,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Bảng'), findsNothing);
     expect(find.text('Playoff'), findsNothing);
-    expect(find.byType(CrossTableView), findsOneWidget);
-    expect(find.text('A - LƯỢT 1'), findsOneWidget);
+    expect(find.byType(GroupStageView), findsOneWidget);
+    expect(find.text('Bảng A'), findsOneWidget);
+    expect(find.text('Lượt 1 / 2'), findsOneWidget);
     expect(find.byType(SingleElimDiagram), findsNothing);
     expect(find.byType(DoubleElimDiagram), findsNothing);
   });
@@ -285,17 +286,21 @@ void main() {
 
       expect(find.text('Bảng'), findsOneWidget);
       expect(find.text('Playoff'), findsOneWidget);
-      expect(find.byType(StandingsView), findsOneWidget);
+      expect(find.byType(GroupStageView), findsOneWidget);
       expect(find.text('Đội bảng A1'), findsOneWidget);
       expect(find.byType(SingleElimDiagram), findsNothing);
-      final table = tester.widget<DataTable>(find.byType(DataTable));
-      expect(table.rows.take(2).every((row) => row.color != null), isTrue);
-      expect(table.rows[2].color, isNull);
+
+      await tester.tap(find.text('Bảng xếp hạng'));
+      await tester.pumpAndSettle();
+      Color? rankColor(String rank) =>
+          tester.widget<Text>(find.text(rank).first).style?.color;
+      expect(rankColor('1'), rankColor('2'));
+      expect(rankColor('1'), isNot(rankColor('3')));
 
       await tester.tap(find.text('Playoff'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(StandingsView), findsNothing);
+      expect(find.byType(GroupStageView), findsNothing);
       final diagram = tester.widget<SingleElimDiagram>(
         find.byType(SingleElimDiagram),
       );
@@ -332,7 +337,7 @@ void main() {
     )!;
     expect(find.text('Bảng'), findsOneWidget);
     expect(find.text('Playoff'), findsOneWidget);
-    expect(find.text(l10n.standings_empty), findsOneWidget);
+    expect(find.text(l10n.crossTableEmpty), findsOneWidget);
 
     await tester.tap(find.text('Playoff'));
     await tester.pumpAndSettle();
