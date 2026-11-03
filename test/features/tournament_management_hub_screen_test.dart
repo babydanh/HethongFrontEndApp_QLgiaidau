@@ -165,6 +165,16 @@ class _UpdateRecorder extends _EmptyTournamentRepository {
   }
 }
 
+class _PatchRecorder extends _EmptyTournamentManagementRepository
+    implements TournamentSettingsRepository {
+  final patches = <Map<String, dynamic>>[];
+
+  @override
+  Future<void> updateTournament(String id, Map<String, dynamic> payload) async {
+    patches.add(payload);
+  }
+}
+
 class _OneVenueRepository extends _EmptyTournamentManagementRepository {
   @override
   Future<List<Map<String, dynamic>>> getVenues(String id) async => [
@@ -546,18 +556,69 @@ void main() {
         'tournament-overview-timeline-opens-edit',
         'tournament-overview-timeline-deadline-edit',
         'tournament-overview-timeline-opening-edit',
+        'tournament-overview-timeline-closing-edit',
       ]) {
         await tester.pumpWidget(const SizedBox.shrink());
         await pumpHub(tester, tournament);
         await tapKey(tester, key);
-        // The popup itself plus the date picker sheet it opens at once.
-        expect(find.byType(BottomSheet), findsNWidgets(2), reason: key);
+        // Only the date picker: no form sheet around it.
+        expect(find.byType(BottomSheet), findsOneWidget, reason: key);
         expect(
           find.byType(SocialDateTimePickerSheet),
           findsOneWidget,
           reason: key,
         );
       }
+    });
+
+    testWidgets('TC-EYE-01: the founder eye on a MANUAL tournament shows the founder again', (
+      tester,
+    ) async {
+      final repo = _PatchRecorder();
+      final tournament = Tournament.fromJson({
+        'name': 'Eye regression',
+        'sport': 'pickleball',
+        'format': 'doubles',
+        'bracketType': 'single_elimination',
+        'status': 'registration',
+        'creator': {'id': 'creator-1', 'fullName': 'Organizer Name'},
+        'contactInfo': {
+          'displayMode': 'MANUAL',
+          'organizerName': 'Ban to chuc A',
+          'hidden': true,
+        },
+        'createdAt': '2026-01-01T00:00:00Z',
+        'updatedAt': '2026-01-01T00:00:00Z',
+      }, 'tournament-1');
+      await pumpHub(tester, tournament, managementRepository: repo);
+
+      await tapKey(tester, 'tournament-founder-eye');
+
+      final contactInfo =
+          repo.patches.single['contactInfo'] as Map<String, dynamic>;
+      expect(contactInfo['hidden'], false);
+      expect(contactInfo['displayMode'], 'PROFILE');
+      expect(contactInfo['organizerName'], 'Ban to chuc A');
+    });
+
+    testWidgets('TC-EYE-02: the banner eye hides the card text and saves it', (
+      tester,
+    ) async {
+      final repo = _PatchRecorder();
+      await pumpHub(
+        tester,
+        _tournament('registration', bannerUrl: 'https://example.test/b.png'),
+        managementRepository: repo,
+      );
+
+      await tester.tap(
+        find.byKey(const ValueKey('tournament-banner-card-text-eye')),
+      );
+      await tester.pumpAndSettle();
+
+      final config =
+          repo.patches.single['tournamentConfig'] as Map<String, dynamic>;
+      expect(config['hideFeaturedCardText'], true);
     });
 
     testWidgets('closing the date picker without a choice closes the popup', (

@@ -344,24 +344,55 @@ class _TournamentSettingsFormState
     _nameController.addListener(_syncDirty);
   }
 
+  /// The roadmap row tapped on the overview, if any.
+  _RegistrationField? get _focusedDateField => switch (widget.focus) {
+    TournamentManagementFocus.registrationOpens => _RegistrationField.opens,
+    TournamentManagementFocus.registrationDeadline =>
+      _RegistrationField.deadline,
+    TournamentManagementFocus.tournamentOpening => _RegistrationField.opening,
+    TournamentManagementFocus.tournamentClosing => _RegistrationField.closing,
+    _ => null,
+  };
+
+  /// A roadmap row opened from the overview has no form: the date picker opens
+  /// at once and the chosen date is saved. Nothing else is drawn, so any
+  /// outcome (locked, refused, failed) ends in a snackbar and a closed popup.
+  bool get _dateDirect => widget.popup && _focusedDateField != null;
+
+  /// The server only freezes the registration dates (and extends the deadline
+  /// of a closed tournament); the opening and closing dates stay editable.
+  bool _fieldEditable(_RegistrationField field) => switch (field) {
+    _RegistrationField.opens => _settingsEditable,
+    _RegistrationField.deadline => _deadlineEditable,
+    _RegistrationField.opening || _RegistrationField.closing => !_isSaving,
+  };
+
+  bool get _editsOnlyTournamentDates =>
+      _focusedDateField == _RegistrationField.opening ||
+      _focusedDateField == _RegistrationField.closing;
+
+  void _endDateDirect(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    Navigator.of(context).pop();
+  }
+
   /// Opens the picker of the roadmap row tapped on the overview, once the
-  /// page is up. Locked rows stay shut, exactly as their field is.
+  /// page is up.
   void _openFocusedDate() {
-    final field = switch (widget.focus) {
-      TournamentManagementFocus.registrationOpens => _RegistrationField.opens,
-      TournamentManagementFocus.registrationDeadline =>
-        _RegistrationField.deadline,
-      TournamentManagementFocus.tournamentOpening => _RegistrationField.opening,
-      TournamentManagementFocus.tournamentClosing => _RegistrationField.closing,
-      _ => null,
-    };
+    final field = _focusedDateField;
     if (field == null) return;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      final editable = field == _RegistrationField.deadline
-          ? _deadlineEditable
-          : _settingsEditable;
-      if (!editable) return;
+      if (!_fieldEditable(field)) {
+        final l10n = AppLocalizations.of(context)!;
+        _endDateDirect(
+          _locked
+              ? l10n.tournamentManagementRegistrationLockedHint
+              : l10n.tournamentManagementRegistrationClosedHint,
+        );
+        return;
+      }
       final picked = await _pickRegistrationDate(field);
       if (!picked && widget.popup && mounted) Navigator.of(context).pop();
     });
@@ -481,14 +512,6 @@ class _TournamentSettingsFormState
 
   /// Popup: only the tapped item and its own save button.
   Widget _popupBody(AppLocalizations l10n) {
-    final dateField = switch (widget.focus) {
-      TournamentManagementFocus.registrationOpens => _RegistrationField.opens,
-      TournamentManagementFocus.registrationDeadline =>
-        _RegistrationField.deadline,
-      TournamentManagementFocus.tournamentOpening => _RegistrationField.opening,
-      TournamentManagementFocus.tournamentClosing => _RegistrationField.closing,
-      _ => null,
-    };
     if (widget.focus == TournamentManagementFocus.branding) {
       return SingleChildScrollView(
         child: TournamentManagementBrandsSection(tournament: widget.tournament),
@@ -507,9 +530,7 @@ class _TournamentSettingsFormState
                 if (widget.focus == TournamentManagementFocus.name)
                   _nameField(l10n)
                 else if (widget.focus == TournamentManagementFocus.contact)
-                  _contactForm()
-                else if (dateField != null)
-                  _registrationDateRow(l10n, dateField),
+                  _contactForm(),
               ],
             ),
           ),
@@ -874,6 +895,10 @@ class _TournamentSettingsFormState
 
   String? _registrationError(AppLocalizations l10n) {
     final orderErrors = _registrationOrderErrors(l10n);
+    final field = _focusedDateField;
+    if (widget.popup && _editsOnlyTournamentDates && field != null) {
+      return orderErrors[field];
+    }
     if (orderErrors.isNotEmpty) return orderErrors.values.first;
     if (_closed && !_locked && !_deadlineExtended) {
       return l10n.tournamentManagementClosedDeadlineExtensionOnly;
@@ -900,22 +925,23 @@ class _TournamentSettingsFormState
           payload['contactInfo'] = Map<String, dynamic>.of(_contactInfo);
         }
       case _SettingsGroup.registration:
+        _addDateUpdate(payload, 'startDate', _startDate, saved.startDate);
+        _addDateUpdate(payload, 'endDate', _endDate, saved.endDate);
         _addDateUpdate(
           payload,
           'registrationEndDate',
           _registrationEndDate,
           saved.registrationEndDate,
         );
-        // Giải đã đóng chỉ gửi hạn chót đăng ký; máy chủ từ chối phần còn lại.
-        if (_closed && !_locked) return payload;
+        // Giải đã đóng chỉ gia hạn hạn chót đăng ký; giải đã khoá thì không
+        // đổi gì ở đăng ký. Máy chủ từ chối phần còn lại.
+        if (_closed || _locked) return payload;
         _addDateUpdate(
           payload,
           'registrationStartDate',
           _registrationStartDate,
           saved.registrationStartDate,
         );
-        _addDateUpdate(payload, 'startDate', _startDate, saved.startDate);
-        _addDateUpdate(payload, 'endDate', _endDate, saved.endDate);
         if (_visibility != _savedVisibility) {
           payload['visibility'] = _visibility;
         }
@@ -1074,10 +1100,11 @@ class _TournamentSettingsFormState
   }
 
   Future<void> _save() async {
-    if (_isSaving || _locked) return;
+    if (_isSaving || (_locked && !_editsOnlyTournamentDates)) return;
     final l10n = AppLocalizations.of(context)!;
     final validationError = _validate(l10n);
     if (validationError != null) {
+      if (_dateDirect) return _endDateDirect(validationError);
       setState(() => _errorMessage = validationError);
       return;
     }
@@ -1100,11 +1127,12 @@ class _TournamentSettingsFormState
       ).showSnackBar(SnackBar(content: Text(l10n.tournamentManagementSaved)));
       if (widget.popup) Navigator.of(context).pop();
     } catch (error) {
-      if (mounted) {
-        setState(
-          () => _errorMessage =
-              _serverMessage(error) ?? l10n.tournamentManagementSaveError,
-        );
+      final message =
+          _serverMessage(error) ?? l10n.tournamentManagementSaveError;
+      if (_dateDirect) {
+        _endDateDirect(message);
+      } else if (mounted) {
+        setState(() => _errorMessage = message);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

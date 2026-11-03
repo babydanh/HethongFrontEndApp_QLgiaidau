@@ -27,3 +27,14 @@ Mọi popup sửa ở Tổng quan SHALL dùng một khung có tiêu đề, nút 
 #### Scenario: Đóng bằng nút
 - **WHEN** quản lý bấm nút đóng
 - **THEN** popup đóng, không lưu
+
+### Requirement: Bốn mốc ngày cùng một cách sửa
+Bấm một mốc ở Lộ trình SHALL mở thẳng bộ chọn ngày giờ (không form bao quanh) và lưu ngay khi xác nhận; mốc bị khoá SHALL báo lý do bằng thông báo ngắn rồi đóng; lỗi SHALL hiện bằng thông báo và không để lại lớp chặn.
+
+#### Scenario: Giải đã đóng đăng ký, sửa ngày bế mạc
+- **WHEN** giải ở trạng thái đã đóng đăng ký và quản lý chọn ngày bế mạc mới
+- **THEN** chỉ `endDate` được gửi lên và popup đóng
+
+#### Scenario: Mốc mở đăng ký khi đã đóng
+- **WHEN** giải đã đóng đăng ký và quản lý bấm "Mở đăng ký"
+- **THEN** hiện thông báo lý do, không mở bộ chọn, không gửi gì

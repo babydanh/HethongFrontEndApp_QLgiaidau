@@ -14,6 +14,26 @@ Future<void> showTournamentEditPopup(
   required String opsWorkspaceRoute,
   required String actionRouteBase,
 }) {
+  if (_isDateFocus(focus)) {
+    // No sheet: the section screen opens the date picker straight away and
+    // saves the pick, so all four roadmap dates behave the same.
+    return showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration.zero,
+      pageBuilder: (_, _, _) => Offstage(
+        child: TournamentManagementSectionScreen(
+          tournament: tournament,
+          section: TournamentManagementSection.registration,
+          focus: focus,
+          popup: true,
+          opsWorkspaceRoute: opsWorkspaceRoute,
+          actionRouteBase: actionRouteBase,
+        ),
+      ),
+    );
+  }
   final l10n = AppLocalizations.of(context)!;
   return showModalBottomSheet<void>(
     context: context,
@@ -35,6 +55,12 @@ Future<void> showTournamentEditPopup(
     ),
   );
 }
+
+bool _isDateFocus(TournamentManagementFocus focus) =>
+    focus == TournamentManagementFocus.registrationOpens ||
+    focus == TournamentManagementFocus.registrationDeadline ||
+    focus == TournamentManagementFocus.tournamentOpening ||
+    focus == TournamentManagementFocus.tournamentClosing;
 
 /// Venues and entry fee lay themselves out with `Expanded`.
 bool _needsBoundedHeight(TournamentManagementFocus focus) =>
