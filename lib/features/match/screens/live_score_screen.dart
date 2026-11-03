@@ -2981,10 +2981,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         child: _liveTab == 0
             ? _buildChatTab(match)
             : LiveViewerSuggestions(
-                tournamentId: tournamentId,
                 currentMatchId: match.id,
                 onOpen: (next) => context.pushReplacement(
-                  NavigationHelper.getLiveMatchRoute(tournamentId, next.id),
+                  NavigationHelper.getLiveMatchRoute(
+                    next.tournamentId,
+                    next.matchId,
+                  ),
                 ),
               ),
       ),

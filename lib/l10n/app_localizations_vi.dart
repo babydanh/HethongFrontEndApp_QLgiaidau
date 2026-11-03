@@ -7319,6 +7319,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveSuggestionsEmpty => 'Chưa có trận nào khác để xem';
 
   @override
+  String get liveSuggestionsFilterLive => 'Đang live';
+
+  @override
+  String get liveSuggestionsFilterReplay => 'Phát lại';
+
+  @override
+  String get liveSuggestionsFilterSameTournament => 'Cùng giải';
+
+  @override
+  String get liveSuggestionsBadgeReplay => 'Phát lại';
+
+  @override
+  String get liveSuggestionsEmptyFilter => 'Không có video nào trong mục này.';
+
+  @override
   String get liveNoSignalLabel => 'Chưa có tín hiệu phát trực tiếp';
 
   @override

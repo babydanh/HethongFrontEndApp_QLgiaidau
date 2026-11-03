@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_suggestion_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_playback_repository.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -26,6 +27,12 @@ class _FakeMatchPlaybackRepository implements IMatchPlaybackRepository {
     replayCalls++;
     return replay;
   }
+
+  @override
+  Future<MatchSuggestionsPage> getMatchSuggestions(
+    String matchId, {
+    String? cursor,
+  }) => throw UnimplementedError();
 }
 
 MatchReplay _replay({required bool available, String? reason}) =>

@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_suggestion_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_playback_repository.dart';
 import 'package:dio/dio.dart';
 
@@ -44,6 +45,24 @@ class ApiMatchPlaybackRepository implements IMatchPlaybackRepository {
       );
     }
     throw const FormatException('Phan hoi replay khong hop le');
+  }
+
+  @override
+  Future<MatchSuggestionsPage> getMatchSuggestions(
+    String matchId, {
+    String? cursor,
+  }) async {
+    final response = await _dioClient.dio.get<Object?>(
+      '/livestream/matches/$matchId/suggestions',
+      queryParameters: cursor == null ? null : {'cursor': cursor},
+      options: Options(extra: <String, Object?>{'noCache': true}),
+    );
+    await _ensureSuccess(response);
+    final payload = response.data;
+    if (payload is Map) {
+      return MatchSuggestionsPage.fromJson(Map<String, Object?>.from(payload));
+    }
+    throw const FormatException('Phan hoi goi y video khong hop le');
   }
 
   Future<void> _ensureSuccess(Response<Object?> response) async {

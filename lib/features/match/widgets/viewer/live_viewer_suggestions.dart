@@ -1,58 +1,82 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
-import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
-import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/data/models/match_suggestion_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Same live statuses as the Web "Đang diễn ra" tab (it also accepts PLAYING).
-const _liveStatuses = {'LIVE', 'ONGOING', 'IN_PROGRESS', 'PLAYING'};
+enum SuggestionFilter { all, live, replay, sameTournament }
 
-bool _isOfferable(MatchModel m) =>
-    !m.isByeMatch && !m.isCompleted && m.winnerId.isEmpty;
+/// A replay shorter than this is not worth suggesting (same rule as the Web).
+const _minReplaySec = 180;
 
-bool isLiveSuggestion(MatchModel m) =>
-    _liveStatuses.contains(m.normalizedStatus);
+/// Starts the next page a little before the viewer reaches the last card.
+const _loadMoreMargin = 160.0;
 
-/// Matches worth offering next, using the Web rules: no byes, nothing already
-/// completed or decided. Live ones first, then upcoming ones; the match being
-/// watched and other statuses are left out.
-List<MatchModel> pickLiveSuggestions(
-  List<MatchModel> matches, {
-  required String currentMatchId,
-}) {
-  final others = matches.where(
-    (m) => m.id != currentMatchId && _isOfferable(m),
-  );
-  return [
-    ...others.where(isLiveSuggestion),
-    ...others.where((m) => !isLiveSuggestion(m) && m.isScheduled),
-  ];
+const _thumbWidth = 152.0;
+
+/// Live videos always count; a replay needs at least three minutes of video.
+bool isSuggestable(MatchSuggestion item) {
+  final duration = item.durationSec;
+  return item.isLive || (duration != null && duration >= _minReplaySec);
 }
 
-enum _SuggestionFilter { all, live, soon }
+/// Keeps the server order; the server already ranks live first.
+List<MatchSuggestion> filterSuggestions(
+  Iterable<MatchSuggestion> items,
+  SuggestionFilter filter,
+) {
+  return items.where((item) {
+    return switch (filter) {
+      SuggestionFilter.all => true,
+      SuggestionFilter.live => item.isLive,
+      SuggestionFilter.replay => !item.isLive,
+      SuggestionFilter.sameTournament => item.sameTournament,
+    };
+  }).toList();
+}
 
-const _thumbWidth = 128.0;
-const _thumbHeight = 72.0;
-const _thumbColors = [Color(0xFF0F172A), Color(0xFF1E3A8A)];
+/// Appends a freshly loaded page, keeping the first copy of any match listed.
+List<MatchSuggestion> mergeSuggestionPages(
+  List<MatchSuggestion> current,
+  List<MatchSuggestion> incoming,
+) {
+  final seen = current.map((item) => item.matchId).toSet();
+  return [...current, ...incoming.where((item) => seen.add(item.matchId))];
+}
 
-/// "More videos" tab: one uniform row per other match (thumbnail + names),
-/// with filter chips like the Web match list.
+/// `15:38`, or `1:02:05` from one hour up; empty when missing or invalid.
+String formatSuggestionDuration(int? seconds) {
+  if (seconds == null || seconds < 0) return '';
+  final hours = seconds ~/ 3600;
+  final minutes = (seconds % 3600) ~/ 60;
+  final secs = (seconds % 60).toString().padLeft(2, '0');
+  if (hours == 0) return '$minutes:$secs';
+  return '$hours:${minutes.toString().padLeft(2, '0')}:$secs';
+}
+
+/// Stable hue (0-359) per tournament, so its cards share a colour without a
+/// cover image. Same hash as the Web.
+int suggestionThumbHue(String tournamentId) {
+  var hash = 0;
+  for (final unit in tournamentId.codeUnits) {
+    hash = (hash * 31 + unit) % 360;
+  }
+  return hash;
+}
+
+/// "More videos" tab, same content as the Web "Video gợi ý": live matches and
+/// replays from the suggestions API, with pill filters and paging by cursor.
 class LiveViewerSuggestions extends ConsumerStatefulWidget {
   const LiveViewerSuggestions({
     super.key,
-    required this.tournamentId,
     required this.currentMatchId,
     required this.onOpen,
   });
 
-  final String tournamentId;
   final String currentMatchId;
-  final void Function(MatchModel match) onOpen;
+  final void Function(MatchSuggestion suggestion) onOpen;
 
   @override
   ConsumerState<LiveViewerSuggestions> createState() =>
@@ -60,268 +84,416 @@ class LiveViewerSuggestions extends ConsumerStatefulWidget {
 }
 
 class _LiveViewerSuggestionsState extends ConsumerState<LiveViewerSuggestions> {
-  _SuggestionFilter _filter = _SuggestionFilter.all;
+  final _scroll = ScrollController();
+  List<MatchSuggestion>? _items;
+  String? _nextCursor;
+  var _filter = SuggestionFilter.all;
+  var _failed = false;
+  var _loadingMore = false;
+
+  // A failed page is retried only after the viewer scrolls again, so a dead
+  // connection cannot turn the auto-load into a request loop.
+  var _moreFailed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(() => _maybeLoadMore(userScroll: true));
+    _loadFirst();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  List<MatchSuggestion> _suggestable(List<MatchSuggestion> page) => page
+      .where((s) => s.matchId != widget.currentMatchId && isSuggestable(s))
+      .toList();
+
+  Future<void> _loadFirst() async {
+    try {
+      final page = await ref
+          .read(matchPlaybackRepositoryProvider)
+          .getMatchSuggestions(widget.currentMatchId);
+      if (!mounted) return;
+      setState(() {
+        _items = _suggestable(page.items);
+        _nextCursor = page.nextCursor;
+      });
+    } on Exception {
+      if (!mounted) return;
+      setState(() {
+        _failed = true;
+        _items = const [];
+      });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    final cursor = _nextCursor;
+    if (cursor == null || _loadingMore) return;
+    setState(() => _loadingMore = true);
+    try {
+      final page = await ref
+          .read(matchPlaybackRepositoryProvider)
+          .getMatchSuggestions(widget.currentMatchId, cursor: cursor);
+      if (!mounted) return;
+      setState(() {
+        _items = mergeSuggestionPages(
+          _items ?? const [],
+          _suggestable(page.items),
+        );
+        _nextCursor = page.nextCursor;
+        _loadingMore = false;
+      });
+    } on Exception {
+      // Keep the cards already shown; scrolling again tries the page again.
+      if (!mounted) return;
+      setState(() {
+        _moreFailed = true;
+        _loadingMore = false;
+      });
+    }
+  }
+
+  /// Asks for the next page when the list is short or scrolled near its end.
+  void _maybeLoadMore({bool userScroll = false}) {
+    if (userScroll) _moreFailed = false;
+    if (_nextCursor == null || _loadingMore || _moreFailed) return;
+    final nearEnd =
+        !_scroll.hasClients || _scroll.position.extentAfter < _loadMoreMargin;
+    if (nearEnd) _loadMore();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // The bracket projection also carries Lite matches, which the public flat
-    // feed behind matchesProvider leaves out (that made this tab empty).
-    final async = ref.watch(bracketMatchesProvider(widget.tournamentId));
+    final items = _items;
+    if (items == null) return const _SuggestionSkeleton(rows: 3);
+    if (_failed) return Center(child: Text(l10n.homeMatchesLoadError));
+    if (items.isEmpty) return Center(child: Text(l10n.liveSuggestionsEmpty));
 
-    return async.when(
-      loading: () => const SkeletonScope(
-        child: SingleChildScrollView(
-          physics: NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.all(12),
-          child: Column(
-            children: [
-              SkeletonBox(height: _thumbHeight, radius: 10),
-              SizedBox(height: 12),
-              SkeletonBox(height: _thumbHeight, radius: 10),
-              SizedBox(height: 12),
-              SkeletonBox(height: _thumbHeight, radius: 10),
-            ],
-          ),
+    if (_nextCursor != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _maybeLoadMore();
+      });
+    }
+    final shown = filterSuggestions(items, _filter);
+    return Column(
+      children: [
+        _FilterPills(
+          selected: _filter,
+          onSelected: (filter) => setState(() => _filter = filter),
         ),
-      ),
-      error: (_, _) => Center(child: Text(l10n.homeMatchesLoadError)),
-      data: (matches) {
-        final picked = pickLiveSuggestions(
-          matches,
-          currentMatchId: widget.currentMatchId,
-        );
-        if (picked.isEmpty) {
-          return Center(child: Text(l10n.liveSuggestionsEmpty));
-        }
-        final shown = switch (_filter) {
-          _SuggestionFilter.all => picked,
-          _SuggestionFilter.live => picked.where(isLiveSuggestion).toList(),
-          _SuggestionFilter.soon =>
-            picked.where((m) => !isLiveSuggestion(m)).toList(),
-        };
-        return Column(
-          children: [
-            _buildFilters(l10n),
-            Expanded(
-              child: shown.isEmpty
-                  ? Center(child: Text(l10n.liveSuggestionsEmpty))
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                      itemCount: shown.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (_, i) => _SuggestionRow(
-                        match: shown[i],
-                        onTap: () => widget.onOpen(shown[i]),
-                      ),
-                    ),
-            ),
-          ],
-        );
-      },
+        Expanded(child: _buildList(l10n, shown)),
+      ],
     );
   }
 
-  Widget _buildFilters(AppLocalizations l10n) {
+  Widget _buildList(AppLocalizations l10n, List<MatchSuggestion> shown) {
+    if (shown.isEmpty) {
+      final waitingForPage = _nextCursor != null && !_moreFailed;
+      return waitingForPage
+          ? const _SuggestionSkeleton(rows: 2)
+          : Center(child: Text(l10n.liveSuggestionsEmptyFilter));
+    }
+    return ListView(
+      controller: _scroll,
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      children: [
+        for (final item in shown)
+          _SuggestionRow(item: item, onTap: () => widget.onOpen(item)),
+        if (_loadingMore) const _SuggestionSkeleton(rows: 2, scrollable: false),
+      ],
+    );
+  }
+}
+
+class _FilterPills extends StatelessWidget {
+  const _FilterPills({required this.selected, required this.onSelected});
+
+  final SuggestionFilter selected;
+  final ValueChanged<SuggestionFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final labels = {
-      _SuggestionFilter.all: l10n.matchesFilterAll,
-      _SuggestionFilter.live: l10n.matchesFilterOngoing,
-      _SuggestionFilter.soon: l10n.matchesFilterScheduled,
+      SuggestionFilter.all: l10n.matchesFilterAll,
+      SuggestionFilter.live: l10n.liveSuggestionsFilterLive,
+      SuggestionFilter.replay: l10n.liveSuggestionsFilterReplay,
+      SuggestionFilter.sameTournament: l10n.liveSuggestionsFilterSameTournament,
     };
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-      child: Row(
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
         children: [
-          for (final entry in labels.entries) ...[
-            ChoiceChip(
+          for (final entry in labels.entries)
+            _Pill(
               key: ValueKey('live-suggestion-filter-${entry.key.name}'),
-              label: Text(entry.value),
-              selected: _filter == entry.key,
-              onSelected: (_) => setState(() => _filter = entry.key),
+              label: entry.value,
+              active: entry.key == selected,
+              onTap: () => onSelected(entry.key),
             ),
-            const SizedBox(width: 8),
-          ],
         ],
+      ),
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({
+    super.key,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      selected: active,
+      child: Material(
+        color: active ? colors.textPrimary : colors.bgSurface,
+        shape: const StadiumBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 36),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: active ? colors.bgCard : colors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
 class _SuggestionRow extends StatelessWidget {
-  const _SuggestionRow({required this.match, required this.onTap});
+  const _SuggestionRow({required this.item, required this.onTap});
 
-  final MatchModel match;
+  final MatchSuggestion item;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    final round = MatchRoundLabel.formatRound(
-      match: match,
-      short: true,
-      l10n: l10n,
-    );
-    final court = TournamentLocationFormatter.matchShortCourt(match.court);
-    final subtitle = [round, court].where((s) => s.isNotEmpty).join(' · ');
+    final subtitle = [
+      item.tournamentName,
+      item.roundLabel ?? '',
+    ].where((part) => part.isNotEmpty).join(' · ');
+    final team1 = item.team1Name.isEmpty
+        ? l10n.matchNotDetermined
+        : item.team1Name;
+    final team2 = item.team2Name.isEmpty
+        ? l10n.matchNotDetermined
+        : item.team2Name;
 
     return InkWell(
-      key: ValueKey('live-suggestion-${match.id}'),
-      borderRadius: BorderRadius.circular(10),
+      key: ValueKey('live-suggestion-${item.matchId}'),
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SuggestionThumb(match: match),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${_sideName(l10n, 1)} ${l10n.matchVsLabel} ${_sideName(l10n, 2)}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    height: 1.3,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colors.textMuted),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _sideName(AppLocalizations l10n, int side) {
-    final name = matchSideLabel(match, side).trim();
-    return name.isEmpty ? l10n.matchNotDetermined : name;
-  }
-}
-
-/// No frame image exists for a match, so the thumbnail is drawn from the two
-/// sides' logos plus the live score (or "VS") and the start time.
-class _SuggestionThumb extends StatelessWidget {
-  const _SuggestionThumb({required this.match});
-
-  final MatchModel match;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final live = isLiveSuggestion(match);
-    final score = match.currentLiveScore;
-    final start = match.scheduledTime;
-
-    return ClipRRect(
-      key: ValueKey('live-suggestion-thumb-${match.id}'),
-      borderRadius: BorderRadius.circular(10),
-      child: SizedBox(
-        width: _thumbWidth,
-        height: _thumbHeight,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: _thumbColors,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _SideLogo(
-                    url: match.team1LogoUrl,
-                    name: matchSideLabel(match, 1),
-                  ),
-                  Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SuggestionThumb(item: item),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$team1 ${l10n.matchVsLabel} $team2',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          live
-                              ? '${score.score1} - ${score.score2}'
-                              : l10n.matchVsLabel,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            fontFeatures: [FontFeature.tabularFigures()],
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  _SideLogo(
-                    url: match.team2LogoUrl,
-                    name: matchSideLabel(match, 2),
-                  ),
+                    if (!item.isLive)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          l10n.liveSuggestionsBadgeReplay,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// No cover image exists yet, so the tile is a court-like card in the
+/// tournament's colour with the score on it (same drawing as the Web).
+class _SuggestionThumb extends StatelessWidget {
+  const _SuggestionThumb({required this.item});
+
+  final MatchSuggestion item;
+
+  @override
+  Widget build(BuildContext context) {
+    final hue = suggestionThumbHue(item.tournamentId).toDouble();
+    final line = Colors.white.withValues(alpha: 0.4);
+    final duration = formatSuggestionDuration(item.durationSec);
+
+    return SizedBox(
+      width: _thumbWidth,
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: ClipRRect(
+          key: ValueKey('live-suggestion-thumb-${item.matchId}'),
+          borderRadius: BorderRadius.circular(8),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  HSLColor.fromAHSL(1, hue, 0.55, 0.20).toColor(),
+                  HSLColor.fromAHSL(1, hue, 0.60, 0.38).toColor(),
                 ],
               ),
-              if (live)
-                Positioned(
-                  left: 5,
-                  top: 5,
-                  child: _ThumbBadge(
-                    text: l10n.matchLiveStatus,
-                    color: const Color(0xFFDC2626),
-                  ),
-                )
-              else if (start != null)
-                Positioned(
-                  right: 5,
-                  bottom: 5,
-                  child: _ThumbBadge(
-                    text:
-                        '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}',
-                    color: Colors.black54,
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: FractionallySizedBox(
+                    widthFactor: 0.8,
+                    heightFactor: 0.72,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: line),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: Center(
+                        child: SizedBox(width: 1, child: ColoredBox(color: line)),
+                      ),
+                    ),
                   ),
                 ),
-            ],
+                if (item.isLive)
+                  const Positioned(left: 8, top: 8, child: _LiveDot())
+                else if (duration.isNotEmpty)
+                  Positioned(
+                    right: 6,
+                    bottom: 6,
+                    child: _ThumbBadge(text: duration, alpha: 0.75),
+                  ),
+                Positioned(
+                  left: 6,
+                  bottom: 6,
+                  child: _ThumbBadge(
+                    text: '${item.team1Score} – ${item.team2Score}',
+                    alpha: 0.6,
+                    bold: true,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LiveDot extends StatelessWidget {
+  const _LiveDot();
+
+  @override
+  Widget build(BuildContext context) {
+    const red = Color(0xFFDC2626);
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        color: red,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: red.withValues(alpha: 0.4), spreadRadius: 2),
+        ],
       ),
     );
   }
 }
 
 class _ThumbBadge extends StatelessWidget {
-  const _ThumbBadge({required this.text, required this.color});
+  const _ThumbBadge({required this.text, required this.alpha, this.bold = false});
 
   final String text;
-  final Color color;
+  final double alpha;
+  final bool bold;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(5),
+        color: Colors.black.withValues(alpha: alpha),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
         child: Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 9.5,
-            fontWeight: FontWeight.w800,
+            fontSize: bold ? 11 : 10,
+            height: 1,
+            fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ),
@@ -329,42 +501,48 @@ class _ThumbBadge extends StatelessWidget {
   }
 }
 
-class _SideLogo extends StatelessWidget {
-  const _SideLogo({required this.url, required this.name});
+class _SuggestionSkeleton extends StatelessWidget {
+  const _SuggestionSkeleton({required this.rows, this.scrollable = true});
 
-  final String? url;
-  final String name;
+  final int rows;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
-    final trimmed = name.trim();
-    final initial = Center(
-      child: Text(
-        trimmed.isEmpty ? '?' : trimmed[0].toUpperCase(),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+    final content = Column(
+      children: [
+        for (var i = 0; i < rows; i++)
+          const Padding(
+            padding: EdgeInsets.all(6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonBox(width: _thumbWidth, height: 85.5, radius: 8),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 4),
+                      SkeletonBox(height: 12, radius: 4),
+                      SizedBox(height: 8),
+                      SkeletonBox(width: 90, height: 12, radius: 4),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
-    final logo = url;
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: logo != null && logo.isNotEmpty
-          ? Image.network(
-              logo,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => initial,
+    return SkeletonScope(
+      child: scrollable
+          ? SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(6),
+              child: content,
             )
-          : initial,
+          : content,
     );
   }
 }

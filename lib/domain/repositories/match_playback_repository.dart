@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/data/models/match_suggestion_model.dart';
 
 /// Nguồn phát trực tiếp của một trận.
 ///
@@ -13,4 +14,11 @@ abstract class IMatchPlaybackRepository {
 
   /// Trả về danh sách các đoạn phát lại của trận.
   Future<MatchReplay> getMatchReplay(String matchId);
+
+  /// One page of suggested videos (live now, then replays) for the "more
+  /// videos" tab; pass the previous page's `nextCursor` to get the next page.
+  Future<MatchSuggestionsPage> getMatchSuggestions(
+    String matchId, {
+    String? cursor,
+  });
 }

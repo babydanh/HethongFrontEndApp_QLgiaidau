@@ -13598,6 +13598,36 @@ abstract class AppLocalizations {
   /// **'Chưa có trận nào khác để xem'**
   String get liveSuggestionsEmpty;
 
+  /// No description provided for @liveSuggestionsFilterLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang live'**
+  String get liveSuggestionsFilterLive;
+
+  /// No description provided for @liveSuggestionsFilterReplay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát lại'**
+  String get liveSuggestionsFilterReplay;
+
+  /// No description provided for @liveSuggestionsFilterSameTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cùng giải'**
+  String get liveSuggestionsFilterSameTournament;
+
+  /// No description provided for @liveSuggestionsBadgeReplay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát lại'**
+  String get liveSuggestionsBadgeReplay;
+
+  /// No description provided for @liveSuggestionsEmptyFilter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có video nào trong mục này.'**
+  String get liveSuggestionsEmptyFilter;
+
   /// No description provided for @liveNoSignalLabel.
   ///
   /// In vi, this message translates to:

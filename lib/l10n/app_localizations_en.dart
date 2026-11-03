@@ -7327,6 +7327,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveSuggestionsEmpty => 'No other matches to watch yet';
 
   @override
+  String get liveSuggestionsFilterLive => 'Live now';
+
+  @override
+  String get liveSuggestionsFilterReplay => 'Replays';
+
+  @override
+  String get liveSuggestionsFilterSameTournament => 'Same tournament';
+
+  @override
+  String get liveSuggestionsBadgeReplay => 'Replay';
+
+  @override
+  String get liveSuggestionsEmptyFilter => 'No videos in this section.';
+
+  @override
   String get liveNoSignalLabel => 'No live signal yet';
 
   @override
