@@ -241,6 +241,9 @@ void main() {
       expect(board, findsOneWidget);
       expect(tester.getTopLeft(board).dy, greaterThanOrEqualTo(headerBottom));
       expect(tester.getTopLeft(board).dx, lessThan(videoRect.left + 16));
+      // Hugs the top of the picture: the header sits above the video, so the
+      // board needs no extra gap to dodge it.
+      expect(tester.getTopLeft(board).dy - videoRect.top, lessThanOrEqualTo(12));
       expect(tester.getTopLeft(board).dy, lessThan(videoRect.center.dy));
       expect(
         tester.getBottomLeft(board).dy,

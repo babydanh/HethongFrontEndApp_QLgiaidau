@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
-### Requirement: Viewer scoreboard sits below the header inside the video
-The viewer scoreboard overlay SHALL be drawn at the top-left of the video area, starting below the viewer header bar, and SHALL NOT occupy the lower half of the video.
+### Requirement: Viewer scoreboard hugs the top-left of the video picture
+In portrait the viewer header bar SHALL sit above the video picture (not over it), and the scoreboard overlay SHALL be drawn at the top-left corner of the picture. In fullscreen landscape, where the header floats over the video, the scoreboard SHALL start below it.
 
-#### Scenario: Viewer opens a live match
+#### Scenario: Viewer opens a live match in portrait
 - **WHEN** a viewer opens a live match whose scoreboard is visible
-- **THEN** the scoreboard top edge is at or below the header bar bottom, near the video's left edge, and above the video's vertical center
+- **THEN** the scoreboard top edge is at or below the header bar bottom, within 12 px of the top of the video picture, near its left edge
 
 ### Requirement: Other videos list is uniform and filterable
 The "Video khác" tab SHALL show every offered match as the same row layout (thumbnail, both side names, round and court) and SHALL provide All, Live and Upcoming filter chips.

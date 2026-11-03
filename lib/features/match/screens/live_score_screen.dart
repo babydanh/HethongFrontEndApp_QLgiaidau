@@ -2277,6 +2277,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         viewerLayout &&
         MediaQuery.of(context).orientation == Orientation.landscape;
 
+    // Portrait viewer: the header sits ABOVE the picture, so nothing hides the
+    // top of the video and the scoreboard can hug the picture's top-left.
+    // Fullscreen landscape has no room above, so the header floats over it.
+    final topBarOverVideo = viewerLayout && landscape;
+    Widget withHeaderAbove(Widget video) => viewerLayout && !landscape
+        ? Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [_buildViewerTopBar(match), video],
+          )
+        : video;
+
     // ─── Live Video Stream Player Box (Mockup) ───
     final videoBox = Container(
           width: double.infinity,
@@ -2298,7 +2309,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
             ],
           ),
-          child: Stack(
+          child: withHeaderAbove(Stack(
             children: [
               // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
               // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
@@ -2310,12 +2321,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
               ),
 
-              // Bảng điểm đè khung hình, kiểu hai hàng chồng của web. Luôn ở
-              // góc trên trái trong khung video; người xem thì nằm ngay dưới
-              // thanh Quay lại (thanh đó đè lên đầu video) để không bị che,
-              // và tạm ẩn khi overlay H2H / Sơ đồ đang hiện.
+              // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
+              // hình video, tạm ẩn khi overlay H2H / Sơ đồ đang hiện. Chỉ khi
+              // thanh nút đè lên video (toàn màn hình ngang) mới hạ xuống dưới nó.
               Positioned(
-                top: viewerLayout ? _viewerTopBarInset : 8,
+                top: topBarOverVideo ? _viewerTopBarInset : 8,
                 left: 8,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
@@ -2340,7 +2350,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                 ),
               ),
-              if (viewerLayout)
+              if (topBarOverVideo)
                 Positioned(
                   top: 0,
                   left: 0,
@@ -2500,7 +2510,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
             ],
-          ),
+          )),
         );
 
     if (landscape) return _buildViewerLandscape(match, videoBox);

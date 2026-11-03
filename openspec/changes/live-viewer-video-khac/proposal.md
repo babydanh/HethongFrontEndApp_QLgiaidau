@@ -4,7 +4,7 @@ Trên màn xem trực tiếp của App, bảng điểm đè lên chữ "Chưa ph
 
 ## What Changes
 
-- Bảng điểm đè video của người xem chuyển lên góc trên trái, ngay dưới thanh header (thanh header đè lên đầu video), vẫn nằm trong khung video.
+- Thanh header của người xem (dọc) nằm trên hình video thay vì đè lên nó; bảng điểm bám góc trên trái của hình video. Toàn màn hình ngang (header buộc phải đè video) thì bảng điểm hạ xuống dưới header.
 - Tab "Video khác": mỗi trận là một hàng đồng nhất gồm thumbnail vẽ từ logo hai bên + điểm/"VS" + giờ, cạnh đó tên hai bên và "vòng · sân"; thêm bộ lọc Tất cả / Đang diễn ra / Sắp diễn ra.
 - Nút nhập điểm giữ nguyên là icon trên header, không thêm nút mới.
 
