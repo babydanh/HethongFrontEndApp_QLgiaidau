@@ -55,6 +55,10 @@ import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_match_side
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_new_messages_pill.dart';
 import 'package:app_quanly_giaidau/shared/widgets/report_sheet.dart';
 
+/// Height of the viewer top bar drawn over the video (48 button + 2·2 padding)
+/// plus a small gap, so the scoreboard starts right below it.
+const double _viewerTopBarInset = 56;
+
 class _HeartModel {
   final double startX;
   final double scale;
@@ -2306,14 +2310,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
               ),
 
-              // Bảng điểm đè khung hình, kiểu hai hàng chồng của web (theo bản
-              // vẽ Lavish app-live-viewer-popup). Người xem: góc dưới trái
-              // video cùng chỗ với overlay H2H / Sơ đồ, nên tạm ẩn khi một
-              // trong hai đang hiện; thanh Quay lại giữ nguyên trên video.
-              // Người điều khiển: giữ góc trên trái.
+              // Bảng điểm đè khung hình, kiểu hai hàng chồng của web. Luôn ở
+              // góc trên trái trong khung video; người xem thì nằm ngay dưới
+              // thanh Quay lại (thanh đó đè lên đầu video) để không bị che,
+              // và tạm ẩn khi overlay H2H / Sơ đồ đang hiện.
               Positioned(
-                top: viewerLayout ? null : 8,
-                bottom: viewerLayout ? liveOverlayBottomInset : null,
+                top: viewerLayout ? _viewerTopBarInset : 8,
                 left: 8,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),

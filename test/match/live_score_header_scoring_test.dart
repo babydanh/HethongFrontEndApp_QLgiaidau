@@ -4,7 +4,9 @@ import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_scoreboard_overlay.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_score_access_provider.dart';
@@ -215,6 +217,39 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets(
+    'TC-LIVEVIEW-11 viewer scoreboard sits top-left inside the video, below the header',
+    (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _viewerAuth,
+        match: _match(scoreboardVisible: true),
+        isViewer: true,
+      );
+
+      final board = find.byType(LiveScoreboardOverlay);
+      final headerBottom = tester
+          .getBottomLeft(
+            find.ancestor(
+              of: find.byIcon(Icons.arrow_back_ios_new_rounded),
+              matching: find.byType(IconButton),
+            ),
+          )
+          .dy;
+      final videoRect = tester.getRect(find.byType(LiveVideoBox));
+
+      expect(board, findsOneWidget);
+      expect(tester.getTopLeft(board).dy, greaterThanOrEqualTo(headerBottom));
+      expect(tester.getTopLeft(board).dx, lessThan(videoRect.left + 16));
+      expect(tester.getTopLeft(board).dy, lessThan(videoRect.center.dy));
+      expect(
+        tester.getBottomLeft(board).dy,
+        lessThan(videoRect.bottom - liveOverlayBottomInset),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('TC-FEAT-08: live H2H overlay does not show the match code', (
     tester,
   ) async {

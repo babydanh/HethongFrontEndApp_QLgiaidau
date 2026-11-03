@@ -78,6 +78,80 @@ void main() {
     expect(opened, 'soon');
   });
 
+  testWidgets('TC-LIVEVIEW-12 every card has a thumbnail and the match names', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(
+        matches: [_match('now', 'in_progress'), _match('soon', 'scheduled')],
+        onOpen: (_) {},
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    for (final id in ['now', 'soon']) {
+      expect(find.byKey(ValueKey('live-suggestion-thumb-$id')), findsOneWidget);
+      expect(find.textContaining('Alpha $id'), findsOneWidget);
+      expect(find.textContaining('Beta $id'), findsOneWidget);
+    }
+  });
+
+  testWidgets(
+    'TC-LIVEVIEW-13 filter chips narrow the list to live or upcoming',
+    (tester) async {
+      await tester.pumpWidget(
+        _app(
+          matches: [_match('now', 'in_progress'), _match('soon', 'scheduled')],
+          onOpen: (_) {},
+        ),
+      );
+      await tester.pumpAndSettle();
+      final now = find.byKey(const ValueKey('live-suggestion-now'));
+      final soon = find.byKey(const ValueKey('live-suggestion-soon'));
+      expect(now, findsOneWidget);
+      expect(soon, findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('live-suggestion-filter-live')),
+      );
+      await tester.pumpAndSettle();
+      expect(now, findsOneWidget);
+      expect(soon, findsNothing);
+
+      await tester.tap(
+        find.byKey(const ValueKey('live-suggestion-filter-soon')),
+      );
+      await tester.pumpAndSettle();
+      expect(now, findsNothing);
+      expect(soon, findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey('live-suggestion-filter-all')),
+      );
+      await tester.pumpAndSettle();
+      expect(now, findsOneWidget);
+      expect(soon, findsOneWidget);
+    },
+  );
+
+  testWidgets('TC-LIVEVIEW-14 a filter with no match shows the empty message', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _app(matches: [_match('soon', 'scheduled')], onOpen: (_) {}),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('live-suggestion-filter-live')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No other matches to watch yet'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('live-suggestion-filter-all')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('TC-LIVEVIEW-07 shows the empty message with no candidates', (
     tester,
   ) async {
