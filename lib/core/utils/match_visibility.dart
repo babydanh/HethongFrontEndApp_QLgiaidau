@@ -15,8 +15,22 @@ bool isRenderablePublicMatch(MatchModel match) {
     return false;
   }
 
-  return !_isUnresolvedParticipantLabel(match.team1Name) &&
-      !_isUnresolvedParticipantLabel(match.team2Name);
+  return _isResolvedSide(match.team1Name, hasPlayers: _hasPlayers(match, 1)) &&
+      _isResolvedSide(match.team2Name, hasPlayers: _hasPlayers(match, 2));
+}
+
+bool _hasPlayers(MatchModel match, int side) {
+  final players = side == 1 ? match.team1Players : match.team2Players;
+  final members = side == 1 ? match.team1MemberInfos : match.team2MemberInfos;
+  return players.isNotEmpty || members.isNotEmpty;
+}
+
+/// A side with real players is resolved even without a team name: athletes
+/// added one by one or by Excel have no team name, and `MatchModel.fromJson`
+/// leaves the name empty for them so the players are shown instead.
+bool _isResolvedSide(String name, {required bool hasPlayers}) {
+  if (name.trim().isEmpty) return hasPlayers;
+  return !_isUnresolvedParticipantLabel(name);
 }
 
 bool _isUnresolvedParticipantLabel(String value) {

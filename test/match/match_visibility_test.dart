@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 
 MatchModel _match({
@@ -13,6 +14,8 @@ MatchModel _match({
   String team2Name = 'Team Two',
   List<MatchMemberInfo> team1MemberInfos = const [],
   List<MatchMemberInfo> team2MemberInfos = const [],
+  List<ParticipantPlayer> team1Players = const [],
+  List<ParticipantPlayer> team2Players = const [],
 }) {
   return MatchModel(
     id: 'match-1',
@@ -31,6 +34,8 @@ MatchModel _match({
     team2IsMock: team2IsMock,
     team1MemberInfos: team1MemberInfos,
     team2MemberInfos: team2MemberInfos,
+    team1Players: team1Players,
+    team2Players: team2Players,
   );
 }
 
@@ -57,5 +62,24 @@ void main() {
     expect(isRenderablePublicMatch(_match(team2Id: '')), isFalse);
     expect(isRenderablePublicMatch(_match(team2Name: 'TBD')), isFalse);
     expect(isRenderablePublicMatch(_match(team1Name: 'CHỜ XÁC ĐỊNH')), isFalse);
+  });
+
+  // TC-VIS-01: athletes added one by one or by Excel have no team name; the
+  // match JSON then carries an empty name plus the players (see
+  // MatchModel.fromJson). They are real and must stay visible.
+  test('TC-VIS-01 keeps a side with no team name but real players', () {
+    const players = [ParticipantPlayer(slot: 1, fullName: 'Nguyen Van A')];
+    final match = _match(
+      team1Name: '',
+      team2Name: '',
+      team1Players: players,
+      team2Players: [const ParticipantPlayer(slot: 1, fullName: 'Tran B')],
+    );
+    expect(isRenderablePublicMatch(match), isTrue);
+  });
+
+  test('TC-VIS-02 still hides a side with no name and no players', () {
+    final match = _match(team1Name: '');
+    expect(isRenderablePublicMatch(match), isFalse);
   });
 }
