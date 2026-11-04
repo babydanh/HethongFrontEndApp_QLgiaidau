@@ -1166,8 +1166,8 @@ class _BottomBar extends StatelessWidget {
       spacing: 10,
       children: controls,
     );
-    // Upright: CHANGE SERVE takes the width left over, so the buttons keep
-    // their full height.
+    // Upright: the width left over goes to CHANGE SERVE (or a gap), so the
+    // buttons keep their full height and the pairs are justified to the edges.
     if (upright) {
       return SizedBox(
         height: 64,
@@ -1177,8 +1177,11 @@ class _BottomBar extends StatelessWidget {
             spacing: 6,
             children: [
               ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
+              // Without CHANGE SERVE the two pairs still sit at the two edges.
               if (loseServe != null)
-                Expanded(child: _serveButton(context, l10n, flexible: true)),
+                Expanded(child: _serveButton(context, l10n, flexible: true))
+              else
+                const Spacer(),
               ..._teamButtons(
                 l10n,
                 rightTeam,

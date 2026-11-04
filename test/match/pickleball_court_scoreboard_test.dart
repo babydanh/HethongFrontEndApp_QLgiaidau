@@ -620,6 +620,33 @@ void main() {
       ]);
     });
 
+    testWidgets(
+      'the +/- buttons are spread to both edges, with or without change serve',
+      (tester) async {
+        for (final withServe in [true, false]) {
+          await _pump(
+            tester,
+            _board(_Spy(), axis: Axis.vertical, withLoseServe: withServe),
+            size: phone,
+          );
+
+          final left = tester.getTopLeft(
+            find.byTooltip('Add point for team 1'),
+          );
+          final right = tester.getTopRight(
+            find.byTooltip('Add point for team 2'),
+          );
+          expect(left.dx, lessThan(16), reason: 'left edge, serve=$withServe');
+          expect(
+            phone.width - right.dx,
+            lessThan(16),
+            reason: 'right edge, serve=$withServe',
+          );
+          expect(tester.takeException(), isNull);
+        }
+      },
+    );
+
     testWidgets('the clock sits at the top right, not in the bar', (
       tester,
     ) async {
