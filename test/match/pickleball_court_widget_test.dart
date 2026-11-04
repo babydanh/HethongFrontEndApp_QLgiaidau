@@ -956,6 +956,32 @@ void main() {
       expect(repository.maxConcurrent, 1);
     });
 
+    for (final size in [const Size(360, 640), const Size(800, 360)]) {
+      testWidgets('the swap button works and the swap stays when saving fails '
+          '(${size.width.toInt()}x${size.height.toInt()})', (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await _pumpPanel(
+          tester,
+          canScore: true,
+          repository: _FailingCourtRepository(),
+        );
+        final before = tester.getCenter(find.text('Minh'));
+        final partner = tester.getCenter(find.text('L. Anh'));
+
+        final swap = find.byTooltip('Swap left and right').first;
+        expect(swap.hitTestable(), findsOneWidget);
+        await tester.tap(swap);
+        await tester.pumpAndSettle();
+
+        // Saving failed, yet the two partners changed places on screen.
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(tester.getCenter(find.text('Minh')), partner);
+        expect(tester.getCenter(find.text('L. Anh')), before);
+      });
+    }
+
     testWidgets('every failed drag shows its own error, not just the first', (
       tester,
     ) async {
