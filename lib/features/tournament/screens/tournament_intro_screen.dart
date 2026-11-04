@@ -15,8 +15,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_state_
 import 'package:app_quanly_giaidau/features/tournament/widgets/overview_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/intro_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/results_merged_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/teams_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_register_bar.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
@@ -676,151 +675,41 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     final List<Widget> tabViews = [];
     final List<String> tabIds = [];
 
-    // 1. Tab [Đang diễn ra]: như Web, hiện khi giải đang thi đấu hoặc có trận
-    // đang đấu; chấm đỏ + số trận chỉ khi thật sự có trận live.
-    if (showLiveTab) {
-      tabHeaders.add(
-        Tab(
-          height: 28,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (hasLive) ...[
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFEF4444),
-                  ),
-                ),
-                const SizedBox(width: 5),
-              ],
-              Text(
-                'Đang diễn ra',
-                style: hasLive
-                    ? TextStyle(
-                        color: colors.error,
-                        fontWeight: FontWeight.w700,
-                      )
-                    : null,
-              ),
-              if (hasLive) ...[
-                const SizedBox(width: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4.5,
-                    vertical: 0.5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.error,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${matchSummary.liveCount}',
-                    style: const TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      );
-      tabIds.add('live');
-      tabViews.add(
-        LiveTab(
-          key: const ValueKey('live'),
-          tournamentId: widget.tournamentId,
-          isLite: tournament.isLite,
-          divisions: tournament.divisions,
-          selectedDivisionId: _selectedDivisionId,
-          canManage: canManage,
-          onSelectDivision: (div) {
-            setState(() {
-              _selectedDivisionId = div.id;
-              _selectedDivision = div.name;
-              _divisionExpanded = true;
-            });
-          },
-        ),
-      );
-    }
-
-    // 2. Tab [🏆 Kết quả]: người xem chỉ thấy khi đã có kết quả; Ban tổ chức luôn thấy
-    if (hasResults || canManage) {
-      tabHeaders.add(
-        const Tab(
-          height: 28,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.emoji_events_rounded, size: 14),
-              SizedBox(width: 4),
-              Text('Kết quả'),
-            ],
-          ),
-        ),
-      );
-      tabIds.add('results');
-      tabViews.add(
-        tournament.divisions.length > 1
-            ? Column(
-                children: [
-                  _buildResultsDivisionStrip(tournament),
-                  Expanded(
-                    child: ResultsTab(
-                      key: ValueKey('results-$_selectedDivisionId'),
-                      tournamentId: widget.tournamentId,
-                      selectedDivisionId: _selectedDivisionId,
-                      selectedDivision: _selectedDivision,
-                      matchType: selectedMatchType,
-                      onShare: () => _shareTournament(tournament),
-                    ),
-                  ),
-                ],
-              )
-            : ResultsTab(
-                key: ValueKey('results-$_selectedDivisionId'),
-                tournamentId: widget.tournamentId,
-                selectedDivisionId: _selectedDivisionId,
-                selectedDivision: _selectedDivision,
-                matchType: selectedMatchType,
-                onShare: () => _shareTournament(tournament),
-              ),
-      );
-    }
-
-    // 3. Tab [Tổng quan] (Mặc định khi vào màn hình)
+    // 1. Tab [Tổng quan] (Mặc định khi vào màn hình)
     final int overviewIndex = tabHeaders.length;
     tabHeaders.add(const Tab(height: 28, text: 'Tổng quan'));
     tabIds.add('overview');
 
-    // 4. Tab [Giới thiệu]
+    // 2. Tab [Giới thiệu]
     final int introIndex = tabHeaders.length;
     _introTabIndex = introIndex;
     tabHeaders.add(const Tab(height: 28, text: 'Giới thiệu'));
     tabIds.add('intro');
 
-    // 5. Tab [Đội tham gia]
+    // 3. Tab [Đội tham gia]
     tabHeaders.add(Tab(height: 28, text: l10n.tabTeams));
     tabIds.add('teams');
 
-    // 6. Tab [Bảng đấu]
+    // 4. Tab [Bảng đấu]
     tabHeaders.add(const Tab(height: 28, text: 'Bảng đấu'));
     tabIds.add('bracket');
 
-    // 7. Lịch thi đấu.
+    // 5. Lịch thi đấu.
     tabHeaders.add(Tab(height: 28, text: l10n.tabSchedule));
     tabIds.add('schedule');
 
-    // 8. Tab [Tài trợ] (nếu có) luôn là tab cuối.
+    // 6. Tab [Tài trợ] (nếu có).
     if (hasSponsors) {
       tabHeaders.add(Tab(height: 28, text: l10n.tabSponsors));
       tabIds.add('sponsors');
+    }
+
+    // 7. Tab [Kết quả] là tab cuối, như Web: gộp "Đang diễn ra" vào đây. Người
+    // xem thấy khi giải đang thi đấu hoặc đã có kết quả; Ban tổ chức luôn thấy.
+    final bool showResultsTab = showLiveTab || hasResults || canManage;
+    if (showResultsTab) {
+      tabHeaders.add(_resultsTabHeader(colors, hasLive, matchSummary.liveCount));
+      tabIds.add('results');
     }
 
     _updateTabController(tabIds, defaultIndex: overviewIndex);
@@ -937,7 +826,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       ),
     );
 
-    // Tài trợ (tab cuối)
+    // Tài trợ
     if (hasSponsors) {
       tabViews.add(
         SingleChildScrollView(
@@ -945,6 +834,31 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           padding: const EdgeInsets.only(bottom: 160),
           child: SponsorsTab(sponsors: tournament.sponsors),
         ),
+      );
+    }
+
+    // Kết quả (tab cuối): bục vinh danh rồi bảng trận của hạng mục đang chọn.
+    if (showResultsTab) {
+      final manyDivisions = tournament.divisions.length > 1;
+      final merged = ResultsMergedTab(
+        key: ValueKey('results-$_selectedDivisionId'),
+        tournamentId: widget.tournamentId,
+        isLite: tournament.isLite,
+        canManage: canManage,
+        divisionId: manyDivisions ? _selectedDivisionId : null,
+        divisionName: _selectedDivision,
+        matchType: selectedMatchType,
+        onShare: () => _shareTournament(tournament),
+      );
+      tabViews.add(
+        manyDivisions
+            ? Column(
+                children: [
+                  _buildResultsDivisionStrip(tournament),
+                  Expanded(child: merged),
+                ],
+              )
+            : merged,
       );
     }
 
@@ -998,6 +912,64 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ),
         ],
         body: TabBarView(controller: controller, children: tabViews),
+      ),
+    );
+  }
+
+  /// "Kết quả" tab label: a red dot and the live count while a match is in
+  /// play, the trophy otherwise.
+  Tab _resultsTabHeader(AppColorsExtension colors, bool hasLive, int liveCount) {
+    if (!hasLive) {
+      return const Tab(
+        height: 28,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.emoji_events_rounded, size: 14),
+            SizedBox(width: 4),
+            Text('Kết quả'),
+          ],
+        ),
+      );
+    }
+    return Tab(
+      height: 28,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFEF4444),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            'Kết quả',
+            style: TextStyle(
+              color: colors.error,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 0.5),
+            decoration: BoxDecoration(
+              color: colors.error,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '$liveCount',
+              style: const TextStyle(
+                fontSize: 9.5,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

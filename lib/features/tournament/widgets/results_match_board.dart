@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_schedule_dialog.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/final_matches.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_board_palette.dart';
@@ -77,6 +78,7 @@ class ResultsMatchBoard extends ConsumerStatefulWidget {
     required this.canManage,
     this.divisionId,
     this.initialFilter = ResultsBoardFilter.all,
+    this.finalOnly = false,
     this.clock = _systemNow,
   });
 
@@ -89,6 +91,10 @@ class ResultsMatchBoard extends ConsumerStatefulWidget {
 
   /// Chip selected when the board is first built (e.g. from a progress popup).
   final ResultsBoardFilter initialFilter;
+
+  /// Finished division: list only the knockout final. A bracket without a
+  /// knockout final (round robin, swiss) keeps the full board.
+  final bool finalOnly;
 
   /// Source of "now" for the "Trễ giờ" chip; tests pass a fixed clock.
   final DateTime Function() clock;
@@ -117,6 +123,7 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   // search box or switching a filter chip never recomputes round labels.
   List<MatchModel>? _source;
   String? _derivedDivisionId;
+  bool _derivedFinalOnly = false;
   String? _derivedLocale;
   List<MatchModel> _all = const [];
   List<ResultsRound> _rounds = const [];
@@ -158,17 +165,23 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
 
   void _refreshDerived(List<MatchModel> source, AppLocalizations l10n) {
     final divisionId = widget.divisionId;
+    final finalOnly = widget.finalOnly;
     if (identical(source, _source) &&
         divisionId == _derivedDivisionId &&
+        finalOnly == _derivedFinalOnly &&
         l10n.localeName == _derivedLocale) {
       return;
     }
     _source = source;
     _derivedDivisionId = divisionId;
+    _derivedFinalOnly = finalOnly;
     _derivedLocale = l10n.localeName;
-    final all = divisionId == null
+    final ofDivision = divisionId == null
         ? source
         : source.where((m) => matchDivisionId(m) == divisionId).toList();
+    final all = finalOnly
+        ? (pickFinalMatches(ofDivision) ?? ofDivision)
+        : ofDivision;
     final real = all.where((m) => !m.isBye).toList();
     _all = all;
     _rounds = buildResultsRounds(all, (m) => _roundLabel(m, all, l10n));

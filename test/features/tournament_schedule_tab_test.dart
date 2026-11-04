@@ -227,6 +227,15 @@ Future<void> _scrollHorizontallyTo(
   }
 }
 
+/// Tab label: plain text tabs use `text`, the "Kết quả" tab is a Row.
+String? _tabLabel(Widget tab) {
+  final t = tab as Tab;
+  if (t.text != null) return t.text;
+  final row = t.child;
+  if (row is! Row) return null;
+  return row.children.whereType<Text>().first.data;
+}
+
 Future<void> _tapTab(WidgetTester tester, Finder target) async {
   await _scrollHorizontallyTo(tester, target, find.byType(TabBar).first);
   await tester.tap(target);
@@ -234,13 +243,16 @@ Future<void> _tapTab(WidgetTester tester, Finder target) async {
 }
 
 void main() {
-  testWidgets('schedule tab is last and opens the schedule page', (
+  testWidgets('schedule tab sits right before the last results tab and opens the schedule page', (
     tester,
   ) async {
     await _pumpTournamentDetail(tester, locale: const Locale('vi'));
 
+    // "Kết quả" is the last tab (as on Web); the schedule sits right before it.
     final tabBar = tester.widget<TabBar>(find.byType(TabBar).first);
-    expect((tabBar.tabs.last as Tab).text, 'Lịch thi đấu');
+    final labels = [for (final tab in tabBar.tabs) _tabLabel(tab)];
+    expect(labels.last, 'Kết quả');
+    expect(labels[labels.length - 2], 'Lịch thi đấu');
 
     final scheduleTab = find.widgetWithText(Tab, 'Lịch thi đấu');
     await _tapTab(tester, scheduleTab);
@@ -249,7 +261,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sponsor tab is last, right after the schedule tab', (
+  testWidgets('sponsor tab follows the schedule tab, results tab is last', (
     tester,
   ) async {
     await _pumpTournamentDetail(
@@ -259,9 +271,10 @@ void main() {
     );
 
     final tabBar = tester.widget<TabBar>(find.byType(TabBar).first);
-    final labels = [for (final tab in tabBar.tabs) (tab as Tab).text];
-    expect(labels.last, 'Tài trợ');
-    expect(labels[labels.length - 2], 'Lịch thi đấu');
+    final labels = [for (final tab in tabBar.tabs) _tabLabel(tab)];
+    expect(labels.last, 'Kết quả');
+    expect(labels[labels.length - 2], 'Tài trợ');
+    expect(labels[labels.length - 3], 'Lịch thi đấu');
 
     await _tapTab(tester, find.widgetWithText(Tab, 'Lịch thi đấu'));
     expect(find.byType(TextField).hitTestable(), findsOneWidget);
@@ -301,8 +314,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final tabBar = tester.widget<TabBar>(find.byType(TabBar).first);
-    expect((tabBar.tabs.last as Tab).text, 'Schedule');
-    expect(tabBar.controller?.index, tabBar.tabs.length - 1);
+    final scheduleIndex = [
+      for (final tab in tabBar.tabs) _tabLabel(tab),
+    ].indexOf('Schedule');
+    expect(scheduleIndex, tabBar.tabs.length - 2);
+    expect(tabBar.controller?.index, scheduleIndex);
     expect(find.byType(TextField).hitTestable(), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

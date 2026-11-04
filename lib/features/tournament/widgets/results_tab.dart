@@ -5,8 +5,10 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
-/// "Kết quả" tab: the honour podium (champion, runner-up, third place) and a
-/// share icon. The match board lives in the "Đang diễn ra" tab.
+/// The honour podium (champion, runner-up, third place) of one division.
+/// Alone it is a scrolling page with a share icon; [embedded] makes it only the
+/// podium, shown when the division has official results, and a tap on it
+/// shares (the merged "Kết quả" tab puts the match board under it).
 class ResultsTab extends ConsumerWidget {
   final String tournamentId;
 
@@ -17,6 +19,9 @@ class ResultsTab extends ConsumerWidget {
   /// Opens the share sheet; null hides the share icon.
   final VoidCallback? onShare;
 
+  /// Podium only: no scroll view, no share icon, no empty or loading card.
+  final bool embedded;
+
   const ResultsTab({
     super.key,
     required this.tournamentId,
@@ -24,6 +29,7 @@ class ResultsTab extends ConsumerWidget {
     this.selectedDivision,
     this.matchType,
     this.onShare,
+    this.embedded = false,
   });
 
   @override
@@ -34,6 +40,8 @@ class ResultsTab extends ConsumerWidget {
         divisionId: selectedDivisionId,
       )),
     );
+
+    if (embedded) return _embeddedPodium(context, resultAsync.value);
 
     final awards = resultAsync.when(
       data: (data) {
@@ -54,6 +62,17 @@ class ResultsTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [if (onShare != null) _shareButton(context), awards],
       ),
+    );
+  }
+
+  Widget _embeddedPodium(BuildContext context, Map<String, dynamic>? data) {
+    final rawAwards = data?['awards'];
+    if (rawAwards is! List || rawAwards.isEmpty) return const SizedBox.shrink();
+    return GestureDetector(
+      key: const ValueKey('results-podium-share'),
+      behavior: HitTestBehavior.opaque,
+      onTap: onShare,
+      child: _buildPodium(context, rawAwards),
     );
   }
 

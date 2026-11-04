@@ -4,7 +4,6 @@ import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_accordion.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/live_tab.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -206,17 +205,17 @@ List<MatchModel> _fixtureMatches() => [
   ),
 ];
 
-/// Vùng nội dung mở ra dưới hàng hạng mục (dùng chung cho Đang diễn ra / Đội / Bảng đấu).
+/// Vùng nội dung mở ra dưới hàng hạng mục (dùng chung cho Đội / Bảng đấu).
 Finder _divisionContent(String divisionId) =>
     find.byKey(ValueKey('division-content-$divisionId'));
 
 void _registerDivisionTransitionTests() {
-  testWidgets('live, teams and bracket tabs share one division list widget', (
+  testWidgets('teams and bracket tabs share one division list widget', (
     tester,
   ) async {
     // Mỗi tab dựng màn mới: thẻ trận live có hoạt ảnh lặp nên không chuyển tab
     // tiếp bằng pumpAndSettle được.
-    for (final tab in ['Đang diễn ra', 'Danh sách đội', 'Bảng đấu']) {
+    for (final tab in ['Danh sách đội', 'Bảng đấu']) {
       await _pumpDivisionTransitionScreen(tester);
       await _openTab(tester, tab);
       expect(find.byType(DivisionAccordion), findsOneWidget, reason: tab);
@@ -225,22 +224,18 @@ void _registerDivisionTransitionTests() {
         findsOneWidget,
         reason: tab,
       );
-      if (tab == 'Đang diễn ra') {
-        // Hàng hạng mục không còn dòng phụ "Đánh Đơn/Đánh Đôi" riêng của tab live.
-        expect(find.text('Đánh Đôi'), findsNothing);
-      }
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 1));
     }
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('changing a live division animates its expansion', (
+  testWidgets('changing a division animates its expansion', (
     tester,
   ) async {
     await _pumpDivisionTransitionScreen(tester);
-    await _openTab(tester, 'Đang diễn ra');
-    expect(find.byType(LiveTab), findsOneWidget);
+    await _openTab(tester, 'Danh sách đội');
+    expect(find.byType(DivisionAccordion), findsOneWidget);
 
     final targetDivision = find.text('Division 1');
     expect(targetDivision.hitTestable(), findsOneWidget);
@@ -260,8 +255,8 @@ void _registerDivisionTransitionTests() {
 
   testWidgets('division expansion respects reduced motion', (tester) async {
     await _pumpDivisionTransitionScreen(tester, disableAnimations: true);
-    await _openTab(tester, 'Đang diễn ra');
-    expect(find.byType(LiveTab), findsOneWidget);
+    await _openTab(tester, 'Danh sách đội');
+    expect(find.byType(DivisionAccordion), findsOneWidget);
 
     final targetDivision = find.text('Division 1');
     final expansion = _divisionContent('division-1');
@@ -281,8 +276,8 @@ void _registerDivisionTransitionTests() {
     tester,
   ) async {
     await _pumpDivisionTransitionScreen(tester);
-    await _openTab(tester, 'Đang diễn ra');
-    expect(find.byType(LiveTab), findsOneWidget);
+    await _openTab(tester, 'Danh sách đội');
+    expect(find.byType(DivisionAccordion), findsOneWidget);
 
     final targetDivision = find.text('Division 1');
     expect(targetDivision.hitTestable(), findsOneWidget);
@@ -396,11 +391,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    await _openTab(tester, 'Đang diễn ra');
+    // "Đang diễn ra" is merged into the last tab: the board and the podium.
+    await _openTab(tester, 'Kết quả');
     expect(find.text('Player Gamma'), findsOneWidget);
     expect(find.text('Player Delta'), findsOneWidget);
-
-    await _openTab(tester, 'Kết quả');
     expect(find.text('Champion Alpha'), findsWidgets);
 
     await _openTab(tester, 'Danh sách đội');

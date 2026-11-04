@@ -151,13 +151,16 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tab is already there from the tournament status, without a live badge.
-      expect(find.widgetWithText(Tab, 'Đang diễn ra'), findsOneWidget);
+      expect(find.widgetWithText(Tab, 'Kết quả'), findsOneWidget);
 
       matches.add([_liveMatch()]);
       await tester.pumpAndSettle();
 
       expect(
-        find.descendant(of: find.byType(Tab), matching: find.text('1')),
+        find.descendant(
+          of: find.widgetWithText(Tab, 'Kết quả'),
+          matching: find.text('1'),
+        ),
         findsOneWidget,
       );
     },

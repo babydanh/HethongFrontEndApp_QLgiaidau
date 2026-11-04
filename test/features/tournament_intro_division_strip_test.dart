@@ -108,6 +108,9 @@ Future<List<String?>> _pumpResultsTab(WidgetTester tester) async {
   for (var i = 0; i < 20; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
+  // "Kết quả" is the last tab: slide the tab bar to its end before tapping.
+  await tester.drag(find.byType(TabBar), const Offset(-600, 0));
+  await tester.pump(const Duration(milliseconds: 500));
   await tester.tap(find.widgetWithText(Tab, 'Kết quả'));
   for (var i = 0; i < 10; i++) {
     await tester.pump(const Duration(milliseconds: 100));

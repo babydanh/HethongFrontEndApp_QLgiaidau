@@ -74,6 +74,7 @@ Future<void> _pump(
   String? divisionId = 'd1',
   ResultsBoardFilter initialFilter = ResultsBoardFilter.all,
   DateTime Function()? clock,
+  bool finalOnly = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -103,6 +104,7 @@ Future<void> _pump(
                     canManage: canManage,
                     initialFilter: initialFilter,
                     clock: clock ?? DateTime.now,
+                    finalOnly: finalOnly,
                   ),
                 ),
               ),
@@ -151,6 +153,41 @@ void main() {
     expect(_row('r2a'), findsOneWidget);
     expect(_row('bye'), findsNothing);
     expect(find.byKey(const ValueKey('results-box-live')), findsNothing);
+  });
+
+  group('TC-FINAL-02 finalOnly lists the knockout final only', () {
+    final knockout = [
+      _match('r1a', round: 1, number: 1, stageType: 'SINGLE_ELIMINATION'),
+      _match('r1b', round: 1, number: 2, stageType: 'SINGLE_ELIMINATION'),
+      _match('fin', round: 2, number: 1, stageType: 'SINGLE_ELIMINATION'),
+    ];
+
+    testWidgets('a finished knockout division shows the last round only', (
+      tester,
+    ) async {
+      await _pump(tester, knockout, finalOnly: true);
+
+      expect(_toggles, findsNWidgets(1));
+      expect(_row('fin'), findsOneWidget);
+      expect(_row('r1a'), findsNothing);
+    });
+
+    testWidgets('without finalOnly every round stays', (tester) async {
+      await _pump(tester, knockout);
+
+      expect(_toggles, findsNWidgets(2));
+    });
+
+    testWidgets('no knockout final keeps the full board', (tester) async {
+      await _pump(tester, [
+        _match('a', round: 1, number: 1, stageType: 'ROUND_ROBIN'),
+        _match('b', round: 2, number: 1, stageType: 'ROUND_ROBIN'),
+      ], finalOnly: true);
+
+      // Round robin rounds share one "Vòng bảng" box; both matches stay.
+      expect(_row('a'), findsOneWidget);
+      expect(_row('b'), findsOneWidget);
+    });
   });
 
   testWidgets('a live match sits in the red live box once, not in its round', (
