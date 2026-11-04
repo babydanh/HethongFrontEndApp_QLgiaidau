@@ -601,7 +601,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool pickleballAwardPoint(bool isTeam1) {
     if (_rejectIfMaxSetsReached()) return false;
     final pb = state.pickleball ?? const PickleballServeState();
-    if (!state.isOpenScoring && pb.isTeam1Serving != isTeam1) {
+    final strictSideOut =
+        !state.isOpenScoring &&
+        state.config.scoringModel == SportScoringModel.pickleballSideOut;
+    if (strictSideOut && pb.isTeam1Serving != isTeam1) {
       state = state.copyWith(errorMessage: _l10n.scorePanel_servingTeamOnly);
       return false;
     }
@@ -612,7 +615,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
         currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
       ),
-      pickleball: pb.copyWith(serverNumber: 1),
+      // A point keeps the same server: server 2 stays server 2 until a fault.
+      // Lite/rally lets the receiver score: the serve then goes to that team.
+      pickleball: pb.isTeam1Serving == isTeam1
+          ? pb
+          : pb.copyWith(isTeam1Serving: isTeam1, serverNumber: 1),
       errorMessage: null,
     );
     _checkPickleballGameEnd();
@@ -628,6 +635,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           : pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1),
       errorMessage: null,
     );
+    _scheduleLiveSync();
   }
 
   void pickleballSideOut() {
@@ -639,6 +647,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       ),
       errorMessage: null,
     );
+    _scheduleLiveSync();
+  }
+
+  /// Who serves, in the shape `_hydrateState` reads back: without it the serve
+  /// falls back to team 1 at server 2 whenever the match is opened again.
+  Map<String, dynamic>? _pickleballLiveState() {
+    final pb = state.pickleball;
+    if (pb == null) return null;
+    return {
+      'sideOutState': {
+        'servingTeam': pb.isTeam1Serving ? 1 : 2,
+        'serverNumber': pb.serverNumber,
+      },
+    };
   }
 
   void _checkPickleballGameEnd() {
@@ -660,6 +682,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           ),
         ],
         rally: const RallySetState(),
+        // A new game opens with a single fault for the serving team (x-y-2).
+        pickleball: (state.pickleball ?? const PickleballServeState())
+            .copyWith(serverNumber: 2),
       );
       _syncSetsToBackend();
     }
@@ -1390,6 +1415,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     Map<String, dynamic>? liveState;
     if (rally != null) {
       sets.add(SetScoreData(score1: rally.currentP1, score2: rally.currentP2));
+      liveState = _pickleballLiveState();
     } else if (tennis != null) {
       final hasActiveSet = sets.isNotEmpty && !sets.last.isFinished;
       if (!hasActiveSet &&

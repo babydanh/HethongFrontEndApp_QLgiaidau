@@ -125,6 +125,9 @@ class CourtDraggable extends StatelessWidget {
     return LongPressDraggable<CourtDragSource>(
       data: source,
       delay: _longPressDelay,
+      // Empty space inside the child counts, so a roomy child is grabbable
+      // anywhere, not only on its text.
+      hitTestBehavior: HitTestBehavior.opaque,
       hapticFeedbackOnStart: true,
       dragAnchorStrategy: (_, _, _) => anchor,
       feedback: Material(

@@ -209,6 +209,13 @@ Future<void> _pumpPanel(
   await tester.pumpAndSettle();
 }
 
+/// Opens the END dialog and taps one of its entries.
+Future<void> _endChoose(WidgetTester tester, String item) async {
+  await tester.tap(find.text('END'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(item));
+}
+
 Future<void> _openMenu(WidgetTester tester) async {
   await tester.tap(find.byTooltip('More actions'));
   await tester.pumpAndSettle();
@@ -224,7 +231,7 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log, context: _context(serverNumber: 1));
 
-      await tester.tap(find.byTooltip('Lose serve'));
+      await tester.tap(find.byTooltip('Change serve'));
 
       // The score panel moves 1 -> 2 and then to the other team.
       expect(log, ['switchServer']);
@@ -238,12 +245,12 @@ void main() {
         context: _context(isDoubles: false, serverNumber: 1),
       );
 
-      await tester.tap(find.byTooltip('Lose serve'));
+      await tester.tap(find.byTooltip('Change serve'));
 
       expect(log, ['sideOut']);
     });
 
-    testWidgets('rally has no lose serve', (tester) async {
+    testWidgets('rally rule keeps the lose serve button too', (tester) async {
       await _pumpPanel(
         tester,
         log: <String>[],
@@ -251,15 +258,15 @@ void main() {
         state: _state(model: SportScoringModel.rallyPointSet),
       );
 
-      expect(find.byTooltip('Lose serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
     });
 
-    testWidgets('Lite has no lose serve even with a side-out rule', (
+    testWidgets('Lite keeps the lose serve button so the referee can move it', (
       tester,
     ) async {
       await _pumpPanel(tester, log: <String>[], state: _state(lite: true));
 
-      expect(find.byTooltip('Lose serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
     });
   });
 
@@ -268,7 +275,7 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log);
 
-      await tester.tap(find.byTooltip('Finish set'));
+      await _endChoose(tester, 'Finish set');
       await tester.pumpAndSettle();
       expect(find.text('Finish set 1 at 5-3?'), findsOneWidget);
       expect(log, isEmpty);
@@ -283,7 +290,7 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log);
 
-      await tester.tap(find.byTooltip('Finish set'));
+      await _endChoose(tester, 'Finish set');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -295,10 +302,14 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log, confirmMessage: null);
 
-      await tester.tap(find.byTooltip('Finish set'), warnIfMissed: false);
+      await tester.tap(find.text('END'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Finish set'), warnIfMissed: false);
       await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsNothing);
+      // Only the END dialog is open: no confirmation follows.
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Confirm'), findsNothing);
       expect(log, isEmpty);
     });
 
@@ -308,7 +319,7 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log, state: _state(override: true));
 
-      await tester.tap(find.byTooltip('Finish set'));
+      await _endChoose(tester, 'Finish set');
       await tester.pumpAndSettle();
       final confirm = find.widgetWithText(FilledButton, 'Confirm');
       expect(tester.widget<FilledButton>(confirm).onPressed, isNull);
@@ -326,7 +337,7 @@ void main() {
       await _pumpPanel(tester, log: log, completable: {1});
       final label1 = matchSideLabel(_match(), 1);
 
-      await tester.tap(find.byTooltip('Pick the winner'));
+      await _endChoose(tester, 'Pick the winner');
       await tester.pumpAndSettle();
       await tester.tap(find.text(label1));
       await tester.pumpAndSettle();
@@ -343,7 +354,7 @@ void main() {
       await _pumpPanel(tester, log: log, completable: {1});
       final label2 = matchSideLabel(_match(), 2);
 
-      await tester.tap(find.byTooltip('Pick the winner'));
+      await _endChoose(tester, 'Pick the winner');
       await tester.pumpAndSettle();
       await tester.tap(find.text(label2), warnIfMissed: false);
       await tester.pumpAndSettle();
@@ -358,7 +369,7 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log);
 
-      await tester.tap(find.byTooltip('Pick the winner'));
+      await _endChoose(tester, 'Pick the winner');
       await tester.pumpAndSettle();
 
       expect(
@@ -385,7 +396,7 @@ void main() {
         completable: {1},
       );
 
-      await tester.tap(find.byTooltip('Pick the winner'));
+      await _endChoose(tester, 'Pick the winner');
       await tester.pumpAndSettle();
       final button = find.widgetWithText(
         FilledButton,
@@ -402,7 +413,7 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log, completable: {1}, failComplete: true);
 
-      await tester.tap(find.byTooltip('Pick the winner'));
+      await _endChoose(tester, 'Pick the winner');
       await tester.pumpAndSettle();
       await tester.tap(find.text(matchSideLabel(_match(), 1)));
       await tester.pumpAndSettle();
@@ -415,7 +426,7 @@ void main() {
       final log = <String>[];
       await _pumpPanel(tester, log: log, completable: {1});
 
-      await tester.tap(find.byTooltip('Pick the winner'));
+      await _endChoose(tester, 'Pick the winner');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -435,11 +446,14 @@ void main() {
         state: _state().copyWith(isSubmitting: true),
       );
 
-      await tester.tap(find.byTooltip('Pick the winner'), warnIfMissed: false);
-      await tester.tap(find.byTooltip('Finish set'), warnIfMissed: false);
+      await tester.tap(find.text('END'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pick the winner'), warnIfMissed: false);
+      await tester.tap(find.text('Finish set'), warnIfMissed: false);
       await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsNothing);
+      // Both entries are locked: only the END dialog stays open.
+      expect(find.byType(AlertDialog), findsOneWidget);
       expect(log, isEmpty);
     });
   });
@@ -547,9 +561,8 @@ void main() {
       await _pumpPanel(tester, log: <String>[], canScore: false);
 
       expect(find.byTooltip('More actions'), findsNothing);
-      expect(find.byTooltip('Finish set'), findsNothing);
-      expect(find.byTooltip('Pick the winner'), findsNothing);
-      expect(find.byTooltip('Lose serve'), findsNothing);
+      expect(find.text('END'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsNothing);
     });
   });
 
@@ -565,10 +578,10 @@ void main() {
 
       await tester.tap(find.byTooltip('Add point for team 2'));
 
-      expect(log, ['rallyAdd:2']);
+      expect(log, ['award:2']);
     });
 
-    test('the court context treats Lite as rally', () async {
+    test('the court context tracks serve turns in Lite', () async {
       final container = ProviderContainer(
         overrides: [
           singleMatchProvider.overrideWith(
@@ -585,7 +598,8 @@ void main() {
 
       final court = container.read(pickleballCourtContextProvider(_params));
 
-      expect(court?.scoringMode, CourtScoringMode.rally);
+      expect(court?.scoringMode, CourtScoringMode.sideOut);
+      expect(court?.serverNumber, 2);
     });
   });
 }

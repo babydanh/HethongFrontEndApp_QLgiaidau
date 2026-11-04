@@ -2143,7 +2143,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pickleballCourtSaveError =>
-      'Không lưu được sơ đồ sân. Đã giữ cài đặt của máy chủ.';
+      'Chưa lưu được lên máy chủ. Thay đổi vẫn giữ trên máy này.';
 
   @override
   String get pickleballCourtMenu => 'Thêm thao tác';

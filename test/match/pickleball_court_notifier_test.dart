@@ -157,7 +157,7 @@ void main() {
     expect(harness.state.autoSwitchEnds, isFalse);
   });
 
-  test('a failed write reverts to the last server court and reports it', () async {
+  test('a failed write keeps the local change and reports it', () async {
     final harness = _Harness();
     addTearDown(harness.dispose);
     harness.matches.add(_match());
@@ -169,7 +169,50 @@ void main() {
     );
 
     expect(error, isA<Exception>());
-    expect(harness.state.autoSwitchEnds, isTrue);
+    // Swapping places must not depend on the network or the server.
+    expect(harness.state.autoSwitchEnds, isFalse);
+  });
+
+  test('a server refresh does not overwrite a change not yet saved', () async {
+    final harness = _Harness();
+    addTearDown(harness.dispose);
+    harness.matches.add(_match());
+    await harness.settle();
+    harness.repository.failWith = Exception('Lỗi mạng');
+    await harness.notifier.apply(
+      (state, context) => setAutoSwitchEnds(state, context, false),
+    );
+
+    harness.matches.add(_match());
+    await harness.settle();
+
+    expect(harness.state.autoSwitchEnds, isFalse);
+  });
+
+  test('the next successful write confirms the local change', () async {
+    final harness = _Harness();
+    addTearDown(harness.dispose);
+    harness.matches.add(_match());
+    await harness.settle();
+    harness.repository.failWith = Exception('Lỗi mạng');
+    await harness.notifier.apply(
+      (state, context) => setAutoSwitchEnds(state, context, false),
+    );
+    harness.repository.failWith = null;
+
+    final error = await harness.notifier.apply(
+      (state, context) => setAutoSwitchEnds(state, context, false),
+    );
+    await harness.notifier.syncAutomatic();
+    await harness.notifier.syncAutomatic();
+
+    expect(error, isNull);
+    expect(harness.repository.requests.last['autoSwitchEnds'], isFalse);
+    harness.matches.add(
+      _match(courtState: const CourtState(autoSwitchEnds: false).toJson()),
+    );
+    await harness.settle();
+    expect(harness.state.autoSwitchEnds, isFalse);
   });
 
   test('a socket update replaces the court when no write is pending', () async {
@@ -293,7 +336,8 @@ void _realContextTests() {
 
       expect(harness.context.scoringMode, CourtScoringMode.sideOut);
       expect(harness.context.servingTeam, 1);
-      expect(harness.context.serverNumber, 1);
+      // The first serve of a game has one fault only: call x-y-2.
+      expect(harness.context.serverNumber, 2);
     });
 
     test('moving the ball to the partner at 0-0 keeps the override', () async {

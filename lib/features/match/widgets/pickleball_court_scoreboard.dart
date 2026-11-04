@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
@@ -26,6 +27,12 @@ const _minBarWidth = 600.0;
 /// Below this height the middle column shrinks instead of overflowing.
 const _minMiddleHeight = 244.0;
 
+/// Upright phone: the score band between the halves never gets shorter.
+const _minBandHeight = 120.0;
+
+/// Narrowest upright bar that still fits UNDO beside the four +/- buttons.
+const _minUprightUndoWidth = 300.0;
+
 final _cellColor = courtTeam1.court;
 final _servingCellColor = courtTeam2.court;
 
@@ -36,6 +43,7 @@ final _servingCellColor = courtTeam2.court;
 class CourtScoreboard extends StatelessWidget {
   const CourtScoreboard({
     super.key,
+    this.axis = Axis.horizontal,
     required this.layout,
     required this.team1Players,
     required this.team2Players,
@@ -54,6 +62,9 @@ class CourtScoreboard extends StatelessWidget {
     required this.onDrop,
   });
 
+  /// Horizontal: halves side by side. Vertical (upright phone): halves stacked,
+  /// the first team on top, the scores in a band between them.
+  final Axis axis;
   final CourtLayout layout;
   final List<String> team1Players;
   final List<String> team2Players;
@@ -77,11 +88,17 @@ class CourtScoreboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final left = _leftTeam;
     final right = 3 - left;
+    final upright = axis == Axis.vertical;
     return ColoredBox(
       color: _surface,
       child: Column(
         children: [
-          _TopRow(net: net, overrideEnabled: overrideEnabled),
+          _TopRow(
+            net: net,
+            overrideEnabled: overrideEnabled,
+            // Upright: no room in the bar, the clock moves to the top row.
+            clockStart: upright ? startedAt : null,
+          ),
           Expanded(
             child: _CourtBlock(
               scoreboard: this,
@@ -97,7 +114,9 @@ class CourtScoreboard extends StatelessWidget {
             servingTeam: layout.servingTeam,
             onScoreChange: onScoreChange,
             onLoseServe: net.onLoseServe,
-            startedAt: startedAt,
+            onUndo: net.menu.onUndo,
+            startedAt: upright ? null : startedAt,
+            upright: upright,
           ),
         ],
       ),
@@ -106,10 +125,17 @@ class CourtScoreboard extends StatelessWidget {
 }
 
 class _TopRow extends StatelessWidget {
-  const _TopRow({required this.net, required this.overrideEnabled});
+  const _TopRow({
+    required this.net,
+    required this.overrideEnabled,
+    this.clockStart,
+  });
 
   final CourtNetActions net;
   final bool overrideEnabled;
+
+  /// Shows the elapsed clock at the right end when set.
+  final DateTime? clockStart;
 
   Future<void> _showEndDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -202,18 +228,48 @@ class _TopRow extends StatelessWidget {
         ),
       if (net.menu.hasAny) CourtMenuButton(actions: net.menu),
     ];
-    if (items.isEmpty) return const SizedBox(height: 8);
+    final clock = clockStart;
+    if (items.isEmpty && clock == null) return const SizedBox(height: 8);
     return SizedBox(
       height: 56,
-      child: Center(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 12,
-            children: items,
+      child: Stack(
+        children: [
+          // The sport shows as a mark in the corner instead of a word.
+          const Positioned(
+            left: 12,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: SportIconWidget(iconData: 'pickleball', size: 32),
+            ),
           ),
-        ),
+          Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 12,
+                children: items,
+              ),
+            ),
+          ),
+          if (clock != null)
+            Positioned(
+              right: 12,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: SizedBox(
+                  width: 92,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: _ElapsedClock(startedAt: clock),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -278,6 +334,7 @@ class _CourtBlock extends StatelessWidget {
 
   Widget _half(int team, {required bool isLeft}) {
     return _ScoreboardHalf(
+      axis: scoreboard.axis,
       team: team,
       isLeft: isLeft,
       layout: scoreboard.layout,
@@ -291,31 +348,43 @@ class _CourtBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final upright = scoreboard.axis == Axis.vertical;
     return Semantics(
       container: true,
       explicitChildNodes: true,
       label: l10n.pickleballCourtLabel,
       customSemanticsActions: _switchEndsAction(l10n),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Container(
-          key: courtSurfaceKey,
-          decoration: BoxDecoration(border: Border.all(color: _ink, width: 2)),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            children: [
-              Expanded(flex: 35, child: _half(leftTeam, isLeft: true)),
-              Expanded(
-                flex: 30,
-                child: _MiddleColumn(
-                  scoreboard: scoreboard,
-                  leftTeam: leftTeam,
-                  rightTeam: rightTeam,
-                ),
-              ),
-              Expanded(flex: 35, child: _half(rightTeam, isLeft: false)),
-            ],
-          ),
+      child: Container(
+        key: courtSurfaceKey,
+        decoration: BoxDecoration(border: Border.all(color: _ink, width: 2)),
+        clipBehavior: Clip.antiAlias,
+        // Horizontal court: a Row of columns. Upright court: a Column of rows.
+        child: Flex(
+          direction: scoreboard.axis,
+          children: [
+            Expanded(
+              flex: upright ? 38 : 35,
+              child: _half(leftTeam, isLeft: true),
+            ),
+            Expanded(
+              flex: upright ? 24 : 30,
+              child: upright
+                  ? _MiddleBand(
+                      scoreboard: scoreboard,
+                      firstTeam: leftTeam,
+                      secondTeam: rightTeam,
+                    )
+                  : _MiddleColumn(
+                      scoreboard: scoreboard,
+                      leftTeam: leftTeam,
+                      rightTeam: rightTeam,
+                    ),
+            ),
+            Expanded(
+              flex: upright ? 38 : 35,
+              child: _half(rightTeam, isLeft: false),
+            ),
+          ],
         ),
       ),
     );
@@ -357,6 +426,7 @@ class _RoundControl extends StatelessWidget {
 /// One half: two cells and the ↕ button that swaps its players.
 class _ScoreboardHalf extends StatefulWidget {
   const _ScoreboardHalf({
+    required this.axis,
     required this.team,
     required this.isLeft,
     required this.layout,
@@ -366,7 +436,10 @@ class _ScoreboardHalf extends StatefulWidget {
     required this.onDrop,
   });
 
+  final Axis axis;
   final int team;
+
+  /// First half of the court: the left one, or the top one when upright.
   final bool isLeft;
   final CourtLayout layout;
   final List<String> players;
@@ -389,11 +462,17 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
 
   CourtDropTarget get _halfTarget => CourtDropTarget.half(team: widget.team);
 
-  /// Left half: left cell on top. Right half: right cell on top. Both cells
-  /// face the net.
-  List<CourtCell> get _cellOrder => widget.isLeft
-      ? const [CourtCell.left, CourtCell.right]
-      : const [CourtCell.right, CourtCell.left];
+  /// Horizontal court: left half has its left cell on top, right half its
+  /// right cell on top. Upright court: the top half has its right cell on the
+  /// screen's left, the bottom half its left cell. Both cells face the net.
+  List<CourtCell> get _cellOrder {
+    final rightFirst = widget.axis == Axis.vertical
+        ? widget.isLeft
+        : !widget.isLeft;
+    return rightFirst
+        ? const [CourtCell.right, CourtCell.left]
+        : const [CourtCell.left, CourtCell.right];
+  }
 
   Widget _cell(CourtCell cell) {
     final l10n = AppLocalizations.of(context)!;
@@ -467,7 +546,9 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
     );
     if (action == null) return null;
     return _RoundControl(
-      icon: Icons.swap_vert_rounded,
+      icon: widget.axis == Axis.vertical
+          ? Icons.swap_horiz_rounded
+          : Icons.swap_vert_rounded,
       tooltip: l10n.pickleballCourtActionSwapPlaces,
       onPressed: () => widget.onDrop(action),
     );
@@ -478,14 +559,19 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
     final l10n = AppLocalizations.of(context)!;
     final cells = _cellOrder;
     final swap = _swapButton(l10n);
+    final upright = widget.axis == Axis.vertical;
     final body = Stack(
       children: [
-        Column(
-          // Stretch so each cell's colour fills the column, not just its label.
+        Flex(
+          // Cells sit side by side when upright, stacked when sideways.
+          direction: upright ? Axis.horizontal : Axis.vertical,
+          // Stretch so each cell's colour fills the box, not just its label.
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _cell(cells[0]),
-            const SizedBox(height: 2, child: ColoredBox(color: _ink)),
+            upright
+                ? const SizedBox(width: 2, child: ColoredBox(color: _ink))
+                : const SizedBox(height: 2, child: ColoredBox(color: _ink)),
             _cell(cells[1]),
           ],
         ),
@@ -613,13 +699,15 @@ class _ScoreboardCell extends StatelessWidget {
                         type: MaterialType.transparency,
                         child: _PersonLabel(name: shortName),
                       ),
-                      child: person,
+                      // The whole cell is the grab area, not only the name.
+                      child: SizedBox.expand(child: Center(child: person)),
                     )
                   : person,
               if (isServing)
                 Positioned(
+                  // Clear of the screen edge, where a camera hole may sit.
                   top: 0,
-                  right: 0,
+                  right: 20,
                   child: _ServeTag(
                     team: team,
                     playerIndex: index,
@@ -751,7 +839,7 @@ class _ServeTag extends StatelessWidget {
   }
 }
 
-/// Call, the two scores, ⇄ and "pickleball · Set n". Shrinks as a whole when
+/// Call, the two scores, ⇄ and "Set n". Shrinks as a whole when
 /// the court is short.
 class _MiddleColumn extends StatelessWidget {
   const _MiddleColumn({
@@ -829,23 +917,108 @@ class _MiddleColumn extends StatelessWidget {
                     )
                   else
                     const SizedBox(height: _controlSize),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.pickleballCourtSportName,
-                        style: const TextStyle(color: _ink, fontSize: 18),
+                  if (setNumber != null)
+                    Text(
+                      l10n.pickleballCourtSetNumber(setNumber),
+                      style: const TextStyle(
+                        color: Color(0xFF7A7F8A),
+                        fontSize: 14,
                       ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Upright phone: first team's score, the call with ⇅ and the set number, the
+/// second team's score. Shrinks as a whole when the court is short.
+class _MiddleBand extends StatelessWidget {
+  const _MiddleBand({
+    required this.scoreboard,
+    required this.firstTeam,
+    required this.secondTeam,
+  });
+
+  final CourtScoreboard scoreboard;
+  final int firstTeam;
+  final int secondTeam;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final call = scoreboard.callText;
+    final setNumber = scoreboard.setNumber;
+    final switchEnds = scoreboard.onSwitchEnds;
+    Widget score(int team, Alignment align) => Expanded(
+      child: Align(
+        alignment: align,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: _ScoreChip(
+            score: scoreboard.scoreOf(team),
+            isServing: scoreboard.layout.servingTeam == team,
+            motion: scoreboard.motion,
+          ),
+        ),
+      ),
+    );
+    return ColoredBox(
+      color: Colors.white,
+      child: LayoutBuilder(
+        builder: (context, constraints) => FittedBox(
+          fit: BoxFit.scaleDown,
+          child: SizedBox(
+            width: constraints.maxWidth,
+            height: math.max(constraints.maxHeight, _minBandHeight),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Row(
+                children: [
+                  score(firstTeam, Alignment.centerLeft),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 4,
+                    children: [
+                      Semantics(
+                        label: call == null
+                            ? null
+                            : '${l10n.pickleballCourtCallLabel}: $call',
+                        excludeSemantics: true,
+                        child: Text(
+                          call ?? '',
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                      if (switchEnds != null)
+                        _RoundControl(
+                          icon: Icons.swap_vert_rounded,
+                          tooltip: l10n.pickleballCourtActionSwitchEnds,
+                          onPressed: switchEnds,
+                        ),
                       if (setNumber != null)
                         Text(
                           l10n.pickleballCourtSetNumber(setNumber),
                           style: const TextStyle(
                             color: Color(0xFF7A7F8A),
-                            fontSize: 12,
+                            fontSize: 14,
                           ),
                         ),
                     ],
                   ),
+                  score(secondTeam, Alignment.centerRight),
                 ],
               ),
             ),
@@ -900,7 +1073,8 @@ class _ScoreChip extends StatelessWidget {
   }
 }
 
-/// Clock, then + − of the left team, CHANGE SERVE, − + of the right team.
+/// Clock, then + − of the left team, UNDO and CHANGE SERVE, − + of the right
+/// team.
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.leftTeam,
@@ -910,7 +1084,9 @@ class _BottomBar extends StatelessWidget {
     required this.servingTeam,
     required this.onScoreChange,
     required this.onLoseServe,
+    required this.onUndo,
     required this.startedAt,
+    required this.upright,
   });
 
   final int leftTeam;
@@ -920,12 +1096,19 @@ class _BottomBar extends StatelessWidget {
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
   final VoidCallback? onLoseServe;
+
+  /// Takes back the last change; null (button greyed) when there is none.
+  final VoidCallback? onUndo;
   final DateTime? startedAt;
+
+  /// Upright phone: the buttons share the width instead of a fixed row.
+  final bool upright;
 
   List<Widget> _teamButtons(
     AppLocalizations l10n,
     int team, {
     required bool plusFirst,
+    double buttonWidth = 56,
   }) {
     final change = onScoreChange;
     if (change == null) return const [];
@@ -934,43 +1117,120 @@ class _BottomBar extends StatelessWidget {
     final plus = _BarButton(
       tooltip: l10n.pickleballCourtAddPoint(team),
       color: accent,
+      minWidth: buttonWidth,
       onPressed: plusEnabled ? () => change(team, true) : null,
       child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
     );
     final minus = _BarButton(
       tooltip: l10n.pickleballCourtRemovePoint(team),
       color: Color.lerp(accent, Colors.white, 0.3)!,
+      minWidth: buttonWidth,
       onPressed: scoreOf(team) > 0 ? () => change(team, false) : null,
       child: const Icon(Icons.remove_rounded, color: Colors.white, size: 28),
     );
     return plusFirst ? [plus, minus] : [minus, plus];
   }
 
+  /// Icon-only button between the two minus buttons. Hidden for a viewer
+  /// (no score buttons); greyed while there is nothing to take back.
+  Widget? _undoButton(AppLocalizations l10n, {double buttonWidth = 56}) {
+    if (onScoreChange == null) return null;
+    return _BarButton(
+      tooltip: l10n.pickleballCourtUndo,
+      color: _ink,
+      minWidth: buttonWidth,
+      onPressed: onUndo,
+      child: const Icon(Icons.undo_rounded, color: Colors.white, size: 24),
+    );
+  }
+
+  /// [flexible]: no minimum width; the label scales down to the width it gets.
+  Widget _serveButton(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required bool flexible,
+  }) {
+    final label = Text(
+      l10n.pickleballCourtChangeServe.toUpperCase(),
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.w800,
+      ),
+    );
+    return _BarButton(
+      tooltip: l10n.pickleballCourtChangeServe,
+      color: context.colors.success,
+      minWidth: flexible ? 0 : 120,
+      onPressed: onLoseServe,
+      child: flexible
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: FittedBox(fit: BoxFit.scaleDown, child: label),
+            )
+          : label,
+    );
+  }
+
+  /// Upright row: the width left over goes to CHANGE SERVE (or a gap), so the
+  /// buttons keep their full height and the pairs sit at the two edges.
+  Widget _uprightRow(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required bool withUndo,
+  }) {
+    final undo = withUndo ? _undoButton(l10n, buttonWidth: 40) : null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        spacing: 6,
+        children: [
+          ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
+          if (onLoseServe != null) ...[
+            ?undo,
+            Expanded(child: _serveButton(context, l10n, flexible: true)),
+          ] else ...[
+            // UNDO stays in the middle between the two pairs.
+            const Spacer(),
+            ?undo,
+            const Spacer(),
+          ],
+          ..._teamButtons(l10n, rightTeam, plusFirst: false, buttonWidth: 48),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final loseServe = onLoseServe;
+    final undo = _undoButton(l10n);
     final controls = <Widget>[
       ..._teamButtons(l10n, leftTeam, plusFirst: true),
-      if (loseServe != null)
-        _BarButton(
-          tooltip: l10n.pickleballCourtChangeServe,
-          color: context.colors.success,
-          minWidth: 120,
-          onPressed: loseServe,
-          child: Text(
-            l10n.pickleballCourtChangeServe.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
+      ?undo,
+      if (loseServe != null) _serveButton(context, l10n, flexible: false),
       ..._teamButtons(l10n, rightTeam, plusFirst: false),
     ];
     final start = startedAt;
     if (controls.isEmpty && start == null) return const SizedBox(height: 8);
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 10,
+      children: controls,
+    );
+    if (upright) {
+      return SizedBox(
+        height: 64,
+        child: LayoutBuilder(
+          builder: (context, c) => _uprightRow(
+            context,
+            l10n,
+            withUndo: c.maxWidth >= _minUprightUndoWidth,
+          ),
+        ),
+      );
+    }
     return SizedBox(
       height: 64,
       child: LayoutBuilder(
@@ -994,11 +1254,7 @@ class _BottomBar extends StatelessWidget {
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 10,
-                  children: controls,
-                ),
+                row,
                 const Expanded(child: SizedBox.shrink()),
               ],
             ),

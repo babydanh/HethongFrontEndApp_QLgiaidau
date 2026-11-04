@@ -348,9 +348,11 @@ class DioClient {
     final identity = sessionIdentity?.call();
     final refreshToken = await _tokenManager.getRefreshToken();
     if (sessionIdentity != null && !identical(identity, sessionIdentity!())) {
+      _logRefresh('skipped: session changed before refresh');
       return const (pair: null, transientFailure: null);
     }
     if (refreshToken == null || refreshToken.isEmpty) {
+      _logRefresh('no refresh token stored, tokens cleared');
       await _tokenManager.clearTokens();
       return const (pair: null, transientFailure: null);
     }
@@ -370,20 +372,27 @@ class DioClient {
         final access = data['accessToken']?.toString();
         final nextRefresh = data['refreshToken']?.toString();
         if (access == null || nextRefresh == null) {
+          _logRefresh('response had no token pair');
           return const (pair: null, transientFailure: null);
         }
         if (sessionIdentity != null &&
             !identical(identity, sessionIdentity!())) {
+          _logRefresh('dropped: session changed during refresh');
           return const (pair: null, transientFailure: null);
         }
         await _tokenManager.saveTokens(
           accessToken: access,
           refreshToken: nextRefresh,
         );
+        _logRefresh('ok attempt=$attempt');
         return (pair: _TokenPair(access, nextRefresh), transientFailure: null);
       } on DioException catch (error, stack) {
         _log.error('Failed to refresh token', error, stack);
         final status = error.response?.statusCode;
+        _logRefresh(
+          'failed attempt=$attempt status=${status ?? 'network'} '
+          'type=${error.type.name} server_message=${_serverMessage(error)}',
+        );
         // 401/403 là server từ chối token: thử lại cũng vô nghĩa, và token cũ
         // phải bị xoá để auth provider đưa user về màn đăng nhập.
         if (sessionIdentity != null &&
@@ -391,6 +400,7 @@ class DioClient {
           return const (pair: null, transientFailure: null);
         }
         if (status == 401 || status == 403) {
+          _logRefresh('server rejected the refresh token, tokens cleared');
           await _tokenManager.clearTokens();
           return const (pair: null, transientFailure: null);
         }
@@ -409,6 +419,25 @@ class DioClient {
       }
     }
     return (pair: null, transientFailure: lastTransient);
+  }
+
+  /// Refresh outcome only: never a token value. Debug builds only.
+  void _logRefresh(String outcome) {
+    if (!kDebugMode) return;
+    debugPrint('[DioClient] [REFRESH] $outcome');
+  }
+
+  /// The server's own short reason (e.g. a message string), never a payload.
+  static String _serverMessage(DioException error) {
+    final body = error.response?.data;
+    final message = body is Map ? body['message'] : null;
+    final text = switch (message) {
+      final String text => text,
+      // Validation errors arrive as a list of short reasons.
+      final List<dynamic> list => list.join('; '),
+      _ => '-',
+    };
+    return text.length > 80 ? text.substring(0, 80) : text;
   }
 
   String _cacheKey(RequestOptions options) {
@@ -450,7 +479,8 @@ class DioClient {
       '[DioClient] '
       '[HTTP] error ${options.method} ${_routeTemplate(options)} '
       'status=${err.response?.statusCode ?? 'network'} '
-      'duration_ms=${_durationMs(options)} type=${err.type.name}',
+      'duration_ms=${_durationMs(options)} type=${err.type.name} '
+      'server_message=${_serverMessage(err)}',
     );
   }
 

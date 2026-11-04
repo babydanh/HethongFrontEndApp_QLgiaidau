@@ -360,7 +360,7 @@ void main() {
       expect(needsServerWrite(base, setAutoSwitchEnds(base, c0, false)), isTrue);
     });
 
-    test('toJson đúng hợp đồng: version 1, history không lồng, bỏ meta khi null', () {
+    test('toJson đúng hợp đồng: version 1 ở cả history, history không lồng, bỏ meta khi null', () {
       final c0 = ctx();
       final state = setStartingRight(
         reconcileCourtState(const CourtState(), c0),
@@ -377,7 +377,8 @@ void main() {
       expect(history, hasLength(1));
       final first = history.single as Map;
       expect(first.containsKey('history'), isFalse);
-      expect(first.containsKey('version'), isFalse);
+      // The server rejects (400) a history snapshot without its own version.
+      expect(first['version'], 1);
     });
 
     test('fromJson(toJson) giữ cài đặt, history và meta', () {

@@ -264,11 +264,12 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     final court = ref.watch(pickleballCourtNotifierProvider(widget.params));
     final match = ref.watch(singleMatchProvider(widget.params)).value;
 
-    // Lite is a free scorecard: the court runs as rally, with no serve turns.
+    // Serve turns show for every pickleball match; only the strict side-out
+    // rule stops the receiving team from scoring.
     final isLite = score.isOpenScoring;
-    final isSideOut =
-        !isLite &&
-        score.config.scoringModel == SportScoringModel.pickleballSideOut;
+    const isSideOut = true;
+    final receiverCanScore =
+        isLite || score.config.scoringModel != SportScoringModel.pickleballSideOut;
     final axis =
         widget.axis ??
         (MediaQuery.orientationOf(context) == Orientation.landscape
@@ -292,7 +293,7 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       team2Score: courtContext.score2,
       isSideOut: isSideOut,
       isDoubles: courtContext.isDoubles,
-      receiverCanScore: isLite,
+      receiverCanScore: receiverCanScore,
       autoSwitchEnds: court.autoSwitchEnds,
       overrideEnabled: score.overrideEnabled,
       startedAt: _isOver(match) ? null : match?.startedAt,

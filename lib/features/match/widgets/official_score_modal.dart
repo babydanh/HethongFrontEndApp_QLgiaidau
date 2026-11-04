@@ -86,6 +86,22 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
   bool _penaltySelectionError = false;
   final _penaltyReasonController = TextEditingController();
 
+  /// The system bars are hidden (sideways pickleball court).
+  bool _barsHidden = false;
+
+  /// Hides the system bars while [hide] is true, so the scoreboard fills the
+  /// whole screen; a swipe from the edge shows them again briefly.
+  void _syncSystemBars(bool hide) {
+    if (hide == _barsHidden) return;
+    _barsHidden = hide;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      SystemChrome.setEnabledSystemUIMode(
+        _barsHidden ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge,
+      );
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -100,6 +116,9 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
   @override
   void dispose() {
     _penaltyReasonController.dispose();
+    if (_barsHidden) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -147,22 +166,97 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     // all sit on it, so the shared bottom bar is not drawn.
     final courtMode = kind == SportRuleKind.pickleball;
 
+    // Sideways, the pickleball court runs to both edges, also under the
+    // camera inset on the right: its controls stay clear of the hole.
+    final bleedRight =
+        courtMode && MediaQuery.orientationOf(context) == Orientation.landscape;
+    _syncSystemBars(bleedRight);
     return Scaffold(
       backgroundColor: colors.bgCard,
       body: SafeArea(
+        right: !bleedRight,
         child: OrientationBuilder(
           builder: (context, orientation) {
             // A short landscape screen puts the finished sets on the title row.
             final compactHeader =
                 courtMode && orientation == Orientation.landscape;
+            // A wide landscape screen drops the tab row: the tabs sit on the
+            // END row of the court, to the right of it.
+            final overlayTabs =
+                compactHeader && MediaQuery.sizeOf(context).width >= 760;
             final hasFinishedSets = ref.watch(
               scorePanelNotifierProvider(
                 params,
               ).select((state) => state.finishedSets.isNotEmpty),
             );
+            // Info and close live on the title row, or on the tab row of the
+            // pickleball court, whose names are already on the court.
+            final infoAndClose = <Widget>[
+                IconButton(
+                  icon: Icon(
+                    Icons.info_outline_rounded,
+                    size: 19,
+                    color: AppTheme.primary,
+                  ),
+                  tooltip: l10n.matchMatchInfo,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 30,
+                    minHeight: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    _showMatchInfoDialog(
+                      context,
+                      widget.match,
+                      config,
+                      kind,
+                      colors,
+                      l10n,
+                      isLite: isLite,
+                    );
+                  },
+                ),
+                const SizedBox(width: 2),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 19),
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 30,
+                    minHeight: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+            ];
+            final tabBar = TabBar(
+              isScrollable: overlayTabs,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelPadding: EdgeInsets.symmetric(
+                horizontal: overlayTabs ? 8 : 12,
+              ),
+              labelStyle: TextStyle(
+                fontSize: overlayTabs ? 12 : 13,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontSize: overlayTabs ? 12 : 13,
+                fontWeight: FontWeight.w600,
+              ),
+              labelColor: AppTheme.primary,
+              unselectedLabelColor: colors.textMuted,
+              indicatorColor: AppTheme.primary,
+              tabs: [
+                Tab(text: l10n.officialScoreScoringTab),
+                Tab(text: l10n.officialScorePenaltyTab),
+              ],
+            );
             Widget content = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (!courtMode) ...[
                 // 1. TOP HEADER BAR: Match Title & Info Popup Button
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -186,54 +280,19 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                           Expanded(
                             child: _setHistoryStrip(params, colors, inline: true),
                           ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.info_outline_rounded,
-                            size: 19,
-                            color: AppTheme.primary,
-                          ),
-                          tooltip: l10n.matchMatchInfo,
-                          visualDensity: VisualDensity.compact,
-                          constraints: const BoxConstraints(
-                            minWidth: 30,
-                            minHeight: 30,
-                          ),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            _showMatchInfoDialog(
-                              context,
-                              widget.match,
-                              config,
-                              kind,
-                              colors,
-                              l10n,
-                              isLite: isLite,
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 2),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 19),
-                          visualDensity: VisualDensity.compact,
-                          constraints: const BoxConstraints(
-                            minWidth: 30,
-                            minHeight: 30,
-                          ),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
+                        ...infoAndClose,
                       ],
                     ),
                   ),
                 ),
                 const Divider(height: 1, thickness: 1),
+                ],
 
                 // Dải hiển thị điểm các set đã chốt ở đầu màn hình
                 if (!compactHeader) ...[
-                  _setHistoryStrip(params, colors),
-                  const Divider(height: 1, thickness: 1),
+                  _setHistoryStrip(params, colors, hideWhenEmpty: courtMode),
+                  if (!courtMode || hasFinishedSets)
+                    const Divider(height: 1, thickness: 1),
                 ],
 
 
@@ -243,32 +302,32 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     length: 2,
                     child: Column(
                       children: [
+                        if (!overlayTabs)
                         SizedBox(
                           height: 38,
-                          child: TabBar(
-                            indicatorSize: TabBarIndicatorSize.label,
-                            labelPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                            ),
-                            labelStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            unselectedLabelStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            labelColor: AppTheme.primary,
-                            unselectedLabelColor: colors.textMuted,
-                            indicatorColor: AppTheme.primary,
-                            tabs: [
-                              Tab(text: l10n.officialScoreScoringTab),
-                              Tab(text: l10n.officialScorePenaltyTab),
-                            ],
-                          ),
+                          child: Row(children: [
+                          Expanded(flex: 2, child: tabBar),
+                          if (courtMode) ...[
+                            if (compactHeader && hasFinishedSets)
+                              Expanded(
+                                flex: 3,
+                                child: _setHistoryStrip(params, colors, inline: true),
+                              ),
+                            const SizedBox(width: 6),
+                            ...infoAndClose,
+                            const SizedBox(width: 10),
+                          ],
+                          ]),
                         ),
                         Expanded(
-                          child: TabBarView(
+                          child: Stack(children: [
+                          TabBarView(
+                            // The court is all drag targets: a sideways
+                            // swipe there must not slide the tab page.
+                            // The tab labels still switch pages.
+                            physics: courtMode
+                                ? const NeverScrollableScrollPhysics()
+                                : null,
                             children: [
                               _buildScoreTab(
                                 context,
@@ -276,16 +335,49 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                 kind,
                                 isLite,
                               ),
-                              _buildFoulTab(
-                                context,
-                                strategy,
-                                config,
-                                kind,
-                                colors,
-                                l10n,
+                              Padding(
+                                // Keep the foul page clear of the overlay row.
+                                padding: EdgeInsets.only(
+                                  top: overlayTabs ? 64 : 0,
+                                ),
+                                child: _buildFoulTab(
+                                  context,
+                                  strategy,
+                                  config,
+                                  kind,
+                                  colors,
+                                  l10n,
+                                ),
                               ),
                             ],
                           ),
+                          if (overlayTabs)
+                            Positioned(
+                              top: 0,
+                              left: 12,
+                              right: 12,
+                              height: 56,
+                              child: Row(
+                                children: [
+                                  if (hasFinishedSets) ...[
+                                    // Leave the corner to the sport icon.
+                                    const SizedBox(width: 44),
+                                    SizedBox(
+                                      width: 240,
+                                      child: _setHistoryStrip(
+                                        params,
+                                        colors,
+                                        inline: true,
+                                      ),
+                                    ),
+                                  ],
+                                  const Spacer(),
+                                  SizedBox(width: 240, child: tabBar),
+                                  ...infoAndClose,
+                                ],
+                              ),
+                            ),
+                          ]),
                         ),
                       ],
                     ),
@@ -692,13 +784,14 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     ({String tournamentId, String matchId}) params,
     AppColorsExtension colors, {
     bool inline = false,
+    bool hideWhenEmpty = false,
   }) {
     return Consumer(
                   builder: (context, ref, _) {
                     final state = ref.watch(scorePanelNotifierProvider(params));
                     final historySets = state.finishedSets;
                     if (historySets.isEmpty) {
-                      if (inline) return const SizedBox.shrink();
+                      if (inline || hideWhenEmpty) return const SizedBox.shrink();
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -793,12 +886,17 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
         : kind == SportRuleKind.tableTennis
         ? TableTennisScorePanel(params: params, isReadOnly: false)
         : RallyScorePanel(params: params, isReadOnly: false);
+    // The pickleball court (sideways or upright) runs edge to edge; only the
+    // warning below keeps a side margin.
+    final sideways = kind == SportRuleKind.pickleball;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: sideways
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
         children: [
           Expanded(child: scorePanel),
-          const SizedBox(height: 6),
+          if (!sideways) const SizedBox(height: 6),
           Consumer(
             builder: (context, ref, _) {
               final state = ref.watch(scorePanelNotifierProvider(params));
@@ -807,7 +905,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 return const SizedBox.shrink();
               }
               return Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: EdgeInsets.fromLTRB(sideways ? 12 : 0, 4, sideways ? 12 : 0, 0),
                 child: ScoreWarningBox(
                   message: formatScoreValidationError(
                     AppLocalizations.of(context)!,
@@ -816,6 +914,241 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 ),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitPenalty(
+    BuildContext context,
+    AppLocalizations l10n,
+    SportRuleKind kind,
+    PenaltyOption selectedPenalty,
+  ) async {
+      if (_selectedPenaltySide == null) {
+        setState(() => _penaltySelectionError = true);
+        return;
+      }
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.officialScore_penaltyConfirmTitle),
+          content: Text(
+            l10n.officialScore_penaltyConfirmContent(
+              _penaltyLabel(selectedPenalty, kind, l10n),
+              matchSideLabel(widget.match, _selectedPenaltySide!),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.matchCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.matchConfirm),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+      final option = selectedPenalty;
+      final reason = _penaltyReasonController.text.trim();
+      if (widget.onSubmitPenalty != null) {
+        await widget.onSubmitPenalty!.call(
+          _selectedPenaltySide!,
+          option,
+          reason,
+        );
+      } else {
+        widget.onRecordPenalty?.call();
+      }
+      if (context.mounted) {
+        setState(() {
+          _selectedPenaltySide = null;
+          _penaltySelectionError = false;
+          _penaltyReasonController.clear();
+        });
+      }
+  }
+
+  /// Sideways pickleball: choices on the left, who and why on the right, so
+  /// the whole page fits without a scroll.
+  Widget _buildFoulTabSideBySide(
+    BuildContext context,
+    List<PenaltyOption> options,
+    PenaltyOption selectedPenalty,
+    SportRuleKind kind,
+    AppColorsExtension colors,
+    AppLocalizations l10n,
+  ) {
+    final titleStyle = TextStyle(
+      color: colors.textPrimary,
+      fontWeight: FontWeight.w800,
+      fontSize: 13,
+    );
+    final rightInset = MediaQuery.paddingOf(context).right;
+    Widget teamButton(int side) {
+      final selected = _selectedPenaltySide == side;
+      return Expanded(
+        child: Padding(
+          padding: EdgeInsets.only(right: side == 1 ? 8 : 0),
+          child: OutlinedButton(
+            onPressed: () => setState(() {
+              _selectedPenaltySide = side;
+              _penaltySelectionError = false;
+            }),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(44),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              backgroundColor: selected
+                  ? AppTheme.primary.withValues(alpha: 0.1)
+                  : colors.bgSurface,
+              side: BorderSide(
+                color: selected ? AppTheme.primary : colors.border,
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Text(
+              matchSideLabel(widget.match, side),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget optionChip(PenaltyOption option, double width) {
+      final selected = selectedPenalty.id == option.id;
+      return SizedBox(
+        width: width,
+        height: 44,
+        child: Material(
+          color: selected
+              ? option.color.withValues(alpha: 0.1)
+              : colors.bgSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            side: BorderSide(
+              color: selected
+                  ? option.color
+                  : option.color.withValues(alpha: 0.35),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            onTap: () => setState(() => _selectedPenalty = option),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Icon(option.icon, color: option.color, size: 18),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _penaltyLabel(option, kind, l10n),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        height: 1.15,
+                      ),
+                    ),
+                  ),
+                  if (selected)
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: option.color,
+                      size: 16,
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(16, 4, 16 + rightInset, 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.officialScore_penaltyOptionsTitle, style: titleStyle),
+                const SizedBox(height: 8),
+                LayoutBuilder(
+                  builder: (context, constraints) => Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final option in options)
+                        optionChip(option, (constraints.maxWidth - 8) / 2),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _penaltyRulesDescription(kind, l10n),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.officialScore_penalizedTeam, style: titleStyle),
+                const SizedBox(height: 8),
+                Row(children: [teamButton(1), teamButton(2)]),
+                if (_penaltySelectionError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      l10n.officialScore_penaltySelectionRequired,
+                      style: TextStyle(color: colors.error, fontSize: 12),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _penaltyReasonController,
+                  maxLines: 1,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    labelText: l10n.officialScore_penaltyReasonLabel,
+                    hintText: l10n.officialScore_penaltyReasonHint,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: () =>
+                      _submitPenalty(context, l10n, kind, selectedPenalty),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44),
+                  ),
+                  icon: const Icon(Icons.gavel_rounded),
+                  label: Text(l10n.matchRecordPenalty),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -833,6 +1166,17 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     final options = strategy.getOptions();
     final selectedPenalty = _selectedPenalty ?? options.first;
     const sides = [1, 2];
+    if (kind == SportRuleKind.pickleball &&
+        MediaQuery.orientationOf(context) == Orientation.landscape) {
+      return _buildFoulTabSideBySide(
+        context,
+        options,
+        selectedPenalty,
+        kind,
+        colors,
+        l10n,
+      );
+    }
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
       child: Column(
@@ -1069,53 +1413,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: () async {
-              if (_selectedPenaltySide == null) {
-                setState(() => _penaltySelectionError = true);
-                return;
-              }
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: Text(l10n.officialScore_penaltyConfirmTitle),
-                  content: Text(
-                    l10n.officialScore_penaltyConfirmContent(
-                      _penaltyLabel(selectedPenalty, kind, l10n),
-                      matchSideLabel(widget.match, _selectedPenaltySide!),
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      child: Text(l10n.matchCancel),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      child: Text(l10n.matchConfirm),
-                    ),
-                  ],
-                ),
-              );
-              if (confirmed != true || !context.mounted) return;
-              final option = selectedPenalty;
-              final reason = _penaltyReasonController.text.trim();
-              if (widget.onSubmitPenalty != null) {
-                await widget.onSubmitPenalty!.call(
-                  _selectedPenaltySide!,
-                  option,
-                  reason,
-                );
-              } else {
-                widget.onRecordPenalty?.call();
-              }
-              if (context.mounted) {
-                setState(() {
-                  _selectedPenaltySide = null;
-                  _penaltySelectionError = false;
-                  _penaltyReasonController.clear();
-                });
-              }
-            },
+            onPressed: () => _submitPenalty(context, l10n, kind, selectedPenalty),
             icon: const Icon(Icons.gavel_rounded),
             label: Text(l10n.matchRecordPenalty),
           ),

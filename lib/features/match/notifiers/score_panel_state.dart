@@ -28,9 +28,10 @@ class PickleballServeState {
   final bool isTeam1Serving;
   final int serverNumber; // 1 | 2
 
+  /// A game starts with one fault only for the serving team: server number 2.
   const PickleballServeState({
     this.isTeam1Serving = true,
-    this.serverNumber = 1,
+    this.serverNumber = 2,
   });
 
   PickleballServeState copyWith({bool? isTeam1Serving, int? serverNumber}) =>

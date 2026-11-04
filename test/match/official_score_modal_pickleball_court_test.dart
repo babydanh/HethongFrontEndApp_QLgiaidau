@@ -9,11 +9,13 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.da
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -150,24 +152,25 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('pickleball scores on the court', () {
-    testWidgets('portrait: vertical court, no bottom bar, no big score block', (
-      tester,
-    ) async {
-      await _pump(tester, sportKey: 'PICKLEBALL');
+    testWidgets(
+      'portrait: same scoreboard stacked, no bottom bar, no big score block',
+      (tester) async {
+        await _pump(tester, sportKey: 'PICKLEBALL');
 
-      final view = tester.widget<PickleballCourtView>(
-        find.byType(PickleballCourtView),
-      );
-      expect(view.axis, Axis.vertical);
-      // The bottom bar of the other sports is gone: its chips and buttons.
-      expect(find.byType(FilterChip), findsNothing);
-      expect(find.text('Override'), findsNothing);
-      expect(find.text('Force win'), findsNothing);
-      expect(find.text('FINISH SET'), findsNothing);
-      // Each score is drawn once, inside the court.
-      expect(find.text('4'), findsOneWidget);
-      expect(find.text('2'), findsOneWidget);
-    });
+        final view = tester.widget<PickleballCourtView>(
+          find.byType(PickleballCourtView),
+        );
+        expect(view.axis, Axis.vertical);
+        // The bottom bar of the other sports is gone: its chips and buttons.
+        expect(find.byType(FilterChip), findsNothing);
+        expect(find.text('Override'), findsNothing);
+        expect(find.text('Force win'), findsNothing);
+        expect(find.text('FINISH SET'), findsNothing);
+        // Each score is drawn once, inside the court.
+        expect(find.text('4'), findsOneWidget);
+        expect(find.text('2'), findsOneWidget);
+      },
+    );
 
     testWidgets('landscape: horizontal court', (tester) async {
       await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
@@ -179,7 +182,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Lite shows the court too, as rally', (tester) async {
+    testWidgets('Lite shows the court too, with the serve button', (
+      tester,
+    ) async {
       await _pump(
         tester,
         sportKey: 'PICKLEBALL',
@@ -188,7 +193,48 @@ void main() {
       );
 
       expect(find.byType(PickleballCourtPanel), findsOneWidget);
-      expect(find.byTooltip('Lose serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
+    });
+  });
+
+  group('TC-COURT-10 swipe on the court does not slide the tabs', () {
+    for (final size in const [Size(360, 780), Size(800, 360)]) {
+      testWidgets('pressing a player and moving keeps Scoring open $size', (
+        tester,
+      ) async {
+        await _pump(tester, sportKey: 'PICKLEBALL', size: size);
+        final tabs = DefaultTabController.of(
+          tester.element(find.byType(TabBarView)),
+        );
+
+        // Move sideways before the long-press delay: the grab is not armed
+        // yet, so the tab view must not take the swipe either.
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('L. Anh')),
+        );
+        await gesture.moveBy(const Offset(-150, 0));
+        await tester.pump(const Duration(milliseconds: 50));
+        await gesture.moveBy(const Offset(-150, 0));
+        await gesture.up();
+        await tester.pumpAndSettle();
+
+        expect(tabs.index, 0);
+        expect(tabs.animation!.value, 0);
+      });
+    }
+
+    testWidgets('the Penalties tab still opens by tapping its label', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+      final tabs = DefaultTabController.of(
+        tester.element(find.byType(TabBarView)),
+      );
+
+      await tester.tap(find.text('Penalties'));
+      await tester.pumpAndSettle();
+
+      expect(tabs.index, 1);
     });
   });
 
@@ -217,8 +263,137 @@ void main() {
     );
   });
 
-  group('landscape header', () {
-    testWidgets('finished sets share the title row', (tester) async {
+  group('pickleball header', () {
+    for (final size in const [Size(640, 360), Size(390, 800)]) {
+      testWidgets('no names title; info and close sit on the tab row $size', (
+        tester,
+      ) async {
+        await _pump(tester, sportKey: 'PICKLEBALL', size: size);
+
+        // The names are already on the court, so no title row repeats them.
+        expect(find.textContaining('VS'), findsNothing);
+        final tabs = tester.getRect(find.byType(TabBar));
+        final info = tester.getCenter(find.byIcon(Icons.info_outline_rounded));
+        final close = tester.getCenter(find.byIcon(Icons.close_rounded));
+        expect((info.dy - tabs.center.dy).abs(), lessThan(20));
+        expect((close.dy - tabs.center.dy).abs(), lessThan(20));
+        expect(info.dx, lessThan(close.dx));
+        // The tabs keep a usable width next to the two buttons.
+        expect(tabs.width, greaterThan(size.width * 0.4));
+      });
+    }
+
+    testWidgets('wide landscape: tabs, info and close sit right of END', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      expect(find.textContaining('VS'), findsNothing);
+      final end = tester.getRect(find.text('END'));
+      final tabs = tester.getRect(find.byType(TabBar));
+      final info = tester.getCenter(find.byIcon(Icons.info_outline_rounded));
+      final close = tester.getCenter(find.byIcon(Icons.close_rounded));
+      // Same row as END, no row of their own above the court.
+      expect((tabs.center.dy - end.center.dy).abs(), lessThan(12));
+      expect(tabs.left, greaterThan(end.right));
+      expect(info.dx, greaterThan(tabs.center.dx));
+      expect(close.dx, greaterThan(info.dx));
+      expect(close.dx, lessThan(800));
+    });
+
+    testWidgets('wide landscape: tabs, info, close and END all take taps', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      // The overlay row sits on top of the court: nothing may be covered.
+      for (final target in [
+        find.text('Scoring'),
+        find.text('Penalties'),
+        find.text('END'),
+        find.byIcon(Icons.info_outline_rounded),
+        find.byIcon(Icons.close_rounded),
+      ]) {
+        expect(target.hitTestable(), findsOneWidget);
+      }
+    });
+
+    testWidgets('wide landscape: penalties page fits one screen, no scroll', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+      await tester.tap(find.text('Penalties'));
+      await tester.pumpAndSettle();
+
+      final scroll = tester.state<ScrollableState>(
+        find
+            .descendant(
+              of: find.byType(TabBarView),
+              matching: find.byType(Scrollable),
+            )
+            .last,
+      );
+      expect(scroll.position.maxScrollExtent, 0);
+      expect(find.text('Record penalty').hitTestable(), findsOneWidget);
+    });
+
+    testWidgets('wide landscape: the court runs to both screen edges', (
+      tester,
+    ) async {
+      // The phone reports a 46.8dp inset on its right (camera side) and top.
+      const inset = FakeViewPadding(top: 47, right: 47);
+      tester.view.viewPadding = inset;
+      tester.view.padding = inset;
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      final court = tester.getRect(find.byKey(courtSurfaceKey));
+      expect(court.left, 0);
+      expect(court.right, 800);
+    });
+
+    testWidgets('wide landscape: no margin above or below the scoreboard', (
+      tester,
+    ) async {
+      // Only the status bar inset stays on top; the system bars are hidden.
+      const inset = FakeViewPadding(top: 47);
+      tester.view.viewPadding = inset;
+      tester.view.padding = inset;
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      final board = tester.getRect(find.byType(CourtScoreboard));
+      expect(board.top, 47);
+      expect(board.bottom, 360);
+    });
+
+    testWidgets('wide landscape hides the system bars, portrait restores', (
+      tester,
+    ) async {
+      final modes = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'SystemChrome.setEnabledSystemUIMode') {
+            modes.add(call.arguments as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+      expect(modes.last, 'SystemUiMode.immersiveSticky');
+
+      tester.view.physicalSize = const Size(390, 800);
+      await tester.pumpAndSettle();
+      expect(modes.last, 'SystemUiMode.edgeToEdge');
+    });
+
+    testWidgets('landscape: finished sets share the tab row', (tester) async {
       await _pump(
         tester,
         sportKey: 'PICKLEBALL',
@@ -229,26 +404,25 @@ void main() {
       );
 
       expect(find.text('Set 1: 11-7'), findsOneWidget);
-      // No second strip: the sets are on the title row only.
-      final title = tester.getCenter(find.textContaining('VS')).dy;
+      final tabs = tester.getRect(find.byType(TabBar));
       expect(
-        (tester.getCenter(find.text('Set 1: 11-7')).dy - title).abs(),
+        (tester.getCenter(find.text('Set 1: 11-7')).dy - tabs.center.dy).abs(),
         lessThan(20),
       );
     });
 
-    testWidgets('without finished sets the title keeps the whole row', (
+    testWidgets('portrait: no empty-sets row, court runs edge to edge', (
       tester,
     ) async {
-      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+      await _pump(tester, sportKey: 'PICKLEBALL');
 
-      final title = tester.getRect(find.textContaining('VS'));
-      final info = tester.getCenter(find.byIcon(Icons.info_outline_rounded));
-      // No empty half-row reserved for the sets: the title may use the room.
-      expect(title.right, greaterThan(info.dx - 120));
+      expect(find.text('Chưa chốt set nào'), findsNothing);
+      final court = tester.getRect(find.byType(PickleballCourtView));
+      expect(court.left, 0);
+      expect(court.right, tester.getSize(find.byType(Scaffold).first).width);
     });
 
-    testWidgets('portrait keeps the strip under the title', (tester) async {
+    testWidgets('portrait keeps the strip above the tabs', (tester) async {
       await _pump(
         tester,
         sportKey: 'PICKLEBALL',
@@ -257,10 +431,9 @@ void main() {
         ],
       );
 
-      final title = tester.getCenter(find.textContaining('VS')).dy;
       expect(
         tester.getCenter(find.text('Set 1: 11-7')).dy,
-        greaterThan(title + 15),
+        lessThan(tester.getRect(find.byType(TabBar)).top),
       );
     });
   });

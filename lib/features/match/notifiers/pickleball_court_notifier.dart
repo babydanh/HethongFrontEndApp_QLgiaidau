@@ -1,5 +1,4 @@
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
-import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
@@ -51,19 +50,11 @@ final pickleballCourtContextProvider = Provider.autoDispose
       final match = ref.watch(singleMatchProvider(arg)).value;
       if (match == null) return null;
       final panel = ref.watch(scorePanelNotifierProvider(arg));
-      final lastScoringTeam = ref.watch(pickleballLastScoringTeamProvider(arg));
       final rally = panel.rally ?? const RallySetState();
-      // The match rule decides side-out: the serve state only appears after the
-      // first tap on the scoring panel, so until then team 1 serves by default.
-      // Lite is open scoring: no serve turns, so it runs as rally whatever the
-      // rule or a serve state saved by an earlier side-out session say.
-      final sideOutRule =
-          !panel.isOpenScoring &&
-          panel.config.scoringModel == SportScoringModel.pickleballSideOut;
-      final serve = panel.isOpenScoring
-          ? null
-          : panel.pickleball ??
-                (sideOutRule ? const PickleballServeState() : null);
+      // Serve turns are tracked for every pickleball match (Lite and strict):
+      // the referee always sees who serves and the 1/2 turn. Only the strict
+      // side-out rule forces who may score.
+      final serve = panel.pickleball ?? const PickleballServeState();
       final team1PlayerCount = (match.team1Members?.length ?? 0) >= 2 ? 2 : 1;
       final team2PlayerCount = (match.team2Members?.length ?? 0) >= 2 ? 2 : 1;
       final config = panel.config;
@@ -74,13 +65,9 @@ final pickleballCourtContextProvider = Provider.autoDispose
         isDoubles: team1PlayerCount == 2 || team2PlayerCount == 2,
         team1PlayerCount: team1PlayerCount,
         team2PlayerCount: team2PlayerCount,
-        servingTeam: serve == null
-            ? lastScoringTeam
-            : (serve.isTeam1Serving ? 1 : 2),
-        serverNumber: serve?.serverNumber ?? 1,
-        scoringMode: serve == null
-            ? CourtScoringMode.rally
-            : CourtScoringMode.sideOut,
+        servingTeam: serve.isTeam1Serving ? 1 : 2,
+        serverNumber: serve.serverNumber,
+        scoringMode: CourtScoringMode.sideOut,
         setIndex: setIndex,
         targetPoints: config.pointsPerSet,
         isDecidingSet: !config.isOpenScoring && setIndex == config.bestOf - 1,
@@ -88,8 +75,9 @@ final pickleballCourtContextProvider = Provider.autoDispose
     });
 
 /// Trạng thái sơ đồ sân của một trận. Nguồn sự thật là server
-/// (`scoreDetails.courtState`). Thay đổi cài đặt áp dụng lạc quan rồi ghi
-/// server; ghi lỗi thì quay về trạng thái server đã xác nhận.
+/// (`scoreDetails.courtState`). Thay đổi cài đặt áp dụng ngay trên máy rồi ghi
+/// server; ghi lỗi thì vẫn giữ thay đổi trên máy (đổi chỗ không phụ thuộc mạng
+/// hay server) và thử ghi lại ở lần ghi kế tiếp.
 class PickleballCourtNotifier extends Notifier<CourtState> {
   PickleballCourtNotifier(this._arg);
 
@@ -98,6 +86,10 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
   int _pendingWrites = 0;
   int _writeSeq = 0;
   bool _disposed = false;
+
+  /// A local change the server has not confirmed yet. While set, a server
+  /// refresh must not overwrite it.
+  bool _unsynced = false;
 
   /// Lần đồng bộ đầu tiên (mở màn): chỉ suy lượt tại chỗ, không ghi server.
   bool _hasSynced = false;
@@ -115,7 +107,9 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
       final match = next.value;
       if (match == null) return;
       _server = _courtFromScoreDetails(match.scoreDetails);
-      if (_pendingWrites == 0) state = _displayFromServer(_server, state);
+      if (_pendingWrites == 0 && !_unsynced) {
+        state = _displayFromServer(_server, state);
+      }
     });
     return _server;
   }
@@ -146,7 +140,8 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
       state = reconciled;
       return null;
     }
-    if (!needsServerWrite(state, reconciled)) return null;
+    // An unconfirmed local change is retried on the next automatic sync.
+    if (!_unsynced && !needsServerWrite(state, reconciled)) return null;
     return _persist(reconciled);
   }
 
@@ -164,12 +159,12 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
         next.toJson(),
       );
       _server = _courtFromScoreDetails(saved.scoreDetails);
+      if (seq == _writeSeq) _unsynced = false;
       if (seq == _writeSeq && !_disposed) state = _server;
       return null;
     } catch (error) {
-      if (seq == _writeSeq && !_disposed) {
-        state = _displayFromServer(_server, state);
-      }
+      // Keep the change on this device; only the server copy is behind.
+      if (seq == _writeSeq) _unsynced = true;
       return error;
     } finally {
       _pendingWrites--;
