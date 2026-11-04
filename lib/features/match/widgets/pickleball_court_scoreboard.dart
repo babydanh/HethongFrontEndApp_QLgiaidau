@@ -481,6 +481,8 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
     final body = Stack(
       children: [
         Column(
+          // Stretch so each cell's colour fills the column, not just its label.
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _cell(cells[0]),
             const SizedBox(height: 2, child: ColoredBox(color: _ink)),

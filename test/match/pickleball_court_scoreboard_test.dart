@@ -155,6 +155,26 @@ void main() {
       expect(_at(tester, 'Bảo').dy, lessThan(_at(tester, 'Hà').dy));
     });
 
+    testWidgets('each player cell fills its whole side column', (tester) async {
+      await _pump(tester, _board(_Spy()));
+
+      final court = tester.getRect(find.byKey(courtSurfaceKey));
+      for (final name in ['Minh', 'L. Anh', 'Bảo', 'Hà']) {
+        final cell = tester.getRect(
+          find
+              .ancestor(of: find.text(name), matching: find.byType(ColoredBox))
+              .first,
+        );
+        // The side column is 35% of the court; the fill must not shrink to the
+        // name label.
+        expect(
+          cell.width,
+          greaterThan(court.width * 0.3),
+          reason: '$name cell is only ${cell.width}px wide',
+        );
+      }
+    });
+
     testWidgets('switching ends moves the scores with the teams', (
       tester,
     ) async {
