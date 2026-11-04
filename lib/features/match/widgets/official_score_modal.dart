@@ -352,7 +352,9 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                               height: 56,
                               child: Row(
                                 children: [
-                                  if (hasFinishedSets)
+                                  if (hasFinishedSets) ...[
+                                    // Leave the corner to the sport icon.
+                                    const SizedBox(width: 44),
                                     SizedBox(
                                       width: 240,
                                       child: _setHistoryStrip(
@@ -361,6 +363,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                         inline: true,
                                       ),
                                     ),
+                                  ],
                                   const Spacer(),
                                   SizedBox(width: 240, child: tabBar),
                                   ...infoAndClose,

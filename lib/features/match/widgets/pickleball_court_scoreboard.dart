@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
@@ -205,15 +206,28 @@ class _TopRow extends StatelessWidget {
     if (items.isEmpty) return const SizedBox(height: 8);
     return SizedBox(
       height: 56,
-      child: Center(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 12,
-            children: items,
+      child: Stack(
+        children: [
+          // The sport shows as a mark in the corner instead of a word.
+          const Positioned(
+            left: 12,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: SportIconWidget(iconData: 'pickleball', size: 32),
+            ),
           ),
-        ),
+          Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 12,
+                children: items,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -610,7 +624,8 @@ class _ScoreboardCell extends StatelessWidget {
                         type: MaterialType.transparency,
                         child: _PersonLabel(name: shortName),
                       ),
-                      child: person,
+                      // The whole cell is the grab area, not only the name.
+                      child: SizedBox.expand(child: Center(child: person)),
                     )
                   : person,
               if (isServing)
@@ -749,7 +764,7 @@ class _ServeTag extends StatelessWidget {
   }
 }
 
-/// Call, the two scores, ⇄ and "pickleball · Set n". Shrinks as a whole when
+/// Call, the two scores, ⇄ and "Set n". Shrinks as a whole when
 /// the court is short.
 class _MiddleColumn extends StatelessWidget {
   const _MiddleColumn({
@@ -827,23 +842,16 @@ class _MiddleColumn extends StatelessWidget {
                     )
                   else
                     const SizedBox(height: _controlSize),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.pickleballCourtSportName,
-                        style: const TextStyle(color: _ink, fontSize: 18),
+                  if (setNumber != null)
+                    Text(
+                      l10n.pickleballCourtSetNumber(setNumber),
+                      style: const TextStyle(
+                        color: Color(0xFF7A7F8A),
+                        fontSize: 14,
                       ),
-                      if (setNumber != null)
-                        Text(
-                          l10n.pickleballCourtSetNumber(setNumber),
-                          style: const TextStyle(
-                            color: Color(0xFF7A7F8A),
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  ),
+                    )
+                  else
+                    const SizedBox.shrink(),
                 ],
               ),
             ),

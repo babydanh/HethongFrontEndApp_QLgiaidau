@@ -183,11 +183,23 @@ void main() {
       expect(_at(tester, '3').dx, lessThan(_at(tester, '7').dx));
     });
 
-    testWidgets('shows the sport name and the set number', (tester) async {
+    testWidgets('shows the set number; the sport is an icon in the corner', (
+      tester,
+    ) async {
       await _pump(tester, _board(_Spy(), setNumber: 2));
 
-      expect(find.text('pickleball'), findsOneWidget);
+      expect(find.text('pickleball'), findsNothing);
       expect(find.text('Set 2'), findsOneWidget);
+      final icon = find.byWidgetPredicate(
+        (w) =>
+            w is Image &&
+            w.image is AssetImage &&
+            (w.image as AssetImage).assetName ==
+                'assets/icons/pickleball.png',
+      );
+      expect(icon, findsOneWidget);
+      expect(tester.getTopLeft(icon).dx, lessThan(40));
+      expect(tester.getTopLeft(icon).dy, lessThan(56));
     });
 
     testWidgets(
@@ -417,6 +429,24 @@ void main() {
       await _pump(tester, _board(spy));
 
       final gesture = await tester.startGesture(_at(tester, 'Minh'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await gesture.moveBy(const Offset(4, 4));
+      await tester.pump();
+      await gesture.moveTo(_at(tester, 'Bảo'));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(spy.calls, ['switchEndsDrop']);
+    });
+
+    testWidgets('the whole cell drags, not only the name', (tester) async {
+      final spy = _Spy();
+      await _pump(tester, _board(spy));
+
+      // A spot well left of the name, still inside the same cell.
+      final start = _at(tester, 'Minh') - const Offset(110, 0);
+      final gesture = await tester.startGesture(start);
       await tester.pump(const Duration(milliseconds: 400));
       await gesture.moveBy(const Offset(4, 4));
       await tester.pump();
