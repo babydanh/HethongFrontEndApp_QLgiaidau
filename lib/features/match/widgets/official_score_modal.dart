@@ -147,9 +147,14 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     // all sit on it, so the shared bottom bar is not drawn.
     final courtMode = kind == SportRuleKind.pickleball;
 
+    // Sideways, the pickleball court runs to both edges, also under the
+    // camera inset on the right: its controls stay clear of the hole.
+    final bleedRight =
+        courtMode && MediaQuery.orientationOf(context) == Orientation.landscape;
     return Scaffold(
       backgroundColor: colors.bgCard,
       body: SafeArea(
+        right: !bleedRight,
         child: OrientationBuilder(
           builder: (context, orientation) {
             // A short landscape screen puts the finished sets on the title row.
@@ -850,8 +855,13 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
         : kind == SportRuleKind.tableTennis
         ? TableTennisScorePanel(params: params, isReadOnly: false)
         : RallyScorePanel(params: params, isReadOnly: false);
+    // The sideways pickleball scoreboard runs edge to edge; only the warning
+    // below keeps a side margin.
+    final sideways =
+        kind == SportRuleKind.pickleball &&
+        MediaQuery.orientationOf(context) == Orientation.landscape;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: sideways ? 0 : 12, vertical: 8),
       child: Column(
         children: [
           Expanded(child: scorePanel),
@@ -864,7 +874,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 return const SizedBox.shrink();
               }
               return Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: EdgeInsets.fromLTRB(sideways ? 12 : 0, 4, sideways ? 12 : 0, 0),
                 child: ScoreWarningBox(
                   message: formatScoreValidationError(
                     AppLocalizations.of(context)!,

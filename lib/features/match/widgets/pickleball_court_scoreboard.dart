@@ -296,26 +296,23 @@ class _CourtBlock extends StatelessWidget {
       explicitChildNodes: true,
       label: l10n.pickleballCourtLabel,
       customSemanticsActions: _switchEndsAction(l10n),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Container(
-          key: courtSurfaceKey,
-          decoration: BoxDecoration(border: Border.all(color: _ink, width: 2)),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            children: [
-              Expanded(flex: 35, child: _half(leftTeam, isLeft: true)),
-              Expanded(
-                flex: 30,
-                child: _MiddleColumn(
-                  scoreboard: scoreboard,
-                  leftTeam: leftTeam,
-                  rightTeam: rightTeam,
-                ),
+      child: Container(
+        key: courtSurfaceKey,
+        decoration: BoxDecoration(border: Border.all(color: _ink, width: 2)),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            Expanded(flex: 35, child: _half(leftTeam, isLeft: true)),
+            Expanded(
+              flex: 30,
+              child: _MiddleColumn(
+                scoreboard: scoreboard,
+                leftTeam: leftTeam,
+                rightTeam: rightTeam,
               ),
-              Expanded(flex: 35, child: _half(rightTeam, isLeft: false)),
-            ],
-          ),
+            ),
+            Expanded(flex: 35, child: _half(rightTeam, isLeft: false)),
+          ],
         ),
       ),
     );
@@ -618,8 +615,9 @@ class _ScoreboardCell extends StatelessWidget {
                   : person,
               if (isServing)
                 Positioned(
+                  // Clear of the screen edge, where a camera hole may sit.
                   top: 0,
-                  right: 0,
+                  right: 20,
                   child: _ServeTag(
                     team: team,
                     playerIndex: index,

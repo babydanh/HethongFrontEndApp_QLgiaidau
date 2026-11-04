@@ -455,10 +455,10 @@ void main() {
       await _pump(tester, _view(_Spy()), size: const Size(844, 390));
 
       expect(tester.takeException(), isNull);
-      // Between the top row (56dp) and the bottom bar (64dp), 12dp margins.
+      // Between the top row (56dp) and the bottom bar (64dp), edge to edge.
       expect(
         tester.getRect(find.byKey(courtSurfaceKey)),
-        const Rect.fromLTWH(28, 72, 788, 238),
+        const Rect.fromLTWH(16, 72, 812, 238),
       );
     });
 

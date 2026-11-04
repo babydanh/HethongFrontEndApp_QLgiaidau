@@ -272,6 +272,20 @@ void main() {
       }
     });
 
+    testWidgets('wide landscape: the court runs to both screen edges', (
+      tester,
+    ) async {
+      // The phone reports a 46.8dp inset on its right (camera side) and top.
+      const inset = FakeViewPadding(top: 47, right: 47);
+      tester.view.viewPadding = inset;
+      tester.view.padding = inset;
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      final court = tester.getRect(find.byKey(courtSurfaceKey));
+      expect(court.left, 0);
+      expect(court.right, 800);
+    });
+
     testWidgets('landscape: finished sets share the tab row', (tester) async {
       await _pump(
         tester,
