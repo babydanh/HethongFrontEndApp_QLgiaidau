@@ -239,7 +239,11 @@ class CourtState {
   Map<String, dynamic> toJson() => {
     'version': currentVersion,
     ...toSettingsJson(),
-    'history': [for (final item in history) item.toSettingsJson()],
+    // Every snapshot carries its own version: the server validates each one.
+    'history': [
+      for (final item in history)
+        {'version': currentVersion, ...item.toSettingsJson()},
+    ],
     if (updatedAt != null) 'updatedAt': updatedAt,
     if (updatedBy != null) 'updatedBy': updatedBy,
   };
