@@ -4160,6 +4160,36 @@ abstract class AppLocalizations {
   /// **'Mất giao'**
   String get pickleballCourtLoseServe;
 
+  /// No description provided for @pickleballCourtEnd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc'**
+  String get pickleballCourtEnd;
+
+  /// No description provided for @pickleballCourtChangeServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi giao'**
+  String get pickleballCourtChangeServe;
+
+  /// No description provided for @pickleballCourtServeTag.
+  ///
+  /// In vi, this message translates to:
+  /// **'GIAO'**
+  String get pickleballCourtServeTag;
+
+  /// No description provided for @pickleballCourtSportName.
+  ///
+  /// In vi, this message translates to:
+  /// **'pickleball'**
+  String get pickleballCourtSportName;
+
+  /// No description provided for @pickleballCourtSetNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Set {number}'**
+  String pickleballCourtSetNumber(int number);
+
   /// No description provided for @tennisTiebreakInfo.
   ///
   /// In vi, this message translates to:

@@ -105,25 +105,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('score sits in the kitchen strip of each half', () {
-    testWidgets('horizontal: the number is between the cells and the net', (
-      tester,
-    ) async {
-      await _pump(tester, _view(_Spy(), score1: 7, score2: 3));
-
-      final court = tester.getRect(find.byKey(courtSurfaceKey));
-      final net = tester.getCenter(find.byKey(courtNetKey)).dx;
-      final score1 = _at(tester, '7');
-      final score2 = _at(tester, '3');
-
-      // Team 1 plays on the left: its score is right of its chips, before the net.
-      expect(score1.dx, greaterThan(_at(tester, 'Minh').dx));
-      expect(score1.dx, lessThan(net));
-      // Team 2 plays on the right: its score is left of its chips, after the net.
-      expect(score2.dx, lessThan(_at(tester, 'Hà').dx));
-      expect(score2.dx, greaterThan(net));
-      expect(court.width, greaterThan(0));
-    });
-
     testWidgets('vertical: the number is between the cells and the net', (
       tester,
     ) async {
@@ -155,7 +136,7 @@ void main() {
       tester,
     ) async {
       final spy = _Spy();
-      await _pump(tester, _view(spy, score1: 2));
+      await _pump(tester, _view(spy, axis: Axis.vertical, score1: 2));
 
       await tester.tap(find.byTooltip('Add point for team 1'));
       await tester.tap(find.byTooltip('Remove point for team 1'));
@@ -176,8 +157,15 @@ void main() {
       (widget) => widget is ColoredBox && widget.color == palette.court,
     );
 
-    for (final axis in Axis.values) {
-      testWidgets('team 1 blue, team 2 orange, before and after switching ends '
+    test('TC-COURT-01 team 1 is orange and team 2 is blue', () {
+      expect(courtTeam1.accent, const Color(0xFFEA580C));
+      expect(courtTeam2.accent, const Color(0xFF2979FF));
+      expect(courtTeam1.court, const Color(0xFFF6C3A1));
+      expect(courtTeam2.court, const Color(0xFF8EBDF0));
+    });
+
+    for (final axis in [Axis.vertical]) {
+      testWidgets('team 1 orange, team 2 blue, before and after switching ends '
           '(${axis.name})', (tester) async {
         final size = axis == Axis.vertical
             ? const Size(360, 640)
@@ -203,7 +191,7 @@ void main() {
     }
 
     testWidgets('the plus button takes the color of its team', (tester) async {
-      await _pump(tester, _view(_Spy(), score1: 1));
+      await _pump(tester, _view(_Spy(), axis: Axis.vertical, score1: 1));
 
       Color plusColor(int team) {
         final box = find.descendant(
@@ -220,18 +208,7 @@ void main() {
     });
   });
 
-  group('cells face the net in both directions', () {
-    testWidgets('horizontal: left half has the left cell on top', (
-      tester,
-    ) async {
-      await _pump(tester, _view(_Spy()));
-
-      // Team 1 (left half): left cell "Minh" above right cell "L. Anh".
-      expect(_at(tester, 'Minh').dy, lessThan(_at(tester, 'L. Anh').dy));
-      // Team 2 (right half): right cell "Bảo" above left cell "Hà".
-      expect(_at(tester, 'Bảo').dy, lessThan(_at(tester, 'Hà').dy));
-    });
-
+  group('cells face the net (portrait)', () {
     testWidgets(
       'vertical: team 1 on top, right cell on the left of the screen',
       (tester) async {
@@ -262,7 +239,7 @@ void main() {
 
     testWidgets('each icon calls its action', (tester) async {
       final spy = _Spy();
-      await _pump(tester, _view(spy, score1: 5));
+      await _pump(tester, _view(spy, axis: Axis.vertical, score1: 5));
 
       await tester.tap(find.byTooltip('Finish set'));
       await tester.tap(find.byTooltip('Pick the winner'));
@@ -292,7 +269,10 @@ void main() {
     testWidgets('lose serve is hidden when the mode has no serve turns', (
       tester,
     ) async {
-      await _pump(tester, _view(_Spy(), withLoseServe: false));
+      await _pump(
+        tester,
+        _view(_Spy(), axis: Axis.vertical, withLoseServe: false),
+      );
 
       expect(find.byTooltip('Lose serve'), findsNothing);
       expect(find.byTooltip('Pick the winner'), findsOneWidget);
@@ -302,7 +282,10 @@ void main() {
       tester,
     ) async {
       final spy = _Spy();
-      await _pump(tester, _view(spy, finishSetEnabled: false));
+      await _pump(
+        tester,
+        _view(spy, axis: Axis.vertical, finishSetEnabled: false),
+      );
 
       await tester.tap(find.byTooltip('Finish set'), warnIfMissed: false);
 
@@ -311,10 +294,7 @@ void main() {
 
     // Measured with the painted size (FittedBox scaling included), in a slot
     // like the real one: a phone held upright, or held sideways.
-    for (final entry in {
-      Axis.vertical: const Size(360, 640),
-      Axis.horizontal: const Size(800, 360),
-    }.entries) {
+    for (final entry in {Axis.vertical: const Size(360, 640)}.entries) {
       testWidgets('every control has a >= 40dp hit area (${entry.key.name})', (
         tester,
       ) async {
@@ -457,7 +437,7 @@ void main() {
       );
     }
 
-    testWidgets('horizontal court fits an 800x300 landscape slot', (
+    testWidgets('horizontal scoreboard fits an 800x300 landscape slot', (
       tester,
     ) async {
       await _pump(
@@ -467,9 +447,6 @@ void main() {
       );
 
       expect(tester.takeException(), isNull);
-      final court = tester.getRect(find.byKey(courtSurfaceKey));
-      expect(court.height, lessThanOrEqualTo(220));
-      expect(court.size, const Size(768, 220));
     });
   });
 
@@ -478,9 +455,10 @@ void main() {
       await _pump(tester, _view(_Spy()), size: const Size(844, 390));
 
       expect(tester.takeException(), isNull);
+      // Between the top row (56dp) and the bottom bar (64dp), 12dp margins.
       expect(
         tester.getRect(find.byKey(courtSurfaceKey)),
-        const Rect.fromLTWH(16, 16, 812, 358),
+        const Rect.fromLTWH(28, 72, 788, 238),
       );
     });
 

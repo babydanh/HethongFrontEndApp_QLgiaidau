@@ -1,15 +1,12 @@
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// Same two team colors as the score panels.
-const _team1Color = Color(0xFF2979FF);
-const _team2Color = Color(0xFFEA580C);
 
 /// Reason for an exception result. Every keystroke goes to the score panel so
 /// the dialog buttons and the saved result see the same text.
@@ -145,8 +142,8 @@ class PickWinnerDialog extends ConsumerWidget {
         spacing: 8,
         children: [
           if (_needsReason(state)) _OverrideReasonField(params: params),
-          teamButton(1, _team1Color),
-          teamButton(2, _team2Color),
+          teamButton(1, courtTeam1.accent),
+          teamButton(2, courtTeam2.accent),
           if (nobodyCanWin)
             Text(
               l10n.scorePanel_matchNotReady,

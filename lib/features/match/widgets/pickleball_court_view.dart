@@ -1,40 +1,20 @@
 import 'dart:math' as math;
 
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_drag_widgets.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
 export 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart'
     show courtNetControlsKey, courtNetKey;
-
-/// Tên hiển thị của VĐV ở [index] trong đội; thiếu tên thì dùng "VĐV n".
-String courtPlayerDisplayName(
-  List<String> players,
-  int index,
-  AppLocalizations l10n,
-) {
-  if (index >= 0 && index < players.length) {
-    final name = players[index].trim();
-    if (name.isNotEmpty) return name;
-  }
-  return l10n.pickleballCourtPlayerLabel(index + 1);
-}
-
-/// Key of the 48dp hit area around the serving ball.
-const serveBallHitKey = Key('serveBallHit');
-
-/// Key of the painted court (cells, kitchens and net).
-const courtSurfaceKey = Key('courtSurface');
-
-/// Resolves a drop to an action, or null when the drop must do nothing.
-typedef _ResolveDrop =
-    CourtDropAction? Function(CourtDragSource source, CourtDropTarget target);
+export 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_drag_widgets.dart'
+    show courtPlayerDisplayName, courtSurfaceKey, serveBallHitKey;
 
 /// Sơ đồ sân pickleball: dọc (hai đội trên/dưới) khi [axis] là dọc, ngang 2:1
 /// khi [axis] là ngang. Điểm nằm trong dải bếp của mỗi nửa; lưới giữ lời hô và
@@ -58,6 +38,8 @@ class PickleballCourtView extends StatelessWidget {
     this.receiverCanScore = false,
     this.autoSwitchEnds = true,
     this.overrideEnabled = false,
+    this.startedAt,
+    this.setNumber,
     this.finishSetEnabled = true,
     this.pickWinnerEnabled = true,
     this.onScoreChange,
@@ -76,8 +58,9 @@ class PickleballCourtView extends StatelessWidget {
 
   static const _motion = Duration(milliseconds: 240);
 
-  /// A horizontal court is never shorter than this; a shorter slot scrolls.
-  static const _minHorizontalHeight = 120.0;
+  /// A horizontal scoreboard is never shorter than this; a shorter slot
+  /// scrolls.
+  static const _minHorizontalHeight = 260.0;
 
   /// A vertical court is never shorter than this; a shorter slot scrolls.
   static const _minVerticalHeight = 360.0;
@@ -100,6 +83,13 @@ class PickleballCourtView extends StatelessWidget {
   final bool receiverCanScore;
   final bool autoSwitchEnds;
   final bool overrideEnabled;
+
+  /// When the match started; drives the clock of the horizontal scoreboard.
+  /// Null hides the clock.
+  final DateTime? startedAt;
+
+  /// Number of the set being played, shown on the horizontal scoreboard.
+  final int? setNumber;
 
   /// Chốt set bị khoá khi set chưa kết thúc được (vd. 0-0).
   final bool finishSetEnabled;
@@ -173,51 +163,79 @@ class PickleballCourtView extends StatelessWidget {
         : '$serving-$receiving-$server';
   }
 
+  CourtNetActions get _net => CourtNetActions(
+    menu: CourtMenuActions(
+      onSwitchEnds: onSwitchEnds,
+      onUndo: onUndo,
+      onRestoreAutomatic: onRestoreAutomatic,
+      onToggleAutoSwitch: onToggleAutoSwitch,
+      autoSwitchEnds: autoSwitchEnds,
+      onToggleOverride: onToggleOverride,
+      overrideEnabled: overrideEnabled,
+      onForceWin: onForceWin,
+    ),
+    onFinishSet: onFinishSet,
+    finishSetEnabled: finishSetEnabled,
+    onPickWinner: onPickWinner,
+    pickWinnerEnabled: pickWinnerEnabled,
+    onLoseServe: onLoseServe,
+  );
+
+  /// Horizontal: the scoreboard. Vertical: the portrait court.
+  Widget _surface(Duration motion) {
+    final lockReceiverPlus = isSideOut && !receiverCanScore;
+    if (axis == Axis.horizontal) {
+      return CourtScoreboard(
+        layout: layout,
+        team1Players: team1Players,
+        team2Players: team2Players,
+        scoreOf: _scoreOf,
+        lockReceiverPlus: lockReceiverPlus,
+        onScoreChange: onScoreChange,
+        callText: _callText,
+        net: _net,
+        onSwitchEnds: onSwitchEnds,
+        overrideEnabled: overrideEnabled,
+        startedAt: startedAt,
+        setNumber: setNumber,
+        motion: motion,
+        dragEnabled: onDrop != null,
+        resolve: _resolve,
+        onDrop: _handleDrop,
+      );
+    }
+    final firstTeam = layout.team1First ? 1 : 2;
+    return _CourtSurface(
+      axis: axis,
+      layout: layout,
+      firstTeam: firstTeam,
+      secondTeam: 3 - firstTeam,
+      team1Players: team1Players,
+      team2Players: team2Players,
+      scoreOf: _scoreOf,
+      lockReceiverPlus: lockReceiverPlus,
+      onScoreChange: onScoreChange,
+      callText: _callText,
+      net: _net,
+      motion: motion,
+      dragEnabled: onDrop != null,
+      resolve: _resolve,
+      onDrop: _handleDrop,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final motion = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : _motion;
-    final firstTeam = layout.team1First ? 1 : 2;
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = _courtSize(constraints);
         final court = SizedBox(
           width: size.width,
           height: size.height,
-          child: _CourtSurface(
-            axis: axis,
-            layout: layout,
-            firstTeam: firstTeam,
-            secondTeam: 3 - firstTeam,
-            team1Players: team1Players,
-            team2Players: team2Players,
-            scoreOf: _scoreOf,
-            lockReceiverPlus: isSideOut && !receiverCanScore,
-            onScoreChange: onScoreChange,
-            callText: _callText,
-            net: CourtNetActions(
-              menu: CourtMenuActions(
-                onSwitchEnds: onSwitchEnds,
-                onUndo: onUndo,
-                onRestoreAutomatic: onRestoreAutomatic,
-                onToggleAutoSwitch: onToggleAutoSwitch,
-                autoSwitchEnds: autoSwitchEnds,
-                onToggleOverride: onToggleOverride,
-                overrideEnabled: overrideEnabled,
-                onForceWin: onForceWin,
-              ),
-              onFinishSet: onFinishSet,
-              finishSetEnabled: finishSetEnabled,
-              onPickWinner: onPickWinner,
-              pickWinnerEnabled: pickWinnerEnabled,
-              onLoseServe: onLoseServe,
-            ),
-            motion: motion,
-            dragEnabled: onDrop != null,
-            resolve: _resolve,
-            onDrop: _handleDrop,
-          ),
+          child: _surface(motion),
         );
         final scrolls =
             constraints.hasBoundedHeight &&
@@ -263,7 +281,7 @@ class _CourtSurface extends StatelessWidget {
   final CourtNetActions net;
   final Duration motion;
   final bool dragEnabled;
-  final _ResolveDrop resolve;
+  final ResolveCourtDrop resolve;
   final void Function(CourtDropAction action) onDrop;
 
   Widget _half(int team, {required bool isFirst}) => Expanded(
@@ -365,7 +383,7 @@ class _CourtHalf extends StatefulWidget {
   final void Function(int team, bool increment)? onScoreChange;
   final Duration motion;
   final bool dragEnabled;
-  final _ResolveDrop resolve;
+  final ResolveCourtDrop resolve;
   final void Function(CourtDropAction action) onDrop;
 
   @override
@@ -383,47 +401,24 @@ class _CourtHalfState extends State<_CourtHalf> {
 
   CourtDropTarget get _halfTarget => CourtDropTarget.half(team: widget.team);
 
-  /// Screen-reader replacement for dragging: the same drops, resolved and
-  /// applied through the same callbacks, so permissions, singles and rally
-  /// rules hold for both.
+  /// Screen-reader replacement for dragging, see [courtPlayerActions].
   Map<CustomSemanticsAction, VoidCallback> _semanticActions(
     int playerIndex,
     AppLocalizations l10n,
   ) {
     if (!widget.dragEnabled) return const {};
-    final layout = widget.layout;
-    final actions = <CustomSemanticsAction, VoidCallback>{};
-    void add(String label, CourtDragSource source, CourtDropTarget target) {
-      final action = widget.resolve(source, target);
-      if (action == null) return;
-      actions[CustomSemanticsAction(label: label)] = () =>
-          widget.onDrop(action);
-    }
-
-    final self = CourtDragSource(
-      kind: CourtDragKind.player,
+    final actions = courtPlayerActions(
+      l10n: l10n,
+      layout: widget.layout,
       team: widget.team,
       playerIndex: playerIndex,
+      resolve: widget.resolve,
+      onDrop: widget.onDrop,
     );
-    add(
-      l10n.pickleballCourtActionSwapPlaces,
-      self,
-      CourtDropTarget.half(team: widget.team),
-    );
-    final servingTeam = layout.servingTeam;
-    final server = layout.serverPlayerIndex;
-    if (servingTeam != null && server != null) {
-      add(
-        l10n.pickleballCourtActionServeHere,
-        CourtDragSource(
-          kind: CourtDragKind.ball,
-          team: servingTeam,
-          playerIndex: server,
-        ),
-        CourtDropTarget.player(team: widget.team, playerIndex: playerIndex),
-      );
-    }
-    return actions;
+    return {
+      for (final entry in actions.entries)
+        CustomSemanticsAction(label: entry.key): entry.value,
+    };
   }
 
   Widget _cell(CourtCell cell) {
@@ -473,7 +468,7 @@ class _CourtHalfState extends State<_CourtHalf> {
           final source = candidates.isEmpty ? null : candidates.first;
           final action = source == null ? null : widget.resolve(source, target);
           final highlight = action != null && action is! SwitchEnds;
-          return _DropOutline(active: highlight, radius: 6, child: tile);
+          return CourtDropOutline(active: highlight, radius: 6, child: tile);
         },
       ),
     );
@@ -552,42 +547,12 @@ class _CourtHalfState extends State<_CourtHalf> {
         final action = widget.resolve(details.data, _halfTarget);
         if (action != null) widget.onDrop(action);
       },
-      builder: (context, candidates, _) => _DropOutline(
+      builder: (context, candidates, _) => CourtDropOutline(
         active: candidates.isNotEmpty || _switchHover,
         radius: 0,
         thick: true,
         child: body,
       ),
-    );
-  }
-}
-
-/// Green outline drawn over [child] while a drop would do something.
-class _DropOutline extends StatelessWidget {
-  const _DropOutline({
-    required this.active,
-    required this.radius,
-    required this.child,
-    this.thick = false,
-  });
-
-  final bool active;
-  final double radius;
-  final bool thick;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return DecoratedBox(
-      position: DecorationPosition.foreground,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radius),
-        border: active
-            ? Border.all(color: colors.success, width: thick ? 4 : 3)
-            : null,
-      ),
-      child: child,
     );
   }
 }
@@ -659,7 +624,7 @@ class _CourtCellTile extends StatelessWidget {
               right: isServing ? _ballHitSize / 2 : 0,
             ),
             child: dragEnabled
-                ? _CourtDraggable(
+                ? CourtDraggable(
                     source: source,
                     feedback: _PlayerChip(
                       label: shortName,
@@ -764,7 +729,7 @@ class _ServeBall extends StatelessWidget {
       label: l10n.pickleballCourtBall,
       excludeSemantics: true,
       child: dragEnabled
-          ? _CourtDraggable(
+          ? CourtDraggable(
               source: source,
               feedback: ball,
               feedbackSize: const Size.square(_CourtCellTile._ballSize),
@@ -795,42 +760,4 @@ class _ServeBall extends StatelessWidget {
       color: courtNavy,
     ),
   );
-}
-
-/// Long-press then drag; the original dims while dragging and the feedback
-/// is centred under the finger.
-class _CourtDraggable extends StatelessWidget {
-  const _CourtDraggable({
-    required this.source,
-    required this.feedback,
-    required this.child,
-    this.feedbackSize = const Size(96, 32),
-  });
-
-  static const _longPressDelay = Duration(milliseconds: 250);
-
-  final CourtDragSource source;
-  final Widget feedback;
-  final Size feedbackSize;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final anchor = Offset(feedbackSize.width / 2, feedbackSize.height / 2);
-    return LongPressDraggable<CourtDragSource>(
-      data: source,
-      delay: _longPressDelay,
-      hapticFeedbackOnStart: true,
-      dragAnchorStrategy: (_, _, _) => anchor,
-      feedback: Material(
-        type: MaterialType.transparency,
-        child: SizedBox.fromSize(
-          size: feedbackSize,
-          child: Center(child: feedback),
-        ),
-      ),
-      childWhenDragging: Opacity(opacity: 0.3, child: child),
-      child: child,
-    );
-  }
 }

@@ -768,6 +768,18 @@
   "pickleballCourtFinishSet": "Chốt set",
   "pickleballCourtPickWinner": "Chọn đội thắng",
   "pickleballCourtLoseServe": "Mất giao",
+  "pickleballCourtEnd": "Kết thúc",
+  "pickleballCourtChangeServe": "Đổi giao",
+  "pickleballCourtServeTag": "GIAO",
+  "pickleballCourtSportName": "pickleball",
+  "pickleballCourtSetNumber": "Set {number}",
+  "@pickleballCourtSetNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "tennisTiebreakInfo": "TIEBREAK · Mỗi pha bóng được 1 điểm, chạm {points} và cách 2 để thắng set",
   "tennisPointsLabel": "15 • 30 • 40",
   "tennisTiebreakLabel": "Tiebreak",

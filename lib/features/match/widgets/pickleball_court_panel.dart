@@ -295,6 +295,8 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       receiverCanScore: isLite,
       autoSwitchEnds: court.autoSwitchEnds,
       overrideEnabled: score.overrideEnabled,
+      startedAt: _isOver(match) ? null : match?.startedAt,
+      setNumber: courtContext.setIndex + 1,
       finishSetEnabled:
           !score.isSubmitting &&
           scoreNotifier.finishSetConfirmMessage() != null,

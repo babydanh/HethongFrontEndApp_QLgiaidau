@@ -25,16 +25,17 @@ class CourtTeamPalette {
   final Color accent;
 }
 
+// Team 1 is orange and team 2 is blue, as on the referee's scoreboard.
 const courtTeam1 = CourtTeamPalette(
-  court: Color(0xFF8EBDF0),
-  kitchen: Color(0xFFB7D4F7),
-  accent: Color(0xFF2979FF),
-);
-
-const courtTeam2 = CourtTeamPalette(
   court: Color(0xFFF6C3A1),
   kitchen: Color(0xFFFBDCC6),
   accent: Color(0xFFEA580C),
+);
+
+const courtTeam2 = CourtTeamPalette(
+  court: Color(0xFF8EBDF0),
+  kitchen: Color(0xFFB7D4F7),
+  accent: Color(0xFF2979FF),
 );
 
 CourtTeamPalette courtPaletteOf(int team) =>

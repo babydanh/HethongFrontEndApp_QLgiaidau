@@ -458,7 +458,10 @@ void main() {
       tester.view.viewInsets = const FakeViewPadding(bottom: 200);
       addTearDown(tester.view.resetViewInsets);
 
-      await tester.tap(find.byTooltip('Pick the winner'));
+      // Landscape: the scoreboard's END button leads to the winner popup.
+      await tester.tap(find.text('END'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pick the winner'));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);

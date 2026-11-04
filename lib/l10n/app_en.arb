@@ -766,6 +766,18 @@
   "pickleballCourtFinishSet": "Finish set",
   "pickleballCourtPickWinner": "Pick the winner",
   "pickleballCourtLoseServe": "Lose serve",
+  "pickleballCourtEnd": "End",
+  "pickleballCourtChangeServe": "Change serve",
+  "pickleballCourtServeTag": "SERVE",
+  "pickleballCourtSportName": "pickleball",
+  "pickleballCourtSetNumber": "Set {number}",
+  "@pickleballCourtSetNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "tennisTiebreakInfo": "TIEBREAK · Each rally scores 1 point, first to {points} by 2 wins the set",
   "tennisPointsLabel": "15 • 30 • 40",
   "tennisTiebreakLabel": "Tiebreak",

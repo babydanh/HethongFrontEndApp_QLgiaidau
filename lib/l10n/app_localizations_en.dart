@@ -2163,6 +2163,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballCourtLoseServe => 'Lose serve';
 
   @override
+  String get pickleballCourtEnd => 'End';
+
+  @override
+  String get pickleballCourtChangeServe => 'Change serve';
+
+  @override
+  String get pickleballCourtServeTag => 'SERVE';
+
+  @override
+  String get pickleballCourtSportName => 'pickleball';
+
+  @override
+  String pickleballCourtSetNumber(int number) {
+    return 'Set $number';
+  }
+
+  @override
   String tennisTiebreakInfo(Object points) {
     return 'TIEBREAK · Each rally scores 1 point, first to $points by 2 wins the set';
   }

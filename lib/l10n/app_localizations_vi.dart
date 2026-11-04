@@ -2158,6 +2158,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtLoseServe => 'Mất giao';
 
   @override
+  String get pickleballCourtEnd => 'Kết thúc';
+
+  @override
+  String get pickleballCourtChangeServe => 'Đổi giao';
+
+  @override
+  String get pickleballCourtServeTag => 'GIAO';
+
+  @override
+  String get pickleballCourtSportName => 'pickleball';
+
+  @override
+  String pickleballCourtSetNumber(int number) {
+    return 'Set $number';
+  }
+
+  @override
   String tennisTiebreakInfo(Object points) {
     return 'TIEBREAK · Mỗi pha bóng được 1 điểm, chạm $points và cách 2 để thắng set';
   }

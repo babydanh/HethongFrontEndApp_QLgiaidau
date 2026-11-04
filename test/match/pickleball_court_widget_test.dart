@@ -318,7 +318,7 @@ Future<void> _tapMenu(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-Finder _ball() => find.byIcon(Icons.sports_baseball_rounded);
+Finder _ball() => find.byKey(serveBallHitKey);
 
 /// A court half is outlined green while a drop on it would do something.
 Finder _greenOutline(WidgetTester tester) {
@@ -599,9 +599,7 @@ void main() {
         expect(size.width, greaterThanOrEqualTo(40), reason: tooltip);
         expect(size.height, greaterThanOrEqualTo(40), reason: tooltip);
       }
-      final ballHit = tester.getSize(
-        find.ancestor(of: _ball(), matching: find.byKey(serveBallHitKey)),
-      );
+      final ballHit = tester.getSize(_ball());
       expect(ballHit.width, greaterThanOrEqualTo(48));
       expect(ballHit.height, greaterThanOrEqualTo(48));
     });

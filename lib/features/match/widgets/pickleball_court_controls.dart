@@ -97,7 +97,7 @@ class CourtNetBand extends StatelessWidget {
         : Axis.vertical;
     final lineSide = const BorderSide(color: courtLineColor, width: 2);
     final children = <Widget>[
-      if (actions.menu.hasAny) _MenuButton(actions: actions.menu),
+      if (actions.menu.hasAny) CourtMenuButton(actions: actions.menu),
       if (callText != null)
         Semantics(
           label: '${l10n.pickleballCourtCallLabel}: $callText',
@@ -241,8 +241,9 @@ class _NetIcon extends StatelessWidget {
 
 enum _MenuItem { switchEnds, undo, restore, autoSwitch, override, forceWin }
 
-class _MenuButton extends StatelessWidget {
-  const _MenuButton({required this.actions});
+/// The ⋯ button and its popup menu.
+class CourtMenuButton extends StatelessWidget {
+  const CourtMenuButton({super.key, required this.actions});
 
   final CourtMenuActions actions;
 
