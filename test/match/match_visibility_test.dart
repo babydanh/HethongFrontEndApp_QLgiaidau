@@ -82,4 +82,52 @@ void main() {
     final match = _match(team1Name: '');
     expect(isRenderablePublicMatch(match), isFalse);
   });
+
+  // TC-VIS-03/04 go through MatchModel.fromJson, the path real API data takes.
+  Map<String, dynamic> side(String id, List<Map<String, dynamic>> members,
+          {bool isMock = false}) =>
+      {'id': id, 'teamName': null, 'isMock': isMock, 'members': members};
+
+  Map<String, dynamic> matchJson(
+    Map<String, dynamic> p1,
+    Map<String, dynamic> p2,
+  ) => {
+    'id': 'm-json',
+    'status': 'SCHEDULED',
+    'roundNumber': 1,
+    'participant1': p1,
+    'participant2': p2,
+  };
+
+  test('TC-VIS-03 API match of athletes added one by one or by Excel is kept', () {
+    final match = MatchModel.fromJson(
+      matchJson(
+        side('p1', [
+          {'fullName': 'Nguyen Van A', 'userId': 'u1'},
+        ]),
+        // Guest added by Excel: no account.
+        side('p2', [
+          {'fullName': 'Tran Thi B'},
+        ]),
+      ),
+      'm-json',
+    );
+    expect(match.team1Name, isEmpty);
+    expect(isRenderablePublicMatch(match), isTrue);
+  });
+
+  test('TC-VIS-04 API match with a real mock participant stays hidden', () {
+    final match = MatchModel.fromJson(
+      matchJson(
+        side('p1', [
+          {'fullName': 'Mock A', 'userId': 'u1', 'isMock': true},
+        ], isMock: true),
+        side('p2', [
+          {'fullName': 'Tran Thi B'},
+        ]),
+      ),
+      'm-json',
+    );
+    expect(isRenderablePublicMatch(match), isFalse);
+  });
 }
