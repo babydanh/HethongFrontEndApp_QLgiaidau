@@ -9,11 +9,13 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.da
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -272,6 +274,25 @@ void main() {
       }
     });
 
+    testWidgets('wide landscape: penalties page fits one screen, no scroll', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+      await tester.tap(find.text('Penalties'));
+      await tester.pumpAndSettle();
+
+      final scroll = tester.state<ScrollableState>(
+        find
+            .descendant(
+              of: find.byType(TabBarView),
+              matching: find.byType(Scrollable),
+            )
+            .last,
+      );
+      expect(scroll.position.maxScrollExtent, 0);
+      expect(find.text('Record penalty').hitTestable(), findsOneWidget);
+    });
+
     testWidgets('wide landscape: the court runs to both screen edges', (
       tester,
     ) async {
@@ -284,6 +305,48 @@ void main() {
       final court = tester.getRect(find.byKey(courtSurfaceKey));
       expect(court.left, 0);
       expect(court.right, 800);
+    });
+
+    testWidgets('wide landscape: no margin above or below the scoreboard', (
+      tester,
+    ) async {
+      // Only the status bar inset stays on top; the system bars are hidden.
+      const inset = FakeViewPadding(top: 47);
+      tester.view.viewPadding = inset;
+      tester.view.padding = inset;
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      final board = tester.getRect(find.byType(CourtScoreboard));
+      expect(board.top, 47);
+      expect(board.bottom, 360);
+    });
+
+    testWidgets('wide landscape hides the system bars, portrait restores', (
+      tester,
+    ) async {
+      final modes = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'SystemChrome.setEnabledSystemUIMode') {
+            modes.add(call.arguments as String);
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+      expect(modes.last, 'SystemUiMode.immersiveSticky');
+
+      tester.view.physicalSize = const Size(390, 800);
+      await tester.pumpAndSettle();
+      expect(modes.last, 'SystemUiMode.edgeToEdge');
     });
 
     testWidgets('landscape: finished sets share the tab row', (tester) async {
