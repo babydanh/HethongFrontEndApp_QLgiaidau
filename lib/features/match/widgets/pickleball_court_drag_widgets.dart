@@ -1,11 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
-import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-
-/// Key of the 48dp hit area around the serving ball.
-const serveBallHitKey = Key('serveBallHit');
 
 /// Key of the painted court (cells, kitchens and net).
 const courtSurfaceKey = Key('courtSurface');
@@ -28,46 +24,21 @@ String courtPlayerDisplayName(
 }
 
 /// What a tap (or a screen reader) can do with one player, without dragging:
-/// the same drops, resolved and applied through the same callbacks, so
-/// permissions, singles and rally rules hold for both. Keys are labels.
+/// the same drop, resolved and applied through the same callbacks, so
+/// permissions and singles rules hold for both. Keys are labels.
 Map<String, VoidCallback> courtPlayerActions({
   required AppLocalizations l10n,
-  required CourtLayout layout,
   required int team,
   required int playerIndex,
   required ResolveCourtDrop resolve,
   required void Function(CourtDropAction action) onDrop,
 }) {
-  final actions = <String, VoidCallback>{};
-  void add(String label, CourtDragSource source, CourtDropTarget target) {
-    final action = resolve(source, target);
-    if (action == null) return;
-    actions[label] = () => onDrop(action);
-  }
-
-  add(
-    l10n.pickleballCourtActionSwapPlaces,
-    CourtDragSource(
-      kind: CourtDragKind.player,
-      team: team,
-      playerIndex: playerIndex,
-    ),
+  final swap = resolve(
+    CourtDragSource(team: team, playerIndex: playerIndex),
     CourtDropTarget.half(team: team),
   );
-  final servingTeam = layout.servingTeam;
-  final server = layout.serverPlayerIndex;
-  if (servingTeam != null && server != null) {
-    add(
-      l10n.pickleballCourtActionServeHere,
-      CourtDragSource(
-        kind: CourtDragKind.ball,
-        team: servingTeam,
-        playerIndex: server,
-      ),
-      CourtDropTarget.player(team: team, playerIndex: playerIndex),
-    );
-  }
-  return actions;
+  if (swap == null) return const {};
+  return {l10n.pickleballCourtActionSwapPlaces: () => onDrop(swap)};
 }
 
 /// Green outline drawn over [child] while a drop would do something.

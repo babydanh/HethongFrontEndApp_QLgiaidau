@@ -152,15 +152,6 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     }
   }
 
-  /// Đổi đội giao (side-out) bằng logic điểm có sẵn; người giao do [_applyDrop]
-  /// đặt ngay sau đó.
-  void _setServingTeam(int team, CourtContext court) {
-    if (court.servingTeam == team) return;
-    ref
-        .read(scorePanelNotifierProvider(widget.params).notifier)
-        .pickleballSideOut();
-  }
-
   /// Mất giao bằng một nút: đôi đi từng bước (người giao 1 → 2 → đội kia) qua
   /// `pickleballSwitchServer`; đánh đơn chuyển thẳng sang đội kia.
   void _loseServe(CourtContext court) {
@@ -240,13 +231,6 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
         );
       case SwitchEnds():
         unawaited(_apply(swapEndsNow));
-      case SetServer(:final team, :final playerIndex):
-        unawaited(
-          _apply(
-            (state, context) =>
-                setServerOverride(state, context, team, playerIndex),
-          ),
-        );
     }
   }
 
@@ -304,9 +288,6 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       onScoreChange: canChangeScore
           ? (team, increment) =>
                 _changeScore(team, increment, isSideOut: isSideOut)
-          : null,
-      onSetServingTeam: canEdit && isSideOut
-          ? (team) => _setServingTeam(team, courtContext)
           : null,
       onDrop: canEdit ? _applyDrop : null,
       onSwitchEnds: canEdit ? () => unawaited(_apply(swapEndsNow)) : null,

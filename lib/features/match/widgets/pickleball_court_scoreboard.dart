@@ -318,11 +318,7 @@ class _CourtBlock extends StatelessWidget {
   ) {
     if (!scoreboard.dragEnabled) return const {};
     final action = scoreboard.resolve(
-      CourtDragSource(
-        kind: CourtDragKind.player,
-        team: leftTeam,
-        playerIndex: 0,
-      ),
+      CourtDragSource(team: leftTeam, playerIndex: 0),
       CourtDropTarget.half(team: rightTeam),
     );
     if (action == null) return const {};
@@ -496,7 +492,6 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
           ? const {}
           : courtPlayerActions(
               l10n: l10n,
-              layout: layout,
               team: widget.team,
               playerIndex: index,
               resolve: widget.resolve,
@@ -537,11 +532,7 @@ class _ScoreboardHalfState extends State<_ScoreboardHalf> {
   Widget? _swapButton(AppLocalizations l10n) {
     if (!widget.dragEnabled) return null;
     final action = widget.resolve(
-      CourtDragSource(
-        kind: CourtDragKind.player,
-        team: widget.team,
-        playerIndex: 0,
-      ),
+      CourtDragSource(team: widget.team, playerIndex: 0),
       _halfTarget,
     );
     if (action == null) return null;
@@ -671,11 +662,7 @@ class _ScoreboardCell extends StatelessWidget {
     }
     final shortName = abbreviateName(name);
     final person = _PersonLabel(name: shortName);
-    final source = CourtDragSource(
-      kind: CourtDragKind.player,
-      team: team,
-      playerIndex: index,
-    );
+    final source = CourtDragSource(team: team, playerIndex: index);
     return Semantics(
       label: isServing
           ? '$cellLabel: $name, ${l10n.pickleballServing}'
@@ -708,12 +695,7 @@ class _ScoreboardCell extends StatelessWidget {
                   // Clear of the screen edge, where a camera hole may sit.
                   top: 0,
                   right: 20,
-                  child: _ServeTag(
-                    team: team,
-                    playerIndex: index,
-                    serverNumber: serverNumber,
-                    dragEnabled: dragEnabled,
-                  ),
+                  child: _ServeTag(serverNumber: serverNumber),
                 ),
             ],
           ),
@@ -760,81 +742,49 @@ class _PersonLabel extends StatelessWidget {
 
 /// "SERVE n" tag of the server's cell. Long-press and drag it to hand the
 /// ball to another player, like the ball of the portrait court.
+/// "SERVE" pill on the server's cell. Informational: the server follows the
+/// score, so it cannot be dragged to someone else.
 class _ServeTag extends StatelessWidget {
-  const _ServeTag({
-    required this.team,
-    required this.playerIndex,
-    required this.serverNumber,
-    required this.dragEnabled,
-  });
+  const _ServeTag({required this.serverNumber});
 
-  static const _feedbackSize = Size(144, 36);
-
-  /// Hit area around the tag, like the ball of the portrait court.
-  static const _hitSize = 48.0;
-
-  final int team;
-  final int playerIndex;
   final int? serverNumber;
-  final bool dragEnabled;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final number = serverNumber;
-    final pill = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: _tagColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 4,
-        children: [
-          const Icon(Icons.directions_run_rounded, size: 16, color: _ink),
-          Text(
-            number == null
-                ? l10n.pickleballCourtServeTag
-                : '${l10n.pickleballCourtServeTag} $number',
-            style: const TextStyle(
-              color: _ink,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
-    final hit = ColoredBox(
-      key: serveBallHitKey,
-      color: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minWidth: _hitSize,
-          minHeight: _hitSize,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Center(child: pill),
-        ),
-      ),
-    );
     return Semantics(
       label: l10n.pickleballCourtBall,
       excludeSemantics: true,
-      child: dragEnabled
-          ? CourtDraggable(
-              source: CourtDragSource(
-                kind: CourtDragKind.ball,
-                team: team,
-                playerIndex: playerIndex,
-              ),
-              feedback: pill,
-              feedbackSize: _feedbackSize,
-              child: hit,
-            )
-          : hit,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: _tagColor,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 4,
+              children: [
+                const Icon(Icons.directions_run_rounded, size: 16, color: _ink),
+                Text(
+                  number == null
+                      ? l10n.pickleballCourtServeTag
+                      : '${l10n.pickleballCourtServeTag} $number',
+                  style: const TextStyle(
+                    color: _ink,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

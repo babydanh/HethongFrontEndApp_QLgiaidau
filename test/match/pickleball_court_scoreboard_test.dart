@@ -70,15 +70,10 @@ Widget _board(
     onScoreChange: interactive
         ? (team, increment) => spy.calls.add('score:$team:$increment')
         : null,
-    onSetServingTeam: interactive
-        ? (team) => spy.calls.add('serving:$team')
-        : null,
     onDrop: interactive
         ? (action) => spy.calls.add(switch (action) {
             SwapPlaces(:final team) => 'swap:$team',
             SwitchEnds() => 'switchEndsDrop',
-            SetServer(:final team, :final playerIndex) =>
-              'server:$team:$playerIndex',
           })
         : null,
     onSwitchEnds: interactive ? () => spy.calls.add('switchEnds') : null,
@@ -461,19 +456,17 @@ void main() {
       expect(spy.calls, ['switchEndsDrop']);
     });
 
-    testWidgets('tapping a player offers swap and give-serve', (tester) async {
+    testWidgets('tapping a player offers swap only, never to pick the server', (
+      tester,
+    ) async {
       final spy = _Spy();
       await _pump(tester, _board(spy));
 
       await tester.tap(find.text('Bảo'));
       await tester.pumpAndSettle();
+
       expect(find.text('Swap left and right'), findsWidgets);
-      expect(find.text('Give serve here'), findsOneWidget);
-
-      await tester.tap(find.text('Give serve here'));
-      await tester.pumpAndSettle();
-
-      expect(spy.calls, ['serving:2', 'server:2:0']);
+      expect(find.text('Give serve here'), findsNothing);
     });
 
     testWidgets('a viewer tapping a player gets nothing', (tester) async {

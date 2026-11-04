@@ -4088,12 +4088,6 @@ abstract class AppLocalizations {
   /// **'Đổi sân'**
   String get pickleballCourtActionSwitchEnds;
 
-  /// No description provided for @pickleballCourtActionServeHere.
-  ///
-  /// In vi, this message translates to:
-  /// **'Giao bóng cho người này'**
-  String get pickleballCourtActionServeHere;
-
   /// No description provided for @pickleballCourtLabel.
   ///
   /// In vi, this message translates to:

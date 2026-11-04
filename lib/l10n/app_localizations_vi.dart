@@ -2121,9 +2121,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtActionSwitchEnds => 'Đổi sân';
 
   @override
-  String get pickleballCourtActionServeHere => 'Giao bóng cho người này';
-
-  @override
   String get pickleballCourtLabel => 'Sân pickleball';
 
   @override

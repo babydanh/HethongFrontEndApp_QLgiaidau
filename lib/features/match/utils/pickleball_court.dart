@@ -118,7 +118,8 @@ class CourtTurnStart {
       Object.hash(team, serverNumber, teamScoreAtStart, serverPlayerIndex);
 }
 
-/// Trọng tài chỉ định người đang giao. Bị xoá khi lượt giao kế tiếp bắt đầu.
+/// Legacy referee-picked server. Still read and written back to match the
+/// Backend contract, but it no longer decides who serves.
 class CourtServerOverride {
   const CourtServerOverride({required this.team, required this.playerIndex});
 
@@ -496,25 +497,6 @@ CourtState setAutoSwitchEnds(CourtState state, CourtContext context, bool value)
   return reconcileCourtState(next, context);
 }
 
-/// Chỉ định người đang giao. Chỉ có tác dụng khi đúng đội đang giao. Ghi history.
-CourtState setServerOverride(
-  CourtState state,
-  CourtContext context,
-  int team,
-  int playerIndex,
-) {
-  _checkTeam(team);
-  _checkPlayerIndex(playerIndex);
-  final base = reconcileCourtState(state, context);
-  final next = _recordChange(
-    base,
-    (s) => s.copyWith(
-      serverOverride: CourtServerOverride(team: team, playerIndex: playerIndex),
-    ),
-  );
-  return reconcileCourtState(next, context);
-}
-
 /// Khôi phục tự động: xoá endsOverride và serverOverride, bật tự đổi sân,
 /// xoá cờ lật giữa set (để tính lại theo luật). Giữ startingRight và turnStart.
 CourtState restoreAutomaticCourt(CourtState state, CourtContext context) {
@@ -660,8 +642,7 @@ int _turnStartPlayerIndex(int team, CourtState s, CourtContext c) {
 }
 
 int _serverPlayerIndex(int team, CourtState s, CourtContext c) {
-  final override = s.serverOverride;
-  if (override != null && override.team == team) return override.playerIndex;
+  // A saved referee-picked server (old data) is ignored: the score decides.
   final turn = s.turnStart;
   if (c.scoringMode == CourtScoringMode.sideOut &&
       turn != null &&

@@ -340,22 +340,6 @@ void _realContextTests() {
       expect(harness.context.serverNumber, 2);
     });
 
-    test('moving the ball to the partner at 0-0 keeps the override', () async {
-      final harness = _RealContextHarness();
-      addTearDown(harness.container.dispose);
-      await harness.settle();
-      await harness.notifier.syncAutomatic();
-
-      await harness.notifier.apply(
-        (state, context) => setServerOverride(state, context, 1, 1),
-      );
-
-      final layout = resolveCourtLayout(harness.state, harness.context);
-      expect(harness.state.serverOverride?.playerIndex, 1);
-      expect(layout.serverPlayerIndex, 1);
-      expect(harness.state.turnStart, isNotNull);
-    });
-
     test('the first point keeps the first server serving', () async {
       final harness = _RealContextHarness();
       addTearDown(harness.container.dispose);

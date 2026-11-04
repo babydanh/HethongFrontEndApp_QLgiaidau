@@ -318,8 +318,6 @@ Future<void> _tapMenu(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-Finder _ball() => find.byKey(serveBallHitKey);
-
 /// A court half is outlined green while a drop on it would do something.
 Finder _greenOutline(WidgetTester tester) {
   final green = tester.element(find.byType(PickleballCourtView)).colors.success;
@@ -332,7 +330,6 @@ Finder _greenOutline(WidgetTester tester) {
 
 class _ViewSpy {
   final scoreChanges = <(int, bool)>[];
-  final servingTeams = <int>[];
   final drops = <CourtDropAction>[];
 }
 
@@ -360,7 +357,6 @@ Widget _view(
     onScoreChange: interactive
         ? (team, increment) => spy.scoreChanges.add((team, increment))
         : null,
-    onSetServingTeam: interactive && sideOut ? spy.servingTeams.add : null,
     onDrop: interactive ? spy.drops.add : null,
     onUndo: interactive ? () {} : null,
     onRestoreAutomatic: interactive ? () {} : null,
@@ -450,7 +446,6 @@ void main() {
 
       expect(spy.drops.single, isA<SwapPlaces>());
       expect((spy.drops.single as SwapPlaces).team, 1);
-      expect(spy.servingTeams, isEmpty);
     });
 
     testWidgets('dragging a player onto itself does nothing', (tester) async {
@@ -483,44 +478,18 @@ void main() {
       expect(spy.drops.single, isA<SwitchEnds>());
     });
 
-    testWidgets('side-out: the ball dropped on an opponent changes the serve', (
+    testWidgets('the SERVE tag cannot be dragged to hand the serve over', (
       tester,
     ) async {
       final spy = _ViewSpy();
       await tester.pumpWidget(ProviderScope(child: _app(_view(spy))));
 
-      await _longPressDrag(tester, _ball(), find.text('Bảo'));
+      final tag = find.textContaining('SERVE ');
+      await _longPressDrag(tester, tag, find.text('Minh'));
+      await _longPressDrag(tester, tag, find.text('Bảo'));
 
-      expect(spy.servingTeams, [2]);
-      final drop = spy.drops.single as SetServer;
-      expect(
-        (drop.team, drop.playerIndex, drop.changesServingTeam),
-        (2, 0, true),
-      );
+      expect(spy.drops, isEmpty);
     });
-
-    testWidgets(
-      'the ball can move to a teammate but never to the other team in rally',
-      (tester) async {
-        final spy = _ViewSpy();
-        await tester.pumpWidget(
-          ProviderScope(
-            child: _app(_view(spy, context: _rallyContext, sideOut: false)),
-          ),
-        );
-
-        await _longPressDrag(tester, _ball(), find.text('Bảo'));
-        expect(spy.drops, isEmpty);
-        expect(spy.servingTeams, isEmpty);
-
-        await _longPressDrag(tester, _ball(), find.text('Minh'));
-        final drop = spy.drops.single as SetServer;
-        expect(
-          (drop.team, drop.playerIndex, drop.changesServingTeam),
-          (1, 1, false),
-        );
-      },
-    );
 
     testWidgets('receiverCanScore keeps plus enabled for the receiving team', (
       tester,
@@ -599,9 +568,6 @@ void main() {
         expect(size.width, greaterThanOrEqualTo(40), reason: tooltip);
         expect(size.height, greaterThanOrEqualTo(40), reason: tooltip);
       }
-      final ballHit = tester.getSize(_ball());
-      expect(ballHit.width, greaterThanOrEqualTo(48));
-      expect(ballHit.height, greaterThanOrEqualTo(48));
     });
 
     testWidgets('singles: no outline over the free cell or own half', (
@@ -665,17 +631,16 @@ void main() {
       final spy = _ViewSpy();
       await tester.pumpWidget(ProviderScope(child: _app(_view(spy))));
 
-      // "Minh" is the server's teammate: can swap and receive the serve.
+      // The server follows the score: a player can only swap sides.
       final minh = semanticActionIds(tester, RegExp('Minh'));
-      expect(
-        minh.keys,
-        unorderedEquals(['Swap left and right', 'Give serve here']),
-      );
-      // "Lan Anh" is the server: nobody gives the serve to himself.
-      expect(
-        semanticActionIds(tester, RegExp('Lan Anh')).keys,
-        isNot(contains('Give serve here')),
-      );
+      expect(minh.keys, ['Swap left and right']);
+      for (final name in ['Lan Anh', 'Bảo', 'Hà']) {
+        expect(
+          semanticActionIds(tester, RegExp(name)).keys,
+          isNot(contains('Give serve here')),
+          reason: name,
+        );
+      }
       // Switch ends lives on the court node only, never on the four players.
       for (final name in ['Lan Anh', 'Minh', 'Bảo', 'Hà']) {
         expect(
@@ -694,12 +659,10 @@ void main() {
             args: ids[action],
           );
       run(RegExp('Minh'), minh, 'Swap left and right');
-      run(RegExp('Minh'), minh, 'Give serve here');
       run('Pickleball court', court, 'Switch ends');
 
       expect(spy.drops[0], isA<SwapPlaces>());
-      expect((spy.drops[1] as SetServer).playerIndex, 1);
-      expect(spy.drops[2], isA<SwitchEnds>());
+      expect(spy.drops[1], isA<SwitchEnds>());
       semantics.dispose();
     });
 
@@ -811,22 +774,6 @@ void main() {
       expect(repository.requests.last['endsOverride'], isTrue);
     });
 
-    testWidgets('dragging the ball onto a teammate sets the server and saves', (
-      tester,
-    ) async {
-      final repository = _EchoCourtRepository();
-      await _pumpPanel(tester, canScore: true, repository: repository);
-      final before = repository.requests.length;
-
-      await _longPressDrag(tester, _ball(), find.text('Minh'));
-
-      expect(repository.requests.length, before + 1);
-      expect(repository.requests.last['serverOverride'], {
-        'team': 1,
-        'playerIndex': 1,
-      });
-    });
-
     testWidgets('side-out rule without serve state: receiver plus is locked', (
       tester,
     ) async {
@@ -841,7 +788,7 @@ void main() {
 
       // The court context (real provider: see the notifier test) is side-out
       // with team 1 serving by default: ball shown, team 2 cannot score.
-      expect(_ball(), findsOneWidget);
+      expect(find.textContaining('SERVE '), findsOneWidget);
       await tester.tap(find.byTooltip('Add point for team 2'));
       expect(calls, isEmpty);
       await tester.tap(find.byTooltip('Add point for team 1'));
@@ -1081,28 +1028,6 @@ void main() {
 
       expect(repository.requests, hasLength(1));
       expect((repository.requests.single['turnStart'] as Map)['team'], 2);
-    });
-
-    testWidgets('handing the serve over writes through one chain only', (
-      tester,
-    ) async {
-      // Dropping the ball on an opponent flips the serving team, which fires
-      // the context listener; that automatic sync must not run in parallel
-      // with the drop's own write.
-      final repository = _SlowCourtRepository();
-      await _pumpPanel(
-        tester,
-        canScore: true,
-        repository: repository,
-        liveContext: true,
-      );
-
-      await _longPressDrag(tester, _ball(), find.text('Bảo'));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pumpAndSettle();
-
-      expect(repository.requests, isNotEmpty);
-      expect(repository.maxConcurrent, 1);
     });
 
     testWidgets('undo restores the court after a drag', (tester) async {

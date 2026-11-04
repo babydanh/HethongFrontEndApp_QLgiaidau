@@ -140,48 +140,25 @@ void main() {
       );
     });
 
-    test('đổi đội giao mở lượt mới theo điểm đội mới và xoá người giao chỉ định', () {
-      var state = reconcileCourtState(const CourtState(), ctx(serving: 1));
-      state = setServerOverride(state, ctx(serving: 1), 1, 1);
-      expect(
-        state.serverOverride,
-        const CourtServerOverride(team: 1, playerIndex: 1),
+    test('người giao chỉ định cũ trong dữ liệu không quyết định người giao', () {
+      // Old saves may still carry a referee-picked server; the rules win.
+      const state = CourtState(
+        serverOverride: CourtServerOverride(team: 1, playerIndex: 1),
       );
 
-      state = reconcileCourtState(state, ctx(s2: 1, serving: 2));
-      expect(
-        state.turnStart,
-        const CourtTurnStart(
-          team: 2,
-          serverNumber: 1,
-          teamScoreAtStart: 1,
-          serverPlayerIndex: 1,
-        ),
-      );
-      expect(state.serverOverride, isNull);
-    });
-
-    test('override chỉ có tác dụng khi đúng đội giao', () {
-      final state = setServerOverride(
-        const CourtState(),
-        ctx(mode: CourtScoringMode.rally, serving: 1),
-        1,
-        1,
-      );
-
-      final other = resolveCourtLayout(
-        state,
-        ctx(mode: CourtScoringMode.rally, serving: 2),
-      );
-      expect(other.servingTeam, 2);
-      expect(other.serverPlayerIndex, 0);
-
-      final same = resolveCourtLayout(
+      final rally = resolveCourtLayout(
         state,
         ctx(mode: CourtScoringMode.rally, serving: 1),
       );
-      expect(same.serverPlayerIndex, 1);
-      expect(same.serverCell, CourtCell.left);
+      // Score 0 is even: the player on the right serves.
+      expect(rally.serverPlayerIndex, 0);
+      expect(rally.serverCell, CourtCell.right);
+
+      final odd = resolveCourtLayout(
+        state,
+        ctx(s1: 1, mode: CourtScoringMode.rally, serving: 1),
+      );
+      expect(odd.serverCell, CourtCell.left);
     });
   });
 
@@ -332,7 +309,9 @@ void main() {
     test('restoreAutomaticCourt xoá ép và người giao chỉ định, giữ VĐV ô phải và lượt', () {
       var state = setStartingRight(base(), c0, 1, 1);
       state = swapEndsNow(state, c0);
-      state = setServerOverride(state, c0, 1, 0);
+      state = state.copyWith(
+        serverOverride: const CourtServerOverride(team: 1, playerIndex: 0),
+      );
       state = setAutoSwitchEnds(state, c0, false);
 
       final restored = restoreAutomaticCourt(state, c0);
@@ -347,7 +326,6 @@ void main() {
     test('team hoặc VĐV ngoài phạm vi ném ArgumentError', () {
       expect(() => setStartingRight(base(), c0, 3, 0), throwsArgumentError);
       expect(() => setStartingRight(base(), c0, 1, 2), throwsArgumentError);
-      expect(() => setServerOverride(base(), c0, 0, 0), throwsArgumentError);
     });
   });
 

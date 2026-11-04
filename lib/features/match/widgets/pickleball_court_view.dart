@@ -7,7 +7,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_score
 import 'package:flutter/material.dart';
 
 export 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_drag_widgets.dart'
-    show courtPlayerDisplayName, courtSurfaceKey, serveBallHitKey;
+    show courtPlayerDisplayName, courtSurfaceKey;
 
 /// Sơ đồ sân pickleball: dọc (hai đội trên/dưới) khi [axis] là dọc, ngang 2:1
 /// khi [axis] là ngang. Điểm nằm trong dải bếp của mỗi nửa; lưới giữ lời hô và
@@ -36,7 +36,6 @@ class PickleballCourtView extends StatelessWidget {
     this.finishSetEnabled = true,
     this.pickWinnerEnabled = true,
     this.onScoreChange,
-    this.onSetServingTeam,
     this.onDrop,
     this.onSwitchEnds,
     this.onUndo,
@@ -95,7 +94,6 @@ class PickleballCourtView extends StatelessWidget {
 
   /// Gọi trước [onDrop] khi trái bóng được thả sang đội kia (đổi đội giao).
   /// Null thì không cho thả trái bóng sang đội kia.
-  final void Function(int team)? onSetServingTeam;
 
   /// Null thì tắt kéo thả.
   final void Function(CourtDropAction action)? onDrop;
@@ -116,21 +114,9 @@ class PickleballCourtView extends StatelessWidget {
   int _scoreOf(int team) => team == 1 ? team1Score : team2Score;
 
   CourtDropAction? _resolve(CourtDragSource source, CourtDropTarget target) {
-    final action = resolveCourtDrop(source, target, layout.servingTeam);
+    final action = resolveCourtDrop(source, target);
     if (action is SwapPlaces && !isDoubles) return null;
-    if (action is SetServer &&
-        action.changesServingTeam &&
-        (!isSideOut || onSetServingTeam == null)) {
-      return null;
-    }
     return action;
-  }
-
-  void _handleDrop(CourtDropAction action) {
-    if (action is SetServer && action.changesServingTeam) {
-      onSetServingTeam?.call(action.team);
-    }
-    onDrop?.call(action);
   }
 
   /// The court fills its slot: halves, cells and the net band are all flexible,
@@ -193,7 +179,7 @@ class PickleballCourtView extends StatelessWidget {
       motion: motion,
       dragEnabled: onDrop != null,
       resolve: _resolve,
-      onDrop: _handleDrop,
+      onDrop: (action) => onDrop?.call(action),
     );
   }
 

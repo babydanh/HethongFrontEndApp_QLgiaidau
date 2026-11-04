@@ -754,7 +754,6 @@
   "pickleballCourtBall": "Serving ball",
   "pickleballCourtActionSwapPlaces": "Swap left and right",
   "pickleballCourtActionSwitchEnds": "Switch ends",
-  "pickleballCourtActionServeHere": "Give serve here",
   "pickleballCourtLabel": "Pickleball court",
   "pickleballCourtUndo": "Undo",
   "pickleballCourtRestoreAutomatic": "Restore automatic",
