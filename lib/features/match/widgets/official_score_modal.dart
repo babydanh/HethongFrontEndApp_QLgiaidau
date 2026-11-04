@@ -322,6 +322,12 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                         Expanded(
                           child: Stack(children: [
                           TabBarView(
+                            // The court is all drag targets: a sideways
+                            // swipe there must not slide the tab page.
+                            // The tab labels still switch pages.
+                            physics: courtMode
+                                ? const NeverScrollableScrollPhysics()
+                                : null,
                             children: [
                               _buildScoreTab(
                                 context,

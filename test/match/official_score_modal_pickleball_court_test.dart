@@ -195,6 +195,47 @@ void main() {
     });
   });
 
+  group('TC-COURT-10 swipe on the court does not slide the tabs', () {
+    for (final size in const [Size(360, 780), Size(800, 360)]) {
+      testWidgets('pressing a player and moving keeps Scoring open $size', (
+        tester,
+      ) async {
+        await _pump(tester, sportKey: 'PICKLEBALL', size: size);
+        final tabs = DefaultTabController.of(
+          tester.element(find.byType(TabBarView)),
+        );
+
+        // Move sideways before the long-press delay: the grab is not armed
+        // yet, so the tab view must not take the swipe either.
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('L. Anh')),
+        );
+        await gesture.moveBy(const Offset(-150, 0));
+        await tester.pump(const Duration(milliseconds: 50));
+        await gesture.moveBy(const Offset(-150, 0));
+        await gesture.up();
+        await tester.pumpAndSettle();
+
+        expect(tabs.index, 0);
+        expect(tabs.animation!.value, 0);
+      });
+    }
+
+    testWidgets('the Penalties tab still opens by tapping its label', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+      final tabs = DefaultTabController.of(
+        tester.element(find.byType(TabBarView)),
+      );
+
+      await tester.tap(find.text('Penalties'));
+      await tester.pumpAndSettle();
+
+      expect(tabs.index, 1);
+    });
+  });
+
   testWidgets('rotating the screen keeps the court panel State', (
     tester,
   ) async {
