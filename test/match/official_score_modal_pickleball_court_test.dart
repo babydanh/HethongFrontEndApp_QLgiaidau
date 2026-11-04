@@ -152,24 +152,25 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('pickleball scores on the court', () {
-    testWidgets('portrait: vertical court, no bottom bar, no big score block', (
-      tester,
-    ) async {
-      await _pump(tester, sportKey: 'PICKLEBALL');
+    testWidgets(
+      'portrait: same scoreboard stacked, no bottom bar, no big score block',
+      (tester) async {
+        await _pump(tester, sportKey: 'PICKLEBALL');
 
-      final view = tester.widget<PickleballCourtView>(
-        find.byType(PickleballCourtView),
-      );
-      expect(view.axis, Axis.vertical);
-      // The bottom bar of the other sports is gone: its chips and buttons.
-      expect(find.byType(FilterChip), findsNothing);
-      expect(find.text('Override'), findsNothing);
-      expect(find.text('Force win'), findsNothing);
-      expect(find.text('FINISH SET'), findsNothing);
-      // Each score is drawn once, inside the court.
-      expect(find.text('4'), findsOneWidget);
-      expect(find.text('2'), findsOneWidget);
-    });
+        final view = tester.widget<PickleballCourtView>(
+          find.byType(PickleballCourtView),
+        );
+        expect(view.axis, Axis.vertical);
+        // The bottom bar of the other sports is gone: its chips and buttons.
+        expect(find.byType(FilterChip), findsNothing);
+        expect(find.text('Override'), findsNothing);
+        expect(find.text('Force win'), findsNothing);
+        expect(find.text('FINISH SET'), findsNothing);
+        // Each score is drawn once, inside the court.
+        expect(find.text('4'), findsOneWidget);
+        expect(find.text('2'), findsOneWidget);
+      },
+    );
 
     testWidgets('landscape: horizontal court', (tester) async {
       await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
@@ -190,7 +191,7 @@ void main() {
       );
 
       expect(find.byType(PickleballCourtPanel), findsOneWidget);
-      expect(find.byTooltip('Lose serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsNothing);
     });
   });
 
