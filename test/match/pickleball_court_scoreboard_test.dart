@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
@@ -714,5 +716,56 @@ void main() {
         }
       });
     }
+  });
+
+  group('TC-COURT-11 undo button sits between the two minus buttons', () {
+    for (final withServe in [true, false]) {
+      for (final upright in [false, true]) {
+        testWidgets(
+          '${upright ? 'upright' : 'sideways'}, change serve: $withServe',
+          (tester) async {
+            final spy = _Spy();
+            await _pump(
+              tester,
+              _board(
+                spy,
+                axis: upright ? Axis.vertical : Axis.horizontal,
+                withLoseServe: withServe,
+                score1: 3,
+                score2: 2,
+              ),
+              size: upright ? const Size(360, 640) : const Size(844, 390),
+            );
+
+            final undo = tester.getCenter(find.byTooltip('Undo'));
+            final minus1 = tester.getCenter(
+              find.byTooltip('Remove point for team 1'),
+            );
+            final minus2 = tester.getCenter(
+              find.byTooltip('Remove point for team 2'),
+            );
+            expect(
+              undo.dx,
+              inExclusiveRange(
+                math.min(minus1.dx, minus2.dx),
+                math.max(minus1.dx, minus2.dx),
+              ),
+            );
+            expect(tester.takeException(), isNull);
+
+            await tester.tap(find.byTooltip('Undo'));
+            expect(spy.calls, ['undo']);
+          },
+        );
+      }
+    }
+
+    testWidgets('a viewer without edit rights has no undo button', (
+      tester,
+    ) async {
+      await _pump(tester, _board(_Spy(), interactive: false));
+
+      expect(find.byTooltip('Undo'), findsNothing);
+    });
   });
 }

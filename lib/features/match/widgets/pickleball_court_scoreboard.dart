@@ -30,6 +30,9 @@ const _minMiddleHeight = 244.0;
 /// Upright phone: the score band between the halves never gets shorter.
 const _minBandHeight = 120.0;
 
+/// Narrowest upright bar that still fits UNDO beside the four +/- buttons.
+const _minUprightUndoWidth = 300.0;
+
 final _cellColor = courtTeam1.court;
 final _servingCellColor = courtTeam2.court;
 
@@ -111,6 +114,7 @@ class CourtScoreboard extends StatelessWidget {
             servingTeam: layout.servingTeam,
             onScoreChange: onScoreChange,
             onLoseServe: net.onLoseServe,
+            onUndo: net.menu.onUndo,
             startedAt: upright ? null : startedAt,
             upright: upright,
           ),
@@ -1069,7 +1073,8 @@ class _ScoreChip extends StatelessWidget {
   }
 }
 
-/// Clock, then + − of the left team, CHANGE SERVE, − + of the right team.
+/// Clock, then + − of the left team, UNDO and CHANGE SERVE, − + of the right
+/// team.
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.leftTeam,
@@ -1079,6 +1084,7 @@ class _BottomBar extends StatelessWidget {
     required this.servingTeam,
     required this.onScoreChange,
     required this.onLoseServe,
+    required this.onUndo,
     required this.startedAt,
     required this.upright,
   });
@@ -1090,6 +1096,9 @@ class _BottomBar extends StatelessWidget {
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
   final VoidCallback? onLoseServe;
+
+  /// Takes back the last change; null (button greyed) when there is none.
+  final VoidCallback? onUndo;
   final DateTime? startedAt;
 
   /// Upright phone: the buttons share the width instead of a fixed row.
@@ -1122,6 +1131,19 @@ class _BottomBar extends StatelessWidget {
     return plusFirst ? [plus, minus] : [minus, plus];
   }
 
+  /// Icon-only button between the two minus buttons. Hidden for a viewer
+  /// (no score buttons); greyed while there is nothing to take back.
+  Widget? _undoButton(AppLocalizations l10n, {double buttonWidth = 56}) {
+    if (onScoreChange == null) return null;
+    return _BarButton(
+      tooltip: l10n.pickleballCourtUndo,
+      color: _ink,
+      minWidth: buttonWidth,
+      onPressed: onUndo,
+      child: const Icon(Icons.undo_rounded, color: Colors.white, size: 24),
+    );
+  }
+
   /// [flexible]: no minimum width; the label scales down to the width it gets.
   Widget _serveButton(
     BuildContext context,
@@ -1150,12 +1172,43 @@ class _BottomBar extends StatelessWidget {
     );
   }
 
+  /// Upright row: the width left over goes to CHANGE SERVE (or a gap), so the
+  /// buttons keep their full height and the pairs sit at the two edges.
+  Widget _uprightRow(
+    BuildContext context,
+    AppLocalizations l10n, {
+    required bool withUndo,
+  }) {
+    final undo = withUndo ? _undoButton(l10n, buttonWidth: 40) : null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        spacing: 6,
+        children: [
+          ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
+          if (onLoseServe != null) ...[
+            ?undo,
+            Expanded(child: _serveButton(context, l10n, flexible: true)),
+          ] else ...[
+            // UNDO stays in the middle between the two pairs.
+            const Spacer(),
+            ?undo,
+            const Spacer(),
+          ],
+          ..._teamButtons(l10n, rightTeam, plusFirst: false, buttonWidth: 48),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final loseServe = onLoseServe;
+    final undo = _undoButton(l10n);
     final controls = <Widget>[
       ..._teamButtons(l10n, leftTeam, plusFirst: true),
+      ?undo,
       if (loseServe != null) _serveButton(context, l10n, flexible: false),
       ..._teamButtons(l10n, rightTeam, plusFirst: false),
     ];
@@ -1166,29 +1219,14 @@ class _BottomBar extends StatelessWidget {
       spacing: 10,
       children: controls,
     );
-    // Upright: the width left over goes to CHANGE SERVE (or a gap), so the
-    // buttons keep their full height and the pairs are justified to the edges.
     if (upright) {
       return SizedBox(
         height: 64,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            spacing: 6,
-            children: [
-              ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
-              // Without CHANGE SERVE the two pairs still sit at the two edges.
-              if (loseServe != null)
-                Expanded(child: _serveButton(context, l10n, flexible: true))
-              else
-                const Spacer(),
-              ..._teamButtons(
-                l10n,
-                rightTeam,
-                plusFirst: false,
-                buttonWidth: 48,
-              ),
-            ],
+        child: LayoutBuilder(
+          builder: (context, c) => _uprightRow(
+            context,
+            l10n,
+            withUndo: c.maxWidth >= _minUprightUndoWidth,
           ),
         ),
       );
