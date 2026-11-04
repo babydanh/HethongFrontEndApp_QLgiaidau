@@ -629,6 +629,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           : pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1),
       errorMessage: null,
     );
+    _scheduleLiveSync();
   }
 
   void pickleballSideOut() {
@@ -640,6 +641,24 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       ),
       errorMessage: null,
     );
+    _scheduleLiveSync();
+  }
+
+  /// Who serves, in the shape `_hydrateState` reads back: without it the serve
+  /// falls back to team 1 at server 2 whenever the match is opened again.
+  Map<String, dynamic>? _pickleballLiveState() {
+    final pb = state.pickleball;
+    if (pb == null ||
+        state.isOpenScoring ||
+        state.config.scoringModel != SportScoringModel.pickleballSideOut) {
+      return null;
+    }
+    return {
+      'sideOutState': {
+        'servingTeam': pb.isTeam1Serving ? 1 : 2,
+        'serverNumber': pb.serverNumber,
+      },
+    };
   }
 
   void _checkPickleballGameEnd() {
@@ -1394,6 +1413,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     Map<String, dynamic>? liveState;
     if (rally != null) {
       sets.add(SetScoreData(score1: rally.currentP1, score2: rally.currentP2));
+      liveState = _pickleballLiveState();
     } else if (tennis != null) {
       final hasActiveSet = sets.isNotEmpty && !sets.last.isFinished;
       if (!hasActiveSet &&

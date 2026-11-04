@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -17,6 +19,28 @@ const _config = SportConfig(
   tiebreakAt: 0,
 );
 
+/// Records what the panel writes to the server.
+class _Writes extends Fake implements IMatchRepository {
+  final extras = <Map<String, dynamic>?>[];
+
+  @override
+  Future<void> updateScoreDetails(
+    String tournamentId,
+    String matchId, {
+    required int p1SetsWon,
+    required int p2SetsWon,
+    required List<SetScoreData> scoreDetails,
+    Map<String, dynamic>? scoreDetailsExtras,
+    String? winnerId,
+    String? overrideReason,
+    int? expectedRevision,
+    bool useLiteParticipantAccess = false,
+    ({String date, String? time})? playedAt,
+  }) async {
+    extras.add(scoreDetailsExtras);
+  }
+}
+
 /// The real score panel logic, started from a state the test chooses.
 class _Panel extends ScorePanelNotifier {
   _Panel(super.arg, this.initial);
@@ -31,9 +55,11 @@ ProviderContainer _container({
   PickleballServeState? serve,
   int score1 = 0,
   int score2 = 0,
+  _Writes? writes,
 }) {
   final container = ProviderContainer(
     overrides: [
+      matchRepositoryProvider.overrideWithValue(writes ?? _Writes()),
       scorePanelNotifierProvider.overrideWith2(
         (arg) => _Panel(
           arg,
@@ -47,6 +73,9 @@ ProviderContainer _container({
     ],
   );
   addTearDown(container.dispose);
+  // The live sync fires 250ms after a change; let it land while the container
+  // is still alive (tear-downs run last-in first-out).
+  addTearDown(() => Future<void>.delayed(const Duration(milliseconds: 300)));
   container.listen(scorePanelNotifierProvider(_params), (_, _) {});
   return container;
 }
@@ -142,6 +171,51 @@ void main() {
       expect(state.finishedSets, hasLength(1));
       expect(state.rally?.currentP1, 0);
       expect(state.pickleball!.serverNumber, 2);
+    });
+  });
+
+  group('TC-SERVE-02 who serves survives closing the screen', () {
+    // The reader (`liveState.sideOutState`) turns this back into the serve
+    // state when the match is opened again.
+    Future<Map<String, dynamic>?> lastSideOut(_Writes writes) async {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      final liveState = writes.extras.last?['liveState'] as Map?;
+      final raw = liveState?['sideOutState'];
+      return raw == null ? null : Map<String, dynamic>.from(raw as Map);
+    }
+
+    test('a point is written together with the serving team and number', () async {
+      final writes = _Writes();
+      final c = _container(
+        serve: const PickleballServeState(
+          isTeam1Serving: true,
+          serverNumber: 2,
+        ),
+        score1: 3,
+        score2: 1,
+        writes: writes,
+      );
+
+      _panel(c).pickleballAwardPoint(true);
+
+      expect(await lastSideOut(writes), {'servingTeam': 1, 'serverNumber': 2});
+    });
+
+    test('a fault with no point after it is written too', () async {
+      final writes = _Writes();
+      final c = _container(
+        serve: const PickleballServeState(
+          isTeam1Serving: true,
+          serverNumber: 2,
+        ),
+        score1: 3,
+        score2: 1,
+        writes: writes,
+      );
+
+      _panel(c).pickleballSwitchServer();
+
+      expect(await lastSideOut(writes), {'servingTeam': 2, 'serverNumber': 1});
     });
   });
 }
