@@ -761,7 +761,7 @@
   "pickleballCourtCallLabel": "Call",
   "pickleballCourtRightCell": "Right",
   "pickleballCourtLeftCell": "Left",
-  "pickleballCourtSaveError": "Could not save the court. Server settings were kept.",
+  "pickleballCourtSaveError": "Could not save to the server. Your change is kept on this device.",
   "pickleballCourtMenu": "More actions",
   "pickleballCourtFinishSet": "Finish set",
   "pickleballCourtPickWinner": "Pick the winner",

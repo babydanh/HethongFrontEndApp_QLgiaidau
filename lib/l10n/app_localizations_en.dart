@@ -2148,7 +2148,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pickleballCourtSaveError =>
-      'Could not save the court. Server settings were kept.';
+      'Could not save to the server. Your change is kept on this device.';
 
   @override
   String get pickleballCourtMenu => 'More actions';

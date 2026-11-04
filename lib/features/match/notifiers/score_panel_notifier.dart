@@ -612,7 +612,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
         currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
       ),
-      pickleball: pb.copyWith(serverNumber: 1),
+      // A point keeps the same server: server 2 stays server 2 until a fault.
+      pickleball: pb,
       errorMessage: null,
     );
     _checkPickleballGameEnd();
@@ -660,6 +661,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           ),
         ],
         rally: const RallySetState(),
+        // A new game opens with a single fault for the serving team (x-y-2).
+        pickleball: (state.pickleball ?? const PickleballServeState())
+            .copyWith(serverNumber: 2),
       );
       _syncSetsToBackend();
     }

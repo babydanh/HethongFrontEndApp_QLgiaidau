@@ -88,8 +88,9 @@ final pickleballCourtContextProvider = Provider.autoDispose
     });
 
 /// Trạng thái sơ đồ sân của một trận. Nguồn sự thật là server
-/// (`scoreDetails.courtState`). Thay đổi cài đặt áp dụng lạc quan rồi ghi
-/// server; ghi lỗi thì quay về trạng thái server đã xác nhận.
+/// (`scoreDetails.courtState`). Thay đổi cài đặt áp dụng ngay trên máy rồi ghi
+/// server; ghi lỗi thì vẫn giữ thay đổi trên máy (đổi chỗ không phụ thuộc mạng
+/// hay server) và thử ghi lại ở lần ghi kế tiếp.
 class PickleballCourtNotifier extends Notifier<CourtState> {
   PickleballCourtNotifier(this._arg);
 
@@ -98,6 +99,10 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
   int _pendingWrites = 0;
   int _writeSeq = 0;
   bool _disposed = false;
+
+  /// A local change the server has not confirmed yet. While set, a server
+  /// refresh must not overwrite it.
+  bool _unsynced = false;
 
   /// Lần đồng bộ đầu tiên (mở màn): chỉ suy lượt tại chỗ, không ghi server.
   bool _hasSynced = false;
@@ -115,7 +120,9 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
       final match = next.value;
       if (match == null) return;
       _server = _courtFromScoreDetails(match.scoreDetails);
-      if (_pendingWrites == 0) state = _displayFromServer(_server, state);
+      if (_pendingWrites == 0 && !_unsynced) {
+        state = _displayFromServer(_server, state);
+      }
     });
     return _server;
   }
@@ -146,7 +153,8 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
       state = reconciled;
       return null;
     }
-    if (!needsServerWrite(state, reconciled)) return null;
+    // An unconfirmed local change is retried on the next automatic sync.
+    if (!_unsynced && !needsServerWrite(state, reconciled)) return null;
     return _persist(reconciled);
   }
 
@@ -164,12 +172,12 @@ class PickleballCourtNotifier extends Notifier<CourtState> {
         next.toJson(),
       );
       _server = _courtFromScoreDetails(saved.scoreDetails);
+      if (seq == _writeSeq) _unsynced = false;
       if (seq == _writeSeq && !_disposed) state = _server;
       return null;
     } catch (error) {
-      if (seq == _writeSeq && !_disposed) {
-        state = _displayFromServer(_server, state);
-      }
+      // Keep the change on this device; only the server copy is behind.
+      if (seq == _writeSeq) _unsynced = true;
       return error;
     } finally {
       _pendingWrites--;

@@ -763,7 +763,7 @@
   "pickleballCourtCallLabel": "Lời hô",
   "pickleballCourtRightCell": "Ô phải",
   "pickleballCourtLeftCell": "Ô trái",
-  "pickleballCourtSaveError": "Không lưu được sơ đồ sân. Đã giữ cài đặt của máy chủ.",
+  "pickleballCourtSaveError": "Chưa lưu được lên máy chủ. Thay đổi vẫn giữ trên máy này.",
   "pickleballCourtMenu": "Thêm thao tác",
   "pickleballCourtFinishSet": "Chốt set",
   "pickleballCourtPickWinner": "Chọn đội thắng",

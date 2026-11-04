@@ -431,7 +431,12 @@ class DioClient {
   static String _serverMessage(DioException error) {
     final body = error.response?.data;
     final message = body is Map ? body['message'] : null;
-    final text = message is String ? message : '-';
+    final text = switch (message) {
+      final String text => text,
+      // Validation errors arrive as a list of short reasons.
+      final List<dynamic> list => list.join('; '),
+      _ => '-',
+    };
     return text.length > 80 ? text.substring(0, 80) : text;
   }
 
@@ -474,7 +479,8 @@ class DioClient {
       '[DioClient] '
       '[HTTP] error ${options.method} ${_routeTemplate(options)} '
       'status=${err.response?.statusCode ?? 'network'} '
-      'duration_ms=${_durationMs(options)} type=${err.type.name}',
+      'duration_ms=${_durationMs(options)} type=${err.type.name} '
+      'server_message=${_serverMessage(err)}',
     );
   }
 
