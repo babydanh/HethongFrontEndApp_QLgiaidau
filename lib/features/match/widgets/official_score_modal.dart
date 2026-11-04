@@ -290,8 +290,9 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
 
                 // Dải hiển thị điểm các set đã chốt ở đầu màn hình
                 if (!compactHeader) ...[
-                  _setHistoryStrip(params, colors),
-                  const Divider(height: 1, thickness: 1),
+                  _setHistoryStrip(params, colors, hideWhenEmpty: courtMode),
+                  if (!courtMode || hasFinishedSets)
+                    const Divider(height: 1, thickness: 1),
                 ],
 
 
@@ -777,13 +778,14 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     ({String tournamentId, String matchId}) params,
     AppColorsExtension colors, {
     bool inline = false,
+    bool hideWhenEmpty = false,
   }) {
     return Consumer(
                   builder: (context, ref, _) {
                     final state = ref.watch(scorePanelNotifierProvider(params));
                     final historySets = state.finishedSets;
                     if (historySets.isEmpty) {
-                      if (inline) return const SizedBox.shrink();
+                      if (inline || hideWhenEmpty) return const SizedBox.shrink();
                       return Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -878,11 +880,9 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
         : kind == SportRuleKind.tableTennis
         ? TableTennisScorePanel(params: params, isReadOnly: false)
         : RallyScorePanel(params: params, isReadOnly: false);
-    // The sideways pickleball scoreboard runs edge to edge; only the warning
-    // below keeps a side margin.
-    final sideways =
-        kind == SportRuleKind.pickleball &&
-        MediaQuery.orientationOf(context) == Orientation.landscape;
+    // The pickleball court (sideways or upright) runs edge to edge; only the
+    // warning below keeps a side margin.
+    final sideways = kind == SportRuleKind.pickleball;
     return Padding(
       padding: sideways
           ? EdgeInsets.zero

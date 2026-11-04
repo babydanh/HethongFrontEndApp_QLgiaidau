@@ -367,6 +367,17 @@ void main() {
       );
     });
 
+    testWidgets('portrait: no empty-sets row, court runs edge to edge', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL');
+
+      expect(find.text('Chưa chốt set nào'), findsNothing);
+      final court = tester.getRect(find.byType(PickleballCourtView));
+      expect(court.left, 0);
+      expect(court.right, tester.getSize(find.byType(Scaffold).first).width);
+    });
+
     testWidgets('portrait keeps the strip above the tabs', (tester) async {
       await _pump(
         tester,
