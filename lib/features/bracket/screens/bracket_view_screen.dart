@@ -11,6 +11,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
@@ -459,13 +461,20 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
 
                   final effectiveIsLite =
                       widget.isLite || tournament?.isLite == true;
+                  // A global ADMIN role must not leak scoring rights across
+                  // tournaments: only the creator admin keeps them.
+                  final adminLocked = isAdminScoringLocked(
+                    userId: ref.watch(userProfileProvider).value?.id,
+                    isAdmin: auth.role == UserRole.admin,
+                    createdBy: tournament?.creatorId,
+                  );
+                  final adminMayScore =
+                      auth.role == UserRole.admin && !adminLocked;
                   final canActAsReferee =
-                      effectiveIsLite ||
-                      auth.role == UserRole.admin ||
-                      widget.isReferee;
+                      effectiveIsLite || adminMayScore || widget.isReferee;
                   final canScoreMatch =
-                      auth.role == UserRole.admin ||
-                      widget.canEditBracket ||
+                      adminMayScore ||
+                      (widget.canEditBracket && !adminLocked) ||
                       widget.isReferee;
                   final isReadOnlyMode =
                       !effectiveIsLite && auth.role == UserRole.viewer;

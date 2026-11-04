@@ -18,3 +18,16 @@ bool canControlTournamentLive({
   if (isAdmin) return false;
   return scoreAccess == true;
 }
+
+/// True when a signed-in admin must not score on a whole screen: the
+/// tournament is not theirs. Fails closed while the creator is unknown. A
+/// referee-only exception is per match, so callers keep `isReferee` separate.
+/// Mirrors the Web rule `isAdminScoringLocked`.
+bool isAdminScoringLocked({
+  required String? userId,
+  required bool isAdmin,
+  required String? createdBy,
+}) {
+  if (userId == null || userId.isEmpty || !isAdmin) return false;
+  return userId != createdBy;
+}
