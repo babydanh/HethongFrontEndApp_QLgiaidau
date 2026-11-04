@@ -218,7 +218,7 @@ void main() {
   });
 
   group('pickleball header', () {
-    for (final size in const [Size(800, 360), Size(390, 800)]) {
+    for (final size in const [Size(640, 360), Size(390, 800)]) {
       testWidgets('no names title; info and close sit on the tab row $size', (
         tester,
       ) async {
@@ -236,6 +236,41 @@ void main() {
         expect(tabs.width, greaterThan(size.width * 0.4));
       });
     }
+
+    testWidgets('wide landscape: tabs, info and close sit right of END', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      expect(find.textContaining('VS'), findsNothing);
+      final end = tester.getRect(find.text('END'));
+      final tabs = tester.getRect(find.byType(TabBar));
+      final info = tester.getCenter(find.byIcon(Icons.info_outline_rounded));
+      final close = tester.getCenter(find.byIcon(Icons.close_rounded));
+      // Same row as END, no row of their own above the court.
+      expect((tabs.center.dy - end.center.dy).abs(), lessThan(12));
+      expect(tabs.left, greaterThan(end.right));
+      expect(info.dx, greaterThan(tabs.center.dx));
+      expect(close.dx, greaterThan(info.dx));
+      expect(close.dx, lessThan(800));
+    });
+
+    testWidgets('wide landscape: tabs, info, close and END all take taps', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+      // The overlay row sits on top of the court: nothing may be covered.
+      for (final target in [
+        find.text('Scoring'),
+        find.text('Penalties'),
+        find.text('END'),
+        find.byIcon(Icons.info_outline_rounded),
+        find.byIcon(Icons.close_rounded),
+      ]) {
+        expect(target.hitTestable(), findsOneWidget);
+      }
+    });
 
     testWidgets('landscape: finished sets share the tab row', (tester) async {
       await _pump(

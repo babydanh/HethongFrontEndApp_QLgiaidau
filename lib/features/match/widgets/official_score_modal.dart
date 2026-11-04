@@ -155,6 +155,10 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
             // A short landscape screen puts the finished sets on the title row.
             final compactHeader =
                 courtMode && orientation == Orientation.landscape;
+            // A wide landscape screen drops the tab row: the tabs sit on the
+            // END row of the court, to the right of it.
+            final overlayTabs =
+                compactHeader && MediaQuery.sizeOf(context).width >= 760;
             final hasFinishedSets = ref.watch(
               scorePanelNotifierProvider(
                 params,
@@ -202,6 +206,28 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                   },
                 ),
             ];
+            final tabBar = TabBar(
+              isScrollable: overlayTabs,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelPadding: EdgeInsets.symmetric(
+                horizontal: overlayTabs ? 8 : 12,
+              ),
+              labelStyle: TextStyle(
+                fontSize: overlayTabs ? 12 : 13,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontSize: overlayTabs ? 12 : 13,
+                fontWeight: FontWeight.w600,
+              ),
+              labelColor: AppTheme.primary,
+              unselectedLabelColor: colors.textMuted,
+              indicatorColor: AppTheme.primary,
+              tabs: [
+                Tab(text: l10n.officialScoreScoringTab),
+                Tab(text: l10n.officialScorePenaltyTab),
+              ],
+            );
             Widget content = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -250,30 +276,11 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                     length: 2,
                     child: Column(
                       children: [
+                        if (!overlayTabs)
                         SizedBox(
                           height: 38,
                           child: Row(children: [
-                          Expanded(flex: 2, child: TabBar(
-                            indicatorSize: TabBarIndicatorSize.label,
-                            labelPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                            ),
-                            labelStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            unselectedLabelStyle: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            labelColor: AppTheme.primary,
-                            unselectedLabelColor: colors.textMuted,
-                            indicatorColor: AppTheme.primary,
-                            tabs: [
-                              Tab(text: l10n.officialScoreScoringTab),
-                              Tab(text: l10n.officialScorePenaltyTab),
-                            ],
-                          )),
+                          Expanded(flex: 2, child: tabBar),
                           if (courtMode) ...[
                             if (compactHeader && hasFinishedSets)
                               Expanded(
@@ -287,7 +294,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                           ]),
                         ),
                         Expanded(
-                          child: TabBarView(
+                          child: Stack(children: [
+                          TabBarView(
                             children: [
                               _buildScoreTab(
                                 context,
@@ -295,16 +303,46 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                                 kind,
                                 isLite,
                               ),
-                              _buildFoulTab(
-                                context,
-                                strategy,
-                                config,
-                                kind,
-                                colors,
-                                l10n,
+                              Padding(
+                                // Keep the foul page clear of the overlay row.
+                                padding: EdgeInsets.only(
+                                  top: overlayTabs ? 64 : 0,
+                                ),
+                                child: _buildFoulTab(
+                                  context,
+                                  strategy,
+                                  config,
+                                  kind,
+                                  colors,
+                                  l10n,
+                                ),
                               ),
                             ],
                           ),
+                          if (overlayTabs)
+                            Positioned(
+                              top: 8,
+                              left: 12,
+                              right: 12,
+                              height: 56,
+                              child: Row(
+                                children: [
+                                  if (hasFinishedSets)
+                                    SizedBox(
+                                      width: 240,
+                                      child: _setHistoryStrip(
+                                        params,
+                                        colors,
+                                        inline: true,
+                                      ),
+                                    ),
+                                  const Spacer(),
+                                  SizedBox(width: 240, child: tabBar),
+                                  ...infoAndClose,
+                                ],
+                              ),
+                            ),
+                          ]),
                         ),
                       ],
                     ),
