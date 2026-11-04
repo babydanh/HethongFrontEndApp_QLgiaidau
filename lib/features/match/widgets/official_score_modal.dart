@@ -160,9 +160,52 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 params,
               ).select((state) => state.finishedSets.isNotEmpty),
             );
+            // Info and close live on the title row, or on the tab row of the
+            // pickleball court, whose names are already on the court.
+            final infoAndClose = <Widget>[
+                IconButton(
+                  icon: Icon(
+                    Icons.info_outline_rounded,
+                    size: 19,
+                    color: AppTheme.primary,
+                  ),
+                  tooltip: l10n.matchMatchInfo,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 30,
+                    minHeight: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    _showMatchInfoDialog(
+                      context,
+                      widget.match,
+                      config,
+                      kind,
+                      colors,
+                      l10n,
+                      isLite: isLite,
+                    );
+                  },
+                ),
+                const SizedBox(width: 2),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, size: 19),
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 30,
+                    minHeight: 30,
+                  ),
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+            ];
             Widget content = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (!courtMode) ...[
                 // 1. TOP HEADER BAR: Match Title & Info Popup Button
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -186,49 +229,13 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                           Expanded(
                             child: _setHistoryStrip(params, colors, inline: true),
                           ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.info_outline_rounded,
-                            size: 19,
-                            color: AppTheme.primary,
-                          ),
-                          tooltip: l10n.matchMatchInfo,
-                          visualDensity: VisualDensity.compact,
-                          constraints: const BoxConstraints(
-                            minWidth: 30,
-                            minHeight: 30,
-                          ),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            _showMatchInfoDialog(
-                              context,
-                              widget.match,
-                              config,
-                              kind,
-                              colors,
-                              l10n,
-                              isLite: isLite,
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 2),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 19),
-                          visualDensity: VisualDensity.compact,
-                          constraints: const BoxConstraints(
-                            minWidth: 30,
-                            minHeight: 30,
-                          ),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
+                        ...infoAndClose,
                       ],
                     ),
                   ),
                 ),
                 const Divider(height: 1, thickness: 1),
+                ],
 
                 // Dải hiển thị điểm các set đã chốt ở đầu màn hình
                 if (!compactHeader) ...[
@@ -245,7 +252,8 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                       children: [
                         SizedBox(
                           height: 38,
-                          child: TabBar(
+                          child: Row(children: [
+                          Expanded(flex: 2, child: TabBar(
                             indicatorSize: TabBarIndicatorSize.label,
                             labelPadding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -265,7 +273,18 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                               Tab(text: l10n.officialScoreScoringTab),
                               Tab(text: l10n.officialScorePenaltyTab),
                             ],
-                          ),
+                          )),
+                          if (courtMode) ...[
+                            if (compactHeader && hasFinishedSets)
+                              Expanded(
+                                flex: 3,
+                                child: _setHistoryStrip(params, colors, inline: true),
+                              ),
+                            const SizedBox(width: 6),
+                            ...infoAndClose,
+                            const SizedBox(width: 10),
+                          ],
+                          ]),
                         ),
                         Expanded(
                           child: TabBarView(

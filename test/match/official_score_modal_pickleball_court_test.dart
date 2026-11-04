@@ -217,8 +217,27 @@ void main() {
     );
   });
 
-  group('landscape header', () {
-    testWidgets('finished sets share the title row', (tester) async {
+  group('pickleball header', () {
+    for (final size in const [Size(800, 360), Size(390, 800)]) {
+      testWidgets('no names title; info and close sit on the tab row $size', (
+        tester,
+      ) async {
+        await _pump(tester, sportKey: 'PICKLEBALL', size: size);
+
+        // The names are already on the court, so no title row repeats them.
+        expect(find.textContaining('VS'), findsNothing);
+        final tabs = tester.getRect(find.byType(TabBar));
+        final info = tester.getCenter(find.byIcon(Icons.info_outline_rounded));
+        final close = tester.getCenter(find.byIcon(Icons.close_rounded));
+        expect((info.dy - tabs.center.dy).abs(), lessThan(20));
+        expect((close.dy - tabs.center.dy).abs(), lessThan(20));
+        expect(info.dx, lessThan(close.dx));
+        // The tabs keep a usable width next to the two buttons.
+        expect(tabs.width, greaterThan(size.width * 0.4));
+      });
+    }
+
+    testWidgets('landscape: finished sets share the tab row', (tester) async {
       await _pump(
         tester,
         sportKey: 'PICKLEBALL',
@@ -229,26 +248,14 @@ void main() {
       );
 
       expect(find.text('Set 1: 11-7'), findsOneWidget);
-      // No second strip: the sets are on the title row only.
-      final title = tester.getCenter(find.textContaining('VS')).dy;
+      final tabs = tester.getRect(find.byType(TabBar));
       expect(
-        (tester.getCenter(find.text('Set 1: 11-7')).dy - title).abs(),
+        (tester.getCenter(find.text('Set 1: 11-7')).dy - tabs.center.dy).abs(),
         lessThan(20),
       );
     });
 
-    testWidgets('without finished sets the title keeps the whole row', (
-      tester,
-    ) async {
-      await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
-
-      final title = tester.getRect(find.textContaining('VS'));
-      final info = tester.getCenter(find.byIcon(Icons.info_outline_rounded));
-      // No empty half-row reserved for the sets: the title may use the room.
-      expect(title.right, greaterThan(info.dx - 120));
-    });
-
-    testWidgets('portrait keeps the strip under the title', (tester) async {
+    testWidgets('portrait keeps the strip above the tabs', (tester) async {
       await _pump(
         tester,
         sportKey: 'PICKLEBALL',
@@ -257,10 +264,9 @@ void main() {
         ],
       );
 
-      final title = tester.getCenter(find.textContaining('VS')).dy;
       expect(
         tester.getCenter(find.text('Set 1: 11-7')).dy,
-        greaterThan(title + 15),
+        lessThan(tester.getRect(find.byType(TabBar)).top),
       );
     });
   });
