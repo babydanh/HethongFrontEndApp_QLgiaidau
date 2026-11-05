@@ -30,6 +30,6 @@ void main() {
       '/admin/disputes',
       '/admin/transactions',
       '/admin/verification',
-    ]);
+    ], settle: const Duration(seconds: 15));
   });
 }
