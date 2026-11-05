@@ -89,11 +89,15 @@ class Chup {
   }
 
   /// Mở [route] rồi chụp. [maxScrolls] giới hạn số ảnh cuộn cho mỗi màn/tab.
-  Future<void> page(String route, {int maxScrolls = 2}) async {
+  Future<void> page(
+    String route, {
+    int maxScrolls = 2,
+    Duration settle = const Duration(seconds: 5),
+  }) async {
     final slug = _slug(route);
     try {
       container.read(routerProvider).go(route);
-      await chupWait(tester, const Duration(seconds: 5));
+      await chupWait(tester, settle);
       await snap('$slug-dau');
       await _scrollShots(slug, maxScrolls);
 
@@ -116,9 +120,13 @@ class Chup {
     }
   }
 
-  Future<void> pages(List<String> routes, {int maxScrolls = 2}) async {
+  Future<void> pages(
+    List<String> routes, {
+    int maxScrolls = 2,
+    Duration settle = const Duration(seconds: 5),
+  }) async {
     for (final route in routes) {
-      await page(route, maxScrolls: maxScrolls);
+      await page(route, maxScrolls: maxScrolls, settle: settle);
     }
     debugPrintSynchronously(
       'CHUP-XONG $prefix: $_count ảnh, ${failures.length} trang lỗi '
