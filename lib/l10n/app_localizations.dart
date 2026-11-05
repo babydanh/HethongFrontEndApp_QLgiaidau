@@ -33234,6 +33234,138 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{group} · Lượt {leg}'**
   String groupStage_sheetTitle(String group, int leg);
+
+  /// No description provided for @pairMoveOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi VĐV giữa các cặp'**
+  String get pairMoveOpen;
+
+  /// No description provided for @pairMoveSheetTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi VĐV giữa các cặp'**
+  String get pairMoveSheetTitle;
+
+  /// No description provided for @pairMoveHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ một VĐV rồi kéo thả vào ô của cặp khác, vào ô trống hoặc vào khay chờ ghép. Hoặc bấm ⋮ để chọn nơi chuyển.'**
+  String get pairMoveHint;
+
+  /// No description provided for @pairMovePairLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cặp {n}'**
+  String pairMovePairLabel(int n);
+
+  /// No description provided for @pairMoveWaitingLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ ghép'**
+  String get pairMoveWaitingLabel;
+
+  /// No description provided for @pairMoveEmptySlot.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ô trống'**
+  String get pairMoveEmptySlot;
+
+  /// No description provided for @pairMoveTrayLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khay chờ ghép: thả vào đây để tách VĐV khỏi cặp'**
+  String get pairMoveTrayLabel;
+
+  /// No description provided for @pairMoveMenuMoveTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyển sang…'**
+  String get pairMoveMenuMoveTo;
+
+  /// No description provided for @pairMoveMenuRemove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ khỏi cặp'**
+  String get pairMoveMenuRemove;
+
+  /// No description provided for @pairMovePickerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyển {name} sang…'**
+  String pairMovePickerTitle(String name);
+
+  /// No description provided for @pairMovePickerTray.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khay chờ ghép (tách khỏi cặp)'**
+  String get pairMovePickerTray;
+
+  /// No description provided for @pairMovePickerSwap.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cặp {n}: đổi chỗ với {name}'**
+  String pairMovePickerSwap(int n, String name);
+
+  /// No description provided for @pairMovePickerEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cặp {n}: vào ô trống'**
+  String pairMovePickerEmpty(int n);
+
+  /// No description provided for @pairMoveRemoveConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ khỏi cặp'**
+  String get pairMoveRemoveConfirmTitle;
+
+  /// No description provided for @pairMoveRemoveConfirmMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ {name} khỏi cặp? {name} sẽ bị loại khỏi giải, người còn lại quay về hàng chờ ghép.'**
+  String pairMoveRemoveConfirmMessage(String name);
+
+  /// No description provided for @pairMoveRemoveConfirmAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ khỏi cặp'**
+  String get pairMoveRemoveConfirmAction;
+
+  /// No description provided for @pairMoveMoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đổi VĐV.'**
+  String get pairMoveMoved;
+
+  /// No description provided for @pairMoveRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gỡ VĐV khỏi cặp.'**
+  String get pairMoveRemoved;
+
+  /// No description provided for @pairMoveConflict.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách vừa thay đổi. Đã tải lại, hãy thử lại.'**
+  String get pairMoveConflict;
+
+  /// No description provided for @pairMoveFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đổi được VĐV. Kiểm tra mạng rồi thử lại.'**
+  String get pairMoveFailed;
+
+  /// No description provided for @pairMoveLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách cặp.'**
+  String get pairMoveLoadFailed;
+
+  /// No description provided for @pairMoveEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có cặp hay VĐV nào để đổi.'**
+  String get pairMoveEmpty;
 }
 
 class _AppLocalizationsDelegate

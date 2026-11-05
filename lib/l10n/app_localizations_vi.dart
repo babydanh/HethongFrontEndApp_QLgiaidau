@@ -18447,4 +18447,83 @@ class AppLocalizationsVi extends AppLocalizations {
   String groupStage_sheetTitle(String group, int leg) {
     return '$group · Lượt $leg';
   }
+
+  @override
+  String get pairMoveOpen => 'Đổi VĐV giữa các cặp';
+
+  @override
+  String get pairMoveSheetTitle => 'Đổi VĐV giữa các cặp';
+
+  @override
+  String get pairMoveHint =>
+      'Giữ một VĐV rồi kéo thả vào ô của cặp khác, vào ô trống hoặc vào khay chờ ghép. Hoặc bấm ⋮ để chọn nơi chuyển.';
+
+  @override
+  String pairMovePairLabel(int n) {
+    return 'Cặp $n';
+  }
+
+  @override
+  String get pairMoveWaitingLabel => 'Chờ ghép';
+
+  @override
+  String get pairMoveEmptySlot => 'Ô trống';
+
+  @override
+  String get pairMoveTrayLabel =>
+      'Khay chờ ghép: thả vào đây để tách VĐV khỏi cặp';
+
+  @override
+  String get pairMoveMenuMoveTo => 'Chuyển sang…';
+
+  @override
+  String get pairMoveMenuRemove => 'Gỡ khỏi cặp';
+
+  @override
+  String pairMovePickerTitle(String name) {
+    return 'Chuyển $name sang…';
+  }
+
+  @override
+  String get pairMovePickerTray => 'Khay chờ ghép (tách khỏi cặp)';
+
+  @override
+  String pairMovePickerSwap(int n, String name) {
+    return 'Cặp $n: đổi chỗ với $name';
+  }
+
+  @override
+  String pairMovePickerEmpty(int n) {
+    return 'Cặp $n: vào ô trống';
+  }
+
+  @override
+  String get pairMoveRemoveConfirmTitle => 'Gỡ khỏi cặp';
+
+  @override
+  String pairMoveRemoveConfirmMessage(String name) {
+    return 'Gỡ $name khỏi cặp? $name sẽ bị loại khỏi giải, người còn lại quay về hàng chờ ghép.';
+  }
+
+  @override
+  String get pairMoveRemoveConfirmAction => 'Gỡ khỏi cặp';
+
+  @override
+  String get pairMoveMoved => 'Đã đổi VĐV.';
+
+  @override
+  String get pairMoveRemoved => 'Đã gỡ VĐV khỏi cặp.';
+
+  @override
+  String get pairMoveConflict =>
+      'Danh sách vừa thay đổi. Đã tải lại, hãy thử lại.';
+
+  @override
+  String get pairMoveFailed => 'Không đổi được VĐV. Kiểm tra mạng rồi thử lại.';
+
+  @override
+  String get pairMoveLoadFailed => 'Không tải được danh sách cặp.';
+
+  @override
+  String get pairMoveEmpty => 'Chưa có cặp hay VĐV nào để đổi.';
 }

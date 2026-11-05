@@ -18518,4 +18518,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupStage_sheetTitle(String group, int leg) {
     return '$group · Leg $leg';
   }
+
+  @override
+  String get pairMoveOpen => 'Move athletes between pairs';
+
+  @override
+  String get pairMoveSheetTitle => 'Move athletes between pairs';
+
+  @override
+  String get pairMoveHint =>
+      'Press and hold an athlete, then drop onto another pair\'s slot, an empty slot or the waiting tray. Or tap ⋮ to choose where to move.';
+
+  @override
+  String pairMovePairLabel(int n) {
+    return 'Pair $n';
+  }
+
+  @override
+  String get pairMoveWaitingLabel => 'Waiting';
+
+  @override
+  String get pairMoveEmptySlot => 'Empty slot';
+
+  @override
+  String get pairMoveTrayLabel =>
+      'Waiting tray: drop here to split the athlete from the pair';
+
+  @override
+  String get pairMoveMenuMoveTo => 'Move to…';
+
+  @override
+  String get pairMoveMenuRemove => 'Remove from pair';
+
+  @override
+  String pairMovePickerTitle(String name) {
+    return 'Move $name to…';
+  }
+
+  @override
+  String get pairMovePickerTray => 'Waiting tray (split from pair)';
+
+  @override
+  String pairMovePickerSwap(int n, String name) {
+    return 'Pair $n: swap with $name';
+  }
+
+  @override
+  String pairMovePickerEmpty(int n) {
+    return 'Pair $n: take the empty slot';
+  }
+
+  @override
+  String get pairMoveRemoveConfirmTitle => 'Remove from pair';
+
+  @override
+  String pairMoveRemoveConfirmMessage(String name) {
+    return 'Remove $name from the pair? $name will be removed from the tournament and the other athlete returns to the waiting list.';
+  }
+
+  @override
+  String get pairMoveRemoveConfirmAction => 'Remove from pair';
+
+  @override
+  String get pairMoveMoved => 'Athlete moved.';
+
+  @override
+  String get pairMoveRemoved => 'Athlete removed from the pair.';
+
+  @override
+  String get pairMoveConflict =>
+      'The list just changed. It was reloaded, please try again.';
+
+  @override
+  String get pairMoveFailed =>
+      'Could not move the athlete. Check your connection and try again.';
+
+  @override
+  String get pairMoveLoadFailed => 'Could not load the pairs.';
+
+  @override
+  String get pairMoveEmpty => 'There are no pairs or athletes to move yet.';
 }
