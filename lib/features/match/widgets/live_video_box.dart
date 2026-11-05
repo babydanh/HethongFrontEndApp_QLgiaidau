@@ -46,9 +46,13 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     this.fill = false,
     this.fullscreen = false,
     this.onToggleFullscreen,
+    this.showLiveDot = false,
   });
 
   final String matchId;
+
+  /// Forwarded to the live player: red LIVE dot beside the sound button.
+  final bool showLiveDot;
 
   /// Fill the parent's bounded height (landscape fullscreen) instead of sizing
   /// by aspect ratio.
@@ -90,6 +94,7 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         fill: widget.fill,
         fullscreen: widget.fullscreen,
         onToggleFullscreen: widget.onToggleFullscreen,
+        showLiveDot: widget.showLiveDot,
       );
     }
 

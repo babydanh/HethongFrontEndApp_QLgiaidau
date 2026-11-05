@@ -1870,50 +1870,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  /// Scorer-only row under the video: scoreboard toggle + H2H / bracket chips.
-  Widget _buildScorerControls(MatchModel match, String tournamentId) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Container(
-      key: const ValueKey('live-scorer-controls'),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        border: Border(bottom: BorderSide(color: colors.border)),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: l10n.liveScoreboardToggle,
-            icon: Icon(
-              Icons.leaderboard_outlined,
-              color: match.scoreboardVisible
-                  ? AppTheme.primary
-                  : colors.textMuted,
-            ),
-            onPressed: () => _toggleScoreboardVisibility(match),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: LiveOverlayToggleChips(
-                h2hVisible: match.h2hOverlayVisible,
-                bracketVisible: match.bracketOverlayVisible,
-                bracketAvailable: tournamentId.isNotEmpty,
-                matchEnded: match.isCompleted,
-                pendingKind: _pendingOverlayKind,
-                onToggle: (kind, visible) =>
-                    _setOverlayVisibility(match, kind, visible: visible),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildH2hOverlay(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
     final tournament = (match.tournamentName ?? '').trim();
@@ -2309,15 +2265,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 fill: landscape,
                 fullscreen: landscape,
                 onToggleFullscreen: _toggleFullscreen,
-              ),
-
-              // Thanh nút người xem nổi trên đầu video; bảng điểm vẽ SAU nó
-              // nên nằm trong video và đè lên nút quay lại.
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: _buildViewerTopBar(match, canControl: canControl),
+                showLiveDot: match.isLive,
               ),
 
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
@@ -2385,7 +2333,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Positioned(
                 left: 8,
                 right: 8,
-                top: 8,
+                // Leave the header strip clear so its buttons never cover the
+                // overlay's own close button.
+                top: _viewerHeaderHeight,
                 bottom: liveOverlayBottomInset,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
@@ -2412,6 +2362,36 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                 ),
               ),
+
+              // Top layer: a translucent header over the whole picture, the
+              // scoreboard and every overlay included. The scoreboard keeps
+              // its top-left spot; the back button floats right over it.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.7),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildViewerTopBar(match, canControl: canControl),
+                  ],
+                ),
+              ),
             ],
           ),
         );
@@ -2421,7 +2401,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return Column(
       children: [
         videoBox,
-        if (canControl) _buildScorerControls(match, effectiveId),
         ..._buildViewerBottom(match, effectiveId),
       ],
     );
@@ -2469,15 +2448,19 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  /// Back / LIVE / share / more, drawn over the top of the video.
+  /// Height of the header strip (one 40dp button row plus padding).
+  static const double _viewerHeaderHeight = 44;
+
+  /// Back / share / more, drawn over the top of the video. LIVE is no longer
+  /// a pill here: it is a dot beside the sound button (see LiveVideoPlayer).
   Widget _buildViewerTopBar(MatchModel match, {required bool canControl}) {
     final l10n = AppLocalizations.of(context)!;
     Widget round(IconData icon, VoidCallback onTap, String tooltip) {
       return IconButton(
         tooltip: tooltip,
         onPressed: onTap,
-        icon: Icon(icon, size: 20, color: Colors.white),
-        style: IconButton.styleFrom(backgroundColor: Colors.black45),
+        visualDensity: VisualDensity.compact,
+        icon: Icon(icon, size: 22, color: Colors.white),
       );
     }
 
@@ -2491,31 +2474,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             l10n.liveBack,
           ),
           const Spacer(),
-          if (match.isLive)
-            FadeTransition(
-              opacity: _livePulseAnim,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: context.colors.error,
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text(
-                  l10n.matchLiveStatus,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(width: 6),
-          if (canControl)
-            _scoringAction(
-              match,
-              style: IconButton.styleFrom(backgroundColor: Colors.black45),
-            ),
+          if (canControl) _scoringAction(match),
           if (MediaQuery.of(context).orientation == Orientation.landscape) ...[
             round(
               _landscapeChatOpen
@@ -2535,13 +2494,74 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             () => _shareMatch(match),
             l10n.liveShareAction,
           ),
-          round(
-            Icons.more_vert_rounded,
-            () => _showDetailsSheet(match),
-            l10n.liveViewerMore,
-          ),
+          if (canControl)
+            _scorerMoreMenu(match)
+          else
+            round(
+              Icons.more_vert_rounded,
+              () => _showDetailsSheet(match),
+              l10n.liveViewerMore,
+            ),
         ],
       ),
+    );
+  }
+
+  /// More menu for a scorer: match details plus the scoreboard / H2H / bracket
+  /// switches that used to be a row of chips over the video.
+  Widget _scorerMoreMenu(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
+    final tournamentId = _effectiveTournamentId(match);
+    final locked = _pendingOverlayKind != null || match.isCompleted;
+    return PopupMenuButton<String>(
+      key: const ValueKey('live-more-menu'),
+      tooltip: l10n.liveViewerMore,
+      padding: EdgeInsets.zero,
+      icon: const Icon(Icons.more_vert_rounded, size: 22, color: Colors.white),
+      onSelected: (value) {
+        switch (value) {
+          case 'details':
+            _showDetailsSheet(match);
+          case 'board':
+            _toggleScoreboardVisibility(match);
+          case 'h2h':
+            _setOverlayVisibility(
+              match,
+              LiveOverlayKind.h2h,
+              visible: !match.h2hOverlayVisible,
+            );
+          case 'bracket':
+            _setOverlayVisibility(
+              match,
+              LiveOverlayKind.bracket,
+              visible: !match.bracketOverlayVisible,
+            );
+        }
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem<String>(
+          value: 'details',
+          child: Text(l10n.liveDetailsSheetTitle),
+        ),
+        const PopupMenuDivider(),
+        CheckedPopupMenuItem<String>(
+          value: 'board',
+          checked: match.scoreboardVisible,
+          child: Text(l10n.liveScoreboardToggle),
+        ),
+        CheckedPopupMenuItem<String>(
+          value: 'h2h',
+          checked: match.h2hOverlayVisible,
+          enabled: !locked,
+          child: Text(l10n.liveOverlayChipH2h),
+        ),
+        CheckedPopupMenuItem<String>(
+          value: 'bracket',
+          checked: match.bracketOverlayVisible,
+          enabled: !locked && tournamentId.isNotEmpty,
+          child: Text(l10n.liveOverlayChipBracket),
+        ),
+      ],
     );
   }
 
