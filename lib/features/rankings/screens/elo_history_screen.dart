@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class EloHistoryScreen extends ConsumerStatefulWidget {
@@ -47,7 +47,8 @@ class EloHistoryScreen extends ConsumerStatefulWidget {
 
 class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   String? _selectedScope;
-  static const _limit = 50;
+  int _limit = _pageSize;
+  static const _pageSize = 50;
 
   @override
   void initState() {
@@ -72,200 +73,92 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final historyAsync = ref.watch(eloHistoryProvider(_query));
-    final history = historyAsync.asData?.value ?? [];
-
     final l10n = AppLocalizations.of(context)!;
+    final query = _query;
+    final historyAsync = ref.watch(eloHistoryProvider(query));
+    // Giữ danh sách cũ khi đang tải thêm (limit đổi) thay vì nháy skeleton.
+    final history = historyAsync.asData?.value;
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: colors.bgDark,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            } else {
-              context.go('/home');
-            }
-          },
-        ),
-        title: Text(
-          widget.categoryName != null && widget.categoryName!.isNotEmpty
-              ? '${l10n.settingsEloHistory} · ${widget.categoryName}'
-              : l10n.settingsEloHistory,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 16,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
+    final title = widget.categoryName != null && widget.categoryName!.isNotEmpty
+        ? '${l10n.settingsEloHistory} · ${widget.categoryName}'
+        : l10n.settingsEloHistory;
+
+    Widget content;
+    if (history == null && historyAsync.hasError) {
+      content = LavishErrorState(
+        onRetry: () => ref.invalidate(eloHistoryProvider(query)),
+      );
+    } else if (history == null) {
+      content = const LavishRowSkeleton();
+    } else if (history.isEmpty) {
+      content = LavishEmptyState(
+        icon: Icons.show_chart_rounded,
+        title: l10n.publicProfileNoPlayedElo,
+      );
+    } else {
+      content = _buildData(history);
+    }
+
+    return LavishScaffold(
+      title: title,
+      onBack: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          context.go('/home');
+        }
+      },
+      body: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 20),
-            _buildChart(history, colors),
-            const SizedBox(height: 20),
-            _buildScopeFilter(colors),
-            const SizedBox(height: 8),
-            _buildActivityLog(history, colors),
-          ],
-        ),
+        padding: const EdgeInsets.only(bottom: 40),
+        children: [_buildHeader(), _buildScopeFilter(), content],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildData(List<EloHistoryLog> history) {
     final l10n = AppLocalizations.of(context)!;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Row(
-        children: [
-          UserAvatarTap(
-            userId: widget.userId,
-            name: widget.userName,
-            communityId: widget.communityId,
-            imageUrl: widget.avatarUrl,
-            elo: widget.currentElo,
-            tierName: widget.tierName,
-            size: 48,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.userName,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  l10n.publicProfileEloAfter,
-                  style: TextStyle(
-                    color: context.colors.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${widget.currentElo}',
-                style: TextStyle(
-                  color: AppTheme.primary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (widget.tierName != null)
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    widget.tierName!,
-                    style: TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChart(List<EloHistoryLog> history, AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
     final sorted = List<EloHistoryLog>.from(history)
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final peakElo = sorted.fold<int>(
       widget.currentElo,
       (peak, h) => h.newElo > peak ? h.newElo : peak,
     );
+    final results = history
+        .map((h) => h.match?.result?.toUpperCase())
+        .where((r) => r == 'WIN' || r == 'LOSS' || r == 'DRAW')
+        .toList();
+    final wins = results.where((r) => r == 'WIN').length;
+    final fmt = NumberFormat.decimalPattern(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (history.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              border: Border.all(color: colors.border),
+        LavishStatGrid(
+          items: [
+            LavishStat(
+              label: l10n.publicProfilePeakElo,
+              value: fmt.format(peakElo),
+              tone: LavishTone.warn,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.show_chart_rounded,
-                    color: AppTheme.primary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.publicProfileNoPlayedElo,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.publicProfileNoPlayedEloHint,
-                  style: TextStyle(fontSize: 11, color: colors.textMuted),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            LavishStat(
+              label: l10n.publicProfileMatchesShort,
+              value: '${history.length}',
             ),
-          )
-        else
-          EloProgressChart(
+            if (results.isNotEmpty)
+              LavishStat(
+                label: l10n.publicProfileWinRateShort,
+                value: '${(wins * 100 / results.length).round()}%',
+                tone: LavishTone.ok,
+              ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
+          child: EloProgressChart(
             data: sorted.map((h) {
               final date = DateTime.tryParse(h.createdAt) ?? DateTime.now();
               return (DateFormat('dd/MM').format(date), h.newElo);
@@ -274,64 +167,92 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
             tierName: widget.tierName,
             height: 200,
           ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            border: Border.all(color: colors.border),
-          ),
-          child: Row(
-            children: [
-              Text(
-                l10n.publicProfilePeakElo,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: colors.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                NumberFormat.decimalPattern(
-                  Localizations.localeOf(context).toLanguageTag(),
-                ).format(peakElo),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: colors.textPrimary,
-                ),
-              ),
-              if (peakElo > widget.currentElo) ...[
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.warning.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    '+${peakElo - widget.currentElo}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: colors.warning,
-                    ),
-                  ),
-                ),
-              ],
-            ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+          child: Text(
+            l10n.publicProfileActivity,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: c.muted,
+            ),
           ),
         ),
+        for (final log in history) _buildLogRow(log),
+        if (history.length >= _limit)
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Center(
+              child: LavishButton(
+                buttonKey: const Key('elo_history_load_more'),
+                kind: LavishButtonKind.outline,
+                label: l10n.eloHistLoadMore,
+                onPressed: () => setState(() => _limit += _pageSize),
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildScopeFilter(AppColorsExtension colors) {
+  Widget _buildHeader() {
+    final c = LavishColors.of(context);
+    final name = widget.userName.trim();
+    final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.rowLine)),
+      ),
+      child: Row(
+        children: [
+          LavishIconBox(
+            size: 48,
+            child: Text(
+              initial,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.userName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: c.text,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (widget.tierName != null) ...[
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: LavishPill(widget.tierName!),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Text(
+            '${widget.currentElo}',
+            style: const TextStyle(
+              color: LavishColors.accent,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScopeFilter() {
     if (widget.lockRatingScope) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context)!;
@@ -344,78 +265,33 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
-        children: scopes.map((s) {
-          final selected = _selectedScope == s.$1;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedScope = s.$1),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: selected ? AppTheme.primary : colors.bgCard,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: selected ? AppTheme.primary : colors.border,
-                  ),
-                ),
-                child: Text(
-                  s.$2,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: selected ? Colors.white : colors.textSecondary,
-                  ),
-                ),
+        children: [
+          for (final s in scopes)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: LavishChipButton(
+                label: s.$2,
+                selected: _selectedScope == s.$1,
+                onPressed: () => setState(() {
+                  _selectedScope = s.$1;
+                  _limit = _pageSize;
+                }),
               ),
             ),
-          );
-        }).toList(),
+        ],
       ),
     );
   }
 
-  Widget _buildActivityLog(
-    List<EloHistoryLog> history,
-    AppColorsExtension colors,
-  ) {
-    if (history.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(
-            AppLocalizations.of(context)!.publicProfileActivity,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: colors.textMuted,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        ...history.map((log) => _buildLogItem(log, colors)),
-      ],
-    );
-  }
-
-  Widget _buildLogItem(EloHistoryLog log, AppColorsExtension colors) {
+  Widget _buildLogRow(EloHistoryLog log) {
     final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
     final date = DateTime.tryParse(log.createdAt) ?? DateTime.now();
     final timeStr = DateFormat('dd/MM/yyyy HH:mm').format(date);
     final match = log.match;
     final result = match?.result?.toUpperCase();
-    final resultColor = result == 'WIN'
-        ? const Color(0xFF2563EB)
-        : result == 'LOSS'
-        ? const Color(0xFFDC2626)
-        : colors.textMuted;
     final resultLabel = result == 'WIN'
         ? l10n.publicProfileResultWin
         : result == 'LOSS'
@@ -423,155 +299,55 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
         : result == 'DRAW'
         ? l10n.publicProfileResultDraw
         : null;
-    final diffColor = log.eloDiff >= 0 ? colors.success : colors.error;
-    final diffStr = log.eloDiff >= 0 ? '+${log.eloDiff}' : '${log.eloDiff}';
+    final resultTone = result == 'WIN'
+        ? LavishTone.ok
+        : result == 'LOSS'
+        ? LavishTone.bad
+        : LavishTone.neutral;
+    final gain = log.eloDiff >= 0;
+    final tone = gain ? LavishTone.ok : LavishTone.bad;
+    final diffStr = gain ? '+${log.eloDiff}' : '${log.eloDiff}';
     final title = match?.tournamentName?.isNotEmpty == true
         ? match!.tournamentName!
         : log.reason?.isNotEmpty == true
         ? log.reason!
         : l10n.publicProfileEloChange;
-    final opponent = match?.opponentName ?? l10n.publicProfileUnknownOpponent;
-    final score = match?.p1SetsWon != null && match?.p2SetsWon != null
-        ? '${match!.p1SetsWon} - ${match.p2SetsWon}'
-        : null;
+    final details = <String>[
+      timeStr,
+      if (match?.opponentName?.isNotEmpty == true) match!.opponentName!,
+      if (match?.p1SetsWon != null && match?.p2SetsWon != null)
+        '${match!.p1SetsWon} - ${match.p2SetsWon}',
+    ];
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: colors.border),
+    return LavishRow(
+      title: title,
+      subtitle: details.join(' · '),
+      leading: LavishIconBox(
+        tone: tone,
+        child: Icon(
+          gain ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+          size: 18,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: diffColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    diffStr,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: diffColor,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      timeStr,
-                      style: TextStyle(fontSize: 10, color: colors.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-              if (resultLabel != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: resultColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: Text(
-                    resultLabel,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: resultColor,
-                    ),
-                  ),
-                ),
-            ],
+      trailing: [
+        if (resultLabel != null) LavishPill(resultLabel, tone: resultTone),
+        Text(
+          diffStr,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            color: LavishColors.of(context).solid(tone),
           ),
-          if (match != null) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(
-                  Icons.person_outline_rounded,
-                  size: 15,
-                  color: colors.textMuted,
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    '${l10n.publicProfileOpponent}: $opponent',
-                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (score != null) ...[
-                  Icon(
-                    Icons.sports_score_rounded,
-                    size: 15,
-                    color: colors.textMuted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${l10n.publicProfileScore}: $score',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 12,
-            runSpacing: 4,
-            children: [
-              Text(
-                '${l10n.publicProfileEloBefore}: ${log.previousElo}',
-                style: TextStyle(fontSize: 10, color: colors.textMuted),
-              ),
-              Text(
-                '${l10n.publicProfileEloAfter}: ${log.newElo}',
-                style: TextStyle(fontSize: 10, color: colors.textMuted),
-              ),
-              Text(
-                '${l10n.publicProfileEloChange}: $diffStr',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: diffColor,
-                ),
-              ),
-            ],
+        ),
+        Text(
+          '${log.newElo}',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: c.muted,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

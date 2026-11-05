@@ -82,37 +82,34 @@ final eloHistoryProvider =
       ref,
       query,
     ) async {
-      try {
-        if (query.userId.isEmpty) return [];
-        final dio = ref.read(dioProvider);
-        final params = <String, dynamic>{
-          'limit': query.limit,
-          if (query.cursor != null) 'cursor': query.cursor,
-        };
-        if (query.categoryId != null) params['categoryId'] = query.categoryId;
-        if (query.scope != null) params['scope'] = query.scope;
-        if (query.communityId != null)
-          params['communityId'] = query.communityId;
-        if (query.matchType != null) params['matchType'] = query.matchType;
-        if (query.genderRestriction != null)
-          params['genderRestriction'] = query.genderRestriction;
-        if (query.partnerId != null) params['partnerId'] = query.partnerId;
-
-        final response = await dio.get(
-          '/rankings/user/${query.userId}/history',
-          queryParameters: params,
-        );
-        final raw = response.data;
-        final List<dynamic> list = raw is Map<String, dynamic>
-            ? (raw['data'] as List<dynamic>? ?? [])
-            : (raw as List<dynamic>? ?? []);
-        return list
-            .map((e) => EloHistoryLog.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } catch (e) {
-        return [];
+      // Không bắt lỗi: màn hình cần phân biệt "lỗi" với "chưa có dữ liệu".
+      if (query.userId.isEmpty) return [];
+      final dio = ref.read(dioProvider);
+      final params = <String, dynamic>{
+        'limit': query.limit,
+        if (query.cursor != null) 'cursor': query.cursor,
+      };
+      if (query.categoryId != null) params['categoryId'] = query.categoryId;
+      if (query.scope != null) params['scope'] = query.scope;
+      if (query.communityId != null) params['communityId'] = query.communityId;
+      if (query.matchType != null) params['matchType'] = query.matchType;
+      if (query.genderRestriction != null) {
+        params['genderRestriction'] = query.genderRestriction;
       }
-    });
+      if (query.partnerId != null) params['partnerId'] = query.partnerId;
+
+      final response = await dio.get(
+        '/rankings/user/${query.userId}/history',
+        queryParameters: params,
+      );
+      final raw = response.data;
+      final List<dynamic> list = raw is Map<String, dynamic>
+          ? (raw['data'] as List<dynamic>? ?? [])
+          : (raw as List<dynamic>? ?? []);
+      return list
+          .map((e) => EloHistoryLog.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }, retry: (_, _) => null); // lỗi hiện ngay, người dùng bấm thử lại
 
 /// Provider lấy tổng hợp ELO của user từ API GET /rankings/user/:userId
 /// Dùng repository thay vì raw Dio để có auth interceptor

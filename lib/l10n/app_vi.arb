@@ -7447,5 +7447,95 @@
   "regAttachmentTooLarge": "Tệp lớn hơn {size} MB.",
   "@regAttachmentTooLarge": {"placeholders": {"size": {"type": "num"}}},
   "regAttachmentNetworkError": "Lỗi mạng. Kiểm tra kết nối rồi thử lại.",
-  "regAttachmentFailed": "Không tải được tệp lên. Vui lòng thử lại."
+  "regAttachmentFailed": "Không tải được tệp lên. Vui lòng thử lại.",
+  "lavishErrorDefault": "Không tải được dữ liệu. Vui lòng thử lại.",
+  "lavishRetry": "Thử lại",
+  "lavishPasswordShow": "Hiện mật khẩu",
+  "lavishPasswordHide": "Ẩn mật khẩu",
+  "lavishBack": "Quay lại",
+  "eloHistLoadMore": "Tải thêm",
+  "settingsLvLogoutConfirmTitle": "Đăng xuất?",
+  "settingsLvLogoutConfirmBody": "Bạn sẽ cần đăng nhập lại.",
+  "settingsLvAccountError": "Không tải được tài khoản",
+  "settingsLvVersion": "Phiên bản {version} ({build})",
+  "@settingsLvVersion": {"placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}},
+  "profLvTabActivity": "Hoạt động",
+  "profLvTabTournaments": "Giải đấu",
+  "profLvTabFriends": "Bạn bè",
+  "profLvTabAchievements": "Thành tích",
+  "profLvStatElo": "ELO",
+  "profLvStatMatches": "Trận",
+  "profLvStatWinRate": "Thắng",
+  "profLvStatTournaments": "Giải",
+  "profLvRoleAdmin": "Quản trị viên",
+  "profLvRoleOrganizer": "Ban tổ chức",
+  "profLvRoleAthlete": "Vận động viên",
+  "profLvRecentMatches": "Trận gần đây",
+  "profLvSeeAll": "Xem tất cả",
+  "profLvUpcoming": "Sắp tới",
+  "profLvCompleted": "Đã xong",
+  "profLvRanks": "Xếp hạng môn",
+  "profLvHistory": "Lịch sử đấu",
+  "profLvEloDetail": "Chi tiết ELO",
+  "profLvEmptyMatches": "Chưa có trận nào",
+  "profLvCreateSession": "Tạo kèo",
+  "profLvEmptyTournaments": "Chưa có giải",
+  "profLvExplore": "Khám phá giải",
+  "profLvEmptyRanks": "Chưa có xếp hạng",
+  "profLvJoinTournament": "Tham gia giải",
+  "profLvEmptyFriends": "Chưa có bạn bè",
+  "profLvFindFriends": "Tìm bạn",
+  "profLvEmptyIncoming": "Không có lời mời",
+  "profLvEmptyOutgoing": "Chưa gửi lời mời",
+  "profLvFriendsCount": "Bạn bè ({count})",
+  "@profLvFriendsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profLvIncomingCount": "Lời mời ({count})",
+  "@profLvIncomingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profLvOutgoingCount": "Đã gửi ({count})",
+  "@profLvOutgoingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profLvWantsToConnect": "Muốn kết nối",
+  "profLvPending": "Đang chờ",
+  "profLvAccept": "Đồng ý",
+  "profLvReject": "Từ chối",
+  "profLvCancel": "Hủy",
+  "profLvChat": "Nhắn tin",
+  "profLvSettings": "Cài đặt",
+  "profLvLoadError": "Không tải được hồ sơ",
+  "profLvFriendsLoadError": "Không tải được bạn bè",
+  "profLvMatchesLoadError": "Không tải được trận đấu",
+  "profLvUser": "Người dùng",
+  "profLvAthlete": "Vận động viên",
+  "profLvSport": "Môn thể thao",
+  "profLvMatchUpcoming": "Sắp diễn ra",
+  "profLvMatchDone": "Đã xong",
+  "profLvMatchesWinRate": "{matches} trận · {rate}% thắng",
+  "@profLvMatchesWinRate": {
+    "placeholders": {
+      "matches": {},
+      "rate": {}
+    }
+  },
+  "dsh28_yesterday": "Hôm qua",
+  "dsh28_daysAgo": "{count} ngày trước",
+  "@dsh28_daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dsh28_liteBadge": "Lite",
+  "rpt22_descTooShort": "Cần ít nhất 10 ký tự"
 }

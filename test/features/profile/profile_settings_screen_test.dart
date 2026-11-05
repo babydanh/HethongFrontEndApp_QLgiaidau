@@ -92,9 +92,15 @@ void main() {
   ) async {
     final l10n = await _pumpSettings(tester);
 
-    expect(find.text(l10n.accountSettingsAccountSection), findsOneWidget);
-    expect(find.text(l10n.accountSettingsPersonalProfile), findsOneWidget);
-    expect(find.text(l10n.accountSettingsAppSection), findsOneWidget);
+    expect(
+      find.text(l10n.accountSettingsAccountSection.toUpperCase()),
+      findsOneWidget,
+    );
+    expect(find.text('Alex Player'), findsOneWidget);
+    expect(
+      find.text(l10n.accountSettingsAppSection.toUpperCase()),
+      findsOneWidget,
+    );
     expect(find.text(l10n.settingsLanguage), findsOneWidget);
     expect(find.text(l10n.settingsDarkMode), findsOneWidget);
     expect(find.text(l10n.settingsNotifications), findsOneWidget);
@@ -142,9 +148,9 @@ void main() {
   });
 
   testWidgets('Hồ sơ cá nhân mở /profile/edit', (tester) async {
-    final l10n = await _pumpSettings(tester);
+    await _pumpSettings(tester);
 
-    await tester.tap(find.text(l10n.accountSettingsPersonalProfile));
+    await tester.tap(find.text('Alex Player'));
     await tester.pumpAndSettle();
 
     expect(find.text('edit destination'), findsOneWidget);

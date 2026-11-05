@@ -18667,4 +18667,199 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get regAttachmentFailed => 'Không tải được tệp lên. Vui lòng thử lại.';
+
+  @override
+  String get lavishErrorDefault => 'Không tải được dữ liệu. Vui lòng thử lại.';
+
+  @override
+  String get lavishRetry => 'Thử lại';
+
+  @override
+  String get lavishPasswordShow => 'Hiện mật khẩu';
+
+  @override
+  String get lavishPasswordHide => 'Ẩn mật khẩu';
+
+  @override
+  String get lavishBack => 'Quay lại';
+
+  @override
+  String get eloHistLoadMore => 'Tải thêm';
+
+  @override
+  String get settingsLvLogoutConfirmTitle => 'Đăng xuất?';
+
+  @override
+  String get settingsLvLogoutConfirmBody => 'Bạn sẽ cần đăng nhập lại.';
+
+  @override
+  String get settingsLvAccountError => 'Không tải được tài khoản';
+
+  @override
+  String settingsLvVersion(String version, String build) {
+    return 'Phiên bản $version ($build)';
+  }
+
+  @override
+  String get profLvTabActivity => 'Hoạt động';
+
+  @override
+  String get profLvTabTournaments => 'Giải đấu';
+
+  @override
+  String get profLvTabFriends => 'Bạn bè';
+
+  @override
+  String get profLvTabAchievements => 'Thành tích';
+
+  @override
+  String get profLvStatElo => 'ELO';
+
+  @override
+  String get profLvStatMatches => 'Trận';
+
+  @override
+  String get profLvStatWinRate => 'Thắng';
+
+  @override
+  String get profLvStatTournaments => 'Giải';
+
+  @override
+  String get profLvRoleAdmin => 'Quản trị viên';
+
+  @override
+  String get profLvRoleOrganizer => 'Ban tổ chức';
+
+  @override
+  String get profLvRoleAthlete => 'Vận động viên';
+
+  @override
+  String get profLvRecentMatches => 'Trận gần đây';
+
+  @override
+  String get profLvSeeAll => 'Xem tất cả';
+
+  @override
+  String get profLvUpcoming => 'Sắp tới';
+
+  @override
+  String get profLvCompleted => 'Đã xong';
+
+  @override
+  String get profLvRanks => 'Xếp hạng môn';
+
+  @override
+  String get profLvHistory => 'Lịch sử đấu';
+
+  @override
+  String get profLvEloDetail => 'Chi tiết ELO';
+
+  @override
+  String get profLvEmptyMatches => 'Chưa có trận nào';
+
+  @override
+  String get profLvCreateSession => 'Tạo kèo';
+
+  @override
+  String get profLvEmptyTournaments => 'Chưa có giải';
+
+  @override
+  String get profLvExplore => 'Khám phá giải';
+
+  @override
+  String get profLvEmptyRanks => 'Chưa có xếp hạng';
+
+  @override
+  String get profLvJoinTournament => 'Tham gia giải';
+
+  @override
+  String get profLvEmptyFriends => 'Chưa có bạn bè';
+
+  @override
+  String get profLvFindFriends => 'Tìm bạn';
+
+  @override
+  String get profLvEmptyIncoming => 'Không có lời mời';
+
+  @override
+  String get profLvEmptyOutgoing => 'Chưa gửi lời mời';
+
+  @override
+  String profLvFriendsCount(Object count) {
+    return 'Bạn bè ($count)';
+  }
+
+  @override
+  String profLvIncomingCount(Object count) {
+    return 'Lời mời ($count)';
+  }
+
+  @override
+  String profLvOutgoingCount(Object count) {
+    return 'Đã gửi ($count)';
+  }
+
+  @override
+  String get profLvWantsToConnect => 'Muốn kết nối';
+
+  @override
+  String get profLvPending => 'Đang chờ';
+
+  @override
+  String get profLvAccept => 'Đồng ý';
+
+  @override
+  String get profLvReject => 'Từ chối';
+
+  @override
+  String get profLvCancel => 'Hủy';
+
+  @override
+  String get profLvChat => 'Nhắn tin';
+
+  @override
+  String get profLvSettings => 'Cài đặt';
+
+  @override
+  String get profLvLoadError => 'Không tải được hồ sơ';
+
+  @override
+  String get profLvFriendsLoadError => 'Không tải được bạn bè';
+
+  @override
+  String get profLvMatchesLoadError => 'Không tải được trận đấu';
+
+  @override
+  String get profLvUser => 'Người dùng';
+
+  @override
+  String get profLvAthlete => 'Vận động viên';
+
+  @override
+  String get profLvSport => 'Môn thể thao';
+
+  @override
+  String get profLvMatchUpcoming => 'Sắp diễn ra';
+
+  @override
+  String get profLvMatchDone => 'Đã xong';
+
+  @override
+  String profLvMatchesWinRate(Object matches, Object rate) {
+    return '$matches trận · $rate% thắng';
+  }
+
+  @override
+  String get dsh28_yesterday => 'Hôm qua';
+
+  @override
+  String dsh28_daysAgo(int count) {
+    return '$count ngày trước';
+  }
+
+  @override
+  String get dsh28_liteBadge => 'Lite';
+
+  @override
+  String get rpt22_descTooShort => 'Cần ít nhất 10 ký tự';
 }

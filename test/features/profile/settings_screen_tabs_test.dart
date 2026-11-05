@@ -111,14 +111,14 @@ void main() {
   ) async {
     final l10n = await _pumpSettings(tester);
 
-    expect(find.text(l10n.settingsVerificationStatus), findsOneWidget);
+    expect(find.text(l10n.settingsVerificationStatus.toUpperCase()), findsOneWidget);
     expect(find.text(l10n.settingsVerifyEmail), findsOneWidget);
     expect(find.text(l10n.settingsVerifyPhone), findsOneWidget);
 
     await _tapTab(tester, l10n.settingsSecurityTab);
 
     expect(find.text(l10n.settingsChangePassword), findsOneWidget);
-    expect(find.text(l10n.settingsVerificationStatus), findsNothing);
+    expect(find.text(l10n.settingsVerificationStatus.toUpperCase()), findsNothing);
     expect(find.text(l10n.settingsVerifyEmail), findsNothing);
   });
 
@@ -139,7 +139,7 @@ void main() {
 
     await _tapTab(tester, l10n.accountSettingsOrganizerTab);
 
-    expect(find.text(l10n.accountSettingsOrganizerRoleTitle), findsOneWidget);
+    expect(find.text(l10n.accountSettingsOrganizerRoleTitle.toUpperCase()), findsOneWidget);
     expect(
       find.text(l10n.accountSettingsOrganizerNotRegistered),
       findsOneWidget,

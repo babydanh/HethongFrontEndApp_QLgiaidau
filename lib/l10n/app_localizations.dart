@@ -33600,6 +33600,372 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không tải được tệp lên. Vui lòng thử lại.'**
   String get regAttachmentFailed;
+
+  /// No description provided for @lavishErrorDefault.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được dữ liệu. Vui lòng thử lại.'**
+  String get lavishErrorDefault;
+
+  /// No description provided for @lavishRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get lavishRetry;
+
+  /// No description provided for @lavishPasswordShow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mật khẩu'**
+  String get lavishPasswordShow;
+
+  /// No description provided for @lavishPasswordHide.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn mật khẩu'**
+  String get lavishPasswordHide;
+
+  /// No description provided for @lavishBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quay lại'**
+  String get lavishBack;
+
+  /// No description provided for @eloHistLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải thêm'**
+  String get eloHistLoadMore;
+
+  /// No description provided for @settingsLvLogoutConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng xuất?'**
+  String get settingsLvLogoutConfirmTitle;
+
+  /// No description provided for @settingsLvLogoutConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn sẽ cần đăng nhập lại.'**
+  String get settingsLvLogoutConfirmBody;
+
+  /// No description provided for @settingsLvAccountError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được tài khoản'**
+  String get settingsLvAccountError;
+
+  /// No description provided for @settingsLvVersion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên bản {version} ({build})'**
+  String settingsLvVersion(String version, String build);
+
+  /// No description provided for @profLvTabActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get profLvTabActivity;
+
+  /// No description provided for @profLvTabTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải đấu'**
+  String get profLvTabTournaments;
+
+  /// No description provided for @profLvTabFriends.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè'**
+  String get profLvTabFriends;
+
+  /// No description provided for @profLvTabAchievements.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành tích'**
+  String get profLvTabAchievements;
+
+  /// No description provided for @profLvStatElo.
+  ///
+  /// In vi, this message translates to:
+  /// **'ELO'**
+  String get profLvStatElo;
+
+  /// No description provided for @profLvStatMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận'**
+  String get profLvStatMatches;
+
+  /// No description provided for @profLvStatWinRate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thắng'**
+  String get profLvStatWinRate;
+
+  /// No description provided for @profLvStatTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải'**
+  String get profLvStatTournaments;
+
+  /// No description provided for @profLvRoleAdmin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản trị viên'**
+  String get profLvRoleAdmin;
+
+  /// No description provided for @profLvRoleOrganizer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban tổ chức'**
+  String get profLvRoleOrganizer;
+
+  /// No description provided for @profLvRoleAthlete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận động viên'**
+  String get profLvRoleAthlete;
+
+  /// No description provided for @profLvRecentMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận gần đây'**
+  String get profLvRecentMatches;
+
+  /// No description provided for @profLvSeeAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tất cả'**
+  String get profLvSeeAll;
+
+  /// No description provided for @profLvUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp tới'**
+  String get profLvUpcoming;
+
+  /// No description provided for @profLvCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xong'**
+  String get profLvCompleted;
+
+  /// No description provided for @profLvRanks.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp hạng môn'**
+  String get profLvRanks;
+
+  /// No description provided for @profLvHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử đấu'**
+  String get profLvHistory;
+
+  /// No description provided for @profLvEloDetail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiết ELO'**
+  String get profLvEloDetail;
+
+  /// No description provided for @profLvEmptyMatches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận nào'**
+  String get profLvEmptyMatches;
+
+  /// No description provided for @profLvCreateSession.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo kèo'**
+  String get profLvCreateSession;
+
+  /// No description provided for @profLvEmptyTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có giải'**
+  String get profLvEmptyTournaments;
+
+  /// No description provided for @profLvExplore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khám phá giải'**
+  String get profLvExplore;
+
+  /// No description provided for @profLvEmptyRanks.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có xếp hạng'**
+  String get profLvEmptyRanks;
+
+  /// No description provided for @profLvJoinTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia giải'**
+  String get profLvJoinTournament;
+
+  /// No description provided for @profLvEmptyFriends.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bạn bè'**
+  String get profLvEmptyFriends;
+
+  /// No description provided for @profLvFindFriends.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm bạn'**
+  String get profLvFindFriends;
+
+  /// No description provided for @profLvEmptyIncoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có lời mời'**
+  String get profLvEmptyIncoming;
+
+  /// No description provided for @profLvEmptyOutgoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa gửi lời mời'**
+  String get profLvEmptyOutgoing;
+
+  /// No description provided for @profLvFriendsCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè ({count})'**
+  String profLvFriendsCount(Object count);
+
+  /// No description provided for @profLvIncomingCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lời mời ({count})'**
+  String profLvIncomingCount(Object count);
+
+  /// No description provided for @profLvOutgoingCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi ({count})'**
+  String profLvOutgoingCount(Object count);
+
+  /// No description provided for @profLvWantsToConnect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Muốn kết nối'**
+  String get profLvWantsToConnect;
+
+  /// No description provided for @profLvPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ'**
+  String get profLvPending;
+
+  /// No description provided for @profLvAccept.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng ý'**
+  String get profLvAccept;
+
+  /// No description provided for @profLvReject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get profLvReject;
+
+  /// No description provided for @profLvCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get profLvCancel;
+
+  /// No description provided for @profLvChat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhắn tin'**
+  String get profLvChat;
+
+  /// No description provided for @profLvSettings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt'**
+  String get profLvSettings;
+
+  /// No description provided for @profLvLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được hồ sơ'**
+  String get profLvLoadError;
+
+  /// No description provided for @profLvFriendsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được bạn bè'**
+  String get profLvFriendsLoadError;
+
+  /// No description provided for @profLvMatchesLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được trận đấu'**
+  String get profLvMatchesLoadError;
+
+  /// No description provided for @profLvUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get profLvUser;
+
+  /// No description provided for @profLvAthlete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận động viên'**
+  String get profLvAthlete;
+
+  /// No description provided for @profLvSport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Môn thể thao'**
+  String get profLvSport;
+
+  /// No description provided for @profLvMatchUpcoming.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp diễn ra'**
+  String get profLvMatchUpcoming;
+
+  /// No description provided for @profLvMatchDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xong'**
+  String get profLvMatchDone;
+
+  /// No description provided for @profLvMatchesWinRate.
+  ///
+  /// In vi, this message translates to:
+  /// **'{matches} trận · {rate}% thắng'**
+  String profLvMatchesWinRate(Object matches, Object rate);
+
+  /// No description provided for @dsh28_yesterday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm qua'**
+  String get dsh28_yesterday;
+
+  /// No description provided for @dsh28_daysAgo.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày trước'**
+  String dsh28_daysAgo(int count);
+
+  /// No description provided for @dsh28_liteBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lite'**
+  String get dsh28_liteBadge;
+
+  /// No description provided for @rpt22_descTooShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần ít nhất 10 ký tự'**
+  String get rpt22_descTooShort;
 }
 
 class _AppLocalizationsDelegate

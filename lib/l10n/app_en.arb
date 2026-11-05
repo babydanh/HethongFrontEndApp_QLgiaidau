@@ -7419,5 +7419,95 @@
   "regAttachmentTooLarge": "The file is larger than {size} MB.",
   "@regAttachmentTooLarge": {"placeholders": {"size": {"type": "num"}}},
   "regAttachmentNetworkError": "Network problem. Check your connection and try again.",
-  "regAttachmentFailed": "Could not upload the file. Please try again."
+  "regAttachmentFailed": "Could not upload the file. Please try again.",
+  "lavishErrorDefault": "Could not load data. Please try again.",
+  "lavishRetry": "Retry",
+  "lavishPasswordShow": "Show password",
+  "lavishPasswordHide": "Hide password",
+  "lavishBack": "Back",
+  "eloHistLoadMore": "Load more",
+  "settingsLvLogoutConfirmTitle": "Log out?",
+  "settingsLvLogoutConfirmBody": "You will need to sign in again.",
+  "settingsLvAccountError": "Could not load account",
+  "settingsLvVersion": "Version {version} ({build})",
+  "@settingsLvVersion": {"placeholders": {"version": {"type": "String"}, "build": {"type": "String"}}},
+  "profLvTabActivity": "Activity",
+  "profLvTabTournaments": "Tournaments",
+  "profLvTabFriends": "Friends",
+  "profLvTabAchievements": "Achievements",
+  "profLvStatElo": "ELO",
+  "profLvStatMatches": "Matches",
+  "profLvStatWinRate": "Win",
+  "profLvStatTournaments": "Events",
+  "profLvRoleAdmin": "Admin",
+  "profLvRoleOrganizer": "Organizer",
+  "profLvRoleAthlete": "Athlete",
+  "profLvRecentMatches": "Recent matches",
+  "profLvSeeAll": "See all",
+  "profLvUpcoming": "Upcoming",
+  "profLvCompleted": "Completed",
+  "profLvRanks": "Sport ranks",
+  "profLvHistory": "Match history",
+  "profLvEloDetail": "ELO details",
+  "profLvEmptyMatches": "No matches yet",
+  "profLvCreateSession": "Create session",
+  "profLvEmptyTournaments": "No tournaments",
+  "profLvExplore": "Explore",
+  "profLvEmptyRanks": "No ranking yet",
+  "profLvJoinTournament": "Join a tournament",
+  "profLvEmptyFriends": "No friends yet",
+  "profLvFindFriends": "Find friends",
+  "profLvEmptyIncoming": "No requests",
+  "profLvEmptyOutgoing": "No sent requests",
+  "profLvFriendsCount": "Friends ({count})",
+  "@profLvFriendsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profLvIncomingCount": "Requests ({count})",
+  "@profLvIncomingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profLvOutgoingCount": "Sent ({count})",
+  "@profLvOutgoingCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "profLvWantsToConnect": "Wants to connect",
+  "profLvPending": "Pending",
+  "profLvAccept": "Accept",
+  "profLvReject": "Decline",
+  "profLvCancel": "Cancel",
+  "profLvChat": "Message",
+  "profLvSettings": "Settings",
+  "profLvLoadError": "Could not load profile",
+  "profLvFriendsLoadError": "Could not load friends",
+  "profLvMatchesLoadError": "Could not load matches",
+  "profLvUser": "User",
+  "profLvAthlete": "Athlete",
+  "profLvSport": "Sport",
+  "profLvMatchUpcoming": "Upcoming",
+  "profLvMatchDone": "Done",
+  "profLvMatchesWinRate": "{matches} matches · {rate}% won",
+  "@profLvMatchesWinRate": {
+    "placeholders": {
+      "matches": {},
+      "rate": {}
+    }
+  },
+  "dsh28_yesterday": "Yesterday",
+  "dsh28_daysAgo": "{count} days ago",
+  "@dsh28_daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dsh28_liteBadge": "Lite",
+  "rpt22_descTooShort": "At least 10 characters"
 }

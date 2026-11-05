@@ -35,4 +35,7 @@ abstract class IAuthRepository {
   Future<void> confirmPhoneVerification({
     required String code,
   });
+
+  /// Thu hồi refresh token phía server (POST /auth/logout).
+  Future<void> logout({required String refreshToken});
 }

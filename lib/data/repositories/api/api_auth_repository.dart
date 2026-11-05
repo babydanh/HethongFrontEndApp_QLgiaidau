@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:dio/dio.dart';
+
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
@@ -15,6 +17,19 @@ class ApiAuthRepository implements IAuthRepository {
 
   AppLocalizations get _l10n =>
       lookupAppLocalizations(PlatformDispatcher.instance.locale);
+
+  /// Backend đọc refresh token từ cookie `refreshToken` của `/auth/logout`.
+  @override
+  Future<void> logout({required String refreshToken}) async {
+    await _dioClient.dio.post(
+      '/auth/logout',
+      options: Options(
+        headers: {'Cookie': 'refreshToken=$refreshToken'},
+        sendTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 5),
+      ),
+    );
+  }
 
   @override
   Future<AuthSession> loginWithEmailPassword({

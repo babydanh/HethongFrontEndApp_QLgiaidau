@@ -7,6 +7,9 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Backend tách thông báo thành 2 scope; App phải đọc cả hai.
+const notificationScopes = ['player', 'management'];
+
 final notificationRepositoryProvider = Provider<ApiNotificationRepository>((
   ref,
 ) {
@@ -20,7 +23,10 @@ final unreadCountProvider = FutureProvider<int>((ref) async {
   if (!ref.watch(authProvider).isAuthenticated) return 0;
   try {
     final repo = ref.watch(notificationRepositoryProvider);
-    return await repo.getUnreadCount();
+    final counts = await Future.wait(
+      notificationScopes.map((s) => repo.getUnreadCount(scope: s)),
+    );
+    return counts.fold<int>(0, (a, b) => a + b);
   } catch (e, stack) {
     AppLogger(
       'NotificationProvider',
@@ -34,7 +40,11 @@ final notificationsProvider = FutureProvider<List<AppNotification>>((
   ref,
 ) async {
   final repo = ref.watch(notificationRepositoryProvider);
-  return (await repo.getMyNotifications(limit: 20)).items;
+  final pages = await Future.wait(
+    notificationScopes.map((s) => repo.getMyNotifications(limit: 20, scope: s)),
+  );
+  return [for (final p in pages) ...p.items]
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 });
 
 /// Notifier quản lý trạng thái thông báo
@@ -54,27 +64,35 @@ class NotificationNotifier extends Notifier<NotificationState> {
     final repo = ref.read(notificationRepositoryProvider);
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final result = await repo.getMyNotifications(
-        cursor: page == 1 ? null : state.nextCursor,
-        limit: 20,
+      final first = page == 1;
+      // Mỗi scope một cursor; scope đã hết trang thì bỏ qua.
+      final scopes = first
+          ? notificationScopes
+          : notificationScopes.where(state.cursors.containsKey).toList();
+      final results = await Future.wait(
+        scopes.map(
+          (s) => repo.getMyNotifications(
+            cursor: first ? null : state.cursors[s],
+            limit: 20,
+            scope: s,
+          ),
+        ),
       );
-      final items = result.items;
-      if (page == 1) {
-        state = NotificationState(
-          notifications: items,
-          currentPage: 1,
-          hasMore: result.hasMore,
-          nextCursor: result.nextCursor,
-        );
-      } else {
-        state = state.copyWith(
-          notifications: [...state.notifications, ...items],
-          currentPage: page,
-          hasMore: result.hasMore,
-          nextCursor: result.nextCursor,
-          isLoading: false,
-        );
+      final cursors = <String, String?>{};
+      for (var i = 0; i < scopes.length; i++) {
+        if (results[i].hasMore && results[i].nextCursor != null) {
+          cursors[scopes[i]] = results[i].nextCursor;
+        }
       }
+      final items = [for (final r in results) ...r.items];
+      final merged = [if (!first) ...state.notifications, ...items]
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      state = NotificationState(
+        notifications: merged,
+        currentPage: page,
+        hasMore: cursors.isNotEmpty,
+        cursors: cursors,
+      );
     } catch (e, stack) {
       _log.error('Không thể tải thông báo', e, stack);
       state = state.copyWith(
@@ -114,7 +132,9 @@ class NotificationNotifier extends Notifier<NotificationState> {
   /// Đánh dấu tất cả đã đọc
   Future<void> markAllAsRead() async {
     final repo = ref.read(notificationRepositoryProvider);
-    await repo.markAllAsRead();
+    await Future.wait(
+      notificationScopes.map((s) => repo.markAllAsRead(scope: s)),
+    );
     state = state.copyWith(
       notifications: state.notifications
           .map(
@@ -143,7 +163,8 @@ class NotificationState {
   final List<AppNotification> notifications;
   final int currentPage;
   final bool hasMore;
-  final String? nextCursor;
+  /// Cursor trang kế của từng scope còn dữ liệu (scope hết trang thì vắng).
+  final Map<String, String?> cursors;
   final bool isLoading;
   final String? errorMessage;
 
@@ -151,7 +172,7 @@ class NotificationState {
     this.notifications = const [],
     this.currentPage = 0,
     this.hasMore = true,
-    this.nextCursor,
+    this.cursors = const {},
     this.isLoading = false,
     this.errorMessage,
   });
@@ -160,7 +181,7 @@ class NotificationState {
     List<AppNotification>? notifications,
     int? currentPage,
     bool? hasMore,
-    String? nextCursor,
+    Map<String, String?>? cursors,
     bool? isLoading,
     String? errorMessage,
     bool clearError = false,
@@ -169,7 +190,7 @@ class NotificationState {
       notifications: notifications ?? this.notifications,
       currentPage: currentPage ?? this.currentPage,
       hasMore: hasMore ?? this.hasMore,
-      nextCursor: nextCursor ?? this.nextCursor,
+      cursors: cursors ?? this.cursors,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );

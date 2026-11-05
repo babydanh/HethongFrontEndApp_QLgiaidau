@@ -9,10 +9,11 @@ class ApiNotificationRepository {
 
   ApiNotificationRepository(this._dioClient);
 
-  /// GET /notifications?cursor=&limit=
+  /// GET /notifications?cursor=&limit=&scope=player|management
   Future<NotificationPage> getMyNotifications({
     String? cursor,
     int limit = 20,
+    String scope = 'player',
   }) async {
     _log.info(
       'Lấy danh sách thông báo: cursor=${cursor != null}, limit=$limit',
@@ -22,6 +23,7 @@ class ApiNotificationRepository {
         '/notifications',
         queryParameters: {
           'limit': limit,
+          'scope': scope,
           ...?(cursor == null ? null : <String, dynamic>{'cursor': cursor}),
         },
         options: Options(
@@ -55,11 +57,12 @@ class ApiNotificationRepository {
   }
 
   /// GET /notifications/unread-count
-  Future<int> getUnreadCount() async {
+  Future<int> getUnreadCount({String scope = 'player'}) async {
     _log.info('Lấy số thông báo chưa đọc');
     try {
       final response = await _dioClient.dio.get(
         '/notifications/unread-count',
+        queryParameters: {'scope': scope},
         options: Options(extra: {'noCache': true}),
       );
       if (response.statusCode == 200) {
@@ -84,10 +87,13 @@ class ApiNotificationRepository {
   }
 
   /// PATCH /notifications/read-all
-  Future<void> markAllAsRead() async {
+  Future<void> markAllAsRead({String scope = 'player'}) async {
     _log.info('Đánh dấu tất cả đã đọc');
     try {
-      await _dioClient.dio.patch('/notifications/read-all');
+      await _dioClient.dio.patch(
+        '/notifications/read-all',
+        data: {'scope': scope},
+      );
     } catch (e, stack) {
       _log.error('Lỗi đánh dấu tất cả đã đọc', e, stack);
       rethrow;

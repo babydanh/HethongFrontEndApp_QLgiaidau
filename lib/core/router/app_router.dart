@@ -44,6 +44,8 @@ import 'package:app_quanly_giaidau/features/profile/screens/profile_settings_scr
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/reports/screens/my_reports_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/features/admin/screens/admin_clubs_screen.dart';
@@ -828,16 +830,33 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               return Consumer(
                 builder: (context, ref, _) {
-                  final profile = ref.watch(userProfileProvider).asData?.value;
-                  final userId = profile?.id ?? '';
                   final l10n = AppLocalizations.of(context)!;
-                  final userName = profile?.fullName ?? l10n.routerDefaultUser;
-                  final avatarUrl = profile?.avatarUrl;
+                  final profileAsync = ref.watch(userProfileProvider);
+                  final profile = profileAsync.asData?.value;
+                  if (profile == null) {
+                    return LavishScaffold(
+                      title: l10n.settingsEloHistory,
+                      body: profileAsync.hasError
+                          ? LavishErrorState(
+                              onRetry: () =>
+                                  ref.invalidate(userProfileProvider),
+                            )
+                          : const LavishRowSkeleton(),
+                    );
+                  }
+                  final rankings =
+                      ref.watch(userRankingsProvider).asData?.value ??
+                      const <PlayerRanking>[];
+                  final currentElo = rankings.isEmpty
+                      ? 1000
+                      : rankings
+                            .map((r) => r.eloPoints)
+                            .reduce((a, b) => a > b ? a : b);
                   return EloHistoryScreen(
-                    userId: userId,
-                    userName: userName,
-                    avatarUrl: avatarUrl,
-                    currentElo: 1000,
+                    userId: profile.id,
+                    userName: profile.fullName ?? l10n.routerDefaultUser,
+                    avatarUrl: profile.avatarUrl,
+                    currentElo: currentElo,
                   );
                 },
               );
