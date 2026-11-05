@@ -178,7 +178,7 @@ void main() {
       });
     }
 
-    testWidgets('referee keeps the scoring icon and overlay toggles on video', (
+    testWidgets('referee: scoring icon on video, overlay toggles below it', (
       tester,
     ) async {
       await _pumpLiveScreen(
@@ -199,7 +199,24 @@ void main() {
         ),
         findsOneWidget,
       );
+      // The H2H / bracket toggles sit in their own row under the video, not
+      // painted over the picture.
       expect(find.byType(LiveOverlayToggleChips), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(LiveVideoBox),
+          matching: find.byType(LiveOverlayToggleChips),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: videoBox.first,
+          matching: find.byType(LiveOverlayToggleChips),
+        ),
+        findsNothing,
+      );
+      expect(find.byKey(const ValueKey('live-scorer-controls')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -212,6 +229,7 @@ void main() {
       );
 
       expect(find.byType(LiveOverlayToggleChips), findsNothing);
+      expect(find.byKey(const ValueKey('live-scorer-controls')), findsNothing);
     });
   });
 

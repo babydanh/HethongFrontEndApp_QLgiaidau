@@ -294,13 +294,6 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              l10n.matchReplayLabel,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ),
           AspectRatio(
             aspectRatio: 16 / 9,
             child: controller != null && controller.value.isInitialized

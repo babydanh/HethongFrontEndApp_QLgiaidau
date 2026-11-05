@@ -1870,20 +1870,47 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  Widget _liveControlIcon({
-    required IconData icon,
-    required String tooltip,
-    required bool active,
-    required VoidCallback onTap,
-  }) {
-    return IconButton(
-      tooltip: tooltip,
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-      iconSize: 16,
-      icon: Icon(icon, color: active ? AppTheme.primary : Colors.white54),
-      onPressed: onTap,
+  /// Scorer-only row under the video: scoreboard toggle + H2H / bracket chips.
+  Widget _buildScorerControls(MatchModel match, String tournamentId) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return Container(
+      key: const ValueKey('live-scorer-controls'),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border(bottom: BorderSide(color: colors.border)),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: l10n.liveScoreboardToggle,
+            icon: Icon(
+              Icons.leaderboard_outlined,
+              color: match.scoreboardVisible
+                  ? AppTheme.primary
+                  : colors.textMuted,
+            ),
+            onPressed: () => _toggleScoreboardVisibility(match),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: LiveOverlayToggleChips(
+                h2hVisible: match.h2hOverlayVisible,
+                bracketVisible: match.bracketOverlayVisible,
+                bracketAvailable: tournamentId.isNotEmpty,
+                matchEnded: match.isCompleted,
+                pendingKind: _pendingOverlayKind,
+                onToggle: (kind, visible) =>
+                    _setOverlayVisibility(match, kind, visible: visible),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2232,7 +2259,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   //  VIEWER STATE — Người xem
   // ═══════════════════════════════════════════════════════════
   Widget _buildViewerState(MatchModel match, {required bool canControl}) {
-    final l10n = AppLocalizations.of(context)!;
     final currentScore = _currentLiveScore(match);
     final effectiveId = _effectiveTournamentId(match);
     // No AppBar here: the controls live on the video and the lower half is
@@ -2326,63 +2352,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                 ),
               ),
-              // Video controls overlay (Bottom bar)
-              if (canControl) Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.8),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      if (canControl) ...[
-                        const SizedBox(width: 6),
-                        _liveControlIcon(
-                          icon: Icons.leaderboard_outlined,
-                          tooltip: l10n.liveScoreboardToggle,
-                          active: match.scoreboardVisible,
-                          onTap: () => _toggleScoreboardVisibility(match),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: SizedBox(
-                            height: 44,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: LiveOverlayToggleChips(
-                                h2hVisible: match.h2hOverlayVisible,
-                                bracketVisible: match.bracketOverlayVisible,
-                                bracketAvailable: effectiveId.isNotEmpty,
-                                matchEnded: match.isCompleted,
-                                pendingKind: _pendingOverlayKind,
-                                onToggle: (kind, visible) => _setOverlayVisibility(
-                                  match,
-                                  kind,
-                                  visible: visible,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
               // Overlay theo cờ server: một overlay một lúc, 240 ms easeOutCubic.
               Positioned(
                 left: 8,
@@ -2452,13 +2421,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return Column(
       children: [
         videoBox,
-
+        if (canControl) _buildScorerControls(match, effectiveId),
         ..._buildViewerBottom(match, effectiveId),
       ],
     );
   }
 
-  // ─── Viewer layout (portrait, read-only) ───
+  // ─── Live page layout (same for every account) ───
 
   String _viewerTitle(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
