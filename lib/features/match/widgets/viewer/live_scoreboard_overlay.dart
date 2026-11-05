@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 /// Brand blue shared with the H2H / bracket overlays and the Web scoreboard.
 const _accent = Color(0xFF1E90FF);
 const _panel = Color(0xFF020617);
-const _rowHeight = 26.0;
-const _scoreWidth = 40.0;
+// Broadcast-size score bug: slim rows, translucent so the picture shows.
+const _rowHeight = 20.0;
+const _scoreWidth = 32.0;
+const _panelAlpha = 0.6;
+const _scoreAlpha = 0.85;
 
 /// Scoreboard drawn over the video, same look as the Web
 /// `LiveScoreboardOverlay`: two stacked rows, blue bar on the left, dark body
@@ -45,22 +48,16 @@ class LiveScoreboardOverlay extends StatelessWidget {
 
   Widget _board() {
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 150, maxWidth: 215),
+      constraints: const BoxConstraints(minWidth: 120, maxWidth: 170),
       child: DecoratedBox(
+        key: const ValueKey('live-scoreboard-panel'),
         decoration: BoxDecoration(
-          color: _panel,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.6),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: _panel.withValues(alpha: _panelAlpha),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(7),
+          borderRadius: BorderRadius.circular(5),
           child: IntrinsicWidth(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -91,10 +88,10 @@ class _Row extends StatelessWidget {
       height: _rowHeight,
       child: Row(
         children: [
-          const SizedBox(width: 5, child: ColoredBox(color: _accent)),
+          const SizedBox(width: 4, child: ColoredBox(color: _accent)),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
               child: Align(alignment: Alignment.centerLeft, child: name),
             ),
           ),
@@ -113,9 +110,12 @@ class _ScoreCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = finished
-        ? const [Color(0xFF475569), Color(0xFF334155)]
-        : const [Color(0xFF2563EB), Color(0xFF0EA5E9)];
+    final colors =
+        (finished
+                ? const [Color(0xFF475569), Color(0xFF334155)]
+                : const [Color(0xFF2563EB), Color(0xFF0EA5E9)])
+            .map((c) => c.withValues(alpha: _scoreAlpha))
+            .toList();
     return SizedBox(
       width: _scoreWidth,
       child: ClipPath(
@@ -125,7 +125,7 @@ class _ScoreCell extends StatelessWidget {
           decoration: BoxDecoration(gradient: LinearGradient(colors: colors)),
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.only(left: 6),
+              padding: const EdgeInsets.only(left: 5),
               // A new score pops in (scale + fade), the old one fades out.
               child: AnimatedSwitcher(
                 duration: MediaQuery.disableAnimationsOf(context)
@@ -140,7 +140,7 @@ class _ScoreCell extends StatelessWidget {
                   key: ValueKey(score),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: FontWeight.w900,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),

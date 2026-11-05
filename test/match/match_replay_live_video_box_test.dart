@@ -59,8 +59,9 @@ MatchReplay _replay({required bool available, String? reason}) =>
 
 Future<void> _pumpBox(
   WidgetTester tester,
-  _FakeMatchPlaybackRepository repository,
-) async {
+  _FakeMatchPlaybackRepository repository, {
+  VoidCallback? onToggleFullscreen,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -69,11 +70,14 @@ Future<void> _pumpBox(
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
+        home: Scaffold(
           body: Center(
             child: SizedBox(
               width: 320,
-              child: LiveVideoBox(matchId: 'match-1'),
+              child: LiveVideoBox(
+                matchId: 'match-1',
+                onToggleFullscreen: onToggleFullscreen,
+              ),
             ),
           ),
         ),
@@ -100,6 +104,45 @@ void main() {
       findsOneWidget,
     );
     expect(repository.replayCalls, 1);
+  });
+
+  testWidgets('replay controls sit on the picture, no black strip below it', (
+    tester,
+  ) async {
+    final repository = _FakeMatchPlaybackRepository(_replay(available: true));
+
+    await _pumpBox(tester, repository, onToggleFullscreen: () {});
+
+    // The whole player is just the 16:9 picture (320 wide -> 180 high).
+    final size = tester.getSize(
+      find.byKey(const ValueKey<String>('match-replay-player')),
+    );
+    expect(size.height, closeTo(320 * 9 / 16, 0.5));
+    // Same controls as the live player: play, sound (muted by default),
+    // timeline and fullscreen, all inside the picture.
+    expect(find.byIcon(Icons.volume_off), findsOneWidget);
+    expect(find.byIcon(Icons.fullscreen), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('match-replay-timeline')),
+      findsOneWidget,
+    );
+    final picture = tester.getRect(
+      find.byKey(const ValueKey<String>('match-replay-player')),
+    );
+    expect(
+      picture.contains(tester.getCenter(find.byIcon(Icons.volume_off))),
+      isTrue,
+    );
+  });
+
+  testWidgets('sound button toggles the replay mute icon', (tester) async {
+    final repository = _FakeMatchPlaybackRepository(_replay(available: true));
+
+    await _pumpBox(tester, repository);
+    await tester.tap(find.byIcon(Icons.volume_off));
+    await tester.pump();
+
+    expect(find.byIcon(Icons.volume_up), findsOneWidget);
   });
 
   testWidgets(

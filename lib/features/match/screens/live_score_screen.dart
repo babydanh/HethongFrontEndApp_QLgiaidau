@@ -37,7 +37,6 @@ import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_discussion_message.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
@@ -134,8 +133,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     }
   }
 
-  late TabController _tabController;
-  int _selectedViewerTab = 1;
   // Viewer layout: 0 = Chat, 1 = More videos.
   int _liveTab = 0;
   bool _landscapeChatOpen = true;
@@ -242,12 +239,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: _selectedViewerTab,
-    );
-
     _livePulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -330,7 +321,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   void dispose() {
     _maxScoreController.dispose();
     _timeLimitController.dispose();
-    _tabController.dispose();
     _chatScroll.dispose();
     _restoreSystemChrome();
     _commentSub?.cancel();
@@ -781,10 +771,16 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
-    // Read-only view: back/share/menu sit on the video instead of an AppBar
-    // (see _buildViewerState). Keep the AppBar while loading or empty so the
-    // user is never left without a back button.
-    final useViewerLayout = match != null && !canOpenScoring;
+    // Every account gets the same modern page: back/share/menu (and, for a
+    // scorer, the scoring button) sit on the video instead of an AppBar (see
+    // _buildViewerState). Only the pre-match setup page keeps its AppBar, and
+    // so do loading and empty states, so the user always has a back button.
+    final showsSetup =
+        match != null &&
+        !widget.isViewer &&
+        canOpenScoring &&
+        match.isScheduled;
+    final useViewerLayout = match != null && !showsSetup;
 
     return Scaffold(
       backgroundColor: context.colors.bgDark,
@@ -843,35 +839,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           if (canOpenScoring)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: match.isScheduled
-                  ? IconButton(
-                      tooltip: l10n.liveStartMatch,
-                      icon: const Icon(Icons.play_circle_fill_rounded),
-                      color: const Color(0xFF16A34A),
-                      onPressed: () async {
-                        await _startMatchSafely(
-                          tournamentId: effectiveTournamentId,
-                        );
-                      },
-                    )
-                  : IconButton(
-                      tooltip: l10n.liveOpenScoreboardShort,
-                      icon: const Icon(Icons.scoreboard_rounded),
-                      color: AppTheme.primary,
-                      onPressed: () {
-                        showOfficialScoreModal(
-                          context,
-                          tournamentId: effectiveTournamentId,
-                          matchId: widget.matchId,
-                          match: match,
-                          onRecordPenalty: () =>
-                              _showFoulSelectionDialog(match),
-                          onSubmitPenalty: (teamSide, option, reason) =>
-                              _submitPenalty(match, teamSide, option, reason),
-                          onForceWin: () => _showForceWinDialog(match),
-                        );
-                      },
-                    ),
+              child: _scoringAction(match),
             ),
         ],
       ),
@@ -1902,23 +1870,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  Widget _liveControlIcon({
-    required IconData icon,
-    required String tooltip,
-    required bool active,
-    required VoidCallback onTap,
-  }) {
-    return IconButton(
-      tooltip: tooltip,
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-      iconSize: 16,
-      icon: Icon(icon, color: active ? AppTheme.primary : Colors.white54),
-      onPressed: onTap,
-    );
-  }
-
   Widget _buildH2hOverlay(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
     final tournament = (match.tournamentName ?? '').trim();
@@ -2264,15 +2215,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   //  VIEWER STATE — Người xem
   // ═══════════════════════════════════════════════════════════
   Widget _buildViewerState(MatchModel match, {required bool canControl}) {
-    final l10n = AppLocalizations.of(context)!;
     final currentScore = _currentLiveScore(match);
     final effectiveId = _effectiveTournamentId(match);
-    // Same condition as `useViewerLayout` in build(): no AppBar there, so the
-    // controls live on the video and the lower half is header + Chat/Videos.
-    final viewerLayout = !canControl;
+    // No AppBar here: the controls live on the video and the lower half is
+    // header + Chat/Videos, for viewers and scorers alike. [canControl] only
+    // adds the scorer tools (scoring button, overlay toggles).
     // Overlays are part of the picture: a viewer sees them only while a live
-    // stream or a replay is actually showing, never over "no signal".
-    final videoShowing = !viewerLayout || _isVideoShowing();
+    // stream or a replay is actually showing, never over "no signal"; a scorer
+    // always sees them so the toggles have a visible effect.
+    final videoShowing = canControl || _isVideoShowing();
     // Cờ server quyết định overlay; nút đóng chỉ ẩn cục bộ overlay đó.
     final serverOverlay = liveOverlayToShow(
       h2hVisible: match.h2hOverlayVisible,
@@ -2282,9 +2233,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final overlayToShow = !videoShowing || serverOverlay == _dismissedOverlay
         ? null
         : serverOverlay;
-    final params = (tournamentId: effectiveId, matchId: widget.matchId);
     final landscape =
-        viewerLayout &&
         MediaQuery.of(context).orientation == Orientation.landscape;
 
     // ─── Live Video Stream Player Box (Mockup) ───
@@ -2292,9 +2241,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           width: double.infinity,
           height: landscape ? double.infinity : null,
           padding: EdgeInsets.only(
-            top: viewerLayout && !landscape
-                ? MediaQuery.of(context).padding.top
-                : 0,
+            top: landscape ? 0 : MediaQuery.of(context).padding.top,
           ),
           decoration: BoxDecoration(
             color: Colors.black,
@@ -2317,18 +2264,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 showStreamStats: _canSeeStreamStats(effectiveId),
                 fill: landscape,
                 fullscreen: landscape,
-                onToggleFullscreen: viewerLayout ? _toggleFullscreen : null,
+                onToggleFullscreen: _toggleFullscreen,
+                showLiveDot: match.isLive,
               ),
-
-              // Thanh nút người xem nổi trên đầu video; bảng điểm vẽ SAU nó
-              // nên nằm trong video và đè lên nút quay lại.
-              if (viewerLayout)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _buildViewerTopBar(match),
-                ),
 
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
               // hình video, tạm ẩn khi overlay H2H / Sơ đồ đang hiện. Người
@@ -2337,7 +2275,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 top: 8,
                 left: 8,
                 child: IgnorePointer(
-                  ignoring: viewerLayout,
                   child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
                   reverseDuration: liveOverlayReverseDuration(context),
@@ -2352,7 +2289,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   child:
                       match.scoreboardVisible &&
                           videoShowing &&
-                          (!viewerLayout || overlayToShow == null)
+                          overlayToShow == null
                       ? KeyedSubtree(
                           key: const ValueKey('live-scoreboard-on'),
                           child: _liveScoreOverlay(match, currentScore),
@@ -2363,98 +2300,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   ),
                 ),
               ),
-              // TV Broadcast overlay for Camera source
-              if (!viewerLayout) Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.videocam_rounded,
-                        size: 10,
-                        color: Colors.white.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        l10n.liveCameraLabel,
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Video controls overlay (Bottom bar)
-              if (canControl) Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.8),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      if (canControl) ...[
-                        const SizedBox(width: 6),
-                        _liveControlIcon(
-                          icon: Icons.leaderboard_outlined,
-                          tooltip: l10n.liveScoreboardToggle,
-                          active: match.scoreboardVisible,
-                          onTap: () => _toggleScoreboardVisibility(match),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: SizedBox(
-                            height: 44,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: LiveOverlayToggleChips(
-                                h2hVisible: match.h2hOverlayVisible,
-                                bracketVisible: match.bracketOverlayVisible,
-                                bracketAvailable: effectiveId.isNotEmpty,
-                                matchEnded: match.isCompleted,
-                                pendingKind: _pendingOverlayKind,
-                                onToggle: (kind, visible) => _setOverlayVisibility(
-                                  match,
-                                  kind,
-                                  visible: visible,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
               // Overlay theo cờ server: một overlay một lúc, 240 ms easeOutCubic.
               Positioned(
                 left: 8,
@@ -2488,7 +2333,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Positioned(
                 left: 8,
                 right: 8,
-                top: 8,
+                // Leave the header strip clear so its buttons never cover the
+                // overlay's own close button.
+                top: _viewerHeaderHeight,
                 bottom: liveOverlayBottomInset,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
@@ -2515,6 +2362,36 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                 ),
               ),
+
+              // Top layer: a translucent header over the whole picture, the
+              // scoreboard and every overlay included. The scoreboard keeps
+              // its top-left spot; the back button floats right over it.
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.7),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _buildViewerTopBar(match, canControl: canControl),
+                  ],
+                ),
+              ),
             ],
           ),
         );
@@ -2524,125 +2401,66 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return Column(
       children: [
         videoBox,
-
-        if (viewerLayout)
-          ..._buildViewerBottom(match, effectiveId)
-        else ...[
-        // ─── Viewer Count Badge (Sockets Realtime) ───
-        if (match.isLive)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12, top: 4),
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final liveViewers =
-                      ref.watch(viewerCountProvider(widget.matchId)).value ?? 0;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.remove_red_eye_rounded,
-                          color: Color(0xFFEF4444),
-                          size: 14,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          l10n.liveViewerCount(liveViewers),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-
-        // ─── TabBar ───
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: context.colors.bgCard,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.colors.border),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            onTap: (index) {
-              if (mounted) setState(() => _selectedViewerTab = index);
-            },
-            labelColor: AppTheme.primary,
-            unselectedLabelColor: context.colors.textSecondary,
-            indicator: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            ),
-            indicatorSize: TabBarIndicatorSize.tab,
-            dividerColor: Colors.transparent,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
-            tabs: [
-              Tab(text: l10n.liveScoreTab),
-              Tab(text: l10n.liveDiscussionTab),
-            ],
-          ),
-        ),
-
-        // ─── Tab Content ───
-        if (_selectedViewerTab == 0)
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final state = ref.watch(scorePanelNotifierProvider(params));
-                  return _buildViewerScoreboard(match, state);
-                },
-              ),
-            ),
-          )
-        else
-          Expanded(child: _buildChatTab(match)),
-        ],
+        ..._buildViewerBottom(match, effectiveId),
       ],
     );
   }
 
-  // ─── Viewer layout (portrait, read-only) ───
+  // ─── Live page layout (same for every account) ───
 
   String _viewerTitle(MatchModel match) {
     final l10n = AppLocalizations.of(context)!;
     return '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} ${matchSideLabel(match, 2)}';
   }
 
-  /// Back / LIVE / share / more, drawn over the top of the video.
-  Widget _buildViewerTopBar(MatchModel match) {
+  /// Start (scheduled) or open-scoreboard (live) button for a scorer.
+  Widget _scoringAction(MatchModel match, {ButtonStyle? style}) {
+    final l10n = AppLocalizations.of(context)!;
+    final tournamentId = _effectiveTournamentId(match);
+    if (match.isScheduled) {
+      return IconButton(
+        tooltip: l10n.liveStartMatch,
+        icon: const Icon(Icons.play_circle_fill_rounded),
+        color: const Color(0xFF16A34A),
+        style: style,
+        onPressed: () async {
+          await _startMatchSafely(tournamentId: tournamentId);
+        },
+      );
+    }
+    return IconButton(
+      tooltip: l10n.liveOpenScoreboardShort,
+      icon: const Icon(Icons.scoreboard_rounded),
+      color: AppTheme.primary,
+      style: style,
+      onPressed: () {
+        showOfficialScoreModal(
+          context,
+          tournamentId: tournamentId,
+          matchId: widget.matchId,
+          match: match,
+          onRecordPenalty: () => _showFoulSelectionDialog(match),
+          onSubmitPenalty: (teamSide, option, reason) =>
+              _submitPenalty(match, teamSide, option, reason),
+          onForceWin: () => _showForceWinDialog(match),
+        );
+      },
+    );
+  }
+
+  /// Height of the header strip (one 40dp button row plus padding).
+  static const double _viewerHeaderHeight = 44;
+
+  /// Back / share / more, drawn over the top of the video. LIVE is no longer
+  /// a pill here: it is a dot beside the sound button (see LiveVideoPlayer).
+  Widget _buildViewerTopBar(MatchModel match, {required bool canControl}) {
     final l10n = AppLocalizations.of(context)!;
     Widget round(IconData icon, VoidCallback onTap, String tooltip) {
       return IconButton(
         tooltip: tooltip,
         onPressed: onTap,
-        icon: Icon(icon, size: 20, color: Colors.white),
-        style: IconButton.styleFrom(backgroundColor: Colors.black45),
+        visualDensity: VisualDensity.compact,
+        icon: Icon(icon, size: 22, color: Colors.white),
       );
     }
 
@@ -2656,26 +2474,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             l10n.liveBack,
           ),
           const Spacer(),
-          if (match.isLive)
-            FadeTransition(
-              opacity: _livePulseAnim,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: context.colors.error,
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text(
-                  l10n.matchLiveStatus,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(width: 6),
+          if (canControl) _scoringAction(match),
           if (MediaQuery.of(context).orientation == Orientation.landscape) ...[
             round(
               _landscapeChatOpen
@@ -2695,13 +2494,74 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             () => _shareMatch(match),
             l10n.liveShareAction,
           ),
-          round(
-            Icons.more_vert_rounded,
-            () => _showDetailsSheet(match),
-            l10n.liveViewerMore,
-          ),
+          if (canControl)
+            _scorerMoreMenu(match)
+          else
+            round(
+              Icons.more_vert_rounded,
+              () => _showDetailsSheet(match),
+              l10n.liveViewerMore,
+            ),
         ],
       ),
+    );
+  }
+
+  /// More menu for a scorer: match details plus the scoreboard / H2H / bracket
+  /// switches that used to be a row of chips over the video.
+  Widget _scorerMoreMenu(MatchModel match) {
+    final l10n = AppLocalizations.of(context)!;
+    final tournamentId = _effectiveTournamentId(match);
+    final locked = _pendingOverlayKind != null || match.isCompleted;
+    return PopupMenuButton<String>(
+      key: const ValueKey('live-more-menu'),
+      tooltip: l10n.liveViewerMore,
+      padding: EdgeInsets.zero,
+      icon: const Icon(Icons.more_vert_rounded, size: 22, color: Colors.white),
+      onSelected: (value) {
+        switch (value) {
+          case 'details':
+            _showDetailsSheet(match);
+          case 'board':
+            _toggleScoreboardVisibility(match);
+          case 'h2h':
+            _setOverlayVisibility(
+              match,
+              LiveOverlayKind.h2h,
+              visible: !match.h2hOverlayVisible,
+            );
+          case 'bracket':
+            _setOverlayVisibility(
+              match,
+              LiveOverlayKind.bracket,
+              visible: !match.bracketOverlayVisible,
+            );
+        }
+      },
+      itemBuilder: (_) => [
+        PopupMenuItem<String>(
+          value: 'details',
+          child: Text(l10n.liveDetailsSheetTitle),
+        ),
+        const PopupMenuDivider(),
+        CheckedPopupMenuItem<String>(
+          value: 'board',
+          checked: match.scoreboardVisible,
+          child: Text(l10n.liveScoreboardToggle),
+        ),
+        CheckedPopupMenuItem<String>(
+          value: 'h2h',
+          checked: match.h2hOverlayVisible,
+          enabled: !locked,
+          child: Text(l10n.liveOverlayChipH2h),
+        ),
+        CheckedPopupMenuItem<String>(
+          value: 'bracket',
+          checked: match.bracketOverlayVisible,
+          enabled: !locked && tournamentId.isNotEmpty,
+          child: Text(l10n.liveOverlayChipBracket),
+        ),
+      ],
     );
   }
 
@@ -3030,191 +2890,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     );
   }
 
-  String _memberEloLabel(MatchMemberInfo member, bool isDoubles) {
-    final l10n = AppLocalizations.of(context)!;
-    final name = member.fullName.trim();
-    final elo = member.eloPoints;
-    final typeLabel = isDoubles ? l10n.liveDoublesElo : l10n.liveSinglesElo;
-    final eloStr = elo != null ? '$elo' : l10n.liveNoElo;
-    if (name.isEmpty) return '$typeLabel: $eloStr';
-    return '$typeLabel:\n$eloStr';
-  }
-
-  String _teamMemberSummary(
-    List<MatchMemberInfo> memberInfos,
-    List<String> displayList,
-    int? teamEloPoints,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
-    if (isDoubles) {
-      return '${l10n.liveDoublesElo}:\n${teamEloPoints ?? l10n.liveNoElo}';
-    }
-    final realMembers = memberInfos
-        .where((member) => member.fullName.trim().isNotEmpty)
-        .toList();
-    if (realMembers.isNotEmpty) {
-      return realMembers.map((m) => _memberEloLabel(m, isDoubles)).join('\n');
-    }
-    final label = isDoubles ? l10n.liveDoublesElo : l10n.liveSinglesElo;
-    if (displayList.length == 1) {
-      return '$label:\n${l10n.liveNoElo}';
-    }
-    return displayList.map((n) => '$n\n$label: ${l10n.liveNoElo}').join('\n');
-  }
-
-  Widget _teamMemberSummaryWidget(
-    List<MatchMemberInfo> memberInfos,
-    List<String> displayList,
-    int? teamEloPoints,
-    TextStyle style,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final bool isDoubles = displayList.length >= 2 || memberInfos.length >= 2;
-    if (isDoubles) {
-      return Text(
-        l10n.liveDoublesEloValue(teamEloPoints ?? l10n.liveNoElo),
-        style: style.copyWith(fontWeight: FontWeight.w700),
-        textAlign: TextAlign.center,
-      );
-    }
-    final realMembers = memberInfos
-        .where((member) => member.fullName.trim().isNotEmpty)
-        .toList();
-    if (realMembers.isEmpty) {
-      return Text(
-        _teamMemberSummary(memberInfos, displayList, teamEloPoints),
-        style: style,
-        textAlign: TextAlign.center,
-      );
-    }
-    return Column(
-      children: realMembers.map((member) {
-        final userId = member.userId?.trim();
-        final label = _memberEloLabel(member, isDoubles);
-        if (userId == null || userId.isEmpty) {
-          return Text(label, style: style, textAlign: TextAlign.center);
-        }
-        return InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          onTap: () => context.push('/profile/user/$userId'),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Text(
-              label,
-              style: style.copyWith(decoration: TextDecoration.underline),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildTeamAvatarWidget(
-    List<String> displayList,
-    List<MatchMemberInfo> memberInfos,
-    Color color,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final bool isDoubles = displayList.length >= 2;
-
-    // Only a slot the server resolved to a real account can lead somewhere: a
-    // team name, a still-"TBD" athlete or a mock member keeps its plain
-    // initial rather than a control that goes nowhere.
-    final linkable = memberInfos
-        .where((m) => !m.isMock && (m.userId ?? '').trim().isNotEmpty)
-        .toList();
-
-    Widget slot({
-      required int index,
-      required String name,
-      required double size,
-      required double fontSize,
-      required double alpha,
-      String fallbackInitial = '?',
-    }) {
-      final member = index < linkable.length ? linkable[index] : null;
-      if (member != null) {
-        return UserAvatarTap(
-          userId: member.userId!.trim(),
-          name: name,
-          imageUrl: member.avatarUrl,
-          elo: member.eloPoints ?? 0,
-          tierName: member.tierName,
-          size: size,
-          // The hit box matches the artwork exactly: the two doubles avatars
-          // are deliberately overlapped, and a wider box would let one eat
-          // the other's taps.
-          minTouchTarget: size,
-        );
-      }
-      return CircleAvatar(
-        radius: size / 2,
-        backgroundColor: color.withValues(alpha: alpha),
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : fallbackInitial,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w700,
-            color: color,
-          ),
-        ),
-      );
-    }
-
-    if (isDoubles) {
-      final name1 = displayList.isNotEmpty
-          ? displayList[0].trim()
-          : l10n.liveAthleteOne;
-      final name2 = displayList.length > 1
-          ? displayList[1].trim()
-          : l10n.liveAthleteTwo;
-
-      return SizedBox(
-        width: 68,
-        height: 48,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned(
-              left: 4,
-              child: slot(
-                index: 0,
-                name: name1,
-                size: 40,
-                fontSize: 13,
-                alpha: 0.25,
-              ),
-            ),
-            Positioned(
-              right: 4,
-              child: slot(
-                index: 1,
-                name: name2,
-                size: 40,
-                fontSize: 13,
-                alpha: 0.45,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Singles
-    final name1 = displayList.isNotEmpty
-        ? displayList[0].trim()
-        : '';
-    return slot(
-      index: 0,
-      name: name1,
-      size: 52,
-      fontSize: 18,
-      alpha: 0.15,
-    );
-  }
-
 
   /// Bảng điểm hai hàng chồng ở góc trên trái, giống web
   /// (`LiveScoreboardOverlay.tsx`): mỗi hàng là [tên viết tắt IN HOA | ô điểm
@@ -3231,9 +2906,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       overflow: TextOverflow.ellipsis,
       style: const TextStyle(
         color: Colors.white,
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: FontWeight.w900,
-        letterSpacing: 0.3,
+        letterSpacing: 0.2,
       ),
     );
 
@@ -3366,648 +3041,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             );
           }),
         ],
-      ),
-    );
-  }
-
-  Widget _buildViewerScoreboard(
-    MatchModel match,
-    ScorePanelState notifierState,
-  ) {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final currentScore = _currentLiveScore(match, notifierState);
-    final kind = SportRuleKind.fromString(match.sportKey);
-    final effectiveTournamentId = _effectiveTournamentId(match);
-    final tournament = effectiveTournamentId.isNotEmpty
-        ? ref.watch(tournamentProvider(effectiveTournamentId)).value
-        : null;
-    final tournamentRules = tournament?.sportRules;
-    final effectiveSportRules =
-        tournamentRules != null && tournamentRules.isNotEmpty
-        ? {
-            ...tournamentRules,
-            if (match.sportRules != null && match.sportRules!.isNotEmpty)
-              ...match.sportRules!,
-          }
-        : match.sportRules;
-    final config = resolveSportConfig(effectiveSportRules, kind);
-    final isLiteMatch = isLiteScoringMode(
-      tournamentConfig: match.tournamentConfig,
-      sportRules: effectiveSportRules,
-      tournamentIsLite: tournament?.isLite == true,
-    );
-    // Prefer hydrated notifier state, but keep the server snapshot as a
-    // fallback while the score-panel provider is reconnecting. Super Lite
-    // deliberately has no fixed BO/max-set limit: every manually closed set
-    // is retained and one open set is shown after it.
-    final serverSets = _scoreDetailsSets(match);
-    // The notifier keeps Tennis' open set in the same list so it can survive
-    // a socket/refetch. The viewer history must only contain closed sets; the
-    // open set is rendered once in the current-set slot below. This keeps the
-    // app count aligned with the web (no extra 0-0/set N+1 card).
-    final allSets = notifierState.finishedSets.isNotEmpty
-        ? notifierState.finishedSets
-        : serverSets;
-    final finishedSets = allSets.where((set) => set.isFinished).toList();
-    final team1SetWins = finishedSets
-        .where((set) => set.score1 > set.score2)
-        .length;
-    final team2SetWins = finishedSets
-        .where((set) => set.score2 > set.score1)
-        .length;
-    final liteSetCount = finishedSets.length + (match.isCompleted ? 0 : 1);
-    final setCount = isLiteMatch
-        ? (liteSetCount > 0 ? liteSetCount : 1)
-        : config.bestOf;
-    final scoreSummary = isLiteMatch
-        ? null
-        : _viewerScoreSummary(match, config);
-    final modelLabel = isLiteMatch ? null : _viewerModelLabel(config);
-    final fullLocation = tournament != null
-        ? TournamentLocationFormatter.matchFullLocation(
-            tournament: tournament,
-            courtName: match.court,
-          )
-        : TournamentLocationFormatter.matchCourtLabel(match.court);
-
-    final currentSetLabel = _viewerCurrentSetLabel(
-      match,
-      notifierState,
-      config,
-      isLiteMatch,
-      finishedSetCount: finishedSets.length,
-    );
-
-    final t1DisplayList = [
-      for (final p in matchSidePlayers(match, 1)) p.fullName,
-    ];
-    final t2DisplayList = [
-      for (final p in matchSidePlayers(match, 2)) p.fullName,
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Match metadata card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.location_on_rounded,
-                  size: 16,
-                  color: AppTheme.primary,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    fullLocation.isNotEmpty
-                        ? fullLocation
-                        : l10n.liveCourtDefault,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: colors.textSecondary,
-                    ),
-                  ),
-                ),
-                if (scoreSummary != null) ...[
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                    ),
-                    child: Text(
-                      scoreSummary,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-              border: Border.all(color: colors.border),
-            ),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                _buildViewerConfigChip(
-                  l10n.liveSportLabel,
-                  _setupSportLabel(kind),
-                ),
-                if (modelLabel != null)
-                  _buildViewerConfigChip(l10n.liveScoringLabel, modelLabel),
-                if (isLiteMatch)
-                  _buildViewerConfigChip(
-                    l10n.liveRuleLabel,
-                    l10n.liveOpenRules,
-                  ),
-                if (!isLiteMatch)
-                  _buildViewerConfigChip(
-                    l10n.liveWinLabel,
-                    l10n.liveSetValue(config.setsToWin),
-                  ),
-                if (!isLiteMatch && config.mustWinByTwo)
-                  _buildViewerConfigChip(
-                    l10n.liveRuleLabel,
-                    l10n.liveDifferenceTwo,
-                  ),
-                if (!isLiteMatch && kind == SportRuleKind.tennis)
-                  _buildViewerConfigChip(
-                    l10n.liveTiebreakLabel,
-                    l10n.livePointsValue(config.tiebreakPoints ?? 7),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Main Premium Scoreboard
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [colors.bgCard, colors.bgSurface],
-              ),
-              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-              border: Border.all(color: colors.border, width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    // Team 1
-                    Expanded(
-                      child: Column(
-                        children: [
-                          _buildTeamAvatarWidget(
-                            t1DisplayList,
-                            match.team1MemberInfos,
-                            const Color(0xFF2979FF),
-                          ),
-                          const SizedBox(height: 12),
-                          ParticipantLabel(
-                            teamName: matchSideTeamName(match, 1),
-                            players: matchSidePlayers(match, 1),
-                            teamOnly: isFootballMatch(match),
-                            compact: true,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
-                            textAlign: TextAlign.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                          ),
-                          const SizedBox(height: 6),
-                          // Player Info / ELO từ API thật; fallback trung thực nếu chưa có.
-                          _teamMemberSummaryWidget(
-                            match.team1MemberInfos,
-                            t1DisplayList,
-                            match.team1EloPoints,
-                            TextStyle(
-                              fontSize: 11,
-                              color: colors.textMuted,
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (!isLiteMatch)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFF2979FF,
-                                ).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusMedium,
-                                ),
-                              ),
-                              child: Text(
-                                l10n.liveSetWins(team1SetWins),
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2979FF),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-
-                    // Center Score
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                '${currentScore.score1}',
-                                style: TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textPrimary,
-                                  fontFamily: 'Courier',
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 6),
-                                child: Text(
-                                  '-',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ),
-                              Text(
-                                '${currentScore.score2}',
-                                style: TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.w700,
-                                  color: colors.textPrimary,
-                                  fontFamily: 'Courier',
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  currentSetLabel,
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Team 2
-                    Expanded(
-                      child: Column(
-                        children: [
-                          _buildTeamAvatarWidget(
-                            t2DisplayList,
-                            match.team2MemberInfos,
-                            const Color(0xFFEF4444),
-                          ),
-                          const SizedBox(height: 12),
-                          ParticipantLabel(
-                            teamName: matchSideTeamName(match, 2),
-                            players: matchSidePlayers(match, 2),
-                            teamOnly: isFootballMatch(match),
-                            compact: true,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
-                            textAlign: TextAlign.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                          ),
-                          const SizedBox(height: 6),
-                          // Player Info / ELO từ API thật; fallback trung thực nếu chưa có.
-                          _teamMemberSummaryWidget(
-                            match.team2MemberInfos,
-                            t2DisplayList,
-                            match.team2EloPoints,
-                            TextStyle(
-                              fontSize: 11,
-                              color: colors.textMuted,
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          if (!isLiteMatch)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFFEF4444,
-                                ).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusMedium,
-                                ),
-                              ),
-                              child: Text(
-                                l10n.liveSetWins(team2SetWins),
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFEF4444),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Both strict formats and Super Lite expose set history. Strict
-          // formats use the configured BO count; Super Lite grows this list
-          // from the sets that the scorer has explicitly closed.
-          if (setCount > 0) ...[
-            // TỈ SỐ CÁC SET Section
-            Text(
-              l10n.liveSetScoresTitle,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: colors.textSecondary,
-                letterSpacing: 0.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(setCount, (index) {
-                  final isPlayed = index < finishedSets.length;
-                  final currentPlaying = index == finishedSets.length;
-                  String scoreDisplay = '-';
-                  Color boxBg = colors.bgSurface;
-                  Color borderCol = colors.border;
-
-                  if (isPlayed) {
-                    final setScore = finishedSets[index];
-                    scoreDisplay = '${setScore.score1} - ${setScore.score2}';
-                    boxBg = Colors.green.withValues(alpha: 0.06);
-                    borderCol = Colors.green.withValues(alpha: 0.2);
-                  } else if (currentPlaying && !match.isCompleted) {
-                    scoreDisplay =
-                        '${currentScore.score1} - ${currentScore.score2}';
-                    boxBg = AppTheme.primary.withValues(alpha: 0.05);
-                    borderCol = AppTheme.primary.withValues(alpha: 0.3);
-                  }
-
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: boxBg,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                      border: Border.all(color: borderCol, width: 1.5),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          '${l10n.tennisInfoSet} ${index + 1}',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          scoreDisplay,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: isPlayed || currentPlaying
-                                ? colors.textPrimary
-                                : colors.textMuted.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
-          ],
-
-          _buildViewerPenaltyLog(match),
-
-          // Match details expansion card
-          const SizedBox(height: 24),
-          Card(
-            color: colors.bgCard,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-              side: BorderSide(color: colors.border, width: 0.5),
-            ),
-            elevation: 0,
-            child: ExpansionTile(
-              shape: const Border(),
-              title: Text(
-                l10n.liveMatchDetails,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
-              ),
-              leading: Icon(
-                Icons.info_outline_rounded,
-                color: colors.textSecondary,
-                size: 20,
-              ),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Column(
-                    children: [
-                      _buildInfoRow(
-                        l10n.liveTournamentLabel,
-                        match.tournamentName ?? l10n.liveDefaultTournament,
-                      ),
-                      const Divider(height: 16),
-                      _buildInfoRow(
-                        l10n.liveRefereeLabel,
-                        match.refereeName?.trim().isNotEmpty == true
-                            ? match.refereeName!
-                            : l10n.liveUnknownValue,
-                      ),
-                      const Divider(height: 16),
-                      _buildInfoRow(
-                        l10n.liveScheduledTimeLabel,
-                        match.scheduledTime != null
-                            ? DateFormat(
-                                'HH:mm - dd/MM/yyyy',
-                              ).format(match.scheduledTime!.toLocal())
-                            : l10n.liveNotScheduled,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: context.colors.textSecondary),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: context.colors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _viewerScoreSummary(MatchModel match, SportConfig config) {
-    final l10n = AppLocalizations.of(context)!;
-    final matchCap = match.maxScore;
-    if (config.kind == SportRuleKind.tennis) {
-      final setGames = matchCap ?? config.pointsPerSet;
-      return l10n.liveSummaryTennis(config.bestOf, setGames);
-    }
-    if (config.scoringModel == SportScoringModel.pickleballSideOut) {
-      final target = matchCap ?? config.pointsPerSet;
-      return l10n.liveSummarySideOut(config.bestOf, target);
-    }
-    final target = matchCap ?? config.pointsPerSet;
-    return l10n.liveSummaryRally(config.bestOf, target);
-  }
-
-  String _viewerModelLabel(SportConfig config) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (config.scoringModel) {
-      case SportScoringModel.tennisSet:
-        return l10n.liveModelGame;
-      case SportScoringModel.pickleballSideOut:
-        return l10n.liveModelSideOut;
-      case SportScoringModel.rallyPointSet:
-        return l10n.liveModelRally;
-    }
-  }
-
-  String _viewerCurrentSetLabel(
-    MatchModel match,
-    ScorePanelState state,
-    SportConfig config,
-    bool isLiteMatch, {
-    int? finishedSetCount,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    if (match.isCompleted) {
-      return l10n.liveCurrentSetFinished;
-    }
-    final currentSet = (finishedSetCount ?? state.finishedSets.length) + 1;
-    if (isLiteMatch || config.scoringModel == SportScoringModel.tennisSet) {
-      return l10n.liveCurrentSet(currentSet);
-    }
-    return l10n.liveCurrentRound(currentSet);
-  }
-
-  Widget _buildViewerConfigChip(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: context.colors.bgSurface,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: TextStyle(fontSize: 11, color: context.colors.textMuted),
-          children: [
-            TextSpan(text: '$label: '),
-            TextSpan(
-              text: value,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: context.colors.textPrimary,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

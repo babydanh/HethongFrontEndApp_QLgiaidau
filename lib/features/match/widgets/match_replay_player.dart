@@ -8,9 +8,20 @@ import 'package:video_player/video_player.dart';
 
 /// Phát nối các segment MP4 của trận bằng một thanh thời gian toàn cục.
 class MatchReplayPlayer extends StatefulWidget {
-  const MatchReplayPlayer({super.key, required this.replay});
+  const MatchReplayPlayer({
+    super.key,
+    required this.replay,
+    this.fullscreen = false,
+    this.onToggleFullscreen,
+  });
 
   final MatchReplay replay;
+
+  /// Current fullscreen state, only used to pick the button icon.
+  final bool fullscreen;
+
+  /// Shows a fullscreen button when set (same as the live player).
+  final VoidCallback? onToggleFullscreen;
 
   @override
   State<MatchReplayPlayer> createState() => _MatchReplayPlayerState();
@@ -29,6 +40,7 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   bool _advancing = false;
   bool _showSkipped = false;
   bool _finished = false;
+  bool _muted = true;
   int _displayedSeconds = 0;
 
   @override
@@ -99,7 +111,7 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
       try {
         await controller.initialize();
         await controller.setLooping(false);
-        await controller.setVolume(0);
+        await controller.setVolume(_muted ? 0 : 1);
       } catch (_) {
         await controller.dispose();
         _failed.add(candidate);
@@ -189,7 +201,7 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
     try {
       await controller.initialize();
       await controller.setLooping(false);
-      await controller.setVolume(0);
+      await controller.setVolume(_muted ? 0 : 1);
       if (!mounted || index <= _segmentIndex) {
         await controller.dispose();
       } else {
@@ -265,6 +277,11 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _toggleMute() async {
+    setState(() => _muted = !_muted);
+    await _controller?.setVolume(_muted ? 0 : 1);
+  }
+
   String _formatTime(int seconds) {
     final safeSeconds = seconds.clamp(0, 359999);
     final hours = safeSeconds ~/ 3600;
@@ -286,97 +303,137 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final controller = _controller;
-    final maxDuration = widget.replay.durationSec.toDouble();
-    final current = _displayedSeconds.clamp(0, widget.replay.durationSec);
     return ColoredBox(
       key: const ValueKey<String>('match-replay-player'),
       color: Colors.black,
+      // The picture is the whole player: controls float over its bottom edge
+      // like the live player, instead of a black strip underneath.
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (controller != null && controller.value.isInitialized)
+              VideoPlayer(controller)
+            else
+              Center(
+                child: _failed.length >= widget.replay.segments.length
+                    ? Text(
+                        l10n.matchReplayUnableToPlay,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70),
+                      )
+                    : _finished
+                    ? Text(
+                        l10n.matchReplayFinished,
+                        style: const TextStyle(color: Colors.white70),
+                      )
+                    : const CircularProgressIndicator(),
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _buildControls(l10n, controller),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControls(
+    AppLocalizations l10n,
+    VideoPlayerController? controller,
+  ) {
+    final maxDuration = widget.replay.durationSec.toDouble();
+    final current = _displayedSeconds.clamp(0, widget.replay.durationSec);
+    final playing = controller?.value.isPlaying == true;
+    Widget button(IconData icon, String tooltip, VoidCallback? onPressed) =>
+        IconButton(
+          tooltip: tooltip,
+          onPressed: onPressed,
+          visualDensity: VisualDensity.compact,
+          iconSize: 22,
+          color: Colors.white,
+          icon: Icon(icon),
+        );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.75)],
+        ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              l10n.matchReplayLabel,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
+          if (_showSkipped)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  l10n.matchReplaySkippedSegment,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                ),
+              ),
+            ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+            ),
+            child: SizedBox(
+              height: 24,
+              child: Slider(
+                key: const ValueKey<String>('match-replay-timeline'),
+                value: current.toDouble().clamp(0, maxDuration).toDouble(),
+                max: maxDuration > 0 ? maxDuration : 1,
+                onChanged: maxDuration > 0
+                    ? (value) => _seekGlobal(value)
+                    : null,
+                activeColor: Theme.of(context).colorScheme.primary,
+                inactiveColor: Colors.white24,
+              ),
             ),
           ),
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: controller != null && controller.value.isInitialized
-                ? VideoPlayer(controller)
-                : Center(
-                    child: _failed.length >= widget.replay.segments.length
-                        ? Text(
-                            l10n.matchReplayUnableToPlay,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.white70),
-                          )
-                        : _finished
-                        ? Text(
-                            l10n.matchReplayFinished,
-                            style: const TextStyle(color: Colors.white70),
-                          )
-                        : const CircularProgressIndicator(),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Slider(
-                  key: const ValueKey<String>('match-replay-timeline'),
-                  value: current.toDouble().clamp(0, maxDuration).toDouble(),
-                  max: maxDuration > 0 ? maxDuration : 1,
-                  onChanged: maxDuration > 0
-                      ? (value) => _seekGlobal(value)
-                      : null,
-                  activeColor: Theme.of(context).colorScheme.primary,
-                  inactiveColor: Colors.white24,
+          Row(
+            children: [
+              const SizedBox(width: 4),
+              button(
+                playing ? Icons.pause : Icons.play_arrow,
+                playing ? l10n.matchReplayPause : l10n.matchReplayPlay,
+                _togglePlayback,
+              ),
+              button(
+                _muted ? Icons.volume_off : Icons.volume_up,
+                _muted ? 'Bật tiếng' : 'Tắt tiếng',
+                _toggleMute,
+              ),
+              Expanded(
+                child: Text(
+                  '${_formatTime(current)} / ${_formatTime(widget.replay.durationSec)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: controller?.value.isPlaying == true
-                          ? l10n.matchReplayPause
-                          : l10n.matchReplayPlay,
-                      onPressed: _togglePlayback,
-                      color: Colors.white,
-                      icon: Icon(
-                        controller?.value.isPlaying == true
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${_formatTime(current)} / ${_formatTime(widget.replay.durationSec)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
+              ),
+              if (widget.onToggleFullscreen != null)
+                button(
+                  widget.fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                  widget.fullscreen
+                      ? l10n.liveExitFullscreen
+                      : l10n.liveEnterFullscreen,
+                  widget.onToggleFullscreen,
                 ),
-                if (_showSkipped)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      l10n.matchReplaySkippedSegment,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+              const SizedBox(width: 4),
+            ],
           ),
         ],
       ),

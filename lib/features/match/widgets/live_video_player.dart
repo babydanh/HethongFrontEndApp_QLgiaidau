@@ -34,6 +34,7 @@ class LiveVideoPlayer extends StatefulWidget {
     this.fill = false,
     this.fullscreen = false,
     this.onToggleFullscreen,
+    this.showLiveDot = false,
   });
 
   final String url;
@@ -53,6 +54,10 @@ class LiveVideoPlayer extends StatefulWidget {
 
   /// Hiện huy hiệu Ping góc trên trái (màn live quyết định cờ này).
   final bool showStreamStats;
+
+  /// Chấm LIVE cạnh nút âm thanh: đỏ khi đang ở mép trực tiếp, xám khi xem
+  /// trễ (bấm để về live). Thay cho nhãn chữ "LIVE" ở header.
+  final bool showLiveDot;
 
   @override
   State<LiveVideoPlayer> createState() => _LiveVideoPlayerState();
@@ -323,7 +328,12 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                                 label: _muted ? 'Bật tiếng' : 'Tắt tiếng',
                                 onPressed: _toggleMute,
                               ),
-                              if (_behindLive)
+                              if (widget.showLiveDot)
+                                _LiveDot(
+                                  behind: _behindLive,
+                                  onTap: _behindLive ? _goLive : null,
+                                )
+                              else if (_behindLive)
                                 TextButton(
                                   onPressed: _goLive,
                                   child: Text(
@@ -395,6 +405,45 @@ class _ControlButton extends StatelessWidget {
             width: 48,
             height: 48,
             child: Icon(icon, color: const Color(0xFFCBD5E1), size: 20),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Red dot while the viewer is at the live edge; grey (tap to jump back)
+/// once they have fallen behind.
+class _LiveDot extends StatelessWidget {
+  const _LiveDot({required this.behind, this.onTap});
+
+  final bool behind;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Semantics(
+      button: onTap != null,
+      label: behind ? l10n.liveBackToLive : l10n.matchLiveStatus,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 20,
+        child: SizedBox(
+          width: 28,
+          height: 48,
+          child: Center(
+            child: Container(
+              key: const ValueKey('live-dot'),
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: behind
+                    ? const Color(0xFF9CA3AF)
+                    : const Color(0xFFEF4444),
+              ),
+            ),
           ),
         ),
       ),

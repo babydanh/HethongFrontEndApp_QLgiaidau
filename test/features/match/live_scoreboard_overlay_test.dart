@@ -66,6 +66,54 @@ void main() {
     );
   });
 
+  testWidgets('TC-LIVEVIEW-21 broadcast-size board: two slim rows', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        const LiveScoreboardOverlay(
+          team1: Text('Alpha'),
+          team2: Text('Beta'),
+          score1: 3,
+          score2: 1,
+        ),
+      ),
+    );
+
+    final size = tester.getSize(find.byType(LiveScoreboardOverlay));
+    // Two 20dp rows plus the 2dp gap, and no wider than a TV score bug.
+    expect(size.height, lessThanOrEqualTo(44));
+    expect(size.width, lessThanOrEqualTo(170));
+  });
+
+  testWidgets('TC-LIVEVIEW-22 the board is translucent so the picture shows', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        const LiveScoreboardOverlay(
+          team1: Text('Alpha'),
+          team2: Text('Beta'),
+          score1: 3,
+          score2: 1,
+        ),
+      ),
+    );
+
+    final panel = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('live-scoreboard-panel')),
+    );
+    expect(((panel.decoration as BoxDecoration).color)!.a, lessThan(0.8));
+    final cell = tester.widgetList<DecoratedBox>(
+      find.byKey(const ValueKey('live-scoreboard-score-bg')),
+    );
+    for (final c in cell) {
+      final gradient =
+          (c.decoration as BoxDecoration).gradient as LinearGradient;
+      expect(gradient.colors.first.a, lessThan(1));
+    }
+  });
+
   testWidgets('TC-LIVEVIEW-13 finished match greys the score cells', (
     tester,
   ) async {
@@ -88,7 +136,11 @@ void main() {
     for (final c in cells) {
       final gradient =
           (c.decoration as BoxDecoration).gradient as LinearGradient;
-      expect(gradient.colors.first, const Color(0xFF475569));
+      // Grey hue kept; only the alpha is lowered so the picture shows through.
+      expect(
+        gradient.colors.first.withValues(alpha: 1),
+        const Color(0xFF475569),
+      );
     }
   });
 

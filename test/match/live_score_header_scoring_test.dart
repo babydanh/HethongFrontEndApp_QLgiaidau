@@ -151,12 +151,110 @@ Future<void> _pumpLiveScreen(
   await tester.pump(const Duration(milliseconds: 300));
 }
 
-Finder _appBarScoringIcon() => find.descendant(
-  of: find.byType(AppBar),
-  matching: find.byIcon(Icons.scoreboard_rounded),
-);
+Finder _appBarScoringIcon() => find.byIcon(Icons.scoreboard_rounded);
 
 void main() {
+  group('TC-LIVEVIEW-20 one modern layout for every account', () {
+    for (final entry in {
+      'referee': _refereeAuth,
+      'viewer': _viewerAuth,
+    }.entries) {
+      testWidgets('${entry.key}: no AppBar, Chat and Other videos tabs', (
+        tester,
+      ) async {
+        await _pumpLiveScreen(
+          tester,
+          auth: entry.value,
+          match: _match(),
+          isViewer: true,
+        );
+
+        expect(find.byType(AppBar), findsNothing);
+        expect(find.text('Chat'), findsOneWidget);
+        expect(find.text('Score & Timeline'), findsNothing);
+        expect(find.text('Discussion'), findsNothing);
+        expect(find.byIcon(Icons.arrow_back_ios_new_rounded), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('referee: scoring icon on video, overlay toggles in the ⋮ menu', (
+      tester,
+    ) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _refereeAuth,
+        match: _match(),
+        isViewer: true,
+      );
+
+      final videoBox = find.ancestor(
+        of: find.byType(LiveVideoBox),
+        matching: find.byType(Stack),
+      );
+      expect(
+        find.descendant(
+          of: videoBox.first,
+          matching: find.byIcon(Icons.scoreboard_rounded),
+        ),
+        findsOneWidget,
+      );
+      // No toggle row anywhere on the page: the toggles hide behind ⋮.
+      expect(find.byType(LiveOverlayToggleChips), findsNothing);
+      expect(find.byKey(const ValueKey('live-scorer-controls')), findsNothing);
+      expect(find.text('H2H'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('live-more-menu')));
+      // The page has looping animations, so pumpAndSettle would never settle.
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.text('Match details'), findsOneWidget);
+      expect(find.text('Scoreboard'), findsOneWidget);
+      expect(find.text('H2H'), findsOneWidget);
+      expect(find.text('Bracket'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('viewer has no overlay toggles', (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _viewerAuth,
+        match: _match(),
+        isViewer: true,
+      );
+
+      expect(find.byType(LiveOverlayToggleChips), findsNothing);
+      expect(find.byKey(const ValueKey('live-more-menu')), findsNothing);
+      expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
+    });
+
+    testWidgets('LIVE is a red dot by the sound button, not a header pill', (
+      tester,
+    ) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _viewerAuth,
+        match: _match(),
+        isViewer: true,
+      );
+
+      expect(find.text('LIVE'), findsNothing);
+      expect(find.byKey(const ValueKey('live-dot')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('no live dot once the match is over', (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _viewerAuth,
+        match: _match(status: 'COMPLETED'),
+        isViewer: true,
+      );
+
+      expect(find.byKey(const ValueKey('live-dot')), findsNothing);
+    });
+  });
+
   testWidgets(
     'trọng tài thấy icon bấm điểm ở header khi mở trận live từ thẻ trận (route viewer)',
     (tester) async {
@@ -230,7 +328,7 @@ void main() {
     },
   );
   testWidgets(
-    'TC-LIVEVIEW-11 viewer scoreboard sits top-left inside the video, over the back button',
+    'TC-LIVEVIEW-11 scoreboard keeps the top-left spot, the header layer sits above it',
     (tester) async {
       await _pumpLiveScreen(
         tester,
@@ -249,8 +347,26 @@ void main() {
       final videoRect = tester.getRect(find.byType(LiveVideoBox));
 
       expect(board, findsOneWidget);
-      // The header floats over the picture and the board is drawn on top of it,
-      // so the board covers the back button inside the video.
+      // The header is the top layer of the video: the board keeps its old
+      // top-left spot and the back button is drawn over it, still visible.
+      final videoStack = tester.widget<Stack>(
+        find
+            .ancestor(
+              of: find.byType(LiveVideoBox),
+              matching: find.byType(Stack),
+            )
+            .first,
+      );
+      int layerOf(Finder target) => videoStack.children.indexWhere(
+        (c) => find
+            .descendant(of: find.byWidget(c), matching: target)
+            .evaluate()
+            .isNotEmpty,
+      );
+      expect(
+        layerOf(find.byIcon(Icons.arrow_back_ios_new_rounded)),
+        greaterThan(layerOf(find.byType(LiveScoreboardOverlay))),
+      );
       expect(videoRect.contains(backButton.topLeft), isTrue);
       expect(tester.getRect(board).overlaps(backButton), isTrue);
       expect(tester.getTopLeft(board).dx, lessThan(videoRect.left + 16));

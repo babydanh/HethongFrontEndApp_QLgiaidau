@@ -46,9 +46,13 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     this.fill = false,
     this.fullscreen = false,
     this.onToggleFullscreen,
+    this.showLiveDot = false,
   });
 
   final String matchId;
+
+  /// Forwarded to the live player: red LIVE dot beside the sound button.
+  final bool showLiveDot;
 
   /// Fill the parent's bounded height (landscape fullscreen) instead of sizing
   /// by aspect ratio.
@@ -90,6 +94,7 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         fill: widget.fill,
         fullscreen: widget.fullscreen,
         onToggleFullscreen: widget.onToggleFullscreen,
+        showLiveDot: widget.showLiveDot,
       );
     }
 
@@ -103,27 +108,16 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         final player = MatchReplayPlayer(
           key: ValueKey<String>('match-replay-${value.matchId}'),
           replay: value,
+          fullscreen: widget.fullscreen,
+          onToggleFullscreen: widget.onToggleFullscreen,
         );
-        return widget.fill ? _fitReplay(player) : player;
+        // The replay is just the 16:9 picture now (controls float over it),
+        // so in a bounded landscape box it only needs centring.
+        return widget.fill ? Center(child: player) : player;
       },
       orElse: () => const _NoSignalBox(),
     );
   }
-}
-
-/// The replay is a column (label + 16:9 video + timeline). In a bounded
-/// landscape box, narrow it so the whole column fits the height.
-Widget _fitReplay(Widget player) {
-  const chromeHeight = 140.0;
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final width = ((constraints.maxHeight - chromeHeight) * 16 / 9).clamp(
-        160.0,
-        constraints.maxWidth,
-      );
-      return Center(child: SizedBox(width: width, child: player));
-    },
-  );
 }
 
 class _NoSignalBox extends StatelessWidget {
