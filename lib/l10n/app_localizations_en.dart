@@ -18518,4 +18518,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupStage_sheetTitle(String group, int leg) {
     return '$group · Leg $leg';
   }
+
+  @override
+  String get regAttachmentChoose => 'Choose file';
+
+  @override
+  String get regAttachmentRemove => 'Remove file';
+
+  @override
+  String get regAttachmentUploading => 'Uploading file...';
+
+  @override
+  String regAttachmentMaxSize(num size) {
+    return 'Maximum $size MB';
+  }
+
+  @override
+  String regAttachmentTooLarge(num size) {
+    return 'The file is larger than $size MB.';
+  }
+
+  @override
+  String get regAttachmentNetworkError =>
+      'Network problem. Check your connection and try again.';
+
+  @override
+  String get regAttachmentFailed =>
+      'Could not upload the file. Please try again.';
 }

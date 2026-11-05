@@ -33234,6 +33234,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{group} · Lượt {leg}'**
   String groupStage_sheetTitle(String group, int leg);
+
+  /// No description provided for @regAttachmentChoose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tệp'**
+  String get regAttachmentChoose;
+
+  /// No description provided for @regAttachmentRemove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ tệp'**
+  String get regAttachmentRemove;
+
+  /// No description provided for @regAttachmentUploading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải tệp lên...'**
+  String get regAttachmentUploading;
+
+  /// No description provided for @regAttachmentMaxSize.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa {size} MB'**
+  String regAttachmentMaxSize(num size);
+
+  /// No description provided for @regAttachmentTooLarge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tệp lớn hơn {size} MB.'**
+  String regAttachmentTooLarge(num size);
+
+  /// No description provided for @regAttachmentNetworkError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi mạng. Kiểm tra kết nối rồi thử lại.'**
+  String get regAttachmentNetworkError;
+
+  /// No description provided for @regAttachmentFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được tệp lên. Vui lòng thử lại.'**
+  String get regAttachmentFailed;
 }
 
 class _AppLocalizationsDelegate

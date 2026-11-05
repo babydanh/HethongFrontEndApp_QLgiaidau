@@ -7372,5 +7372,14 @@
   "groupStage_setLabel": "Set {n}",
   "@groupStage_setLabel": {"placeholders": {"n": {"type": "int"}}},
   "groupStage_sheetTitle": "{group} · Lượt {leg}",
-  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "leg": {"type": "int"}}}
+  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "leg": {"type": "int"}}},
+  "regAttachmentChoose": "Chọn tệp",
+  "regAttachmentRemove": "Bỏ tệp",
+  "regAttachmentUploading": "Đang tải tệp lên...",
+  "regAttachmentMaxSize": "Tối đa {size} MB",
+  "@regAttachmentMaxSize": {"placeholders": {"size": {"type": "num"}}},
+  "regAttachmentTooLarge": "Tệp lớn hơn {size} MB.",
+  "@regAttachmentTooLarge": {"placeholders": {"size": {"type": "num"}}},
+  "regAttachmentNetworkError": "Lỗi mạng. Kiểm tra kết nối rồi thử lại.",
+  "regAttachmentFailed": "Không tải được tệp lên. Vui lòng thử lại."
 }

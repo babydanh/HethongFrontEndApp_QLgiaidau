@@ -20,6 +20,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/features/register/utils/division_gender_restriction.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
 import 'package:app_quanly_giaidau/features/register/utils/division_selection.dart';
+import 'package:app_quanly_giaidau/features/register/widgets/registration_attachment_field.dart';
 
 final _divisionsProvider =
     FutureProvider.family<List<TournamentDivisionOption>, String>((
@@ -181,6 +182,8 @@ class _TournamentRegisterScreenState
 
   bool _rankingConsent = false;
   final Map<String, dynamic> _customResponses = {};
+  // FILE fields with an upload in flight; the submit button stays locked.
+  final Set<String> _uploadingAttachmentIds = {};
 
   String _getSubmitLabel(Tournament? t) {
     if (t?.registrationMode == 'APPROVAL') return l10n.registerSubmitApproval;
@@ -252,6 +255,9 @@ class _TournamentRegisterScreenState
       for (final field in fields) {
         final id = field['id']?.toString() ?? '';
         if (id.isEmpty) continue;
+        // A FILE field only ever holds an uploaded attachment, never a profile
+        // value, even when its label mentions email or phone.
+        if (field['type'] == 'FILE') continue;
         if (!_customResponses.containsKey(id) ||
             _customResponses[id] == null ||
             _customResponses[id].toString().trim().isEmpty) {
@@ -306,6 +312,31 @@ class _TournamentRegisterScreenState
             final required = field['required'] == true;
             final type = field['type']?.toString();
             final help = field['helpText']?.toString();
+            if (type == 'FILE') {
+              return RegistrationAttachmentField(
+                key: ValueKey('regAttachment_$id'),
+                tournamentId: widget.tournamentId,
+                field: field,
+                value: _customResponses[id],
+                onChanged: (attachment) => setState(() {
+                  if (attachment == null) {
+                    _customResponses.remove(id);
+                  } else {
+                    _customResponses[id] = attachment;
+                  }
+                }),
+                onUploadingChanged: (busy) {
+                  if (!mounted) return;
+                  setState(() {
+                    if (busy) {
+                      _uploadingAttachmentIds.add(id);
+                    } else {
+                      _uploadingAttachmentIds.remove(id);
+                    }
+                  });
+                },
+              );
+            }
             if (type == 'CHECKBOX') {
               return CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
@@ -2379,6 +2410,7 @@ class _TournamentRegisterScreenState
                             _isDivisionRegistrationExpired ||
                             _isSelectedDivisionFull ||
                             !_duprValid ||
+                            _uploadingAttachmentIds.isNotEmpty ||
                             _submitting)
                         ? null
                         : _register,

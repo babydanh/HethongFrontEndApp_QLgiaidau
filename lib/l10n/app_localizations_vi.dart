@@ -18447,4 +18447,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String groupStage_sheetTitle(String group, int leg) {
     return '$group · Lượt $leg';
   }
+
+  @override
+  String get regAttachmentChoose => 'Chọn tệp';
+
+  @override
+  String get regAttachmentRemove => 'Bỏ tệp';
+
+  @override
+  String get regAttachmentUploading => 'Đang tải tệp lên...';
+
+  @override
+  String regAttachmentMaxSize(num size) {
+    return 'Tối đa $size MB';
+  }
+
+  @override
+  String regAttachmentTooLarge(num size) {
+    return 'Tệp lớn hơn $size MB.';
+  }
+
+  @override
+  String get regAttachmentNetworkError =>
+      'Lỗi mạng. Kiểm tra kết nối rồi thử lại.';
+
+  @override
+  String get regAttachmentFailed => 'Không tải được tệp lên. Vui lòng thử lại.';
 }

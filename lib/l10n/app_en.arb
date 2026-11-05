@@ -7344,5 +7344,14 @@
   "groupStage_setLabel": "Set {n}",
   "@groupStage_setLabel": {"placeholders": {"n": {"type": "int"}}},
   "groupStage_sheetTitle": "{group} · Leg {leg}",
-  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "leg": {"type": "int"}}}
+  "@groupStage_sheetTitle": {"placeholders": {"group": {"type": "String"}, "leg": {"type": "int"}}},
+  "regAttachmentChoose": "Choose file",
+  "regAttachmentRemove": "Remove file",
+  "regAttachmentUploading": "Uploading file...",
+  "regAttachmentMaxSize": "Maximum {size} MB",
+  "@regAttachmentMaxSize": {"placeholders": {"size": {"type": "num"}}},
+  "regAttachmentTooLarge": "The file is larger than {size} MB.",
+  "@regAttachmentTooLarge": {"placeholders": {"size": {"type": "num"}}},
+  "regAttachmentNetworkError": "Network problem. Check your connection and try again.",
+  "regAttachmentFailed": "Could not upload the file. Please try again."
 }

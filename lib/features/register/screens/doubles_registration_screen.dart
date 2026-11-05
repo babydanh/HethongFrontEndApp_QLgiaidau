@@ -23,6 +23,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/shared/widgets/withdraw_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/register/doubles_registration_member.dart';
+import 'package:app_quanly_giaidau/features/register/widgets/registration_attachment_field.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 
 class DoublesRegistrationFlow extends ConsumerStatefulWidget {
@@ -52,6 +53,8 @@ class _DoublesRegistrationFlowState
   final _teamNameCtrl = TextEditingController();
   final _partnerSearchCtrl = TextEditingController();
   final Map<String, dynamic> _customResponses = {};
+  // FILE fields with an upload in flight; the submit button stays locked.
+  final Set<String> _uploadingAttachmentIds = {};
   List<UserSearchResult> _searchResults = [];
   UserSearchResult? _selectedPartner;
   bool _searching = false;
@@ -129,6 +132,9 @@ class _DoublesRegistrationFlowState
       for (final field in fields) {
         final id = field['id']?.toString() ?? '';
         if (id.isEmpty) continue;
+        // A FILE field only ever holds an uploaded attachment, never a profile
+        // value, even when its label mentions email or phone.
+        if (field['type'] == 'FILE') continue;
         if (!_customResponses.containsKey(id) ||
             _customResponses[id] == null ||
             _customResponses[id].toString().trim().isEmpty) {
@@ -184,6 +190,31 @@ class _DoublesRegistrationFlowState
             final required = field['required'] == true;
             final type = field['type']?.toString();
             final help = field['helpText']?.toString();
+            if (type == 'FILE') {
+              return RegistrationAttachmentField(
+                key: ValueKey('regAttachment_$id'),
+                tournamentId: widget.tournamentId,
+                field: field,
+                value: _customResponses[id],
+                onChanged: (attachment) => setState(() {
+                  if (attachment == null) {
+                    _customResponses.remove(id);
+                  } else {
+                    _customResponses[id] = attachment;
+                  }
+                }),
+                onUploadingChanged: (busy) {
+                  if (!mounted) return;
+                  setState(() {
+                    if (busy) {
+                      _uploadingAttachmentIds.add(id);
+                    } else {
+                      _uploadingAttachmentIds.remove(id);
+                    }
+                  });
+                },
+              );
+            }
             if (type == 'CHECKBOX') {
               return CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
@@ -1182,7 +1213,10 @@ class _DoublesRegistrationFlowState
           height: 50,
           child: FilledButton.icon(
             onPressed:
-                (_submitting || _isNewClaimBlocked || !_duprValid)
+                (_submitting ||
+                    _isNewClaimBlocked ||
+                    !_duprValid ||
+                    _uploadingAttachmentIds.isNotEmpty)
                 ? null
                 : _handleStep1Submit,
             icon: _submitting
