@@ -25,6 +25,10 @@ class LiveLandscapeChat extends StatelessWidget {
   });
 
   static const _maxLines = 30;
+  static final _noOutline = OutlineInputBorder(
+    borderRadius: BorderRadius.circular(99),
+    borderSide: BorderSide.none,
+  );
 
   final List<LiveChatLine> lines;
   final bool canPost;
@@ -88,10 +92,12 @@ class LiveLandscapeChat extends StatelessWidget {
                                 isDense: true,
                                 filled: true,
                                 fillColor: Colors.black38,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(99),
-                                  borderSide: BorderSide.none,
-                                ),
+                                // Set every state: the theme's enabled/focused
+                                // borders would otherwise draw a white outline.
+                                border: _noOutline,
+                                enabledBorder: _noOutline,
+                                focusedBorder: _noOutline,
+                                disabledBorder: _noOutline,
                               ),
                               onSubmitted: (_) => onSend(),
                             )

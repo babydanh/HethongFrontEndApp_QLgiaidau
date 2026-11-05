@@ -84,4 +84,22 @@ void main() {
     await tester.tap(find.byIcon(Icons.favorite_rounded));
     expect([sends, cheers], [1, 1]);
   });
+
+  testWidgets('TC-LIVEFS-12 comment box draws no outline even when focused', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(lines: const [], canPost: true));
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
+
+    final decoration = tester.widget<TextField>(find.byType(TextField)).decoration!;
+    for (final border in [
+      decoration.border,
+      decoration.enabledBorder,
+      decoration.focusedBorder,
+      decoration.disabledBorder,
+    ]) {
+      expect((border! as OutlineInputBorder).borderSide, BorderSide.none);
+    }
+  });
 }

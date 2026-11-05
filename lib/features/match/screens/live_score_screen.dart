@@ -2475,7 +2475,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
           const Spacer(),
           if (canControl) _scoringAction(match),
-          if (MediaQuery.of(context).orientation == Orientation.landscape) ...[
+          if (MediaQuery.of(context).orientation == Orientation.landscape)
             round(
               _landscapeChatOpen
                   ? Icons.chat_bubble_rounded
@@ -2483,12 +2483,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               () => setState(() => _landscapeChatOpen = !_landscapeChatOpen),
               _landscapeChatOpen ? l10n.liveChatHide : l10n.liveChatShow,
             ),
-            round(
-              Icons.flag_outlined,
-              () => _reportMatch(match),
-              l10n.liveReportAction,
-            ),
-          ],
           round(
             Icons.share_outlined,
             () => _shareMatch(match),
