@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/features/tournament/screens/tournament_manage
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/pair_move_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/pairing_strategy_picker.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/wildcard_sheet.dart';
@@ -204,6 +205,20 @@ class _TournamentManagementAthletesTabState
     );
   }
 
+  /// Đổi VĐV giữa các cặp / gỡ VĐV khỏi cặp của hạng mục đôi.
+  Future<void> _openPairMove(TournamentDivision division) async {
+    await PairMoveSheet.show(
+      context,
+      tournamentId: widget.tournament.id,
+      divisionId: division.id,
+      onRefresh: () async {
+        if (!mounted) return;
+        ref.invalidate(tournamentDivisionsProvider(widget.tournament.id));
+        _reload();
+      },
+    );
+  }
+
   /// "Tự ghép": pick one of the three strategies, confirm, then one POST for
   /// the open division only. Double taps are ignored while it runs.
   Future<void> _autoPair(TournamentDivision division) async {
@@ -329,6 +344,7 @@ class _TournamentManagementAthletesTabState
                         onOpenWildcard: () => _openWildcard(active),
                         onOpenPairing: () => _openPairing(active),
                         onAutoPair: () => _autoPair(active),
+                        onOpenPairMove: () => _openPairMove(active),
                         presence: _presence,
                         onPresenceChanged: (id, present) =>
                             setState(() => _presence[id] = present),
@@ -357,6 +373,7 @@ class _DivisionBody extends StatelessWidget {
     required this.onOpenWildcard,
     required this.onOpenPairing,
     required this.onAutoPair,
+    required this.onOpenPairMove,
     required this.presence,
     required this.onPresenceChanged,
   });
@@ -371,6 +388,7 @@ class _DivisionBody extends StatelessWidget {
   final VoidCallback onOpenWildcard;
   final VoidCallback onOpenPairing;
   final VoidCallback onAutoPair;
+  final VoidCallback onOpenPairMove;
   final Map<String, bool> presence;
   final void Function(String participantId, bool present) onPresenceChanged;
 
@@ -440,6 +458,7 @@ class _DivisionBody extends StatelessWidget {
             onImportExcel: onImportExcel,
             onOpenPairing: onOpenPairing,
             onAutoPair: onAutoPair,
+            onOpenPairMove: onOpenPairMove,
             onAddAthlete: () => onAddAthlete(participants),
             onDownloadTemplate: onDownloadTemplate,
             onOpenWildcard: onOpenWildcard,
@@ -475,6 +494,7 @@ class _AthleteActionRow extends StatelessWidget {
     required this.onImportExcel,
     required this.onOpenPairing,
     required this.onAutoPair,
+    required this.onOpenPairMove,
     required this.onAddAthlete,
     required this.onDownloadTemplate,
     required this.onOpenWildcard,
@@ -489,6 +509,7 @@ class _AthleteActionRow extends StatelessWidget {
   final VoidCallback onImportExcel;
   final VoidCallback onOpenPairing;
   final VoidCallback onAutoPair;
+  final VoidCallback onOpenPairMove;
   final VoidCallback onAddAthlete;
   final VoidCallback onDownloadTemplate;
   final VoidCallback onOpenWildcard;
@@ -545,11 +566,18 @@ class _AthleteActionRow extends StatelessWidget {
             padding: EdgeInsets.zero,
             tooltip: l10n.club_moreOptions,
             onSelected: (value) => switch (value) {
+              'pairMove' => onOpenPairMove(),
               'wildcard' => onOpenWildcard(),
               'template' => onDownloadTemplate(),
               _ => onOpenMockParticipants(),
             },
             itemBuilder: (_) => [
+              if (showPairing)
+                PopupMenuItem(
+                  key: const ValueKey('athletes-pair-move'),
+                  value: 'pairMove',
+                  child: Text(l10n.pairMoveOpen),
+                ),
               PopupMenuItem(
                 key: const ValueKey('athletes-wildcard'),
                 value: 'wildcard',

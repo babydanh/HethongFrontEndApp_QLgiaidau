@@ -18518,4 +18518,227 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupStage_sheetTitle(String group, int leg) {
     return '$group · Leg $leg';
   }
+
+  @override
+  String get pairMoveOpen => 'Move athletes between pairs';
+
+  @override
+  String get pairMoveSheetTitle => 'Move athletes between pairs';
+
+  @override
+  String get pairMoveHint =>
+      'Press and hold an athlete, then drop onto another pair\'s slot, an empty slot or the waiting tray. Or tap ⋮ to choose where to move.';
+
+  @override
+  String pairMovePairLabel(int n) {
+    return 'Pair $n';
+  }
+
+  @override
+  String get pairMoveWaitingLabel => 'Waiting';
+
+  @override
+  String get pairMoveEmptySlot => 'Empty slot';
+
+  @override
+  String get pairMoveTrayLabel =>
+      'Waiting tray: drop here to split the athlete from the pair';
+
+  @override
+  String get pairMoveMenuMoveTo => 'Move to…';
+
+  @override
+  String get pairMoveMenuRemove => 'Remove from pair';
+
+  @override
+  String pairMovePickerTitle(String name) {
+    return 'Move $name to…';
+  }
+
+  @override
+  String get pairMovePickerTray => 'Waiting tray (split from pair)';
+
+  @override
+  String pairMovePickerSwap(int n, String name) {
+    return 'Pair $n: swap with $name';
+  }
+
+  @override
+  String pairMovePickerEmpty(int n) {
+    return 'Pair $n: take the empty slot';
+  }
+
+  @override
+  String get pairMoveRemoveConfirmTitle => 'Remove from pair';
+
+  @override
+  String pairMoveRemoveConfirmMessage(String name) {
+    return 'Remove $name from the pair? $name will be removed from the tournament and the other athlete returns to the waiting list.';
+  }
+
+  @override
+  String get pairMoveRemoveConfirmAction => 'Remove from pair';
+
+  @override
+  String get pairMoveMoved => 'Athlete moved.';
+
+  @override
+  String get pairMoveRemoved => 'Athlete removed from the pair.';
+
+  @override
+  String get pairMoveConflict =>
+      'The list just changed. It was reloaded, please try again.';
+
+  @override
+  String get pairMoveFailed =>
+      'Could not move the athlete. Check your connection and try again.';
+
+  @override
+  String get pairMoveLoadFailed => 'Could not load the pairs.';
+
+  @override
+  String get pairMoveEmpty => 'There are no pairs or athletes to move yet.';
+
+  @override
+  String get stageActionEntry => 'Stage operations';
+
+  @override
+  String get stageActionTitle => 'Stage operations';
+
+  @override
+  String get stageActionLoadError =>
+      'Could not load the stages. Check your connection and try again.';
+
+  @override
+  String get stageActionRetry => 'Retry';
+
+  @override
+  String get stageActionEmpty => 'This division has no bracket yet.';
+
+  @override
+  String stageActionStageSummary(int done, int total) {
+    return '$done/$total matches finished';
+  }
+
+  @override
+  String get stageActionDismiss => 'Go back';
+
+  @override
+  String get stageActionFinish => 'Finish stage early';
+
+  @override
+  String get stageActionFinishConfirmTitle => 'Finish this stage early?';
+
+  @override
+  String stageActionFinishConfirmBody(int count) {
+    return '$count unfinished matches will be cancelled and cannot be restored. Completed matches are kept.';
+  }
+
+  @override
+  String get stageActionFinishConfirm => 'Finish early';
+
+  @override
+  String get stageActionFinishDone => 'Stage finished.';
+
+  @override
+  String get stageActionAdvance => 'Lock groups and advance to knockout';
+
+  @override
+  String stageActionAdvanceBlocked(int count) {
+    return '$count group matches are still unfinished.';
+  }
+
+  @override
+  String get stageActionAdvanceConfirmTitle => 'Lock the group stage?';
+
+  @override
+  String get stageActionAdvanceConfirmBody =>
+      'Teams that qualify by the current standings will be placed into the knockout stage.';
+
+  @override
+  String get stageActionAdvanceConfirm => 'Lock groups';
+
+  @override
+  String stageActionAdvanceDone(int count) {
+    return 'Qualified teams moved into the knockout stage ($count matches).';
+  }
+
+  @override
+  String get stageActionPlayoffHeading => 'Tied teams (playoff)';
+
+  @override
+  String get stageActionPlayoffCreate => 'Create playoff';
+
+  @override
+  String get stageActionPlayoffConfirmTitle => 'Create a playoff match?';
+
+  @override
+  String stageActionPlayoffConfirmBody(String team1, String team2) {
+    return 'Create a playoff match between $team1 and $team2 in this round robin.';
+  }
+
+  @override
+  String get stageActionPlayoffDone => 'Playoff match created.';
+
+  @override
+  String get stageActionCancelBracket => 'Cancel bracket and schedule';
+
+  @override
+  String get stageActionCancelConfirmTitle =>
+      'Cancel this division\'s bracket and schedule?';
+
+  @override
+  String stageActionCancelConfirmBody(int stageCount, int matchCount) {
+    return 'This cancels $stageCount stages and $matchCount matches of this division only. Registrations and other divisions are kept. It cannot be undone.';
+  }
+
+  @override
+  String get stageActionCancelConfirm => 'Confirm cancel';
+
+  @override
+  String stageActionCancelDone(int stageCount, int matchCount) {
+    return 'Cancelled $stageCount stages and $matchCount matches.';
+  }
+
+  @override
+  String get stageActionCancelStarted =>
+      'Cannot cancel: a match has already started.';
+
+  @override
+  String get stageActionNetworkError =>
+      'Connection lost or timed out. Please try again.';
+
+  @override
+  String get stageActionConflict =>
+      'The data just changed. Reloaded; please check and try again.';
+
+  @override
+  String get stageActionGenericError => 'The action failed. Please try again.';
+
+  @override
+  String get regAttachmentChoose => 'Choose file';
+
+  @override
+  String get regAttachmentRemove => 'Remove file';
+
+  @override
+  String get regAttachmentUploading => 'Uploading file...';
+
+  @override
+  String regAttachmentMaxSize(num size) {
+    return 'Maximum $size MB';
+  }
+
+  @override
+  String regAttachmentTooLarge(num size) {
+    return 'The file is larger than $size MB.';
+  }
+
+  @override
+  String get regAttachmentNetworkError =>
+      'Network problem. Check your connection and try again.';
+
+  @override
+  String get regAttachmentFailed =>
+      'Could not upload the file. Please try again.';
 }
