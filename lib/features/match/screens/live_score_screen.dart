@@ -2906,9 +2906,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       overflow: TextOverflow.ellipsis,
       style: const TextStyle(
         color: Colors.white,
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: FontWeight.w900,
-        letterSpacing: 0.3,
+        letterSpacing: 0.2,
       ),
     );
 
