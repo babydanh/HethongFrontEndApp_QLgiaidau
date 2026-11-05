@@ -25,6 +25,17 @@ class AppNotification {
     this.data,
   });
 
+  AppNotification copyWith({bool? isRead}) => AppNotification(
+    id: id,
+    type: type,
+    title: title,
+    body: body,
+    redirectUrl: redirectUrl,
+    isRead: isRead ?? this.isRead,
+    createdAt: createdAt,
+    data: data,
+  );
+
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
       id: json['id'] ?? '',

@@ -29,6 +29,8 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
 
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/features/profile/utils/edit_profile_payload.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:dio/dio.dart';
@@ -70,6 +72,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with SingleTickerProviderStateMixin {
+  static const _log = AppLogger('Profile');
   bool _uploading = false;
   bool _uploadingCover = false;
   late TabController _tabController;
@@ -203,13 +206,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
           );
         }
-      } catch (e) {
+      } catch (e, stack) {
+        _log.error('Lỗi tải ảnh bìa', e, stack);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                '${l10n.commonErrorPrefix}: ${e.toString().replaceAll("Exception: ", "")}',
-              ),
+              content: Text(ErrorParser.parse(e, '', l10n)),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -224,7 +226,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         bytes: bytes,
         title: l10n.profileChangeAvatar,
       );
-      if (croppedBytes == null) return;
+      if (croppedBytes == null || !mounted) return;
       setState(() => _uploading = true);
       try {
         final repo = ref.read(userRepositoryProvider);
@@ -239,13 +241,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
           );
         }
-      } catch (e) {
+      } catch (e, stack) {
+        _log.error('Lỗi tải ảnh đại diện', e, stack);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                '${l10n.commonErrorPrefix}: ${e.toString().replaceAll("Exception: ", "")}',
-              ),
+              content: Text(ErrorParser.parse(e, '', l10n)),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
@@ -260,20 +261,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Future<void> _pickAndUploadAvatar() => _pickImage(false);
   Future<void> _pickAndUploadCover() => _pickImage(true);
 
-  String _formatGender(BuildContext context, String? rawGender) {
-    if (rawGender == null || rawGender.trim().isEmpty) return '—';
+  /// Nhãn giới tính để hiển thị; null khi rỗng hoặc không nhận diện được.
+  String? _formatGender(BuildContext context, String? rawGender) {
     final l10n = AppLocalizations.of(context);
-    final g = rawGender.trim().toUpperCase();
-    if (g == 'MALE' || g == 'NAM' || g == 'MEN' || g == 'M') {
-      return l10n?.genderMale ?? 'Nam';
-    }
-    if (g == 'FEMALE' || g == 'NU' || g == 'NỮ' || g == 'WOMEN' || g == 'F') {
-      return l10n?.genderFemale ?? 'Nữ';
-    }
-    if (g == 'OTHER' || g == 'KHAC' || g == 'KHÁC') {
-      return l10n?.genderOther ?? 'Khác';
-    }
-    return 'Nam';
+    return switch (normalizeGenderLabel(rawGender)) {
+      genderLabelMale => l10n?.genderMale ?? 'Nam',
+      genderLabelFemale => l10n?.genderFemale ?? 'Nữ',
+      genderLabelOther => l10n?.genderOther ?? 'Khác',
+      _ => null,
+    };
   }
 
   // ─── FRIEND ACTIONS ──────────────────────────────────────────────────
@@ -289,7 +285,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     try {
       await op(FriendRequestActions(ref.read(dioProvider)));
       ref.invalidate(userFriendsProvider);
-    } catch (e) {
+    } catch (e, stack) {
+      _log.error('Lỗi thao tác kết bạn $friendshipId', e, stack);
       messenger.showSnackBar(
         SnackBar(
           content: Text(ErrorParser.parse(e, '', l10n)),
@@ -369,11 +366,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget _buildNestedBody(BuildContext context, UserProfile profile) {
     final l10n = AppLocalizations.of(context)!;
     final c = LavishColors.of(context);
-    final rankings =
-        ref.watch(userRankingsProvider).asData?.value ??
-        const <PlayerRanking>[];
-    final followedCount =
-        ref.watch(followedTournamentsProvider).asData?.value.length ?? 0;
+    final rankingsAsync = ref.watch(userRankingsProvider);
+    final followedAsync = ref.watch(followedTournamentsProvider);
+    final rankings = rankingsAsync.asData?.value ?? const <PlayerRanking>[];
+    // Lỗi/đang tải khác "0 thật": hiện — thay vì số 0.
+    final rankingsReady = rankingsAsync.hasValue;
+    final followedCount = followedAsync.asData?.value.length;
+    final statsFailed =
+        (rankingsAsync.hasError && !rankingsAsync.hasValue) ||
+        (followedAsync.hasError && !followedAsync.hasValue);
 
     final totalPlayed = rankings.fold<int>(0, (s, r) => s + r.matchesPlayed);
     final totalWon = rankings.fold<int>(0, (s, r) => s + r.matchesWon);
@@ -402,8 +403,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ? LavishTone.warn
         : (isOrganizer ? LavishTone.accent : LavishTone.neutral);
     final metaParts = <String>[
-      if (profile.gender != null && profile.gender!.isNotEmpty)
-        _formatGender(context, profile.gender),
+      ?_formatGender(context, profile.gender),
       if (profile.address != null && profile.address!.isNotEmpty)
         profile.address!,
     ];
@@ -601,29 +601,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ),
                   ),
                 const SizedBox(height: 12),
-                LavishStatGrid(
-                  items: [
-                    LavishStat(
-                      label: l10n.profLvStatElo,
-                      value: bestElo > 0
-                          ? _formatNumberWithCommas(bestElo)
-                          : '—',
-                      tone: LavishTone.accent,
-                    ),
-                    LavishStat(
-                      label: l10n.profLvStatMatches,
-                      value: '$totalPlayed',
-                    ),
-                    LavishStat(
-                      label: l10n.profLvStatWinRate,
-                      value: '$winRate%',
-                      tone: LavishTone.ok,
-                    ),
-                    LavishStat(
-                      label: l10n.profLvStatTournaments,
-                      value: '$followedCount',
-                    ),
-                  ],
+                _retryOnTap(
+                  enabled: statsFailed,
+                  onTap: () {
+                    if (!rankingsReady) ref.invalidate(userRankingsProvider);
+                    if (followedCount == null) {
+                      ref.invalidate(followedTournamentsProvider);
+                    }
+                  },
+                  child: LavishStatGrid(
+                    items: [
+                      LavishStat(
+                        label: l10n.profLvStatElo,
+                        value: bestElo > 0
+                            ? _formatNumberWithCommas(bestElo)
+                            : '—',
+                        tone: LavishTone.accent,
+                      ),
+                      LavishStat(
+                        label: l10n.profLvStatMatches,
+                        value: rankingsReady ? '$totalPlayed' : '—',
+                      ),
+                      LavishStat(
+                        label: l10n.profLvStatWinRate,
+                        value: rankingsReady ? '$winRate%' : '—',
+                        tone: LavishTone.ok,
+                      ),
+                      LavishStat(
+                        label: l10n.profLvStatTournaments,
+                        value: followedCount == null ? '—' : '$followedCount',
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -639,6 +648,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               indicatorWeight: 3,
               labelColor: LavishColors.accent,
               unselectedLabelColor: c.muted,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 2),
               dividerColor: c.line,
               labelStyle: const TextStyle(
                 fontSize: 11.5,
@@ -669,11 +679,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
+  /// Bọc [child] để chạm là thử lại khi [enabled] (thống kê đang lỗi).
+  Widget _retryOnTap({
+    required bool enabled,
+    required VoidCallback onTap,
+    required Widget child,
+  }) => enabled ? InkWell(onTap: onTap, child: child) : child;
+
   Tab _tab(IconData icon, String label) => Tab(
     height: 56,
     icon: Icon(icon, size: 20),
     iconMargin: const EdgeInsets.only(bottom: 2),
-    child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    // Co chữ vừa tab (320dp, chữ lớn) thay vì cắt bằng ellipsis.
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(label, maxLines: 1, softWrap: false),
+    ),
   );
 
   Widget _seeAll(String label, VoidCallback onTap) => TextButton(

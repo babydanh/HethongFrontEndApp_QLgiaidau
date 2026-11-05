@@ -66,7 +66,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     Future<void> settle(Future<Object?> future) async {
       try {
         await future;
-      } catch (_) {}
+      } catch (_) {
+        // Lỗi từng nguồn đã hiện ở khối tương ứng (LavishErrorState + thử lại);
+        // ở đây chỉ cần đợi xong để vòng kéo-làm-mới kết thúc.
+      }
     }
 
     await Future.wait([
@@ -314,7 +317,7 @@ class _ProfileRow extends ConsumerWidget {
                     ? (_, _) {}
                     : null,
                 child: Text(
-                  name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?',
+                  name.isNotEmpty ? name.characters.first.toUpperCase() : '?',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     color: LavishColors.accent,
@@ -485,31 +488,40 @@ class _EloSummary extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text.rich(
-                TextSpan(
-                  children: [
+              Flexible(
+                flex: 3,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text.rich(
                     TextSpan(
-                      text: '${rank.eloPoints}',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: c.text,
-                      ),
+                      children: [
+                        TextSpan(
+                          text: '${rank.eloPoints}',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: c.text,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' ELO',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: c.muted,
+                          ),
+                        ),
+                      ],
                     ),
-                    TextSpan(
-                      text: ' ELO',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: c.muted,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Align(
+                flex: 2,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
                   alignment: Alignment.centerRight,
                   child: LavishPill(EloHelpers.getRankDisplayName(rank, l10n)),
                 ),
@@ -633,17 +645,28 @@ class _RankingRow extends StatelessWidget {
         EloHelpers.getEloMatchTypeLabel(ranking.matchType, l10n),
         if (isDoubles && partner != null && partner.isNotEmpty) partner,
       ].join(' • '),
+      // Wrap: ở 320dp / chữ lớn các phần tử rơi xuống dòng thay vì tràn Row.
       trailing: [
-        ?streakPill,
-        Text(
-          '${ranking.eloPoints}',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: c.text,
+        Flexible(
+          child: Wrap(
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              ?streakPill,
+              Text(
+                '${ranking.eloPoints}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: c.text,
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: c.faint),
+            ],
           ),
         ),
-        Icon(Icons.chevron_right_rounded, color: c.faint),
       ],
       onTap: () => Navigator.push(
         context,
@@ -1075,9 +1098,8 @@ class _ManageSectionState extends ConsumerState<_ManageSection> {
           );
         }
         final notifier = ref.read(myTournamentWorkspaceProvider.notifier);
-        int count(_Role r) => r == _Role.all
-            ? all.length
-            : all.where((e) => e.role == r).length;
+        int count(_Role r) =>
+            r == _Role.all ? all.length : all.where((e) => e.role == r).length;
         final labels = <_Role, String>{
           _Role.all: l10n.infoAll,
           _Role.organizer: l10n.dashboard_organizer,

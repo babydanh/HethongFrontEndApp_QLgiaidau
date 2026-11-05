@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
@@ -97,6 +99,32 @@ void main() {
 
       expect(events, contains('clearAuth'));
       expect(events, contains('clearInvite'));
+    });
+
+    test('runs device unregister and logout in parallel, clears after both',
+        () async {
+      final events = <String>[];
+      final gate = Completer<void>();
+      final useCase = ClearSessionUseCase(
+        _FakeSession(events),
+        authRepository: _FakeAuth(events),
+        readRefreshToken: () async => 'rt-1',
+        unregisterDevice: () async {
+          events.add('unregister:start');
+          await gate.future;
+          events.add('unregister:end');
+        },
+      );
+
+      final done = useCase();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      // logout đã chạy dù unregister chưa xong
+      expect(events, ['unregister:start', 'logout:rt-1']);
+      gate.complete();
+      await done;
+      expect(events.last, 'clearAuth');
+      expect(events.indexOf('unregister:end'),
+          lessThan(events.indexOf('clearInvite')));
     });
 
     test('skips the API call when there is no refresh token', () async {

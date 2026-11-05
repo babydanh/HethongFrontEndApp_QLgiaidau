@@ -141,6 +141,68 @@ void main() {
     });
   });
 
+  group('normalizeGenderLabel', () {
+    test('giá trị Backend MALE/FEMALE/OTHER về nhãn của màn', () {
+      expect(normalizeGenderLabel('MALE'), 'Nam');
+      expect(normalizeGenderLabel('FEMALE'), 'Nữ');
+      expect(normalizeGenderLabel('OTHER'), 'Khác');
+    });
+
+    test('biến thể nhãn/alias, không phân biệt hoa thường và dấu', () {
+      expect(normalizeGenderLabel('Nam'), 'Nam');
+      expect(normalizeGenderLabel(' nữ '), 'Nữ');
+      expect(normalizeGenderLabel('NU'), 'Nữ');
+      expect(normalizeGenderLabel('Khác'), 'Khác');
+      expect(normalizeGenderLabel('khac'), 'Khác');
+      expect(normalizeGenderLabel('men'), 'Nam');
+      expect(normalizeGenderLabel('women'), 'Nữ');
+      // 'Nữ' dạng tổ hợp (NFD)
+      expect(normalizeGenderLabel('Nu\u031b\u0303'), 'Nữ');
+    });
+
+    test('rỗng hoặc lạ thì null, không đoán bừa', () {
+      expect(normalizeGenderLabel(null), isNull);
+      expect(normalizeGenderLabel(''), isNull);
+      expect(normalizeGenderLabel('xyz'), isNull);
+    });
+  });
+
+  group('normalizeBankAccountName', () {
+    test('bỏ dấu và viết hoa, gồm cả Ý/ý và Đ/đ', () {
+      expect(normalizeBankAccountName('NGÔ Ý'), 'NGO Y');
+      expect(normalizeBankAccountName('ngô ý'), 'NGO Y');
+      expect(normalizeBankAccountName('Nguyễn Văn Ánh'), 'NGUYEN VAN ANH');
+      expect(normalizeBankAccountName('Đặng đình Ỷ Ỹ ỹ'), 'DANG DINH Y Y Y');
+    });
+
+    test('dạng tổ hợp NFD cũng bỏ dấu', () {
+      // 'Ý' = Y + U+0301; 'Đ' không phân rã nên vẫn phải map riêng.
+      expect(normalizeBankAccountName('Y\u0301 \u0110a\u0309ng'), 'Y DANG');
+    });
+
+    test('giữ nguyên số, khoảng trắng và ký tự ASCII', () {
+      expect(normalizeBankAccountName('abc 123-x'), 'ABC 123-X');
+    });
+  });
+
+  group('firstInitial', () {
+    test('lấy grapheme đầu, viết hoa', () {
+      expect(firstInitial('alex'), 'A');
+      expect(firstInitial('éric'), 'É');
+    });
+
+    test('emoji (cặp surrogate) và cờ không bị cắt đôi', () {
+      expect(firstInitial('\u{1F44D} Nam'), '\u{1F44D}');
+      expect(firstInitial('\u{1F1FB}\u{1F1F3} VN'), '\u{1F1FB}\u{1F1F3}');
+    });
+
+    test('rỗng/null thì dùng fallback', () {
+      expect(firstInitial(null), 'U');
+      expect(firstInitial(''), 'U');
+      expect(firstInitial('', fallback: 'C'), 'C');
+    });
+  });
+
   group('buildEditProfilePayload', () {
     test('không gửi phoneNumber khi trống', () {
       final p = _build(phone: '   ');

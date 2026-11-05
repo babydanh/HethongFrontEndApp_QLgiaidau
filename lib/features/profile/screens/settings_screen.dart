@@ -136,7 +136,8 @@ class _ProfileTab extends ConsumerStatefulWidget {
   ConsumerState<_ProfileTab> createState() => _ProfileTabState();
 }
 
-class _ProfileTabState extends ConsumerState<_ProfileTab> {
+class _ProfileTabState extends ConsumerState<_ProfileTab>
+    with AutomaticKeepAliveClientMixin {
   static const _log = AppLogger('Settings.Profile');
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -166,7 +167,15 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   ];
 
   static const _genderUnset = '__unset__';
-  static const _genders = [_genderUnset, 'Nam', 'Nữ', 'Khác'];
+  static const _genders = [
+    _genderUnset,
+    genderLabelMale,
+    genderLabelFemale,
+    genderLabelOther,
+  ];
+
+  @override
+  bool get wantKeepAlive => true;
 
   List<Region> _provinces = _fallbackProvinces;
   String _gender = _genderUnset;
@@ -266,7 +275,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         );
       },
     );
-    if (source == null) return;
+    if (source == null || !mounted) return;
     final file = await ImagePicker().pickImage(
       source: source,
       imageQuality: 85,
@@ -280,7 +289,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       bytes: originalBytes,
       title: l10n.profileChangeAvatar,
     );
-    if (croppedBytes == null) return;
+    if (croppedBytes == null || !mounted) return;
     setState(() => _isUploadingAvatar = true);
     try {
       await ref
@@ -313,6 +322,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     );
     if (file == null) return;
     final bytes = await file.readAsBytes();
+    if (!mounted) return;
     if (bytes.length > 5 * 1024 * 1024) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -356,7 +366,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       lastDate: now,
       helpText: AppLocalizations.of(context)!.infoDob,
     );
-    if (picked != null) setState(() => _dob = picked);
+    if (picked != null && mounted) setState(() => _dob = picked);
   }
 
   Future<void> _showGenderChangeRequestDialog() async {
@@ -550,6 +560,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final profileAsync = ref.watch(userProfileProvider);
 
     return profileAsync.when(
@@ -560,9 +571,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           _phoneCtrl.text = profile.phoneNumber ?? '';
           _addressCtrl.text = profile.address ?? '';
           _bioCtrl.text = profile.bio ?? '';
-          _gender = _genders.contains(profile.gender)
-              ? (profile.gender ?? _genderUnset)
-              : _genderUnset;
+          // Backend trả MALE/FEMALE/OTHER; đưa về nhãn của màn.
+          _gender = normalizeGenderLabel(profile.gender) ?? _genderUnset;
           _provinceCode = profile.provinceCode ?? '';
           _dob = DateTime.tryParse(profile.dateOfBirth ?? '');
           _initialized = true;
@@ -778,9 +788,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
                               )
                             : avatarUrl == null
                             ? Text(
-                                (fullName?.isNotEmpty ?? false)
-                                    ? fullName![0].toUpperCase()
-                                    : 'U',
+                                firstInitial(fullName),
                                 style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w800,
@@ -884,9 +892,9 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           locked ? null : (v) => setState(() => _gender = v ?? _genderUnset),
           displayLabels: {
             _genderUnset: l10n.settingsGenderNotSelected,
-            'Nam': l10n.settingsGenderMale,
-            'Nữ': l10n.settingsGenderFemale,
-            'Khác': l10n.settingsGenderOther,
+            genderLabelMale: l10n.settingsGenderMale,
+            genderLabelFemale: l10n.settingsGenderFemale,
+            genderLabelOther: l10n.settingsGenderOther,
           },
         ),
         if (locked)
@@ -951,7 +959,8 @@ class _BankTab extends ConsumerStatefulWidget {
   ConsumerState<_BankTab> createState() => _BankTabState();
 }
 
-class _BankTabState extends ConsumerState<_BankTab> {
+class _BankTabState extends ConsumerState<_BankTab>
+    with AutomaticKeepAliveClientMixin {
   static const _log = AppLogger('Settings.Bank');
   final _accountNumberCtrl = TextEditingController();
   final _accountNameCtrl = TextEditingController();
@@ -978,6 +987,9 @@ class _BankTabState extends ConsumerState<_BankTab> {
   bool _isLoading = false;
   bool _initialized = false;
 
+  @override
+  bool get wantKeepAlive => true;
+
   bool get _isWallet => _wallets.contains(_bankName);
 
   @override
@@ -985,83 +997,6 @@ class _BankTabState extends ConsumerState<_BankTab> {
     _accountNumberCtrl.dispose();
     _accountNameCtrl.dispose();
     super.dispose();
-  }
-
-  /// Viết hoa + bỏ dấu (NFD) như web: NGUYEN VAN A.
-  String _normalizeAccountName(String value) {
-    const diacriticsMap = {
-      'À': 'A',
-      'Á': 'A',
-      'Ạ': 'A',
-      'Ả': 'A',
-      'Ã': 'A',
-      'Â': 'A',
-      'Ầ': 'A',
-      'Ấ': 'A',
-      'Ậ': 'A',
-      'Ẩ': 'A',
-      'Ẫ': 'A',
-      'Ă': 'A',
-      'Ằ': 'A',
-      'Ắ': 'A',
-      'Ặ': 'A',
-      'Ẳ': 'A',
-      'Ẵ': 'A',
-      'Đ': 'D',
-      'È': 'E',
-      'É': 'E',
-      'Ẹ': 'E',
-      'Ẻ': 'E',
-      'Ẽ': 'E',
-      'Ê': 'E',
-      'Ề': 'E',
-      'Ế': 'E',
-      'Ệ': 'E',
-      'Ể': 'E',
-      'Ễ': 'E',
-      'Ì': 'I',
-      'Í': 'I',
-      'Ị': 'I',
-      'Ỉ': 'I',
-      'Ĩ': 'I',
-      'Ò': 'O',
-      'Ó': 'O',
-      'Ọ': 'O',
-      'Ỏ': 'O',
-      'Õ': 'O',
-      'Ô': 'O',
-      'Ồ': 'O',
-      'Ố': 'O',
-      'Ộ': 'O',
-      'Ổ': 'O',
-      'Ỗ': 'O',
-      'Ơ': 'O',
-      'Ờ': 'O',
-      'Ớ': 'O',
-      'Ợ': 'O',
-      'Ở': 'O',
-      'Ỡ': 'O',
-      'Ù': 'U',
-      'Ú': 'U',
-      'Ụ': 'U',
-      'Ủ': 'U',
-      'Ũ': 'U',
-      'Ư': 'U',
-      'Ừ': 'U',
-      'Ứ': 'U',
-      'Ự': 'U',
-      'Ử': 'U',
-      'Ữ': 'U',
-      'Ỳ': 'Y',
-      'Ỵ': 'Y',
-      'Ỷ': 'Y',
-      'Ỹ': 'Y',
-    };
-    return value
-        .toUpperCase()
-        .split('')
-        .map((char) => diacriticsMap[char] ?? char)
-        .join();
   }
 
   Future<void> _save() async {
@@ -1078,7 +1013,9 @@ class _BankTabState extends ConsumerState<_BankTab> {
       await repo.updateProfile({
         'bankName': _bankName == _noBank ? '' : _bankName,
         'bankAccountNumber': _accountNumberCtrl.text.trim(),
-        'bankAccountName': _normalizeAccountName(_accountNameCtrl.text.trim()),
+        'bankAccountName': normalizeBankAccountName(
+          _accountNameCtrl.text.trim(),
+        ),
       });
 
       _log.success('Lưu thông tin ngân hàng thành công');
@@ -1103,6 +1040,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final profileAsync = ref.watch(userProfileProvider);
 
     return profileAsync.when(
@@ -1199,7 +1137,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
                         label: l10n.settingsAccountHolder,
                         controller: _accountNameCtrl,
                         onChanged: (value) {
-                          final normalized = _normalizeAccountName(value);
+                          final normalized = normalizeBankAccountName(value);
                           if (normalized != value) {
                             final selection = _accountNameCtrl.selection;
                             _accountNameCtrl.value = TextEditingValue(
@@ -1367,95 +1305,35 @@ class _VerificationSection extends ConsumerWidget {
 class _SecurityTab extends ConsumerWidget {
   const _SecurityTab();
 
+  static const _log = AppLogger('Settings.Security');
+
   Future<void> _confirmDeleteAccount(
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final passwordCtrl = TextEditingController();
-    var isDeleting = false;
-    String? error;
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
+    // Lấy sẵn mọi thứ cần dùng sau await: widget có thể đã bị gỡ khi xong.
+    final repo = ref.read(userRepositoryProvider);
+    final auth = ref.read(authProvider.notifier);
+    final container = ProviderScope.containerOf(context);
+    final router = GoRouter.of(context);
 
-    await showDialog<void>(
+    final deleted = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            Future<void> delete() async {
-              final password = passwordCtrl.text;
-              if (password.isEmpty) {
-                setState(() => error = l10n.settingsPasswordRequired);
-                return;
-              }
-              setState(() {
-                isDeleting = true;
-                error = null;
-              });
-              try {
-                await ref.read(userRepositoryProvider).deleteAccount(password);
-                if (!ctx.mounted) return;
-                Navigator.of(ctx).pop();
-                await ref.read(authProvider.notifier).signOut();
-                ref.invalidate(userProfileProvider);
-                if (context.mounted) context.go('/home');
-              } catch (e) {
-                // Hiện lỗi thật (sai mật khẩu, mất mạng...) ngay trong hộp thoại.
-                if (ctx.mounted) {
-                  setState(() => error = ErrorParser.parse(e, '', l10n));
-                }
-              } finally {
-                if (ctx.mounted) setState(() => isDeleting = false);
-              }
-            }
-
-            return AlertDialog(
-              backgroundColor: colors.bgCard,
-              title: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: colors.error),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(l10n.settingsConfirmDeleteTitle)),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.settingsDeleteIrreversible,
-                    style: const TextStyle(fontSize: 13, height: 1.5),
-                  ),
-                  const SizedBox(height: 16),
-                  LavishTextField(
-                    label: l10n.settingsConfirmPassword,
-                    controller: passwordCtrl,
-                    enabled: !isDeleting,
-                    obscure: true,
-                    errorText: error,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isDeleting ? null : () => Navigator.of(ctx).pop(),
-                  child: Text(l10n.commonCancel),
-                ),
-                LavishButton(
-                  label: l10n.settingsConfirmDelete,
-                  kind: LavishButtonKind.danger,
-                  busy: isDeleting,
-                  onPressed: delete,
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => _DeleteAccountDialog(onDelete: repo.deleteAccount),
     );
+    if (deleted != true) return;
 
-    passwordCtrl.dispose();
+    // Tài khoản đã xóa trên Backend: luôn kết thúc phiên cục bộ và về /home,
+    // dù signOut có lỗi.
+    try {
+      await auth.signOut();
+    } catch (e, stack) {
+      _log.error('signOut sau khi xóa tài khoản lỗi', e, stack);
+    } finally {
+      container.invalidate(userProfileProvider);
+      router.go('/home');
+    }
   }
 
   @override
@@ -1473,24 +1351,6 @@ class _SecurityTab extends ConsumerWidget {
             title: l10n.settingsChangePassword,
             subtitle: l10n.settingsChangePasswordSubtitle,
             onTap: () => context.push('/profile/change-password'),
-          ),
-          _actionRow(
-            context,
-            icon: Icons.security_rounded,
-            title: l10n.settingsStrongPassword,
-            subtitle: l10n.settingsStrongPasswordSubtitle,
-            trailing: Icon(
-              Icons.check_circle_rounded,
-              color: LavishColors.ok,
-              size: 20,
-            ),
-          ),
-          LavishGroupHeader(l10n.settingsSessions),
-          LavishRow(
-            leading: const LavishIconBox(child: Icon(Icons.devices_rounded)),
-            title: l10n.settingsCurrentDevice,
-            subtitle: l10n.settingsActive,
-            trailing: [LavishPill(l10n.settingsOnline, tone: LavishTone.ok)],
           ),
           const _StrangerMessagesSettingsCard(),
           const _ClubNotificationSettingsCard(),
@@ -1517,6 +1377,101 @@ class _SecurityTab extends ConsumerWidget {
           const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+}
+
+/// Hộp thoại xác nhận xóa tài khoản. Sở hữu [TextEditingController] để dispose
+/// đúng lúc (sau khi route đóng xong), trả `true` khi xóa thành công.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog({required this.onDelete});
+
+  final Future<void> Function(String password) onDelete;
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  static const _log = AppLogger('Settings.DeleteAccount');
+  final _passwordCtrl = TextEditingController();
+  bool _isDeleting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _delete(AppLocalizations l10n) async {
+    final password = _passwordCtrl.text;
+    if (password.isEmpty) {
+      setState(() => _error = l10n.settingsPasswordRequired);
+      return;
+    }
+    setState(() {
+      _isDeleting = true;
+      _error = null;
+    });
+    try {
+      await widget.onDelete(password);
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (e, stack) {
+      _log.error('Xóa tài khoản lỗi', e, stack);
+      // Hiện lỗi thật (sai mật khẩu, mất mạng...) ngay trong hộp thoại.
+      if (mounted) {
+        setState(() {
+          _error = ErrorParser.parse(e, '', l10n);
+          _isDeleting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      backgroundColor: colors.bgCard,
+      title: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: colors.error),
+          const SizedBox(width: 8),
+          Expanded(child: Text(l10n.settingsConfirmDeleteTitle)),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.settingsDeleteIrreversible,
+            style: const TextStyle(fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 16),
+          LavishTextField(
+            label: l10n.settingsConfirmPassword,
+            controller: _passwordCtrl,
+            enabled: !_isDeleting,
+            obscure: true,
+            errorText: _error,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isDeleting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        LavishButton(
+          label: l10n.settingsConfirmDelete,
+          kind: LavishButtonKind.danger,
+          busy: _isDeleting,
+          onPressed: () => _delete(l10n),
+        ),
+      ],
     );
   }
 }
@@ -1628,7 +1583,8 @@ class _ClubNotificationSettingsCardState
   List<ClubNotificationPrefModel>? _prefs;
   bool _isLoading = true;
   bool _loadFailed = false;
-  String? _updatingClubId;
+  static const _log = AppLogger('Settings.ClubNotifications');
+  final Set<String> _updatingClubIds = {};
 
   @override
   void initState() {
@@ -1651,7 +1607,8 @@ class _ClubNotificationSettingsCardState
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e, stack) {
+      _log.error('Lỗi tải thông báo CLB', e, stack);
       // Lỗi tải khác "không có CLB": hiện lỗi + thử lại thay vì danh sách rỗng.
       if (mounted) {
         setState(() {
@@ -1662,19 +1619,28 @@ class _ClubNotificationSettingsCardState
     }
   }
 
+  String? _prefOf(String communityId) => _prefs
+      ?.where((c) => c.communityId == communityId)
+      .firstOrNull
+      ?.notificationPreference;
+
+  List<ClubNotificationPrefModel> _withPref(String communityId, String pref) =>
+      [
+        for (final c in _prefs ?? const <ClubNotificationPrefModel>[])
+          c.communityId == communityId
+              ? c.copyWith(notificationPreference: pref)
+              : c,
+      ];
+
   Future<void> _updatePref(String communityId, String newPref) async {
     final l10n = AppLocalizations.of(context)!;
-    final currentList = _prefs ?? [];
-    final idx = currentList.indexWhere((c) => c.communityId == communityId);
-    if (idx == -1) return;
+    final oldPref = _prefOf(communityId);
+    if (oldPref == null || _updatingClubIds.contains(communityId)) return;
 
-    final oldPref = currentList[idx].notificationPreference;
-    // Optimistic update
+    // Optimistic update: gán list mới, không sửa tại chỗ.
     setState(() {
-      _updatingClubId = communityId;
-      currentList[idx] = currentList[idx].copyWith(
-        notificationPreference: newPref,
-      );
+      _updatingClubIds.add(communityId);
+      _prefs = _withPref(communityId, newPref);
     });
 
     try {
@@ -1694,20 +1660,17 @@ class _ClubNotificationSettingsCardState
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật thông báo CLB $communityId', e, stack);
       if (mounted) {
-        setState(() {
-          currentList[idx] = currentList[idx].copyWith(
-            notificationPreference: oldPref,
-          );
-        });
+        setState(() => _prefs = _withPref(communityId, oldPref));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.settingsNotificationsUpdateFailed)),
         );
       }
     } finally {
       if (mounted) {
-        setState(() => _updatingClubId = null);
+        setState(() => _updatingClubIds.remove(communityId));
       }
     }
   }
@@ -1742,7 +1705,7 @@ class _ClubNotificationSettingsCardState
     AppLocalizations l10n,
     ClubNotificationPrefModel club,
   ) {
-    final isUpdating = _updatingClubId == club.communityId;
+    final isUpdating = _updatingClubIds.contains(club.communityId);
     final hasLogo = club.logoUrl != null && club.logoUrl!.isNotEmpty;
     final summary = club.notificationPreference == 'ALL'
         ? l10n.settingsClubNotificationAllSummary
@@ -1772,9 +1735,7 @@ class _ClubNotificationSettingsCardState
             child: hasLogo
                 ? null
                 : Text(
-                    club.communityName.isNotEmpty
-                        ? club.communityName[0].toUpperCase()
-                        : 'C',
+                    firstInitial(club.communityName, fallback: 'C'),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 14,

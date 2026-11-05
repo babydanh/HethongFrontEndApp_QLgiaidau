@@ -49,6 +49,10 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   String? _selectedScope;
   int _limit = _pageSize;
   static const _pageSize = 50;
+  // Trang gần nhất đã tải xong (theo scope): giữ hiển thị khi "Tải thêm" làm
+  // đổi `limit` → provider mới → asData tạm thời null.
+  List<EloHistoryLog>? _lastData;
+  String? _lastScope;
 
   @override
   void initState() {
@@ -71,13 +75,26 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
     cursor: null,
   );
 
+  static const _noDate = '—';
+
+  /// Thời điểm theo giờ máy; null khi chuỗi không hợp lệ (không giả "bây giờ").
+  static DateTime? _parseTime(String raw) => DateTime.tryParse(raw)?.toLocal();
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final query = _query;
     final historyAsync = ref.watch(eloHistoryProvider(query));
-    // Giữ danh sách cũ khi đang tải thêm (limit đổi) thay vì nháy skeleton.
-    final history = historyAsync.asData?.value;
+    final fresh = historyAsync.asData?.value;
+    if (fresh != null) {
+      _lastData = fresh;
+      _lastScope = _selectedScope;
+    }
+    // Giữ danh sách cũ khi đang tải thêm (limit đổi) thay vì nháy skeleton;
+    // đổi scope thì không giữ vì dữ liệu cũ thuộc scope khác.
+    final history = fresh ?? (_lastScope == _selectedScope ? _lastData : null);
+    final loadingMore = fresh == null && history != null;
+    final loadMoreFailed = loadingMore && historyAsync.hasError;
 
     final title = widget.categoryName != null && widget.categoryName!.isNotEmpty
         ? '${l10n.settingsEloHistory} · ${widget.categoryName}'
@@ -96,7 +113,12 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
         title: l10n.publicProfileNoPlayedElo,
       );
     } else {
-      content = _buildData(history);
+      content = _buildData(
+        history,
+        loadingMore: loadingMore && !loadMoreFailed,
+        loadMoreFailed: loadMoreFailed,
+        retry: () => ref.invalidate(eloHistoryProvider(query)),
+      );
     }
 
     return LavishScaffold(
@@ -116,7 +138,12 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
     );
   }
 
-  Widget _buildData(List<EloHistoryLog> history) {
+  Widget _buildData(
+    List<EloHistoryLog> history, {
+    bool loadingMore = false,
+    bool loadMoreFailed = false,
+    required VoidCallback retry,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final c = LavishColors.of(context);
     final sorted = List<EloHistoryLog>.from(history)
@@ -160,8 +187,15 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
           child: EloProgressChart(
             data: sorted.map((h) {
-              final date = DateTime.tryParse(h.createdAt) ?? DateTime.now();
-              return (DateFormat('dd/MM').format(date), h.newElo);
+              final date = _parseTime(h.createdAt);
+              return (
+                date == null
+                    ? _noDate
+                    : DateFormat.Md(
+                        Localizations.localeOf(context).toLanguageTag(),
+                      ).format(date),
+                h.newElo,
+              );
             }).toList(),
             currentElo: widget.currentElo,
             tierName: widget.tierName,
@@ -180,7 +214,42 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
           ),
         ),
         for (final log in history) _buildLogRow(log),
-        if (history.length >= _limit)
+        if (loadingMore)
+          const Padding(
+            padding: EdgeInsets.all(14),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else if (loadMoreFailed)
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                Text(
+                  l10n.lavishErrorDefault,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                LavishButton(
+                  buttonKey: const Key('elo_history_load_more_retry'),
+                  kind: LavishButtonKind.outline,
+                  label: l10n.lavishRetry,
+                  onPressed: retry,
+                ),
+              ],
+            ),
+          )
+        else if (history.length >= _limit)
           Padding(
             padding: const EdgeInsets.all(14),
             child: Center(
@@ -288,8 +357,12 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
   Widget _buildLogRow(EloHistoryLog log) {
     final l10n = AppLocalizations.of(context)!;
     final c = LavishColors.of(context);
-    final date = DateTime.tryParse(log.createdAt) ?? DateTime.now();
-    final timeStr = DateFormat('dd/MM/yyyy HH:mm').format(date);
+    final date = _parseTime(log.createdAt);
+    final timeStr = date == null
+        ? _noDate
+        : DateFormat.yMd(
+            Localizations.localeOf(context).toLanguageTag(),
+          ).add_Hm().format(date);
     final match = log.match;
     final result = match?.result?.toUpperCase();
     final resultLabel = result == 'WIN'

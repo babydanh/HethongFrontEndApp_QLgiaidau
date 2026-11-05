@@ -43,6 +43,7 @@ const _uuid = '11111111-1111-4111-8111-111111111111';
 Future<_CaptureAdapter> _open(
   WidgetTester tester, {
   required String targetType,
+  String? contextNote,
 }) async {
   final adapter = _CaptureAdapter();
   final dio = Dio()..httpClientAdapter = adapter;
@@ -59,7 +60,11 @@ Future<_CaptureAdapter> _open(
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
-            child: ReportSheet(targetId: _uuid, targetType: targetType),
+            child: ReportSheet(
+              targetId: _uuid,
+              targetType: targetType,
+              contextNote: contextNote,
+            ),
           ),
         ),
       ),
@@ -111,5 +116,38 @@ void main() {
     final body = adapter.requests.single.data as Map;
     expect(body['targetType'], 'MATCH');
     expect(body['reason'], 'mô tả đủ dài rồi');
+  });
+
+  testWidgets('contextNote duoc them vao mo ta mac dinh', (tester) async {
+    final adapter = await _open(
+      tester,
+      targetType: 'community',
+      contextNote: 'post:post-42',
+    );
+    await tester.tap(find.text('Gian lận'));
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump(const Duration(milliseconds: 50));
+    final reason = (adapter.requests.single.data as Map)['reason'] as String;
+    expect(reason, contains('post:post-42'));
+    expect(reason.length, greaterThanOrEqualTo(10));
+  });
+
+  testWidgets('contextNote giu nguyen khi mo ta qua dai (<= 2000)', (
+    tester,
+  ) async {
+    final adapter = await _open(
+      tester,
+      targetType: 'community',
+      contextNote: 'post:post-42',
+    );
+    await tester.tap(find.text('Gian lận'));
+    await tester.enterText(find.byType(TextField), 'x' * 2500);
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump(const Duration(milliseconds: 50));
+    final reason = (adapter.requests.single.data as Map)['reason'] as String;
+    expect(reason.length, lessThanOrEqualTo(2000));
+    expect(reason, contains('post:post-42'));
   });
 }

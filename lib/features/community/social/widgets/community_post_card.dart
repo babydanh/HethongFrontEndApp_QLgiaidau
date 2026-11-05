@@ -689,6 +689,7 @@ class CommunityPostCard extends ConsumerWidget {
       context,
       targetId: communityId,
       targetType: 'community',
+      contextNote: 'post:${post.id}',
     );
   }
 

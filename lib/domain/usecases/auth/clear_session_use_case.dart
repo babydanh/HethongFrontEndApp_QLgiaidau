@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/repositories/auth_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/session_repository.dart';
 
@@ -5,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/repositories/session_repository.dart';
 /// effort, timeout ngắn) TRƯỚC khi xoá phiên cục bộ. Lỗi mạng không chặn đăng
 /// xuất.
 class ClearSessionUseCase {
+  static const _log = AppLogger('ClearSession');
   static const _remoteTimeout = Duration(seconds: 5);
 
   final ISessionRepository _sessionRepository;
@@ -22,8 +24,11 @@ class ClearSessionUseCase {
         _unregisterDevice = unregisterDevice;
 
   Future<void> call() async {
-    await _bestEffort(() async => _unregisterDevice?.call());
-    await _bestEffort(_revokeRefreshToken);
+    // Song song để tối đa ~5s thay vì ~10s; cả hai xong mới xoá phiên cục bộ.
+    await Future.wait([
+      _bestEffort('unregisterDevice', () async => _unregisterDevice?.call()),
+      _bestEffort('revokeRefreshToken', _revokeRefreshToken),
+    ]);
     await _sessionRepository.clearInviteToken();
     await _sessionRepository.clearAuthTokens();
   }
@@ -34,11 +39,15 @@ class ClearSessionUseCase {
     await _authRepository?.logout(refreshToken: token);
   }
 
-  Future<void> _bestEffort(Future<void> Function() action) async {
+  Future<void> _bestEffort(
+    String name,
+    Future<void> Function() action,
+  ) async {
     try {
       await action().timeout(_remoteTimeout);
-    } catch (_) {
+    } catch (e, stack) {
       // Server không tới được thì vẫn xoá phiên cục bộ.
+      _log.error('Logout bước $name lỗi, bỏ qua', e, stack);
     }
   }
 }

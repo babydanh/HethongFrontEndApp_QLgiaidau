@@ -44,7 +44,6 @@ import 'package:app_quanly_giaidau/features/profile/screens/profile_settings_scr
 import 'package:app_quanly_giaidau/features/profile/screens/change_password_screen.dart';
 import 'package:app_quanly_giaidau/features/reports/screens/my_reports_screen.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
-import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -827,40 +826,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'elo',
-            builder: (context, state) {
-              return Consumer(
-                builder: (context, ref, _) {
-                  final l10n = AppLocalizations.of(context)!;
-                  final profileAsync = ref.watch(userProfileProvider);
-                  final profile = profileAsync.asData?.value;
-                  if (profile == null) {
-                    return LavishScaffold(
-                      title: l10n.settingsEloHistory,
-                      body: profileAsync.hasError
-                          ? LavishErrorState(
-                              onRetry: () =>
-                                  ref.invalidate(userProfileProvider),
-                            )
-                          : const LavishRowSkeleton(),
-                    );
-                  }
-                  final rankings =
-                      ref.watch(userRankingsProvider).asData?.value ??
-                      const <PlayerRanking>[];
-                  final currentElo = rankings.isEmpty
-                      ? 1000
-                      : rankings
-                            .map((r) => r.eloPoints)
-                            .reduce((a, b) => a > b ? a : b);
-                  return EloHistoryScreen(
-                    userId: profile.id,
-                    userName: profile.fullName ?? l10n.routerDefaultUser,
-                    avatarUrl: profile.avatarUrl,
-                    currentElo: currentElo,
-                  );
-                },
-              );
-            },
+            builder: (context, state) => const ProfileEloRouteScreen(),
           ),
           GoRoute(
             path: 'user/:id',
@@ -1146,6 +1112,63 @@ final routerProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+/// Màn `/profile/elo`: chỉ dựng [EloHistoryScreen] khi đã có hồ sơ và bảng xếp
+/// hạng thật, tránh nháy/ghim ELO 1000 giả khi dữ liệu đang tải hoặc lỗi.
+class ProfileEloRouteScreen extends ConsumerWidget {
+  const ProfileEloRouteScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    void back() {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/profile');
+      }
+    }
+
+    Widget shell(Widget body) => LavishScaffold(
+      title: l10n.settingsEloHistory,
+      onBack: back,
+      body: body,
+    );
+
+    final profileAsync = ref.watch(userProfileProvider);
+    final profile = profileAsync.asData?.value;
+    if (profile == null) {
+      return shell(
+        profileAsync.hasError
+            ? LavishErrorState(
+                onRetry: () => ref.invalidate(userProfileProvider),
+              )
+            : const LavishRowSkeleton(),
+      );
+    }
+    final rankingsAsync = ref.watch(userRankingsProvider);
+    final rankings = rankingsAsync.asData?.value;
+    if (rankings == null) {
+      return shell(
+        rankingsAsync.hasError
+            ? LavishErrorState(
+                onRetry: () => ref.invalidate(userRankingsProvider),
+              )
+            : const LavishRowSkeleton(),
+      );
+    }
+    // 1000 chỉ là mặc định khi người dùng thật sự chưa có xếp hạng nào.
+    final currentElo = rankings.isEmpty
+        ? 1000
+        : rankings.map((r) => r.eloPoints).reduce((a, b) => a > b ? a : b);
+    return EloHistoryScreen(
+      userId: profile.id,
+      userName: profile.fullName ?? l10n.routerDefaultUser,
+      avatarUrl: profile.avatarUrl,
+      currentElo: currentElo,
+    );
+  }
+}
 
 class _ClubChatRouteWrapper extends ConsumerStatefulWidget {
   final String communityId;

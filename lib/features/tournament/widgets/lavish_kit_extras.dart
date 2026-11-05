@@ -288,6 +288,31 @@ class LavishStatGrid extends StatelessWidget {
       rows.length == 1 ? rows[index].length : _maxColumns;
 }
 
+/// Centers [child]; in a bounded-height parent it scrolls when the content is
+/// taller than the space (small screens, large text) and stays pull-to-refresh
+/// friendly. In an unbounded parent (e.g. inside a ListView) it just centers.
+class _LavishStateBody extends StatelessWidget {
+  const _LavishStateBody({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!constraints.hasBoundedHeight) return Center(child: child);
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(child: child),
+          ),
+        );
+      },
+    );
+  }
+}
+
 /// Centred icon, short title and an optional outline action.
 class LavishEmptyState extends StatelessWidget {
   const LavishEmptyState({
@@ -307,7 +332,7 @@ class LavishEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = LavishColors.of(context);
     final label = action;
-    return Center(
+    return _LavishStateBody(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -355,7 +380,7 @@ class LavishErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = LavishColors.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return Center(
+    return _LavishStateBody(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

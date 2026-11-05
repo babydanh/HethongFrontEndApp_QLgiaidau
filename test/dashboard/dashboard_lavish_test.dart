@@ -73,8 +73,10 @@ Future<void> _pump(
   void Function()? onTeams,
   void Function()? onWorkspace,
   ThemeData? theme,
+  Size size = const Size(800, 1600),
+  double textScale = 1,
 }) async {
-  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
@@ -109,6 +111,12 @@ Future<void> _pump(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('vi'),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: const DashboardScreen(),
       ),
     ),
@@ -116,6 +124,20 @@ Future<void> _pump(
   await tester.pump(const Duration(milliseconds: 50));
   await tester.pump(const Duration(milliseconds: 400));
 }
+
+const _streakRank = PlayerRanking(
+  id: 'r2',
+  userId: 'u1',
+  fullName: 'Nguyen An',
+  eloPoints: 1360,
+  rank: 2,
+  matchesPlayed: 8,
+  matchesWon: 6,
+  categoryId: 'badminton',
+  categoryName: 'Cầu lông đơn nam nâng cao',
+  currentStreakType: 'WIN',
+  currentStreakCount: 12,
+);
 
 Future<void> _end(WidgetTester tester) async {
   await tester.pumpWidget(const SizedBox.shrink());
@@ -224,6 +246,19 @@ void main() {
     expect(rankings, greaterThan(r0));
     expect(teams, greaterThan(t0));
     expect(workspace, greaterThan(w0));
+    await _end(tester);
+  });
+
+  testWidgets('ranking row trailing does not overflow at 320dp and 2x text', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      rankings: const [_streakRank],
+      size: const Size(320, 700),
+      textScale: 2,
+    );
+    expect(tester.takeException(), isNull);
     await _end(tester);
   });
 }

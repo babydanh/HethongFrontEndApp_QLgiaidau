@@ -9,7 +9,9 @@ import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
@@ -26,6 +28,7 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
+  static const _log = AppLogger('ProfileSettings');
   late final Future<PackageInfo> _packageInfoFuture;
   bool _checkingUpdate = false;
   bool _loggingOut = false;
@@ -213,10 +216,11 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      _log.error('Lỗi kiểm tra cập nhật', e, stack);
       messenger.showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(ErrorParser.parse(e, '', l)),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -330,13 +334,26 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         ],
       ),
     );
-    if (ok != true || !mounted) return;
+    if (ok != true || !context.mounted || _loggingOut) return;
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _loggingOut = true);
-    await ref.read(authProvider.notifier).signOut();
-    ref.invalidate(userProfileProvider);
-    ref.invalidate(userRankingsProvider);
-    if (!context.mounted) return;
-    context.go('/home');
+    try {
+      await ref.read(authProvider.notifier).signOut();
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(userRankingsProvider);
+      if (!context.mounted) return;
+      context.go('/home');
+    } catch (e, stack) {
+      _log.error('Lỗi đăng xuất', e, stack);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(ErrorParser.parse(e, '', l)),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _loggingOut = false);
+    }
   }
 
   Widget _buildAppVersion(BuildContext context) {

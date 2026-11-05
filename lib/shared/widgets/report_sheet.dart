@@ -37,6 +37,7 @@ String _targetTypeForApi(String type) => switch (type.toLowerCase()) {
 };
 
 const _minReasonLength = 10;
+const _maxReasonLength = 2000; // Backend CreateReportDto.reason MaxLength
 
 String _reasonLabel(AppLocalizations l10n, String key) => switch (key) {
   'spam' => l10n.report_reasonSpam,
@@ -53,12 +54,18 @@ String _reasonLabel(AppLocalizations l10n, String key) => switch (key) {
 /// ```
 class ReportSheet extends ConsumerStatefulWidget {
   final String targetId;
-  final String targetType; // 'match', 'user', 'tournament', 'community' ('community_post' cũ cũng được)
+  final String
+  targetType; // 'match', 'user', 'tournament', 'community' ('community_post' cũ cũng được)
+
+  /// Ghi chú ngữ cảnh nối vào lý do gửi lên (vd `post:<id>`), cho đối tượng mà
+  /// Backend chưa có loại riêng (bài viết cộng đồng chỉ gắn vào id cộng đồng).
+  final String? contextNote;
 
   const ReportSheet({
     super.key,
     required this.targetId,
     required this.targetType,
+    this.contextNote,
   });
 
   /// Show bottom sheet và trả về true nếu gửi thành công
@@ -66,12 +73,17 @@ class ReportSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     required String targetId,
     required String targetType,
+    String? contextNote,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ReportSheet(targetId: targetId, targetType: targetType),
+      builder: (_) => ReportSheet(
+        targetId: targetId,
+        targetType: targetType,
+        contextNote: contextNote,
+      ),
     ).then((r) => r ?? false);
   }
 
@@ -100,6 +112,16 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
 
   bool get _isValid => _selectedReason.isNotEmpty && !_descriptionTooShort;
 
+  /// Nối ghi chú ngữ cảnh, cắt phần mô tả để tổng không vượt giới hạn Backend.
+  String _composeReason(String text) {
+    final note = widget.contextNote?.trim();
+    if (note == null || note.isEmpty) return text;
+    final suffix = ' [$note]';
+    final room = _maxReasonLength - suffix.length;
+    final body = text.length > room ? text.substring(0, room) : text;
+    return '$body$suffix';
+  }
+
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_isValid || _isSubmitting) return;
@@ -115,9 +137,11 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
           'targetId': widget.targetId,
           'targetType': _targetTypeForApi(widget.targetType),
           'category': _categoryForReason(_selectedReason),
-          'reason': description.isEmpty
-              ? l10n.reportDefaultReason(_selectedReason)
-              : description,
+          'reason': _composeReason(
+            description.isEmpty
+                ? l10n.reportDefaultReason(_selectedReason)
+                : description,
+          ),
           'evidenceUrls': _evidenceUrls,
         },
       );

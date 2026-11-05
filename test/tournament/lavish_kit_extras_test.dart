@@ -209,4 +209,58 @@ void main() {
     expect(find.byType(LavishRowSkeleton), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  for (final error in [false, true]) {
+    testWidgets('state fits 320x300 at 2x text and scrolls (error=$error)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 300);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('vi'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: error
+                ? LavishErrorState(
+                    message: 'Không tải được dữ liệu, vui lòng thử lại sau',
+                    onRetry: () {},
+                  )
+                : LavishEmptyState(
+                    icon: Icons.inbox,
+                    title: 'Chưa có dữ liệu để hiển thị ở đây cả',
+                    action: 'Xem tất cả',
+                    onAction: () {},
+                  ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
+    });
+  }
+
+  testWidgets('empty state inside an unbounded ListView does not throw', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      Scaffold(
+        body: ListView(
+          children: const [LavishEmptyState(icon: Icons.inbox, title: 'Trống')],
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(find.text('Trống'), findsOneWidget);
+  });
 }

@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -59,11 +60,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         _scrollController.position.maxScrollExtent - 200) {
       final s = ref.read(notificationStateProvider);
       if (s.hasMore && !_isLoadingMore) {
-        _isLoadingMore = true;
+        setState(() => _isLoadingMore = true);
         ref
             .read(notificationStateProvider.notifier)
             .loadPage(s.currentPage + 1)
-            .then((_) {
+            .whenComplete(() {
               if (mounted) setState(() => _isLoadingMore = false);
             });
       }
@@ -178,7 +179,13 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       }
 
       if (isAlreadyJoinedOrResolved) {
-        await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
+        try {
+          await ref
+              .read(notificationStateProvider.notifier)
+              .markAsRead(notif.id);
+        } catch (markError, markStack) {
+          _log.error('Không đánh dấu đã đọc được', markError, markStack);
+        }
         if (mounted) {
           setState(() => _handledInviteIds.add(notif.id));
           ScaffoldMessenger.of(context).showSnackBar(
@@ -197,10 +204,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         }
       } else {
         if (mounted) {
-          final cleanMsg = e
-              .toString()
-              .replaceAll('Exception: ', '')
-              .replaceAll('StateError: ', '');
+          // StateError mang sẵn thông điệp đã dịch; còn lại qua ErrorParser
+          // để không lộ chuỗi thô của DioException.
+          final cleanMsg = e is StateError
+              ? e.message
+              : ErrorParser.parse(e, '', l10n);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
