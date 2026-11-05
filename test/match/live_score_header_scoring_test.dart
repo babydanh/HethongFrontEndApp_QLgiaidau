@@ -151,12 +151,70 @@ Future<void> _pumpLiveScreen(
   await tester.pump(const Duration(milliseconds: 300));
 }
 
-Finder _appBarScoringIcon() => find.descendant(
-  of: find.byType(AppBar),
-  matching: find.byIcon(Icons.scoreboard_rounded),
-);
+Finder _appBarScoringIcon() => find.byIcon(Icons.scoreboard_rounded);
 
 void main() {
+  group('TC-LIVEVIEW-20 one modern layout for every account', () {
+    for (final entry in {
+      'referee': _refereeAuth,
+      'viewer': _viewerAuth,
+    }.entries) {
+      testWidgets('${entry.key}: no AppBar, Chat and Other videos tabs', (
+        tester,
+      ) async {
+        await _pumpLiveScreen(
+          tester,
+          auth: entry.value,
+          match: _match(),
+          isViewer: true,
+        );
+
+        expect(find.byType(AppBar), findsNothing);
+        expect(find.text('Chat'), findsOneWidget);
+        expect(find.text('Score & Timeline'), findsNothing);
+        expect(find.text('Discussion'), findsNothing);
+        expect(find.byIcon(Icons.arrow_back_ios_new_rounded), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('referee keeps the scoring icon and overlay toggles on video', (
+      tester,
+    ) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _refereeAuth,
+        match: _match(),
+        isViewer: true,
+      );
+
+      final videoBox = find.ancestor(
+        of: find.byType(LiveVideoBox),
+        matching: find.byType(Stack),
+      );
+      expect(
+        find.descendant(
+          of: videoBox.first,
+          matching: find.byIcon(Icons.scoreboard_rounded),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(LiveOverlayToggleChips), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('viewer has no overlay toggles', (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _viewerAuth,
+        match: _match(),
+        isViewer: true,
+      );
+
+      expect(find.byType(LiveOverlayToggleChips), findsNothing);
+    });
+  });
+
   testWidgets(
     'trọng tài thấy icon bấm điểm ở header khi mở trận live từ thẻ trận (route viewer)',
     (tester) async {
