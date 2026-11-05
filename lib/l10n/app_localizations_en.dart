@@ -18518,4 +18518,120 @@ class AppLocalizationsEn extends AppLocalizations {
   String groupStage_sheetTitle(String group, int leg) {
     return '$group · Leg $leg';
   }
+
+  @override
+  String get stageActionEntry => 'Stage operations';
+
+  @override
+  String get stageActionTitle => 'Stage operations';
+
+  @override
+  String get stageActionLoadError =>
+      'Could not load the stages. Check your connection and try again.';
+
+  @override
+  String get stageActionRetry => 'Retry';
+
+  @override
+  String get stageActionEmpty => 'This division has no bracket yet.';
+
+  @override
+  String stageActionStageSummary(int done, int total) {
+    return '$done/$total matches finished';
+  }
+
+  @override
+  String get stageActionDismiss => 'Go back';
+
+  @override
+  String get stageActionFinish => 'Finish stage early';
+
+  @override
+  String get stageActionFinishConfirmTitle => 'Finish this stage early?';
+
+  @override
+  String stageActionFinishConfirmBody(int count) {
+    return '$count unfinished matches will be cancelled and cannot be restored. Completed matches are kept.';
+  }
+
+  @override
+  String get stageActionFinishConfirm => 'Finish early';
+
+  @override
+  String get stageActionFinishDone => 'Stage finished.';
+
+  @override
+  String get stageActionAdvance => 'Lock groups and advance to knockout';
+
+  @override
+  String stageActionAdvanceBlocked(int count) {
+    return '$count group matches are still unfinished.';
+  }
+
+  @override
+  String get stageActionAdvanceConfirmTitle => 'Lock the group stage?';
+
+  @override
+  String get stageActionAdvanceConfirmBody =>
+      'Teams that qualify by the current standings will be placed into the knockout stage.';
+
+  @override
+  String get stageActionAdvanceConfirm => 'Lock groups';
+
+  @override
+  String stageActionAdvanceDone(int count) {
+    return 'Qualified teams moved into the knockout stage ($count matches).';
+  }
+
+  @override
+  String get stageActionPlayoffHeading => 'Tied teams (playoff)';
+
+  @override
+  String get stageActionPlayoffCreate => 'Create playoff';
+
+  @override
+  String get stageActionPlayoffConfirmTitle => 'Create a playoff match?';
+
+  @override
+  String stageActionPlayoffConfirmBody(String team1, String team2) {
+    return 'Create a playoff match between $team1 and $team2 in this round robin.';
+  }
+
+  @override
+  String get stageActionPlayoffDone => 'Playoff match created.';
+
+  @override
+  String get stageActionCancelBracket => 'Cancel bracket and schedule';
+
+  @override
+  String get stageActionCancelConfirmTitle =>
+      'Cancel this division\'s bracket and schedule?';
+
+  @override
+  String stageActionCancelConfirmBody(int stageCount, int matchCount) {
+    return 'This cancels $stageCount stages and $matchCount matches of this division only. Registrations and other divisions are kept. It cannot be undone.';
+  }
+
+  @override
+  String get stageActionCancelConfirm => 'Confirm cancel';
+
+  @override
+  String stageActionCancelDone(int stageCount, int matchCount) {
+    return 'Cancelled $stageCount stages and $matchCount matches.';
+  }
+
+  @override
+  String get stageActionCancelStarted =>
+      'Cannot cancel: a match has already started.';
+
+  @override
+  String get stageActionNetworkError =>
+      'Connection lost or timed out. Please try again.';
+
+  @override
+  String get stageActionConflict =>
+      'The data just changed. Reloaded; please check and try again.';
+
+  @override
+  String get stageActionGenericError => 'The action failed. Please try again.';
 }

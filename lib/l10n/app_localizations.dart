@@ -33234,6 +33234,198 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{group} · Lượt {leg}'**
   String groupStage_sheetTitle(String group, int leg);
+
+  /// No description provided for @stageActionEntry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận hành giai đoạn'**
+  String get stageActionEntry;
+
+  /// No description provided for @stageActionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận hành giai đoạn'**
+  String get stageActionTitle;
+
+  /// No description provided for @stageActionLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được các giai đoạn. Kiểm tra mạng rồi thử lại.'**
+  String get stageActionLoadError;
+
+  /// No description provided for @stageActionRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get stageActionRetry;
+
+  /// No description provided for @stageActionEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng mục này chưa có sơ đồ.'**
+  String get stageActionEmpty;
+
+  /// No description provided for @stageActionStageSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{done}/{total} trận đã xong'**
+  String stageActionStageSummary(int done, int total);
+
+  /// No description provided for @stageActionDismiss.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quay lại'**
+  String get stageActionDismiss;
+
+  /// No description provided for @stageActionFinish.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc sớm giai đoạn'**
+  String get stageActionFinish;
+
+  /// No description provided for @stageActionFinishConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc sớm giai đoạn này?'**
+  String get stageActionFinishConfirmTitle;
+
+  /// No description provided for @stageActionFinishConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} trận chưa hoàn tất sẽ bị hủy và không thể khôi phục. Các trận đã hoàn tất được giữ nguyên.'**
+  String stageActionFinishConfirmBody(int count);
+
+  /// No description provided for @stageActionFinishConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc sớm'**
+  String get stageActionFinishConfirm;
+
+  /// No description provided for @stageActionFinishDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc giai đoạn.'**
+  String get stageActionFinishDone;
+
+  /// No description provided for @stageActionAdvance.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt vòng bảng và sang loại trực tiếp'**
+  String get stageActionAdvance;
+
+  /// No description provided for @stageActionAdvanceBlocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {count} trận vòng bảng chưa hoàn tất.'**
+  String stageActionAdvanceBlocked(int count);
+
+  /// No description provided for @stageActionAdvanceConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt vòng bảng?'**
+  String get stageActionAdvanceConfirmTitle;
+
+  /// No description provided for @stageActionAdvanceConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Các đội đi tiếp theo bảng xếp hạng hiện tại sẽ được đưa vào vòng loại trực tiếp.'**
+  String get stageActionAdvanceConfirmBody;
+
+  /// No description provided for @stageActionAdvanceConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chốt vòng bảng'**
+  String get stageActionAdvanceConfirm;
+
+  /// No description provided for @stageActionAdvanceDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đưa các đội đi tiếp vào vòng loại trực tiếp ({count} trận).'**
+  String stageActionAdvanceDone(int count);
+
+  /// No description provided for @stageActionPlayoffHeading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hai đội bằng điểm (play-off)'**
+  String get stageActionPlayoffHeading;
+
+  /// No description provided for @stageActionPlayoffCreate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo play-off'**
+  String get stageActionPlayoffCreate;
+
+  /// No description provided for @stageActionPlayoffConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo trận play-off?'**
+  String get stageActionPlayoffConfirmTitle;
+
+  /// No description provided for @stageActionPlayoffConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo một trận play-off giữa {team1} và {team2} trong vòng tròn này.'**
+  String stageActionPlayoffConfirmBody(String team1, String team2);
+
+  /// No description provided for @stageActionPlayoffDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo trận play-off.'**
+  String get stageActionPlayoffDone;
+
+  /// No description provided for @stageActionCancelBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy sơ đồ và lịch'**
+  String get stageActionCancelBracket;
+
+  /// No description provided for @stageActionCancelConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy sơ đồ và lịch của hạng mục này?'**
+  String get stageActionCancelConfirmTitle;
+
+  /// No description provided for @stageActionCancelConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác này hủy {stageCount} giai đoạn và {matchCount} trận của riêng hạng mục này. Danh sách đăng ký và các hạng mục khác được giữ nguyên. Không thể khôi phục.'**
+  String stageActionCancelConfirmBody(int stageCount, int matchCount);
+
+  /// No description provided for @stageActionCancelConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận hủy'**
+  String get stageActionCancelConfirm;
+
+  /// No description provided for @stageActionCancelDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy {stageCount} giai đoạn và {matchCount} trận.'**
+  String stageActionCancelDone(int stageCount, int matchCount);
+
+  /// No description provided for @stageActionCancelStarted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể hủy vì đã có trận bắt đầu.'**
+  String get stageActionCancelStarted;
+
+  /// No description provided for @stageActionNetworkError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mất kết nối hoặc hết thời gian chờ. Vui lòng thử lại.'**
+  String get stageActionNetworkError;
+
+  /// No description provided for @stageActionConflict.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dữ liệu vừa thay đổi. Đã tải lại, hãy kiểm tra rồi thử lại.'**
+  String get stageActionConflict;
+
+  /// No description provided for @stageActionGenericError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác thất bại. Vui lòng thử lại.'**
+  String get stageActionGenericError;
 }
 
 class _AppLocalizationsDelegate

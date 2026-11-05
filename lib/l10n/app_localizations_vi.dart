@@ -18447,4 +18447,119 @@ class AppLocalizationsVi extends AppLocalizations {
   String groupStage_sheetTitle(String group, int leg) {
     return '$group · Lượt $leg';
   }
+
+  @override
+  String get stageActionEntry => 'Vận hành giai đoạn';
+
+  @override
+  String get stageActionTitle => 'Vận hành giai đoạn';
+
+  @override
+  String get stageActionLoadError =>
+      'Không tải được các giai đoạn. Kiểm tra mạng rồi thử lại.';
+
+  @override
+  String get stageActionRetry => 'Thử lại';
+
+  @override
+  String get stageActionEmpty => 'Hạng mục này chưa có sơ đồ.';
+
+  @override
+  String stageActionStageSummary(int done, int total) {
+    return '$done/$total trận đã xong';
+  }
+
+  @override
+  String get stageActionDismiss => 'Quay lại';
+
+  @override
+  String get stageActionFinish => 'Kết thúc sớm giai đoạn';
+
+  @override
+  String get stageActionFinishConfirmTitle => 'Kết thúc sớm giai đoạn này?';
+
+  @override
+  String stageActionFinishConfirmBody(int count) {
+    return '$count trận chưa hoàn tất sẽ bị hủy và không thể khôi phục. Các trận đã hoàn tất được giữ nguyên.';
+  }
+
+  @override
+  String get stageActionFinishConfirm => 'Kết thúc sớm';
+
+  @override
+  String get stageActionFinishDone => 'Đã kết thúc giai đoạn.';
+
+  @override
+  String get stageActionAdvance => 'Chốt vòng bảng và sang loại trực tiếp';
+
+  @override
+  String stageActionAdvanceBlocked(int count) {
+    return 'Còn $count trận vòng bảng chưa hoàn tất.';
+  }
+
+  @override
+  String get stageActionAdvanceConfirmTitle => 'Chốt vòng bảng?';
+
+  @override
+  String get stageActionAdvanceConfirmBody =>
+      'Các đội đi tiếp theo bảng xếp hạng hiện tại sẽ được đưa vào vòng loại trực tiếp.';
+
+  @override
+  String get stageActionAdvanceConfirm => 'Chốt vòng bảng';
+
+  @override
+  String stageActionAdvanceDone(int count) {
+    return 'Đã đưa các đội đi tiếp vào vòng loại trực tiếp ($count trận).';
+  }
+
+  @override
+  String get stageActionPlayoffHeading => 'Hai đội bằng điểm (play-off)';
+
+  @override
+  String get stageActionPlayoffCreate => 'Tạo play-off';
+
+  @override
+  String get stageActionPlayoffConfirmTitle => 'Tạo trận play-off?';
+
+  @override
+  String stageActionPlayoffConfirmBody(String team1, String team2) {
+    return 'Tạo một trận play-off giữa $team1 và $team2 trong vòng tròn này.';
+  }
+
+  @override
+  String get stageActionPlayoffDone => 'Đã tạo trận play-off.';
+
+  @override
+  String get stageActionCancelBracket => 'Hủy sơ đồ và lịch';
+
+  @override
+  String get stageActionCancelConfirmTitle =>
+      'Hủy sơ đồ và lịch của hạng mục này?';
+
+  @override
+  String stageActionCancelConfirmBody(int stageCount, int matchCount) {
+    return 'Thao tác này hủy $stageCount giai đoạn và $matchCount trận của riêng hạng mục này. Danh sách đăng ký và các hạng mục khác được giữ nguyên. Không thể khôi phục.';
+  }
+
+  @override
+  String get stageActionCancelConfirm => 'Xác nhận hủy';
+
+  @override
+  String stageActionCancelDone(int stageCount, int matchCount) {
+    return 'Đã hủy $stageCount giai đoạn và $matchCount trận.';
+  }
+
+  @override
+  String get stageActionCancelStarted => 'Không thể hủy vì đã có trận bắt đầu.';
+
+  @override
+  String get stageActionNetworkError =>
+      'Mất kết nối hoặc hết thời gian chờ. Vui lòng thử lại.';
+
+  @override
+  String get stageActionConflict =>
+      'Dữ liệu vừa thay đổi. Đã tải lại, hãy kiểm tra rồi thử lại.';
+
+  @override
+  String get stageActionGenericError => 'Thao tác thất bại. Vui lòng thử lại.';
 }

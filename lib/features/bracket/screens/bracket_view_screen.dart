@@ -32,6 +32,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_search_filte
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/stage_operations_screen.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -542,13 +543,15 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         !_hasRequestedDivision &&
         divisions.isNotEmpty &&
         (divisions.length > 1 || widget.onManageDivisions != null);
-    final bodyContent = showStrip
+    final stageOps = _buildStageOperationsEntry(l10n, tournament, auth);
+    final bodyContent = showStrip || stageOps != null
         ? Column(
             mainAxisSize: widget.isEmbedded
                 ? MainAxisSize.min
                 : MainAxisSize.max,
             children: [
-              _buildDivisionSelector(divisions),
+              if (showStrip) _buildDivisionSelector(divisions),
+              ?stageOps,
               if (widget.isEmbedded)
                 matchContent
               else
@@ -622,6 +625,50 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                 _buildGroupTabItem(1, l10n.bracketView_standings),
                 _buildGroupTabItem(2, l10n.bracketView_schedule),
               ],
+      ),
+    );
+  }
+
+  /// Organizers/admins only, once the division has a bracket: opens the
+  /// stage operations screen (finish early, lock groups, playoff, cancel).
+  Widget? _buildStageOperationsEntry(
+    AppLocalizations l10n,
+    Tournament? tournament,
+    AuthState auth,
+  ) {
+    final divisionId = _activeDivisionId;
+    if (divisionId == null || divisionId.isEmpty) return null;
+    if (!(widget.canEditBracket || auth.role == UserRole.admin)) return null;
+    if (widget.isLite || tournament?.isLite == true) return null;
+    final hasBracket =
+        ref
+            .watch(
+              bracketMatchesWithDivisionProvider((
+                tournamentId: widget.tournamentId,
+                divisionId: divisionId,
+              )),
+            )
+            .value
+            ?.isNotEmpty ??
+        false;
+    if (!hasBracket) return null;
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: TextButton.icon(
+          key: const Key('stage-operations-entry'),
+          onPressed: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(
+              builder: (_) => StageOperationsScreen(
+                tournamentId: widget.tournamentId,
+                divisionId: divisionId,
+              ),
+            ),
+          ),
+          icon: const Icon(Icons.tune_rounded),
+          label: Text(l10n.stageActionEntry),
+        ),
       ),
     );
   }
