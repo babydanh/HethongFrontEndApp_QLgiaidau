@@ -215,6 +215,51 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('H2H panel is translucent and comes back from the menu after X', (
+      tester,
+    ) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _refereeAuth,
+        match: _match(h2hOverlayVisible: true),
+        isViewer: true,
+      );
+      final h2h = find.byKey(const ValueKey('live-overlay-h2h'));
+      expect(h2h, findsOneWidget);
+      final opacity = tester.widget<Opacity>(
+        find.descendant(of: h2h, matching: find.byType(Opacity)).first,
+      );
+      expect(opacity.opacity, lessThan(1));
+
+      // Hide it with its own X: the server flag is still on.
+      await tester.tap(find.descendant(of: h2h, matching: find.byIcon(Icons.close)));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(h2h, findsNothing);
+
+      // The menu must not claim H2H is on while the picture hides it.
+      await tester.tap(find.byKey(const ValueKey('live-more-menu')));
+      await tester.pump(const Duration(milliseconds: 400));
+      final items = tester
+          .widgetList<CheckedPopupMenuItem<String>>(
+            find.byType(CheckedPopupMenuItem<String>),
+          )
+          .toList();
+      expect(items.firstWhere((i) => i.value == 'h2h').checked, isFalse);
+      await tester.tapAt(const Offset(5, 600)); // barrier: close the menu
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Choosing H2H once must bring the panel back (not flip the server flag
+      // off, which would need a second tap).
+      final menu = tester.widget<PopupMenuButton<String>>(
+        find.byKey(const ValueKey('live-more-menu')),
+      );
+      menu.onSelected!('h2h');
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(h2h, findsOneWidget);
+    });
+
     testWidgets('viewer has no overlay toggles', (tester) async {
       await _pumpLiveScreen(
         tester,

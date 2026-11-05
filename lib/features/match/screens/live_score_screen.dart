@@ -1856,11 +1856,35 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     setState(() => _dismissedOverlay = kind);
   }
 
+  bool _overlayFlag(MatchModel match, LiveOverlayKind kind) =>
+      kind == LiveOverlayKind.h2h
+      ? match.h2hOverlayVisible
+      : match.bracketOverlayVisible;
+
+  /// What the picture really shows: the server flag, unless the X hid it here.
+  bool _overlayShowing(MatchModel match, LiveOverlayKind kind) =>
+      _overlayFlag(match, kind) && _dismissedOverlay != kind;
+
+  /// Menu action. The server flag stays true after the X, so a plain flip
+  /// would switch it OFF and need a second tap; bring it back locally instead.
+  void _toggleOverlay(MatchModel match, LiveOverlayKind kind) {
+    final flag = _overlayFlag(match, kind);
+    if (flag && _dismissedOverlay == kind) {
+      setState(() => _dismissedOverlay = null);
+      return;
+    }
+    _setOverlayVisibility(match, kind, visible: !flag);
+  }
+
+  /// H2H / bracket panels let the picture show through; the close button
+  /// stays fully opaque.
+  static const double _overlayOpacity = 0.75;
+
   Widget _withCloseButton(Widget overlay, {required VoidCallback onClose}) {
     return Stack(
       fit: StackFit.passthrough,
       children: [
-        overlay,
+        Opacity(opacity: _overlayOpacity, child: overlay),
         Positioned(
           top: 4,
           right: 4,
@@ -2475,7 +2499,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ),
           const Spacer(),
           if (canControl) _scoringAction(match),
-          if (MediaQuery.of(context).orientation == Orientation.landscape)
+          if (MediaQuery.of(context).orientation == Orientation.landscape) ...[
             round(
               _landscapeChatOpen
                   ? Icons.chat_bubble_rounded
@@ -2483,6 +2507,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               () => setState(() => _landscapeChatOpen = !_landscapeChatOpen),
               _landscapeChatOpen ? l10n.liveChatHide : l10n.liveChatShow,
             ),
+            round(
+              Icons.flag_outlined,
+              () => _reportMatch(match),
+              l10n.liveReportAction,
+            ),
+          ],
           round(
             Icons.share_outlined,
             () => _shareMatch(match),
@@ -2519,17 +2549,9 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           case 'board':
             _toggleScoreboardVisibility(match);
           case 'h2h':
-            _setOverlayVisibility(
-              match,
-              LiveOverlayKind.h2h,
-              visible: !match.h2hOverlayVisible,
-            );
+            _toggleOverlay(match, LiveOverlayKind.h2h);
           case 'bracket':
-            _setOverlayVisibility(
-              match,
-              LiveOverlayKind.bracket,
-              visible: !match.bracketOverlayVisible,
-            );
+            _toggleOverlay(match, LiveOverlayKind.bracket);
         }
       },
       itemBuilder: (_) => [
@@ -2545,13 +2567,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ),
         CheckedPopupMenuItem<String>(
           value: 'h2h',
-          checked: match.h2hOverlayVisible,
+          checked: _overlayShowing(match, LiveOverlayKind.h2h),
           enabled: !locked,
           child: Text(l10n.liveOverlayChipH2h),
         ),
         CheckedPopupMenuItem<String>(
           value: 'bracket',
-          checked: match.bracketOverlayVisible,
+          checked: _overlayShowing(match, LiveOverlayKind.bracket),
           enabled: !locked && tournamentId.isNotEmpty,
           child: Text(l10n.liveOverlayChipBracket),
         ),
