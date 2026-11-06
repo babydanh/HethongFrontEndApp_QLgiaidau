@@ -938,7 +938,7 @@
   "quickCreateOrganizerPairingEnabled": "Allow organizer pairing",
   "quickCreateOrganizerPairingOn": "On",
   "quickCreateOrganizerPairingOff": "Off",
-  "doublesRegPartnerHint": "Enter partner's email or phone",
+  "doublesRegPartnerHint": "Search partner by name",
   "doublesRegSubmitNext": "Next",
   "doublesRegProcessing": "Processing...",
   "doublesRegInviteTitle": "Invite Partner",

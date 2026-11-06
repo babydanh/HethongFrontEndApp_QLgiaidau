@@ -5021,7 +5021,7 @@ abstract class AppLocalizations {
   /// No description provided for @doublesRegPartnerHint.
   ///
   /// In vi, this message translates to:
-  /// **'Nhập email hoặc SĐT đồng đội'**
+  /// **'Tìm đồng đội theo tên'**
   String get doublesRegPartnerHint;
 
   /// No description provided for @doublesRegSubmitNext.

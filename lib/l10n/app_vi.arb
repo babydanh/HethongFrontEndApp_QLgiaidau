@@ -940,7 +940,7 @@
   "quickCreateOrganizerPairingEnabled": "Cho phép BTC ghép đôi",
   "quickCreateOrganizerPairingOn": "Bật",
   "quickCreateOrganizerPairingOff": "Tắt",
-  "doublesRegPartnerHint": "Nhập email hoặc SĐT đồng đội",
+  "doublesRegPartnerHint": "Tìm đồng đội theo tên",
   "doublesRegSubmitNext": "Tiếp theo",
   "doublesRegProcessing": "Đang xử lý...",
   "doublesRegInviteTitle": "Mời đồng đội",

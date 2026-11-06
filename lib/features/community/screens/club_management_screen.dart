@@ -2006,15 +2006,6 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    subtitle: u.email != null
-                        ? Text(
-                            u.email!,
-                            style: TextStyle(
-                              color: colors.textMuted,
-                              fontSize: 11,
-                            ),
-                          )
-                        : null,
                     trailing: GestureDetector(
                       onTap: () => _inviteUser(u, colors),
                       child: Container(

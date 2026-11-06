@@ -2646,7 +2646,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickCreateOrganizerPairingOff => 'Off';
 
   @override
-  String get doublesRegPartnerHint => 'Enter partner\'s email or phone';
+  String get doublesRegPartnerHint => 'Search partner by name';
 
   @override
   String get doublesRegSubmitNext => 'Next';

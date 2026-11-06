@@ -33,6 +33,10 @@
   - Files: sửa `lib/features/dashboard/screens/dashboard_screen.dart`; test trong `test/dashboard/`
   - Phụ thuộc: sau 1.1
 
+- [x] 2.9 Tìm người dùng theo tên, đăng ký đôi gửi `partnerUserId`. Tiêu chí: `flutter test --no-pub test/user_search_partner_user_id_test.dart` → exit 0
+  - Files: sửa `lib/domain/entities/user.dart` (bỏ `email`), `lib/features/community/screens/club_management_screen.dart`, `lib/features/register/screens/doubles_registration_screen.dart`, `lib/domain/repositories/tournament_repository.dart`, `lib/data/repositories/api/api_tournament_repository.dart`, `app_vi.arb`, `app_en.arb`; tạo `test/user_search_partner_user_id_test.dart`
+  - Phụ thuộc: Backend d823a26 (GET /users/search chỉ {id, fullName, avatarUrl}; register nhận `partnerUserId`)
+
 ## 3. Kiểm tra cuối
 
 - [ ] 3.1 Sinh l10n, analyze, test liên quan, chụp lại ảnh Android. Tiêu chí: `flutter gen-l10n && flutter analyze --no-pub lib test` → exit 0 và `related-tests` xanh

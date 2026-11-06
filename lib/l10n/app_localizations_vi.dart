@@ -2639,7 +2639,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get quickCreateOrganizerPairingOff => 'Tắt';
 
   @override
-  String get doublesRegPartnerHint => 'Nhập email hoặc SĐT đồng đội';
+  String get doublesRegPartnerHint => 'Tìm đồng đội theo tên';
 
   @override
   String get doublesRegSubmitNext => 'Tiếp theo';
