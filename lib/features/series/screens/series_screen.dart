@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
@@ -55,11 +56,22 @@ class SeriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final seriesAsync = ref.watch(_seriesListProvider);
+    final profile = ref.watch(userProfileProvider).asData?.value;
+    final canManage = profile != null &&
+        (profile.hasRole('ORGANIZER') || profile.hasRole('ADMIN'));
     return Scaffold(
       backgroundColor: context.colors.bgDark,
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.seriesTitle),
         centerTitle: true,
+        actions: [
+          if (canManage)
+            IconButton(
+              tooltip: AppLocalizations.of(context)!.seriesMgmtEntryTooltip,
+              icon: Icon(Icons.tune_rounded, color: context.colors.textPrimary),
+              onPressed: () => context.push('/organizer/series'),
+            ),
+        ],
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_rounded, color: context.colors.textPrimary),
           onPressed: () {

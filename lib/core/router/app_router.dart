@@ -66,6 +66,8 @@ import 'package:app_quanly_giaidau/features/lite/screens/lite_pairing_screen.dar
 import 'package:app_quanly_giaidau/domain/entities/tournament_registration.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
+import 'package:app_quanly_giaidau/features/series/screens/my_series_screen.dart';
+import 'package:app_quanly_giaidau/features/series/screens/series_form_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
@@ -943,6 +945,21 @@ final routerProvider = Provider<GoRouter>((ref) {
                 0,
           );
         },
+      ),
+
+      // ─── Series management (organizer) ───
+      GoRoute(
+        path: '/organizer/series',
+        builder: (context, state) => const MySeriesScreen(),
+      ),
+      GoRoute(
+        path: '/organizer/series/create',
+        builder: (context, state) => const SeriesFormScreen(),
+      ),
+      GoRoute(
+        path: '/organizer/series/:id/edit',
+        builder: (context, state) =>
+            SeriesFormScreen(seriesId: state.pathParameters['id']),
       ),
 
       // ─── Series ───
