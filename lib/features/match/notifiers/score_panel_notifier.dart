@@ -328,16 +328,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     }
 
     // 3. Pickleball serve state
-    PickleballServeState? pbState;
     final rawPb = liveState?['sideOutState'] is Map
         ? Map<String, dynamic>.from(liveState!['sideOutState'] as Map)
         : null;
-    if (rawPb != null) {
-      pbState = PickleballServeState(
-        isTeam1Serving: rawPb['servingTeam'] == 1,
-        serverNumber: rawPb['serverNumber'] as int? ?? 1,
-      );
-    }
 
     // 4. Rally Point state
     RallySetState? rallyState;
@@ -356,6 +349,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         // reappear as points and causes the next sync to drift.
         rallyState = const RallySetState();
       }
+    }
+
+    // Data saved before `openingDone` existed: a 0-0 set is still an opening
+    // serve, any point scored means the opening is over.
+    PickleballServeState? pbState;
+    if (rawPb != null) {
+      final hasPoints =
+          rallyState != null &&
+          (rallyState.currentP1 > 0 || rallyState.currentP2 > 0);
+      pbState = PickleballServeState(
+        isTeam1Serving: rawPb['servingTeam'] == 1,
+        serverNumber: rawPb['serverNumber'] as int? ?? 1,
+        openingDone: rawPb['openingDone'] as bool? ?? hasPoints,
+      );
     }
 
     return current.copyWith(
@@ -619,7 +626,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // Lite/rally lets the receiver score: the serve then goes to that team.
       pickleball: pb.isTeam1Serving == isTeam1
           ? pb
-          : pb.copyWith(isTeam1Serving: isTeam1, serverNumber: 1),
+          : pb.copyWith(
+              isTeam1Serving: isTeam1,
+              serverNumber: 1,
+              openingDone: true,
+            ),
       errorMessage: null,
     );
     _checkPickleballGameEnd();
@@ -627,12 +638,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     return true;
   }
 
+  /// The serving team loses a rally. Doubles: server 1 -> server 2 -> other
+  /// team. The opening serve of a game has a single fault, so it passes
+  /// straight to the other team (server 1).
   void pickleballSwitchServer() {
     final pb = state.pickleball ?? const PickleballServeState();
+    final handsOver = !pb.openingDone || pb.serverNumber != 1;
     state = state.copyWith(
-      pickleball: pb.serverNumber == 1
-          ? pb.copyWith(serverNumber: 2)
-          : pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1),
+      pickleball: handsOver
+          ? pb.copyWith(
+              isTeam1Serving: !pb.isTeam1Serving,
+              serverNumber: 1,
+              openingDone: true,
+            )
+          : pb.copyWith(serverNumber: 2),
       errorMessage: null,
     );
     _scheduleLiveSync();
@@ -644,6 +663,28 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       pickleball: pb.copyWith(
         isTeam1Serving: !pb.isTeam1Serving,
         serverNumber: 1,
+        openingDone: true,
+      ),
+      errorMessage: null,
+    );
+    _scheduleLiveSync();
+  }
+
+  /// Picks who serves first. At 0-0 this is the opening serve (one fault
+  /// only); once points were scored it is a plain side-out.
+  void pickleballSetServingTeam(bool isTeam1) {
+    final pb = state.pickleball ?? const PickleballServeState();
+    if (pb.isTeam1Serving == isTeam1) return;
+    final r = state.rally ?? const RallySetState();
+    if (r.currentP1 != 0 || r.currentP2 != 0) {
+      pickleballSideOut();
+      return;
+    }
+    state = state.copyWith(
+      pickleball: pb.copyWith(
+        isTeam1Serving: isTeam1,
+        serverNumber: 2,
+        openingDone: false,
       ),
       errorMessage: null,
     );
@@ -659,6 +700,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       'sideOutState': {
         'servingTeam': pb.isTeam1Serving ? 1 : 2,
         'serverNumber': pb.serverNumber,
+        'openingDone': pb.openingDone,
       },
     };
   }
@@ -684,7 +726,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         rally: const RallySetState(),
         // A new game opens with a single fault for the serving team (x-y-2).
         pickleball: (state.pickleball ?? const PickleballServeState())
-            .copyWith(serverNumber: 2),
+            .copyWith(serverNumber: 2, openingDone: false),
       );
       _syncSetsToBackend();
     }

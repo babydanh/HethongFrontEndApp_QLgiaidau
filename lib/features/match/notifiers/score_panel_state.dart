@@ -28,17 +28,27 @@ class PickleballServeState {
   final bool isTeam1Serving;
   final int serverNumber; // 1 | 2
 
+  /// False from the start of a game until the serve first changes hands.
+  /// While false, the serving team has a single fault: losing the first rally
+  /// passes the serve straight to the other team (no second server).
+  final bool openingDone;
+
   /// A game starts with one fault only for the serving team: server number 2.
   const PickleballServeState({
     this.isTeam1Serving = true,
     this.serverNumber = 2,
+    this.openingDone = false,
   });
 
-  PickleballServeState copyWith({bool? isTeam1Serving, int? serverNumber}) =>
-      PickleballServeState(
-        isTeam1Serving: isTeam1Serving ?? this.isTeam1Serving,
-        serverNumber: serverNumber ?? this.serverNumber,
-      );
+  PickleballServeState copyWith({
+    bool? isTeam1Serving,
+    int? serverNumber,
+    bool? openingDone,
+  }) => PickleballServeState(
+    isTeam1Serving: isTeam1Serving ?? this.isTeam1Serving,
+    serverNumber: serverNumber ?? this.serverNumber,
+    openingDone: openingDone ?? this.openingDone,
+  );
 }
 
 /// Trạng thái set hiện tại cho Rally Point (Badminton, Table Tennis, Pickleball Rally).
