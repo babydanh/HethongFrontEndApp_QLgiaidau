@@ -3,8 +3,8 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -157,7 +157,7 @@ void main() {
     await _pump(tester);
 
     // Row đầu mở sẵn (hành vi của màn): sơ đồ hiện ngay, không cần chạm.
-    final diagram = find.byType(SingleElimDiagram);
+    final diagram = find.byType(PlayoffDoubleElimView);
     expect(diagram, findsOneWidget);
 
     // Sơ đồ nằm sát ngay dưới row, không bắt cuộn xuống tìm.
@@ -178,13 +178,13 @@ void main() {
   ) async {
     _phone(tester);
     await _pump(tester);
-    expect(find.byType(SingleElimDiagram), findsOneWidget);
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
 
     await _tapRow(tester, 'Đôi Nam Nữ');
-    expect(find.byType(SingleElimDiagram), findsNothing);
+    expect(find.byType(PlayoffDoubleElimView), findsNothing);
 
     await _tapRow(tester, 'Đôi Nam Nữ');
-    expect(find.byType(SingleElimDiagram), findsOneWidget);
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
   });
 
   testWidgets('opening a division without matches does not keep another bracket', (
@@ -197,7 +197,7 @@ void main() {
 
     // Nội dung "Đơn nam" chưa có trận: sơ đồ của "Đôi Nam Nữ" biến mất khỏi
     // trang, không rò sang row khác.
-    expect(find.byType(SingleElimDiagram), findsNothing);
+    expect(find.byType(PlayoffDoubleElimView), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -205,37 +205,24 @@ void main() {
     _phone(tester);
     await _pump(tester);
 
-    final diagramRect = tester.getRect(find.byType(SingleElimDiagram));
+    final diagramRect = tester.getRect(find.byType(PlayoffDoubleElimView));
     final otherRect = tester.getRect(find.text('Đơn nam'));
     expect(otherRect.top, greaterThanOrEqualTo(diagramRect.bottom - 1));
   });
 
-  testWidgets('horizontal drag pans the bracket instead of switching tab', (
+  testWidgets('TC-PLF-14 the bracket fits the phone width, two rounds a page', (
     tester,
   ) async {
     _phone(tester);
     await _pump(tester);
 
-    final diagram = find.byType(SingleElimDiagram);
-    final horizontal = find.descendant(
-      of: diagram,
-      matching: find.byWidgetPredicate(
-        (widget) =>
-            widget is Scrollable && widget.axisDirection == AxisDirection.right,
-      ),
-    );
-    final state = tester.state<ScrollableState>(horizontal.first);
-    expect(state.position.maxScrollExtent, greaterThan(0));
-
-    await tester.drag(diagram, const Offset(-200, 0));
-    await tester.pumpAndSettle();
-
-    expect(state.position.pixels, greaterThan(0));
-    final bar = tester.widget<TabBar>(find.byType(TabBar).first);
-    expect((bar.tabs[bar.controller!.index] as Tab).text, 'Bảng đấu');
+    final board = tester.getRect(find.byType(PlayoffBracketBoard));
+    expect(board.left, greaterThanOrEqualTo(0));
+    expect(board.right, lessThanOrEqualTo(390));
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('horizontal drag on a double-elim card pans it inside the tab', (
+  testWidgets('TC-PLF-15 next round pages a double-elim bracket inside the tab', (
     tester,
   ) async {
     _phone(tester);
@@ -260,29 +247,21 @@ void main() {
       ],
     );
 
-    final diagram = find.byType(DoubleElimDiagram);
-    expect(diagram, findsOneWidget);
-    final horizontal = tester.state<ScrollableState>(
-      find
-          .descendant(
-            of: diagram,
-            matching: find.byWidgetPredicate(
-              (widget) =>
-                  widget is Scrollable &&
-                  widget.axisDirection == AxisDirection.right,
-            ),
-          )
-          .first,
-    );
-    expect(horizontal.position.maxScrollExtent, greaterThan(0));
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
+    expect(find.text('Đội w10-A'), findsOneWidget);
+    expect(find.text('Đội w40-A'), findsNothing);
 
-    final card = find.text('Đội w10-A');
-    await tester.ensureVisible(card);
+    final next = lookupAppLocalizations(const Locale('vi')).playoff_nextRound;
+    final button = find.byTooltip(next);
+    await tester.ensureVisible(button);
     await tester.pumpAndSettle();
-    await tester.dragFrom(tester.getCenter(card), const Offset(-200, 0));
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    await tester.tap(button);
     await tester.pumpAndSettle();
 
-    expect(horizontal.position.pixels, greaterThan(0));
+    expect(find.text('Đội w10-A'), findsNothing);
+    expect(find.text('Đội w40-A'), findsOneWidget);
     final bar = tester.widget<TabBar>(find.byType(TabBar).first);
     expect((bar.tabs[bar.controller!.index] as Tab).text, 'Bảng đấu');
   });

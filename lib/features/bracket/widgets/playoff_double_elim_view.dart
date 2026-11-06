@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
@@ -16,12 +17,39 @@ class PlayoffRound {
   final List<MatchModel> matches;
 }
 
+int _byPosition(MatchModel a, MatchModel b) =>
+    a.bracketPosition.position.compareTo(b.bracketPosition.position);
+
+/// Single elimination has one branch; rounds are named from the final backwards.
+List<PlayoffRound> _singleElimRounds(
+  List<MatchModel> matches,
+  AppLocalizations l10n,
+) {
+  final byRound = <int, List<MatchModel>>{};
+  for (final m in matches) {
+    if (m.status == 'cancelled' || m.isFullByeMatch) continue;
+    byRound.putIfAbsent(m.round, () => []).add(m);
+  }
+  final rounds = byRound.keys.toList()..sort();
+  return [
+    for (final round in rounds)
+      PlayoffRound(
+        MatchRoundLabel.knockoutRoundName(round, rounds.last, l10n: l10n),
+        byRound[round]!..sort(_byPosition),
+      ),
+  ];
+}
+
 /// Splits double-elimination matches into the two branches. The grand final(s)
-/// are appended to the winners branch as a last round.
+/// are appended to the winners branch as a last round. Single elimination
+/// yields only the winners branch.
 ({List<PlayoffRound> winners, List<PlayoffRound> losers}) buildPlayoffBranches(
   List<MatchModel> matches,
   AppLocalizations l10n,
 ) {
+  if (!matches.any(isDoubleEliminationMatch)) {
+    return (winners: _singleElimRounds(matches, l10n), losers: const []);
+  }
   final winners = <int, List<MatchModel>>{};
   final losers = <int, List<MatchModel>>{};
   final finals = <MatchModel>[];
@@ -37,9 +65,6 @@ class PlayoffRound {
     }
   }
 
-  int byPosition(MatchModel a, MatchModel b) =>
-      a.bracketPosition.position.compareTo(b.bracketPosition.position);
-
   List<PlayoffRound> toRounds(
     Map<int, List<MatchModel>> byRound,
     String Function(int fromEnd, int round) label,
@@ -49,7 +74,7 @@ class PlayoffRound {
       for (var i = 0; i < rounds.length; i++)
         PlayoffRound(
           label(rounds.length - (i + 1), rounds[i]),
-          byRound[rounds[i]]!..sort(byPosition),
+          byRound[rounds[i]]!..sort(_byPosition),
         ),
     ];
   }
@@ -111,6 +136,7 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
       for (final round in r) round.matches,
     ];
     final hasLosers = branches.losers.isNotEmpty;
+    final isDouble = widget.matches.any(isDoubleEliminationMatch);
     final losers =
         hasLosers &&
         (_losers ??
@@ -139,25 +165,26 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              ModeChip(
-                label:
-                    '${l10n.playoff_tabWinners} (${_count(branches.winners)})',
-                selected: !losers,
-                onTap: () => setState(() => _losers = false),
-              ),
-              if (hasLosers)
+          if (isDouble)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
                 ModeChip(
                   label:
-                      '${l10n.playoff_tabLosers} (${_count(branches.losers)})',
-                  selected: losers,
-                  onTap: () => setState(() => _losers = true),
+                      '${l10n.playoff_tabWinners} (${_count(branches.winners)})',
+                  selected: !losers,
+                  onTap: () => setState(() => _losers = false),
                 ),
-            ],
-          ),
+                if (hasLosers)
+                  ModeChip(
+                    label:
+                        '${l10n.playoff_tabLosers} (${_count(branches.losers)})',
+                    selected: losers,
+                    onTap: () => setState(() => _losers = true),
+                  ),
+              ],
+            ),
           if (rounds.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
