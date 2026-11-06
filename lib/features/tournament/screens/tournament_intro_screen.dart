@@ -797,6 +797,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                 tournament,
                 colors,
                 selectedContentBuilder: bracketFor,
+                fullBleedContent: true,
               )
             : bracketFor(tournament.divisions.firstOrNull),
       ),
@@ -1007,8 +1008,10 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     Tournament tournament,
     AppColorsExtension colors, {
     Widget Function(TournamentDivision division)? selectedContentBuilder,
+    bool fullBleedContent = false,
   }) {
     return DivisionAccordion(
+      fullBleedContent: fullBleedContent,
       divisions: tournament.divisions,
       selectedDivisionId: _selectedDivisionId,
       expanded: _divisionExpanded,

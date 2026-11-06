@@ -20,6 +20,7 @@ class DivisionAccordion extends StatelessWidget {
     this.isCompleted = false,
     this.contentBuilder,
     this.badgeBuilder,
+    this.fullBleedContent = false,
   });
 
   final List<TournamentDivision> divisions;
@@ -39,19 +40,24 @@ class DivisionAccordion extends StatelessWidget {
   /// Nhãn phụ cạnh tên (vd. số trận đang diễn ra). Null = không có.
   final Widget? Function(TournamentDivision division)? badgeBuilder;
 
+  /// Nội dung mở ra tràn hết bề ngang màn hình (không thụt 16px hai bên);
+  /// hàng hạng mục vẫn giữ lề. Dùng cho tab Bảng đấu.
+  final bool fullBleedContent;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final duration = MediaQuery.disableAnimationsOf(context)
         ? const Duration(milliseconds: 1)
         : const Duration(milliseconds: 220);
+    const sideInset = EdgeInsets.symmetric(horizontal: 16);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (var index = 0; index < divisions.length; index++) ...[
-            _row(context, divisions[index]),
+            Padding(padding: sideInset, child: _row(context, divisions[index])),
             AnimatedSize(
               key: ValueKey('division-content-${divisions[index].id}'),
               duration: duration,
@@ -61,11 +67,17 @@ class DivisionAccordion extends StatelessWidget {
                   divisions[index].id == selectedDivisionId &&
                       expanded &&
                       contentBuilder != null
-                  ? contentBuilder!(divisions[index])
+                  ? Padding(
+                      padding: fullBleedContent ? EdgeInsets.zero : sideInset,
+                      child: contentBuilder!(divisions[index]),
+                    )
                   : const SizedBox(width: double.infinity),
             ),
             if (index < divisions.length - 1)
-              Divider(height: 1, thickness: 1, color: colors.border),
+              Padding(
+                padding: sideInset,
+                child: Divider(height: 1, thickness: 1, color: colors.border),
+              ),
           ],
         ],
       ),
