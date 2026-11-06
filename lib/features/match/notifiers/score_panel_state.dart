@@ -33,10 +33,11 @@ class PickleballServeState {
   /// passes the serve straight to the other team (no second server).
   final bool openingDone;
 
-  /// A game starts with one fault only for the serving team: server number 2.
+  /// A game opens showing server 1; [openingDone] false makes its first fault
+  /// pass the serve straight to the other team.
   const PickleballServeState({
     this.isTeam1Serving = true,
-    this.serverNumber = 2,
+    this.serverNumber = 1,
     this.openingDone = false,
   });
 

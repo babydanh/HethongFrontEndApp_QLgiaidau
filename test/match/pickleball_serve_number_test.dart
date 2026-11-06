@@ -140,8 +140,9 @@ void main() {
       expect(_serve(c).serverNumber, 1);
     });
 
-    test('the first serve of a game has one fault only: it starts at 2', () {
-      expect(const PickleballServeState().serverNumber, 2);
+    test('the opening serve of a game shows server 1 and is not done', () {
+      expect(const PickleballServeState().serverNumber, 1);
+      expect(const PickleballServeState().openingDone, isFalse);
       expect(const PickleballServeState().isTeam1Serving, isTrue);
     });
 
@@ -159,7 +160,7 @@ void main() {
       expect(_serve(c).serverNumber, 1);
     });
 
-    test('a new game starts at server 2 again', () {
+    test('a new game opens again at server 1, opening not done', () {
       final c = _container(
         serve: const PickleballServeState(
           isTeam1Serving: true,
@@ -174,7 +175,8 @@ void main() {
       final state = c.read(scorePanelNotifierProvider(_params));
       expect(state.finishedSets, hasLength(1));
       expect(state.rally?.currentP1, 0);
-      expect(state.pickleball!.serverNumber, 2);
+      expect(state.pickleball!.serverNumber, 1);
+      expect(state.pickleball!.openingDone, isFalse);
     });
   });
 
@@ -311,7 +313,7 @@ void main() {
 
       _panel(c).pickleballSetServingTeam(false);
       expect(_serve(c).isTeam1Serving, isFalse);
-      expect(_serve(c).serverNumber, 2);
+      expect(_serve(c).serverNumber, 1);
       expect(_serve(c).openingDone, isFalse);
 
       _panel(c).pickleballSwitchServer();
@@ -384,7 +386,7 @@ void main() {
 
       _panel(c).pickleballAwardPoint(true);
 
-      expect(_serve(c).serverNumber, 2);
+      expect(_serve(c).serverNumber, 1);
       expect(_serve(c).openingDone, isFalse);
     });
 

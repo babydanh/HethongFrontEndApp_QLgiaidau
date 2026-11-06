@@ -683,7 +683,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     state = state.copyWith(
       pickleball: pb.copyWith(
         isTeam1Serving: isTeam1,
-        serverNumber: 2,
+        serverNumber: 1,
         openingDone: false,
       ),
       errorMessage: null,
@@ -692,7 +692,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   /// Who serves, in the shape `_hydrateState` reads back: without it the serve
-  /// falls back to team 1 at server 2 whenever the match is opened again.
+  /// falls back to team 1 at the opening serve whenever the match is reopened.
   Map<String, dynamic>? _pickleballLiveState() {
     final pb = state.pickleball;
     if (pb == null) return null;
@@ -724,9 +724,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           ),
         ],
         rally: const RallySetState(),
-        // A new game opens with a single fault for the serving team (x-y-2).
+        // A new game opens at server 1 with a single fault (openingDone false).
         pickleball: (state.pickleball ?? const PickleballServeState())
-            .copyWith(serverNumber: 2, openingDone: false),
+            .copyWith(serverNumber: 1, openingDone: false),
       );
       _syncSetsToBackend();
     }
