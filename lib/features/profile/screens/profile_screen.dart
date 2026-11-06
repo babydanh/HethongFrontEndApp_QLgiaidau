@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 
+import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -483,39 +484,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       HapticFeedback.lightImpact();
                       _pickAndUploadAvatar();
                     },
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: c.surface,
-                        border: Border.all(
-                          color: LavishColors.accent,
-                          width: 2.5,
-                        ),
-                      ),
-                      child: _uploading
-                          ? const SizedBox.square(
-                              dimension: 96,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            )
-                          : RankAvatar(
-                              imageUrl: profile.avatarUrl,
-                              name:
-                                  (profile.fullName != null &&
-                                      profile.fullName!.isNotEmpty)
-                                  ? profile.fullName!
-                                  : 'SportO',
-                              elo: bestRanking?.eloPoints ?? 0,
-                              tierName: bestRanking?.tierName,
-                              matchesPlayed: bestRanking?.matchesPlayed ?? 0,
-                              size: 96,
-                              ringWidth: 3,
+                    child: _uploading
+                        ? const SizedBox.square(
+                            dimension: 96,
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
-                    ),
+                          )
+                        : RankAvatar(
+                            imageUrl: profile.avatarUrl,
+                            name:
+                                (profile.fullName != null &&
+                                    profile.fullName!.isNotEmpty)
+                                ? profile.fullName!
+                                : 'SportO',
+                            elo: bestRanking?.eloPoints ?? 0,
+                            tierName: bestRanking?.tierName,
+                            matchesPlayed: bestRanking?.matchesPlayed ?? 0,
+                            size: 96,
+                            ringWidth: 3,
+                          ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -1081,6 +1069,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final done =
         match.status.toLowerCase() == 'completed' || match.completedAt != null;
     return LavishRow(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        context.push(
+          NavigationHelper.getLiveMatchRoute(
+            match.tournamentId ?? '',
+            match.id,
+          ),
+        );
+      },
       leading: LavishIconBox(
         tone: done ? LavishTone.ok : LavishTone.accent,
         child: Icon(

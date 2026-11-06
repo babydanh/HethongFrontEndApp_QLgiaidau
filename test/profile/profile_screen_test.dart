@@ -12,11 +12,13 @@ import 'package:app_quanly_giaidau/features/profile/screens/profile_screen.dart'
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 class _Call {
   _Call(this.method, this.path, this.data);
@@ -144,6 +146,7 @@ Future<_RecordingAdapter> _pump(
   List<MatchModel>? matches,
   List<PlayerRanking> ranks = const [_rank],
   List<Tournament>? tournaments,
+  GoRouter? router,
 }) async {
   tester.view.physicalSize = const Size(800, 1800);
   tester.view.devicePixelRatio = 1;
@@ -169,13 +172,21 @@ Future<_RecordingAdapter> _pump(
         ),
         userFriendsProvider.overrideWith((ref) async => friends),
       ],
-      child: MaterialApp(
-        theme: theme ?? AppTheme.darkTheme,
-        locale: const Locale('vi'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const ProfileScreen(),
-      ),
+      child: router != null
+          ? MaterialApp.router(
+              theme: theme ?? AppTheme.darkTheme,
+              locale: const Locale('vi'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            )
+          : MaterialApp(
+              theme: theme ?? AppTheme.darkTheme,
+              locale: const Locale('vi'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const ProfileScreen(),
+            ),
     ),
   );
   await tester.pump();
@@ -342,5 +353,57 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(SnackBar), findsOneWidget);
+  });
+
+  group('TC-PROF-RM recent matches and avatar', () {
+    GoRouter routerWithLive() => GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const ProfileScreen()),
+        GoRoute(
+          path: '/live/:matchId',
+          builder: (_, state) => Scaffold(
+            body: Text(
+              'LIVE ${state.pathParameters['matchId']} '
+              '${state.uri.queryParameters['tournamentId']}',
+            ),
+          ),
+        ),
+      ],
+    );
+
+    testWidgets('TC-PROF-RM-01 tapping a recent match opens its live page '
+        'with the tournament context', (tester) async {
+      await _pump(
+        tester,
+        matches: [_match.copyWith(tournamentId: 't1')],
+        router: routerWithLive(),
+      );
+      await tester.tap(find.text('Doi Alpha vs Doi Beta'));
+      await tester.pumpAndSettle();
+      expect(find.text('LIVE m1 t1'), findsOneWidget);
+    });
+
+    testWidgets('TC-PROF-RM-02 a match without tournament id still opens '
+        'its live page', (tester) async {
+      await _pump(tester, router: routerWithLive());
+      await tester.tap(find.text('Doi Alpha vs Doi Beta'));
+      await tester.pumpAndSettle();
+      expect(find.text('LIVE m1 null'), findsOneWidget);
+    });
+
+    testWidgets('TC-PROF-AV-01 avatar has no extra accent ring around it', (
+      tester,
+    ) async {
+      await _pump(tester);
+      final accentRing = find.byWidgetPredicate((w) {
+        if (w is! Container) return false;
+        final d = w.decoration;
+        return d is BoxDecoration &&
+            d.shape == BoxShape.circle &&
+            d.border != null &&
+            d.border!.top.color == LavishColors.accent;
+      });
+      expect(accentRing, findsNothing);
+    });
   });
 }
