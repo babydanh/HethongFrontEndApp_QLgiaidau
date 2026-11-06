@@ -7,6 +7,8 @@ import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:intl/intl.dart';
 
 // ─── Models ───
@@ -20,6 +22,9 @@ class SeriesDetail {
   final DateTime? startDate;
   final DateTime? endDate;
   final String? bannerUrl;
+
+  /// Chủ chuỗi (`series.organizerId`); null khi Backend không trả.
+  final String? organizerId;
   final int legCount;
   final int participantCount;
   final List<SeriesLeg> legs;
@@ -34,16 +39,23 @@ class SeriesDetail {
     this.startDate,
     this.endDate,
     this.bannerUrl,
+    this.organizerId,
     this.legCount = 0,
     this.participantCount = 0,
     this.legs = const [],
     this.rankings = const [],
   });
 
-  factory SeriesDetail.fromJson(Map<String, dynamic> json) {
+  factory SeriesDetail.fromJson(Map<String, dynamic> root) {
+    // `GET /series/:slug` answers `{series, organizer, legs}`; older shapes
+    // put the fields at the top level.
+    final series = root['series'];
+    final json = series is Map<String, dynamic> ? series : root;
     final legsList =
-        (json['legs'] ?? json['tournaments'] ?? []) as List<dynamic>?;
-    final rankingsList = json['rankings'] as List<dynamic>?;
+        (root['legs'] ?? json['legs'] ?? json['tournaments'] ?? [])
+            as List<dynamic>?;
+    final rankingsList =
+        (root['rankings'] ?? json['rankings']) as List<dynamic>?;
 
     return SeriesDetail(
       id: json['id'] ?? '',
@@ -58,6 +70,7 @@ class SeriesDetail {
           ? DateTime.tryParse(json['endDate'])?.toLocal()
           : null,
       bannerUrl: json['bannerUrl'],
+      organizerId: json['organizerId']?.toString(),
       legCount:
           json['_count']?['legs'] ?? json['legCount'] ?? legsList?.length ?? 0,
       participantCount:
@@ -292,6 +305,9 @@ class _SeriesDetailContentState extends ConsumerState<_SeriesDetailContent>
             icon: Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
             onPressed: () => context.pop(),
           ),
+          actions: [
+            _ManageLegsButton(seriesId: d.id, organizerId: d.organizerId),
+          ],
           flexibleSpace: FlexibleSpaceBar(
             background: _buildHeader(d, colors, isActive, l10n),
           ),
@@ -414,6 +430,33 @@ class _SeriesDetailContentState extends ConsumerState<_SeriesDetailContent>
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── Manage legs entry (series owner / ADMIN only) ───
+
+class _ManageLegsButton extends ConsumerWidget {
+  final String seriesId;
+  final String? organizerId;
+
+  const _ManageLegsButton({required this.seriesId, this.organizerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider);
+    if (!auth.isAuthenticated || seriesId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final owner = organizerId;
+    final userId = ref.watch(userProfileProvider).asData?.value.id;
+    final isOwner = owner != null && owner.isNotEmpty && userId == owner;
+    if (!auth.isAdmin && !isOwner) return const SizedBox.shrink();
+    return TextButton.icon(
+      onPressed: () => context.push('/organizer/series/$seriesId/manage'),
+      style: TextButton.styleFrom(foregroundColor: Colors.white),
+      icon: const Icon(Icons.tune_rounded, size: 18),
+      label: Text(AppLocalizations.of(context)!.seriesLegsManage),
     );
   }
 }

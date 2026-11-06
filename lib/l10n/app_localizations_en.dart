@@ -18936,4 +18936,350 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rpt22_descTooShort => 'At least 10 characters';
+
+  @override
+  String get seriesMgmtEntryTooltip => 'Manage my series';
+
+  @override
+  String get seriesMgmtListTitle => 'My series';
+
+  @override
+  String get seriesMgmtCreateTitle => 'Create series';
+
+  @override
+  String get seriesMgmtEditTitle => 'Edit series';
+
+  @override
+  String get seriesMgmtCreateAction => 'Create series';
+
+  @override
+  String get seriesMgmtEmptyTitle => 'You have no series yet';
+
+  @override
+  String get seriesMgmtEmptyHint =>
+      'Create a series to group tournaments and track PSR ranking points.';
+
+  @override
+  String get seriesMgmtLoadError => 'Could not load your series.';
+
+  @override
+  String get seriesMgmtRetry => 'Retry';
+
+  @override
+  String get seriesMgmtManageLegs => 'Manage legs and tournaments';
+
+  @override
+  String get seriesMgmtEditAction => 'Edit';
+
+  @override
+  String get seriesMgmtDeleteAction => 'Delete';
+
+  @override
+  String get seriesMgmtCancel => 'Cancel';
+
+  @override
+  String get seriesMgmtDeleteTitle => 'Delete this series?';
+
+  @override
+  String seriesMgmtDeleteMessage(Object name) {
+    return 'The series \"$name\" will be removed from your list.';
+  }
+
+  @override
+  String get seriesMgmtDeleted => 'Series deleted.';
+
+  @override
+  String get seriesMgmtDeleteFailed =>
+      'Could not delete the series. Please try again.';
+
+  @override
+  String get seriesMgmtCreated => 'Series created.';
+
+  @override
+  String get seriesMgmtUpdated => 'Changes saved.';
+
+  @override
+  String get seriesMgmtSaveFailed =>
+      'Could not save the series. Please try again.';
+
+  @override
+  String get seriesMgmtNetworkError =>
+      'Could not reach the server. Check your connection and try again.';
+
+  @override
+  String get seriesMgmtSave => 'Save';
+
+  @override
+  String get seriesMgmtStatusDraft => 'Draft';
+
+  @override
+  String get seriesMgmtStatusActive => 'Active';
+
+  @override
+  String get seriesMgmtStatusCompleted => 'Completed';
+
+  @override
+  String get seriesMgmtStatusCancelled => 'Cancelled';
+
+  @override
+  String get seriesMgmtVisibilityPublic => 'Public';
+
+  @override
+  String get seriesMgmtVisibilityPrivate => 'Private';
+
+  @override
+  String get seriesMgmtSectionGeneral => 'General information';
+
+  @override
+  String get seriesMgmtSectionRules => 'PSR scoring rules';
+
+  @override
+  String get seriesMgmtNameLabel => 'Series name *';
+
+  @override
+  String get seriesMgmtNameRequired => 'Please enter the series name';
+
+  @override
+  String get seriesMgmtDescriptionLabel => 'Description';
+
+  @override
+  String get seriesMgmtBannerLabel => 'Banner URL';
+
+  @override
+  String get seriesMgmtLogoLabel => 'Logo URL';
+
+  @override
+  String get seriesMgmtVisibilityLabel => 'Visibility';
+
+  @override
+  String get seriesMgmtStatusLabel => 'Status';
+
+  @override
+  String get seriesMgmtStartDateLabel => 'Start date';
+
+  @override
+  String get seriesMgmtEndDateLabel => 'End date';
+
+  @override
+  String get seriesMgmtClearDate => 'Clear date';
+
+  @override
+  String get seriesMgmtEndBeforeStart =>
+      'End date must not be before the start date';
+
+  @override
+  String get seriesMgmtPrizeLabel => 'Total prize (VND)';
+
+  @override
+  String get seriesMgmtInvalidNumber => 'Enter a valid whole number';
+
+  @override
+  String get seriesMgmtDirectEntryLabel => 'Direct-entry rank threshold';
+
+  @override
+  String get seriesMgmtWildcardLabel => 'Wildcard slots';
+
+  @override
+  String get seriesMgmtExclusionRuleLabel => 'Apply registration lock rule';
+
+  @override
+  String get seriesMgmtExclusionScopeLabel => 'Lock scope';
+
+  @override
+  String get seriesMgmtScopeCategory => 'Per category';
+
+  @override
+  String get seriesMgmtScopeAll => 'Whole series';
+
+  @override
+  String get seriesMgmtRulesDescriptionLabel => 'Rules description';
+
+  @override
+  String get seriesMgmtDefaultRulesDescription =>
+      'Accumulate PSR points. Top 2 receive direct-entry tickets; Top 16 PSR receive wildcard tickets for the leg.';
+
+  @override
+  String get seriesMgmtPointsTitle => 'Points by rank';
+
+  @override
+  String get seriesMgmtAddRank => 'Add rank';
+
+  @override
+  String get seriesMgmtRankLabel => 'Rank';
+
+  @override
+  String get seriesMgmtPointsLabel => 'Points';
+
+  @override
+  String get seriesMgmtRemoveRank => 'Remove rank';
+
+  @override
+  String get seriesMgmtRankInvalid => 'Rank must be a whole number from 1';
+
+  @override
+  String get seriesMgmtRankDuplicate => 'Duplicate rank';
+
+  @override
+  String get seriesLegsManage => 'Manage legs';
+
+  @override
+  String get seriesLegsAdd => 'Add leg';
+
+  @override
+  String get seriesLegsEdit => 'Edit leg';
+
+  @override
+  String get seriesLegsDelete => 'Delete leg';
+
+  @override
+  String get seriesLegsEmpty => 'This series has no legs yet.';
+
+  @override
+  String get seriesLegsLoadError => 'Could not load the legs.';
+
+  @override
+  String get seriesLegsNoEvents => 'No tournaments linked yet.';
+
+  @override
+  String get seriesLegsLinkTournament => 'Link tournament';
+
+  @override
+  String get seriesLegsUnlink => 'Unlink tournament';
+
+  @override
+  String get seriesLegsFieldName => 'Leg name';
+
+  @override
+  String get seriesLegsFieldOrder => 'Order';
+
+  @override
+  String get seriesLegsFieldStart => 'Start date';
+
+  @override
+  String get seriesLegsFieldEnd => 'End date';
+
+  @override
+  String get seriesLegsFieldDirectSlots => 'Direct entry slots';
+
+  @override
+  String get seriesLegsFieldWildcardSlots => 'Wildcard slots';
+
+  @override
+  String get seriesLegsFieldRegion => 'Region (optional)';
+
+  @override
+  String get seriesLegsFieldMultiplier => 'Point multiplier';
+
+  @override
+  String get seriesLegsClearDate => 'Clear date';
+
+  @override
+  String get seriesLegsSave => 'Save';
+
+  @override
+  String get seriesLegsCancel => 'Cancel';
+
+  @override
+  String get seriesLegsNameRequired => 'Enter a leg name.';
+
+  @override
+  String get seriesLegsNameTooLong => 'The leg name is at most 100 characters.';
+
+  @override
+  String get seriesLegsOrderInvalid =>
+      'Order must be a whole number, 1 or more.';
+
+  @override
+  String get seriesLegsSlotsInvalid => 'Enter a whole number, 0 or more.';
+
+  @override
+  String get seriesLegsDateOrderInvalid =>
+      'The end date must not be before the start date.';
+
+  @override
+  String get seriesLegsMultiplierInvalid =>
+      'The multiplier must be at least 0.1.';
+
+  @override
+  String get seriesLegsTournamentRequired => 'Pick a tournament to link.';
+
+  @override
+  String get seriesLegsNoTournaments =>
+      'None of your tournaments is left to link.';
+
+  @override
+  String get seriesLegsTournamentsLoadError =>
+      'Could not load your tournaments.';
+
+  @override
+  String get seriesLegsPickTournament => 'Pick a tournament';
+
+  @override
+  String get seriesLegsDeleteAction => 'Delete';
+
+  @override
+  String get seriesLegsUnlinkAction => 'Unlink';
+
+  @override
+  String get seriesLegsCreated => 'Leg added.';
+
+  @override
+  String get seriesLegsUpdated => 'Leg updated.';
+
+  @override
+  String get seriesLegsDeleted => 'Leg deleted.';
+
+  @override
+  String get seriesLegsLinked => 'Tournament linked to the leg.';
+
+  @override
+  String get seriesLegsUnlinked => 'Tournament unlinked from the leg.';
+
+  @override
+  String get seriesLegsConflict =>
+      'The data changed or is duplicated. The list was reloaded.';
+
+  @override
+  String get seriesLegsActionFailed => 'The action failed. Please try again.';
+
+  @override
+  String seriesLegsTitleFor(String name) {
+    return 'Legs of $name';
+  }
+
+  @override
+  String seriesLegsHeading(int order, String name) {
+    return 'Leg $order. $name';
+  }
+
+  @override
+  String seriesLegsSlots(int direct, int wildcard) {
+    return 'Direct $direct · Wildcard $wildcard';
+  }
+
+  @override
+  String seriesLegsEventMeta(int order, String multiplier) {
+    return 'Order $order · multiplier $multiplier';
+  }
+
+  @override
+  String get seriesLegsDeleteTitle => 'Delete this leg?';
+
+  @override
+  String seriesLegsDeleteMessage(String name) {
+    return 'Delete the leg \"$name\" and unlink its tournaments?';
+  }
+
+  @override
+  String get seriesLegsUnlinkTitle => 'Unlink this tournament?';
+
+  @override
+  String seriesLegsUnlinkMessage(String name) {
+    return 'Unlink \"$name\" from this leg?';
+  }
+
+  @override
+  String seriesLegsLinkTitle(String leg) {
+    return 'Link a tournament to $leg';
+  }
 }

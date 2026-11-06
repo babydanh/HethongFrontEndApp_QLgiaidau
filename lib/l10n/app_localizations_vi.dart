@@ -18862,4 +18862,347 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rpt22_descTooShort => 'Cần ít nhất 10 ký tự';
+
+  @override
+  String get seriesMgmtEntryTooltip => 'Quản lý chuỗi giải của tôi';
+
+  @override
+  String get seriesMgmtListTitle => 'Chuỗi giải của tôi';
+
+  @override
+  String get seriesMgmtCreateTitle => 'Tạo chuỗi giải';
+
+  @override
+  String get seriesMgmtEditTitle => 'Sửa chuỗi giải';
+
+  @override
+  String get seriesMgmtCreateAction => 'Tạo chuỗi giải';
+
+  @override
+  String get seriesMgmtEmptyTitle => 'Bạn chưa có chuỗi giải nào';
+
+  @override
+  String get seriesMgmtEmptyHint =>
+      'Tạo chuỗi giải để gom các giải đấu và tính điểm xếp hạng PSR.';
+
+  @override
+  String get seriesMgmtLoadError => 'Không tải được danh sách chuỗi giải.';
+
+  @override
+  String get seriesMgmtRetry => 'Thử lại';
+
+  @override
+  String get seriesMgmtManageLegs => 'Quản lý vòng và giải đấu';
+
+  @override
+  String get seriesMgmtEditAction => 'Sửa';
+
+  @override
+  String get seriesMgmtDeleteAction => 'Xóa';
+
+  @override
+  String get seriesMgmtCancel => 'Hủy';
+
+  @override
+  String get seriesMgmtDeleteTitle => 'Xóa chuỗi giải?';
+
+  @override
+  String seriesMgmtDeleteMessage(Object name) {
+    return 'Chuỗi giải \"$name\" sẽ bị xóa khỏi danh sách.';
+  }
+
+  @override
+  String get seriesMgmtDeleted => 'Đã xóa chuỗi giải.';
+
+  @override
+  String get seriesMgmtDeleteFailed =>
+      'Không xóa được chuỗi giải. Vui lòng thử lại.';
+
+  @override
+  String get seriesMgmtCreated => 'Đã tạo chuỗi giải.';
+
+  @override
+  String get seriesMgmtUpdated => 'Đã lưu thay đổi.';
+
+  @override
+  String get seriesMgmtSaveFailed =>
+      'Không lưu được chuỗi giải. Vui lòng thử lại.';
+
+  @override
+  String get seriesMgmtNetworkError =>
+      'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.';
+
+  @override
+  String get seriesMgmtSave => 'Lưu';
+
+  @override
+  String get seriesMgmtStatusDraft => 'Nháp';
+
+  @override
+  String get seriesMgmtStatusActive => 'Đang diễn ra';
+
+  @override
+  String get seriesMgmtStatusCompleted => 'Đã kết thúc';
+
+  @override
+  String get seriesMgmtStatusCancelled => 'Đã hủy';
+
+  @override
+  String get seriesMgmtVisibilityPublic => 'Công khai';
+
+  @override
+  String get seriesMgmtVisibilityPrivate => 'Riêng tư';
+
+  @override
+  String get seriesMgmtSectionGeneral => 'Thông tin chung';
+
+  @override
+  String get seriesMgmtSectionRules => 'Luật tính điểm PSR';
+
+  @override
+  String get seriesMgmtNameLabel => 'Tên chuỗi giải *';
+
+  @override
+  String get seriesMgmtNameRequired => 'Vui lòng nhập tên chuỗi giải';
+
+  @override
+  String get seriesMgmtDescriptionLabel => 'Mô tả';
+
+  @override
+  String get seriesMgmtBannerLabel => 'Liên kết ảnh bìa';
+
+  @override
+  String get seriesMgmtLogoLabel => 'Liên kết logo';
+
+  @override
+  String get seriesMgmtVisibilityLabel => 'Hiển thị';
+
+  @override
+  String get seriesMgmtStatusLabel => 'Trạng thái';
+
+  @override
+  String get seriesMgmtStartDateLabel => 'Ngày bắt đầu';
+
+  @override
+  String get seriesMgmtEndDateLabel => 'Ngày kết thúc';
+
+  @override
+  String get seriesMgmtClearDate => 'Xóa ngày';
+
+  @override
+  String get seriesMgmtEndBeforeStart => 'Ngày kết thúc phải sau ngày bắt đầu';
+
+  @override
+  String get seriesMgmtPrizeLabel => 'Tổng giải thưởng (VNĐ)';
+
+  @override
+  String get seriesMgmtInvalidNumber => 'Nhập số nguyên hợp lệ';
+
+  @override
+  String get seriesMgmtDirectEntryLabel => 'Hạng tối thiểu để vào thẳng';
+
+  @override
+  String get seriesMgmtWildcardLabel => 'Số suất vé vớt';
+
+  @override
+  String get seriesMgmtExclusionRuleLabel => 'Áp dụng luật khóa đăng ký';
+
+  @override
+  String get seriesMgmtExclusionScopeLabel => 'Phạm vi khóa';
+
+  @override
+  String get seriesMgmtScopeCategory => 'Theo nội dung thi đấu';
+
+  @override
+  String get seriesMgmtScopeAll => 'Toàn chuỗi';
+
+  @override
+  String get seriesMgmtRulesDescriptionLabel => 'Mô tả luật';
+
+  @override
+  String get seriesMgmtDefaultRulesDescription =>
+      'Tính điểm PSR tích lũy. Top 2 nhận vé thẳng, Top 16 PSR nhận vé vớt chặng.';
+
+  @override
+  String get seriesMgmtPointsTitle => 'Điểm theo thứ hạng';
+
+  @override
+  String get seriesMgmtAddRank => 'Thêm hạng';
+
+  @override
+  String get seriesMgmtRankLabel => 'Hạng';
+
+  @override
+  String get seriesMgmtPointsLabel => 'Điểm';
+
+  @override
+  String get seriesMgmtRemoveRank => 'Xóa hạng';
+
+  @override
+  String get seriesMgmtRankInvalid => 'Hạng phải là số nguyên từ 1';
+
+  @override
+  String get seriesMgmtRankDuplicate => 'Hạng bị trùng';
+
+  @override
+  String get seriesLegsManage => 'Quản lý vòng';
+
+  @override
+  String get seriesLegsAdd => 'Thêm vòng';
+
+  @override
+  String get seriesLegsEdit => 'Sửa vòng';
+
+  @override
+  String get seriesLegsDelete => 'Xóa vòng';
+
+  @override
+  String get seriesLegsEmpty => 'Chuỗi chưa có vòng nào.';
+
+  @override
+  String get seriesLegsLoadError => 'Không tải được danh sách vòng.';
+
+  @override
+  String get seriesLegsNoEvents => 'Chưa gắn giải nào.';
+
+  @override
+  String get seriesLegsLinkTournament => 'Gắn giải';
+
+  @override
+  String get seriesLegsUnlink => 'Gỡ giải';
+
+  @override
+  String get seriesLegsFieldName => 'Tên vòng';
+
+  @override
+  String get seriesLegsFieldOrder => 'Thứ tự';
+
+  @override
+  String get seriesLegsFieldStart => 'Ngày bắt đầu';
+
+  @override
+  String get seriesLegsFieldEnd => 'Ngày kết thúc';
+
+  @override
+  String get seriesLegsFieldDirectSlots => 'Suất vào thẳng';
+
+  @override
+  String get seriesLegsFieldWildcardSlots => 'Suất vé vớt';
+
+  @override
+  String get seriesLegsFieldRegion => 'Khu vực (tùy chọn)';
+
+  @override
+  String get seriesLegsFieldMultiplier => 'Hệ số điểm';
+
+  @override
+  String get seriesLegsClearDate => 'Xóa ngày';
+
+  @override
+  String get seriesLegsSave => 'Lưu';
+
+  @override
+  String get seriesLegsCancel => 'Hủy';
+
+  @override
+  String get seriesLegsNameRequired => 'Nhập tên vòng.';
+
+  @override
+  String get seriesLegsNameTooLong => 'Tên vòng tối đa 100 ký tự.';
+
+  @override
+  String get seriesLegsOrderInvalid => 'Thứ tự phải là số nguyên từ 1 trở lên.';
+
+  @override
+  String get seriesLegsSlotsInvalid => 'Nhập số nguyên từ 0 trở lên.';
+
+  @override
+  String get seriesLegsDateOrderInvalid =>
+      'Ngày kết thúc phải sau ngày bắt đầu.';
+
+  @override
+  String get seriesLegsMultiplierInvalid => 'Hệ số điểm tối thiểu 0,1.';
+
+  @override
+  String get seriesLegsTournamentRequired => 'Chọn một giải để gắn.';
+
+  @override
+  String get seriesLegsNoTournaments => 'Không còn giải nào của bạn để gắn.';
+
+  @override
+  String get seriesLegsTournamentsLoadError =>
+      'Không tải được danh sách giải của bạn.';
+
+  @override
+  String get seriesLegsPickTournament => 'Chọn giải';
+
+  @override
+  String get seriesLegsDeleteAction => 'Xóa';
+
+  @override
+  String get seriesLegsUnlinkAction => 'Gỡ';
+
+  @override
+  String get seriesLegsCreated => 'Đã thêm vòng.';
+
+  @override
+  String get seriesLegsUpdated => 'Đã cập nhật vòng.';
+
+  @override
+  String get seriesLegsDeleted => 'Đã xóa vòng.';
+
+  @override
+  String get seriesLegsLinked => 'Đã gắn giải vào vòng.';
+
+  @override
+  String get seriesLegsUnlinked => 'Đã gỡ giải khỏi vòng.';
+
+  @override
+  String get seriesLegsConflict =>
+      'Dữ liệu đã thay đổi hoặc bị trùng. Đã tải lại danh sách.';
+
+  @override
+  String get seriesLegsActionFailed =>
+      'Thao tác không thành công. Vui lòng thử lại.';
+
+  @override
+  String seriesLegsTitleFor(String name) {
+    return 'Vòng của $name';
+  }
+
+  @override
+  String seriesLegsHeading(int order, String name) {
+    return 'Vòng $order. $name';
+  }
+
+  @override
+  String seriesLegsSlots(int direct, int wildcard) {
+    return 'Vào thẳng $direct · Vé vớt $wildcard';
+  }
+
+  @override
+  String seriesLegsEventMeta(int order, String multiplier) {
+    return 'Thứ tự $order · hệ số $multiplier';
+  }
+
+  @override
+  String get seriesLegsDeleteTitle => 'Xóa vòng?';
+
+  @override
+  String seriesLegsDeleteMessage(String name) {
+    return 'Xóa vòng \"$name\" cùng các giải đã gắn trong vòng này?';
+  }
+
+  @override
+  String get seriesLegsUnlinkTitle => 'Gỡ giải khỏi vòng?';
+
+  @override
+  String seriesLegsUnlinkMessage(String name) {
+    return 'Gỡ \"$name\" khỏi vòng này?';
+  }
+
+  @override
+  String seriesLegsLinkTitle(String leg) {
+    return 'Gắn giải vào $leg';
+  }
 }

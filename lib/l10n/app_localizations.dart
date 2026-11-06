@@ -33966,6 +33966,642 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cần ít nhất 10 ký tự'**
   String get rpt22_descTooShort;
+
+  /// No description provided for @seriesMgmtEntryTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý chuỗi giải của tôi'**
+  String get seriesMgmtEntryTooltip;
+
+  /// No description provided for @seriesMgmtListTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi giải của tôi'**
+  String get seriesMgmtListTitle;
+
+  /// No description provided for @seriesMgmtCreateTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo chuỗi giải'**
+  String get seriesMgmtCreateTitle;
+
+  /// No description provided for @seriesMgmtEditTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa chuỗi giải'**
+  String get seriesMgmtEditTitle;
+
+  /// No description provided for @seriesMgmtCreateAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo chuỗi giải'**
+  String get seriesMgmtCreateAction;
+
+  /// No description provided for @seriesMgmtEmptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có chuỗi giải nào'**
+  String get seriesMgmtEmptyTitle;
+
+  /// No description provided for @seriesMgmtEmptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo chuỗi giải để gom các giải đấu và tính điểm xếp hạng PSR.'**
+  String get seriesMgmtEmptyHint;
+
+  /// No description provided for @seriesMgmtLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách chuỗi giải.'**
+  String get seriesMgmtLoadError;
+
+  /// No description provided for @seriesMgmtRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get seriesMgmtRetry;
+
+  /// No description provided for @seriesMgmtManageLegs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý vòng và giải đấu'**
+  String get seriesMgmtManageLegs;
+
+  /// No description provided for @seriesMgmtEditAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa'**
+  String get seriesMgmtEditAction;
+
+  /// No description provided for @seriesMgmtDeleteAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get seriesMgmtDeleteAction;
+
+  /// No description provided for @seriesMgmtCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get seriesMgmtCancel;
+
+  /// No description provided for @seriesMgmtDeleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa chuỗi giải?'**
+  String get seriesMgmtDeleteTitle;
+
+  /// No description provided for @seriesMgmtDeleteMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi giải \"{name}\" sẽ bị xóa khỏi danh sách.'**
+  String seriesMgmtDeleteMessage(Object name);
+
+  /// No description provided for @seriesMgmtDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa chuỗi giải.'**
+  String get seriesMgmtDeleted;
+
+  /// No description provided for @seriesMgmtDeleteFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không xóa được chuỗi giải. Vui lòng thử lại.'**
+  String get seriesMgmtDeleteFailed;
+
+  /// No description provided for @seriesMgmtCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo chuỗi giải.'**
+  String get seriesMgmtCreated;
+
+  /// No description provided for @seriesMgmtUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã lưu thay đổi.'**
+  String get seriesMgmtUpdated;
+
+  /// No description provided for @seriesMgmtSaveFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lưu được chuỗi giải. Vui lòng thử lại.'**
+  String get seriesMgmtSaveFailed;
+
+  /// No description provided for @seriesMgmtNetworkError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.'**
+  String get seriesMgmtNetworkError;
+
+  /// No description provided for @seriesMgmtSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get seriesMgmtSave;
+
+  /// No description provided for @seriesMgmtStatusDraft.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nháp'**
+  String get seriesMgmtStatusDraft;
+
+  /// No description provided for @seriesMgmtStatusActive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get seriesMgmtStatusActive;
+
+  /// No description provided for @seriesMgmtStatusCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kết thúc'**
+  String get seriesMgmtStatusCompleted;
+
+  /// No description provided for @seriesMgmtStatusCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get seriesMgmtStatusCancelled;
+
+  /// No description provided for @seriesMgmtVisibilityPublic.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công khai'**
+  String get seriesMgmtVisibilityPublic;
+
+  /// No description provided for @seriesMgmtVisibilityPrivate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Riêng tư'**
+  String get seriesMgmtVisibilityPrivate;
+
+  /// No description provided for @seriesMgmtSectionGeneral.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin chung'**
+  String get seriesMgmtSectionGeneral;
+
+  /// No description provided for @seriesMgmtSectionRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Luật tính điểm PSR'**
+  String get seriesMgmtSectionRules;
+
+  /// No description provided for @seriesMgmtNameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên chuỗi giải *'**
+  String get seriesMgmtNameLabel;
+
+  /// No description provided for @seriesMgmtNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên chuỗi giải'**
+  String get seriesMgmtNameRequired;
+
+  /// No description provided for @seriesMgmtDescriptionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả'**
+  String get seriesMgmtDescriptionLabel;
+
+  /// No description provided for @seriesMgmtBannerLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên kết ảnh bìa'**
+  String get seriesMgmtBannerLabel;
+
+  /// No description provided for @seriesMgmtLogoLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên kết logo'**
+  String get seriesMgmtLogoLabel;
+
+  /// No description provided for @seriesMgmtVisibilityLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiển thị'**
+  String get seriesMgmtVisibilityLabel;
+
+  /// No description provided for @seriesMgmtStatusLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái'**
+  String get seriesMgmtStatusLabel;
+
+  /// No description provided for @seriesMgmtStartDateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày bắt đầu'**
+  String get seriesMgmtStartDateLabel;
+
+  /// No description provided for @seriesMgmtEndDateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày kết thúc'**
+  String get seriesMgmtEndDateLabel;
+
+  /// No description provided for @seriesMgmtClearDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa ngày'**
+  String get seriesMgmtClearDate;
+
+  /// No description provided for @seriesMgmtEndBeforeStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày kết thúc phải sau ngày bắt đầu'**
+  String get seriesMgmtEndBeforeStart;
+
+  /// No description provided for @seriesMgmtPrizeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng giải thưởng (VNĐ)'**
+  String get seriesMgmtPrizeLabel;
+
+  /// No description provided for @seriesMgmtInvalidNumber.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số nguyên hợp lệ'**
+  String get seriesMgmtInvalidNumber;
+
+  /// No description provided for @seriesMgmtDirectEntryLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng tối thiểu để vào thẳng'**
+  String get seriesMgmtDirectEntryLabel;
+
+  /// No description provided for @seriesMgmtWildcardLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số suất vé vớt'**
+  String get seriesMgmtWildcardLabel;
+
+  /// No description provided for @seriesMgmtExclusionRuleLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng luật khóa đăng ký'**
+  String get seriesMgmtExclusionRuleLabel;
+
+  /// No description provided for @seriesMgmtExclusionScopeLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phạm vi khóa'**
+  String get seriesMgmtExclusionScopeLabel;
+
+  /// No description provided for @seriesMgmtScopeCategory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo nội dung thi đấu'**
+  String get seriesMgmtScopeCategory;
+
+  /// No description provided for @seriesMgmtScopeAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Toàn chuỗi'**
+  String get seriesMgmtScopeAll;
+
+  /// No description provided for @seriesMgmtRulesDescriptionLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả luật'**
+  String get seriesMgmtRulesDescriptionLabel;
+
+  /// No description provided for @seriesMgmtDefaultRulesDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tính điểm PSR tích lũy. Top 2 nhận vé thẳng, Top 16 PSR nhận vé vớt chặng.'**
+  String get seriesMgmtDefaultRulesDescription;
+
+  /// No description provided for @seriesMgmtPointsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm theo thứ hạng'**
+  String get seriesMgmtPointsTitle;
+
+  /// No description provided for @seriesMgmtAddRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm hạng'**
+  String get seriesMgmtAddRank;
+
+  /// No description provided for @seriesMgmtRankLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng'**
+  String get seriesMgmtRankLabel;
+
+  /// No description provided for @seriesMgmtPointsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm'**
+  String get seriesMgmtPointsLabel;
+
+  /// No description provided for @seriesMgmtRemoveRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa hạng'**
+  String get seriesMgmtRemoveRank;
+
+  /// No description provided for @seriesMgmtRankInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng phải là số nguyên từ 1'**
+  String get seriesMgmtRankInvalid;
+
+  /// No description provided for @seriesMgmtRankDuplicate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng bị trùng'**
+  String get seriesMgmtRankDuplicate;
+
+  /// No description provided for @seriesLegsManage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý vòng'**
+  String get seriesLegsManage;
+
+  /// No description provided for @seriesLegsAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm vòng'**
+  String get seriesLegsAdd;
+
+  /// No description provided for @seriesLegsEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa vòng'**
+  String get seriesLegsEdit;
+
+  /// No description provided for @seriesLegsDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa vòng'**
+  String get seriesLegsDelete;
+
+  /// No description provided for @seriesLegsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi chưa có vòng nào.'**
+  String get seriesLegsEmpty;
+
+  /// No description provided for @seriesLegsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách vòng.'**
+  String get seriesLegsLoadError;
+
+  /// No description provided for @seriesLegsNoEvents.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa gắn giải nào.'**
+  String get seriesLegsNoEvents;
+
+  /// No description provided for @seriesLegsLinkTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gắn giải'**
+  String get seriesLegsLinkTournament;
+
+  /// No description provided for @seriesLegsUnlink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ giải'**
+  String get seriesLegsUnlink;
+
+  /// No description provided for @seriesLegsFieldName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên vòng'**
+  String get seriesLegsFieldName;
+
+  /// No description provided for @seriesLegsFieldOrder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ tự'**
+  String get seriesLegsFieldOrder;
+
+  /// No description provided for @seriesLegsFieldStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày bắt đầu'**
+  String get seriesLegsFieldStart;
+
+  /// No description provided for @seriesLegsFieldEnd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày kết thúc'**
+  String get seriesLegsFieldEnd;
+
+  /// No description provided for @seriesLegsFieldDirectSlots.
+  ///
+  /// In vi, this message translates to:
+  /// **'Suất vào thẳng'**
+  String get seriesLegsFieldDirectSlots;
+
+  /// No description provided for @seriesLegsFieldWildcardSlots.
+  ///
+  /// In vi, this message translates to:
+  /// **'Suất vé vớt'**
+  String get seriesLegsFieldWildcardSlots;
+
+  /// No description provided for @seriesLegsFieldRegion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khu vực (tùy chọn)'**
+  String get seriesLegsFieldRegion;
+
+  /// No description provided for @seriesLegsFieldMultiplier.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ số điểm'**
+  String get seriesLegsFieldMultiplier;
+
+  /// No description provided for @seriesLegsClearDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa ngày'**
+  String get seriesLegsClearDate;
+
+  /// No description provided for @seriesLegsSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get seriesLegsSave;
+
+  /// No description provided for @seriesLegsCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get seriesLegsCancel;
+
+  /// No description provided for @seriesLegsNameRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên vòng.'**
+  String get seriesLegsNameRequired;
+
+  /// No description provided for @seriesLegsNameTooLong.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên vòng tối đa 100 ký tự.'**
+  String get seriesLegsNameTooLong;
+
+  /// No description provided for @seriesLegsOrderInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ tự phải là số nguyên từ 1 trở lên.'**
+  String get seriesLegsOrderInvalid;
+
+  /// No description provided for @seriesLegsSlotsInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập số nguyên từ 0 trở lên.'**
+  String get seriesLegsSlotsInvalid;
+
+  /// No description provided for @seriesLegsDateOrderInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày kết thúc phải sau ngày bắt đầu.'**
+  String get seriesLegsDateOrderInvalid;
+
+  /// No description provided for @seriesLegsMultiplierInvalid.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hệ số điểm tối thiểu 0,1.'**
+  String get seriesLegsMultiplierInvalid;
+
+  /// No description provided for @seriesLegsTournamentRequired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn một giải để gắn.'**
+  String get seriesLegsTournamentRequired;
+
+  /// No description provided for @seriesLegsNoTournaments.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không còn giải nào của bạn để gắn.'**
+  String get seriesLegsNoTournaments;
+
+  /// No description provided for @seriesLegsTournamentsLoadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách giải của bạn.'**
+  String get seriesLegsTournamentsLoadError;
+
+  /// No description provided for @seriesLegsPickTournament.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn giải'**
+  String get seriesLegsPickTournament;
+
+  /// No description provided for @seriesLegsDeleteAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa'**
+  String get seriesLegsDeleteAction;
+
+  /// No description provided for @seriesLegsUnlinkAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ'**
+  String get seriesLegsUnlinkAction;
+
+  /// No description provided for @seriesLegsCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm vòng.'**
+  String get seriesLegsCreated;
+
+  /// No description provided for @seriesLegsUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật vòng.'**
+  String get seriesLegsUpdated;
+
+  /// No description provided for @seriesLegsDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa vòng.'**
+  String get seriesLegsDeleted;
+
+  /// No description provided for @seriesLegsLinked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gắn giải vào vòng.'**
+  String get seriesLegsLinked;
+
+  /// No description provided for @seriesLegsUnlinked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gỡ giải khỏi vòng.'**
+  String get seriesLegsUnlinked;
+
+  /// No description provided for @seriesLegsConflict.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dữ liệu đã thay đổi hoặc bị trùng. Đã tải lại danh sách.'**
+  String get seriesLegsConflict;
+
+  /// No description provided for @seriesLegsActionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác không thành công. Vui lòng thử lại.'**
+  String get seriesLegsActionFailed;
+
+  /// No description provided for @seriesLegsTitleFor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng của {name}'**
+  String seriesLegsTitleFor(String name);
+
+  /// No description provided for @seriesLegsHeading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng {order}. {name}'**
+  String seriesLegsHeading(int order, String name);
+
+  /// No description provided for @seriesLegsSlots.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vào thẳng {direct} · Vé vớt {wildcard}'**
+  String seriesLegsSlots(int direct, int wildcard);
+
+  /// No description provided for @seriesLegsEventMeta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thứ tự {order} · hệ số {multiplier}'**
+  String seriesLegsEventMeta(int order, String multiplier);
+
+  /// No description provided for @seriesLegsDeleteTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa vòng?'**
+  String get seriesLegsDeleteTitle;
+
+  /// No description provided for @seriesLegsDeleteMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa vòng \"{name}\" cùng các giải đã gắn trong vòng này?'**
+  String seriesLegsDeleteMessage(String name);
+
+  /// No description provided for @seriesLegsUnlinkTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ giải khỏi vòng?'**
+  String get seriesLegsUnlinkTitle;
+
+  /// No description provided for @seriesLegsUnlinkMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ \"{name}\" khỏi vòng này?'**
+  String seriesLegsUnlinkMessage(String name);
+
+  /// No description provided for @seriesLegsLinkTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gắn giải vào {leg}'**
+  String seriesLegsLinkTitle(String leg);
 }
 
 class _AppLocalizationsDelegate
