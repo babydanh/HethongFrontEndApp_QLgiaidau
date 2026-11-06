@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/pickleball_court_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_dialogs.dart';
@@ -140,11 +141,20 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     );
   }
 
-  void _changeScore(int team, bool increment, {required bool isSideOut}) {
+  void _changeScore(
+    int team,
+    bool increment, {
+    required bool isSideOut,
+    required CourtContext court,
+  }) {
     final score = ref.read(scorePanelNotifierProvider(widget.params).notifier);
     final isTeam1 = team == 1;
     if (!increment) {
       score.rallyRemovePoint(isTeam1);
+    } else if (isSideOut && _receiverWonStrictRally(isTeam1)) {
+      // Strict side-out: only the serving team scores. The receiver winning
+      // the rally just takes the serve step, the score stays.
+      _loseServe(court);
     } else if (isSideOut) {
       score.pickleballAwardPoint(isTeam1);
     } else {
@@ -152,13 +162,23 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     }
   }
 
-  /// Đổi đội giao (side-out) bằng logic điểm có sẵn; người giao do [_applyDrop]
+  bool _receiverWonStrictRally(bool isTeam1) {
+    final panel = ref.read(scorePanelNotifierProvider(widget.params));
+    if (panel.isOpenScoring ||
+        panel.config.scoringModel != SportScoringModel.pickleballSideOut) {
+      return false;
+    }
+    final serve = panel.pickleball ?? const PickleballServeState();
+    return serve.isTeam1Serving != isTeam1;
+  }
+
+  /// Chọn đội giao đầu ván (0-0: chỉ một lượt lỗi); người giao do [_applyDrop]
   /// đặt ngay sau đó.
   void _setServingTeam(int team, CourtContext court) {
     if (court.servingTeam == team) return;
     ref
         .read(scorePanelNotifierProvider(widget.params).notifier)
-        .pickleballSideOut();
+        .pickleballSetServingTeam(team == 1);
   }
 
   /// Mất giao bằng một nút: đôi đi từng bước (người giao 1 → 2 → đội kia) qua
@@ -268,8 +288,9 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     // rule stops the receiving team from scoring.
     final isLite = score.isOpenScoring;
     const isSideOut = true;
-    final receiverCanScore =
-        isLite || score.config.scoringModel != SportScoringModel.pickleballSideOut;
+    // The receiver's plus stays enabled in every mode: in strict side-out it
+    // means "receiver won the rally" and moves the serve (see _changeScore).
+    const receiverCanScore = true;
     final axis =
         widget.axis ??
         (MediaQuery.orientationOf(context) == Orientation.landscape
@@ -304,7 +325,12 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       pickWinnerEnabled: !score.isSubmitting,
       onScoreChange: canChangeScore
           ? (team, increment) =>
-                _changeScore(team, increment, isSideOut: isSideOut)
+                _changeScore(
+                  team,
+                  increment,
+                  isSideOut: isSideOut,
+                  court: courtContext,
+                )
           : null,
       onSetServingTeam: canEdit && isSideOut
           ? (team) => _setServingTeam(team, courtContext)

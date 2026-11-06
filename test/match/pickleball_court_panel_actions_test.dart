@@ -270,6 +270,46 @@ void main() {
     });
   });
 
+  group('strict side-out: the receiving team winning the rally', () {
+    testWidgets('doubles: plus of the receiver loses the serve step by step', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log);
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+
+      // No point is awarded: the serve moves on (1 -> 2 -> other team).
+      expect(log, ['switchServer']);
+    });
+
+    testWidgets('singles: plus of the receiver hands the serve over at once', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await _pumpPanel(
+        tester,
+        log: log,
+        context: _context(isDoubles: false, serverNumber: 1),
+      );
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+
+      expect(log, ['sideOut']);
+    });
+
+    testWidgets('plus of the serving team still awards the point', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log);
+
+      await tester.tap(find.byTooltip('Add point for team 1'));
+
+      expect(log, ['award:1']);
+    });
+  });
+
   group('finish set', () {
     testWidgets('asks first, then finishes the set', (tester) async {
       final log = <String>[];
