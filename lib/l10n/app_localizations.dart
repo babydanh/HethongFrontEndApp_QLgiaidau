@@ -20136,6 +20136,12 @@ abstract class AppLocalizations {
   /// **'Vòng sau'**
   String get playoff_nextRound;
 
+  /// No description provided for @playoff_slotNA.
+  ///
+  /// In vi, this message translates to:
+  /// **'N/A'**
+  String get playoff_slotNA;
+
   /// No description provided for @playoff_waitWinner.
   ///
   /// In vi, this message translates to:

@@ -197,7 +197,7 @@ void main() {
     expect(find.text('Đội w4-A'), findsOneWidget);
   });
 
-  testWidgets('TC-PLF-07 an empty side says which match it waits for', (
+  testWidgets('TC-PLF-07 an empty side shows N/A, not a feeder hint', (
     tester,
   ) async {
     final x = MatchModel.fromJson({
@@ -218,8 +218,9 @@ void main() {
       ],
     );
 
-    expect(find.text('Thắng W1'), findsOneWidget);
-    expect(find.text('Chưa xác định'), findsOneWidget);
+    expect(find.text('N/A'), findsNWidgets(2));
+    expect(find.text('Thắng W1'), findsNothing);
+    expect(find.text('Chưa xác định'), findsNothing);
   });
 
   testWidgets('TC-PLF-08 doubles cards fit without overflow', (tester) async {

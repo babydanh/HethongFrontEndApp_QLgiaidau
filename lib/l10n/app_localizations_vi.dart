@@ -10986,6 +10986,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playoff_nextRound => 'Vòng sau';
 
   @override
+  String get playoff_slotNA => 'N/A';
+
+  @override
   String playoff_waitWinner(String code) {
     return 'Thắng $code';
   }

@@ -161,15 +161,9 @@ class _BracketCard extends StatelessWidget {
     return code.isEmpty ? '#${match.matchNumber}' : code;
   }
 
-  /// "Thắng W4" / "Thua W6" for an empty side. Side 1 / 2 are matched to the
-  /// 1st / 2nd feeder in bracket order (the API has no explicit slot field).
-  String _waiting(AppLocalizations l10n, int side) {
-    if (side > feeders.length) return l10n.matchNotDetermined;
-    final f = feeders[side - 1];
-    return f.loser
-        ? l10n.playoff_waitLoser(f.code)
-        : l10n.playoff_waitWinner(f.code);
-  }
+  /// An empty side is just N/A (same as the web); which match feeds it is
+  /// already drawn by the connector lines.
+  String _waiting(AppLocalizations l10n) => l10n.playoff_slotNA;
 
   Widget _side(BuildContext context, int side) {
     final l10n = AppLocalizations.of(context)!;
@@ -195,7 +189,7 @@ class _BracketCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: empty
                   ? Text(
-                      _waiting(l10n, side),
+                      _waiting(l10n),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 11.5, color: colors.textMuted),

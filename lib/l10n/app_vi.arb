@@ -4404,6 +4404,7 @@
   "playoff_tabLosers": "Nhánh thua",
   "playoff_prevRound": "Vòng trước",
   "playoff_nextRound": "Vòng sau",
+  "playoff_slotNA": "N/A",
   "playoff_waitWinner": "Thắng {code}",
   "@playoff_waitWinner": {"placeholders": {"code": {"type": "String"}}},
   "playoff_waitLoser": "Thua {code}",

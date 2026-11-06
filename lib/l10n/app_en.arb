@@ -4375,6 +4375,7 @@
   "playoff_tabLosers": "Losers bracket",
   "playoff_prevRound": "Previous round",
   "playoff_nextRound": "Next round",
+  "playoff_slotNA": "N/A",
   "playoff_waitWinner": "Winner {code}",
   "@playoff_waitWinner": {"placeholders": {"code": {"type": "String"}}},
   "playoff_waitLoser": "Loser {code}",

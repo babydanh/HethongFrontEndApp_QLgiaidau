@@ -11015,6 +11015,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playoff_nextRound => 'Next round';
 
   @override
+  String get playoff_slotNA => 'N/A';
+
+  @override
   String playoff_waitWinner(String code) {
     return 'Winner $code';
   }
