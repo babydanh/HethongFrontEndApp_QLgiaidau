@@ -223,6 +223,28 @@ void main() {
     expect(find.text('Chưa xác định'), findsNothing);
   });
 
+  testWidgets('TC-PLF-09 the empty side of a BYE match says it is a bye', (
+    tester,
+  ) async {
+    final bye = MatchModel.fromJson({
+      'tournamentId': 't-1',
+      'round': 1,
+      'matchNumber': 1,
+      'status': 'SCHEDULED',
+      'isBye': true,
+      'team1Id': 'p1-bye',
+      'team1Name': 'ggg',
+      'team2Name': '',
+      'stageType': 'DOUBLE_ELIMINATION',
+      'bracketPosition': {'bracket': 'winners', 'round': 1, 'position': 0},
+    }, 'bye');
+    await _pump(tester, matches: [bye]);
+
+    expect(find.text('ggg'), findsOneWidget);
+    expect(find.text('Miễn đấu'), findsOneWidget);
+    expect(find.text('N/A'), findsNothing);
+  });
+
   testWidgets('TC-PLF-08 doubles cards fit without overflow', (tester) async {
     await _pump(
       tester,

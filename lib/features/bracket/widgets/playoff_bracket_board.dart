@@ -161,9 +161,10 @@ class _BracketCard extends StatelessWidget {
     return code.isEmpty ? '#${match.matchNumber}' : code;
   }
 
-  /// An empty side is just N/A (same as the web); which match feeds it is
-  /// already drawn by the connector lines.
-  String _waiting(AppLocalizations l10n) => l10n.playoff_slotNA;
+  /// An empty side is N/A (same as the web), or "bye" when the backend marked
+  /// the whole match as a BYE; the connector lines already show who feeds it.
+  String _waiting(AppLocalizations l10n) =>
+      match.isBye ? l10n.bracketBye : l10n.playoff_slotNA;
 
   Widget _side(BuildContext context, int side) {
     final l10n = AppLocalizations.of(context)!;
