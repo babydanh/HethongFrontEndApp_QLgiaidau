@@ -23,12 +23,13 @@ const double _step = _h + kBracketRowGap;
 
 void main() {
   group('bracketWindowStart', () {
-    test('TC-PLB-01 centres the active round and clamps to the ends', () {
+    test('TC-PLB-01 window starts at the active round, clamped to the ends', () {
       expect(bracketWindowStart(0, 6), 0);
-      expect(bracketWindowStart(1, 6), 0);
-      expect(bracketWindowStart(3, 6), 2);
-      expect(bracketWindowStart(5, 6), 3);
+      expect(bracketWindowStart(1, 6), 1);
+      expect(bracketWindowStart(3, 6), 3);
+      expect(bracketWindowStart(5, 6), 4);
       expect(bracketWindowStart(0, 2), 0);
+      expect(bracketWindowStart(0, 1), 0);
       expect(bracketWindowStart(0, 0), 0);
     });
   });
