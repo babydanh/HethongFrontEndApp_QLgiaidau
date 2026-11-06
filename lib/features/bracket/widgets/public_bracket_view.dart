@@ -10,8 +10,6 @@ import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -22,13 +20,12 @@ enum _Kind { single, double, roundRobin, swiss }
 
 /// Sơ đồ bracket cho trang công khai: CHỈ sơ đồ, không banner/ô tìm/bộ lọc/thẻ
 /// vòng. Chọn đúng loại sơ đồ như `BracketViewScreen`:
-/// - loại trực tiếp  -> [SingleElimDiagram]
-/// - nhánh thắng-thua -> [DoubleElimDiagram]
+/// - loại trực tiếp / nhánh thắng-thua -> [PlayoffDoubleElimView]
 /// - vòng tròn       -> [GroupStageView]
 /// - vòng bảng + knockout -> chỉ phần knockout.
 ///
-/// Sơ đồ chỉ cuộn ngang (`scrollOnly`), không zoom, không kéo chéo. Chiều cao
-/// theo nội dung; cuộn dọc thuộc trang cha.
+/// Sơ đồ mỗi trang hiện 2 vòng, đổi trang bằng Trước/Sau, không zoom, không
+/// kéo chéo. Chiều cao theo nội dung; cuộn dọc thuộc trang cha.
 class PublicBracketView extends StatelessWidget {
   const PublicBracketView({
     super.key,
@@ -132,17 +129,10 @@ class PublicBracketView extends StatelessWidget {
         bracketType: bracketType,
         canScoreMatch: canScoreMatch,
       ),
-      _Kind.double => DoubleElimDiagram(
+      _Kind.double || _Kind.single => PlayoffDoubleElimView(
         matches: knockoutOnly,
         tournamentId: tournamentId,
         canScoreMatch: canScoreMatch,
-        scrollOnly: true,
-      ),
-      _Kind.single => SingleElimDiagram(
-        matches: knockoutOnly,
-        tournamentId: tournamentId,
-        canScoreMatch: canScoreMatch,
-        scrollOnly: true,
       ),
     };
   }
@@ -308,18 +298,11 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
               ),
             ),
           )
-        else if (widget.knockoutMatches.any(isDoubleEliminationMatch))
+        else
           PlayoffDoubleElimView(
             matches: widget.knockoutMatches,
             tournamentId: widget.tournamentId,
             canScoreMatch: widget.canScoreMatch,
-          )
-        else
-          SingleElimDiagram(
-            matches: widget.knockoutMatches,
-            tournamentId: widget.tournamentId,
-            canScoreMatch: widget.canScoreMatch,
-            scrollOnly: true,
           ),
       ],
     );
