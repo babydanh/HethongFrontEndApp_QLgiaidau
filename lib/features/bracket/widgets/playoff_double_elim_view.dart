@@ -140,6 +140,9 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
   // Which way the last page turn went, so the new window slides in from there.
   bool _forward = true;
 
+  // Which way the last page turn went, so the new window slides in from there.
+  bool _forward = true;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
