@@ -2,17 +2,18 @@ import 'dart:math' as math;
 
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 
-/// Rounds shown side by side, like the Web `PagedDoubleElimView`.
-const int kBracketVisibleRounds = 3;
+/// Rounds shown side by side. Two per page leave room for the slide animation
+/// when paging (the Web `PagedDoubleElimView` shows three; App shows two).
+const int kBracketVisibleRounds = 2;
 
 /// Vertical gap between two cards of one column.
 const double kBracketRowGap = 10;
 
-/// First visible round so that the active one sits in the middle of the window
-/// (Web: `activeRoundIndex - 1`, clamped so the window never runs off the end).
+/// First visible round: the active one leads the window, clamped so the window
+/// never runs off the end.
 int bracketWindowStart(int active, int roundCount) {
   final maxStart = math.max(0, roundCount - kBracketVisibleRounds);
-  return (active - 1).clamp(0, maxStart);
+  return active.clamp(0, maxStart);
 }
 
 bool _isOpen(MatchModel m) => !m.isCompleted && m.status != 'cancelled';
@@ -29,8 +30,7 @@ int defaultActiveRound(List<List<MatchModel>> rounds) {
 bool defaultLosersBranch(
   List<List<MatchModel>> winners,
   List<List<MatchModel>> losers,
-) =>
-    !winners.any((r) => r.any(_isOpen)) && losers.any((r) => r.any(_isOpen));
+) => !winners.any((r) => r.any(_isOpen)) && losers.any((r) => r.any(_isOpen));
 
 /// Top offset of every card. The first column is stacked; each next column
 /// centres a card on its already-placed feeders (`nextMatchId` /

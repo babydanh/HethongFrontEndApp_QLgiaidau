@@ -73,11 +73,12 @@ class PlayoffRound {
 
 const double _bracketGap = 14;
 const double _minCardWidth = 96;
-const double _maxCardWidth = 140;
+const double _maxCardWidth = 200;
 
 /// Public playoff of a group-stage + double-elimination division, drawn like the
 /// Web `PagedDoubleElimView`: winners / losers tabs, a window of
-/// [kBracketVisibleRounds] rounds with connector lines, Trước/Sau to slide it.
+/// [kBracketVisibleRounds] rounds with connector lines, Trước/Sau to slide it
+/// (the old window fades out while the new one slides in).
 class PlayoffDoubleElimView extends StatefulWidget {
   const PlayoffDoubleElimView({
     super.key,
@@ -98,6 +99,9 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
   // Null until the user picks one: the default follows the live data.
   bool? _losers;
   final Map<bool, int> _active = {};
+
+  // Which way the last page turn went, so the new window slides in from there.
+  bool _forward = true;
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +129,10 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
         for (final m in round.matches) m.id: round.label,
     };
 
-    void select(int index) => setState(() => _active[losers] = index);
+    void select(int index) => setState(() {
+      _forward = index >= active;
+      _active[losers] = index;
+    });
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
@@ -170,42 +177,70 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
                   ? () => select(active + 1)
                   : null,
             ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final cardWidth =
-                    ((constraints.maxWidth - 2 * _bracketGap) /
-                            kBracketVisibleRounds)
-                        .clamp(_minCardWidth, _maxCardWidth);
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _RoundPills(
-                        rounds: visible,
-                        firstIndex: start,
-                        active: active,
-                        cardWidth: cardWidth,
-                        onSelect: select,
-                      ),
-                      const SizedBox(height: 10),
-                      PlayoffBracketBoard(
-                        columns: [for (final r in visible) r.matches],
-                        feeders: buildFeeders(widget.matches),
-                        cardWidth: cardWidth,
-                        gap: _bracketGap,
-                        onTap: (match) => showGroupMatchSheet(
-                          context,
-                          match: match,
-                          tournamentId: widget.tournamentId,
-                          title: titles[match.id] ?? '',
-                          canScore: widget.canScoreMatch,
-                        ),
-                      ),
-                    ],
+            ClipRect(
+              child: AnimatedSwitcher(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                layoutBuilder: (current, previous) => Stack(
+                  alignment: Alignment.topLeft,
+                  children: [...previous, ?current],
+                ),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: Offset(_forward ? 0.15 : -0.15, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
                   ),
-                );
-              },
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey('playoff-window-$losers-$start'),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cardWidth =
+                          ((constraints.maxWidth -
+                                      (kBracketVisibleRounds - 1) *
+                                          _bracketGap) /
+                                  kBracketVisibleRounds)
+                              .clamp(_minCardWidth, _maxCardWidth);
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _RoundPills(
+                              rounds: visible,
+                              firstIndex: start,
+                              active: active,
+                              cardWidth: cardWidth,
+                              onSelect: select,
+                            ),
+                            const SizedBox(height: 10),
+                            PlayoffBracketBoard(
+                              columns: [for (final r in visible) r.matches],
+                              feeders: buildFeeders(widget.matches),
+                              cardWidth: cardWidth,
+                              gap: _bracketGap,
+                              onTap: (match) => showGroupMatchSheet(
+                                context,
+                                match: match,
+                                tournamentId: widget.tournamentId,
+                                title: titles[match.id] ?? '',
+                                canScore: widget.canScoreMatch,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ],
         ],

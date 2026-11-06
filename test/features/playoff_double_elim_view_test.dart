@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +87,7 @@ void main() {
     expect(branches.losers.length, 2);
   });
 
-  testWidgets('TC-PLF-02 shows a window of 3 rounds and slides with Vòng sau', (
+  testWidgets('TC-PLF-02 shows a window of 2 rounds and slides with Vòng sau', (
     tester,
   ) async {
     await _pump(tester);
@@ -95,18 +96,53 @@ void main() {
     expect(find.text('Nhánh thua (2)'), findsOneWidget);
     expect(find.textContaining('1/5'), findsOneWidget);
     expect(find.text('Đội w1-A'), findsOneWidget);
+    expect(find.text('Đội w2-A'), findsOneWidget);
+    expect(find.text('Đội w3-A'), findsNothing);
+
+    await tester.tap(find.byTooltip('Vòng sau'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('2/5'), findsOneWidget);
+    expect(find.text('Đội w1-A'), findsNothing);
+    expect(find.text('Đội w2-A'), findsOneWidget);
     expect(find.text('Đội w3-A'), findsOneWidget);
-    expect(find.text('Đội w4-A'), findsNothing);
 
     for (var i = 0; i < 3; i++) {
       await tester.tap(find.byTooltip('Vòng sau'));
       await tester.pumpAndSettle();
     }
-    expect(find.textContaining('4/5'), findsOneWidget);
-    expect(find.text('Đội w3-A'), findsOneWidget);
+    expect(find.textContaining('5/5'), findsOneWidget);
     expect(find.text('Đội w4-A'), findsOneWidget);
     expect(find.text('Đội gf-A'), findsOneWidget);
-    expect(find.text('Đội w1-A'), findsNothing);
+    expect(find.text('Đội w3-A'), findsNothing);
+  });
+
+  testWidgets(
+    'TC-PLF-10 paging keeps the old window while the new one slides in',
+    (tester) async {
+      await _pump(tester);
+
+      await tester.tap(find.byTooltip('Vòng sau'));
+      await tester.pump(const Duration(milliseconds: 80));
+      // Round 1 is only in the leaving window, round 3 only in the arriving one.
+      expect(find.text('Đội w1-A'), findsOneWidget);
+      expect(find.text('Đội w3-A'), findsOneWidget);
+
+      await tester.pumpAndSettle();
+      expect(find.text('Đội w1-A'), findsNothing);
+      expect(find.text('Đội w3-A'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('TC-PLF-11 the two visible rounds fill the width', (
+    tester,
+  ) async {
+    await _pump(tester);
+
+    // Screen 400 minus 2 x 12 of padding = 376 available.
+    final width = tester.getSize(find.byType(PlayoffBracketBoard)).width;
+    expect(width, greaterThan(340));
+    expect(width, lessThanOrEqualTo(376));
   });
 
   testWidgets('TC-PLF-03 losers tab shows its own rounds', (tester) async {
@@ -154,10 +190,10 @@ void main() {
     ];
     await _pump(tester, matches: matches);
 
-    // Active round 3 of 4 -> window starts at round 2.
+    // Active round 3 of 4 -> the window of 2 starts at round 3.
     expect(find.textContaining('3/4'), findsOneWidget);
-    expect(find.text('Đội w1-A'), findsNothing);
-    expect(find.text('Đội w2-A'), findsOneWidget);
+    expect(find.text('Đội w2-A'), findsNothing);
+    expect(find.text('Đội w3-A'), findsOneWidget);
     expect(find.text('Đội w4-A'), findsOneWidget);
   });
 
@@ -176,7 +212,10 @@ void main() {
     }, 'x');
     await _pump(
       tester,
-      matches: [_m('a', 'winners', 1, 0, next: 'x', code: 'W1'), x],
+      matches: [
+        _m('a', 'winners', 1, 0, next: 'x', code: 'W1'),
+        x,
+      ],
     );
 
     expect(find.text('Thắng W1'), findsOneWidget);
