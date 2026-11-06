@@ -18923,4 +18923,168 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seriesMgmtRankDuplicate => 'Duplicate rank';
+
+  @override
+  String get seriesLegsManage => 'Manage legs';
+
+  @override
+  String get seriesLegsAdd => 'Add leg';
+
+  @override
+  String get seriesLegsEdit => 'Edit leg';
+
+  @override
+  String get seriesLegsDelete => 'Delete leg';
+
+  @override
+  String get seriesLegsEmpty => 'This series has no legs yet.';
+
+  @override
+  String get seriesLegsLoadError => 'Could not load the legs.';
+
+  @override
+  String get seriesLegsNoEvents => 'No tournaments linked yet.';
+
+  @override
+  String get seriesLegsLinkTournament => 'Link tournament';
+
+  @override
+  String get seriesLegsUnlink => 'Unlink tournament';
+
+  @override
+  String get seriesLegsFieldName => 'Leg name';
+
+  @override
+  String get seriesLegsFieldOrder => 'Order';
+
+  @override
+  String get seriesLegsFieldStart => 'Start date';
+
+  @override
+  String get seriesLegsFieldEnd => 'End date';
+
+  @override
+  String get seriesLegsFieldDirectSlots => 'Direct entry slots';
+
+  @override
+  String get seriesLegsFieldWildcardSlots => 'Wildcard slots';
+
+  @override
+  String get seriesLegsFieldRegion => 'Region (optional)';
+
+  @override
+  String get seriesLegsFieldMultiplier => 'Point multiplier';
+
+  @override
+  String get seriesLegsClearDate => 'Clear date';
+
+  @override
+  String get seriesLegsSave => 'Save';
+
+  @override
+  String get seriesLegsCancel => 'Cancel';
+
+  @override
+  String get seriesLegsNameRequired => 'Enter a leg name.';
+
+  @override
+  String get seriesLegsNameTooLong => 'The leg name is at most 100 characters.';
+
+  @override
+  String get seriesLegsOrderInvalid =>
+      'Order must be a whole number, 1 or more.';
+
+  @override
+  String get seriesLegsSlotsInvalid => 'Enter a whole number, 0 or more.';
+
+  @override
+  String get seriesLegsDateOrderInvalid =>
+      'The end date must not be before the start date.';
+
+  @override
+  String get seriesLegsMultiplierInvalid =>
+      'The multiplier must be at least 0.1.';
+
+  @override
+  String get seriesLegsTournamentRequired => 'Pick a tournament to link.';
+
+  @override
+  String get seriesLegsNoTournaments =>
+      'None of your tournaments is left to link.';
+
+  @override
+  String get seriesLegsTournamentsLoadError =>
+      'Could not load your tournaments.';
+
+  @override
+  String get seriesLegsPickTournament => 'Pick a tournament';
+
+  @override
+  String get seriesLegsDeleteAction => 'Delete';
+
+  @override
+  String get seriesLegsUnlinkAction => 'Unlink';
+
+  @override
+  String get seriesLegsCreated => 'Leg added.';
+
+  @override
+  String get seriesLegsUpdated => 'Leg updated.';
+
+  @override
+  String get seriesLegsDeleted => 'Leg deleted.';
+
+  @override
+  String get seriesLegsLinked => 'Tournament linked to the leg.';
+
+  @override
+  String get seriesLegsUnlinked => 'Tournament unlinked from the leg.';
+
+  @override
+  String get seriesLegsConflict =>
+      'The data changed or is duplicated. The list was reloaded.';
+
+  @override
+  String get seriesLegsActionFailed => 'The action failed. Please try again.';
+
+  @override
+  String seriesLegsTitleFor(String name) {
+    return 'Legs of $name';
+  }
+
+  @override
+  String seriesLegsHeading(int order, String name) {
+    return 'Leg $order. $name';
+  }
+
+  @override
+  String seriesLegsSlots(int direct, int wildcard) {
+    return 'Direct $direct · Wildcard $wildcard';
+  }
+
+  @override
+  String seriesLegsEventMeta(int order, String multiplier) {
+    return 'Order $order · multiplier $multiplier';
+  }
+
+  @override
+  String get seriesLegsDeleteTitle => 'Delete this leg?';
+
+  @override
+  String seriesLegsDeleteMessage(String name) {
+    return 'Delete the leg \"$name\" and unlink its tournaments?';
+  }
+
+  @override
+  String get seriesLegsUnlinkTitle => 'Unlink this tournament?';
+
+  @override
+  String seriesLegsUnlinkMessage(String name) {
+    return 'Unlink \"$name\" from this leg?';
+  }
+
+  @override
+  String seriesLegsLinkTitle(String leg) {
+    return 'Link a tournament to $leg';
+  }
 }
