@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.da
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_layout.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 const double _singlesCardHeight = 92;
 const double _doublesCardHeight = 128;
@@ -23,15 +24,21 @@ double bracketCardHeight(List<List<MatchModel>> columns) {
   return doubles ? _doublesCardHeight : _singlesCardHeight;
 }
 
-/// Sets won by [side] of a finished match (goals for football).
-String _sideScore(MatchModel match, int side) {
-  if (!match.isCompleted) return '';
+/// Score of [side] per set. Unlike the finished-only group lines it also
+/// returns the sets of a live match, so the card can show the running score.
+List<String> _sideScores(MatchModel match, int side) {
   if (!isFootballMatch(match) && match.sets.isNotEmpty) {
-    return '${match.sets.where((s) => side == 1 ? s.score1 > s.score2 : s.score2 > s.score1).length}';
+    return [for (final s in match.sets) '${side == 1 ? s.score1 : s.score2}'];
   }
-  final scores = groupSideScores(match, side);
-  return scores.isEmpty ? '' : scores.first;
+  return groupSideScores(match, side);
 }
+
+/// Width of one score cell; narrower once a match runs past three sets so the
+/// names keep their room.
+double _scoreCellWidth(int cells) => cells > 3 ? 16 : 20;
+
+/// Cap for the LIVE tag + time on the card header so the code keeps its room.
+const double _headerRightMaxWidth = 96;
 
 /// The visible rounds as columns of cards joined by connector lines.
 class PlayoffBracketBoard extends StatelessWidget {
@@ -173,37 +180,122 @@ class _BracketCard extends StatelessWidget {
         match.isCompleted &&
         match.winnerId.isNotEmpty &&
         match.winnerId == (side == 1 ? match.team1Id : match.team2Id);
-    final score = _sideScore(match, side);
+    final scores = _sideScores(match, side);
     final empty = teamName == null && players.isEmpty;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: won ? AppTheme.primary.withValues(alpha: 0.08) : null,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: empty
+                  ? Text(
+                      _waiting(l10n, side),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+                    )
+                  : ParticipantSideLines(
+                      teamName: teamName,
+                      players: players,
+                      teamOnly: isFootballMatch(match),
+                      won: won,
+                    ),
+            ),
+          ),
+          for (final score in scores)
+            SizedBox(
+              width: _scoreCellWidth(scores.length),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  score,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: won ? FontWeight.w900 : FontWeight.w700,
+                    color: won ? AppTheme.primary : colors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// "TK01 · Sân 2" on the left, a LIVE tag and "09:30 08/11" on the right.
+  Widget _header(BuildContext context, ({Color color, String label}) status) {
+    final colors = context.colors;
+    final court = (match.courtName ?? '').trim();
+    final time = match.scheduledTime;
+    final timeText = time == null
+        ? ''
+        : DateFormat('HH:mm dd/MM').format(time.toLocal());
+    final muted = TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w600,
+      color: colors.textMuted,
+    );
     return Row(
       children: [
         Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: empty
-                ? Text(
-                    _waiting(l10n, side),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 11.5, color: colors.textMuted),
-                  )
-                : ParticipantSideLines(
-                    teamName: teamName,
-                    players: players,
-                    teamOnly: isFootballMatch(match),
-                    won: won,
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: _code(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
                   ),
+                ),
+                if (court.isNotEmpty) TextSpan(text: ' · $court'),
+              ],
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: muted,
           ),
         ),
-        if (score.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: Text(
-              score,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: won ? AppTheme.primary : colors.textPrimary,
+        if (match.isLive || timeText.isNotEmpty)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _headerRightMaxWidth),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (match.isLive) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: status.color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      status.label,
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: status.color,
+                      ),
+                    ),
+                  ],
+                  if (timeText.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    Text(timeText, style: muted),
+                  ],
+                ],
               ),
             ),
           ),
@@ -223,34 +315,13 @@ class _BracketCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: colors.bgCard,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: colors.border),
+          border: Border.all(
+            color: match.isLive ? status.color : colors.border,
+          ),
         ),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _code(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textMuted,
-                    ),
-                  ),
-                ),
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: status.color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ],
-            ),
+            _header(context, status),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
