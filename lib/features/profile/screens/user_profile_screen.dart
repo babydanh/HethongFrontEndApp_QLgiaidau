@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -376,7 +377,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${match.team1Name} ${l10n.matchVsLabel} ${match.team2Name}',
+                  '${matchSideLabel(match, 1)} ${l10n.matchVsLabel} ${matchSideLabel(match, 2)}',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: colors.textPrimary,

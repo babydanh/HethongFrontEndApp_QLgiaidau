@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -1084,7 +1085,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           done ? Icons.check_circle_outline_rounded : Icons.schedule_rounded,
         ),
       ),
-      title: '${match.team1Name} vs ${match.team2Name}',
+      title: '${matchSideLabel(match, 1)} vs ${matchSideLabel(match, 2)}',
       subtitle:
           match.tournamentName ??
           (done ? l10n.profLvMatchDone : l10n.profLvMatchUpcoming),

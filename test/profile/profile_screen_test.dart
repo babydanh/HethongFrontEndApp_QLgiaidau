@@ -391,6 +391,23 @@ void main() {
       expect(find.text('LIVE m1 null'), findsOneWidget);
     });
 
+    testWidgets('TC-PROF-RM-03 a match with no team names shows its players', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        matches: [
+          _match.copyWith(
+            team1Name: '',
+            team2Name: '',
+            team1Members: const ['Nguyễn An'],
+            team2Members: const ['Trần Bình'],
+          ),
+        ],
+      );
+      expect(find.text('Nguyễn An vs Trần Bình'), findsOneWidget);
+    });
+
     testWidgets('TC-PROF-AV-01 avatar has no extra accent ring around it', (
       tester,
     ) async {
