@@ -18667,4 +18667,185 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get regAttachmentFailed => 'Không tải được tệp lên. Vui lòng thử lại.';
+
+  @override
+  String get seriesMgmtEntryTooltip => 'Quản lý chuỗi giải của tôi';
+
+  @override
+  String get seriesMgmtListTitle => 'Chuỗi giải của tôi';
+
+  @override
+  String get seriesMgmtCreateTitle => 'Tạo chuỗi giải';
+
+  @override
+  String get seriesMgmtEditTitle => 'Sửa chuỗi giải';
+
+  @override
+  String get seriesMgmtCreateAction => 'Tạo chuỗi giải';
+
+  @override
+  String get seriesMgmtEmptyTitle => 'Bạn chưa có chuỗi giải nào';
+
+  @override
+  String get seriesMgmtEmptyHint =>
+      'Tạo chuỗi giải để gom các giải đấu và tính điểm xếp hạng PSR.';
+
+  @override
+  String get seriesMgmtLoadError => 'Không tải được danh sách chuỗi giải.';
+
+  @override
+  String get seriesMgmtRetry => 'Thử lại';
+
+  @override
+  String get seriesMgmtManageLegs => 'Quản lý vòng và giải đấu';
+
+  @override
+  String get seriesMgmtEditAction => 'Sửa';
+
+  @override
+  String get seriesMgmtDeleteAction => 'Xóa';
+
+  @override
+  String get seriesMgmtCancel => 'Hủy';
+
+  @override
+  String get seriesMgmtDeleteTitle => 'Xóa chuỗi giải?';
+
+  @override
+  String seriesMgmtDeleteMessage(Object name) {
+    return 'Chuỗi giải \"$name\" sẽ bị xóa khỏi danh sách.';
+  }
+
+  @override
+  String get seriesMgmtDeleted => 'Đã xóa chuỗi giải.';
+
+  @override
+  String get seriesMgmtDeleteFailed =>
+      'Không xóa được chuỗi giải. Vui lòng thử lại.';
+
+  @override
+  String get seriesMgmtCreated => 'Đã tạo chuỗi giải.';
+
+  @override
+  String get seriesMgmtUpdated => 'Đã lưu thay đổi.';
+
+  @override
+  String get seriesMgmtSaveFailed =>
+      'Không lưu được chuỗi giải. Vui lòng thử lại.';
+
+  @override
+  String get seriesMgmtNetworkError =>
+      'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.';
+
+  @override
+  String get seriesMgmtSave => 'Lưu';
+
+  @override
+  String get seriesMgmtStatusDraft => 'Nháp';
+
+  @override
+  String get seriesMgmtStatusActive => 'Đang diễn ra';
+
+  @override
+  String get seriesMgmtStatusCompleted => 'Đã kết thúc';
+
+  @override
+  String get seriesMgmtStatusCancelled => 'Đã hủy';
+
+  @override
+  String get seriesMgmtVisibilityPublic => 'Công khai';
+
+  @override
+  String get seriesMgmtVisibilityPrivate => 'Riêng tư';
+
+  @override
+  String get seriesMgmtSectionGeneral => 'Thông tin chung';
+
+  @override
+  String get seriesMgmtSectionRules => 'Luật tính điểm PSR';
+
+  @override
+  String get seriesMgmtNameLabel => 'Tên chuỗi giải *';
+
+  @override
+  String get seriesMgmtNameRequired => 'Vui lòng nhập tên chuỗi giải';
+
+  @override
+  String get seriesMgmtDescriptionLabel => 'Mô tả';
+
+  @override
+  String get seriesMgmtBannerLabel => 'Liên kết ảnh bìa';
+
+  @override
+  String get seriesMgmtLogoLabel => 'Liên kết logo';
+
+  @override
+  String get seriesMgmtVisibilityLabel => 'Hiển thị';
+
+  @override
+  String get seriesMgmtStatusLabel => 'Trạng thái';
+
+  @override
+  String get seriesMgmtStartDateLabel => 'Ngày bắt đầu';
+
+  @override
+  String get seriesMgmtEndDateLabel => 'Ngày kết thúc';
+
+  @override
+  String get seriesMgmtClearDate => 'Xóa ngày';
+
+  @override
+  String get seriesMgmtEndBeforeStart => 'Ngày kết thúc phải sau ngày bắt đầu';
+
+  @override
+  String get seriesMgmtPrizeLabel => 'Tổng giải thưởng (VNĐ)';
+
+  @override
+  String get seriesMgmtInvalidNumber => 'Nhập số nguyên hợp lệ';
+
+  @override
+  String get seriesMgmtDirectEntryLabel => 'Hạng tối thiểu để vào thẳng';
+
+  @override
+  String get seriesMgmtWildcardLabel => 'Số suất vé vớt';
+
+  @override
+  String get seriesMgmtExclusionRuleLabel => 'Áp dụng luật khóa đăng ký';
+
+  @override
+  String get seriesMgmtExclusionScopeLabel => 'Phạm vi khóa';
+
+  @override
+  String get seriesMgmtScopeCategory => 'Theo nội dung thi đấu';
+
+  @override
+  String get seriesMgmtScopeAll => 'Toàn chuỗi';
+
+  @override
+  String get seriesMgmtRulesDescriptionLabel => 'Mô tả luật';
+
+  @override
+  String get seriesMgmtDefaultRulesDescription =>
+      'Tính điểm PSR tích lũy. Top 2 nhận vé thẳng, Top 16 PSR nhận vé vớt chặng.';
+
+  @override
+  String get seriesMgmtPointsTitle => 'Điểm theo thứ hạng';
+
+  @override
+  String get seriesMgmtAddRank => 'Thêm hạng';
+
+  @override
+  String get seriesMgmtRankLabel => 'Hạng';
+
+  @override
+  String get seriesMgmtPointsLabel => 'Điểm';
+
+  @override
+  String get seriesMgmtRemoveRank => 'Xóa hạng';
+
+  @override
+  String get seriesMgmtRankInvalid => 'Hạng phải là số nguyên từ 1';
+
+  @override
+  String get seriesMgmtRankDuplicate => 'Hạng bị trùng';
 }

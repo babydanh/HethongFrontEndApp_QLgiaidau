@@ -18741,4 +18741,186 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get regAttachmentFailed =>
       'Could not upload the file. Please try again.';
+
+  @override
+  String get seriesMgmtEntryTooltip => 'Manage my series';
+
+  @override
+  String get seriesMgmtListTitle => 'My series';
+
+  @override
+  String get seriesMgmtCreateTitle => 'Create series';
+
+  @override
+  String get seriesMgmtEditTitle => 'Edit series';
+
+  @override
+  String get seriesMgmtCreateAction => 'Create series';
+
+  @override
+  String get seriesMgmtEmptyTitle => 'You have no series yet';
+
+  @override
+  String get seriesMgmtEmptyHint =>
+      'Create a series to group tournaments and track PSR ranking points.';
+
+  @override
+  String get seriesMgmtLoadError => 'Could not load your series.';
+
+  @override
+  String get seriesMgmtRetry => 'Retry';
+
+  @override
+  String get seriesMgmtManageLegs => 'Manage legs and tournaments';
+
+  @override
+  String get seriesMgmtEditAction => 'Edit';
+
+  @override
+  String get seriesMgmtDeleteAction => 'Delete';
+
+  @override
+  String get seriesMgmtCancel => 'Cancel';
+
+  @override
+  String get seriesMgmtDeleteTitle => 'Delete this series?';
+
+  @override
+  String seriesMgmtDeleteMessage(Object name) {
+    return 'The series \"$name\" will be removed from your list.';
+  }
+
+  @override
+  String get seriesMgmtDeleted => 'Series deleted.';
+
+  @override
+  String get seriesMgmtDeleteFailed =>
+      'Could not delete the series. Please try again.';
+
+  @override
+  String get seriesMgmtCreated => 'Series created.';
+
+  @override
+  String get seriesMgmtUpdated => 'Changes saved.';
+
+  @override
+  String get seriesMgmtSaveFailed =>
+      'Could not save the series. Please try again.';
+
+  @override
+  String get seriesMgmtNetworkError =>
+      'Could not reach the server. Check your connection and try again.';
+
+  @override
+  String get seriesMgmtSave => 'Save';
+
+  @override
+  String get seriesMgmtStatusDraft => 'Draft';
+
+  @override
+  String get seriesMgmtStatusActive => 'Active';
+
+  @override
+  String get seriesMgmtStatusCompleted => 'Completed';
+
+  @override
+  String get seriesMgmtStatusCancelled => 'Cancelled';
+
+  @override
+  String get seriesMgmtVisibilityPublic => 'Public';
+
+  @override
+  String get seriesMgmtVisibilityPrivate => 'Private';
+
+  @override
+  String get seriesMgmtSectionGeneral => 'General information';
+
+  @override
+  String get seriesMgmtSectionRules => 'PSR scoring rules';
+
+  @override
+  String get seriesMgmtNameLabel => 'Series name *';
+
+  @override
+  String get seriesMgmtNameRequired => 'Please enter the series name';
+
+  @override
+  String get seriesMgmtDescriptionLabel => 'Description';
+
+  @override
+  String get seriesMgmtBannerLabel => 'Banner URL';
+
+  @override
+  String get seriesMgmtLogoLabel => 'Logo URL';
+
+  @override
+  String get seriesMgmtVisibilityLabel => 'Visibility';
+
+  @override
+  String get seriesMgmtStatusLabel => 'Status';
+
+  @override
+  String get seriesMgmtStartDateLabel => 'Start date';
+
+  @override
+  String get seriesMgmtEndDateLabel => 'End date';
+
+  @override
+  String get seriesMgmtClearDate => 'Clear date';
+
+  @override
+  String get seriesMgmtEndBeforeStart =>
+      'End date must not be before the start date';
+
+  @override
+  String get seriesMgmtPrizeLabel => 'Total prize (VND)';
+
+  @override
+  String get seriesMgmtInvalidNumber => 'Enter a valid whole number';
+
+  @override
+  String get seriesMgmtDirectEntryLabel => 'Direct-entry rank threshold';
+
+  @override
+  String get seriesMgmtWildcardLabel => 'Wildcard slots';
+
+  @override
+  String get seriesMgmtExclusionRuleLabel => 'Apply registration lock rule';
+
+  @override
+  String get seriesMgmtExclusionScopeLabel => 'Lock scope';
+
+  @override
+  String get seriesMgmtScopeCategory => 'Per category';
+
+  @override
+  String get seriesMgmtScopeAll => 'Whole series';
+
+  @override
+  String get seriesMgmtRulesDescriptionLabel => 'Rules description';
+
+  @override
+  String get seriesMgmtDefaultRulesDescription =>
+      'Accumulate PSR points. Top 2 receive direct-entry tickets; Top 16 PSR receive wildcard tickets for the leg.';
+
+  @override
+  String get seriesMgmtPointsTitle => 'Points by rank';
+
+  @override
+  String get seriesMgmtAddRank => 'Add rank';
+
+  @override
+  String get seriesMgmtRankLabel => 'Rank';
+
+  @override
+  String get seriesMgmtPointsLabel => 'Points';
+
+  @override
+  String get seriesMgmtRemoveRank => 'Remove rank';
+
+  @override
+  String get seriesMgmtRankInvalid => 'Rank must be a whole number from 1';
+
+  @override
+  String get seriesMgmtRankDuplicate => 'Duplicate rank';
 }
