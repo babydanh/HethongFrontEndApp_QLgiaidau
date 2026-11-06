@@ -27,4 +27,4 @@ final seriesLegsOverviewProvider = FutureProvider.autoDispose
           return SeriesLegWithEvents(leg, events);
         }),
       );
-    });
+    }, retry: (_, _) => null);

@@ -32,6 +32,9 @@ class _FakeLegs implements SeriesLegsRepository {
   /// Thrown by reads while set (to drive the error + retry state).
   Object? readError;
 
+  /// How many times the legs list was requested.
+  int legReads = 0;
+
   /// When set, a write waits for it (to observe the busy state).
   Completer<void>? gate;
 
@@ -42,6 +45,7 @@ class _FakeLegs implements SeriesLegsRepository {
 
   @override
   Future<List<SeriesLegRecord>> getLegs(String seriesId) async {
+    legReads++;
     if (readError != null) throw readError!;
     return List.of(legs);
   }
@@ -237,6 +241,18 @@ void main() {
       await _tap(tester, find.text(_en.infoRetry));
 
       expect(find.text('Leg 1. Chặng Một'), findsOneWidget);
+    });
+
+    testWidgets('TC-SERIESLEGS-24: a load error is not silently retried', (
+      tester,
+    ) async {
+      // An Exception (like a network error) is what Riverpod retries by default.
+      final repo = _twoLegs()..readError = Exception('boom');
+      await _pump(tester, repo);
+      await tester.pump(const Duration(seconds: 5));
+
+      expect(repo.legReads, 1);
+      expect(find.text(_en.seriesLegsLoadError), findsOneWidget);
     });
   });
 

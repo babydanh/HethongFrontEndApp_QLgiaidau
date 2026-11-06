@@ -149,7 +149,7 @@ class SeriesRanking {
 
 // ─── Provider ───
 
-final _seriesDetailProvider = FutureProvider.family<SeriesDetail?, String>((
+final seriesDetailProvider = FutureProvider.autoDispose.family<SeriesDetail?, String>((
   ref,
   slug,
 ) async {
@@ -176,7 +176,7 @@ class SeriesDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final detailAsync = ref.watch(_seriesDetailProvider(slug));
+    final detailAsync = ref.watch(seriesDetailProvider(slug));
     final colors = context.colors;
 
     return Scaffold(
@@ -239,7 +239,7 @@ class SeriesDetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: () => ref.refresh(_seriesDetailProvider(slug)),
+                onPressed: () => ref.refresh(seriesDetailProvider(slug)),
                 icon: const Icon(Icons.refresh_rounded, size: 18),
                 label: Text(l10n.infoRetry),
               ),
@@ -453,7 +453,11 @@ class _ManageLegsButton extends ConsumerWidget {
     final isOwner = owner != null && owner.isNotEmpty && userId == owner;
     if (!auth.isAdmin && !isOwner) return const SizedBox.shrink();
     return TextButton.icon(
-      onPressed: () => context.push('/organizer/series/$seriesId/manage'),
+      onPressed: () async {
+        await context.push('/organizer/series/$seriesId/manage');
+        // Legs and links may have changed while the manage screen was open.
+        if (context.mounted) ref.invalidate(seriesDetailProvider);
+      },
       style: TextButton.styleFrom(foregroundColor: Colors.white),
       icon: const Icon(Icons.tune_rounded, size: 18),
       label: Text(AppLocalizations.of(context)!.seriesLegsManage),

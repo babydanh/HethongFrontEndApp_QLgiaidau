@@ -2,6 +2,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/widgets/form_section.dart';
 import 'package:app_quanly_giaidau/domain/entities/managed_series.dart';
+import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 import 'package:app_quanly_giaidau/features/series/series_management_error.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/series_management_provider.dart';
@@ -206,6 +208,8 @@ class _SeriesFormState extends ConsumerState<_SeriesForm> {
         ref.invalidate(managedSeriesProvider(initial.id));
       }
       ref.invalidate(mySeriesProvider);
+      ref.invalidate(seriesListProvider);
+      ref.invalidate(seriesDetailProvider);
       messenger.showSnackBar(
         SnackBar(
           content: Text(

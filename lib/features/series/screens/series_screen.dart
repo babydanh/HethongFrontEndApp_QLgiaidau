@@ -38,7 +38,7 @@ class SeriesItem {
   );
 }
 
-final _seriesListProvider = FutureProvider<List<SeriesItem>>((ref) async {
+final seriesListProvider = FutureProvider.autoDispose<List<SeriesItem>>((ref) async {
   try {
     final dio = ref.read(dioClientProvider).dio;
     final response = await dio.get('/series');
@@ -55,7 +55,7 @@ class SeriesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final seriesAsync = ref.watch(_seriesListProvider);
+    final seriesAsync = ref.watch(seriesListProvider);
     final profile = ref.watch(userProfileProvider).asData?.value;
     final canManage = profile != null &&
         (profile.hasRole('ORGANIZER') || profile.hasRole('ADMIN'));
@@ -87,7 +87,7 @@ class SeriesScreen extends ConsumerWidget {
         data: (list) {
           if (list.isEmpty) return _buildEmpty(context);
           return RefreshIndicator(
-            onRefresh: () async => ref.refresh(_seriesListProvider),
+            onRefresh: () async => ref.refresh(seriesListProvider),
             child: ListView.builder(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(16),
