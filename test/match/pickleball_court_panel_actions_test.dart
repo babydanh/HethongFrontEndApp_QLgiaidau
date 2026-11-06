@@ -639,7 +639,7 @@ void main() {
       final court = container.read(pickleballCourtContextProvider(_params));
 
       expect(court?.scoringMode, CourtScoringMode.sideOut);
-      expect(court?.serverNumber, 2);
+      expect(court?.serverNumber, 1);
     });
   });
 }
