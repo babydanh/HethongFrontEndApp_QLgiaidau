@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
@@ -16,12 +17,39 @@ class PlayoffRound {
   final List<MatchModel> matches;
 }
 
+int _byPosition(MatchModel a, MatchModel b) =>
+    a.bracketPosition.position.compareTo(b.bracketPosition.position);
+
+/// Single elimination has one branch; rounds are named from the final backwards.
+List<PlayoffRound> _singleElimRounds(
+  List<MatchModel> matches,
+  AppLocalizations l10n,
+) {
+  final byRound = <int, List<MatchModel>>{};
+  for (final m in matches) {
+    if (m.status == 'cancelled' || m.isFullByeMatch) continue;
+    byRound.putIfAbsent(m.round, () => []).add(m);
+  }
+  final rounds = byRound.keys.toList()..sort();
+  return [
+    for (final round in rounds)
+      PlayoffRound(
+        MatchRoundLabel.knockoutRoundName(round, rounds.last, l10n: l10n),
+        byRound[round]!..sort(_byPosition),
+      ),
+  ];
+}
+
 /// Splits double-elimination matches into the two branches. The grand final(s)
-/// are appended to the winners branch as a last round.
+/// are appended to the winners branch as a last round. Single elimination
+/// yields only the winners branch.
 ({List<PlayoffRound> winners, List<PlayoffRound> losers}) buildPlayoffBranches(
   List<MatchModel> matches,
   AppLocalizations l10n,
 ) {
+  if (!matches.any(isDoubleEliminationMatch)) {
+    return (winners: _singleElimRounds(matches, l10n), losers: const []);
+  }
   final winners = <int, List<MatchModel>>{};
   final losers = <int, List<MatchModel>>{};
   final finals = <MatchModel>[];
@@ -37,9 +65,6 @@ class PlayoffRound {
     }
   }
 
-  int byPosition(MatchModel a, MatchModel b) =>
-      a.bracketPosition.position.compareTo(b.bracketPosition.position);
-
   List<PlayoffRound> toRounds(
     Map<int, List<MatchModel>> byRound,
     String Function(int fromEnd, int round) label,
@@ -49,7 +74,7 @@ class PlayoffRound {
       for (var i = 0; i < rounds.length; i++)
         PlayoffRound(
           label(rounds.length - (i + 1), rounds[i]),
-          byRound[rounds[i]]!..sort(byPosition),
+          byRound[rounds[i]]!..sort(_byPosition),
         ),
     ];
   }
@@ -73,11 +98,12 @@ class PlayoffRound {
 
 const double _bracketGap = 14;
 const double _minCardWidth = 96;
-const double _maxCardWidth = 140;
+const double _maxCardWidth = 200;
 
 /// Public playoff of a group-stage + double-elimination division, drawn like the
 /// Web `PagedDoubleElimView`: winners / losers tabs, a window of
-/// [kBracketVisibleRounds] rounds with connector lines, Trước/Sau to slide it.
+/// [kBracketVisibleRounds] rounds with connector lines, Trước/Sau to slide it
+/// (the old window fades out while the new one slides in).
 class PlayoffDoubleElimView extends StatefulWidget {
   const PlayoffDoubleElimView({
     super.key,
@@ -99,6 +125,9 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
   bool? _losers;
   final Map<bool, int> _active = {};
 
+  // Which way the last page turn went, so the new window slides in from there.
+  bool _forward = true;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -107,6 +136,7 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
       for (final round in r) round.matches,
     ];
     final hasLosers = branches.losers.isNotEmpty;
+    final isDouble = widget.matches.any(isDoubleEliminationMatch);
     final losers =
         hasLosers &&
         (_losers ??
@@ -125,32 +155,36 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
         for (final m in round.matches) m.id: round.label,
     };
 
-    void select(int index) => setState(() => _active[losers] = index);
+    void select(int index) => setState(() {
+      _forward = index >= active;
+      _active[losers] = index;
+    });
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              ModeChip(
-                label:
-                    '${l10n.playoff_tabWinners} (${_count(branches.winners)})',
-                selected: !losers,
-                onTap: () => setState(() => _losers = false),
-              ),
-              if (hasLosers)
+          if (isDouble)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
                 ModeChip(
                   label:
-                      '${l10n.playoff_tabLosers} (${_count(branches.losers)})',
-                  selected: losers,
-                  onTap: () => setState(() => _losers = true),
+                      '${l10n.playoff_tabWinners} (${_count(branches.winners)})',
+                  selected: !losers,
+                  onTap: () => setState(() => _losers = false),
                 ),
-            ],
-          ),
+                if (hasLosers)
+                  ModeChip(
+                    label:
+                        '${l10n.playoff_tabLosers} (${_count(branches.losers)})',
+                    selected: losers,
+                    onTap: () => setState(() => _losers = true),
+                  ),
+              ],
+            ),
           if (rounds.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
@@ -170,42 +204,70 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
                   ? () => select(active + 1)
                   : null,
             ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final cardWidth =
-                    ((constraints.maxWidth - 2 * _bracketGap) /
-                            kBracketVisibleRounds)
-                        .clamp(_minCardWidth, _maxCardWidth);
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _RoundPills(
-                        rounds: visible,
-                        firstIndex: start,
-                        active: active,
-                        cardWidth: cardWidth,
-                        onSelect: select,
-                      ),
-                      const SizedBox(height: 10),
-                      PlayoffBracketBoard(
-                        columns: [for (final r in visible) r.matches],
-                        feeders: buildFeeders(widget.matches),
-                        cardWidth: cardWidth,
-                        gap: _bracketGap,
-                        onTap: (match) => showGroupMatchSheet(
-                          context,
-                          match: match,
-                          tournamentId: widget.tournamentId,
-                          title: titles[match.id] ?? '',
-                          canScore: widget.canScoreMatch,
-                        ),
-                      ),
-                    ],
+            ClipRect(
+              child: AnimatedSwitcher(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 260),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                layoutBuilder: (current, previous) => Stack(
+                  alignment: Alignment.topLeft,
+                  children: [...previous, ?current],
+                ),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: Offset(_forward ? 0.15 : -0.15, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
                   ),
-                );
-              },
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey('playoff-window-$losers-$start'),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cardWidth =
+                          ((constraints.maxWidth -
+                                      (kBracketVisibleRounds - 1) *
+                                          _bracketGap) /
+                                  kBracketVisibleRounds)
+                              .clamp(_minCardWidth, _maxCardWidth);
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _RoundPills(
+                              rounds: visible,
+                              firstIndex: start,
+                              active: active,
+                              cardWidth: cardWidth,
+                              onSelect: select,
+                            ),
+                            const SizedBox(height: 10),
+                            PlayoffBracketBoard(
+                              columns: [for (final r in visible) r.matches],
+                              feeders: buildFeeders(widget.matches),
+                              cardWidth: cardWidth,
+                              gap: _bracketGap,
+                              onTap: (match) => showGroupMatchSheet(
+                                context,
+                                match: match,
+                                tournamentId: widget.tournamentId,
+                                title: titles[match.id] ?? '',
+                                canScore: widget.canScoreMatch,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ],
         ],

@@ -64,7 +64,7 @@ Widget _host(Widget child, {List<Override> overrides = const []}) =>
       ),
     );
 
-Future<({ScrollableState page, ScrollableState bracket})> _pumpBracketOnPage(
+Future<ScrollableState> _pumpBracketOnPage(
   WidgetTester tester,
   List<MatchModel> matches,
 ) async {
@@ -82,20 +82,14 @@ Future<({ScrollableState page, ScrollableState bracket})> _pumpBracketOnPage(
             matches: matches,
             bracketType: 'single_elimination',
           ),
+          // Keeps the page taller than the viewport so it can scroll.
+          const SizedBox(height: 600),
         ],
       ),
     ),
   );
   await tester.pumpAndSettle();
-  return (
-    page: tester.state<ScrollableState>(find.byType(Scrollable).first),
-    bracket: tester.state<ScrollableState>(
-      find.descendant(
-        of: find.byType(SingleElimDiagram),
-        matching: find.byType(Scrollable),
-      ),
-    ),
-  );
+  return tester.state<ScrollableState>(find.byType(Scrollable).first);
 }
 
 void main() {
@@ -105,7 +99,7 @@ void main() {
     _match('s3', round: 2, position: 0),
   ];
 
-  testWidgets('single elimination renders the diagram only, read-only', (
+  testWidgets('TC-PLF-12 single elimination uses the paged view, no tabs', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -122,6 +116,11 @@ void main() {
     expect(find.text('Bảng'), findsNothing);
     expect(find.text('Playoff'), findsNothing);
     expect(find.byType(InteractiveViewer), findsNothing);
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
+    expect(find.byType(SingleElimDiagram), findsNothing);
+    expect(find.textContaining('Nhánh thắng'), findsNothing);
+    expect(find.text('Đội s1-A'), findsOneWidget);
+    expect(find.text('Đội s3-A'), findsOneWidget);
   });
 
   testWidgets('bracket-only: no banner, search, filter or round cards', (
@@ -173,6 +172,8 @@ void main() {
     expect(find.text('Bảng'), findsNothing);
     expect(find.text('Playoff'), findsNothing);
     expect(find.byType(SingleElimDiagram), findsNothing);
+    expect(find.byType(DoubleElimDiagram), findsNothing);
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
   });
 
   testWidgets('TC-FEAT-10 round-robin header labels the current leg', (
@@ -302,8 +303,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(GroupStageView), findsNothing);
-      final diagram = tester.widget<SingleElimDiagram>(
-        find.byType(SingleElimDiagram),
+      expect(find.byType(SingleElimDiagram), findsNothing);
+      final diagram = tester.widget<PlayoffDoubleElimView>(
+        find.byType(PlayoffDoubleElimView),
       );
       expect(diagram.matches.map((match) => match.id), ['k1', 'k2', 'k3']);
     },
@@ -416,29 +418,28 @@ void main() {
   testWidgets('vertical drag over the bracket scrolls the page', (
     tester,
   ) async {
-    final scroll = await _pumpBracketOnPage(tester, singleMatches);
+    final page = await _pumpBracketOnPage(tester, singleMatches);
     await tester.dragFrom(
-      tester.getCenter(find.byType(SingleElimDiagram)),
+      tester.getCenter(find.byType(PlayoffDoubleElimView)),
       const Offset(0, -60),
     );
     await tester.pumpAndSettle();
 
-    expect(scroll.page.position.pixels, greaterThan(0));
-    expect(scroll.bracket.position.pixels, 0);
+    expect(page.position.pixels, greaterThan(0));
   });
 
-  testWidgets('horizontal drag over the bracket pans it, page stays put', (
+  testWidgets('horizontal drag over the bracket leaves the page put', (
     tester,
   ) async {
-    final scroll = await _pumpBracketOnPage(tester, singleMatches);
+    final page = await _pumpBracketOnPage(tester, singleMatches);
     await tester.dragFrom(
-      tester.getCenter(find.byType(SingleElimDiagram)),
+      tester.getCenter(find.byType(PlayoffDoubleElimView)),
       const Offset(-120, 0),
     );
     await tester.pumpAndSettle();
 
-    expect(scroll.bracket.position.pixels, greaterThan(0));
-    expect(scroll.page.position.pixels, 0);
+    expect(page.position.pixels, 0);
+    expect(tester.takeException(), isNull);
   });
 
   group('swiss', () {
@@ -624,7 +625,7 @@ void main() {
       expect(find.byType(MatchTableRow), findsNWidgets(1));
     });
   });
-  testWidgets('horizontal drag starting on a double-elim match card pans it', (
+  testWidgets('TC-PLF-13 double elimination pages two rounds at a time', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(400, 800);
@@ -657,20 +658,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final bracket = tester.state<ScrollableState>(
-      find.descendant(
-        of: find.byType(DoubleElimDiagram),
-        matching: find.byType(Scrollable),
-      ),
-    );
-    expect(bracket.position.maxScrollExtent, greaterThan(0));
+    expect(find.byType(DoubleElimDiagram), findsNothing);
+    expect(find.text('Đội w10-A'), findsOneWidget);
+    expect(find.text('Đội w30-A'), findsNothing);
 
-    await tester.dragFrom(
-      tester.getCenter(find.text('Đội w10-A')),
-      const Offset(-200, 0),
-    );
+    final next = lookupAppLocalizations(const Locale('vi')).playoff_nextRound;
+    await tester.tap(find.byTooltip(next));
     await tester.pumpAndSettle();
 
-    expect(bracket.position.pixels, greaterThan(0));
+    expect(find.text('Đội w10-A'), findsNothing);
+    expect(find.text('Đội w30-A'), findsOneWidget);
   });
 }
