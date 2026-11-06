@@ -68,6 +68,7 @@ import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.d
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_screen.dart';
 import 'package:app_quanly_giaidau/features/series/screens/series_detail_screen.dart';
+import 'package:app_quanly_giaidau/features/series/screens/series_legs_manage_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/matches_list_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_screen.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
@@ -956,6 +957,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final slug = state.pathParameters['slug']!;
           return SeriesDetailScreen(slug: slug);
         },
+      ),
+      GoRoute(
+        path: '/organizer/series/:id/manage',
+        builder: (context, state) =>
+            SeriesLegsManageScreen(seriesId: state.pathParameters['id']!),
       ),
 
       // ─── Matches List ───
