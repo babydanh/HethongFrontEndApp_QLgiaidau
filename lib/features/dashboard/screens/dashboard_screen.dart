@@ -1,29 +1,30 @@
-import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'dart:async';
+
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
-import 'package:app_quanly_giaidau/core/utils/elo_tier.dart';
+import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
+import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
+import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
+import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
+import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_card.dart';
-import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
-import 'package:app_quanly_giaidau/domain/entities/user.dart';
-import 'package:intl/intl.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
-import 'package:app_quanly_giaidau/providers/category_provider.dart';
-import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
-import 'package:app_quanly_giaidau/features/rankings/screens/elo_history_screen.dart';
-import 'package:app_quanly_giaidau/features/profile/screens/achievements_tab.dart';
-import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -36,170 +37,116 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with SingleTickerProviderStateMixin {
   String _selectedSport = 'all';
 
-  /// Tổng quan | Hoạt động | Quản lý — giữ controller để tab không nhảy khi
-  /// người dùng vuốt ngang hoặc bấm lại nhãn.
-  late final TabController _tabController = TabController(length: 3, vsync: this);
+  /// Tổng quan | Hoạt động | Quản lý.
+  late final TabController _tabController = TabController(
+    length: 3,
+    vsync: this,
+  );
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
   }
+
+  void _back() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/profile');
+    }
+  }
+
+  /// Kéo để làm mới: tải lại hồ sơ, xếp hạng, đội bóng và workspace rồi mới
+  /// thả vòng quay. Lỗi từng nguồn đã hiện ở khối tương ứng nên nuốt ở đây.
+  Future<void> _refreshAll() async {
+    ref.invalidate(userProfileProvider);
+    ref.invalidate(userRankingsProvider);
+    ref.invalidate(myFootballTeamsProvider);
+    Future<void> settle(Future<Object?> future) async {
+      try {
+        await future;
+      } catch (_) {
+        // Lỗi từng nguồn đã hiện ở khối tương ứng (LavishErrorState + thử lại);
+        // ở đây chỉ cần đợi xong để vòng kéo-làm-mới kết thúc.
+      }
+    }
+
+    await Future.wait([
+      ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
+      settle(ref.read(userProfileProvider.future)),
+      settle(ref.read(userRankingsProvider.future)),
+      settle(ref.read(myFootballTeamsProvider.future)),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final profileAsync = ref.watch(userProfileProvider);
-    final rankingsAsync = ref.watch(userRankingsProvider);
-    final footballTeamsAsync = ref.watch(myFootballTeamsProvider);
-    final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
     final isAuth = ref.watch(authProvider).isAuthenticated;
 
     if (!isAuth) {
-      return Scaffold(
-        backgroundColor: colors.bgDark,
-        appBar: AppBar(
-          title: Text(l10n.dashboard_title),
-          centerTitle: true,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/profile');
-              }
-            },
-          ),
-        ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: colors.info.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Icon(
-                    Icons.dashboard_customize_rounded,
-                    size: 40,
-                    color: colors.info,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.dashboard_loginPrompt,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => context.push('/login'),
-                  icon: const Icon(Icons.login),
-                  label: Text(l10n.loginButton),
-                ),
-              ],
-            ),
-          ),
+      return LavishScaffold(
+        title: l10n.dashboard_title,
+        onBack: _back,
+        body: LavishEmptyState(
+          icon: Icons.dashboard_customize_rounded,
+          title: l10n.dashboard_loginPrompt,
+          action: l10n.loginButton,
+          onAction: () => context.push('/login'),
         ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        title: Text(l10n.dashboard_title),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/profile');
-            }
-          },
-        ),
-      ),
+    final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
+    return LavishScaffold(
+      title: l10n.dashboard_title,
+      onBack: _back,
       body: Column(
         children: [
-          // Tab bar có nhãn chữ: icon-only khiến 4 ý nghĩa phải đoán mò, và
-          // không có accessible name cho screen reader.
-          Container(
-            decoration: BoxDecoration(
-              color: colors.bgDark,
-              border: Border(
-                bottom: BorderSide(color: colors.border),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: AppTheme.primary,
-              indicatorWeight: 3,
-              indicatorSize: TabBarIndicatorSize.label,
-              labelColor: AppTheme.primary,
-              unselectedLabelColor: colors.textMuted,
-              labelStyle: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-              tabs: [
-                Tab(
-                  icon: const Icon(Icons.space_dashboard_rounded, size: 20),
-                  text: l10n.dashboard_tab_overview,
-                ),
-                Tab(
-                  icon: const Icon(Icons.bolt_rounded, size: 20),
-                  text: l10n.dashboard_tab_activity,
-                ),
-                Tab(
-                  icon: const Icon(Icons.tune_rounded, size: 20),
-                  text: l10n.dashboard_tab_manage,
-                ),
-              ],
-            ),
+          _SegmentBar(
+            controller: _tabController,
+            items: [
+              (Icons.space_dashboard_rounded, l10n.dashboard_tab_overview),
+              (Icons.bolt_rounded, l10n.dashboard_tab_activity),
+              (Icons.tune_rounded, l10n.dashboard_tab_manage),
+            ],
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildTabScroll(context, [
-                  _DashboardHeader(
-                    profileAsync: profileAsync,
-                    rankingsAsync: rankingsAsync,
-                    footballTeamsAsync: footballTeamsAsync,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSportFilterChips(colors),
-                  const SizedBox(height: 16),
-                  _buildRankingsSection(context, rankingsAsync),
-                ]),
-                _buildTabScroll(context, [
-                  AchievementsTab(selectedSport: _selectedSport),
-                  const SizedBox(height: 20),
-                  workspaceAsync.when(
-                    loading: () => const _DashboardLoadingCard(),
-                    error: (error, _) => _DashboardErrorCard(
-                      onRetry: () => ref
-                          .read(myTournamentWorkspaceProvider.notifier)
-                          .refresh(),
+                _TabScroll(
+                  onRefresh: _refreshAll,
+                  children: [
+                    const _ProfileRow(),
+                    _SportFilter(
+                      selected: _selectedSport,
+                      onSelected: (id) => setState(() => _selectedSport = id),
                     ),
-                    data: (workspace) =>
-                        _WorkspaceDashboardContent(workspace: workspace),
-                  ),
-                ]),
-                _buildTabScroll(context, [
-                  _ManageTournamentsSection(
-                    workspaceAsync: workspaceAsync,
-                  ),
-                ]),
+                    _EloSection(selectedSport: _selectedSport),
+                  ],
+                ),
+                _TabScroll(
+                  onRefresh: _refreshAll,
+                  children: [
+                    AchievementsTab(selectedSport: _selectedSport),
+                    workspaceAsync.when(
+                      loading: () => const LavishRowSkeleton(count: 4),
+                      error: (_, _) => LavishErrorState(
+                        message: l10n.dashboard_loadErrorTitle,
+                        onRetry: () => ref
+                            .read(myTournamentWorkspaceProvider.notifier)
+                            .refresh(),
+                      ),
+                      data: (workspace) => _WorkspaceContent(workspace),
+                    ),
+                  ],
+                ),
+                _TabScroll(
+                  onRefresh: _refreshAll,
+                  children: [_ManageSection(workspaceAsync: workspaceAsync)],
+                ),
               ],
             ),
           ),
@@ -207,28 +154,129 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ),
     );
   }
+}
 
-  /// Mỗi tab cuộn riêng nhưng dùng chung một khung responsive (maxWidth +
-  /// padding) để bề ngang giống nhau khi xoay máy.
-  Widget _buildTabScroll(BuildContext context, List<Widget> children) {
+// ─── Khung chung ────────────────────────────────────────────────────────────
+
+/// Segment gọn: icon + nhãn ngắn, thu nhỏ chữ thay vì cắt.
+class _SegmentBar extends StatelessWidget {
+  const _SegmentBar({required this.controller, required this.items});
+
+  final TabController controller;
+  final List<(IconData, String)> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = LavishColors.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.line)),
+      ),
+      child: AnimatedBuilder(
+        animation: controller.animation ?? controller,
+        builder: (context, _) {
+          final current = (controller.animation?.value ?? controller.index)
+              .round();
+          return Row(
+            children: [
+              for (var i = 0; i < items.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: _SegmentItem(
+                    icon: items[i].$1,
+                    label: items[i].$2,
+                    selected: current == i,
+                    onTap: () => controller.animateTo(i),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SegmentItem extends StatelessWidget {
+  const _SegmentItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = LavishColors.of(context);
+    final fg = selected ? LavishColors.accent : c.muted;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? c.soft(LavishTone.accent) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            alignment: Alignment.center,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 18, color: fg),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: fg,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Mỗi tab cuộn riêng, cùng khung bề ngang và cùng kéo-để-làm-mới.
+class _TabScroll extends StatelessWidget {
+  const _TabScroll({required this.children, required this.onRefresh});
+
+  final List<Widget> children;
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
+      onRefresh: onRefresh,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        padding: EdgeInsets.zero,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1180),
+            constraints: const BoxConstraints(maxWidth: 760),
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.sizeOf(context).width >= 840 ? 16 : 12,
-                vertical: 16,
-              ),
+              padding: const EdgeInsets.only(bottom: 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: children,
               ),
             ),
@@ -237,585 +285,322 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ),
     );
   }
+}
 
-  Widget _buildSportFilterChips(AppColorsExtension colors) {
+// ─── Tổng quan ──────────────────────────────────────────────────────────────
+
+class _ProfileRow extends ConsumerWidget {
+  const _ProfileRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
+    final c = LavishColors.of(context);
+    return ref
+        .watch(userProfileProvider)
+        .when(
+          loading: () => const LavishRowSkeleton(count: 1),
+          error: (_, _) => LavishErrorState(
+            onRetry: () => ref.invalidate(userProfileProvider),
+          ),
+          data: (UserProfile profile) {
+            final name = profile.fullName?.trim() ?? '';
+            final avatar = profile.avatarUrl;
+            return LavishRow(
+              leading: CircleAvatar(
+                radius: 20,
+                backgroundColor: c.soft(LavishTone.accent),
+                foregroundImage: avatar != null && avatar.isNotEmpty
+                    ? NetworkImage(avatar)
+                    : null,
+                onForegroundImageError: avatar != null && avatar.isNotEmpty
+                    ? (_, _) {}
+                    : null,
+                child: Text(
+                  name.isNotEmpty ? name.characters.first.toUpperCase() : '?',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: LavishColors.accent,
+                  ),
+                ),
+              ),
+              title: name.isNotEmpty ? name : l10n.dashboard_user,
+              subtitle: profile.email,
+              trailing: [Icon(Icons.chevron_right_rounded, color: c.faint)],
+              onTap: () => context.push('/profile'),
+            );
+          },
+        );
+  }
+}
+
+class _SportFilter extends ConsumerWidget {
+  const _SportFilter({required this.selected, required this.onSelected});
+
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
     final categories =
         ref.watch(categoriesProvider).asData?.value ?? const <CategoryModel>[];
-    final sports = [
-      {'id': 'all', 'label': l10n.infoAll, 'icon': Icons.grid_view_rounded},
-      ...categories.map(
-        (category) => <String, Object>{
-          'id': category.slug,
-          'label': category.name,
-          'icon': _profileSportIcon(category.slug),
-        },
-      ),
+    final options = <(String, String)>[
+      ('all', l10n.infoAll),
+      for (final category in categories) (category.slug, category.name),
     ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.dashboard_sportActivityFilterLabel,
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 2),
+          child: Text(
+            l10n.dashboard_sportActivityFilterLabel,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: c.muted,
+            ),
           ),
         ),
-        const SizedBox(height: 8),
         SizedBox(
-          height: 48,
+          height: 52,
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: sports.length,
-            separatorBuilder: (_, index) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final sport = sports[index];
-              final id = sport['id'] as String;
-              final label = sport['label'] as String;
-              final isSelected = _selectedSport == id;
-              final icon = sport['icon'] as IconData;
-              void selectSport() {
-                setState(() => _selectedSport = id);
-              }
-
-              return Tooltip(
-                message: label,
-                child: Semantics(
-                  label: label,
-                  button: true,
-                  selected: isSelected,
-                  onTap: selectSport,
-                  child: ExcludeSemantics(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: selectSport,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        constraints: const BoxConstraints(
-                          minWidth: 68,
-                          minHeight: 48,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? colorScheme.primary
-                              : colors.bgCard,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.radiusXL * 2,
-                          ),
-                          border: Border.all(
-                            color: isSelected
-                                ? colorScheme.primary
-                                : colors.border,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              icon,
-                              size: 16,
-                              color: isSelected
-                                  ? colorScheme.onPrimary
-                                  : colors.textSecondary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              label,
-                              maxLines: 1,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: isSelected
-                                    ? FontWeight.w700
-                                    : FontWeight.w600,
-                                color: isSelected
-                                    ? colorScheme.onPrimary
-                                    : colors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            itemCount: options.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => Center(
+              child: LavishChipButton(
+                label: options[i].$2,
+                selected: selected == options[i].$1,
+                onPressed: () => onSelected(options[i].$1),
+              ),
+            ),
           ),
         ),
       ],
     );
   }
+}
 
-  IconData _profileSportIcon(String slug) {
-    switch (slug.toLowerCase()) {
-      case 'tennis':
-        return Icons.sports_tennis_rounded;
-      case 'football':
-        return Icons.sports_soccer_rounded;
-      case 'badminton':
-        return Icons.sports_tennis_outlined;
-      case 'table_tennis':
-        return Icons.sports_rounded;
-      default:
-        return Icons.sports_handball_rounded;
-    }
-  }
+bool _sportMatches(PlayerRanking ranking, String selected) {
+  if (ranking.matchesPlayed <= 0) return false;
+  if (selected == 'all') return true;
+  final key = (ranking.categoryId ?? ranking.categoryName ?? '')
+      .trim()
+      .toLowerCase();
+  final sel = selected.toLowerCase();
+  bool has(List<String> parts) => parts.any(key.contains);
+  final matched = switch (sel) {
+    'pickleball' => has(['pickle', 'padd']),
+    'badminton' => has(['badminton', 'cầu']),
+    'table_tennis' => has(['table', 'bàn']),
+    'tennis' => key.contains('tennis'),
+    'football' => has(['foot', 'socc', 'bóng']),
+    _ => false,
+  };
+  return matched || key == sel;
+}
 
-  Widget _buildRankingsSection(
-    BuildContext context,
-    AsyncValue<List<PlayerRanking>> rankingsAsync,
-  ) {
-    final colors = context.colors;
+class _EloSection extends ConsumerWidget {
+  const _EloSection({required this.selectedSport});
 
-    return rankingsAsync.when(
-      data: (rankings) {
-        final playedRankings = rankings.where((ranking) {
-          if (ranking.matchesPlayed <= 0) return false;
-          if (_selectedSport == 'all') return true;
+  final String selectedSport;
 
-          final sportKey = (ranking.categoryId ?? ranking.categoryName ?? '')
-              .trim()
-              .toLowerCase();
-          final sel = _selectedSport.toLowerCase();
-
-          if (sel == 'pickleball' &&
-              (sportKey.contains('pickle') || sportKey.contains('padd'))) {
-            return true;
-          }
-          if (sel == 'badminton' &&
-              (sportKey.contains('badminton') || sportKey.contains('cầu'))) {
-            return true;
-          }
-          if (sel == 'table_tennis' &&
-              (sportKey.contains('table') || sportKey.contains('bàn'))) {
-            return true;
-          }
-          if (sel == 'tennis' && sportKey.contains('tennis')) {
-            return true;
-          }
-          if (sel == 'football' &&
-              (sportKey.contains('foot') ||
-                  sportKey.contains('socc') ||
-                  sportKey.contains('bóng'))) {
-            return true;
-          }
-
-          return sportKey == sel;
-        }).toList()..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
-
-        if (playedRankings.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: _buildPrivateNoRankState(colors),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Column(
-            children: playedRankings
-                .map((ranking) => _buildPrivateRankCard(context, ranking))
-                .toList(),
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    return ref
+        .watch(userRankingsProvider)
+        .when(
+          loading: () => const _EloSkeleton(),
+          error: (_, _) => LavishErrorState(
+            onRetry: () => ref.invalidate(userRankingsProvider),
           ),
+          data: (rankings) {
+            final played =
+                rankings.where((r) => _sportMatches(r, selectedSport)).toList()
+                  ..sort((a, b) => b.eloPoints.compareTo(a.eloPoints));
+            if (played.isEmpty) {
+              return LavishEmptyState(
+                icon: Icons.emoji_events_outlined,
+                title: l10n.publicProfileNoPlayedElo,
+              );
+            }
+            final teams =
+                ref.watch(myFootballTeamsProvider).asData?.value ??
+                const <FootballTeamSummary>[];
+            final team = teams.isEmpty
+                ? null
+                : teams.reduce((a, b) => a.eloPoints >= b.eloPoints ? a : b);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _EloSummary(rank: EloHelpers.getBestRankForCategory(played)!),
+                if (team != null) _FootballTeamRow(team),
+                for (final ranking in played) _RankingRow(ranking),
+              ],
+            );
+          },
         );
-      },
-      loading: () => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Container(
-          height: 140,
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-            border: Border.all(color: colors.border),
+  }
+}
+
+class _EloSkeleton extends StatelessWidget {
+  const _EloSkeleton();
+
+  @override
+  Widget build(BuildContext context) => const SkeletonScope(
+    child: Padding(
+      padding: EdgeInsets.all(14),
+      child: Column(
+        children: [
+          SkeletonBox(height: 44, radius: 10),
+          SizedBox(height: 12),
+          SkeletonBox(height: 8, radius: 4),
+          SizedBox(height: 12),
+          SkeletonBox(height: 56, radius: 10),
+        ],
+      ),
+    ),
+  );
+}
+
+/// ELO to + thanh tiến trình tới mốc kế + 4 số liệu.
+class _EloSummary extends StatelessWidget {
+  const _EloSummary({required this.rank});
+
+  final PlayerRanking rank;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
+    final progress = EloHelpers.getEloProgressInfo(rank.eloPoints, l10n);
+    final showProgress = rank.tierSource != 'DUPR';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+                flex: 3,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${rank.eloPoints}',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: c.text,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' ELO',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            color: c.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: LavishPill(EloHelpers.getRankDisplayName(rank, l10n)),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-      error: (_, _) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: _buildPrivateNoRankState(colors),
-      ),
-    );
-  }
-
-  Widget _buildPrivateNoRankState(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.emoji_events_outlined, size: 36, color: colors.textMuted),
-          const SizedBox(width: 12),
-          Expanded(
+        if (showProgress)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l10n.publicProfileNoPlayedElo,
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  l10n.publicProfileNoPlayedEloHint,
-                  style: TextStyle(color: colors.textMuted, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPrivateRankCard(BuildContext context, PlayerRanking ranking) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final tierColor =
-        resolveDisplayTier(
-          tierName: ranking.tierName,
-          elo: ranking.eloPoints,
-          tierSource: ranking.tierSource,
-          tierAvailable: ranking.tierAvailable,
-        )?.backgroundColor ??
-        colors.bgSurface;
-    final winRate = ranking.matchesPlayed > 0
-        ? (ranking.matchesWon / ranking.matchesPlayed * 100).round()
-        : 0;
-    final isDoubles =
-        ranking.matchType == 'DOUBLES' || ranking.matchType == 'MIXED_DOUBLES';
-    final streakType = ranking.currentStreakType?.toUpperCase();
-    final streakColor = streakType == 'WIN'
-        ? const Color(0xFF2563EB)
-        : streakType == 'LOSS'
-        ? const Color(0xFFDC2626)
-        : colors.textMuted;
-    final streakText = streakType == 'WIN'
-        ? l10n.publicProfileWinStreak(ranking.currentStreakCount)
-        : streakType == 'LOSS'
-        ? l10n.publicProfileLossStreak(ranking.currentStreakCount)
-        : l10n.publicProfileNoStreak;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.border)),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.zero,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => EloHistoryScreen(
-              userId: ranking.userId,
-              userName: ranking.fullName,
-              avatarUrl: ranking.avatarUrl,
-              currentElo: ranking.eloPoints,
-              tierName: ranking.tierName,
-              categoryId: ranking.categoryId,
-              categoryName: ranking.categoryName,
-              initialScope: 'PUBLIC',
-              matchType: ranking.matchType,
-              genderRestriction: ranking.genderRestriction ?? '__NONE__',
-              partnerId: ranking.partnerId,
-              lockRatingScope: true,
-            ),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  isDoubles ? Icons.people_alt_rounded : Icons.person_rounded,
-                  color: AppTheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    ranking.categoryName?.isNotEmpty == true
-                        ? ranking.categoryName!
-                        : l10n.publicProfileUserFallback,
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  isDoubles
-                      ? ranking.matchType == 'MIXED_DOUBLES'
-                            ? l10n.publicProfileScopeMixedDoubles
-                            : l10n.publicProfileScopeDoubles
-                      : l10n.publicProfileScopeSingles,
-                  style: TextStyle(
-                    color: colors.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: colors.textMuted,
-                ),
-              ],
-            ),
-            if (isDoubles && ranking.partnerName?.isNotEmpty == true) ...[
-              const SizedBox(height: 8),
-              Text(
-                '${l10n.publicProfilePartner}: ${ranking.partnerName}',
-                style: TextStyle(color: colors.textSecondary, fontSize: 12),
-              ),
-            ],
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      RankTierBadge(
-                        tierName: ranking.tierName,
-                        elo: ranking.eloPoints,
-                        sportName: ranking.categoryName,
-                        tierSource: ranking.tierSource,
-                        tierAvailable: ranking.tierAvailable,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'ELO',
-                        style: TextStyle(color: colors.textMuted, fontSize: 10),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${ranking.eloPoints}',
-                        style: TextStyle(
-                          color: tierColor,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildCompactProfileStat(
-                  l10n.publicProfileMatchesShort,
-                  '${ranking.matchesPlayed}',
-                  colors,
-                ),
-                _buildCompactProfileStat(
-                  l10n.infoWin,
-                  '${ranking.matchesWon}',
-                  colors,
-                ),
-                _buildCompactProfileStat(
-                  l10n.publicProfileWinRateShort,
-                  '$winRate%',
-                  colors,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: (winRate / 100).clamp(0.0, 1.0),
-                minHeight: 5,
-                backgroundColor: colors.border,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  winRate >= 60 ? colors.success : tierColor,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  streakType == 'NONE'
-                      ? Icons.remove_circle_outline_rounded
-                      : Icons.local_fire_department_rounded,
-                  color: streakColor,
-                  size: 18,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    '${l10n.publicProfileCurrentStreak}: $streakText',
-                    style: TextStyle(
-                      color: streakColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value: (progress.percent / 100).clamp(0.0, 1.0),
+                    minHeight: 8,
+                    backgroundColor: c.line,
+                    valueColor: const AlwaysStoppedAnimation(
+                      LavishColors.accent,
                     ),
                   ),
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  progress.label,
+                  style: TextStyle(fontSize: 11.5, color: c.muted),
+                ),
               ],
             ),
+          ),
+        const SizedBox(height: 10),
+        LavishStatGrid(
+          items: [
+            LavishStat(
+              label: l10n.ranking_matchesLabel,
+              value: '${rank.matchesPlayed}',
+            ),
+            LavishStat(
+              label: l10n.ranking_winsLabel,
+              value: '${rank.matchesWon}',
+              tone: LavishTone.ok,
+            ),
+            LavishStat(
+              label: l10n.ranking_winRateLabel,
+              value: '${EloHelpers.getRankWinRate(rank)}%',
+            ),
+            LavishStat(
+              label: l10n.ranking_peakLabel,
+              value: '${rank.peakElo ?? rank.eloPoints}',
+              tone: LavishTone.accent,
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCompactProfileStat(
-    String label,
-    String value,
-    AppColorsExtension colors,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 14),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              color: colors.textMuted,
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-class _WorkspaceDashboardContent extends StatelessWidget {
-  const _WorkspaceDashboardContent({required this.workspace});
+class _FootballTeamRow extends StatelessWidget {
+  const _FootballTeamRow(this.team);
 
-  final TournamentWorkspace workspace;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 860;
-        final roleSummary = Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: _PendingInviteSection(workspace: workspace)),
-            const SizedBox(width: 16),
-            Expanded(child: _RoleSection(workspace: workspace)),
-          ],
-        );
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _WorkspaceOverview(workspace: workspace),
-            const SizedBox(height: 16),
-            wide
-                ? roleSummary
-                : Column(
-                    children: [
-                      _PendingInviteSection(workspace: workspace),
-                      const SizedBox(height: 16),
-                      _RoleSection(workspace: workspace),
-                    ],
-                  ),
-            const SizedBox(height: 16),
-            _AssignedMatchesSection(workspace: workspace),
-            const SizedBox(height: 16),
-            _UnifiedTournamentsSection(workspace: workspace),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _DashboardHeader extends StatelessWidget {
-  const _DashboardHeader({
-    required this.profileAsync,
-    required this.rankingsAsync,
-    required this.footballTeamsAsync,
-  });
-
-  final AsyncValue<UserProfile> profileAsync;
-  final AsyncValue<List<PlayerRanking>> rankingsAsync;
-  final AsyncValue<List<FootballTeamSummary>> footballTeamsAsync;
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final name = profileAsync.asData?.value.fullName ?? l10n.dashboard_user;
-    final email = profileAsync.asData?.value.email;
-    final avatarUrl = profileAsync.asData?.value.avatarUrl;
-    final rankings = rankingsAsync.asData?.value ?? const <PlayerRanking>[];
-    final footballTeams =
-        footballTeamsAsync.asData?.value ?? const <FootballTeamSummary>[];
-    final bestFootballTeam = footballTeams.isEmpty
-        ? null
-        : footballTeams.reduce((a, b) => a.eloPoints >= b.eloPoints ? a : b);
-
-    return EloProgressCard(
-      userName: name,
-      userEmail: email,
-      avatarUrl: avatarUrl,
-      rankings: rankings,
-      footballTeam: bestFootballTeam,
-      onTapProfile: () => context.push('/profile'),
-    ).animate().fadeIn(duration: 260.ms);
-  }
-}
-
-class _WorkspaceOverview extends StatelessWidget {
-  const _WorkspaceOverview({required this.workspace});
-
-  final TournamentWorkspace workspace;
+  final FootballTeamSummary team;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Row(
-      children: [
-        Expanded(
-          child: _OverviewMetric(
-            icon: Icons.notifications_active_rounded,
-            color: context.colors.warning,
-            label: l10n.dashboard_invites,
-            value: '${workspace.pendingInviteCount}',
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _OverviewMetric(
-            icon: Icons.verified_user_rounded,
-            color: AppTheme.primary,
-            label: l10n.dashboard_roles,
-            value: '${workspace.activeRoleCount}',
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _OverviewMetric(
-            icon: Icons.sports_score_rounded,
-            color: const Color(0xFF10B981),
-            label: l10n.dashboard_refereeMatchesCount,
-            value: '${workspace.refereeMatches.length}',
+    final c = LavishColors.of(context);
+    return LavishRow(
+      leading: const LavishIconBox(child: Icon(Icons.groups_rounded)),
+      title: l10n.ranking_topFootballTeam(team.name),
+      trailing: [
+        Text(
+          l10n.ranking_eloValue(team.eloPoints),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: c.text,
           ),
         ),
       ],
@@ -823,502 +608,472 @@ class _WorkspaceOverview extends StatelessWidget {
   }
 }
 
-class _OverviewMetric extends StatelessWidget {
-  const _OverviewMetric({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.value,
-  });
+class _RankingRow extends StatelessWidget {
+  const _RankingRow(this.ranking);
 
-  final IconData icon;
-  final Color color;
-  final String label;
-  final String value;
+  final PlayerRanking ranking;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
+    final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
+    final isDoubles =
+        ranking.matchType == 'DOUBLES' || ranking.matchType == 'MIXED_DOUBLES';
+    final streak = ranking.currentStreakType?.toUpperCase();
+    final streakPill = switch (streak) {
+      'WIN' => LavishPill(
+        l10n.publicProfileWinStreak(ranking.currentStreakCount),
+        tone: LavishTone.ok,
       ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: colors.textPrimary,
-              height: 1.1,
-            ),
+      'LOSS' => LavishPill(
+        l10n.publicProfileLossStreak(ranking.currentStreakCount),
+        tone: LavishTone.bad,
+      ),
+      _ => null,
+    };
+    final partner = ranking.partnerName;
+    return LavishRow(
+      leading: LavishIconBox(
+        child: Icon(
+          isDoubles ? Icons.people_alt_rounded : Icons.person_rounded,
+        ),
+      ),
+      title: ranking.categoryName?.isNotEmpty == true
+          ? ranking.categoryName!
+          : l10n.publicProfileUserFallback,
+      subtitle: [
+        EloHelpers.getEloMatchTypeLabel(ranking.matchType, l10n),
+        if (isDoubles && partner != null && partner.isNotEmpty) partner,
+      ].join(' • '),
+      // Wrap: ở 320dp / chữ lớn các phần tử rơi xuống dòng thay vì tràn Row.
+      trailing: [
+        Flexible(
+          child: Wrap(
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              ?streakPill,
+              Text(
+                '${ranking.eloPoints}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: c.text,
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: c.faint),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: colors.textMuted,
-            ),
+        ),
+      ],
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => EloHistoryScreen(
+            userId: ranking.userId,
+            userName: ranking.fullName,
+            avatarUrl: ranking.avatarUrl,
+            currentElo: ranking.eloPoints,
+            tierName: ranking.tierName,
+            categoryId: ranking.categoryId,
+            categoryName: ranking.categoryName,
+            initialScope: 'PUBLIC',
+            matchType: ranking.matchType,
+            genderRestriction: ranking.genderRestriction ?? '__NONE__',
+            partnerId: ranking.partnerId,
+            lockRatingScope: true,
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _PendingInviteSection extends StatelessWidget {
-  const _PendingInviteSection({required this.workspace});
+// ─── Hoạt động ──────────────────────────────────────────────────────────────
+
+class _WorkspaceContent extends StatelessWidget {
+  const _WorkspaceContent(this.workspace);
 
   final TournamentWorkspace workspace;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final pendingInvites = workspace.refereeInvites
-        .where((invite) => invite.isPending)
-        .toList();
-    if (pendingInvites.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final latestInvite = pendingInvites.first;
-    return _SectionCard(
-      title: l10n.dashboard_pendingInvitesTitle,
-      actionLabel: l10n.dashboard_openList,
-      onTap: () => context.push('/referee/invites'),
-      child: Column(
-        children: [
-          _InfoRow(
-            icon: Icons.gavel_rounded,
-            label: latestInvite.tournamentName,
-            value: latestInvite.categoryName.isNotEmpty
-                ? latestInvite.categoryName
-                : l10n.dashboard_refereeInviteFallback,
-          ),
-          const SizedBox(height: 10),
-          _InfoRow(
-            icon: Icons.schedule_rounded,
-            label: l10n.dashboard_inviteDate,
-            value: latestInvite.assignedAt != null
-                ? DateFormatterUtils.formatDateTime(
-                    latestInvite.assignedAt!.toLocal(),
-                  )
-                : l10n.dashboard_updateInProgress,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoleSection extends StatelessWidget {
-  const _RoleSection({required this.workspace});
-
-  final TournamentWorkspace workspace;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final items = <Widget>[
+    final pending = workspace.refereeInvites.where((i) => i.isPending).toList();
+    final roles = <(IconData, String, int, LavishTone)>[
       if (workspace.organizedTournaments.isNotEmpty)
-        _RoleChip(
-          icon: Icons.workspace_premium_rounded,
-          label: l10n.dashboard_organizer,
-          count: workspace.organizedTournaments.length,
-          color: const Color(0xFF10B981),
+        (
+          Icons.workspace_premium_rounded,
+          l10n.dashboard_organizer,
+          workspace.organizedTournaments.length,
+          LavishTone.ok,
         ),
       if (workspace.coOrganizerTournaments.isNotEmpty)
-        _RoleChip(
-          icon: Icons.groups_rounded,
-          label: l10n.dashboard_coOrganizer,
-          count: workspace.coOrganizerTournaments.length,
-          color: AppTheme.primary,
+        (
+          Icons.groups_rounded,
+          l10n.dashboard_coOrganizer,
+          workspace.coOrganizerTournaments.length,
+          LavishTone.accent,
         ),
       if (workspace.refereeTournaments.isNotEmpty)
-        _RoleChip(
-          icon: Icons.gavel_rounded,
-          label: l10n.infoReferee,
-          count: workspace.refereeTournaments.length,
-          color: AppTheme.refereeColor,
+        (
+          Icons.gavel_rounded,
+          l10n.infoReferee,
+          workspace.refereeTournaments.length,
+          LavishTone.warn,
         ),
       if (workspace.participatingTournaments.isNotEmpty)
-        _RoleChip(
-          icon: Icons.sports_tennis_rounded,
-          label: l10n.infoPlayer,
-          count: workspace.participatingTournaments.length,
-          color: context.colors.info,
+        (
+          Icons.sports_tennis_rounded,
+          l10n.infoPlayer,
+          workspace.participatingTournaments.length,
+          LavishTone.neutral,
         ),
     ];
-
-    return _SectionCard(
-      title: l10n.dashboard_myRoles,
-      child: items.isEmpty
-          ? _EmptySectionText(l10n.dashboard_noRolesDesc)
-          : Wrap(spacing: 10, runSpacing: 10, children: items),
-    );
-  }
-}
-
-class _AssignedMatchesSection extends StatelessWidget {
-  const _AssignedMatchesSection({required this.workspace});
-
-  final TournamentWorkspace workspace;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final matches = workspace.refereeMatches.take(3).toList();
-    return _SectionCard(
-      title: l10n.dashboard_assignedMatches,
-      actionLabel: workspace.refereeMatches.isNotEmpty
-          ? l10n.dashboard_viewInvites
-          : null,
-      onTap: workspace.refereeMatches.isNotEmpty
-          ? () => context.push('/referee/invites')
-          : null,
-      child: matches.isEmpty
-          ? _EmptySectionText(l10n.dashboard_noAssignedMatches)
-          : Column(
-              children: matches.map((match) {
-                final stageDisplay = MatchRoundLabel.formatStageOrGroupName(
-                  match.stageName,
-                  l10n: l10n,
-                );
-                final subtitle = [
-                  if (stageDisplay.isNotEmpty) stageDisplay,
-                  if (match.groupName.isNotEmpty &&
-                      !match.groupName.toUpperCase().contains('BRACKET') &&
-                      !match.groupName.toUpperCase().contains('MAIN'))
-                    match.groupName,
-                  match.localizedMatchLabel(l10n),
-                  l10n.dashboard_roundLabel(match.roundNumber),
-                ].join(' • ');
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _AssignmentTile(
-                    title: match.tournamentName,
-                    subtitle: subtitle,
-                    participants: match.participantLabel,
-                    meta: _formatMatchMeta(match, l10n),
-                    onTap: () => context.push(
-                      NavigationHelper.getLiveMatchRoute(
-                        match.tournamentId,
-                        match.id,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishStatGrid(
+          items: [
+            LavishStat(
+              label: l10n.dashboard_invites,
+              value: '${workspace.pendingInviteCount}',
+              tone: LavishTone.warn,
             ),
+            LavishStat(
+              label: l10n.dashboard_roles,
+              value: '${workspace.activeRoleCount}',
+              tone: LavishTone.accent,
+            ),
+            LavishStat(
+              label: l10n.dashboard_refereeMatchesCount,
+              value: '${workspace.refereeMatches.length}',
+              tone: LavishTone.ok,
+            ),
+          ],
+        ),
+        if (pending.isNotEmpty) ...[
+          LavishGroupHeader(
+            l10n.dashboard_pendingInvitesTitle,
+            trailing: LavishChipButton(
+              label: l10n.dashboard_openList,
+              onPressed: () => context.push('/referee/invites'),
+            ),
+          ),
+          LavishRow(
+            leading: const LavishIconBox(
+              tone: LavishTone.warn,
+              child: Icon(Icons.gavel_rounded),
+            ),
+            title: pending.first.tournamentName,
+            subtitle: [
+              pending.first.categoryName.isNotEmpty
+                  ? pending.first.categoryName
+                  : l10n.dashboard_refereeInviteFallback,
+              if (pending.first.assignedAt != null)
+                DateFormatterUtils.formatDateTime(
+                  pending.first.assignedAt!.toLocal(),
+                ),
+            ].join(' • '),
+            trailing: [
+              Icon(
+                Icons.chevron_right_rounded,
+                color: LavishColors.of(context).faint,
+              ),
+            ],
+            onTap: () => context.push('/referee/invites'),
+          ),
+        ],
+        LavishGroupHeader(l10n.dashboard_myRoles),
+        if (roles.isEmpty)
+          LavishEmptyState(
+            icon: Icons.verified_user_outlined,
+            title: l10n.dashboard_noRolesDesc,
+          )
+        else
+          for (final role in roles)
+            LavishRow(
+              leading: LavishIconBox(tone: role.$4, child: Icon(role.$1)),
+              title: role.$2,
+              trailing: [LavishPill('${role.$3}', tone: role.$4)],
+            ),
+        LavishGroupHeader(
+          l10n.dashboard_assignedMatches,
+          trailing: matches.isEmpty
+              ? null
+              : LavishChipButton(
+                  label: l10n.dashboard_viewInvites,
+                  onPressed: () => context.push('/referee/invites'),
+                ),
+        ),
+        if (matches.isEmpty)
+          LavishEmptyState(
+            icon: Icons.scoreboard_outlined,
+            title: l10n.dashboard_noAssignedMatches,
+          )
+        else
+          for (final match in matches) _AssignedMatchRow(match),
+        _TournamentsSection(workspace),
+      ],
     );
   }
-
-  String _formatMatchMeta(
-    TournamentAssignedMatch match,
-    AppLocalizations l10n,
-  ) {
-    final parts = <String>[];
-    if (match.courtName.isNotEmpty) {
-      parts.add(match.courtName);
-    }
-    if (match.scheduledAt != null) {
-      parts.add(
-        DateFormatterUtils.formatDateTime(match.scheduledAt!.toLocal()),
-      );
-    }
-    return parts.isEmpty ? l10n.dashboard_waitingSchedule : parts.join(' • ');
-  }
 }
 
-class _UnifiedTournamentsSection extends StatefulWidget {
-  const _UnifiedTournamentsSection({required this.workspace});
+class _AssignedMatchRow extends StatelessWidget {
+  const _AssignedMatchRow(this.match);
 
-  final TournamentWorkspace workspace;
-
-  @override
-  State<_UnifiedTournamentsSection> createState() =>
-      _UnifiedTournamentsSectionState();
-}
-
-class _UnifiedTournamentsSectionState
-    extends State<_UnifiedTournamentsSection> {
-  bool _isExpanded = false;
-  String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  final TournamentAssignedMatch match;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
+    final stage = MatchRoundLabel.formatStageOrGroupName(
+      match.stageName,
+      l10n: l10n,
+    );
+    final group = match.groupName.toUpperCase();
+    final line = [
+      if (stage.isNotEmpty) stage,
+      if (match.groupName.isNotEmpty &&
+          !group.contains('BRACKET') &&
+          !group.contains('MAIN'))
+        match.groupName,
+      match.localizedMatchLabel(l10n),
+      l10n.dashboard_roundLabel(match.roundNumber),
+    ].join(' • ');
+    final meta = [
+      if (match.courtName.isNotEmpty) match.courtName,
+      if (match.scheduledAt != null)
+        DateFormatterUtils.formatDateTime(match.scheduledAt!.toLocal()),
+    ];
+    return LavishRow(
+      leading: const LavishIconBox(
+        tone: LavishTone.warn,
+        child: Icon(Icons.scoreboard_rounded),
+      ),
+      title: match.tournamentName,
+      subtitle:
+          '$line\n${match.participantLabel}\n'
+          '${meta.isEmpty ? l10n.dashboard_waitingSchedule : meta.join(' • ')}',
+      subtitleMaxLines: 3,
+      trailing: [
+        Icon(
+          Icons.chevron_right_rounded,
+          color: LavishColors.of(context).faint,
+        ),
+      ],
+      onTap: () => context.push(
+        NavigationHelper.getLiveMatchRoute(match.tournamentId, match.id),
+      ),
+    );
+  }
+}
+
+Widget _tournamentLeading(Tournament t) {
+  final logo = t.logoUrl;
+  if (logo == null || logo.isEmpty) {
+    return const LavishIconBox(child: Icon(Icons.emoji_events_rounded));
+  }
+  return ClipRRect(
+    borderRadius: BorderRadius.circular(10),
+    child: Image.network(
+      logo,
+      width: 34,
+      height: 34,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) =>
+          const LavishIconBox(child: Icon(Icons.emoji_events_rounded)),
+    ),
+  );
+}
+
+LavishTone _statusTone(String status) {
+  if (StatusHelper.isTournamentCompleted(status)) return LavishTone.neutral;
+  if (StatusHelper.isTournamentCancelled(status)) return LavishTone.bad;
+  if (StatusHelper.normalizeTournamentStatus(status) ==
+      AppConstants.statusInProgress) {
+    return LavishTone.ok;
+  }
+  return LavishTone.accent;
+}
+
+/// Giải của tôi (tab Hoạt động): tìm kiếm khi nhiều, thu gọn 4 giải.
+class _TournamentsSection extends StatefulWidget {
+  const _TournamentsSection(this.workspace);
+
+  final TournamentWorkspace workspace;
+
+  @override
+  State<_TournamentsSection> createState() => _TournamentsSectionState();
+}
+
+class _TournamentsSectionState extends State<_TournamentsSection> {
+  static const _collapsed = 4;
+  bool _expanded = false;
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final workspace = widget.workspace;
-
-    // Deduplicate all tournaments (Organized, Co-Organized, Participating)
-    final Map<String, Tournament> tournamentMap = {};
-    for (final t in workspace.organizedTournaments) {
-      tournamentMap[t.id] = t;
-    }
-    for (final t in workspace.coOrganizerTournaments) {
-      tournamentMap[t.id] = t;
-    }
-    for (final t in workspace.participatingTournaments) {
-      tournamentMap[t.id] = t;
-    }
-
-    final allTournaments = tournamentMap.values.toList()
+    final byId = <String, Tournament>{
+      for (final t in workspace.organizedTournaments) t.id: t,
+      for (final t in workspace.coOrganizerTournaments) t.id: t,
+      for (final t in workspace.participatingTournaments) t.id: t,
+    };
+    final all = byId.values.toList()
       ..sort((a, b) {
         if (a.isClubLite == b.isClubLite) return 0;
         return a.isClubLite ? -1 : 1;
       });
-
-    // Filter by search query
-    final filteredTournaments = allTournaments.where((t) {
-      if (_searchQuery.trim().isEmpty) return true;
-      final q = _searchQuery.toLowerCase().trim();
-      return t.name.toLowerCase().contains(q) ||
-          t.sport.toLowerCase().contains(q);
-    }).toList();
-
-    final visibleTournaments = _isExpanded
-        ? filteredTournaments
-        : filteredTournaments.take(4).toList();
-
-    final remainingCount = filteredTournaments.length - 4;
+    final q = _query.trim().toLowerCase();
+    final filtered = all
+        .where(
+          (t) =>
+              q.isEmpty ||
+              t.name.toLowerCase().contains(q) ||
+              t.sport.toLowerCase().contains(q),
+        )
+        .toList();
+    final visible = _expanded ? filtered : filtered.take(_collapsed).toList();
+    bool inList(List<Tournament> list, Tournament t) =>
+        list.any((item) => item.id == t.id);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Section Title Header
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.dashboard_myTournaments(allTournaments.length),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ),
-            if (allTournaments.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Text(
-                  l10n.dashboard_tournamentCount(allTournaments.length),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // Search Bar
-        if (allTournaments.length > 2) ...[
-          Container(
-            height: 38,
-            decoration: BoxDecoration(
-              color: colors.bgSurface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.border),
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              style: TextStyle(fontSize: 13, color: colors.textPrimary),
-              decoration: InputDecoration(
-                hintText: l10n.dashboard_searchHint,
-                hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  size: 18,
-                  color: colors.textMuted,
-                ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, size: 16),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _searchQuery = '');
-                        },
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-              ),
+        LavishGroupHeader(l10n.dashboard_myTournaments(all.length)),
+        if (all.length > 2)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+            child: LavishTextField(
+              label: l10n.dashboard_searchHint,
+              onChanged: (v) => setState(() => _query = v),
             ),
           ),
-          const SizedBox(height: 14),
-        ],
-
-        // List of Tournament Cards
-        if (filteredTournaments.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.emoji_events_outlined,
-                    size: 36,
-                    color: colors.textMuted,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _searchQuery.isNotEmpty
-                        ? l10n.dashboard_noSearchResults
-                        : l10n.dashboard_noTournaments,
-                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
+        if (filtered.isEmpty)
+          LavishEmptyState(
+            icon: Icons.emoji_events_outlined,
+            title: _query.isNotEmpty
+                ? l10n.dashboard_noSearchResults
+                : l10n.dashboard_noTournaments,
           )
         else ...[
-          Column(
-            children: visibleTournaments.map((tournament) {
-              final isOwner = workspace.organizedTournaments.any(
-                (item) => item.id == tournament.id,
-              );
-              final isCoOrg = workspace.coOrganizerTournaments.any(
-                (item) => item.id == tournament.id,
-              );
-              final isParticipant = workspace.participatingTournaments.any(
-                (item) => item.id == tournament.id,
-              );
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _TournamentTile(
-                  tournament: tournament,
-                  isOwner: isOwner,
-                  isCoOrg: isCoOrg,
-                  isParticipant: isParticipant,
-                ),
-              );
-            }).toList(),
-          ),
-
-          // "Xem thêm" / "Thu gọn" button
-          if (filteredTournaments.length > 4) ...[
-            const SizedBox(height: 4),
-            SizedBox(
-              width: double.infinity,
-              height: 42,
-              child: TextButton.icon(
-                onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                icon: Icon(
-                  _isExpanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: AppTheme.primary,
-                ),
-                label: Text(
-                  _isExpanded
-                      ? l10n.dashboard_collapse
-                      : l10n.dashboard_showMore(remainingCount),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  backgroundColor: AppTheme.primary.withValues(alpha: 0.08),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+          for (final t in visible)
+            _unifiedRow(
+              context,
+              t,
+              isOwner: inList(workspace.organizedTournaments, t),
+              isCoOrg: inList(workspace.coOrganizerTournaments, t),
+            ),
+          if (filtered.length > _collapsed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+              child: LavishButton(
+                label: _expanded
+                    ? l10n.dashboard_collapse
+                    : l10n.dashboard_showMore(filtered.length - _collapsed),
+                kind: LavishButtonKind.outline,
+                dense: true,
+                onPressed: () => setState(() => _expanded = !_expanded),
               ),
             ),
-          ],
         ],
       ],
     );
   }
+
+  Widget _unifiedRow(
+    BuildContext context,
+    Tournament t, {
+    required bool isOwner,
+    required bool isCoOrg,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
+    final (roleLabel, roleTone) = isOwner
+        ? (l10n.dashboard_organizer, LavishTone.accent)
+        : isCoOrg
+        ? (l10n.dashboard_coOrganizer, LavishTone.warn)
+        : (l10n.dashboard_registered, LavishTone.ok);
+    final subtitle = [
+      if (t.sport.isNotEmpty) t.sport,
+      if (t.startDate != null)
+        DateFormatterUtils.formatDate(t.startDate!.toLocal()),
+    ].join(' • ');
+    return LavishRow(
+      leading: _tournamentLeading(t),
+      title: t.name,
+      subtitle: subtitle.isEmpty ? l10n.dashboard_updateInProgress : subtitle,
+      trailing: [
+        if (t.isClubLite)
+          LavishPill(l10n.dsh28_liteBadge, tone: LavishTone.neutral),
+        LavishPill(roleLabel, tone: roleTone),
+        Icon(Icons.chevron_right_rounded, color: c.faint),
+      ],
+      onTap: () {
+        if (isOwner || isCoOrg) {
+          context.push(
+            t.isClubLite
+                ? '/lite-manage/${t.id}'
+                : '/organizer/tournaments/${t.id}/manage',
+          );
+        } else {
+          context.push('/intro/${t.id}');
+        }
+      },
+    );
+  }
 }
 
-/// Lọc theo vai trò của người dùng với giải.
-enum _ManageRoleFilter { all, organizer, coOrganizer, participant }
+// ─── Quản lý ────────────────────────────────────────────────────────────────
 
-/// Một giải + vai trò hiển thị, dùng cho cả bộ lọc và danh sách.
-class _ManagedTournament {
-  const _ManagedTournament({required this.tournament, required this.role});
+enum _Role { all, organizer, coOrganizer, participant }
+
+class _Managed {
+  const _Managed(this.tournament, this.role);
   final Tournament tournament;
-  final _ManageRoleFilter role;
+  final _Role role;
 }
 
-/// Tab "Quản lý": ô tìm kiếm riêng + bộ lọc vai trò + danh sách giải.
-///
-/// Giải đã kết thúc nằm cuối danh sách. Ô lọc và nhãn vai trò chỉ hiện
-/// khi thực sự có dữ liệu, khối rỗng thì không render.
-class _ManageTournamentsSection extends ConsumerStatefulWidget {
-  const _ManageTournamentsSection({required this.workspaceAsync});
+/// Tab "Quản lý": tìm kiếm + chip vai trò + danh sách giải (chưa kết thúc
+/// lên trước, mới tạo lên trước), tải thêm khi cuộn gần đáy.
+class _ManageSection extends ConsumerStatefulWidget {
+  const _ManageSection({required this.workspaceAsync});
 
   final AsyncValue<TournamentWorkspace> workspaceAsync;
 
   @override
-  ConsumerState<_ManageTournamentsSection> createState() =>
-      _ManageTournamentsSectionState();
+  ConsumerState<_ManageSection> createState() => _ManageSectionState();
 }
 
-class _ManageTournamentsSectionState
-    extends ConsumerState<_ManageTournamentsSection> {
-  final TextEditingController _searchController = TextEditingController();
-  _ManageRoleFilter _role = _ManageRoleFilter.all;
+class _ManageSectionState extends ConsumerState<_ManageSection> {
+  _Role _role = _Role.all;
   String _query = '';
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   /// Gộp ba nhóm giải, giữ vai trò mạnh nhất khi trùng id.
-  List<_ManagedTournament> _collect(TournamentWorkspace workspace) {
-    final map = <String, _ManagedTournament>{};
-    void put(List<Tournament> list, _ManageRoleFilter role) {
+  List<_Managed> _collect(TournamentWorkspace workspace) {
+    final map = <String, _Managed>{};
+    void put(List<Tournament> list, _Role role) {
       for (final t in list) {
         if (t.id.isEmpty) continue;
         final existing = map[t.id];
         if (existing != null && existing.role.index <= role.index) continue;
-        map[t.id] = _ManagedTournament(tournament: t, role: role);
+        map[t.id] = _Managed(t, role);
       }
     }
 
-    put(workspace.organizedTournaments, _ManageRoleFilter.organizer);
-    put(workspace.coOrganizerTournaments, _ManageRoleFilter.coOrganizer);
-    put(workspace.participatingTournaments, _ManageRoleFilter.participant);
-    return map.values.toList();
-  }
-
-  /// Ưu tiên: giải CHƯA kết thúc trước; trong mỗi nhóm, giải tạo MỚI nhất
-  /// lên đầu. Trước đây xếp theo `startDate` tăng dần nên giải khai báo sau
-  /// (ngày thi đấu xa hơn) bị đẩy xuống dù vừa tạo.
-  void _sort(List<_ManagedTournament> items) {
-    items.sort((a, b) {
+    put(workspace.organizedTournaments, _Role.organizer);
+    put(workspace.coOrganizerTournaments, _Role.coOrganizer);
+    put(workspace.participatingTournaments, _Role.participant);
+    return map.values.toList()..sort((a, b) {
       final aDone = StatusHelper.isTournamentCompleted(a.tournament.status);
       final bDone = StatusHelper.isTournamentCompleted(b.tournament.status);
       if (aDone != bDone) return aDone ? 1 : -1;
-      // compareTo trả âm khi a sớm hơn b; đảo dấu để ngày MỚI lên trước.
       return b.tournament.createdAt.compareTo(a.tournament.createdAt);
     });
   }
@@ -1326,935 +1081,149 @@ class _ManageTournamentsSectionState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-
+    final c = LavishColors.of(context);
     return widget.workspaceAsync.when(
-      loading: () => const _DashboardLoadingCard(),
-      error: (error, _) => _DashboardErrorCard(
+      loading: () => const LavishRowSkeleton(count: 5),
+      error: (_, _) => LavishErrorState(
+        message: l10n.dashboard_loadErrorTitle,
         onRetry: () =>
             ref.read(myTournamentWorkspaceProvider.notifier).refresh(),
       ),
       data: (workspace) {
-        final notifier = ref.read(myTournamentWorkspaceProvider.notifier);
         final all = _collect(workspace);
-        _sort(all);
-
-        // Khởi tạo đủ cả 3 vai trò về 0 để đọc map không bao giờ gặp null,
-        // kể cả khi người dùng chưa làm chủ giải giải nào.
-        final roleCounts = <_ManageRoleFilter, int>{
-          _ManageRoleFilter.organizer: 0,
-          _ManageRoleFilter.coOrganizer: 0,
-          _ManageRoleFilter.participant: 0,
-        };
-        for (final item in all) {
-          roleCounts[item.role] = roleCounts[item.role]! + 1;
-        }
-
-        final visible = all.where((item) {
-          if (_role != _ManageRoleFilter.all && item.role != _role) {
-            return false;
-          }
-          final q = _query.trim().toLowerCase();
-          if (q.isEmpty) return true;
-          return item.tournament.name.toLowerCase().contains(q) ||
-              item.tournament.sport.toLowerCase().contains(q);
-        }).toList();
-
         if (all.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 40),
-            child: Center(
-              child: Text(
-                l10n.dashboard_noTournaments,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: colors.textSecondary),
-              ),
-            ),
+          return LavishEmptyState(
+            icon: Icons.emoji_events_outlined,
+            title: l10n.dashboard_noTournaments,
           );
         }
+        final notifier = ref.read(myTournamentWorkspaceProvider.notifier);
+        int count(_Role r) =>
+            r == _Role.all ? all.length : all.where((e) => e.role == r).length;
+        final labels = <_Role, String>{
+          _Role.all: l10n.infoAll,
+          _Role.organizer: l10n.dashboard_organizer,
+          _Role.coOrganizer: l10n.dashboard_coOrganizer,
+          _Role.participant: l10n.dashboard_participant,
+        };
+        final q = _query.trim().toLowerCase();
+        final visible = all.where((e) {
+          if (_role != _Role.all && e.role != _role) return false;
+          return q.isEmpty ||
+              e.tournament.name.toLowerCase().contains(q) ||
+              e.tournament.sport.toLowerCase().contains(q);
+        }).toList();
 
-        // Bắt cuộn tới gần đáy thì tải trang kế tiếp. Ngưỡng 400px để không phải
-        // chờ tới tận cùng — người dùng thấy nút "Xem thêm" trước khi chạm đáy.
         return NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            if (notification.metrics.extentAfter < 400) {
-              ref.read(myTournamentWorkspaceProvider.notifier).loadMore();
-            }
+          onNotification: (n) {
+            if (n.metrics.extentAfter < 400) notifier.loadMore();
             return false;
           },
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) => setState(() => _query = value),
-                    style: const TextStyle(fontSize: 14),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      hintText: l10n.dashboard_searchHint,
-                      hintStyle: TextStyle(fontSize: 13, color: colors.textMuted),
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        size: 18,
-                        color: colors.textMuted,
-                      ),
-                      prefixIconConstraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(
-                              icon: Icon(
-                                Icons.close_rounded,
-                                size: 16,
-                                color: colors.textMuted,
-                              ),
-                              tooltip: MaterialLocalizations.of(context)
-                                  .deleteButtonTooltip,
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _query = '');
-                              },
-                            ),
-                      filled: true,
-                      fillColor: colors.bgCard,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppTheme.primary),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Lọc theo vai trò: gộp 3 nút to vào MỘT icon cùng hàng tìm kiếm.
-                // Trước đây 3 nút chiếm nguyên một khối cao, đẩy danh sách xuống
-                // dưới màn hình — người dùng phải cuộn mới thấy giải đầu tiên.
-                _RoleFilterIcon(
-                  allCount: all.length,
-                  roleCounts: roleCounts,
-                  selected: _role,
-                  onSelected: (role) => setState(() => _role = role),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (visible.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: Text(
-                    l10n.dashboard_noSearchResults,
-                    style: TextStyle(fontSize: 13, color: colors.textMuted),
-                  ),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                child: LavishTextField(
+                  label: l10n.dashboard_searchHint,
+                  onChanged: (v) => setState(() => _query = v),
                 ),
-              )
-            else
-              ...visible.map(
-                (item) => _ManagedTournamentRow(
-                  entry: item,
-                  roleLabel: switch (item.role) {
-                    _ManageRoleFilter.organizer => l10n.dashboard_organizer,
-                    _ManageRoleFilter.coOrganizer =>
-                      l10n.dashboard_coOrganizer,
-                    _ManageRoleFilter.participant =>
-                      l10n.dashboard_participant,
-                    _ManageRoleFilter.all => null,
+              ),
+              SizedBox(
+                height: 52,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
+                  itemCount: _Role.values.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) {
+                    final role = _Role.values[i];
+                    return Center(
+                      child: LavishChipButton(
+                        label: '${labels[role]} ${count(role)}',
+                        selected: _role == role,
+                        onPressed: () => setState(() => _role = role),
+                      ),
+                    );
                   },
                 ),
               ),
-            // Đang tải trang kế tiếp: spinner nhỏ ở đáy, không chặn thao tác.
-            if (notifier.isLoadingMore)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+              if (visible.isEmpty)
+                LavishEmptyState(
+                  icon: Icons.search_off_rounded,
+                  title: l10n.dashboard_noSearchResults,
+                )
+              else
+                for (final item in visible)
+                  _ManagedRow(item, labels[item.role]!),
+              if (notifier.isLoadingMore)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              else if (!workspace.hasMore && visible.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Center(
+                    child: Text(
+                      l10n.dashboard_noMoreTournaments,
+                      style: TextStyle(fontSize: 12, color: c.muted),
+                    ),
                   ),
                 ),
-              )
-            // Hết danh sách: dấu hiệu "đã xem hết" thay vì để trống lơ lửng.
-            else if (!workspace.hasMore && visible.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Center(
-                  child: Text(
-                    l10n.dashboard_noMoreTournaments,
-                    style: TextStyle(fontSize: 12, color: colors.textMuted),
-                  ),
-                ),
-              ),
-          ],
-        ),
+            ],
+          ),
         );
       },
-    ).animate().fadeIn(delay: 120.ms, duration: 240.ms);
-  }
-}
-
-/// Nút lọc theo vai trò — một icon duy nhất, đứng cạnh ô tìm kiếm.
-///
-/// Thay 3 nút to bằng icon + bottom sheet: giải tiết kiệm chiều cao (3 nút cũ
-/// chiếm trọn một khối ~120px, đẩy giải đầu tiên ra ngoài màn hình), nhưng vẫn
-/// hiện được số đếm để người dùng biết có bao nhiêu giải ở mỗi nhóm.
-class _RoleFilterIcon extends StatelessWidget {
-  const _RoleFilterIcon({
-    required this.allCount,
-    required this.roleCounts,
-    required this.selected,
-    required this.onSelected,
-  });
-
-  final int allCount;
-  final Map<_ManageRoleFilter, int> roleCounts;
-  final _ManageRoleFilter selected;
-  final ValueChanged<_ManageRoleFilter> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final isAll = selected == _ManageRoleFilter.all;
-    final color = isAll ? colors.textMuted : AppTheme.primary;
-
-    final labels = <_ManageRoleFilter, String>{
-      _ManageRoleFilter.all: l10n.infoAll,
-      _ManageRoleFilter.organizer: l10n.dashboard_organizer,
-      _ManageRoleFilter.coOrganizer: l10n.dashboard_coOrganizer,
-      _ManageRoleFilter.participant: l10n.dashboard_participant,
-    };
-
-    return Material(
-      color: isAll ? colors.bgCard : AppTheme.primary.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () async {
-          final picked = await showModalBottomSheet<_ManageRoleFilter>(
-            context: context,
-            showDragHandle: true,
-            builder: (sheetContext) => SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final role in _ManageRoleFilter.values)
-                    ListTile(
-                      title: Text(labels[role]!),
-                      trailing: Text(
-                        (role == _ManageRoleFilter.all
-                                ? allCount
-                                : roleCounts[role] ?? 0)
-                            .toString(),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      selected: selected == role,
-                      onTap: () => Navigator.of(sheetContext).pop(role),
-                    ),
-                ],
-              ),
-            ),
-          );
-          if (picked != null) onSelected(picked);
-        },
-        child: Container(
-          height: 44,
-          width: 48,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isAll ? colors.border : AppTheme.primary,
-            ),
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(Icons.tune_rounded, size: 19, color: color),
-              if (!isAll)
-                Positioned(
-                  right: -6,
-                  top: -5,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 1,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      (roleCounts[selected] ?? 0).toString(),
-                      style: const TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
 
-class _ManagedTournamentRow extends StatelessWidget {
-  const _ManagedTournamentRow({required this.entry, this.roleLabel});
+class _ManagedRow extends StatelessWidget {
+  const _ManagedRow(this.entry, this.roleLabel);
 
-  final _ManagedTournament entry;
-  final String? roleLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final tournament = entry.tournament;
-    final l10n = AppLocalizations.of(context)!;
-    final statusColor = StatusHelper.getTournamentStatusColor(
-      tournament.status,
-      context,
-    );
-    final finished = StatusHelper.isTournamentCompleted(tournament.status);
-
-    // Thẻ giải chỉ gồm 3 thứ theo yêu cầu: tên, vai trò, trạng thái. Không
-    // nhồi sân/ngày/số đội — nhìn là rối mà không thêm gì cho người dùng.
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () => context.push('/tournament/${tournament.id}'),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.border.withValues(alpha: 0.7)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Không đặt icon môn ở đây: người dùng đã biết giải là môn gì
-                // từ tên, icon chỉ tốn chỗ và tạo nhiễu khi quét danh sách.
-                // Dùng thanh dọc mảnh làm neo thị giác, nhẹ hơn ô icon bo tròn.
-                Container(
-                  width: 3,
-                  height: 40,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 2 dòng thay vì 1: tên giải Việt Nam rất dài
-                      // ("GIẢI VPSF PICKLEBALL CUP 2026"), cắt 1 dòng mất chữ.
-                      Text(
-                        tournament.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          height: 1.3,
-                          fontWeight: FontWeight.w700,
-                          color: finished
-                              ? colors.textSecondary
-                              : colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          if (roleLabel != null) ...[
-                            // Vai trò: nhỏ, xám — thông tin phụ.
-                            Text(
-                              roleLabel!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.textMuted,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
-                              child: Text(
-                                '·',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.textMuted,
-                                ),
-                              ),
-                            ),
-                          ],
-                          // Trạng thái: đậm, màu theo trạng thái. Truyền `l10n`
-                          // để nhãn theo ngôn ngữ đang dùng — thiếu nó thì
-                          // helper rơi về mặc định và hiện tiếng Anh.
-                          Flexible(
-                            child: Text(
-                              StatusHelper.getTournamentStatusLabel(
-                                tournament.status,
-                                l10n: l10n,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Ngày tạo: giúp phân biệt giải mới với giải cũ khi tên
-                      // gần giống nhau.
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatCreatedAt(
-                          tournament.createdAt,
-                          l10n.localeName,
-                        ),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: colors.textMuted,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-/// Ngày tạo dạng tương đối: "Hôm qua", "3 ngày trước", "2 tháng trước".
-/// Dùng DateFormat của intl theo locale, không tự tính tay tháng/năm.
-String _formatCreatedAt(DateTime createdAt, String localeName) {
-  final diff = DateTime.now().difference(createdAt);
-  if (diff.inDays < 1) return DateFormat.Hm(localeName).format(createdAt);
-  if (diff.inDays < 2) return 'Hôm qua';
-  if (diff.inDays < 30) return '${diff.inDays} ngày trước';
-  if (diff.inDays < 365) return DateFormat.MMMd(localeName).format(createdAt);
-  return DateFormat.yMMMd(localeName).format(createdAt);
-}
-
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.title,
-    required this.child,
-    this.actionLabel,
-    this.onTap,
-  });
-
-  final String title;
-  final Widget child;
-  final String? actionLabel;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ),
-              if (actionLabel != null && onTap != null)
-                TextButton(onPressed: onTap, child: Text(actionLabel!)),
-            ],
-          ),
-          const SizedBox(height: 14),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _RoleChip extends StatelessWidget {
-  const _RoleChip({
-    required this.icon,
-    required this.label,
-    required this.count,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final int count;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Text(
-        '$label • $count',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
-    );
-  }
-}
-
-class _AssignmentTile extends StatelessWidget {
-  const _AssignmentTile({
-    required this.title,
-    required this.subtitle,
-    required this.participants,
-    required this.meta,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final String participants;
-  final String meta;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppTheme.refereeColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.scoreboard_rounded,
-                color: AppTheme.refereeColor,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    participants,
-                    style: TextStyle(fontSize: 12, color: colors.textMuted),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    meta,
-                    style: TextStyle(fontSize: 11, color: colors.textMuted),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TournamentTile extends StatelessWidget {
-  const _TournamentTile({
-    required this.tournament,
-    this.isOwner = false,
-    this.isCoOrg = false,
-    this.isParticipant = false,
-  });
-
-  final Tournament tournament;
-  final bool isOwner;
-  final bool isCoOrg;
-  final bool isParticipant;
+  final _Managed entry;
+  final String roleLabel;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final isClubLite = tournament.isClubLite;
-
-    String badgeText = l10n.dashboard_registered;
-    Color badgeBg = const Color(0xFFECFDF5);
-    Color badgeTextCol = const Color(0xFF059669);
-    Color badgeBorder = const Color(0xFFA7F3D0);
-
-    if (isOwner) {
-      badgeText = l10n.dashboard_organizer;
-      badgeBg = const Color(0xFFEFF6FF);
-      badgeTextCol = const Color(0xFF2563EB);
-      badgeBorder = const Color(0xFFBFDBFE);
-    } else if (isCoOrg) {
-      badgeText = l10n.dashboard_coOrganizer;
-      badgeBg = const Color(0xFFF3E8FF);
-      badgeTextCol = const Color(0xFF9333EA);
-      badgeBorder = const Color(0xFFE9D5FF);
-    }
-
-    return InkWell(
-      onTap: () {
-        if (isOwner || isCoOrg) {
-          if (isClubLite) {
-            context.push('/lite-manage/${tournament.id}');
-          } else {
-            context.push('/organizer/tournaments/${tournament.id}/manage');
-          }
-        } else {
-          context.push('/intro/${tournament.id}');
-        }
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.border),
+    final t = entry.tournament;
+    return LavishRow(
+      leading: _tournamentLeading(t),
+      title: t.name,
+      subtitle: '$roleLabel • ${_relativeCreated(l10n, t.createdAt)}',
+      trailing: [
+        LavishPill(
+          StatusHelper.getTournamentStatusLabel(t.status, l10n: l10n),
+          tone: _statusTone(t.status),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child:
-                  (tournament.logoUrl != null && tournament.logoUrl!.isNotEmpty)
-                  ? Image.network(
-                      tournament.logoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Image.asset(
-                          'assets/images/sporto_v1_with_text.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Image.asset(
-                        'assets/images/sporto_v1_with_text.png',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tournament.name,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  if (tournament.communityName != null &&
-                      tournament.communityName!.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.groups_rounded,
-                          size: 11,
-                          color: colors.textMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            tournament.communityName!,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: colors.textMuted,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                  ],
-                  Text(
-                    isClubLite
-                        ? (tournament.communityName != null &&
-                                  tournament.communityName!.isNotEmpty
-                              ? 'Giải Siêu Lite • ${tournament.communityName}'
-                              : l10n.dashboard_liteDesc)
-                        : l10n.opsOrganizerOnly,
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: isClubLite
-                          ? const Color(0xFF059669)
-                          : AppTheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: badgeBg,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: badgeBorder),
-                        ),
-                        child: Text(
-                          badgeText,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: badgeTextCol,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          _buildTournamentMeta(tournament, l10n),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colors.textMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: colors.textMuted,
-              size: 22,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _buildTournamentMeta(Tournament tournament, AppLocalizations l10n) {
-    final parts = <String>[];
-    if (tournament.sport.isNotEmpty) {
-      parts.add(tournament.sport);
-    }
-    if (tournament.startDate != null) {
-      parts.add(DateFormatterUtils.formatDate(tournament.startDate!.toLocal()));
-    }
-    return parts.isEmpty ? l10n.dashboard_updateInProgress : parts.join(' • ');
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: colors.textMuted),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: TextStyle(fontSize: 12, color: colors.textMuted),
-          ),
+        Icon(
+          Icons.chevron_right_rounded,
+          color: LavishColors.of(context).faint,
         ),
       ],
+      onTap: () => context.push('/tournament/${t.id}'),
     );
   }
 }
 
-class _EmptySectionText extends StatelessWidget {
-  const _EmptySectionText(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(fontSize: 13, color: context.colors.textMuted),
-    );
-  }
-}
-
-class _DashboardLoadingCard extends StatelessWidget {
-  const _DashboardLoadingCard();
-
-  @override
-  Widget build(BuildContext context) {
-    // Hình dạng khớp thẻ giải thật (_ManagedTournamentRow): 3 hàng cao ~64.
-    return const SkeletonScope(
-      child: Column(
-        children: [
-          SkeletonBox(height: 64, radius: 14),
-          SizedBox(height: 10),
-          SkeletonBox(height: 64, radius: 14),
-          SizedBox(height: 10),
-          SkeletonBox(height: 64, radius: 14),
-        ],
-      ),
-    );
-  }
-}
-
-class _DashboardErrorCard extends StatelessWidget {
-  const _DashboardErrorCard({required this.onRetry});
-
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.dashboard_loadErrorTitle,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.dashboard_loadErrorDesc,
-            style: TextStyle(fontSize: 12, color: colors.textMuted),
-          ),
-          const SizedBox(height: 14),
-          FilledButton(onPressed: onRetry, child: Text(l10n.dashboard_retry)),
-        ],
-      ),
-    );
-  }
+/// Ngày tạo dạng tương đối theo ngôn ngữ đang dùng.
+String _relativeCreated(AppLocalizations l10n, DateTime createdAt) {
+  final diff = DateTime.now().difference(createdAt);
+  final locale = l10n.localeName;
+  if (diff.inDays < 1) return DateFormat.Hm(locale).format(createdAt);
+  if (diff.inDays < 2) return l10n.dsh28_yesterday;
+  if (diff.inDays < 30) return l10n.dsh28_daysAgo(diff.inDays);
+  if (diff.inDays < 365) return DateFormat.MMMd(locale).format(createdAt);
+  return DateFormat.yMMMd(locale).format(createdAt);
 }

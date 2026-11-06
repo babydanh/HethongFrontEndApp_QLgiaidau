@@ -687,8 +687,9 @@ class CommunityPostCard extends ConsumerWidget {
     if (!context.mounted || action != 'report') return;
     await ReportSheet.show(
       context,
-      targetId: post.id,
-      targetType: 'community_post',
+      targetId: communityId,
+      targetType: 'community',
+      contextNote: 'post:${post.id}',
     );
   }
 

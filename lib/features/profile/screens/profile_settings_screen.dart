@@ -4,17 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/theme_provider.dart' as tp;
 import 'package:app_quanly_giaidau/providers/locale_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
+import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
-/// Màn hình Cài đặt tài khoản: Tài khoản, Ứng dụng, Lối tắt (đóng sẵn) và Đăng xuất.
+/// Màn hình Cài đặt (Lavish): thẻ tài khoản, nhóm Ứng dụng, Lối tắt, Đăng xuất.
 class ProfileSettingsScreen extends ConsumerStatefulWidget {
   const ProfileSettingsScreen({super.key});
 
@@ -24,7 +28,10 @@ class ProfileSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
+  static const _log = AppLogger('ProfileSettings');
   late final Future<PackageInfo> _packageInfoFuture;
+  bool _checkingUpdate = false;
+  bool _loggingOut = false;
 
   @override
   void initState() {
@@ -34,349 +41,198 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final l = AppLocalizations.of(context)!;
     final isDark = ref.watch(tp.themeProvider) == ThemeMode.dark;
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: colors.bgDark,
-        elevation: 0,
-        leading: Center(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/profile');
-              }
-            },
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: colors.bgCard,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: colors.borderLight,
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: colors.textPrimary,
-                size: 16,
-              ),
-            ),
-          ),
-        ),
-        title: Text(
-          l.settingsTitle,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
+    return LavishScaffold(
+      title: l.settingsTitle,
+      onBack: () {
+        HapticFeedback.lightImpact();
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/profile');
+        }
+      },
+      body: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionLabel(colors, l.accountSettingsAccountSection),
-            const SizedBox(height: 10),
-            _buildAccountMenu(context),
-            const SizedBox(height: 24),
-            _sectionLabel(colors, l.accountSettingsAppSection),
-            const SizedBox(height: 10),
-            _buildAppMenu(context, isDark),
-            const SizedBox(height: 24),
-            _buildShortcutsMenu(context),
-            const SizedBox(height: 24),
-            _buildLogoutMenu(context),
-            const SizedBox(height: 16),
-            _buildAppVersion(colors),
-          ],
-        ),
+        padding: const EdgeInsets.only(bottom: 32),
+        children: [
+          LavishGroupHeader(l.accountSettingsAccountSection),
+          _buildAccountCard(context),
+          LavishGroupHeader(l.accountSettingsAppSection),
+          _buildAppRows(context, isDark),
+          const SizedBox(height: 8),
+          _buildShortcuts(context),
+          _buildLogoutButton(context),
+          _buildAppVersion(context),
+        ],
       ),
     );
   }
 
-  Widget _sectionLabel(AppColorsExtension colors, String text) {
-    return Row(
-      children: [
-        Container(
-          width: 3.5,
-          height: 16,
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: colors.textSecondary,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _icon(IconData icon, {LavishTone tone = LavishTone.accent}) =>
+      LavishIconBox(tone: tone, child: Icon(icon));
 
-  Widget _menuCard(
-    AppColorsExtension colors, {
-    required List<Widget> children,
-  }) {
-    return Material(
-      color: colors.bgCard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-        side: BorderSide(color: colors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(children: children),
-    );
-  }
+  Widget _chevron(BuildContext context) => Icon(
+    Icons.chevron_right_rounded,
+    size: 18,
+    color: LavishColors.of(context).faint,
+  );
 
-  Widget _menuDivider(AppColorsExtension colors) {
-    return Divider(height: 1, color: colors.borderLight, indent: 56);
-  }
-
-  Widget _menuRow(
-    AppColorsExtension colors, {
+  Widget _navRow(
+    BuildContext context, {
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    required String route,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Icon(icon, size: 18, color: AppTheme.primary),
+    return LavishRow(
+      leading: _icon(icon),
+      title: label,
+      trailing: [_chevron(context)],
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.push(route);
+      },
+    );
+  }
+
+  Widget _buildAccountCard(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final profile = ref.watch(userProfileProvider);
+    return profile.when(
+      loading: () => const LavishRowSkeleton(count: 1),
+      error: (_, _) => LavishRow(
+        leading: _icon(Icons.error_outline_rounded, tone: LavishTone.bad),
+        title: l.settingsLvAccountError,
+        trailing: [
+          LavishChipButton(
+            label: l.lavishRetry,
+            onPressed: () => ref.invalidate(userProfileProvider),
+          ),
+        ],
+      ),
+      data: (user) => _accountRow(context, user),
+    );
+  }
+
+  Widget _accountRow(BuildContext context, UserProfile user) {
+    final name = (user.fullName ?? '').trim();
+    final email = (user.email ?? '').trim();
+    final initial = name.isNotEmpty
+        ? name.characters.first.toUpperCase()
+        : (email.isNotEmpty ? email.characters.first.toUpperCase() : '?');
+    return LavishRow(
+      leading: LavishIconBox(size: 44, child: Text(initial)),
+      title: name.isNotEmpty ? name : email,
+      subtitle: name.isNotEmpty && email.isNotEmpty ? email : null,
+      trailing: [_chevron(context)],
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.push('/profile/edit');
+      },
+    );
+  }
+
+  Widget _buildAppRows(BuildContext context, bool isDark) {
+    final l = AppLocalizations.of(context)!;
+    final isVi = ref.watch(localeProvider).languageCode == 'vi';
+    return Column(
+      children: [
+        _navRow(
+          context,
+          icon: Icons.notifications_outlined,
+          label: l.settingsNotifications,
+          route: '/notifications',
+        ),
+        LavishRow(
+          leading: _icon(Icons.language_rounded),
+          title: l.settingsLanguage,
+          trailing: [
+            LavishChipButton(
+              label: 'VI',
+              selected: isVi,
+              onPressed: () => _changeLocale('vi'),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: colors.textMuted,
+            LavishChipButton(
+              label: 'EN',
+              selected: !isVi,
+              onPressed: () => _changeLocale('en'),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAccountMenu(BuildContext context) {
-    final colors = context.colors;
-    final l = AppLocalizations.of(context)!;
-    return _menuCard(
-      colors,
-      children: [
-        _menuRow(
-          colors,
-          icon: Icons.person_outline_rounded,
-          label: l.accountSettingsPersonalProfile,
-          onTap: () {
-            HapticFeedback.lightImpact();
-            context.push('/profile/edit');
-          },
+        LavishRow(
+          leading: _icon(Icons.dark_mode_rounded),
+          title: l.settingsDarkMode,
+          onTap: () => ref.read(tp.themeProvider.notifier).toggleTheme(),
+          trailing: [
+            LavishSwitch(
+              key: const ValueKey('settings-dark-switch'),
+              value: isDark,
+              onChanged: (_) =>
+                  ref.read(tp.themeProvider.notifier).toggleTheme(),
+            ),
+          ],
+        ),
+        LavishRow(
+          leading: _icon(Icons.system_update_rounded),
+          title: l.coreCheckForUpdate,
+          subtitle: _checkingUpdate ? l.coreCheckingForUpdate : null,
+          onTap: _checkingUpdate ? null : () => _checkForUpdate(context),
+          trailing: [
+            if (_checkingUpdate)
+              const SizedBox.square(
+                dimension: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              _chevron(context),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildAppMenu(BuildContext context, bool isDark) {
-    final colors = context.colors;
-    final l = AppLocalizations.of(context)!;
-    return _menuCard(
-      colors,
-      children: [
-        // Thông báo
-        _menuRow(
-          colors,
-          icon: Icons.notifications_outlined,
-          label: l.settingsNotifications,
-          onTap: () {
-            HapticFeedback.lightImpact();
-            context.push('/notifications');
-          },
-        ),
-        _menuDivider(colors),
-
-        // Ngôn ngữ
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: const Icon(
-                  Icons.language_rounded,
-                  size: 18,
-                  color: AppTheme.primary,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  l.settingsLanguage,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: colors.bgSurface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: colors.borderLight),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _langSegmentButton(
-                      'vi',
-                      'VI',
-                      ref.watch(localeProvider).languageCode == 'vi',
-                    ),
-                    _langSegmentButton(
-                      'en',
-                      'EN',
-                      ref.watch(localeProvider).languageCode == 'en',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        _menuDivider(colors),
-
-        // Giao diện tối
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: const Icon(
-                  Icons.dark_mode_rounded,
-                  size: 18,
-                  color: AppTheme.primary,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  l.settingsDarkMode,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ),
-              Switch(
-                value: isDark,
-                activeThumbColor: AppTheme.primary,
-                onChanged: (v) =>
-                    ref.read(tp.themeProvider.notifier).toggleTheme(),
-              ),
-            ],
-          ),
-        ),
-        _menuDivider(colors),
-
-        // Kiểm tra cập nhật ứng dụng
-        _menuRow(
-          colors,
-          icon: Icons.system_update_rounded,
-          label: l.coreCheckForUpdate,
-          onTap: () => _checkForUpdate(context),
-        ),
-      ],
-    );
+  void _changeLocale(String code) {
+    if (ref.read(localeProvider).languageCode != code) {
+      ref.read(localeProvider.notifier).changeLocale(code);
+    }
   }
 
   Future<void> _checkForUpdate(BuildContext context) async {
     final l = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l.coreCheckingForUpdate),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _checkingUpdate = true);
     try {
       final info = await AppUpdateService(ref.read(dioProvider)).check();
       if (!context.mounted) return;
       if (info != null && info.hasUpdate) {
         await AppUpdateGate.showUpdateDialog(context, info);
       } else {
-        final current = info?.currentVersion ?? '';
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text(l.coreAppUpToDate(current)),
-            backgroundColor: const Color(0xFF16A34A),
+            content: Text(l.coreAppUpToDate(info?.currentVersion ?? '')),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+    } catch (e, stack) {
+      _log.error('Lỗi kiểm tra cập nhật', e, stack);
+      messenger.showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
+          content: Text(ErrorParser.parse(e, '', l)),
           behavior: SnackBarBehavior.floating,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _checkingUpdate = false);
     }
   }
 
-  Widget _buildShortcutsMenu(BuildContext context) {
-    final colors = context.colors;
+  Widget _buildShortcuts(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final shortcuts = [
+    final c = LavishColors.of(context);
+    final items = [
       _SettingsMenuItem(
         Icons.dashboard_rounded,
         l.settingsDashboard,
@@ -409,152 +265,119 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         '/profile/reports',
       ),
     ];
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        key: const ValueKey('account-settings-shortcuts'),
+        initiallyExpanded: false,
+        shape: const Border(),
+        collapsedShape: const Border(),
+        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        childrenPadding: EdgeInsets.zero,
+        iconColor: LavishColors.accent,
+        collapsedIconColor: c.faint,
+        leading: _icon(Icons.bolt_rounded),
+        title: Text(
+          l.accountSettingsShortcuts,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: c.text,
+          ),
+        ),
+        children: [
+          for (final item in items)
+            _navRow(
+              context,
+              icon: item.icon,
+              label: item.label,
+              route: item.route,
+            ),
+        ],
+      ),
+    );
+  }
 
-    final rows = <Widget>[];
-    for (final item in shortcuts) {
-      if (rows.isNotEmpty) rows.add(_menuDivider(colors));
-      rows.add(
-        _menuRow(
-          colors,
-          icon: item.icon,
-          label: item.label,
-          onTap: () {
-            HapticFeedback.lightImpact();
-            context.push(item.route);
-          },
+  Widget _buildLogoutButton(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 20, 14, 0),
+      child: LavishButton(
+        buttonKey: const ValueKey('settings-logout'),
+        label: l.settingsLogout,
+        kind: LavishButtonKind.danger,
+        icon: const Icon(Icons.logout_rounded, size: 18),
+        busy: _loggingOut,
+        onPressed: () => _confirmLogout(context),
+      ),
+    );
+  }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final l = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.settingsLvLogoutConfirmTitle),
+        content: Text(l.settingsLvLogoutConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.commonCancel),
+          ),
+          TextButton(
+            key: const ValueKey('settings-logout-confirm'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: LavishColors.bad),
+            child: Text(l.settingsLogout),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted || _loggingOut) return;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _loggingOut = true);
+    try {
+      await ref.read(authProvider.notifier).signOut();
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(userRankingsProvider);
+      if (!context.mounted) return;
+      context.go('/home');
+    } catch (e, stack) {
+      _log.error('Lỗi đăng xuất', e, stack);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(ErrorParser.parse(e, '', l)),
+          behavior: SnackBarBehavior.floating,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _loggingOut = false);
     }
-
-    return _menuCard(
-      colors,
-      children: [
-        ExpansionTile(
-          key: const ValueKey('account-settings-shortcuts'),
-          initiallyExpanded: false,
-          shape: const Border(),
-          collapsedShape: const Border(),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: EdgeInsets.zero,
-          iconColor: AppTheme.primary,
-          collapsedIconColor: colors.textMuted,
-          textColor: colors.textPrimary,
-          collapsedTextColor: colors.textPrimary,
-          leading: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: const Icon(
-              Icons.bolt_rounded,
-              size: 18,
-              color: AppTheme.primary,
-            ),
-          ),
-          title: Text(
-            l.accountSettingsShortcuts,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: colors.textPrimary,
-            ),
-          ),
-          children: rows,
-        ),
-      ],
-    );
   }
 
-  Widget _buildLogoutMenu(BuildContext context) {
+  Widget _buildAppVersion(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return _menuCard(
-      context.colors,
-      children: [
-        InkWell(
-          onTap: () async {
-            await ref.read(authProvider.notifier).signOut();
-            ref.invalidate(userProfileProvider);
-            ref.invalidate(userRankingsProvider);
-            if (!context.mounted) return;
-            context.go('/home');
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.logout_rounded,
-                  size: 20,
-                  color: AppTheme.adminColor,
-                ),
-                const SizedBox(width: 14),
-                Text(
-                  l.settingsLogout,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.adminColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAppVersion(AppColorsExtension colors) {
+    final c = LavishColors.of(context);
     return FutureBuilder<PackageInfo>(
       future: _packageInfoFuture,
       builder: (context, snapshot) {
         final version = snapshot.data?.version ?? '1.0.0';
         final build = snapshot.data?.buildNumber ?? '1';
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 8),
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Center(
             child: Text(
-              'Phiên bản $version ($build)',
+              l.settingsLvVersion(version, build),
               style: TextStyle(
-                fontSize: 12,
-                color: colors.textMuted,
+                fontSize: 11.5,
+                color: c.faint,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _langSegmentButton(
-    String code,
-    String label,
-    bool isSelected,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        if (!isSelected) {
-          ref.read(localeProvider.notifier).changeLocale(code);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppTheme.primary,
-          ),
-        ),
-      ),
     );
   }
 }

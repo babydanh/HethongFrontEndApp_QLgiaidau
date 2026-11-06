@@ -1,4 +1,3 @@
-import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,32 +5,34 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_quanly_giaidau/core/widgets/image_crop_dialog.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/region.dart';
 import 'package:app_quanly_giaidau/data/models/club_notification_pref_model.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/features/profile/utils/edit_profile_payload.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/email_verification_flow.dart';
 import 'package:app_quanly_giaidau/features/profile/utils/phone_verification_flow.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/language_setting_card.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/extensions/string_extensions.dart';
 
-/// Màn hình Cài đặt — 4 tab: Hồ sơ, Ngân hàng, Tổ chức, Bảo mật.
+/// Màn Chỉnh sửa hồ sơ (`/profile/edit`) — 4 tab: Hồ sơ, Ngân hàng, Tổ chức,
+/// Bảo mật. Dựng bằng bộ Lavish (LavishScaffold, LavishTextField, ...).
 ///
-/// Tính năng đồng bộ với web (/profile/edit):
 /// - Hồ sơ: upload avatar + ảnh bìa, ngày sinh, giới tính (khóa + yêu cầu đổi),
-///   khu vực tranh tài (tỉnh/thành từ API), validate giống backend;
-///   xác minh email + SĐT ở cuối form
+///   khu vực tranh tài (tỉnh/thành từ API); xác minh email + SĐT ở cuối form
 /// - Ngân hàng: chọn ví điện tử/ngân hàng, tên chủ TK tự viết hoa không dấu
 /// - Tổ chức: trạng thái vai trò Ban Tổ Chức, mở luồng đăng ký
-///   (OrganizerVerificationSheet)
-/// - Bảo mật: đổi mật khẩu, phiên đăng nhập, quyền riêng tư, xóa tài khoản
+/// - Bảo mật: đổi mật khẩu, phiên đăng nhập, quyền riêng tư, thông báo CLB,
+///   xóa tài khoản
+/// Ngôn ngữ nằm ở trang Cài đặt, không ở đây.
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -57,63 +58,68 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final c = LavishColors.of(context);
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      appBar: AppBar(
-        backgroundColor: colors.bgDark,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_rounded, color: colors.textPrimary),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/profile');
-            }
-          },
-        ),
-        title: Text(
-          l10n.settingsTitle,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w900,
-            fontSize: 20,
+    return LavishScaffold(
+      title: l10n.settingsEditProfile,
+      onBack: () {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/profile');
+        }
+      },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: c.soft(LavishTone.neutral),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.tab,
+                indicator: BoxDecoration(
+                  color: LavishColors.accent,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                splashBorderRadius: BorderRadius.circular(11),
+                labelColor: Colors.white,
+                unselectedLabelColor: c.muted,
+                labelPadding: EdgeInsets.zero,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12.5,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12.5,
+                ),
+                tabs: [
+                  Tab(height: 42, text: l10n.settingsProfileTab),
+                  Tab(height: 42, text: l10n.settingsBankTab),
+                  Tab(height: 42, text: l10n.accountSettingsOrganizerTab),
+                  Tab(height: 42, text: l10n.settingsSecurityTab),
+                ],
+              ),
+            ),
           ),
-        ),
-        centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          indicatorColor: AppTheme.primary,
-          indicatorWeight: 3,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: colors.textSecondary,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                _ProfileTab(),
+                _BankTab(),
+                _OrganizerTab(),
+                _SecurityTab(),
+              ],
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
-          ),
-          tabs: [
-            Tab(text: l10n.settingsProfileTab),
-            Tab(text: l10n.settingsBankTab),
-            Tab(text: l10n.accountSettingsOrganizerTab),
-            Tab(text: l10n.settingsSecurityTab),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _ProfileTab(),
-          _BankTab(),
-          _OrganizerTab(),
-          _SecurityTab(),
         ],
       ),
     );
@@ -130,13 +136,20 @@ class _ProfileTab extends ConsumerStatefulWidget {
   ConsumerState<_ProfileTab> createState() => _ProfileTabState();
 }
 
-class _ProfileTabState extends ConsumerState<_ProfileTab> {
+class _ProfileTabState extends ConsumerState<_ProfileTab>
+    with AutomaticKeepAliveClientMixin {
   static const _log = AppLogger('Settings.Profile');
-  final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+
+  String? _nameError;
+  String? _phoneError;
+  String? _addressError;
+  String? _bioError;
+  String? _saveError;
 
   /// Fallback khi API /regions/provinces lỗi — giữ nguyên danh mục cũ của app.
   static const List<Region> _fallbackProvinces = [
@@ -154,7 +167,15 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   ];
 
   static const _genderUnset = '__unset__';
-  static const _genders = [_genderUnset, 'Nam', 'Nữ', 'Khác'];
+  static const _genders = [
+    _genderUnset,
+    genderLabelMale,
+    genderLabelFemale,
+    genderLabelOther,
+  ];
+
+  @override
+  bool get wantKeepAlive => true;
 
   List<Region> _provinces = _fallbackProvinces;
   String _gender = _genderUnset;
@@ -213,6 +234,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     _addressDebounce?.cancel();
     _addressCtrl.removeListener(_onAddressInput);
     _nameCtrl.dispose();
+    _emailCtrl.dispose();
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
     _bioCtrl.dispose();
@@ -253,7 +275,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         );
       },
     );
-    if (source == null) return;
+    if (source == null || !mounted) return;
     final file = await ImagePicker().pickImage(
       source: source,
       imageQuality: 85,
@@ -267,7 +289,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       bytes: originalBytes,
       title: l10n.profileChangeAvatar,
     );
-    if (croppedBytes == null) return;
+    if (croppedBytes == null || !mounted) return;
     setState(() => _isUploadingAvatar = true);
     try {
       await ref
@@ -300,6 +322,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     );
     if (file == null) return;
     final bytes = await file.readAsBytes();
+    if (!mounted) return;
     if (bytes.length > 5 * 1024 * 1024) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -343,7 +366,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       lastDate: now,
       helpText: AppLocalizations.of(context)!.infoDob,
     );
-    if (picked != null) setState(() => _dob = picked);
+    if (picked != null && mounted) setState(() => _dob = picked);
   }
 
   Future<void> _showGenderChangeRequestDialog() async {
@@ -374,7 +397,11 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
               } catch (e) {
                 if (!ctx.mounted) return;
                 ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(l10n.settingsRequestFailed)),
+                  SnackBar(
+                    content: Text(
+                      ErrorParser.parse(e, l10n.settingsRequestFailed, l10n),
+                    ),
+                  ),
                 );
               } finally {
                 if (ctx.mounted) setState(() => isSubmitting = false);
@@ -446,26 +473,58 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     );
   }
 
-  Future<void> _save(bool genderLocked) async {
-    if (!_formKey.currentState!.validate()) return;
+  bool _validate(AppLocalizations l10n) {
+    final name = _nameCtrl.text.trim();
+    final phone = _phoneCtrl.text.trim();
+    String? nameError;
+    if (name.isEmpty) {
+      nameError = l10n.settingsFullNameRequired;
+    } else if (name.length < 2) {
+      nameError = l10n.settingsFullNameMin;
+    } else if (name.length > 100) {
+      nameError = l10n.settingsFullNameMax;
+    }
+    final phoneError = phone.isNotEmpty && !isValidVnPhone(phone)
+        ? l10n.settingsPhoneInvalid
+        : null;
+    final addressError = _addressCtrl.text.length > 255
+        ? l10n.settingsAddressMax
+        : null;
+    final bioError = _bioCtrl.text.length > 500 ? l10n.settingsBioMax : null;
+    setState(() {
+      _nameError = nameError;
+      _phoneError = phoneError;
+      _addressError = addressError;
+      _bioError = bioError;
+    });
+    return nameError == null &&
+        phoneError == null &&
+        addressError == null &&
+        bioError == null;
+  }
 
-    setState(() => _isLoading = true);
+  Future<void> _save(bool genderLocked) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (!_validate(l10n)) return;
+
+    setState(() {
+      _isLoading = true;
+      _saveError = null;
+    });
     _log.info('Bắt đầu cập nhật hồ sơ');
 
     try {
-      final payload = <String, dynamic>{
-        'fullName': _nameCtrl.text.trim(),
-        'phoneNumber': _phoneCtrl.text.trim(),
-        if (_dob != null)
-          'dateOfBirth':
-              '${_dob!.year.toString().padLeft(4, '0')}-${_dob!.month.toString().padLeft(2, '0')}-${_dob!.day.toString().padLeft(2, '0')}',
+      final payload = buildEditProfilePayload(
+        fullName: _nameCtrl.text,
+        phone: _phoneCtrl.text,
+        dateOfBirth: _dob,
         // Giới tính bị khóa sau khi hoàn thành giải — không gửi để tránh ghi đè.
-        if (!genderLocked && _gender != _genderUnset) 'gender': _gender,
-        if (_addressCtrl.text.trim().isNotEmpty)
-          'address': _addressCtrl.text.trim(),
-        if (_provinceCode.isNotEmpty) 'provinceCode': _provinceCode,
-        if (_bioCtrl.text.trim().isNotEmpty) 'bio': _bioCtrl.text.trim(),
-      };
+        gender: _gender == _genderUnset ? null : _gender,
+        genderLocked: genderLocked,
+        address: _addressCtrl.text,
+        provinceCode: _provinceCode,
+        bio: _bioCtrl.text,
+      );
 
       await ref.read(userRepositoryProvider).updateProfile(payload);
 
@@ -475,7 +534,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.settingsSaveChanges),
+            content: Text(l10n.settingsSaveChanges),
             backgroundColor: context.colors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -483,7 +542,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
       }
     } catch (e, stack) {
       _log.error('Lỗi cập nhật hồ sơ', e, stack);
-      if (mounted) _showError(e);
+      if (mounted) setState(() => _saveError = ErrorParser.parse(e, '', l10n));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -492,9 +551,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
   void _showError(Object e) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          '${AppLocalizations.of(context)!.errorPrefix}: ${e.toString().replaceAll('Exception: ', '')}',
-        ),
+        content: Text(ErrorParser.parse(e, '', AppLocalizations.of(context))),
         backgroundColor: context.colors.error,
         behavior: SnackBarBehavior.floating,
       ),
@@ -503,26 +560,25 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    super.build(context);
     final profileAsync = ref.watch(userProfileProvider);
 
     return profileAsync.when(
       data: (profile) {
         if (!_initialized) {
           _nameCtrl.text = profile.fullName ?? '';
+          _emailCtrl.text = profile.email ?? '';
           _phoneCtrl.text = profile.phoneNumber ?? '';
           _addressCtrl.text = profile.address ?? '';
           _bioCtrl.text = profile.bio ?? '';
-          _gender = _genders.contains(profile.gender)
-              ? (profile.gender ?? _genderUnset)
-              : _genderUnset;
+          // Backend trả MALE/FEMALE/OTHER; đưa về nhãn của màn.
+          _gender = normalizeGenderLabel(profile.gender) ?? _genderUnset;
           _provinceCode = profile.provinceCode ?? '';
           _dob = DateTime.tryParse(profile.dateOfBirth ?? '');
           _initialized = true;
         }
         final genderLocked = profile.isGenderLocked == true;
         return _buildForm(
-          colors,
           profile.avatarUrl,
           profile.coverUrl,
           profile.email,
@@ -530,18 +586,18 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
           genderLocked,
         );
       },
-      loading: () => const ScrollFreeSkeleton(child: FormSkeleton()),
-      error: (e, _) => _buildErrorState(
-        context,
-        colors,
-        AppLocalizations.of(context)!.settingsProfileLoadError,
-        () => ref.invalidate(userProfileProvider),
+      loading: () => const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: LavishRowSkeleton(count: 7),
+      ),
+      error: (e, _) => LavishErrorState(
+        message: AppLocalizations.of(context)!.settingsProfileLoadError,
+        onRetry: () => ref.invalidate(userProfileProvider),
       ),
     );
   }
 
   Widget _buildForm(
-    AppColorsExtension colors,
     String? avatarUrl,
     String? coverUrl,
     String? email,
@@ -549,288 +605,244 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     bool genderLocked,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LanguageSettingCard(key: const ValueKey('settings-language-card')),
-            const SizedBox(height: 16),
-            // Ảnh bìa + ảnh đại diện
-            _buildCoverAndAvatar(colors, avatarUrl, coverUrl, email, fullName),
-            const SizedBox(height: 24),
-            _card(colors, [
-              _fieldLabel(colors, l10n.fullNameLabel),
-              const SizedBox(height: 6),
-              AppTextFormField(
-                controller: _nameCtrl,
-                hint: l10n.settingsFullNameHint,
-                prefixIcon: Icons.person_outline,
-                validator: (v) {
-                  final value = v?.trim() ?? '';
-                  if (value.isEmpty) return l10n.settingsFullNameRequired;
-                  if (value.length < 2) return l10n.settingsFullNameMin;
-                  if (value.length > 100) return l10n.settingsFullNameMax;
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.emailLabel),
-              const SizedBox(height: 6),
-              AppTextFormField(
-                initialValue: email ?? '',
-                hint: 'email@domain.com',
-                prefixIcon: Icons.email_outlined,
-                enabled: false,
-              ),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.infoPhone),
-              const SizedBox(height: 6),
-              AppTextFormField(
-                controller: _phoneCtrl,
-                hint: '0912345678',
-                keyboardType: TextInputType.phone,
-                prefixIcon: Icons.phone_outlined,
-                validator: (v) {
-                  final value = v?.trim() ?? '';
-                  if (value.isEmpty) return null;
-                  return RegExp(r'^[0-9]{10,11}$').hasMatch(value)
-                      ? null
-                      : l10n.settingsPhoneInvalid;
-                },
-              ),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.infoDob),
-              const SizedBox(height: 6),
-              _dobField(colors),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.infoGender),
-              const SizedBox(height: 6),
-              _genderField(colors, genderLocked),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.settingsCompetitionRegion),
-              const SizedBox(height: 6),
-              _provinceField(colors),
-              const SizedBox(height: 4),
-              Text(
-                l10n.settingsCompetitionRegionHint,
-                style: TextStyle(fontSize: 11, color: colors.textMuted),
-              ),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.settingsDetailedAddress),
-              const SizedBox(height: 6),
-              AppTextFormField(
-                controller: _addressCtrl,
-                hint: l10n.settingsDetailedAddressHint,
-                prefixIcon: Icons.location_on_outlined,
-                validator: (v) =>
-                    (v ?? '').length > 255 ? l10n.settingsAddressMax : null,
-              ),
-              if (_autoDetectedProvinceName != null &&
-                  _provinceCode.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.auto_awesome,
-                      size: 14,
-                      color: AppTheme.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      l10n.settingsAutoDetected(_autoDetectedProvinceName!),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.primary,
+    final c = LavishColors.of(context);
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildCoverAndAvatar(c, avatarUrl, coverUrl, email, fullName),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      LavishTextField(
+                        label: l10n.fullNameLabel,
+                        controller: _nameCtrl,
+                        errorText: _nameError,
+                        onChanged: (_) => setState(() => _nameError = null),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      LavishTextField(
+                        label: l10n.emailLabel,
+                        controller: _emailCtrl,
+                        enabled: false,
+                      ),
+                      const SizedBox(height: 12),
+                      LavishTextField(
+                        label: l10n.infoPhone,
+                        controller: _phoneCtrl,
+                        keyboardType: TextInputType.phone,
+                        errorText: _phoneError,
+                        onChanged: (_) => setState(() => _phoneError = null),
+                      ),
+                      const SizedBox(height: 12),
+                      _dobField(c),
+                      const SizedBox(height: 12),
+                      _genderField(c, genderLocked),
+                      const SizedBox(height: 12),
+                      _provinceField(c),
+                      const SizedBox(height: 12),
+                      LavishTextField(
+                        label: l10n.settingsDetailedAddress,
+                        controller: _addressCtrl,
+                        errorText: _addressError,
+                        onChanged: (_) => setState(() => _addressError = null),
+                      ),
+                      if (_autoDetectedProvinceName != null &&
+                          _provinceCode.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: LavishPill(
+                            l10n.settingsAutoDetected(
+                              _autoDetectedProvinceName!,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      LavishTextField(
+                        label: l10n.settingsBio,
+                        controller: _bioCtrl,
+                        maxLines: 3,
+                        errorText: _bioError,
+                        onChanged: (_) => setState(() => _bioError = null),
+                      ),
+                    ],
+                  ),
                 ),
+                const _VerificationSection(),
+                const SizedBox(height: 16),
               ],
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.settingsBio),
-              const SizedBox(height: 6),
-              AppTextFormField(
-                controller: _bioCtrl,
-                hint: l10n.settingsBioHint,
-                maxLines: 3,
-                prefixIcon: Icons.edit_note_rounded,
-                validator: (v) =>
-                    (v ?? '').length > 500 ? l10n.settingsBioMax : null,
-              ),
-              const SizedBox(height: 24),
-              _saveButton(context, _isLoading, () => _save(genderLocked)),
-            ]),
-            const SizedBox(height: 24),
-            const _VerificationSection(),
-            const SizedBox(height: 32),
-          ],
+            ),
+          ),
         ),
-      ),
+        LavishStickyBar(
+          label: l10n.settingsSaveButton,
+          busy: _isLoading,
+          error: _saveError,
+          onPressed: () => _save(genderLocked),
+        ),
+      ],
     );
   }
 
+  /// Bìa thấp (96) + avatar 72 gối lên mép dưới bìa; tên/email nằm dưới bìa.
   Widget _buildCoverAndAvatar(
-    AppColorsExtension colors,
+    LavishColors c,
     String? avatarUrl,
     String? coverUrl,
     String? email,
     String? fullName,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.bgCard,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: colors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
+    final l10n = AppLocalizations.of(context)!;
+    const coverHeight = 96.0;
+    const avatarRadius = 36.0;
+    const avatarRing = 3.0;
+    const avatarBox = (avatarRadius + avatarRing) * 2;
+    const overlap = 32.0;
+    return SizedBox(
+      height: coverHeight + avatarBox - overlap + 8,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // Banner ảnh bìa
-          Stack(
-            fit: StackFit.loose,
-            children: [
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppTheme.primary,
-                      AppTheme.primary.withValues(alpha: 0.6),
-                    ],
-                  ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            height: coverHeight,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    LavishColors.accent,
+                    LavishColors.accent.withValues(alpha: 0.55),
+                  ],
                 ),
-                child: coverUrl == null
-                    ? null
-                    : Image.network(
-                        coverUrl,
-                        fit: BoxFit.cover,
-                        height: 120,
-                        width: double.infinity,
-                      ),
               ),
-              Positioned(
-                right: 10,
-                bottom: 10,
-                child: Material(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(8),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: _isUploadingCover ? null : _pickAndUploadCover,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_isUploadingCover)
-                            const SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          else
-                            const Icon(
-                              Icons.camera_alt_rounded,
-                              size: 13,
-                              color: Colors.white,
-                            ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _isUploadingCover
-                                ? (AppLocalizations.of(
-                                    context,
-                                  )!.settingsUploading)
-                                : (AppLocalizations.of(
-                                    context,
-                                  )!.settingsChangeCover),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+              child: coverUrl == null
+                  ? null
+                  : Image.network(
+                      coverUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
                     ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-          // Avatar
-          Transform.translate(
-            offset: const Offset(0, -36),
-            child: Column(
-              children: [
-                GestureDetector(
-                  onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.bgCard, width: 4),
-                    ),
-                    child: CircleAvatar(
-                      radius: 44,
-                      backgroundColor: colors.bgCard,
-                      backgroundImage: avatarUrl == null
-                          ? null
-                          : NetworkImage(avatarUrl),
-                      child: _isUploadingAvatar
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : avatarUrl == null
-                          ? Text(
-                              (fullName?.isNotEmpty ?? false)
-                                  ? fullName![0].toUpperCase()
-                                  : 'U',
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          Positioned(
+            right: 6,
+            top: 6,
+            child: IconButton(
+              tooltip: l10n.settingsChangeCover,
+              onPressed: _isUploadingCover ? null : _pickAndUploadCover,
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.black.withValues(alpha: 0.5),
+                foregroundColor: Colors.white,
+                disabledForegroundColor: Colors.white,
+                minimumSize: const Size(48, 48),
+              ),
+              icon: _isUploadingCover
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.photo_camera_rounded, size: 20),
+            ),
+          ),
+          Positioned(
+            left: 14,
+            top: coverHeight - overlap,
+            child: Tooltip(
+              message: l10n.settingsTapToChangeAvatar,
+              child: GestureDetector(
+                onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
+                child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Icon(
-                      Icons.camera_alt_rounded,
-                      size: 12,
-                      color: colors.textMuted,
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: c.surface,
+                      ),
+                      padding: const EdgeInsets.all(avatarRing),
+                      child: CircleAvatar(
+                        radius: avatarRadius,
+                        backgroundColor: c.soft(LavishTone.accent),
+                        backgroundImage: avatarUrl == null
+                            ? null
+                            : NetworkImage(avatarUrl),
+                        child: _isUploadingAvatar
+                            ? const SizedBox.square(
+                                dimension: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : avatarUrl == null
+                            ? Text(
+                                firstInitial(fullName),
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  color: LavishColors.accent,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      AppLocalizations.of(context)!.settingsTapToChangeAvatar,
-                      style: TextStyle(fontSize: 11, color: colors.textMuted),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: LavishColors.accent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: c.surface, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.photo_camera_rounded,
+                          size: 12,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 14 + avatarBox + 12,
+            right: 14,
+            top: coverHeight + 8,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fullName ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: c.text,
+                  ),
+                ),
                 Text(
                   email ?? '',
-                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: c.muted),
                 ),
-                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -839,97 +851,73 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
     );
   }
 
-  Widget _dobField(AppColorsExtension colors) {
+  Widget _dobField(LavishColors c) {
     final l10n = AppLocalizations.of(context)!;
     return InkWell(
       onTap: _pickDob,
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          border: Border.all(color: colors.border),
+      borderRadius: BorderRadius.circular(12),
+      child: InputDecorator(
+        isEmpty: false,
+        decoration: _fieldDecoration(c, l10n.infoDob).copyWith(
+          suffixIcon: Icon(Icons.calendar_month_rounded, color: c.muted),
         ),
-        child: Row(
-          children: [
-            Icon(Icons.cake_rounded, size: 18, color: colors.textMuted),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                _dob == null
-                    ? l10n.settingsChooseDateOfBirth
-                    : l10n.settingsDobDisplay(
-                        _dob!.day.toString().padLeft(2, '0'),
-                        _dob!.month.toString().padLeft(2, '0'),
-                        _dob!.year.toString(),
-                      ),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: _dob == null ? colors.textMuted : colors.textPrimary,
+        child: Text(
+          _dob == null
+              ? l10n.settingsChooseDateOfBirth
+              : l10n.settingsDobDisplay(
+                  _dob!.day.toString().padLeft(2, '0'),
+                  _dob!.month.toString().padLeft(2, '0'),
+                  _dob!.year.toString(),
                 ),
-              ),
-            ),
-            Icon(
-              Icons.calendar_month_rounded,
-              size: 18,
-              color: colors.textMuted,
-            ),
-          ],
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: _dob == null ? c.faint : c.text,
+          ),
         ),
       ),
     );
   }
 
-  Widget _genderField(AppColorsExtension colors, bool locked) {
+  Widget _genderField(LavishColors c, bool locked) {
     final l10n = AppLocalizations.of(context)!;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _dropdown(
-          colors,
+          c,
+          l10n.infoGender,
           _gender,
           _genders,
           locked ? null : (v) => setState(() => _gender = v ?? _genderUnset),
           displayLabels: {
             _genderUnset: l10n.settingsGenderNotSelected,
-            'Nam': l10n.settingsGenderMale,
-            'Nữ': l10n.settingsGenderFemale,
-            'Khác': l10n.settingsGenderOther,
+            genderLabelMale: l10n.settingsGenderMale,
+            genderLabelFemale: l10n.settingsGenderFemale,
+            genderLabelOther: l10n.settingsGenderOther,
           },
         ),
         if (locked)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.settingsGenderLocked,
-                    style: TextStyle(fontSize: 11, color: colors.textSecondary),
-                  ),
-                ),
-                TextButton(
-                  onPressed: _showGenderChangeRequestDialog,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    l10n.settingsRequestGenderChange,
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
+          LavishRow(
+            leading: const LavishIconBox(
+              tone: LavishTone.warn,
+              child: Icon(Icons.lock_outline_rounded),
             ),
+            title: l10n.settingsGenderLocked,
+            trailing: [
+              LavishButton(
+                label: l10n.settingsRequestGenderChange,
+                kind: LavishButtonKind.outline,
+                dense: true,
+                onPressed: _showGenderChangeRequestDialog,
+              ),
+            ],
           ),
       ],
     );
   }
 
-  Widget _provinceField(AppColorsExtension colors) {
+  Widget _provinceField(LavishColors c) {
     final l10n = AppLocalizations.of(context)!;
     // Mã tỉnh đã lưu không có trong danh sách (VD: API thiếu) — vẫn hiển thị để không mất dữ liệu.
     final codes = _provinces.map((province) => province.code).toSet();
@@ -939,7 +927,8 @@ class _ProfileTabState extends ConsumerState<_ProfileTab> {
         .firstOrNull
         ?.name;
     return _dropdown(
-      colors,
+      c,
+      l10n.settingsCompetitionRegion,
       currentName ?? l10n.settingsNoTierSRegion,
       [l10n.settingsNoTierSRegion, ...items.map((province) => province.name)],
       (v) {
@@ -970,9 +959,9 @@ class _BankTab extends ConsumerStatefulWidget {
   ConsumerState<_BankTab> createState() => _BankTabState();
 }
 
-class _BankTabState extends ConsumerState<_BankTab> {
+class _BankTabState extends ConsumerState<_BankTab>
+    with AutomaticKeepAliveClientMixin {
   static const _log = AppLogger('Settings.Bank');
-  final _formKey = GlobalKey<FormState>();
   final _accountNumberCtrl = TextEditingController();
   final _accountNameCtrl = TextEditingController();
 
@@ -994,8 +983,12 @@ class _BankTabState extends ConsumerState<_BankTab> {
   ];
 
   String _bankName = _noBank;
+  String? _saveError;
   bool _isLoading = false;
   bool _initialized = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   bool get _isWallet => _wallets.contains(_bankName);
 
@@ -1006,88 +999,13 @@ class _BankTabState extends ConsumerState<_BankTab> {
     super.dispose();
   }
 
-  /// Viết hoa + bỏ dấu (NFD) như web: NGUYEN VAN A.
-  String _normalizeAccountName(String value) {
-    const diacriticsMap = {
-      'À': 'A',
-      'Á': 'A',
-      'Ạ': 'A',
-      'Ả': 'A',
-      'Ã': 'A',
-      'Â': 'A',
-      'Ầ': 'A',
-      'Ấ': 'A',
-      'Ậ': 'A',
-      'Ẩ': 'A',
-      'Ẫ': 'A',
-      'Ă': 'A',
-      'Ằ': 'A',
-      'Ắ': 'A',
-      'Ặ': 'A',
-      'Ẳ': 'A',
-      'Ẵ': 'A',
-      'Đ': 'D',
-      'È': 'E',
-      'É': 'E',
-      'Ẹ': 'E',
-      'Ẻ': 'E',
-      'Ẽ': 'E',
-      'Ê': 'E',
-      'Ề': 'E',
-      'Ế': 'E',
-      'Ệ': 'E',
-      'Ể': 'E',
-      'Ễ': 'E',
-      'Ì': 'I',
-      'Í': 'I',
-      'Ị': 'I',
-      'Ỉ': 'I',
-      'Ĩ': 'I',
-      'Ò': 'O',
-      'Ó': 'O',
-      'Ọ': 'O',
-      'Ỏ': 'O',
-      'Õ': 'O',
-      'Ô': 'O',
-      'Ồ': 'O',
-      'Ố': 'O',
-      'Ộ': 'O',
-      'Ổ': 'O',
-      'Ỗ': 'O',
-      'Ơ': 'O',
-      'Ờ': 'O',
-      'Ớ': 'O',
-      'Ợ': 'O',
-      'Ở': 'O',
-      'Ỡ': 'O',
-      'Ù': 'U',
-      'Ú': 'U',
-      'Ụ': 'U',
-      'Ủ': 'U',
-      'Ũ': 'U',
-      'Ư': 'U',
-      'Ừ': 'U',
-      'Ứ': 'U',
-      'Ự': 'U',
-      'Ử': 'U',
-      'Ữ': 'U',
-      'Ỳ': 'Y',
-      'Ỵ': 'Y',
-      'Ỷ': 'Y',
-      'Ỹ': 'Y',
-    };
-    return value
-        .toUpperCase()
-        .split('')
-        .map((char) => diacriticsMap[char] ?? char)
-        .join();
-  }
-
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
-    if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _saveError = null;
+    });
     _log.info('Bắt đầu lưu thông tin ngân hàng');
 
     try {
@@ -1095,7 +1013,9 @@ class _BankTabState extends ConsumerState<_BankTab> {
       await repo.updateProfile({
         'bankName': _bankName == _noBank ? '' : _bankName,
         'bankAccountNumber': _accountNumberCtrl.text.trim(),
-        'bankAccountName': _normalizeAccountName(_accountNameCtrl.text.trim()),
+        'bankAccountName': normalizeBankAccountName(
+          _accountNameCtrl.text.trim(),
+        ),
       });
 
       _log.success('Lưu thông tin ngân hàng thành công');
@@ -1112,15 +1032,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
       }
     } catch (e, stack) {
       _log.error('Lỗi lưu thông tin ngân hàng', e, stack);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsBankUpdateError),
-            backgroundColor: context.colors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      if (mounted) setState(() => _saveError = ErrorParser.parse(e, '', l10n));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -1128,7 +1040,7 @@ class _BankTabState extends ConsumerState<_BankTab> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    super.build(context);
     final profileAsync = ref.watch(userProfileProvider);
 
     return profileAsync.when(
@@ -1140,20 +1052,22 @@ class _BankTabState extends ConsumerState<_BankTab> {
           _accountNameCtrl.text = profile.bankAccountName ?? '';
           _initialized = true;
         }
-        return _buildForm(colors);
+        return _buildForm();
       },
-      loading: () => const ScrollFreeSkeleton(child: FormSkeleton()),
-      error: (e, _) => _buildErrorState(
-        context,
-        colors,
-        AppLocalizations.of(context)!.settingsBankLoadError,
-        () => ref.invalidate(userProfileProvider),
+      loading: () => const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: LavishRowSkeleton(count: 4),
+      ),
+      error: (e, _) => LavishErrorState(
+        message: AppLocalizations.of(context)!.settingsBankLoadError,
+        onRetry: () => ref.invalidate(userProfileProvider),
       ),
     );
   }
 
-  Widget _buildForm(AppColorsExtension colors) {
+  Widget _buildForm() {
     final l10n = AppLocalizations.of(context)!;
+    final c = LavishColors.of(context);
     final noBank = l10n.settingsNoBank;
     String walletPrefix(String wallet) => l10n.settingsWalletPrefix(wallet);
     final bankOptions = [noBank, ..._wallets.map(walletPrefix), ..._banks];
@@ -1169,110 +1083,84 @@ class _BankTabState extends ConsumerState<_BankTab> {
         : _bankName;
     if (!isKnown) bankOptions.add(_bankName);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _infoBanner(colors),
-            const SizedBox(height: 20),
-            _card(colors, [
-              _fieldLabel(colors, l10n.settingsPayoutMethod),
-              const SizedBox(height: 6),
-              _dropdown(colors, currentLabel, bankOptions, (v) {
-                if (v == null) return;
-                setState(() {
-                  if (v == noBank) {
-                    _bankName = _noBank;
-                    return;
-                  }
-                  String? selectedWallet;
-                  for (final wallet in _wallets) {
-                    if (walletPrefix(wallet) == v) {
-                      selectedWallet = wallet;
-                      break;
-                    }
-                  }
-                  _bankName = selectedWallet ?? v;
-                });
-              }),
-              const SizedBox(height: 16),
-              _fieldLabel(
-                colors,
-                _isWallet
-                    ? (l10n.settingsWalletPhone)
-                    : (l10n.settingsAccountNumber),
-              ),
-              const SizedBox(height: 6),
-              AppTextFormField(
-                controller: _accountNumberCtrl,
-                hint: _isWallet
-                    ? (l10n.settingsWalletNumberHint)
-                    : (l10n.settingsBankNumberHint),
-                keyboardType: TextInputType.number,
-                prefixIcon: Icons.numbers_rounded,
-              ),
-              const SizedBox(height: 16),
-              _fieldLabel(colors, l10n.settingsAccountHolder),
-              const SizedBox(height: 6),
-              AppTextFormField(
-                controller: _accountNameCtrl,
-                hint: l10n.settingsAccountHolderHint,
-                prefixIcon: Icons.person_rounded,
-                onChanged: (value) {
-                  final normalized = _normalizeAccountName(value);
-                  if (normalized != value) {
-                    final selection = _accountNameCtrl.selection;
-                    _accountNameCtrl.value = TextEditingValue(
-                      text: normalized,
-                      selection: selection,
-                    );
-                  }
-                },
-              ),
-              const SizedBox(height: 24),
-              _saveButton(context, _isLoading, _save),
-            ]),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _infoBanner(AppColorsExtension colors) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.lock_rounded,
-            size: 18,
-            color: AppTheme.primary.withValues(alpha: 0.8),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              l10n.settingsRefundInfo,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.5,
-                color: colors.textSecondary,
-              ),
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                LavishRow(
+                  leading: const LavishIconBox(child: Icon(Icons.lock_rounded)),
+                  title: l10n.settingsRefundInfo,
+                  subtitleMaxLines: 1,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _dropdown(
+                        c,
+                        l10n.settingsPayoutMethod,
+                        currentLabel,
+                        bankOptions,
+                        (v) {
+                          if (v == null) return;
+                          setState(() {
+                            if (v == noBank) {
+                              _bankName = _noBank;
+                              return;
+                            }
+                            String? selectedWallet;
+                            for (final wallet in _wallets) {
+                              if (walletPrefix(wallet) == v) {
+                                selectedWallet = wallet;
+                                break;
+                              }
+                            }
+                            _bankName = selectedWallet ?? v;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      LavishTextField(
+                        label: _isWallet
+                            ? l10n.settingsWalletPhone
+                            : l10n.settingsAccountNumber,
+                        controller: _accountNumberCtrl,
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 12),
+                      LavishTextField(
+                        label: l10n.settingsAccountHolder,
+                        controller: _accountNameCtrl,
+                        onChanged: (value) {
+                          final normalized = normalizeBankAccountName(value);
+                          if (normalized != value) {
+                            final selection = _accountNameCtrl.selection;
+                            _accountNameCtrl.value = TextEditingValue(
+                              text: normalized,
+                              selection: selection,
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+        LavishStickyBar(
+          label: l10n.settingsSaveButton,
+          busy: _isLoading,
+          error: _saveError,
+          onPressed: _save,
+        ),
+      ],
     );
   }
 }
@@ -1285,98 +1173,55 @@ class _OrganizerTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final profileAsync = ref.watch(userProfileProvider);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _sectionTitle(colors, l10n.accountSettingsOrganizerRoleTitle),
-          const SizedBox(height: 10),
+          LavishGroupHeader(l10n.accountSettingsOrganizerRoleTitle),
           profileAsync.when(
             data: (profile) {
               final isOrganizer = profile.hasRole('ORGANIZER');
-              final accent = isOrganizer ? colors.success : AppTheme.primary;
-              return _card(colors, [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  LavishRow(
+                    leading: LavishIconBox(
+                      tone: isOrganizer ? LavishTone.ok : LavishTone.accent,
                       child: Icon(
                         isOrganizer
                             ? Icons.verified_rounded
                             : Icons.how_to_reg_outlined,
-                        color: accent,
-                        size: 22,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isOrganizer
-                                ? l10n.accountSettingsOrganizerVerified
-                                : l10n.accountSettingsOrganizerNotRegistered,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isOrganizer
-                                ? l10n.accountSettingsOrganizerVerifiedDescription
-                                : l10n.accountSettingsOrganizerDescription,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              height: 1.4,
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                if (!isOrganizer) ...[
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 44,
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () => OrganizerVerificationSheet.show(context),
-                      icon: const Icon(Icons.how_to_reg_rounded, size: 18),
-                      label: Text(
-                        l10n.accountSettingsOrganizerOpenApplication,
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
+                    title: isOrganizer
+                        ? l10n.accountSettingsOrganizerVerified
+                        : l10n.accountSettingsOrganizerNotRegistered,
+                    subtitle: isOrganizer
+                        ? l10n.accountSettingsOrganizerVerifiedDescription
+                        : l10n.accountSettingsOrganizerDescription,
+                    subtitleMaxLines: 3,
                   ),
+                  if (!isOrganizer)
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: LavishButton(
+                        label: l10n.accountSettingsOrganizerOpenApplication,
+                        icon: const Icon(Icons.how_to_reg_rounded, size: 18),
+                        onPressed: () =>
+                            OrganizerVerificationSheet.show(context),
+                      ),
+                    ),
                 ],
-              ]);
+              );
             },
-            loading: () => const RowTileSkeleton(),
-            error: (_, _) => _buildErrorState(
-              context,
-              colors,
-              l10n.settingsStatusLoadError,
-              () => ref.invalidate(userProfileProvider),
+            loading: () => const LavishRowSkeleton(count: 1),
+            error: (_, _) => LavishErrorState(
+              message: l10n.settingsStatusLoadError,
+              onRetry: () => ref.invalidate(userProfileProvider),
             ),
           ),
         ],
@@ -1393,78 +1238,62 @@ class _VerificationSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final profileAsync = ref.watch(userProfileProvider);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Trạng thái xác thực
-        _sectionTitle(colors, l10n.settingsVerificationStatus),
-        const SizedBox(height: 10),
-        _card(colors, [
-          ...profileAsync.when(
-            data: (profile) => [
-              _securityRow(
+        LavishGroupHeader(l10n.settingsVerificationStatus),
+        ...profileAsync.when(
+          data: (profile) => [
+            _verifyRow(
+              context,
+              icon: Icons.email_outlined,
+              title: l10n.emailLabel,
+              verified: profile.isEmailVerified == true,
+              value: profile.email,
+            ),
+            _verifyRow(
+              context,
+              icon: Icons.phone_android_rounded,
+              title: l10n.infoPhone,
+              verified: profile.isPhoneVerified == true,
+              value: profile.phoneNumber ?? l10n.settingsPhoneNotUpdated,
+            ),
+            if (profile.isEmailVerified != true)
+              _actionRow(
                 context,
-                colors,
-                icon: Icons.email_outlined,
-                title: l10n.emailLabel,
-                verified: profile.isEmailVerified == true,
-                fallbackText: profile.email,
+                icon: Icons.mark_email_unread_rounded,
+                title: l10n.settingsVerifyEmail,
+                subtitle: l10n.settingsVerifyEmailSubtitle,
+                onTap: () => startEmailVerificationFlow(
+                  context,
+                  ref,
+                  profile.email ?? '',
+                ),
               ),
-              _divider(colors),
-              _securityRow(
+            if (profile.isPhoneVerified != true)
+              _actionRow(
                 context,
-                colors,
-                icon: Icons.phone_android_rounded,
-                title: l10n.infoPhone,
-                verified: profile.isPhoneVerified == true,
-                fallbackText:
-                    profile.phoneNumber ?? (l10n.settingsPhoneNotUpdated),
-              ),
-              if (profile.isEmailVerified != true) ...[
-                _divider(colors),
-                _actionRow(
-                  colors,
-                  icon: Icons.mark_email_unread_rounded,
-                  title: l10n.settingsVerifyEmail,
-                  subtitle: l10n.settingsVerifyEmailSubtitle,
-                  onTap: () => startEmailVerificationFlow(
-                    context,
-                    ref,
-                    profile.email ?? '',
-                  ),
-                ),
-              ],
-              if (profile.isPhoneVerified != true) ...[
-                _divider(colors),
-                _actionRow(
-                  colors,
-                  icon: Icons.sms_rounded,
-                  title: l10n.settingsVerifyPhone,
-                  subtitle: l10n.settingsVerifyPhoneSubtitle,
-                  onTap: () => startPhoneVerificationFlow(
-                    context,
-                    ref,
-                    profile.phoneNumber ?? '',
-                  ),
-                ),
-              ],
-            ],
-            loading: () => [const RowTileSkeleton()],
-            error: (_, _) => [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  l10n.settingsStatusLoadError,
-                  style: TextStyle(color: colors.textSecondary),
+                icon: Icons.sms_rounded,
+                title: l10n.settingsVerifyPhone,
+                subtitle: l10n.settingsVerifyPhoneSubtitle,
+                onTap: () => startPhoneVerificationFlow(
+                  context,
+                  ref,
+                  profile.phoneNumber ?? '',
                 ),
               ),
-            ],
-          ),
-        ]),
+          ],
+          loading: () => [const LavishRowSkeleton(count: 2)],
+          error: (_, _) => [
+            LavishErrorState(
+              message: l10n.settingsStatusLoadError,
+              onRetry: () => ref.invalidate(userProfileProvider),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1476,256 +1305,173 @@ class _VerificationSection extends ConsumerWidget {
 class _SecurityTab extends ConsumerWidget {
   const _SecurityTab();
 
+  static const _log = AppLogger('Settings.Security');
+
   Future<void> _confirmDeleteAccount(
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final passwordCtrl = TextEditingController();
-    var obscure = true;
-    var isDeleting = false;
-    final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
+    // Lấy sẵn mọi thứ cần dùng sau await: widget có thể đã bị gỡ khi xong.
+    final repo = ref.read(userRepositoryProvider);
+    final auth = ref.read(authProvider.notifier);
+    final container = ProviderScope.containerOf(context);
+    final router = GoRouter.of(context);
 
-    await showDialog<void>(
+    final deleted = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            Future<void> delete() async {
-              final password = passwordCtrl.text;
-              if (password.isEmpty) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(l10n.settingsPasswordRequired)),
-                );
-                return;
-              }
-              setState(() => isDeleting = true);
-              try {
-                await ref.read(userRepositoryProvider).deleteAccount(password);
-                if (!ctx.mounted) return;
-                Navigator.of(ctx).pop();
-                await ref.read(authProvider.notifier).signOut();
-                ref.invalidate(userProfileProvider);
-                if (context.mounted) context.go('/home');
-              } catch (e) {
-                if (!ctx.mounted) return;
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  SnackBar(content: Text(l10n.settingsDeleteFailed)),
-                );
-              } finally {
-                if (ctx.mounted) setState(() => isDeleting = false);
-              }
-            }
-
-            return AlertDialog(
-              backgroundColor: colors.bgCard,
-              title: Row(
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: colors.error),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(l10n.settingsConfirmDeleteTitle)),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.settingsDeleteIrreversible,
-                    style: const TextStyle(fontSize: 13, height: 1.5),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: passwordCtrl,
-                    enabled: !isDeleting,
-                    obscureText: obscure,
-                    decoration: InputDecoration(
-                      labelText: l10n.settingsConfirmPassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscure
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                        ),
-                        onPressed: () => setState(() => obscure = !obscure),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isDeleting ? null : () => Navigator.of(ctx).pop(),
-                  child: Text(l10n.commonCancel),
-                ),
-                FilledButton(
-                  onPressed: isDeleting ? null : delete,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colors.error,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: isDeleting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(l10n.settingsConfirmDelete),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => _DeleteAccountDialog(onDelete: repo.deleteAccount),
     );
+    if (deleted != true) return;
 
-    passwordCtrl.dispose();
+    // Tài khoản đã xóa trên Backend: luôn kết thúc phiên cục bộ và về /home,
+    // dù signOut có lỗi.
+    try {
+      await auth.signOut();
+    } catch (e, stack) {
+      _log.error('signOut sau khi xóa tài khoản lỗi', e, stack);
+    } finally {
+      container.invalidate(userProfileProvider);
+      router.go('/home');
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Đổi mật khẩu
-          _sectionTitle(colors, l10n.settingsPasswordSection),
-          const SizedBox(height: 10),
-          _card(colors, [
-            _actionRow(
-              colors,
-              icon: Icons.lock_outline_rounded,
-              title: l10n.settingsChangePassword,
-              subtitle: l10n.settingsChangePasswordSubtitle,
-              onTap: () => context.push('/profile/change-password'),
-            ),
-            _divider(colors),
-            _actionRow(
-              colors,
-              icon: Icons.security_rounded,
-              title: l10n.settingsStrongPassword,
-              subtitle: l10n.settingsStrongPasswordSubtitle,
-              trailing: Icon(
-                Icons.check_circle_rounded,
-                color: colors.success,
-                size: 20,
-              ),
-            ),
-          ]),
-          const SizedBox(height: 24),
-
-          // Phiên đăng nhập
-          _sectionTitle(colors, l10n.settingsSessions),
-          const SizedBox(height: 10),
-          _card(colors, [
-            _actionRow(
-              colors,
-              icon: Icons.devices_rounded,
-              title: l10n.settingsCurrentDevice,
-              subtitle: l10n.settingsActive,
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.success.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  l10n.settingsOnline,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: colors.success,
-                  ),
-                ),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 24),
-
-          // Quyền riêng tư
+          LavishGroupHeader(l10n.settingsPasswordSection),
+          _actionRow(
+            context,
+            icon: Icons.lock_outline_rounded,
+            title: l10n.settingsChangePassword,
+            subtitle: l10n.settingsChangePasswordSubtitle,
+            onTap: () => context.push('/profile/change-password'),
+          ),
           const _StrangerMessagesSettingsCard(),
-          const SizedBox(height: 24),
-
-          // Thông báo Câu lạc bộ
           const _ClubNotificationSettingsCard(),
-          const SizedBox(height: 24),
-
-          // Vùng nguy hiểm
-          _sectionTitle(colors, l10n.settingsDangerZone),
-          const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              border: Border.all(color: colors.error.withValues(alpha: 0.35)),
+          LavishGroupHeader(l10n.settingsDangerZone),
+          LavishRow(
+            leading: const LavishIconBox(
+              tone: LavishTone.bad,
+              child: Icon(Icons.shield_outlined),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.shield_outlined, size: 18, color: colors.error),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.settingsDeleteAccountTitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: colors.error,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.settingsDeleteAccountDescription,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.5,
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 44,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _confirmDeleteAccount(context, ref),
-                    icon: const Icon(Icons.delete_forever_rounded, size: 18),
-                    label: Text(
-                      l10n.settingsDeleteAccount,
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colors.error,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppTheme.radiusMedium,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            title: l10n.settingsDeleteAccountTitle,
+            subtitle: l10n.settingsDeleteAccountDescription,
+            subtitleMaxLines: 4,
+            titleColor: LavishColors.bad,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: LavishButton(
+              label: l10n.settingsDeleteAccount,
+              kind: LavishButtonKind.danger,
+              icon: const Icon(Icons.delete_forever_rounded, size: 18),
+              onPressed: () => _confirmDeleteAccount(context, ref),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+}
+
+/// Hộp thoại xác nhận xóa tài khoản. Sở hữu [TextEditingController] để dispose
+/// đúng lúc (sau khi route đóng xong), trả `true` khi xóa thành công.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog({required this.onDelete});
+
+  final Future<void> Function(String password) onDelete;
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  static const _log = AppLogger('Settings.DeleteAccount');
+  final _passwordCtrl = TextEditingController();
+  bool _isDeleting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _passwordCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _delete(AppLocalizations l10n) async {
+    final password = _passwordCtrl.text;
+    if (password.isEmpty) {
+      setState(() => _error = l10n.settingsPasswordRequired);
+      return;
+    }
+    setState(() {
+      _isDeleting = true;
+      _error = null;
+    });
+    try {
+      await widget.onDelete(password);
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (e, stack) {
+      _log.error('Xóa tài khoản lỗi', e, stack);
+      // Hiện lỗi thật (sai mật khẩu, mất mạng...) ngay trong hộp thoại.
+      if (mounted) {
+        setState(() {
+          _error = ErrorParser.parse(e, '', l10n);
+          _isDeleting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      backgroundColor: colors.bgCard,
+      title: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: colors.error),
+          const SizedBox(width: 8),
+          Expanded(child: Text(l10n.settingsConfirmDeleteTitle)),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.settingsDeleteIrreversible,
+            style: const TextStyle(fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 16),
+          LavishTextField(
+            label: l10n.settingsConfirmPassword,
+            controller: _passwordCtrl,
+            enabled: !_isDeleting,
+            obscure: true,
+            errorText: _error,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isDeleting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+        LavishButton(
+          label: l10n.settingsConfirmDelete,
+          kind: LavishButtonKind.danger,
+          busy: _isDeleting,
+          onPressed: () => _delete(l10n),
+        ),
+      ],
     );
   }
 }
@@ -1763,7 +1509,7 @@ class _StrangerMessagesSettingsCardState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.settingsStrangerMessagesUpdated)),
       );
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         _value = previousValue;
@@ -1771,69 +1517,54 @@ class _StrangerMessagesSettingsCardState
       });
       final l = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.settingsStrangerMessagesUpdateError)),
+        SnackBar(
+          content: Text(
+            ErrorParser.parse(e, l.settingsStrangerMessagesUpdateError, l),
+          ),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final l = AppLocalizations.of(context)!;
     final profileAsync = ref.watch(userProfileProvider);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sectionTitle(colors, l.settingsPrivacyTitle),
-        const SizedBox(height: 10),
-        _card(colors, [
-          profileAsync.when(
-            data: (profile) {
-              final currentValue =
-                  _value ?? profile.allowStrangerMessages ?? false;
-              return Material(
-                type: MaterialType.transparency,
-                child: SwitchListTile.adaptive(
-                  contentPadding: EdgeInsets.zero,
-                  secondary: Icon(
-                    Icons.mark_unread_chat_alt_outlined,
-                    color: AppTheme.primary,
-                  ),
-                  title: Text(
-                    l.settingsStrangerMessages,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '${currentValue ? l.settingsStrangerMessagesOn : l.settingsStrangerMessagesOff}\n${l.settingsStrangerMessagesDescription}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.35,
-                      color: colors.textSecondary,
-                    ),
-                  ),
+        LavishGroupHeader(l.settingsPrivacyTitle),
+        profileAsync.when(
+          data: (profile) {
+            final currentValue =
+                _value ?? profile.allowStrangerMessages ?? false;
+            return LavishRow(
+              leading: const LavishIconBox(
+                child: Icon(Icons.mark_unread_chat_alt_outlined),
+              ),
+              title: l.settingsStrangerMessages,
+              subtitle: currentValue
+                  ? l.settingsStrangerMessagesOn
+                  : l.settingsStrangerMessagesOff,
+              onTap: _isUpdating
+                  ? null
+                  : () => _update(!currentValue, currentValue),
+              trailing: [
+                LavishSwitch(
                   value: currentValue,
                   onChanged: _isUpdating
                       ? null
                       : (value) => _update(value, currentValue),
-                  activeThumbColor: AppTheme.primary,
                 ),
-              );
-            },
-            loading: () => const RowTileSkeleton(),
-            error: (_, _) => Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                l.settingsStrangerMessagesUpdateError,
-                style: TextStyle(color: colors.textSecondary),
-              ),
-            ),
+              ],
+            );
+          },
+          loading: () => const LavishRowSkeleton(count: 1),
+          error: (_, _) => LavishErrorState(
+            onRetry: () => ref.invalidate(userProfileProvider),
           ),
-        ]),
+        ),
       ],
     );
   }
@@ -1851,7 +1582,9 @@ class _ClubNotificationSettingsCardState
     extends ConsumerState<_ClubNotificationSettingsCard> {
   List<ClubNotificationPrefModel>? _prefs;
   bool _isLoading = true;
-  String? _updatingClubId;
+  bool _loadFailed = false;
+  static const _log = AppLogger('Settings.ClubNotifications');
+  final Set<String> _updatingClubIds = {};
 
   @override
   void initState() {
@@ -1860,6 +1593,10 @@ class _ClubNotificationSettingsCardState
   }
 
   Future<void> _loadPrefs() async {
+    setState(() {
+      _isLoading = true;
+      _loadFailed = false;
+    });
     try {
       final list = await ref
           .read(communityRepositoryProvider)
@@ -1870,29 +1607,40 @@ class _ClubNotificationSettingsCardState
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e, stack) {
+      _log.error('Lỗi tải thông báo CLB', e, stack);
+      // Lỗi tải khác "không có CLB": hiện lỗi + thử lại thay vì danh sách rỗng.
       if (mounted) {
         setState(() {
-          _prefs = [];
+          _loadFailed = true;
           _isLoading = false;
         });
       }
     }
   }
 
+  String? _prefOf(String communityId) => _prefs
+      ?.where((c) => c.communityId == communityId)
+      .firstOrNull
+      ?.notificationPreference;
+
+  List<ClubNotificationPrefModel> _withPref(String communityId, String pref) =>
+      [
+        for (final c in _prefs ?? const <ClubNotificationPrefModel>[])
+          c.communityId == communityId
+              ? c.copyWith(notificationPreference: pref)
+              : c,
+      ];
+
   Future<void> _updatePref(String communityId, String newPref) async {
     final l10n = AppLocalizations.of(context)!;
-    final currentList = _prefs ?? [];
-    final idx = currentList.indexWhere((c) => c.communityId == communityId);
-    if (idx == -1) return;
+    final oldPref = _prefOf(communityId);
+    if (oldPref == null || _updatingClubIds.contains(communityId)) return;
 
-    final oldPref = currentList[idx].notificationPreference;
-    // Optimistic update
+    // Optimistic update: gán list mới, không sửa tại chỗ.
     setState(() {
-      _updatingClubId = communityId;
-      currentList[idx] = currentList[idx].copyWith(
-        notificationPreference: newPref,
-      );
+      _updatingClubIds.add(communityId);
+      _prefs = _withPref(communityId, newPref);
     });
 
     try {
@@ -1912,314 +1660,114 @@ class _ClubNotificationSettingsCardState
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      _log.error('Lỗi cập nhật thông báo CLB $communityId', e, stack);
       if (mounted) {
-        setState(() {
-          currentList[idx] = currentList[idx].copyWith(
-            notificationPreference: oldPref,
-          );
-        });
+        setState(() => _prefs = _withPref(communityId, oldPref));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.settingsNotificationsUpdateFailed)),
         );
       }
     } finally {
       if (mounted) {
-        setState(() => _updatingClubId = null);
+        setState(() => _updatingClubIds.remove(communityId));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final c = LavishColors.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final prefs = _prefs ?? const <ClubNotificationPrefModel>[];
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _sectionTitle(colors, l10n.settingsClubNotifications),
-        const SizedBox(height: 10),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            border: Border.all(color: colors.border),
-          ),
-          child: _isLoading
-              ? const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
-                    ),
-                  ),
-                )
-              : (_prefs == null || _prefs!.isEmpty)
-              ? Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.groups_outlined,
-                        size: 36,
-                        color: colors.textMuted,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.settingsNoClubsForNotifications,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.settingsClubNotificationsHint,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _prefs!.length,
-                  separatorBuilder: (_, index) => _divider(colors),
-                  itemBuilder: (context, index) {
-                    final club = _prefs![index];
-                    final isUpdating = _updatingClubId == club.communityId;
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 18,
-                                backgroundColor: const Color(0xFFEFF6FF),
-                                backgroundImage:
-                                    club.logoUrl != null &&
-                                        club.logoUrl!.isNotEmpty
-                                    ? NetworkImage(club.logoUrl!)
-                                    : null,
-                                child:
-                                    club.logoUrl == null ||
-                                        club.logoUrl!.isEmpty
-                                    ? Text(
-                                        club.communityName.isNotEmpty
-                                            ? club.communityName[0]
-                                                  .toUpperCase()
-                                            : 'C',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 14,
-                                          color: Color(0xFF2563EB),
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            club.communityName,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w700,
-                                              color: colors.textPrimary,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: colors.bgDark,
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            club.role.toRoleDisplayName(l10n),
-                                            style: TextStyle(
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.w800,
-                                              color: colors.textSecondary,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      club.notificationPreference == 'ALL'
-                                          ? (l10n
-                                                .settingsClubNotificationAllSummary)
-                                          : club.notificationPreference ==
-                                                'MENTIONS_ONLY'
-                                          ? (l10n
-                                                .settingsClubNotificationMentionsSummary)
-                                          : (l10n
-                                                .settingsClubNotificationMutedSummary),
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: colors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (isUpdating)
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 8),
-                                  child: SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          // 3-Option Segmented Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildSegmentButton(
-                                  title: l10n.settingsNotificationAll,
-                                  icon: Icons.notifications_active_outlined,
-                                  isSelected:
-                                      club.notificationPreference == 'ALL',
-                                  activeColor: const Color(0xFF2563EB),
-                                  colors: colors,
-                                  onTap: isUpdating
-                                      ? null
-                                      : () => _updatePref(
-                                          club.communityId,
-                                          'ALL',
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: _buildSegmentButton(
-                                  title: l10n.settingsNotificationMentions,
-                                  icon: Icons.alternate_email_rounded,
-                                  isSelected:
-                                      club.notificationPreference ==
-                                      'MENTIONS_ONLY',
-                                  activeColor: const Color(0xFFD97706),
-                                  colors: colors,
-                                  onTap: isUpdating
-                                      ? null
-                                      : () => _updatePref(
-                                          club.communityId,
-                                          'MENTIONS_ONLY',
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: _buildSegmentButton(
-                                  title: l10n.settingsNotificationMuted,
-                                  icon: Icons.notifications_off_outlined,
-                                  isSelected:
-                                      club.notificationPreference == 'MUTED',
-                                  activeColor: const Color(0xFFE11D48),
-                                  colors: colors,
-                                  onTap: isUpdating
-                                      ? null
-                                      : () => _updatePref(
-                                          club.communityId,
-                                          'MUTED',
-                                        ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
+        LavishGroupHeader(l10n.settingsClubNotifications),
+        if (_isLoading)
+          const LavishRowSkeleton(count: 2)
+        else if (_loadFailed)
+          LavishErrorState(onRetry: _loadPrefs)
+        else if (prefs.isEmpty)
+          LavishEmptyState(
+            icon: Icons.groups_outlined,
+            title: l10n.settingsNoClubsForNotifications,
+          )
+        else
+          for (final club in prefs) _clubTile(c, l10n, club),
       ],
     );
   }
 
-  Widget _buildSegmentButton({
-    required String title,
-    required IconData icon,
-    required bool isSelected,
-    required Color activeColor,
-    required AppColorsExtension colors,
-    required VoidCallback? onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? activeColor.withValues(alpha: 0.1)
-              : colors.bgDark,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? activeColor.withValues(alpha: 0.5)
-                : colors.border,
-            width: isSelected ? 1.5 : 1,
-          ),
+  Widget _clubTile(
+    LavishColors c,
+    AppLocalizations l10n,
+    ClubNotificationPrefModel club,
+  ) {
+    final isUpdating = _updatingClubIds.contains(club.communityId);
+    final hasLogo = club.logoUrl != null && club.logoUrl!.isNotEmpty;
+    final summary = club.notificationPreference == 'ALL'
+        ? l10n.settingsClubNotificationAllSummary
+        : club.notificationPreference == 'MENTIONS_ONLY'
+        ? l10n.settingsClubNotificationMentionsSummary
+        : l10n.settingsClubNotificationMutedSummary;
+    Widget chip(String title, String value) => Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 3),
+        child: LavishChipButton(
+          label: title,
+          selected: club.notificationPreference == value,
+          onPressed: isUpdating
+              ? null
+              : () => _updatePref(club.communityId, value),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 13,
-              color: isSelected ? activeColor : colors.textMuted,
-            ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? activeColor : colors.textSecondary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LavishRow(
+          leading: CircleAvatar(
+            radius: 17,
+            backgroundColor: c.soft(LavishTone.accent),
+            backgroundImage: hasLogo ? NetworkImage(club.logoUrl!) : null,
+            child: hasLogo
+                ? null
+                : Text(
+                    firstInitial(club.communityName, fallback: 'C'),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: LavishColors.accent,
+                    ),
+                  ),
+          ),
+          title: club.communityName,
+          subtitle: summary,
+          trailing: [
+            if (isUpdating)
+              const SizedBox.square(
+                dimension: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
+            LavishPill(
+              club.role.toRoleDisplayName(l10n),
+              tone: LavishTone.neutral,
             ),
           ],
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(11, 6, 11, 8),
+          child: Row(
+            children: [
+              chip(l10n.settingsNotificationAll, 'ALL'),
+              chip(l10n.settingsNotificationMentions, 'MENTIONS_ONLY'),
+              chip(l10n.settingsNotificationMuted, 'MUTED'),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -2227,50 +1775,25 @@ class _ClubNotificationSettingsCardState
 // ═════════════════════════════════════════════════════════════════════════
 //  SHARED WIDGETS
 // ═════════════════════════════════════════════════════════════════════════
-Widget _card(AppColorsExtension colors, List<Widget> children) {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: colors.bgCard,
-      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-      border: Border.all(color: colors.border),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: children,
-    ),
+/// Viền/nhãn giống [LavishTextField] cho ô chọn (dropdown, ngày sinh).
+InputDecoration _fieldDecoration(LavishColors c, String label) {
+  OutlineInputBorder border(Color color) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(color: color, width: 1.5),
   );
-}
-
-Widget _fieldLabel(AppColorsExtension colors, String text) {
-  return Text(
-    text,
-    style: TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w700,
-      color: colors.textPrimary,
-    ),
-  );
-}
-
-Widget _sectionTitle(AppColorsExtension colors, String title) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
-    child: Text(
-      title,
-      style: TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w800,
-        color: colors.textSecondary,
-        letterSpacing: 0.3,
-      ),
-    ),
+  return InputDecoration(
+    labelText: label,
+    labelStyle: TextStyle(fontSize: 13, color: c.muted),
+    border: border(c.chipLine),
+    enabledBorder: border(c.chipLine),
+    disabledBorder: border(c.chipLine),
+    focusedBorder: border(LavishColors.accent),
   );
 }
 
 Widget _dropdown(
-  AppColorsExtension colors,
+  LavishColors c,
+  String label,
   String value,
   List<String> items,
   ValueChanged<String?>? onChange, {
@@ -2279,21 +1802,21 @@ Widget _dropdown(
   // Giá trị hiện tại nằm ngoài danh sách (dữ liệu cũ) — thêm để DropdownButton không crash.
   var effectiveItems = items;
   if (!items.contains(value)) effectiveItems = [...items, value];
-  return Container(
-    height: 48,
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    decoration: BoxDecoration(
-      color: colors.bgCard,
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      border: Border.all(color: colors.border),
-    ),
+  return InputDecorator(
+    isEmpty: false,
+    decoration: _fieldDecoration(c, label),
     child: DropdownButtonHideUnderline(
       child: DropdownButton<String>(
         value: value,
         isExpanded: true,
-        icon: Icon(Icons.arrow_drop_down_rounded, color: colors.textMuted),
-        style: TextStyle(fontSize: 14, color: colors.textPrimary),
-        dropdownColor: colors.bgCard,
+        isDense: true,
+        icon: Icon(Icons.keyboard_arrow_down_rounded, color: c.muted),
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+          color: c.text,
+        ),
+        dropdownColor: c.surface,
         items: effectiveItems
             .map(
               (e) => DropdownMenuItem(
@@ -2308,230 +1831,46 @@ Widget _dropdown(
   );
 }
 
-Widget _divider(AppColorsExtension colors) {
-  return Padding(
-    padding: const EdgeInsets.only(left: 56),
-    child: Divider(height: 1, color: colors.border.withValues(alpha: 0.5)),
-  );
-}
-
-Widget _saveButton(
-  BuildContext context,
-  bool isLoading,
-  Future<void> Function() onSave,
-) {
-  return SizedBox(
-    width: double.infinity,
-    height: 52,
-    child: ElevatedButton(
-      onPressed: isLoading ? null : onSave,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: AppTheme.primary.withValues(alpha: 0.4),
-        shadowColor: Colors.transparent,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        ),
-      ),
-      child: isLoading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2.5,
-              ),
-            )
-          : Text(
-              AppLocalizations.of(context)!.settingsSaveButton,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-    ),
-  );
-}
-
-Widget _securityRow(
-  BuildContext context,
-  AppColorsExtension colors, {
+Widget _verifyRow(
+  BuildContext context, {
   required IconData icon,
   required String title,
   required bool verified,
-  String? fallbackText,
+  String? value,
 }) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    child: Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppTheme.primary, size: 18),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: colors.textMuted,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                fallbackText ??
-                    (verified
-                        ? AppLocalizations.of(context)!.infoEmailVerified
-                        : AppLocalizations.of(context)!.infoEmailUnverified),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: colors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: (verified ? colors.success : colors.warning).withValues(
-              alpha: 0.12,
-            ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                verified
-                    ? Icons.check_circle_rounded
-                    : Icons.error_outline_rounded,
-                size: 13,
-                color: verified ? colors.success : colors.warning,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                verified
-                    ? AppLocalizations.of(context)!.infoEmailVerified
-                    : AppLocalizations.of(context)!.infoEmailUnverified,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: verified ? colors.success : colors.warning,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
+  final l10n = AppLocalizations.of(context)!;
+  return LavishRow(
+    leading: LavishIconBox(child: Icon(icon)),
+    title: title,
+    subtitle: value,
+    subtitleMaxLines: 1,
+    trailing: [
+      LavishPill(
+        verified ? l10n.infoEmailVerified : l10n.infoEmailUnverified,
+        tone: verified ? LavishTone.ok : LavishTone.warn,
+      ),
+    ],
   );
 }
 
 Widget _actionRow(
-  AppColorsExtension colors, {
+  BuildContext context, {
   required IconData icon,
   required String title,
   required String subtitle,
   VoidCallback? onTap,
   Widget? trailing,
 }) {
-  return InkWell(
+  final c = LavishColors.of(context);
+  return LavishRow(
+    leading: LavishIconBox(child: Icon(icon)),
+    title: title,
+    subtitle: subtitle,
     onTap: onTap,
-    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: AppTheme.primary, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: colors.textMuted),
-                ),
-              ],
-            ),
-          ),
-          if (trailing != null)
-            trailing
-          else if (onTap != null)
-            Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: colors.textMuted,
-            ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget _buildErrorState(
-  BuildContext context,
-  AppColorsExtension colors,
-  String message,
-  VoidCallback onRetry,
-) {
-  return Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: onRetry,
-            child: Text(AppLocalizations.of(context)!.infoRetry),
-          ),
-        ],
-      ),
-    ),
+    trailing: [
+      ?trailing,
+      if (trailing == null && onTap != null)
+        Icon(Icons.chevron_right_rounded, size: 20, color: c.faint),
+    ],
   );
 }

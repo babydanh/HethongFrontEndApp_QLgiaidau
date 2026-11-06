@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
+import 'package:app_quanly_giaidau/core/services/push_notification_service.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/usecases/auth/clear_session_use_case.dart';
 import 'package:app_quanly_giaidau/domain/usecases/auth/login_with_email_use_case.dart';
@@ -21,7 +23,14 @@ final saveInviteTokenUseCaseProvider = Provider<SaveInviteTokenUseCase>((ref) {
 });
 
 final clearSessionUseCaseProvider = Provider<ClearSessionUseCase>((ref) {
-  return ClearSessionUseCase(ref.watch(sessionRepositoryProvider));
+  return ClearSessionUseCase(
+    ref.watch(sessionRepositoryProvider),
+    authRepository: ref.watch(authRepositoryProvider),
+    readRefreshToken: () => ref.read(tokenManagerProvider).getRefreshToken(),
+    unregisterDevice: () => PushNotificationService.instance.unregisterToken(
+      dioClient: ref.read(dioClientProvider),
+    ),
+  );
 });
 
 final loginWithEmailUseCaseProvider = Provider<LoginWithEmailUseCase>((ref) {

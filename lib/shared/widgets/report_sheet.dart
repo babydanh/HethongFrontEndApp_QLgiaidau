@@ -30,6 +30,15 @@ String _categoryForReason(String key) => switch (key) {
   _ => 'OTHER',
 };
 
+/// Backend chỉ nhận USER | TOURNAMENT | MATCH | COMMUNITY.
+String _targetTypeForApi(String type) => switch (type.toLowerCase()) {
+  'community_post' || 'post' || 'community' => 'COMMUNITY',
+  final other => other.toUpperCase(),
+};
+
+const _minReasonLength = 10;
+const _maxReasonLength = 2000; // Backend CreateReportDto.reason MaxLength
+
 String _reasonLabel(AppLocalizations l10n, String key) => switch (key) {
   'spam' => l10n.report_reasonSpam,
   'inappropriate' => l10n.report_reasonInappropriate,
@@ -45,12 +54,18 @@ String _reasonLabel(AppLocalizations l10n, String key) => switch (key) {
 /// ```
 class ReportSheet extends ConsumerStatefulWidget {
   final String targetId;
-  final String targetType; // 'match', 'user', 'comment', 'tournament'
+  final String
+  targetType; // 'match', 'user', 'tournament', 'community' ('community_post' cũ cũng được)
+
+  /// Ghi chú ngữ cảnh nối vào lý do gửi lên (vd `post:<id>`), cho đối tượng mà
+  /// Backend chưa có loại riêng (bài viết cộng đồng chỉ gắn vào id cộng đồng).
+  final String? contextNote;
 
   const ReportSheet({
     super.key,
     required this.targetId,
     required this.targetType,
+    this.contextNote,
   });
 
   /// Show bottom sheet và trả về true nếu gửi thành công
@@ -58,12 +73,17 @@ class ReportSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     required String targetId,
     required String targetType,
+    String? contextNote,
   }) {
     return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => ReportSheet(targetId: targetId, targetType: targetType),
+      builder: (_) => ReportSheet(
+        targetId: targetId,
+        targetType: targetType,
+        contextNote: contextNote,
+      ),
     ).then((r) => r ?? false);
   }
 
@@ -85,7 +105,22 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     super.dispose();
   }
 
-  bool get _isValid => _selectedReason.isNotEmpty;
+  bool get _descriptionTooShort {
+    final length = _reasonController.text.trim().length;
+    return length > 0 && length < _minReasonLength;
+  }
+
+  bool get _isValid => _selectedReason.isNotEmpty && !_descriptionTooShort;
+
+  /// Nối ghi chú ngữ cảnh, cắt phần mô tả để tổng không vượt giới hạn Backend.
+  String _composeReason(String text) {
+    final note = widget.contextNote?.trim();
+    if (note == null || note.isEmpty) return text;
+    final suffix = ' [$note]';
+    final room = _maxReasonLength - suffix.length;
+    final body = text.length > room ? text.substring(0, room) : text;
+    return '$body$suffix';
+  }
 
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
@@ -97,14 +132,16 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
       final dio = ref.read(dioClientProvider).dio;
       final description = _reasonController.text.trim();
       await dio.post(
-        '/reports',
+        '/users/reports',
         data: {
           'targetId': widget.targetId,
-          'targetType': widget.targetType.toUpperCase(),
+          'targetType': _targetTypeForApi(widget.targetType),
           'category': _categoryForReason(_selectedReason),
-          'reason': description.isEmpty
-              ? l10n.reportDefaultReason(_selectedReason)
-              : description,
+          'reason': _composeReason(
+            description.isEmpty
+                ? l10n.reportDefaultReason(_selectedReason)
+                : description,
+          ),
           'evidenceUrls': _evidenceUrls,
         },
       );
@@ -267,6 +304,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
               ),
               child: TextField(
                 controller: _reasonController,
+                onChanged: (_) => setState(() {}),
                 style: TextStyle(color: colors.textPrimary, fontSize: 14),
                 maxLines: 3,
                 decoration: InputDecoration(
@@ -277,6 +315,13 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
                 ),
               ),
             ),
+            if (_descriptionTooShort) ...[
+              const SizedBox(height: 6),
+              Text(
+                l10n.rpt22_descTooShort,
+                style: TextStyle(fontSize: 12, color: colors.error),
+              ),
+            ],
             const SizedBox(height: 20),
 
             Row(

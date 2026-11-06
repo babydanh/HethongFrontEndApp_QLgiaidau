@@ -124,14 +124,13 @@ void main() {
   ) async {
     await _pumpProfile(tester);
 
-    // The activity tab previews only two active followed tournaments.
-    // "Chi tiết →" switches to the tournaments tab, which lists every active
-    // followed tournament above the completed ones.
-    await tester.tap(find.text('Chi tiết →'));
+    // The tournaments tab lists every active followed tournament above the
+    // completed ones (group headers are upper-cased by the Lavish kit).
+    await tester.tap(find.text('Giải đấu').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Giải đấu đang diễn ra & sắp tới'), findsOneWidget);
-    expect(find.text('Giải đấu đã hoàn thành'), findsOneWidget);
+    expect(find.text('SẮP TỚI'), findsOneWidget);
+    expect(find.text('ĐÃ XONG'), findsOneWidget);
     expect(find.text('Giải Sắp Tới'), findsOneWidget);
     expect(find.text('Giải Đã Xong'), findsOneWidget);
 

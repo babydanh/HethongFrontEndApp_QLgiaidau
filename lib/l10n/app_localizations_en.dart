@@ -2646,7 +2646,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickCreateOrganizerPairingOff => 'Off';
 
   @override
-  String get doublesRegPartnerHint => 'Enter partner\'s email or phone';
+  String get doublesRegPartnerHint => 'Search partner by name';
 
   @override
   String get doublesRegSubmitNext => 'Next';
@@ -18741,4 +18741,199 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get regAttachmentFailed =>
       'Could not upload the file. Please try again.';
+
+  @override
+  String get lavishErrorDefault => 'Could not load data. Please try again.';
+
+  @override
+  String get lavishRetry => 'Retry';
+
+  @override
+  String get lavishPasswordShow => 'Show password';
+
+  @override
+  String get lavishPasswordHide => 'Hide password';
+
+  @override
+  String get lavishBack => 'Back';
+
+  @override
+  String get eloHistLoadMore => 'Load more';
+
+  @override
+  String get settingsLvLogoutConfirmTitle => 'Log out?';
+
+  @override
+  String get settingsLvLogoutConfirmBody => 'You will need to sign in again.';
+
+  @override
+  String get settingsLvAccountError => 'Could not load account';
+
+  @override
+  String settingsLvVersion(String version, String build) {
+    return 'Version $version ($build)';
+  }
+
+  @override
+  String get profLvTabActivity => 'Activity';
+
+  @override
+  String get profLvTabTournaments => 'Tournaments';
+
+  @override
+  String get profLvTabFriends => 'Friends';
+
+  @override
+  String get profLvTabAchievements => 'Achievements';
+
+  @override
+  String get profLvStatElo => 'ELO';
+
+  @override
+  String get profLvStatMatches => 'Matches';
+
+  @override
+  String get profLvStatWinRate => 'Win';
+
+  @override
+  String get profLvStatTournaments => 'Events';
+
+  @override
+  String get profLvRoleAdmin => 'Admin';
+
+  @override
+  String get profLvRoleOrganizer => 'Organizer';
+
+  @override
+  String get profLvRoleAthlete => 'Athlete';
+
+  @override
+  String get profLvRecentMatches => 'Recent matches';
+
+  @override
+  String get profLvSeeAll => 'See all';
+
+  @override
+  String get profLvUpcoming => 'Upcoming';
+
+  @override
+  String get profLvCompleted => 'Completed';
+
+  @override
+  String get profLvRanks => 'Sport ranks';
+
+  @override
+  String get profLvHistory => 'Match history';
+
+  @override
+  String get profLvEloDetail => 'ELO details';
+
+  @override
+  String get profLvEmptyMatches => 'No matches yet';
+
+  @override
+  String get profLvCreateSession => 'Create session';
+
+  @override
+  String get profLvEmptyTournaments => 'No tournaments';
+
+  @override
+  String get profLvExplore => 'Explore';
+
+  @override
+  String get profLvEmptyRanks => 'No ranking yet';
+
+  @override
+  String get profLvJoinTournament => 'Join a tournament';
+
+  @override
+  String get profLvEmptyFriends => 'No friends yet';
+
+  @override
+  String get profLvFindFriends => 'Find friends';
+
+  @override
+  String get profLvEmptyIncoming => 'No requests';
+
+  @override
+  String get profLvEmptyOutgoing => 'No sent requests';
+
+  @override
+  String profLvFriendsCount(Object count) {
+    return 'Friends ($count)';
+  }
+
+  @override
+  String profLvIncomingCount(Object count) {
+    return 'Requests ($count)';
+  }
+
+  @override
+  String profLvOutgoingCount(Object count) {
+    return 'Sent ($count)';
+  }
+
+  @override
+  String get profLvWantsToConnect => 'Wants to connect';
+
+  @override
+  String get profLvPending => 'Pending';
+
+  @override
+  String get profLvAccept => 'Accept';
+
+  @override
+  String get profLvReject => 'Decline';
+
+  @override
+  String get profLvCancel => 'Cancel';
+
+  @override
+  String get profLvChat => 'Message';
+
+  @override
+  String get profLvSettings => 'Settings';
+
+  @override
+  String get profLvLoadError => 'Could not load profile';
+
+  @override
+  String get profLvFriendsLoadError => 'Could not load friends';
+
+  @override
+  String get profLvMatchesLoadError => 'Could not load matches';
+
+  @override
+  String get profLvUser => 'User';
+
+  @override
+  String get profLvAthlete => 'Athlete';
+
+  @override
+  String get profLvSport => 'Sport';
+
+  @override
+  String get profLvMatchUpcoming => 'Upcoming';
+
+  @override
+  String get profLvMatchDone => 'Done';
+
+  @override
+  String profLvMatchesWinRate(Object matches, Object rate) {
+    return '$matches matches · $rate% won';
+  }
+
+  @override
+  String get dsh28_yesterday => 'Yesterday';
+
+  @override
+  String dsh28_daysAgo(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get dsh28_liteBadge => 'Lite';
+
+  @override
+  String get rpt22_descTooShort => 'At least 10 characters';
 }

@@ -1,5 +1,3 @@
-import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
-import 'package:app_quanly_giaidau/shared/widgets/content_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +9,10 @@ import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.da
 import 'package:app_quanly_giaidau/domain/entities/app_notification.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -59,11 +60,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         _scrollController.position.maxScrollExtent - 200) {
       final s = ref.read(notificationStateProvider);
       if (s.hasMore && !_isLoadingMore) {
-        _isLoadingMore = true;
+        setState(() => _isLoadingMore = true);
         ref
             .read(notificationStateProvider.notifier)
             .loadPage(s.currentPage + 1)
-            .then((_) {
+            .whenComplete(() {
               if (mounted) setState(() => _isLoadingMore = false);
             });
       }
@@ -161,25 +162,30 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       }
     } catch (e, stack) {
       _log.error('Lỗi xử lý lời mời', e, stack);
-      bool isAlreadyJoinedOrResolved = false;
+      // Chỉ 404 (không còn lời mời) và 409 (đã xử lý) là "đã xử lý"; 400 là
+      // lỗi thật của yêu cầu nên phải hiện cho người dùng.
+      var isAlreadyJoinedOrResolved = false;
       if (e is DioException) {
         final code = e.response?.statusCode;
-        if (code == 404 || code == 400 || code == 409) {
-          isAlreadyJoinedOrResolved = true;
-        }
-      }
-      final rawError = e.toString().toLowerCase();
-      if (rawError.contains('404') ||
-          rawError.contains('not found') ||
-          rawError.contains('no pending') ||
-          rawError.contains('đã tham gia') ||
-          rawError.contains('đã được xử lý') ||
-          rawError.contains('already')) {
-        isAlreadyJoinedOrResolved = true;
+        isAlreadyJoinedOrResolved = code == 404 || code == 409;
+      } else {
+        final rawError = e.toString().toLowerCase();
+        isAlreadyJoinedOrResolved =
+            rawError.contains('not found') ||
+            rawError.contains('no pending') ||
+            rawError.contains('đã tham gia') ||
+            rawError.contains('đã được xử lý') ||
+            rawError.contains('already');
       }
 
       if (isAlreadyJoinedOrResolved) {
-        await ref.read(notificationStateProvider.notifier).markAsRead(notif.id);
+        try {
+          await ref
+              .read(notificationStateProvider.notifier)
+              .markAsRead(notif.id);
+        } catch (markError, markStack) {
+          _log.error('Không đánh dấu đã đọc được', markError, markStack);
+        }
         if (mounted) {
           setState(() => _handledInviteIds.add(notif.id));
           ScaffoldMessenger.of(context).showSnackBar(
@@ -198,10 +204,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         }
       } else {
         if (mounted) {
-          final cleanMsg = e
-              .toString()
-              .replaceAll('Exception: ', '')
-              .replaceAll('StateError: ', '');
+          // StateError mang sẵn thông điệp đã dịch; còn lại qua ErrorParser
+          // để không lộ chuỗi thô của DioException.
+          final cleanMsg = e is StateError
+              ? e.message
+              : ErrorParser.parse(e, '', l10n);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -249,7 +256,6 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final stateNotif = ref.watch(notificationStateProvider);
-    final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
     // Lọc notifications theo chế độ chưa đọc và tab phân loại
@@ -259,294 +265,98 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     }).toList();
 
     final totalUnread = stateNotif.notifications.where((n) => !n.isRead).length;
+    final all = stateNotif.notifications;
 
-    return Scaffold(
-      backgroundColor: colors.bgDark,
-      body: Stack(
-        children: [
-          // Background subtle top ambient blur / gradient like Image 2
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 160,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF2979FF).withValues(alpha: 0.16),
-                    const Color(0xFF3AB5F6).withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                _buildModernAppBar(colors, totalUnread, l10n),
-                _buildCategoryTabs(colors, l10n, totalUnread),
-                Expanded(
-                  child: stateNotif.notifications.isEmpty && stateNotif.isLoading
-                      ? const ScrollFreeSkeleton(
-                          child: ListPageSkeleton(itemCount: 8),
-                        )
-                      : stateNotif.notifications.isEmpty &&
-                            stateNotif.errorMessage != null
-                      ? _buildError(stateNotif.errorMessage!, colors, l10n)
-                      : stateNotif.notifications.isEmpty
-                      ? _buildEmpty(colors, l10n)
-                      : displayedNotifications.isEmpty
-                      ? _buildFilteredEmpty(colors, l10n)
-                      : _buildList(displayedNotifications, colors, l10n),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    final Widget content;
+    if (all.isEmpty && stateNotif.isLoading) {
+      content = const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: LavishRowSkeleton(count: 8),
+      );
+    } else if (all.isEmpty && stateNotif.errorMessage != null) {
+      content = LavishErrorState(
+        message: stateNotif.errorMessage,
+        onRetry: () => ref.read(notificationStateProvider.notifier).loadPage(1),
+      );
+    } else if (all.isEmpty) {
+      content = LavishEmptyState(
+        icon: Icons.notifications_none_rounded,
+        title: l10n.notification_emptyTitle,
+      );
+    } else if (displayedNotifications.isEmpty) {
+      content = LavishEmptyState(
+        icon: Icons.done_all_rounded,
+        title: l10n.notification_filteredEmptyTitle,
+        action: l10n.notification_viewAll,
+        onAction: () => setState(() {
+          _unreadOnly = false;
+          _selectedCategoryTab = 0;
+        }),
+      );
+    } else {
+      content = _buildList(displayedNotifications, l10n);
+    }
 
-  Widget _buildModernAppBar(
-    AppColorsExtension colors,
-    int totalUnread,
-    AppLocalizations l10n,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Row(
-        children: [
+    return LavishScaffold(
+      title: l10n.notification_title,
+      onBack: () {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/home');
+        }
+      },
+      actions: [
+        if (totalUnread > 0)
           IconButton(
-            style: IconButton.styleFrom(
-              backgroundColor: colors.bgCard.withValues(alpha: 0.8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: colors.border.withValues(alpha: 0.6)),
-              ),
-            ),
-            icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: colors.textPrimary),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/home');
-              }
-            },
+            tooltip: l10n.notification_readAll,
+            icon: const Icon(Icons.done_all_rounded),
+            onPressed: _markAllAsRead,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              l10n.notification_title,
-              style: TextStyle(
-                color: colors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 22,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ),
-          if (totalUnread > 0)
-            TextButton.icon(
-              onPressed: _markAllAsRead,
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF2979FF),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              icon: const Icon(Icons.done_all_rounded, size: 16),
-              label: Text(
-                l10n.notification_readAll,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
+      ],
+      body: Column(
+        children: [
+          _buildFilterChips(l10n, totalUnread),
+          Expanded(child: content),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryTabs(
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-    int totalUnread,
-  ) {
+  Widget _buildFilterChips(AppLocalizations l10n, int totalUnread) {
     final tabs = [
       l10n.notification_all,
       l10n.notification_tabTournaments,
       l10n.notification_tabTeams,
       l10n.notification_tabSystem,
     ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      child: Row(
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                for (int i = 0; i < tabs.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _PillFilterTab(
-                      label: tabs[i],
-                      isSelected: _selectedCategoryTab == i,
-                      onTap: () => setState(() => _selectedCategoryTab = i),
-                      colors: colors,
-                    ),
-                  ),
-                // Toggle chỉ hiển thị chưa đọc
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: InkWell(
-                    onTap: () => setState(() => _unreadOnly = !_unreadOnly),
-                    borderRadius: BorderRadius.circular(20),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: _unreadOnly
-                            ? const Color(0xFF2979FF).withValues(alpha: 0.15)
-                            : colors.bgCard,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _unreadOnly
-                              ? const Color(0xFF2979FF)
-                              : colors.border.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _unreadOnly ? Icons.mark_chat_unread : Icons.mark_chat_unread_outlined,
-                            size: 14,
-                            color: _unreadOnly ? const Color(0xFF2979FF) : colors.textMuted,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            totalUnread > 0
-                                ? '${l10n.notification_unread} ($totalUnread)'
-                                : l10n.notification_unread,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: _unreadOnly ? FontWeight.w700 : FontWeight.w600,
-                              color: _unreadOnly
-                                  ? const Color(0xFF2979FF)
-                                  : colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          for (var i = 0; i < tabs.length; i++) ...[
+            LavishChipButton(
+              label: tabs[i],
+              selected: _selectedCategoryTab == i,
+              onPressed: () => setState(() => _selectedCategoryTab = i),
             ),
+            const SizedBox(width: 8),
+          ],
+          LavishChipButton(
+            label: totalUnread > 0
+                ? '${l10n.notification_unread} ($totalUnread)'
+                : l10n.notification_unread,
+            selected: _unreadOnly,
+            onPressed: () => setState(() => _unreadOnly = !_unreadOnly),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEmpty(AppColorsExtension colors, AppLocalizations l10n) =>
-      Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_none_rounded,
-              size: 64,
-              color: colors.textMuted,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.notification_emptyTitle,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.notification_emptySubtitle,
-              style: TextStyle(fontSize: 13, color: colors.textSecondary),
-            ),
-          ],
-        ),
-      );
-
-  Widget _buildFilteredEmpty(
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) => Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.done_all_rounded,
-          size: 48,
-          color: colors.success.withValues(alpha: 0.5),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          l10n.notification_filteredEmptyTitle,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: colors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 4),
-        TextButton(
-          onPressed: () => setState(() => _unreadOnly = false),
-          child: Text(l10n.notification_viewAll),
-        ),
-      ],
-    ),
-  );
-
-  Widget _buildError(
-    String message,
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.cloud_off_rounded, size: 48, color: colors.textMuted),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: colors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: () =>
-                ref.read(notificationStateProvider.notifier).loadPage(1),
-            child: Text(l10n.infoRetry),
-          ),
-        ],
-      ),
-    ),
-  );
-
   Widget _buildList(
     List<AppNotification> notifications,
-    AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
     final workspaceAsync = ref.watch(myTournamentWorkspaceProvider);
@@ -568,7 +378,6 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       grouped.putIfAbsent(key, () => []).add(n);
     }
 
-    // Sort groups by date key
     final orderedKeys = <String>[];
     if (grouped.containsKey(todayLabel)) orderedKeys.add(todayLabel);
     if (grouped.containsKey(yesterdayLabel)) orderedKeys.add(yesterdayLabel);
@@ -583,33 +392,14 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       onRefresh: () => ref.read(notificationStateProvider.notifier).loadPage(1),
       child: ListView(
         controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           if (hasWorkspace)
-            _buildMyTournaments(workspaceAsync.asData!.value, colors, l10n),
-          for (final entryKey in orderedKeys)
-            Builder(
-              builder: (context) {
-                final items = grouped[entryKey]!;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Text(
-                        entryKey,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    ...items.map((n) => _buildCard(n, colors, l10n)),
-                  ],
-                );
-              },
-            ),
+            ..._buildMyTournaments(workspaceAsync.asData!.value, l10n),
+          for (final key in orderedKeys) ...[
+            LavishGroupHeader(key),
+            for (final n in grouped[key]!) _buildCard(n, l10n),
+          ],
           if (_isLoadingMore)
             const Padding(
               padding: EdgeInsets.all(16),
@@ -620,29 +410,20 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     );
   }
 
-  Widget _buildMyTournaments(
+  List<Widget> _buildMyTournaments(
     TournamentWorkspace workspace,
-    AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
     final items = <_TournamentWithRole>[];
     for (final t in workspace.organizedTournaments) {
       items.add(
-        _TournamentWithRole(
-          t,
-          l10n.notification_roleBtc,
-          const Color(0xFF2979FF),
-        ),
+        _TournamentWithRole(t, l10n.notification_roleBtc, LavishTone.accent),
       );
     }
     for (final t in workspace.coOrganizerTournaments) {
       if (!items.any((i) => i.tournament.id == t.id)) {
         items.add(
-          _TournamentWithRole(
-            t,
-            l10n.notification_roleBtc,
-            const Color(0xFF2979FF),
-          ),
+          _TournamentWithRole(t, l10n.notification_roleBtc, LavishTone.accent),
         );
       }
     }
@@ -658,7 +439,7 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
           _TournamentWithRole(
             t,
             l10n.notification_roleReferee,
-            const Color(0xFFF59E0B),
+            LavishTone.warn,
           ),
         );
       }
@@ -666,16 +447,11 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
     for (final t in workspace.participatingTournaments) {
       if (!items.any((i) => i.tournament.id == t.id)) {
         items.add(
-          _TournamentWithRole(
-            t,
-            l10n.notification_rolePlayer,
-            const Color(0xFF10B981),
-          ),
+          _TournamentWithRole(t, l10n.notification_rolePlayer, LavishTone.ok),
         );
       }
     }
-
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty) return const [];
 
     items.sort((a, b) {
       final aLite = a.tournament.isClubLite ? 0 : 1;
@@ -684,101 +460,38 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       return a.tournament.name.compareTo(b.tournament.name);
     });
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(
-            l10n.infoMyTournaments,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: colors.textSecondary,
+    return [
+      LavishGroupHeader(l10n.infoMyTournaments),
+      for (final item in items.take(3))
+        LavishRow(
+          title: item.tournament.name,
+          leading: LavishIconBox(
+            tone: item.tone,
+            child: Icon(
+              item.tournament.isClubLite
+                  ? Icons.bolt_rounded
+                  : Icons.emoji_events_rounded,
             ),
           ),
+          trailing: [LavishPill(item.role, tone: item.tone)],
+          onTap: () => context.push('/intro/${item.tournament.id}'),
         ),
-        SizedBox(
-          height: 92,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 10),
-            itemBuilder: (_, i) {
-              final item = items[i];
-              return GestureDetector(
-                onTap: () => context.push('/intro/${item.tournament.id}'),
-                child: Container(
-                  width: 180,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colors.bgCard,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          if (item.tournament.isClubLite)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 6),
-                              child: Icon(
-                                Icons.bolt_rounded,
-                                size: 14,
-                                color: colors.warning,
-                              ),
-                            ),
-                          Expanded(
-                            child: Text(
-                              item.tournament.name,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: colors.textPrimary,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: item.roleColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.role,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: item.roleColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+    ];
   }
 
-  Widget _buildCard(
-    AppNotification notif,
-    AppColorsExtension colors,
-    AppLocalizations l10n,
-  ) {
+  LavishTone _toneOf(AppNotification n) {
+    final c = n.color.toARGB32();
+    return switch (c) {
+      0xFFF59E0B => LavishTone.warn,
+      0xFF10B981 || 0xFF059669 => LavishTone.ok,
+      0xFFEF4444 => LavishTone.bad,
+      0xFF64748B => LavishTone.neutral,
+      _ => LavishTone.accent,
+    };
+  }
+
+  Widget _buildCard(AppNotification notif, AppLocalizations l10n) {
+    final c = LavishColors.of(context);
     final isInvite = notif.isInvite;
     final pendingInvitesAsync = ref.watch(myCommunityInvitesProvider);
     final pendingCommunityIds = pendingInvitesAsync.asData?.value
@@ -793,8 +506,37 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             pendingCommunityIds != null &&
             notif.communityId != null &&
             !pendingCommunityIds.contains(notif.communityId));
+    final handling = _handlingInviteIds.contains(notif.id);
+    final background = notif.isRead
+        ? null
+        : LavishColors.accent.withValues(alpha: c.dark ? 0.10 : 0.06);
+    final body = notif.body;
 
-    return GestureDetector(
+    final row = LavishRow(
+      title: notif.title,
+      subtitle: body != null && body.isNotEmpty ? body : null,
+      subtitleMaxLines: 2,
+      background: background,
+      leading: LavishIconBox(tone: _toneOf(notif), child: Icon(notif.icon)),
+      trailing: [
+        Text(
+          notif.localizedTimeAgo(l10n),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: c.faint,
+          ),
+        ),
+        if (!notif.isRead)
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: LavishColors.accent,
+            ),
+          ),
+      ],
       onTap: () async {
         if (!notif.isRead) {
           try {
@@ -814,278 +556,59 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
         final route = notif.routeTarget;
         if (route != null) context.push(route);
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.bgCard,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: notif.isRead
-                ? colors.border.withValues(alpha: 0.5)
-                : const Color(0xFF2979FF).withValues(alpha: 0.25),
+    );
+    if (!isInvite) return row;
+
+    return Column(
+      children: [
+        row,
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+          decoration: BoxDecoration(
+            color: background,
+            border: Border(bottom: BorderSide(color: c.rowLine)),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Circular icon container as in Image 2
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: notif.color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
+          child: isHandled
+              ? Align(
+                  alignment: Alignment.centerLeft,
+                  child: LavishPill(
+                    l10n.notification_inviteHandled,
+                    tone: LavishTone.ok,
                   ),
-                  child: Icon(notif.icon, color: notif.color, size: 22),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              notif.title,
-                              style: TextStyle(
-                                fontSize: 14.5,
-                                fontWeight: notif.isRead
-                                    ? FontWeight.w600
-                                    : FontWeight.w700,
-                                color: colors.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            notif.localizedTimeAgo(l10n),
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              color: colors.textMuted,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (notif.body != null && notif.body!.isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          notif.body!,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            height: 1.3,
-                            color: colors.textSecondary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                // Red unread dot or chevron navigation arrow
-                if (!notif.isRead) ...[
-                  Container(
-                    width: 7,
-                    height: 7,
-                    margin: const EdgeInsets.only(right: 4),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFFEF4444), // red dot as seen in Image 2
-                    ),
-                  ),
-                ],
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: colors.textMuted.withValues(alpha: 0.6),
-                ),
-              ],
-            ),
-            if (isInvite) ...[
-              const SizedBox(height: 12),
-              if (isHandled) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF059669).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFF059669).withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: 14,
-                        color: Color(0xFF059669),
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        l10n.notification_inviteHandled,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF059669),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                Row(
+                )
+              : Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    OutlinedButton(
-                      onPressed: _handlingInviteIds.contains(notif.id)
+                    LavishButton(
+                      label: l10n.notification_decline,
+                      kind: LavishButtonKind.outline,
+                      dense: true,
+                      onPressed: handling
                           ? null
                           : () => _handleInviteAction(notif, false),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: colors.textMuted,
-                        side: BorderSide(color: colors.border),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Text(
-                        l10n.notification_decline,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
                     ),
                     const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: _handlingInviteIds.contains(notif.id)
+                    LavishButton(
+                      label: l10n.notification_accept,
+                      dense: true,
+                      busy: handling,
+                      onPressed: handling
                           ? null
                           : () => _handleInviteAction(notif, true),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF2979FF),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: _handlingInviteIds.contains(notif.id)
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              l10n.notification_accept,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
                     ),
                   ],
                 ),
-              ],
-            ],
-          ],
         ),
-      ),
+      ],
     );
   }
 }
-
-// ─── _TournamentWithRole Helper ───
 
 class _TournamentWithRole {
   final Tournament tournament;
   final String role;
-  final Color roleColor;
+  final LavishTone tone;
 
-  const _TournamentWithRole(this.tournament, this.role, this.roleColor);
+  const _TournamentWithRole(this.tournament, this.role, this.tone);
 }
-
-// ─── Filter Pill Tab Widget ───
-
-class _PillFilterTab extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final AppColorsExtension colors;
-
-  const _PillFilterTab({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-    required this.colors,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF2979FF)
-              : colors.bgCard,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF2979FF)
-                : colors.border.withValues(alpha: 0.7),
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF2979FF).withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? Colors.white
-                : colors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-

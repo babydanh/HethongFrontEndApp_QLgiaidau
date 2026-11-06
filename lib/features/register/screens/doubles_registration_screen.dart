@@ -574,7 +574,7 @@ class _DoublesRegistrationFlowState
         .read(userProfileProvider)
         .asData
         ?.value
-        ?.gender
+        .gender
         ?.trim();
     if (requiresGenderProfileForDivision(widget.division.genderRestriction) &&
         (profileGender == null || profileGender.isEmpty)) {
@@ -609,7 +609,7 @@ class _DoublesRegistrationFlowState
     try {
       _partnerContact = organizerPairing
           ? null
-          : _selectedPartner?.email ??
+          : _selectedPartner?.fullName ??
                 (_inviteLater ? null : _partnerSearchCtrl.text.trim());
       final result = await ref
           .read(tournamentRepositoryProvider)
@@ -618,10 +618,10 @@ class _DoublesRegistrationFlowState
             teamName: _teamNameCtrl.text.trim(),
             divisionId: widget.division.id,
             inviteCode: widget.inviteCode,
-            partnerEmailOrPhone: organizerPairing
+            partnerUserId: organizerPairing ? null : _selectedPartner?.id,
+            partnerEmailOrPhone: organizerPairing || _selectedPartner != null
                 ? null
-                : _selectedPartner?.email ??
-                      (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
+                : (_inviteLater ? null : _partnerSearchCtrl.text.trim()),
             doublesPairingMode: pairingMode,
             rankingConsent: tournament?.isRanked == true,
             customResponses: _customResponses.isNotEmpty
@@ -1190,10 +1190,6 @@ class _DoublesRegistrationFlowState
                           fontWeight: FontWeight.w600,
                           color: colors.textPrimary,
                         ),
-                      ),
-                      subtitle: Text(
-                        u.email ?? '',
-                        style: TextStyle(fontSize: 11, color: colors.textMuted),
                       ),
                       trailing: sel
                           ? Icon(Icons.check_circle, color: AppTheme.primary)

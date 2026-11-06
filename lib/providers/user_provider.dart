@@ -119,29 +119,26 @@ final publicUserMatchesProvider =
 /// BE trả về { data: { publicRanks: [...], communityRanks: [...] } }
 /// TransformInterceptor wrap: { data: { publicRanks: [...], ... }, message, statusCode }
 final userRankingsProvider = FutureProvider<List<PlayerRanking>>((ref) async {
-  final profileAsync = ref.watch(userProfileProvider);
-  final profile = profileAsync.asData?.value;
-  if (profile == null) return [];
+  // Chờ hồ sơ; nếu hồ sơ lỗi thì lỗi lan ra để UI hiện trạng thái lỗi.
+  final profile = await ref.watch(userProfileProvider.future);
 
   final userId = profile.id;
   if (userId.isEmpty) return [];
 
-  try {
-    final dio = ref.read(dioProvider);
-    final response = await dio.get('/rankings/user/$userId');
+  final dio = ref.read(dioProvider);
+  final response = await dio.get('/rankings/user/$userId');
 
-    final raw = response.data;
-    if (raw is! Map) return [];
-
-    final inner = raw['data'] is Map ? raw['data'] as Map : raw;
-    final list = inner['publicRanks'] as List<dynamic>? ?? [];
-    return list
-        .whereType<Map<String, dynamic>>()
-        .map((e) => PlayerRanking.fromJson(e))
-        .toList();
-  } catch (e) {
-    return [];
+  final raw = response.data;
+  if (raw is! Map) {
+    throw const FormatException('Invalid /rankings/user response');
   }
+
+  final inner = raw['data'] is Map ? raw['data'] as Map : raw;
+  final list = inner['publicRanks'] as List<dynamic>? ?? [];
+  return list
+      .whereType<Map<String, dynamic>>()
+      .map((e) => PlayerRanking.fromJson(e))
+      .toList();
 });
 
 /// Các đội bóng người dùng đang tham gia, dùng để hiển thị ELO đội cao nhất
@@ -193,18 +190,15 @@ final userFriendsProvider = FutureProvider<List<FriendshipItem>>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) return const [];
 
-  try {
-    final dio = ref.read(dioProvider);
-    final response = await dio.get('/social/friends');
-    final raw = response.data;
-    final payload = raw is Map ? (raw['data'] ?? raw) : raw;
-    final List<dynamic> list = payload is List ? payload : [];
-    return list
-        .whereType<Map<String, dynamic>>()
-        .map((e) => FriendshipItem.fromJson(e))
-        .toList();
-  } catch (_) {
-    return const [];
+  final dio = ref.read(dioProvider);
+  final response = await dio.get('/social/friends');
+  final raw = response.data;
+  final payload = raw is Map ? (raw['data'] ?? raw) : raw;
+  if (payload is! List) {
+    throw const FormatException('Invalid /social/friends response');
   }
+  return payload
+      .whereType<Map<String, dynamic>>()
+      .map((e) => FriendshipItem.fromJson(e))
+      .toList();
 });
-
