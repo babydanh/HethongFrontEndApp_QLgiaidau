@@ -13,6 +13,8 @@ import 'support/bam_diem.dart';
 /// a "+" button, and every check reads what the panel shows or the live state.
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  // A stuck test must fail with a stack trace instead of eating the 40 min job budget.
+  binding.defaultTestTimeout = const Timeout(Duration(minutes: 3));
 
   testWidgets(
     'TC-CBD-APP-05 tennis chuan: 15-30-40, Deuce, Advantage, doi giao',

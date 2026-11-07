@@ -11,6 +11,8 @@ import 'support/bam_diem.dart';
 /// serve line, the 60 second reminder and the end of a game after each tap.
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  // A stuck test must fail with a stack trace instead of eating the 40 min job budget.
+  binding.defaultTestTimeout = const Timeout(Duration(minutes: 3));
 
   testWidgets('TC-CBD-APP-03 cau long: giao theo doi thang pha va o san', (
     tester,

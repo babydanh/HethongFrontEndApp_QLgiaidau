@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
+import 'package:flutter/foundation.dart' show debugPrintSynchronously;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
@@ -77,6 +78,7 @@ Future<void> pumpPanel(
   IMatchRepository? writes,
   List<Override> extra = const [],
 }) async {
+  debugPrintSynchronously('[bam-diem] pumpPanel start');
   tester.view.physicalSize = const Size(400, 900);
   tester.view.devicePixelRatio = 1;
   addTearDown(() {
@@ -105,18 +107,23 @@ Future<void> pumpPanel(
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 50));
+  debugPrintSynchronously('[bam-diem] pumpPanel done');
 }
 
 /// Taps the first widget matching [target], then lets the 300 ms live-sync
 /// debounce fire so the test never ends with a pending timer.
 Future<void> tapAndSettle(WidgetTester tester, Finder target) async {
+  debugPrintSynchronously('[bam-diem] tap');
   await tester.tap(target);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));
+  debugPrintSynchronously('[bam-diem] tap done');
 }
 
 /// Named screenshots on the emulator only: `takeScreenshot` is not available
 /// when the same file runs on the desktop test host.
+const _probeNoShots = true;
+
 class BamDiemShooter {
   BamDiemShooter(WidgetTester tester, IntegrationTestWidgetsFlutterBinding b)
     : _shooter = XemShooter(tester, b);
@@ -124,7 +131,8 @@ class BamDiemShooter {
   final XemShooter _shooter;
 
   Future<void> snap(String name) async {
-    if (!Platform.isAndroid) return;
+    // PROBE: screenshots off to find out whether they hang the emulator run.
+    if (!Platform.isAndroid || _probeNoShots) return;
     await _shooter.snap(name);
   }
 }

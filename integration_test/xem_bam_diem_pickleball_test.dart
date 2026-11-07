@@ -102,6 +102,8 @@ String _wonHandOver(int team) =>
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  // A stuck test must fail with a stack trace instead of eating the 40 min job budget.
+  binding.defaultTestTimeout = const Timeout(Duration(minutes: 3));
 
   setUpAll(initXem);
 
