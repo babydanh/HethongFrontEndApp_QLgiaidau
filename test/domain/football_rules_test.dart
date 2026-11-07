@@ -58,33 +58,39 @@ void main() {
       expect(footballPlayersOnField(s, true), 11);
     });
 
-    test('TC-CBD-FB-03 second yellow of the same shirt adds a red, in order', () {
-      var s = const FootballLiveState();
-      s = footballApplyCard(s, isTeam1: true, shirt: 7, red: false);
-      s = footballApplyCard(s, isTeam1: true, shirt: 7, red: false);
+    test(
+      'TC-CBD-FB-03 second yellow of the same shirt adds a red, in order',
+      () {
+        var s = const FootballLiveState();
+        s = footballApplyCard(s, isTeam1: true, shirt: 7, red: false);
+        s = footballApplyCard(s, isTeam1: true, shirt: 7, red: false);
 
-      expect(_types(s, isTeam1: true), [
-        'YELLOW_CARD',
-        'YELLOW_CARD',
-        'RED_CARD',
-      ]);
-      expect(s.events.last.shirt, 7);
-      expect(footballPlayersOnField(s, true), 10);
-      expect(footballPlayersOnField(s, false), 11);
-    });
+        expect(_types(s, isTeam1: true), [
+          'YELLOW_CARD',
+          'YELLOW_CARD',
+          'RED_CARD',
+        ]);
+        expect(s.events.last.shirt, 7);
+        expect(footballPlayersOnField(s, true), 10);
+        expect(footballPlayersOnField(s, false), 11);
+      },
+    );
 
-    test('TC-CBD-FB-04 yellows of different shirts or teams never add a red', () {
-      var s = const FootballLiveState();
-      s = footballApplyCard(s, isTeam1: true, shirt: 7, red: false);
-      s = footballApplyCard(s, isTeam1: true, shirt: 8, red: false);
-      s = footballApplyCard(s, isTeam1: false, shirt: 7, red: false);
-      // Unknown shirt numbers cannot be tracked: counted as plain cards.
-      s = footballApplyCard(s, isTeam1: true, shirt: null, red: false);
-      s = footballApplyCard(s, isTeam1: true, shirt: null, red: false);
+    test(
+      'TC-CBD-FB-04 yellows of different shirts or teams never add a red',
+      () {
+        var s = const FootballLiveState();
+        s = footballApplyCard(s, isTeam1: true, shirt: 7, red: false);
+        s = footballApplyCard(s, isTeam1: true, shirt: 8, red: false);
+        s = footballApplyCard(s, isTeam1: false, shirt: 7, red: false);
+        // Unknown shirt numbers cannot be tracked: counted as plain cards.
+        s = footballApplyCard(s, isTeam1: true, shirt: null, red: false);
+        s = footballApplyCard(s, isTeam1: true, shirt: null, red: false);
 
-      expect(s.events.where((e) => e.type == 'RED_CARD'), isEmpty);
-      expect(footballPlayersOnField(s, true), 11);
-    });
+        expect(s.events.where((e) => e.type == 'RED_CARD'), isEmpty);
+        expect(footballPlayersOnField(s, true), 11);
+      },
+    );
 
     test('TC-CBD-FB-05 a direct red removes a player, unknown shirt too', () {
       var s = const FootballLiveState();
@@ -96,42 +102,45 @@ void main() {
       expect(s.stoppedWinnerTeam, 0);
     });
 
-    test('TC-CBD-FB-06 fewer than 7 players stops the match, other team wins', () {
-      final seven = _redCards(4, isTeam1: true);
-      expect(footballPlayersOnField(seven, true), 7);
-      expect(seven.stoppedWinnerTeam, 0);
+    test(
+      'TC-CBD-FB-06 fewer than 7 players stops the match, other team wins',
+      () {
+        final seven = _redCards(4, isTeam1: true);
+        expect(footballPlayersOnField(seven, true), 7);
+        expect(seven.stoppedWinnerTeam, 0);
 
-      final stopped = footballApplyCard(
-        seven,
-        isTeam1: true,
-        shirt: 5,
-        red: true,
-      );
-      expect(footballPlayersOnField(stopped, true), 6);
-      expect(stopped.stoppedWinnerTeam, 2);
-      expect(stopped.winnerTeam, 2);
-      expect(stopped.isMatchComplete, isTrue);
+        final stopped = footballApplyCard(
+          seven,
+          isTeam1: true,
+          shirt: 5,
+          red: true,
+        );
+        expect(footballPlayersOnField(stopped, true), 6);
+        expect(stopped.stoppedWinnerTeam, 2);
+        expect(stopped.winnerTeam, 2);
+        expect(stopped.isMatchComplete, isTrue);
 
-      // The decision beats the goal count (team 1 leads 3-0 but is stopped).
-      expect(stopped.copyWith(team1Goals: 3).winnerTeam, 2);
+        // The decision beats the goal count (team 1 leads 3-0 but is stopped).
+        expect(stopped.copyWith(team1Goals: 3).winnerTeam, 2);
 
-      // Once stopped, further cards change nothing.
-      final after = footballApplyCard(
-        stopped,
-        isTeam1: false,
-        shirt: 2,
-        red: true,
-      );
-      expect(identical(after, stopped), isTrue);
+        // Once stopped, further cards change nothing.
+        final after = footballApplyCard(
+          stopped,
+          isTeam1: false,
+          shirt: 2,
+          red: true,
+        );
+        expect(identical(after, stopped), isTrue);
 
-      final team2Stopped = footballApplyCard(
-        _redCards(4, isTeam1: false),
-        isTeam1: false,
-        shirt: 5,
-        red: true,
-      );
-      expect(team2Stopped.stoppedWinnerTeam, 1);
-    });
+        final team2Stopped = footballApplyCard(
+          _redCards(4, isTeam1: false),
+          isTeam1: false,
+          shirt: 5,
+          red: true,
+        );
+        expect(team2Stopped.stoppedWinnerTeam, 1);
+      },
+    );
 
     test('TC-CBD-FB-07 substitutions are limited per team', () {
       var s = const FootballLiveState();

@@ -10272,6 +10272,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String get footballScore_addedMinute => 'Bù giờ +';
 
   @override
+  String get cbdFbShirtTitle => 'Số áo cầu thủ';
+
+  @override
+  String get cbdFbShirtUnknown => 'Không rõ số';
+
+  @override
+  String cbdFbOnFieldLabel(int players, int used, int limit) {
+    return '$players người · thay $used/$limit';
+  }
+
+  @override
+  String get cbdFbWarnGoalOutsidePlay => 'Chỉ ghi bàn khi đang trong hiệp';
+
+  @override
+  String cbdFbWarnSubsLimit(int limit) {
+    return 'Đội đã dùng đủ $limit lượt thay người';
+  }
+
+  @override
+  String get cbdFbWarnMatchStopped =>
+      'Một đội còn dưới 7 người: trận dừng, đội kia thắng';
+
+  @override
+  String get cbdFbWarnAlreadySentOff => 'Cầu thủ này đã bị đuổi khỏi sân';
+
+  @override
   String lite_kickParticipantSuccess(Object teamName) {
     return 'Đã loại $teamName khỏi giải.';
   }

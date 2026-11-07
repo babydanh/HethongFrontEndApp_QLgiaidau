@@ -10296,6 +10296,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get footballScore_addedMinute => 'Added time +';
 
   @override
+  String get cbdFbShirtTitle => 'Player shirt number';
+
+  @override
+  String get cbdFbShirtUnknown => 'Number unknown';
+
+  @override
+  String cbdFbOnFieldLabel(int players, int used, int limit) {
+    return '$players players · subs $used/$limit';
+  }
+
+  @override
+  String get cbdFbWarnGoalOutsidePlay =>
+      'Goals can only be recorded while play is on';
+
+  @override
+  String cbdFbWarnSubsLimit(int limit) {
+    return 'This team has used all $limit substitutions';
+  }
+
+  @override
+  String get cbdFbWarnMatchStopped =>
+      'A team has fewer than 7 players: match stopped, the other team wins';
+
+  @override
+  String get cbdFbWarnAlreadySentOff => 'This player was already sent off';
+
+  @override
   String lite_kickParticipantSuccess(Object teamName) {
     return '$teamName was removed from the tournament.';
   }

@@ -18876,6 +18876,48 @@ abstract class AppLocalizations {
   /// **'Bù giờ +'**
   String get footballScore_addedMinute;
 
+  /// No description provided for @cbdFbShirtTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số áo cầu thủ'**
+  String get cbdFbShirtTitle;
+
+  /// No description provided for @cbdFbShirtUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không rõ số'**
+  String get cbdFbShirtUnknown;
+
+  /// No description provided for @cbdFbOnFieldLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'{players} người · thay {used}/{limit}'**
+  String cbdFbOnFieldLabel(int players, int used, int limit);
+
+  /// No description provided for @cbdFbWarnGoalOutsidePlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ ghi bàn khi đang trong hiệp'**
+  String get cbdFbWarnGoalOutsidePlay;
+
+  /// No description provided for @cbdFbWarnSubsLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội đã dùng đủ {limit} lượt thay người'**
+  String cbdFbWarnSubsLimit(int limit);
+
+  /// No description provided for @cbdFbWarnMatchStopped.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một đội còn dưới 7 người: trận dừng, đội kia thắng'**
+  String get cbdFbWarnMatchStopped;
+
+  /// No description provided for @cbdFbWarnAlreadySentOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cầu thủ này đã bị đuổi khỏi sân'**
+  String get cbdFbWarnAlreadySentOff;
+
   /// No description provided for @lite_kickParticipantSuccess.
   ///
   /// In vi, this message translates to:

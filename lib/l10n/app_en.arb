@@ -3994,6 +3994,15 @@
   "footballScore_penaltyLabel": "Penalty shootout",
   "footballScore_minute": "Minute",
   "footballScore_addedMinute": "Added time +",
+  "cbdFbShirtTitle": "Player shirt number",
+  "cbdFbShirtUnknown": "Number unknown",
+  "cbdFbOnFieldLabel": "{players} players · subs {used}/{limit}",
+  "@cbdFbOnFieldLabel": {"placeholders": {"players": {"type": "int"}, "used": {"type": "int"}, "limit": {"type": "int"}}},
+  "cbdFbWarnGoalOutsidePlay": "Goals can only be recorded while play is on",
+  "cbdFbWarnSubsLimit": "This team has used all {limit} substitutions",
+  "@cbdFbWarnSubsLimit": {"placeholders": {"limit": {"type": "int"}}},
+  "cbdFbWarnMatchStopped": "A team has fewer than 7 players: match stopped, the other team wins",
+  "cbdFbWarnAlreadySentOff": "This player was already sent off",
   "lite_kickParticipantSuccess": "{teamName} was removed from the tournament.",
   "@lite_kickParticipantSuccess": {
     "placeholders": {

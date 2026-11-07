@@ -4022,6 +4022,15 @@
   "footballScore_penaltyLabel": "Luân lưu",
   "footballScore_minute": "Phút",
   "footballScore_addedMinute": "Bù giờ +",
+  "cbdFbShirtTitle": "Số áo cầu thủ",
+  "cbdFbShirtUnknown": "Không rõ số",
+  "cbdFbOnFieldLabel": "{players} người · thay {used}/{limit}",
+  "@cbdFbOnFieldLabel": {"placeholders": {"players": {"type": "int"}, "used": {"type": "int"}, "limit": {"type": "int"}}},
+  "cbdFbWarnGoalOutsidePlay": "Chỉ ghi bàn khi đang trong hiệp",
+  "cbdFbWarnSubsLimit": "Đội đã dùng đủ {limit} lượt thay người",
+  "@cbdFbWarnSubsLimit": {"placeholders": {"limit": {"type": "int"}}},
+  "cbdFbWarnMatchStopped": "Một đội còn dưới 7 người: trận dừng, đội kia thắng",
+  "cbdFbWarnAlreadySentOff": "Cầu thủ này đã bị đuổi khỏi sân",
   "lite_kickParticipantSuccess": "Đã loại {teamName} khỏi giải.",
   "@lite_kickParticipantSuccess": {
     "placeholders": {
