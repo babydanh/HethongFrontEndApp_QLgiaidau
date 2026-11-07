@@ -79,12 +79,16 @@ Future<void> pumpPanel(
   List<Override> extra = const [],
 }) async {
   debugPrintSynchronously('[bam-diem] pumpPanel start');
-  tester.view.physicalSize = const Size(400, 900);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(() {
-    tester.view.resetPhysicalSize();
-    tester.view.resetDevicePixelRatio();
-  });
+  // The emulator keeps its real screen: a resized test view makes the engine drop
+  // frames, so the screen recording would stay on "Test starting..." for the whole run.
+  if (!Platform.isAndroid) {
+    tester.view.physicalSize = const Size(400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+  }
   final match = bamDiemMatch(doubles: doubles);
   await tester.pumpWidget(
     ProviderScope(
@@ -131,7 +135,7 @@ class BamDiemShooter {
   final XemShooter _shooter;
 
   Future<void> snap(String name) async {
-    // PROBE: screenshots off to find out whether they hang the emulator run.
+    // Screenshots stay off: converting the surface to an image blanks the screen recording.
     if (!Platform.isAndroid || _probeNoShots) return;
     await _shooter.snap(name);
   }
