@@ -63,18 +63,10 @@ Future<void> _pumpCourt(
   writes: _PickleballWrites(),
 );
 
-/// Taps "+" of [team], then waits out the sync debounce and the snack bar swap.
+/// Taps "+" of [team], then waits out the sync debounce.
 Future<void> _plus(WidgetTester tester, int team) async {
   await tapAndSettle(tester, find.byTooltip('Add point for team $team'));
   await tester.pump(const Duration(milliseconds: 600));
-}
-
-/// The floating snack bar covers the lower team's "+" button, so a scorer
-/// waits for it to go away before the next tap.
-Future<void> _waitSnackBarGone(WidgetTester tester) async {
-  await tester.pump(const Duration(seconds: 5));
-  await tester.pump(const Duration(seconds: 1));
-  expect(find.byType(SnackBar), findsNothing);
 }
 
 /// Scores, serving team and server number as the real panel holds them.
@@ -91,14 +83,6 @@ Future<void> _waitSnackBarGone(WidgetTester tester) async {
     server: serve.serverNumber,
   );
 }
-
-String _wonServerTwo(int team) =>
-    'Team $team won the rally but the other team is serving: '
-    'server 2 serves next (no point awarded)';
-
-String _wonHandOver(int team) =>
-    'Team $team won the rally but the other team is serving: '
-    'the serve passes to team $team (no point awarded)';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -130,23 +114,20 @@ void main() {
 
     // Receiver plus (1): server 2 of the same team, nobody scores.
     await _plus(tester, 2);
-    expect(find.text(_wonServerTwo(2)), findsOneWidget);
+    expect(find.textContaining('won the rally'), findsNothing);
     expect(find.text('3-0-2'), findsOneWidget);
     expect(_read(tester), (s1: 3, s2: 0, team: 1, server: 2));
     expect(find.text('→ Hand over'), findsOneWidget);
     await shooter.snap('doi-giao-2');
-    await _waitSnackBarGone(tester);
 
     // Receiver plus (2): the serve passes to team B, score still 3-0.
     await _plus(tester, 2);
-    expect(find.text(_wonHandOver(2)), findsOneWidget);
-    expect(find.text(_wonServerTwo(2)), findsNothing);
+    expect(find.textContaining('won the rally'), findsNothing);
     expect(find.text('0-3-1'), findsOneWidget);
     expect(_read(tester), (s1: 3, s2: 0, team: 2, server: 1));
     await shooter.snap('doi-doi-giao-sang-b');
 
     // Team B now serves and can score.
-    await _waitSnackBarGone(tester);
     await _plus(tester, 2);
     expect(find.text('1-3-1'), findsOneWidget);
     expect(_read(tester), (s1: 3, s2: 1, team: 2, server: 1));
@@ -172,13 +153,12 @@ void main() {
 
     // Receiver plus: the serve changes team at once, score unchanged.
     await _plus(tester, 2);
-    expect(find.text(_wonHandOver(2)), findsOneWidget);
+    expect(find.textContaining('won the rally'), findsNothing);
     expect(find.textContaining('server 2'), findsNothing);
     expect(find.text('0-2'), findsOneWidget);
     expect(_read(tester), (s1: 2, s2: 0, team: 2, server: 1));
     expect(find.text('→ Serve 2'), findsNothing);
     await shooter.snap('don-doi-giao-ngay');
-    await _waitSnackBarGone(tester);
 
     await _plus(tester, 2);
     expect(find.text('1-2'), findsOneWidget);
@@ -198,7 +178,7 @@ void main() {
 
     // The first fault of the game passes the serve straight to team B.
     await _plus(tester, 2);
-    expect(find.text(_wonHandOver(2)), findsOneWidget);
+    expect(find.textContaining('won the rally'), findsNothing);
     expect(find.textContaining('server 2'), findsNothing);
     expect(find.text('0-1-1'), findsOneWidget);
     expect(_read(tester), (s1: 1, s2: 0, team: 2, server: 1));

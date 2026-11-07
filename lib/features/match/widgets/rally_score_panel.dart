@@ -27,14 +27,23 @@ class RallyScorePanel extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
 
-    final matchAsync = ref.watch(
+    // Select only what this panel shows: a socket echo or poll with the same
+    // names and team sizes must not rebuild the whole panel.
+    final info = ref.watch(
       singleMatchProvider((
         tournamentId: params.tournamentId,
         matchId: params.matchId,
-      )),
+      )).select(
+        (m) => (
+          m.value?.team1Name,
+          m.value?.team2Name,
+          m.value?.team1Members?.length ?? 0,
+          m.value?.team2Members?.length ?? 0,
+        ),
+      ),
     );
-    final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
-    final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
+    final team1Name = info.$1 ?? l10n.pickleballTeam1;
+    final team2Name = info.$2 ?? l10n.pickleballTeam2;
 
     // Serve line and reminders: badminton and table tennis on a strict match
     // only. Pickleball rally and Lite scorecards keep the plain panel.
@@ -42,10 +51,7 @@ class RallyScorePanel extends ConsumerWidget {
     final showServe =
         !state.isOpenScoring &&
         (kind == SportRuleKind.badminton || kind == SportRuleKind.tableTennis);
-    final match = matchAsync.value;
-    final doubles =
-        (match?.team1Members?.length ?? 0) >= 2 ||
-        (match?.team2Members?.length ?? 0) >= 2;
+    final doubles = info.$3 >= 2 || info.$4 >= 2;
     final gameIndex = state.finishedSets.length;
     final lastSet = state.finishedSets.isEmpty ? null : state.finishedSets.last;
     final serve = showServe

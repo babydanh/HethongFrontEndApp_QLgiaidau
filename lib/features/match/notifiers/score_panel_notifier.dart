@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
@@ -163,9 +164,23 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     return initialState;
   }
 
+  /// Feeds a server snapshot through the same path as the match stream.
+  @visibleForTesting
+  void applyMatchSnapshot(MatchModel match) => _updateStateFromMatch(match);
+
   void _updateStateFromMatch(MatchModel match) {
     final incomingRevision = match.revision;
     final hydrated = _hydrateState(state, match);
+
+    // A tap that is still waiting for its write is newer than any snapshot,
+    // whatever revision the snapshot carries (a court-state PATCH can bump the
+    // revision without containing the tap). Dropping the snapshot keeps the
+    // number from jumping back and forth; the write response syncs it again.
+    if ((_liveSyncPending || _pendingFootballSync != null) &&
+        _scoreSignature(hydrated) != _scoreSignature(state) &&
+        !_isServerTerminal(match)) {
+      return;
+    }
 
     // The score write invalidates the match provider so the outer cards stay
     // fresh.  That provider can briefly emit the pre-write snapshot (or a

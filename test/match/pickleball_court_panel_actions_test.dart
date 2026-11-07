@@ -333,16 +333,14 @@ void main() {
 
       expect(log, ['switchServer']);
       expect(
-        find.text(
-          'Team 2 won the rally but the other team is serving: server 2 '
-          'serves next (no point awarded)',
-        ),
-        findsOneWidget,
+        find.textContaining('won the rally'),
+        findsNothing,
+        reason: 'no toast: it floated over the lower "+" button',
       );
     });
 
-    testWidgets('TC-CBD-PB-02 doubles, server 2: button and toast say the '
-        'serve is handed over', (tester) async {
+    testWidgets('TC-CBD-PB-02 doubles, server 2: the button says the '
+        'serve is handed over, no toast', (tester) async {
       final log = <String>[];
       await _pumpPanel(
         tester,
@@ -357,11 +355,9 @@ void main() {
 
       expect(log, ['switchServer']);
       expect(
-        find.text(
-          'Team 2 won the rally but the other team is serving: the serve '
-          'passes to team 2 (no point awarded)',
-        ),
-        findsOneWidget,
+        find.textContaining('won the rally'),
+        findsNothing,
+        reason: 'no toast: it floated over the lower "+" button',
       );
     });
 
@@ -377,7 +373,7 @@ void main() {
       await tester.pump();
 
       expect(log, ['switchServer']);
-      expect(find.textContaining('the serve passes to team 2'), findsOneWidget);
+      expect(find.textContaining('won the rally'), findsNothing);
     });
 
     testWidgets('TC-CBD-PB-04 singles: the serve is handed over at once', (
@@ -397,7 +393,7 @@ void main() {
       await tester.pump();
 
       expect(log, ['sideOut']);
-      expect(find.textContaining('the serve passes to team 2'), findsOneWidget);
+      expect(find.textContaining('won the rally'), findsNothing);
     });
 
     testWidgets('a serving team point shows no toast', (tester) async {
