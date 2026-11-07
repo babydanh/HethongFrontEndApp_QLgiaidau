@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_tennis.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -36,8 +37,14 @@ class TennisScorePanel extends ConsumerWidget {
     final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
     final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
+    // A match tie-break has no game to start it, so it is derived from the
+    // sets as well as from the point state.
+    final inTiebreak = state.tennisInTiebreak;
+    // Serve line is for strict matches only; an open (Lite) card has none.
+    final serverTeam = state.isOpenScoring ? null : state.tennisServerTeam;
     final isDeuce =
-        !t.isTiebreak &&
+        !inTiebreak &&
+        !ts.noAd &&
         t.team1GamePoints >= 3 &&
         t.team2GamePoints >= 3 &&
         t.team1GamePoints == t.team2GamePoints;
@@ -52,6 +59,9 @@ class TennisScorePanel extends ConsumerWidget {
       colors: colors,
       teamName: team1Name,
       l10n: l10n,
+      inTiebreak: inTiebreak,
+      showServeLine: serverTeam != null,
+      isServing: serverTeam == 1,
     );
 
     final team2Widget = _buildTeamControl(
@@ -61,9 +71,12 @@ class TennisScorePanel extends ConsumerWidget {
       colors: colors,
       teamName: team2Name,
       l10n: l10n,
+      inTiebreak: inTiebreak,
+      showServeLine: serverTeam != null,
+      isServing: serverTeam == 2,
     );
 
-    final tiebreakBanner = t.isTiebreak
+    final tiebreakBanner = inTiebreak
         ? Container(
             width: double.infinity,
             margin: const EdgeInsets.only(bottom: 6),
@@ -84,7 +97,11 @@ class TennisScorePanel extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    l10n.tennisTiebreakInfo(ts.tiebreakPoints ?? 7),
+                    state.tennisMatchTiebreakDue
+                        ? l10n.cbdTennisMatchTiebreak
+                        : l10n.tennisTiebreakInfo(
+                            state.tennisPlan.tiebreakTarget,
+                          ),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -97,8 +114,8 @@ class TennisScorePanel extends ConsumerWidget {
           )
         : null;
 
-    final deuceWidget = (isDeuce || t.isTiebreak)
-        ? _buildCenterState(colors, isDeuce, t.isTiebreak, l10n)
+    final deuceWidget = (isDeuce || inTiebreak)
+        ? _buildCenterState(colors, isDeuce, inTiebreak, l10n)
         : null;
 
     return Padding(
@@ -145,11 +162,14 @@ class TennisScorePanel extends ConsumerWidget {
     required AppColorsExtension colors,
     required String teamName,
     required AppLocalizations l10n,
+    required bool inTiebreak,
+    required bool showServeLine,
+    required bool isServing,
   }) {
     final displayPoints = formatTennisPoint(
       isTeam1 ? t.team1GamePoints : t.team2GamePoints,
       isTeam1 ? t.team2GamePoints : t.team1GamePoints,
-      t.isTiebreak,
+      inTiebreak,
     );
     final color = isTeam1 ? const Color(0xFF2979FF) : const Color(0xFFEA580C);
     final rawPoints = isTeam1 ? t.team1GamePoints : t.team2GamePoints;
@@ -206,7 +226,22 @@ class TennisScorePanel extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          if (showServeLine)
+            SizedBox(
+              height: 16,
+              child: Center(
+                child: Text(
+                  isServing ? l10n.cbdTennisServe : '',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF16A34A),
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox(height: 6),
 
           // HÀNG NGANG: [-] | [ĐIỂM SỐ TENNIS] | [+]
           Expanded(

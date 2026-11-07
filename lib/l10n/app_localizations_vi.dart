@@ -19235,4 +19235,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get cbdRallyChangeEnds => 'Game cuối: đổi sân (một bên đạt 5)';
+
+  @override
+  String get cbdTennisServe => '● GIAO';
+
+  @override
+  String get cbdTennisMatchTiebreak =>
+      'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)';
 }

@@ -34656,6 +34656,18 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Game cuối: đổi sân (một bên đạt 5)'**
   String get cbdRallyChangeEnds;
+
+  /// No description provided for @cbdTennisServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'● GIAO'**
+  String get cbdTennisServe;
+
+  /// No description provided for @cbdTennisMatchTiebreak.
+  ///
+  /// In vi, this message translates to:
+  /// **'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)'**
+  String get cbdTennisMatchTiebreak;
 }
 
 class _AppLocalizationsDelegate

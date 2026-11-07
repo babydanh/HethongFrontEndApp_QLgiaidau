@@ -7665,5 +7665,7 @@
   "cbdRallyBreak60": "Nghỉ 60 giây (bên dẫn đạt 11)",
   "cbdRallyBreak60ChangeEnds": "Nghỉ 60 giây (bên dẫn đạt 11), đổi sân",
   "cbdRallyBreakBetweenGames": "Nghỉ giữa game 120 giây, đổi sân",
-  "cbdRallyChangeEnds": "Game cuối: đổi sân (một bên đạt 5)"
+  "cbdRallyChangeEnds": "Game cuối: đổi sân (một bên đạt 5)",
+  "cbdTennisServe": "● GIAO",
+  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)"
 }

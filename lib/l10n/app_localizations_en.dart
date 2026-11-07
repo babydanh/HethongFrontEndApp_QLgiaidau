@@ -19314,4 +19314,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cbdRallyChangeEnds =>
       'Deciding game: change ends (a side reached 5)';
+
+  @override
+  String get cbdTennisServe => '● SERVE';
+
+  @override
+  String get cbdTennisMatchTiebreak =>
+      'MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)';
 }
