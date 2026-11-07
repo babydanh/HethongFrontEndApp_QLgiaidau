@@ -5,7 +5,9 @@ import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
+import 'package:app_quanly_giaidau/domain/services/tennis_rules.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_tennis.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -481,7 +483,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void tennisAwardPoint(bool isTeam1) {
     if (_rejectIfMaxSetsReached()) return;
-    final t = state.tennis ?? const TennisGameState();
+    final current = state.tennis ?? const TennisGameState();
+    // A match tie-break has no game to start it: it begins with the first point.
+    final t = state.tennisMatchTiebreakDue && !current.isTiebreak
+        ? current.copyWith(isTiebreak: true)
+        : current;
     state = state.copyWith(
       tennis: t.copyWith(
         team1GamePoints: isTeam1 ? t.team1GamePoints + 1 : t.team1GamePoints,
@@ -519,22 +525,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (state.isMatchComplete) return;
     final t = state.tennis;
     if (t == null) return;
-    if (t.isTiebreak) {
-      final target = state.config.tiebreakPoints ?? 7;
-      if (t.team1GamePoints >= target &&
-          (t.team1GamePoints - t.team2GamePoints) >= 2) {
-        _finishTennisGame(1);
-      } else if (t.team2GamePoints >= target &&
-          (t.team2GamePoints - t.team1GamePoints) >= 2) {
-        _finishTennisGame(2);
-      }
-      return;
-    }
-    if (t.team1GamePoints >= 4 &&
-        (t.team1GamePoints - t.team2GamePoints) >= 2) {
+    bool won(int a, int b) => tennisGameWon(
+      a: a,
+      b: b,
+      noAd: state.config.noAd,
+      tiebreak: t.isTiebreak,
+      tiebreakTarget: state.tennisPlan.tiebreakTarget,
+    );
+    if (won(t.team1GamePoints, t.team2GamePoints)) {
       _finishTennisGame(1);
-    } else if (t.team2GamePoints >= 4 &&
-        (t.team2GamePoints - t.team1GamePoints) >= 2) {
+    } else if (won(t.team2GamePoints, t.team1GamePoints)) {
       _finishTennisGame(2);
     }
   }
@@ -545,7 +545,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ? state.finishedSets.last
         : null;
     List<SetScoreData> newSets;
-    if (curSet != null && !curSet.isFinished) {
+    if (state.tennisMatchTiebreakDue) {
+      // The Backend only accepts 7-6 / 6-7 as a tie-break set, so the match
+      // tie-break is stored that way, replacing a live 0-0 placeholder.
+      final done = winnerTeam == 1
+          ? const SetScoreData(score1: 7, score2: 6, isFinished: true)
+          : const SetScoreData(score1: 6, score2: 7, isFinished: true);
+      newSets = [...state.finishedSets.where((set) => set.isFinished), done];
+    } else if (curSet != null && !curSet.isFinished) {
       newSets = [
         ...state.finishedSets.sublist(0, state.finishedSets.length - 1),
         winnerTeam == 1
@@ -576,9 +583,15 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     // limit. Lite/Free tennis is intentionally open-ended: reaching 6 games
     // only makes the set ready; the scorer must press "Chốt set N" so the
     // current set remains editable and the next set can be started manually.
-    if (!state.isOpenScoring &&
-        !state.overrideEnabled &&
-        isSetComplete(curSet, state.config)) {
+    final plan = state.tennisPlan;
+    final tiebreakAtGames =
+        state.config.tiebreakAtGames ?? state.config.tiebreakAt;
+    // Without a tie-break (tiebreakMode NONE / NO_TIEBREAK final set) the set
+    // is won at the target with a 2 game lead; the 7-6 cap does not apply.
+    final setComplete = plan.tiebreakEnabled
+        ? isSetComplete(curSet, state.config)
+        : _setWonByTwoGames(curSet);
+    if (!state.isOpenScoring && !state.overrideEnabled && setComplete) {
       final idx = state.finishedSets.length - 1;
       final newSets = [...state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
@@ -586,8 +599,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         finishedSets: newSets,
         tennis: const TennisGameState(),
       );
-    } else if (curSet.score1 >= state.config.tiebreakAt &&
-        curSet.score2 >= state.config.tiebreakAt &&
+    } else if (plan.tiebreakEnabled &&
+        curSet.score1 >= tiebreakAtGames &&
+        curSet.score2 >= tiebreakAtGames &&
         curSet.score1 == curSet.score2) {
       state = state.copyWith(
         tennis: (state.tennis ?? const TennisGameState()).copyWith(
@@ -595,6 +609,12 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ),
       );
     }
+  }
+
+  bool _setWonByTwoGames(SetScoreData set) {
+    final high = set.score1 > set.score2 ? set.score1 : set.score2;
+    final low = set.score1 > set.score2 ? set.score2 : set.score1;
+    return high >= state.config.pointsPerSet && high - low >= 2;
   }
 
   // ════════════════ PICKLEBALL ════════════════
