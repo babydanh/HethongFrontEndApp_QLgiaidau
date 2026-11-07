@@ -31,7 +31,7 @@
 
 ## 3. Kiểm tra cuối
 
-- [ ] 3.1 `flutter analyze --no-pub integration_test` rồi push nhánh và chạy cloud. Tiêu chí: `flutter analyze --no-pub integration_test` → exit 0; `cloud-test-runner.py run --target app-e2e --app-ref app-e2e-bam-diem --specs integration_test/xem_bam_diem_pickleball_test.dart integration_test/xem_bam_diem_rally_test.dart integration_test/xem_bam_diem_tennis_test.dart integration_test/xem_bam_diem_bongda_test.dart` → exit 0
+- [x] 3.1 `flutter analyze --no-pub integration_test` rồi push nhánh và chạy cloud. Tiêu chí: `flutter analyze --no-pub integration_test` → exit 0; `cloud-test-runner.py run --target app-e2e --app-ref app-e2e-bam-diem --specs integration_test/xem_bam_diem_pickleball_test.dart integration_test/xem_bam_diem_rally_test.dart integration_test/xem_bam_diem_tennis_test.dart integration_test/xem_bam_diem_bongda_test.dart` → exit 0
   - Files: (không sửa file)
   - Giao: (không) · Nhận: 1.1, 2.1–2.4
   - Chủ file chung: (không)
