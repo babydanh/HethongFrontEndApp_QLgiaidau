@@ -419,6 +419,30 @@ void main() {
     });
   });
 
+  group('TC-CBD-PB-05 Lite / rally: either team scores, no side-out', () {
+    for (final lite in [true, false]) {
+      final name = lite ? 'Lite' : 'rally point set';
+      testWidgets('$name: plus of the receiving team awards the point, no '
+          'lose-serve toast or hand-over', (tester) async {
+        final log = <String>[];
+        await _pumpPanel(
+          tester,
+          log: log,
+          state: _state(model: SportScoringModel.rallyPointSet, lite: lite),
+        );
+
+        await tester.tap(find.byTooltip('Add point for team 2'));
+        await tester.pump();
+
+        expect(log, ['award:2']);
+        expect(find.textContaining('no point awarded'), findsNothing);
+        // The button keeps the plain label: there is no "→ next" hint.
+        expect(find.text('CHANGE SERVE'), findsOneWidget);
+        expect(find.textContaining('→'), findsNothing);
+      });
+    }
+  });
+
   group('finish set', () {
     testWidgets('asks first, then finishes the set', (tester) async {
       final log = <String>[];
