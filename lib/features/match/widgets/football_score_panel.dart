@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/domain/services/football_rules.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
@@ -44,7 +45,10 @@ class FootballScorePanel extends ConsumerWidget {
                     child: _TeamScore(
                       name: team1Name,
                       score: score.team1Goals,
-                      onAdd: () => notifier.footballAddGoal(true),
+                      footnote: _onFieldLabel(l10n, score, true),
+                      footnoteKey: const Key('football-onfield-team1'),
+                      onAdd: () =>
+                          _warn(context, notifier.footballAddGoal(true)),
                       onRemove: () => notifier.footballRemoveGoal(true),
                       disabled: isLocked,
                     ),
@@ -63,7 +67,10 @@ class FootballScorePanel extends ConsumerWidget {
                     child: _TeamScore(
                       name: team2Name,
                       score: score.team2Goals,
-                      onAdd: () => notifier.footballAddGoal(false),
+                      footnote: _onFieldLabel(l10n, score, false),
+                      footnoteKey: const Key('football-onfield-team2'),
+                      onAdd: () =>
+                          _warn(context, notifier.footballAddGoal(false)),
                       onRemove: () => notifier.footballRemoveGoal(false),
                       disabled: isLocked,
                     ),
@@ -200,6 +207,16 @@ class FootballScorePanel extends ConsumerWidget {
     );
   }
 
+  static String _onFieldLabel(
+    AppLocalizations l10n,
+    FootballLiveState score,
+    bool isTeam1,
+  ) => l10n.cbdFbOnFieldLabel(
+    footballPlayersOnField(score, isTeam1),
+    footballSubsUsed(score, isTeam1),
+    footballDefaultSubsLimit,
+  );
+
   static String _eventLabel(AppLocalizations l10n, String type) =>
       switch (type) {
         'GOAL' => l10n.footballScore_goal,
@@ -241,11 +258,104 @@ class FootballScorePanel extends ConsumerWidget {
         ),
       ),
     );
-    if (team != null && context.mounted) {
-      ref
-          .read(scorePanelNotifierProvider(params).notifier)
-          .footballAddEvent(type, team);
+    if (team == null || !context.mounted) return;
+    int? shirt;
+    if (type == 'YELLOW_CARD' || type == 'RED_CARD') {
+      final picked = await _showShirtPicker(context);
+      if (picked == null || !context.mounted) return;
+      shirt = picked == _shirtUnknown ? null : picked;
     }
+    final notifier = ref.read(scorePanelNotifierProvider(params).notifier);
+    final blocked = notifier.footballAddEvent(type, team, shirt: shirt);
+    final stopped =
+        ref
+            .read(scorePanelNotifierProvider(params))
+            .football
+            ?.stoppedWinnerTeam ??
+        0;
+    _warn(
+      context,
+      blocked ?? (stopped != 0 ? FootballBlockReason.matchStopped : null),
+    );
+  }
+
+  /// Marker returned by the shirt picker for "number unknown".
+  static const _shirtUnknown = -1;
+
+  /// Grid of shirt numbers 1-99; returns the number, [_shirtUnknown], or null
+  /// when the sheet is dismissed.
+  static Future<int?> _showShirtPicker(BuildContext context) =>
+      showModalBottomSheet<int>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (sheetContext) {
+          final l10n = AppLocalizations.of(sheetContext)!;
+          return SafeArea(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(sheetContext).size.height * 0.6,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.cbdFbShirtTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  TextButton(
+                    key: const Key('football-shirt-unknown'),
+                    onPressed: () => Navigator.pop(sheetContext, _shirtUnknown),
+                    child: Text(l10n.cbdFbShirtUnknown),
+                  ),
+                  Flexible(
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 8,
+                            mainAxisSpacing: 4,
+                            crossAxisSpacing: 4,
+                            childAspectRatio: 1,
+                          ),
+                      itemCount: 99,
+                      itemBuilder: (_, index) => OutlinedButton(
+                        key: Key('football-shirt-${index + 1}'),
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                        ),
+                        onPressed: () => Navigator.pop(sheetContext, index + 1),
+                        child: Text('${index + 1}'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+
+  /// Shows a snackbar for a refused football action; no-op when [reason] is
+  /// null.
+  static void _warn(BuildContext context, FootballBlockReason? reason) {
+    if (reason == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    final message = switch (reason) {
+      FootballBlockReason.goalOutsidePlay => l10n.cbdFbWarnGoalOutsidePlay,
+      FootballBlockReason.matchStopped => l10n.cbdFbWarnMatchStopped,
+      FootballBlockReason.alreadySentOff => l10n.cbdFbWarnAlreadySentOff,
+      FootballBlockReason.substitutionLimit => l10n.cbdFbWarnSubsLimit(
+        footballDefaultSubsLimit,
+      ),
+    };
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
   }
 
   static String _label(AppLocalizations l10n, String phase) => switch (phase) {
@@ -266,6 +376,8 @@ class FootballScorePanel extends ConsumerWidget {
 class _TeamScore extends StatelessWidget {
   final String name;
   final int score;
+  final String footnote;
+  final Key footnoteKey;
   final VoidCallback onAdd;
   final VoidCallback onRemove;
   final bool disabled;
@@ -273,6 +385,8 @@ class _TeamScore extends StatelessWidget {
   const _TeamScore({
     required this.name,
     required this.score,
+    required this.footnote,
+    required this.footnoteKey,
     required this.onAdd,
     required this.onRemove,
     this.disabled = false,
@@ -286,6 +400,12 @@ class _TeamScore extends StatelessWidget {
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+      Text(
+        footnote,
+        key: footnoteKey,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodySmall,
       ),
       Text(
         '$score',

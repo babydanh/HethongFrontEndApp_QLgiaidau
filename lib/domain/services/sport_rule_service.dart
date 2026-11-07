@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/domain/services/tennis_rules.dart';
+
 // ─── Sport Rule Kinds ───
 
 enum SportRuleKind {
@@ -79,6 +81,15 @@ class SportConfig {
   final int tiebreakAt;
   final int? tiebreakPoints;
 
+  /// Tennis options from `sportRules.format` (absent keys keep the old rules).
+  final bool noAd;
+  final TennisFinalSetMode finalSetMode;
+  final TennisTiebreakMode tiebreakMode;
+
+  /// Games each at which a tennis tie-break starts; null falls back to
+  /// [tiebreakAt].
+  final int? tiebreakAtGames;
+
   const SportConfig({
     required this.kind,
     required this.scoringModel,
@@ -90,6 +101,10 @@ class SportConfig {
     required this.maxPoints,
     required this.tiebreakAt,
     this.tiebreakPoints,
+    this.noAd = false,
+    this.finalSetMode = TennisFinalSetMode.standard,
+    this.tiebreakMode = TennisTiebreakMode.standard,
+    this.tiebreakAtGames,
   });
 
   @override
@@ -241,6 +256,7 @@ SportConfig resolveSportConfig(
       ? fallback
       : SportRuleKind.fromString(rawKind);
   final defaults = _sportDefaults[kind]!;
+  final isTennis = kind == SportRuleKind.tennis;
 
   // Nếu sportRules có scoringModel override
   final rawModel = source['scoringModel']?.toString();
@@ -276,7 +292,33 @@ SportConfig resolveSportConfig(
     tiebreakAt: _readInt(source, 'tiebreakAt') ?? defaults.tiebreakAt,
     tiebreakPoints:
         _readInt(source, 'tiebreakPoints') ?? defaults.tiebreakPoints,
+    noAd: isTennis && _readRuleBool(sportRules, 'noAd') == true,
+    finalSetMode: isTennis
+        ? parseTennisFinalSetMode(_readRuleKey(sportRules, 'finalSetMode')) ??
+              TennisFinalSetMode.standard
+        : TennisFinalSetMode.standard,
+    tiebreakMode: isTennis
+        ? parseTennisTiebreakMode(_readRuleKey(sportRules, 'tiebreakMode')) ??
+              TennisTiebreakMode.standard
+        : TennisTiebreakMode.standard,
+    tiebreakAtGames: isTennis
+        ? _readInt({'v': _readRuleKey(sportRules, 'tiebreakAtGames')}, 'v')
+        : null,
   );
+}
+
+/// Reads a tennis rule from `format`, then `scoring`, then the top level, the
+/// same order the Web uses. Backend stores these under `format`.
+Object? _readRuleKey(Map<String, dynamic> rules, String key) {
+  for (final holder in [rules['format'], rules['scoring'], rules]) {
+    if (holder is Map && holder.containsKey(key)) return holder[key];
+  }
+  return null;
+}
+
+bool? _readRuleBool(Map<String, dynamic> rules, String key) {
+  final v = _readRuleKey(rules, key);
+  return v is bool ? v : null;
 }
 
 /// Đếm sets thắng của mỗi bên từ list sets

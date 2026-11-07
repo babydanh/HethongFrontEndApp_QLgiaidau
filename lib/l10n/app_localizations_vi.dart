@@ -2158,6 +2158,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtLoseServe => 'Mất giao';
 
   @override
+  String get cbdPbNextServerTwo => '→ Giao 2';
+
+  @override
+  String get cbdPbNextHandOver => '→ đổi giao';
+
+  @override
+  String cbdPbReceiverWonServerTwo(int team) {
+    return 'Đội $team thắng pha nhưng đội kia đang giao: người giao 2 giao tiếp (không ai được điểm)';
+  }
+
+  @override
+  String cbdPbReceiverWonHandOver(int team) {
+    return 'Đội $team thắng pha nhưng đội kia đang giao: đổi giao sang Đội $team (không ai được điểm)';
+  }
+
+  @override
   String get pickleballCourtEnd => 'Kết thúc';
 
   @override
@@ -10270,6 +10286,32 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get footballScore_addedMinute => 'Bù giờ +';
+
+  @override
+  String get cbdFbShirtTitle => 'Số áo cầu thủ';
+
+  @override
+  String get cbdFbShirtUnknown => 'Không rõ số';
+
+  @override
+  String cbdFbOnFieldLabel(int players, int used, int limit) {
+    return '$players người · thay $used/$limit';
+  }
+
+  @override
+  String get cbdFbWarnGoalOutsidePlay => 'Chỉ ghi bàn khi đang trong hiệp';
+
+  @override
+  String cbdFbWarnSubsLimit(int limit) {
+    return 'Đội đã dùng đủ $limit lượt thay người';
+  }
+
+  @override
+  String get cbdFbWarnMatchStopped =>
+      'Một đội còn dưới 7 người: trận dừng, đội kia thắng';
+
+  @override
+  String get cbdFbWarnAlreadySentOff => 'Cầu thủ này đã bị đuổi khỏi sân';
 
   @override
   String lite_kickParticipantSuccess(Object teamName) {
@@ -19208,4 +19250,38 @@ class AppLocalizationsVi extends AppLocalizations {
   String seriesLegsLinkTitle(String leg) {
     return 'Gắn giải vào $leg';
   }
+
+  @override
+  String get cbdRallyServe => '● GIAO';
+
+  @override
+  String get cbdRallyServeRight => 'ô phải';
+
+  @override
+  String get cbdRallyServeLeft => 'ô trái';
+
+  @override
+  String cbdRallyServePlayer(int n) {
+    return 'VĐV $n';
+  }
+
+  @override
+  String get cbdRallyBreak60 => 'Nghỉ 60 giây (bên dẫn đạt 11)';
+
+  @override
+  String get cbdRallyBreak60ChangeEnds =>
+      'Nghỉ 60 giây (bên dẫn đạt 11), đổi sân';
+
+  @override
+  String get cbdRallyBreakBetweenGames => 'Nghỉ giữa game 120 giây, đổi sân';
+
+  @override
+  String get cbdRallyChangeEnds => 'Game cuối: đổi sân (một bên đạt 5)';
+
+  @override
+  String get cbdTennisServe => '● GIAO';
+
+  @override
+  String get cbdTennisMatchTiebreak =>
+      'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)';
 }

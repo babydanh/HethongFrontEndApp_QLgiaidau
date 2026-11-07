@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/widgets/sport_icon_widget.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
@@ -337,18 +338,38 @@ void main() {
       expect(find.text('Record penalty').hitTestable(), findsOneWidget);
     });
 
-    testWidgets('wide landscape: the court runs to both screen edges', (
-      tester,
-    ) async {
-      // The phone reports a 46.8dp inset on its right (camera side) and top.
-      const inset = FakeViewPadding(top: 47, right: 47);
+    testWidgets(
+      'TC-CBD-PB-06 wide landscape: the court runs to both screen edges',
+      (tester) async {
+        // The phone reports a 46.8dp inset on the camera side (left or right)
+        // and on top.
+        const inset = FakeViewPadding(top: 47, left: 47, right: 47);
+        tester.view.viewPadding = inset;
+        tester.view.padding = inset;
+        await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
+
+        final court = tester.getRect(find.byKey(courtSurfaceKey));
+        expect(court.left, 0);
+        expect(court.right, 800);
+      },
+    );
+
+    testWidgets('TC-CBD-PB-06 wide landscape: controls stay clear of the '
+        'camera hole on both sides', (tester) async {
+      const inset = FakeViewPadding(top: 47, left: 47, right: 47);
       tester.view.viewPadding = inset;
       tester.view.padding = inset;
       await _pump(tester, sportKey: 'PICKLEBALL', size: const Size(800, 360));
 
-      final court = tester.getRect(find.byKey(courtSurfaceKey));
-      expect(court.left, 0);
-      expect(court.right, 800);
+      // The corner mark of the top row is the control nearest the left edge.
+      final mark = tester.getRect(find.byType(SportIconWidget));
+      expect(mark.left, greaterThanOrEqualTo(47));
+      // The bottom bar buttons sit inside both insets.
+      for (final tip in ['Add point for team 1', 'Add point for team 2']) {
+        final plus = tester.getRect(find.byTooltip(tip));
+        expect(plus.left, greaterThanOrEqualTo(47), reason: tip);
+        expect(plus.right, lessThanOrEqualTo(800 - 47), reason: tip);
+      }
     });
 
     testWidgets('wide landscape: no margin above or below the scoreboard', (

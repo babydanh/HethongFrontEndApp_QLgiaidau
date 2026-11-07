@@ -52,10 +52,11 @@ ScorePanelState _state({
   bool lite = false,
   bool override = false,
   String reason = '',
+  PickleballServeState serve = const PickleballServeState(),
 }) => ScorePanelState(
   config: _config(model, open: lite),
   isLite: lite,
-  pickleball: const PickleballServeState(),
+  pickleball: serve,
   rally: const RallySetState(currentP1: 5, currentP2: 3),
   overrideEnabled: override,
   overrideReason: reason,
@@ -268,6 +269,178 @@ void main() {
 
       expect(find.byTooltip('Change serve'), findsOneWidget);
     });
+  });
+
+  group('strict side-out: the receiving team winning the rally', () {
+    testWidgets('doubles: plus of the receiver loses the serve step by step', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log);
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+
+      // No point is awarded: the serve moves on (1 -> 2 -> other team).
+      expect(log, ['switchServer']);
+    });
+
+    testWidgets('singles: plus of the receiver hands the serve over at once', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await _pumpPanel(
+        tester,
+        log: log,
+        context: _context(isDoubles: false, serverNumber: 1),
+      );
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+
+      expect(log, ['sideOut']);
+    });
+
+    testWidgets('plus of the serving team still awards the point', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log);
+
+      await tester.tap(find.byTooltip('Add point for team 1'));
+
+      expect(log, ['award:1']);
+    });
+  });
+
+  group('TC-CBD-PB receiver plus = serving team lost the rally', () {
+    const secondDone = PickleballServeState(serverNumber: 1, openingDone: true);
+    const serverTwo = PickleballServeState(serverNumber: 2, openingDone: true);
+
+    testWidgets('TC-CBD-PB-01 doubles, server 1: button and toast say server 2 '
+        'serves next', (tester) async {
+      final log = <String>[];
+      await _pumpPanel(
+        tester,
+        log: log,
+        context: _context(serverNumber: 1),
+        state: _state(serve: secondDone),
+      );
+
+      expect(find.text('LOSE SERVE'), findsOneWidget);
+      expect(find.text('→ Serve 2'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+      await tester.pump();
+
+      expect(log, ['switchServer']);
+      expect(
+        find.text(
+          'Team 2 won the rally but the other team is serving: server 2 '
+          'serves next (no point awarded)',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('TC-CBD-PB-02 doubles, server 2: button and toast say the '
+        'serve is handed over', (tester) async {
+      final log = <String>[];
+      await _pumpPanel(
+        tester,
+        log: log,
+        state: _state(serve: serverTwo),
+      );
+
+      expect(find.text('→ Hand over'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+      await tester.pump();
+
+      expect(log, ['switchServer']);
+      expect(
+        find.text(
+          'Team 2 won the rally but the other team is serving: the serve '
+          'passes to team 2 (no point awarded)',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('TC-CBD-PB-03 opening serve (0-0): the first fault hands over '
+        'at once', (tester) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log);
+
+      expect(find.text('→ Hand over'), findsOneWidget);
+      expect(find.text('→ Serve 2'), findsNothing);
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+      await tester.pump();
+
+      expect(log, ['switchServer']);
+      expect(find.textContaining('the serve passes to team 2'), findsOneWidget);
+    });
+
+    testWidgets('TC-CBD-PB-04 singles: the serve is handed over at once', (
+      tester,
+    ) async {
+      final log = <String>[];
+      await _pumpPanel(
+        tester,
+        log: log,
+        context: _context(isDoubles: false, serverNumber: 1),
+        state: _state(serve: secondDone),
+      );
+
+      expect(find.text('→ Hand over'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+      await tester.pump();
+
+      expect(log, ['sideOut']);
+      expect(find.textContaining('the serve passes to team 2'), findsOneWidget);
+    });
+
+    testWidgets('a serving team point shows no toast', (tester) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log);
+
+      await tester.tap(find.byTooltip('Add point for team 1'));
+      await tester.pump();
+
+      expect(log, ['award:1']);
+      expect(find.textContaining('no point awarded'), findsNothing);
+    });
+
+    testWidgets('viewer: no plus, no lose-serve button', (tester) async {
+      await _pumpPanel(tester, log: <String>[], canScore: false);
+
+      expect(find.byTooltip('Add point for team 2'), findsNothing);
+      expect(find.text('LOSE SERVE'), findsNothing);
+    });
+  });
+
+  group('TC-CBD-PB-05 Lite / rally: either team scores, no side-out', () {
+    for (final lite in [true, false]) {
+      final name = lite ? 'Lite' : 'rally point set';
+      testWidgets('$name: plus of the receiving team awards the point, no '
+          'lose-serve toast or hand-over', (tester) async {
+        final log = <String>[];
+        await _pumpPanel(
+          tester,
+          log: log,
+          state: _state(model: SportScoringModel.rallyPointSet, lite: lite),
+        );
+
+        await tester.tap(find.byTooltip('Add point for team 2'));
+        await tester.pump();
+
+        expect(log, ['award:2']);
+        expect(find.textContaining('no point awarded'), findsNothing);
+        // The button keeps the plain label: there is no "→ next" hint.
+        expect(find.text('CHANGE SERVE'), findsOneWidget);
+        expect(find.textContaining('→'), findsNothing);
+      });
+    }
   });
 
   group('finish set', () {
@@ -599,7 +772,7 @@ void main() {
       final court = container.read(pickleballCourtContextProvider(_params));
 
       expect(court?.scoringMode, CourtScoringMode.sideOut);
-      expect(court?.serverNumber, 2);
+      expect(court?.serverNumber, 1);
     });
   });
 }

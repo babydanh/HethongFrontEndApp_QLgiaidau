@@ -336,8 +336,8 @@ void _realContextTests() {
 
       expect(harness.context.scoringMode, CourtScoringMode.sideOut);
       expect(harness.context.servingTeam, 1);
-      // The first serve of a game has one fault only: call x-y-2.
-      expect(harness.context.serverNumber, 2);
+      // The opening serve of a game shows server 1 (its fault hands the serve on).
+      expect(harness.context.serverNumber, 1);
     });
 
     test('moving the ball to the partner at 0-0 keeps the override', () async {

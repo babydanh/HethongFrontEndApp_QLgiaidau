@@ -4160,6 +4160,30 @@ abstract class AppLocalizations {
   /// **'Mất giao'**
   String get pickleballCourtLoseServe;
 
+  /// No description provided for @cbdPbNextServerTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'→ Giao 2'**
+  String get cbdPbNextServerTwo;
+
+  /// No description provided for @cbdPbNextHandOver.
+  ///
+  /// In vi, this message translates to:
+  /// **'→ đổi giao'**
+  String get cbdPbNextHandOver;
+
+  /// No description provided for @cbdPbReceiverWonServerTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội {team} thắng pha nhưng đội kia đang giao: người giao 2 giao tiếp (không ai được điểm)'**
+  String cbdPbReceiverWonServerTwo(int team);
+
+  /// No description provided for @cbdPbReceiverWonHandOver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội {team} thắng pha nhưng đội kia đang giao: đổi giao sang Đội {team} (không ai được điểm)'**
+  String cbdPbReceiverWonHandOver(int team);
+
   /// No description provided for @pickleballCourtEnd.
   ///
   /// In vi, this message translates to:
@@ -18875,6 +18899,48 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bù giờ +'**
   String get footballScore_addedMinute;
+
+  /// No description provided for @cbdFbShirtTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số áo cầu thủ'**
+  String get cbdFbShirtTitle;
+
+  /// No description provided for @cbdFbShirtUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không rõ số'**
+  String get cbdFbShirtUnknown;
+
+  /// No description provided for @cbdFbOnFieldLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'{players} người · thay {used}/{limit}'**
+  String cbdFbOnFieldLabel(int players, int used, int limit);
+
+  /// No description provided for @cbdFbWarnGoalOutsidePlay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ ghi bàn khi đang trong hiệp'**
+  String get cbdFbWarnGoalOutsidePlay;
+
+  /// No description provided for @cbdFbWarnSubsLimit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội đã dùng đủ {limit} lượt thay người'**
+  String cbdFbWarnSubsLimit(int limit);
+
+  /// No description provided for @cbdFbWarnMatchStopped.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một đội còn dưới 7 người: trận dừng, đội kia thắng'**
+  String get cbdFbWarnMatchStopped;
+
+  /// No description provided for @cbdFbWarnAlreadySentOff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cầu thủ này đã bị đuổi khỏi sân'**
+  String get cbdFbWarnAlreadySentOff;
 
   /// No description provided for @lite_kickParticipantSuccess.
   ///
@@ -34608,6 +34674,66 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Gắn giải vào {leg}'**
   String seriesLegsLinkTitle(String leg);
+
+  /// No description provided for @cbdRallyServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'● GIAO'**
+  String get cbdRallyServe;
+
+  /// No description provided for @cbdRallyServeRight.
+  ///
+  /// In vi, this message translates to:
+  /// **'ô phải'**
+  String get cbdRallyServeRight;
+
+  /// No description provided for @cbdRallyServeLeft.
+  ///
+  /// In vi, this message translates to:
+  /// **'ô trái'**
+  String get cbdRallyServeLeft;
+
+  /// No description provided for @cbdRallyServePlayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV {n}'**
+  String cbdRallyServePlayer(int n);
+
+  /// No description provided for @cbdRallyBreak60.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ 60 giây (bên dẫn đạt 11)'**
+  String get cbdRallyBreak60;
+
+  /// No description provided for @cbdRallyBreak60ChangeEnds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ 60 giây (bên dẫn đạt 11), đổi sân'**
+  String get cbdRallyBreak60ChangeEnds;
+
+  /// No description provided for @cbdRallyBreakBetweenGames.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ giữa game 120 giây, đổi sân'**
+  String get cbdRallyBreakBetweenGames;
+
+  /// No description provided for @cbdRallyChangeEnds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game cuối: đổi sân (một bên đạt 5)'**
+  String get cbdRallyChangeEnds;
+
+  /// No description provided for @cbdTennisServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'● GIAO'**
+  String get cbdTennisServe;
+
+  /// No description provided for @cbdTennisMatchTiebreak.
+  ///
+  /// In vi, this message translates to:
+  /// **'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)'**
+  String get cbdTennisMatchTiebreak;
 }
 
 class _AppLocalizationsDelegate

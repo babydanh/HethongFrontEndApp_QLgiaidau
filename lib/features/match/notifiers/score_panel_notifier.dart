@@ -2,9 +2,13 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
+import 'package:app_quanly_giaidau/domain/services/football_rules.dart';
+import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
+import 'package:app_quanly_giaidau/domain/services/tennis_rules.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
+import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_tennis.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -38,7 +42,7 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
   final raw = details['football'];
   if (raw is! Map) return null;
   final shootout = raw['shootout'] is Map ? raw['shootout'] as Map : null;
-  return FootballLiveState(
+  final read = FootballLiveState(
     team1Goals: _parseFootballInt(raw['team1Goals']),
     team2Goals: _parseFootballInt(raw['team2Goals']),
     phase: _parseFootballPhase(raw['phase']),
@@ -53,6 +57,7 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
                   isTeam1: _parseFootballInt(event['team']) == 1,
                   minute: _parseFootballInt(event['minute']),
                   addedMinute: _parseFootballInt(event['addedMinute']),
+                  shirt: _parseOptionalFootballInt(event['shirt']),
                 ),
               )
               .toList()
@@ -60,6 +65,9 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
     shootoutTeam1Goals: _parseOptionalFootballInt(shootout?['team1Goals']),
     shootoutTeam2Goals: _parseOptionalFootballInt(shootout?['team2Goals']),
   );
+  // The stopped-match flag is derived from the red cards, so it survives a
+  // server that only stores the original event fields.
+  return read.copyWith(stoppedWinnerTeam: footballStoppedWinnerTeam(read));
 }
 
 String? scorePanelWriteErrorMessage(AppLocalizations l10n, Object error) {
@@ -328,16 +336,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     }
 
     // 3. Pickleball serve state
-    PickleballServeState? pbState;
     final rawPb = liveState?['sideOutState'] is Map
         ? Map<String, dynamic>.from(liveState!['sideOutState'] as Map)
         : null;
-    if (rawPb != null) {
-      pbState = PickleballServeState(
-        isTeam1Serving: rawPb['servingTeam'] == 1,
-        serverNumber: rawPb['serverNumber'] as int? ?? 1,
-      );
-    }
 
     // 4. Rally Point state
     RallySetState? rallyState;
@@ -356,6 +357,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         // reappear as points and causes the next sync to drift.
         rallyState = const RallySetState();
       }
+    }
+
+    // Data saved before `openingDone` existed: a 0-0 set is still an opening
+    // serve, any point scored means the opening is over.
+    PickleballServeState? pbState;
+    if (rawPb != null) {
+      final hasPoints =
+          rallyState != null &&
+          (rallyState.currentP1 > 0 || rallyState.currentP2 > 0);
+      pbState = PickleballServeState(
+        isTeam1Serving: rawPb['servingTeam'] == 1,
+        serverNumber: rawPb['serverNumber'] as int? ?? 1,
+        openingDone: rawPb['openingDone'] as bool? ?? hasPoints,
+      );
     }
 
     return current.copyWith(
@@ -480,7 +495,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   void tennisAwardPoint(bool isTeam1) {
     if (_rejectIfMaxSetsReached()) return;
-    final t = state.tennis ?? const TennisGameState();
+    final current = state.tennis ?? const TennisGameState();
+    // A match tie-break has no game to start it: it begins with the first point.
+    final t = state.tennisMatchTiebreakDue && !current.isTiebreak
+        ? current.copyWith(isTiebreak: true)
+        : current;
     state = state.copyWith(
       tennis: t.copyWith(
         team1GamePoints: isTeam1 ? t.team1GamePoints + 1 : t.team1GamePoints,
@@ -518,22 +537,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     if (state.isMatchComplete) return;
     final t = state.tennis;
     if (t == null) return;
-    if (t.isTiebreak) {
-      final target = state.config.tiebreakPoints ?? 7;
-      if (t.team1GamePoints >= target &&
-          (t.team1GamePoints - t.team2GamePoints) >= 2) {
-        _finishTennisGame(1);
-      } else if (t.team2GamePoints >= target &&
-          (t.team2GamePoints - t.team1GamePoints) >= 2) {
-        _finishTennisGame(2);
-      }
-      return;
-    }
-    if (t.team1GamePoints >= 4 &&
-        (t.team1GamePoints - t.team2GamePoints) >= 2) {
+    bool won(int a, int b) => tennisGameWon(
+      a: a,
+      b: b,
+      noAd: state.config.noAd,
+      tiebreak: t.isTiebreak,
+      tiebreakTarget: state.tennisPlan.tiebreakTarget,
+    );
+    if (won(t.team1GamePoints, t.team2GamePoints)) {
       _finishTennisGame(1);
-    } else if (t.team2GamePoints >= 4 &&
-        (t.team2GamePoints - t.team1GamePoints) >= 2) {
+    } else if (won(t.team2GamePoints, t.team1GamePoints)) {
       _finishTennisGame(2);
     }
   }
@@ -544,7 +557,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ? state.finishedSets.last
         : null;
     List<SetScoreData> newSets;
-    if (curSet != null && !curSet.isFinished) {
+    if (state.tennisMatchTiebreakDue) {
+      // The Backend only accepts 7-6 / 6-7 as a tie-break set, so the match
+      // tie-break is stored that way, replacing a live 0-0 placeholder.
+      final done = winnerTeam == 1
+          ? const SetScoreData(score1: 7, score2: 6, isFinished: true)
+          : const SetScoreData(score1: 6, score2: 7, isFinished: true);
+      newSets = [...state.finishedSets.where((set) => set.isFinished), done];
+    } else if (curSet != null && !curSet.isFinished) {
       newSets = [
         ...state.finishedSets.sublist(0, state.finishedSets.length - 1),
         winnerTeam == 1
@@ -575,9 +595,15 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     // limit. Lite/Free tennis is intentionally open-ended: reaching 6 games
     // only makes the set ready; the scorer must press "Chốt set N" so the
     // current set remains editable and the next set can be started manually.
-    if (!state.isOpenScoring &&
-        !state.overrideEnabled &&
-        isSetComplete(curSet, state.config)) {
+    final plan = state.tennisPlan;
+    final tiebreakAtGames =
+        state.config.tiebreakAtGames ?? state.config.tiebreakAt;
+    // Without a tie-break (tiebreakMode NONE / NO_TIEBREAK final set) the set
+    // is won at the target with a 2 game lead; the 7-6 cap does not apply.
+    final setComplete = plan.tiebreakEnabled
+        ? isSetComplete(curSet, state.config)
+        : _setWonByTwoGames(curSet);
+    if (!state.isOpenScoring && !state.overrideEnabled && setComplete) {
       final idx = state.finishedSets.length - 1;
       final newSets = [...state.finishedSets];
       newSets[idx] = newSets[idx].copyWith(isFinished: true);
@@ -585,8 +611,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         finishedSets: newSets,
         tennis: const TennisGameState(),
       );
-    } else if (curSet.score1 >= state.config.tiebreakAt &&
-        curSet.score2 >= state.config.tiebreakAt &&
+    } else if (plan.tiebreakEnabled &&
+        curSet.score1 >= tiebreakAtGames &&
+        curSet.score2 >= tiebreakAtGames &&
         curSet.score1 == curSet.score2) {
       state = state.copyWith(
         tennis: (state.tennis ?? const TennisGameState()).copyWith(
@@ -594,6 +621,12 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         ),
       );
     }
+  }
+
+  bool _setWonByTwoGames(SetScoreData set) {
+    final high = set.score1 > set.score2 ? set.score1 : set.score2;
+    final low = set.score1 > set.score2 ? set.score2 : set.score1;
+    return high >= state.config.pointsPerSet && high - low >= 2;
   }
 
   // ════════════════ PICKLEBALL ════════════════
@@ -619,7 +652,11 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       // Lite/rally lets the receiver score: the serve then goes to that team.
       pickleball: pb.isTeam1Serving == isTeam1
           ? pb
-          : pb.copyWith(isTeam1Serving: isTeam1, serverNumber: 1),
+          : pb.copyWith(
+              isTeam1Serving: isTeam1,
+              serverNumber: 1,
+              openingDone: true,
+            ),
       errorMessage: null,
     );
     _checkPickleballGameEnd();
@@ -627,12 +664,20 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     return true;
   }
 
+  /// The serving team loses a rally. Doubles: server 1 -> server 2 -> other
+  /// team. The opening serve of a game has a single fault, so it passes
+  /// straight to the other team (server 1).
   void pickleballSwitchServer() {
     final pb = state.pickleball ?? const PickleballServeState();
+    final handsOver = !pb.openingDone || pb.serverNumber != 1;
     state = state.copyWith(
-      pickleball: pb.serverNumber == 1
-          ? pb.copyWith(serverNumber: 2)
-          : pb.copyWith(isTeam1Serving: !pb.isTeam1Serving, serverNumber: 1),
+      pickleball: handsOver
+          ? pb.copyWith(
+              isTeam1Serving: !pb.isTeam1Serving,
+              serverNumber: 1,
+              openingDone: true,
+            )
+          : pb.copyWith(serverNumber: 2),
       errorMessage: null,
     );
     _scheduleLiveSync();
@@ -644,6 +689,28 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       pickleball: pb.copyWith(
         isTeam1Serving: !pb.isTeam1Serving,
         serverNumber: 1,
+        openingDone: true,
+      ),
+      errorMessage: null,
+    );
+    _scheduleLiveSync();
+  }
+
+  /// Picks who serves first. At 0-0 this is the opening serve (one fault
+  /// only); once points were scored it is a plain side-out.
+  void pickleballSetServingTeam(bool isTeam1) {
+    final pb = state.pickleball ?? const PickleballServeState();
+    if (pb.isTeam1Serving == isTeam1) return;
+    final r = state.rally ?? const RallySetState();
+    if (r.currentP1 != 0 || r.currentP2 != 0) {
+      pickleballSideOut();
+      return;
+    }
+    state = state.copyWith(
+      pickleball: pb.copyWith(
+        isTeam1Serving: isTeam1,
+        serverNumber: 1,
+        openingDone: false,
       ),
       errorMessage: null,
     );
@@ -651,7 +718,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   }
 
   /// Who serves, in the shape `_hydrateState` reads back: without it the serve
-  /// falls back to team 1 at server 2 whenever the match is opened again.
+  /// falls back to team 1 at the opening serve whenever the match is reopened.
   Map<String, dynamic>? _pickleballLiveState() {
     final pb = state.pickleball;
     if (pb == null) return null;
@@ -659,6 +726,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       'sideOutState': {
         'servingTeam': pb.isTeam1Serving ? 1 : 2,
         'serverNumber': pb.serverNumber,
+        'openingDone': pb.openingDone,
       },
     };
   }
@@ -682,9 +750,9 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
           ),
         ],
         rally: const RallySetState(),
-        // A new game opens with a single fault for the serving team (x-y-2).
+        // A new game opens at server 1 with a single fault (openingDone false).
         pickleball: (state.pickleball ?? const PickleballServeState())
-            .copyWith(serverNumber: 2),
+            .copyWith(serverNumber: 1, openingDone: false),
       );
       _syncSetsToBackend();
     }
@@ -697,18 +765,54 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final r = state.rally ?? const RallySetState();
     if (!_canAddRallyPoint(isTeam1 ? r.currentP1 : r.currentP2)) return;
     state = state.copyWith(
-      rally: RallySetState(
-        currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
-        currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
-      ),
+      rally: _rallyAfterPoint(r, isTeam1),
       errorMessage: null,
     );
     _checkRallySetEnd();
     _scheduleLiveSync();
   }
 
+  /// Next rally state after a point. Badminton and table tennis also remember
+  /// who won it (and how often a team won on serve) so the panel can show who
+  /// serves; other sports keep only the score.
+  RallySetState _rallyAfterPoint(RallySetState r, bool isTeam1) {
+    final p1 = isTeam1 ? r.currentP1 + 1 : r.currentP1;
+    final p2 = isTeam1 ? r.currentP2 : r.currentP2 + 1;
+    final kind = state.config.kind;
+    if (kind != SportRuleKind.badminton && kind != SportRuleKind.tableTennis) {
+      return RallySetState(currentP1: p1, currentP2: p2);
+    }
+    final winner = isTeam1 ? 1 : 2;
+    final opening = r.currentP1 + r.currentP2 == 0;
+    final prev = state.finishedSets.isEmpty ? null : state.finishedSets.last;
+    final server = opening
+        ? rallyGameFirstServer(
+            kind: kind,
+            gameIndex: state.finishedSets.length,
+            prevGameWinner: prev == null
+                ? null
+                : (prev.score1 > prev.score2 ? 1 : 2),
+          )
+        : r.lastWinner;
+    int? swaps(int team, int? current) {
+      final base = opening ? 0 : current;
+      if (base == null) return null;
+      return winner == team && server == team ? base + 1 : base;
+    }
+
+    return RallySetState(
+      currentP1: p1,
+      currentP2: p2,
+      lastWinner: winner,
+      swaps1: swaps(1, r.swaps1),
+      swaps2: swaps(2, r.swaps2),
+    );
+  }
+
   void rallyRemovePoint(bool isTeam1) {
     final r = state.rally ?? const RallySetState();
+    // A correction makes the serve history unknown; the panel hides the serve
+    // line until the next point instead of showing a wrong server.
     state = state.copyWith(
       rally: RallySetState(
         currentP1: isTeam1
@@ -751,8 +855,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   bool get isMatchComplete => state.isMatchComplete;
 
-  void footballAddGoal(bool isTeam1) {
+  /// Returns why the goal was refused (nothing is recorded), or null when the
+  /// goal was added.
+  FootballBlockReason? footballAddGoal(bool isTeam1) {
     final current = state.football ?? const FootballLiveState();
+    if (current.stoppedWinnerTeam != 0) return FootballBlockReason.matchStopped;
+    if (!footballGoalAllowed(current.phase)) {
+      return FootballBlockReason.goalOutsidePlay;
+    }
     final next = current.copyWith(
       team1Goals: isTeam1 ? current.team1Goals + 1 : current.team1Goals,
       team2Goals: isTeam1 ? current.team2Goals : current.team2Goals + 1,
@@ -768,6 +878,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     );
     state = state.copyWith(football: next, errorMessage: null);
     _scheduleFootballSync(next);
+    return null;
   }
 
   void footballRemoveGoal(bool isTeam1) {
@@ -819,22 +930,54 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _scheduleFootballSync(next);
   }
 
-  void footballAddEvent(String type, bool isTeam1) {
+  /// [shirt] is only used by card events (null = unknown number). Returns why
+  /// the event was refused (nothing is recorded), or null when it was added.
+  FootballBlockReason? footballAddEvent(
+    String type,
+    bool isTeam1, {
+    int? shirt,
+  }) {
     final current = state.football ?? const FootballLiveState();
-    final next = current.copyWith(
-      events: [
-        ...current.events,
-        FootballEvent(
-          type: type,
+    if (current.stoppedWinnerTeam != 0) return FootballBlockReason.matchStopped;
+    final FootballLiveState next;
+    switch (type) {
+      case 'YELLOW_CARD':
+      case 'RED_CARD':
+        next = footballApplyCard(
+          current,
           isTeam1: isTeam1,
-          minute: current.minute,
-          addedMinute: current.addedMinute,
-        ),
-      ],
-    );
+          shirt: shirt,
+          red: type == 'RED_CARD',
+        );
+        if (identical(next, current)) return FootballBlockReason.alreadySentOff;
+      case 'SUBSTITUTION':
+        if (!footballCanSubstitute(current, isTeam1)) {
+          return FootballBlockReason.substitutionLimit;
+        }
+        next = _footballWithEvent(current, type, isTeam1);
+      default:
+        next = _footballWithEvent(current, type, isTeam1);
+    }
     state = state.copyWith(football: next, errorMessage: null);
     _scheduleFootballSync(next);
+    return null;
   }
+
+  FootballLiveState _footballWithEvent(
+    FootballLiveState current,
+    String type,
+    bool isTeam1,
+  ) => current.copyWith(
+    events: [
+      ...current.events,
+      FootballEvent(
+        type: type,
+        isTeam1: isTeam1,
+        minute: current.minute,
+        addedMinute: current.addedMinute,
+      ),
+    ],
+  );
 
   void footballSetShootout({
     required int? team1Goals,
@@ -905,6 +1048,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
                         'team': entry.value.isTeam1 ? 1 : 2,
                         'minute': entry.value.minute,
                         'addedMinute': entry.value.addedMinute,
+                        if (entry.value.shirt != null)
+                          'shirt': entry.value.shirt,
                       },
                     )
                     .toList(),
@@ -1047,7 +1192,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         if (winnerId.isEmpty) {
           throw StateError(_l10n.scorePanel_footballWinnerNotFound);
         }
-        final isDraw = football.team1Goals == football.team2Goals;
+        // A match stopped for too few players is decided without a shootout.
+        final isDraw =
+            football.team1Goals == football.team2Goals &&
+            football.stoppedWinnerTeam == 0;
         final shootout1 = football.shootoutTeam1Goals;
         final shootout2 = football.shootoutTeam2Goals;
         if (isDraw &&
@@ -1072,6 +1220,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
                     'type': entry.value.type,
                     'team': entry.value.isTeam1 ? 1 : 2,
                     'minute': entry.value.minute,
+                    if (entry.value.shirt != null) 'shirt': entry.value.shirt,
                   },
                 )
                 .toList(),

@@ -202,6 +202,9 @@ class _FakeScorePanel extends ScorePanelNotifier {
       calls.add('rallyRemove:${isTeam1 ? 1 : 2}');
 
   @override
+  void pickleballSwitchServer() => calls.add('switchServer');
+
+  @override
   void pickleballSideOut() {
     calls.add('sideOut');
     ref.read(_servingTeamProvider.notifier).set(2);
@@ -827,9 +830,8 @@ void main() {
       });
     });
 
-    testWidgets('side-out rule without serve state: receiver plus is locked', (
-      tester,
-    ) async {
+    testWidgets('side-out rule without serve state: receiver plus loses the '
+        'serve and awards no point', (tester) async {
       final calls = <String>[];
       await _pumpPanel(
         tester,
@@ -840,10 +842,12 @@ void main() {
       );
 
       // The court context (real provider: see the notifier test) is side-out
-      // with team 1 serving by default: ball shown, team 2 cannot score.
+      // with team 1 serving by default: ball shown, team 2 winning the rally
+      // moves the serve (doubles: next server) and awards nothing.
       expect(_ball(), findsOneWidget);
       await tester.tap(find.byTooltip('Add point for team 2'));
-      expect(calls, isEmpty);
+      expect(calls, ['switchServer']);
+      calls.clear();
       await tester.tap(find.byTooltip('Add point for team 1'));
       expect(calls, ['award:1']);
     });
