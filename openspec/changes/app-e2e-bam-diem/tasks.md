@@ -8,22 +8,22 @@
 
 ## 2. Test từng môn (4 file độc lập, chạy sau 1.1)
 
-- [ ] 2.1 `xem_bam_diem_pickleball_test.dart`: TC-CBD-APP-01 đôi Giao 1→Giao 2→đổi giao, 01b đơn đổi giao ngay, 02 Lite rally không có giao bóng. Tiêu chí: `flutter analyze --no-pub integration_test/xem_bam_diem_pickleball_test.dart` → exit 0 và chạy cloud xanh
+- [x] 2.1 `xem_bam_diem_pickleball_test.dart`: TC-CBD-APP-01 đôi Giao 1→Giao 2→đổi giao, 01b đơn đổi giao ngay, 02 Lite rally không có giao bóng. Tiêu chí: `flutter analyze --no-pub integration_test/xem_bam_diem_pickleball_test.dart` → exit 0 và chạy cloud xanh
   - Files: tạo `integration_test/xem_bam_diem_pickleball_test.dart`
   - Giao: (không) · Nhận: `pumpPanel` từ 1.1
   - Chủ file chung: (không)
   - Phụ thuộc: sau 1.1
-- [ ] 2.2 `xem_bam_diem_rally_test.dart`: 03 cầu lông ô phải/trái, 03b 20-20, 04 bóng bàn đổi giao mỗi 2 điểm, 04b 10-10. Tiêu chí: như 1.2
+- [x] 2.2 `xem_bam_diem_rally_test.dart`: 03 cầu lông ô phải/trái, 03b 20-20, 04 bóng bàn đổi giao mỗi 2 điểm, 04b 10-10. Tiêu chí: như 1.2
   - Files: tạo `integration_test/xem_bam_diem_rally_test.dart`
   - Giao: (không) · Nhận: `pumpPanel` từ 1.1
   - Chủ file chung: (không)
   - Phụ thuộc: sau 1.1
-- [ ] 2.3 `xem_bam_diem_tennis_test.dart`: 05 15-30-40/Deuce, 05b tie-break 6-6, 06 No-Ad, 07 match tie-break 10 điểm. Tiêu chí: như 1.2
+- [x] 2.3 `xem_bam_diem_tennis_test.dart`: 05 15-30-40/Deuce, 05b tie-break 6-6, 06 No-Ad, 07 match tie-break 10 điểm. Tiêu chí: như 1.2
   - Files: tạo `integration_test/xem_bam_diem_tennis_test.dart`
   - Giao: (không) · Nhận: `pumpPanel` từ 1.1
   - Chủ file chung: (không)
   - Phụ thuộc: sau 1.1
-- [ ] 2.4 `xem_bam_diem_bongda_test.dart`: 08 ghi bàn, thẻ vàng×2→đỏ, phạt đền, đổi hiệp, dưới 7 người, ghi bàn ngoài hiệp. Tiêu chí: như 1.2
+- [x] 2.4 `xem_bam_diem_bongda_test.dart`: 08 ghi bàn, thẻ vàng×2→đỏ, phạt đền, đổi hiệp, dưới 7 người, ghi bàn ngoài hiệp. Tiêu chí: như 1.2
   - Files: tạo `integration_test/xem_bam_diem_bongda_test.dart`
   - Giao: (không) · Nhận: `pumpPanel` từ 1.1
   - Chủ file chung: (không)
