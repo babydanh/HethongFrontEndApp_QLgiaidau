@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
+import 'package:app_quanly_giaidau/domain/services/football_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -38,7 +39,7 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
   final raw = details['football'];
   if (raw is! Map) return null;
   final shootout = raw['shootout'] is Map ? raw['shootout'] as Map : null;
-  return FootballLiveState(
+  final read = FootballLiveState(
     team1Goals: _parseFootballInt(raw['team1Goals']),
     team2Goals: _parseFootballInt(raw['team2Goals']),
     phase: _parseFootballPhase(raw['phase']),
@@ -53,6 +54,7 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
                   isTeam1: _parseFootballInt(event['team']) == 1,
                   minute: _parseFootballInt(event['minute']),
                   addedMinute: _parseFootballInt(event['addedMinute']),
+                  shirt: _parseOptionalFootballInt(event['shirt']),
                 ),
               )
               .toList()
@@ -60,6 +62,9 @@ FootballLiveState? _readFootballState(Map<String, dynamic> details) {
     shootoutTeam1Goals: _parseOptionalFootballInt(shootout?['team1Goals']),
     shootoutTeam2Goals: _parseOptionalFootballInt(shootout?['team2Goals']),
   );
+  // The stopped-match flag is derived from the red cards, so it survives a
+  // server that only stores the original event fields.
+  return read.copyWith(stoppedWinnerTeam: footballStoppedWinnerTeam(read));
 }
 
 String? scorePanelWriteErrorMessage(AppLocalizations l10n, Object error) {
@@ -751,8 +756,14 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
 
   bool get isMatchComplete => state.isMatchComplete;
 
-  void footballAddGoal(bool isTeam1) {
+  /// Returns why the goal was refused (nothing is recorded), or null when the
+  /// goal was added.
+  FootballBlockReason? footballAddGoal(bool isTeam1) {
     final current = state.football ?? const FootballLiveState();
+    if (current.stoppedWinnerTeam != 0) return FootballBlockReason.matchStopped;
+    if (!footballGoalAllowed(current.phase)) {
+      return FootballBlockReason.goalOutsidePlay;
+    }
     final next = current.copyWith(
       team1Goals: isTeam1 ? current.team1Goals + 1 : current.team1Goals,
       team2Goals: isTeam1 ? current.team2Goals : current.team2Goals + 1,
@@ -768,6 +779,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     );
     state = state.copyWith(football: next, errorMessage: null);
     _scheduleFootballSync(next);
+    return null;
   }
 
   void footballRemoveGoal(bool isTeam1) {
@@ -819,22 +831,54 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _scheduleFootballSync(next);
   }
 
-  void footballAddEvent(String type, bool isTeam1) {
+  /// [shirt] is only used by card events (null = unknown number). Returns why
+  /// the event was refused (nothing is recorded), or null when it was added.
+  FootballBlockReason? footballAddEvent(
+    String type,
+    bool isTeam1, {
+    int? shirt,
+  }) {
     final current = state.football ?? const FootballLiveState();
-    final next = current.copyWith(
-      events: [
-        ...current.events,
-        FootballEvent(
-          type: type,
+    if (current.stoppedWinnerTeam != 0) return FootballBlockReason.matchStopped;
+    final FootballLiveState next;
+    switch (type) {
+      case 'YELLOW_CARD':
+      case 'RED_CARD':
+        next = footballApplyCard(
+          current,
           isTeam1: isTeam1,
-          minute: current.minute,
-          addedMinute: current.addedMinute,
-        ),
-      ],
-    );
+          shirt: shirt,
+          red: type == 'RED_CARD',
+        );
+        if (identical(next, current)) return FootballBlockReason.alreadySentOff;
+      case 'SUBSTITUTION':
+        if (!footballCanSubstitute(current, isTeam1)) {
+          return FootballBlockReason.substitutionLimit;
+        }
+        next = _footballWithEvent(current, type, isTeam1);
+      default:
+        next = _footballWithEvent(current, type, isTeam1);
+    }
     state = state.copyWith(football: next, errorMessage: null);
     _scheduleFootballSync(next);
+    return null;
   }
+
+  FootballLiveState _footballWithEvent(
+    FootballLiveState current,
+    String type,
+    bool isTeam1,
+  ) => current.copyWith(
+    events: [
+      ...current.events,
+      FootballEvent(
+        type: type,
+        isTeam1: isTeam1,
+        minute: current.minute,
+        addedMinute: current.addedMinute,
+      ),
+    ],
+  );
 
   void footballSetShootout({
     required int? team1Goals,
@@ -905,6 +949,8 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
                         'team': entry.value.isTeam1 ? 1 : 2,
                         'minute': entry.value.minute,
                         'addedMinute': entry.value.addedMinute,
+                        if (entry.value.shirt != null)
+                          'shirt': entry.value.shirt,
                       },
                     )
                     .toList(),
@@ -1047,7 +1093,10 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
         if (winnerId.isEmpty) {
           throw StateError(_l10n.scorePanel_footballWinnerNotFound);
         }
-        final isDraw = football.team1Goals == football.team2Goals;
+        // A match stopped for too few players is decided without a shootout.
+        final isDraw =
+            football.team1Goals == football.team2Goals &&
+            football.stoppedWinnerTeam == 0;
         final shootout1 = football.shootoutTeam1Goals;
         final shootout2 = football.shootoutTeam2Goals;
         if (isDraw &&
@@ -1072,6 +1121,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
                     'type': entry.value.type,
                     'team': entry.value.isTeam1 ? 1 : 2,
                     'minute': entry.value.minute,
+                    if (entry.value.shirt != null) 'shirt': entry.value.shirt,
                   },
                 )
                 .toList(),

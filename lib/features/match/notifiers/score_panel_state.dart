@@ -91,6 +91,10 @@ class FootballLiveState {
   final int? shootoutTeam1Goals;
   final int? shootoutTeam2Goals;
 
+  /// 0 = match not stopped, 1/2 = the match was stopped because the other
+  /// team has fewer than 7 players on the field; this team wins.
+  final int stoppedWinnerTeam;
+
   const FootballLiveState({
     this.team1Goals = 0,
     this.team2Goals = 0,
@@ -100,6 +104,7 @@ class FootballLiveState {
     this.events = const [],
     this.shootoutTeam1Goals,
     this.shootoutTeam2Goals,
+    this.stoppedWinnerTeam = 0,
   });
 
   /// Compatibility getter: a decisive Football result is score-based now.
@@ -115,6 +120,7 @@ class FootballLiveState {
   /// Football completion is based on goals; a draw needs an unequal shootout.
   /// The phase and match clock are informational only.
   int get winnerTeam {
+    if (stoppedWinnerTeam != 0) return stoppedWinnerTeam;
     if (team1Goals != team2Goals) {
       return team1Goals > team2Goals ? 1 : 2;
     }
@@ -133,6 +139,7 @@ class FootballLiveState {
     List<FootballEvent>? events,
     Object? shootoutTeam1Goals = _footballUnset,
     Object? shootoutTeam2Goals = _footballUnset,
+    int? stoppedWinnerTeam,
   }) => FootballLiveState(
     team1Goals: team1Goals ?? this.team1Goals,
     team2Goals: team2Goals ?? this.team2Goals,
@@ -146,6 +153,7 @@ class FootballLiveState {
     shootoutTeam2Goals: identical(shootoutTeam2Goals, _footballUnset)
         ? this.shootoutTeam2Goals
         : shootoutTeam2Goals as int?,
+    stoppedWinnerTeam: stoppedWinnerTeam ?? this.stoppedWinnerTeam,
   );
 }
 
@@ -154,11 +162,16 @@ class FootballEvent {
   final bool isTeam1;
   final int minute;
   final int addedMinute;
+
+  /// Shirt number of the player involved; null when unknown (older data or
+  /// the scorer skipped the picker).
+  final int? shirt;
   const FootballEvent({
     required this.type,
     required this.isTeam1,
     required this.minute,
     this.addedMinute = 0,
+    this.shirt,
   });
 }
 
