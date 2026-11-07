@@ -116,7 +116,7 @@ Future<void> tapAndSettle(WidgetTester tester, Finder target) async {
   debugPrintSynchronously('[bam-diem] tap');
   await tester.tap(target);
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 400));
+  await tester.pump(const Duration(milliseconds: 700));
   debugPrintSynchronously('[bam-diem] tap done');
 }
 

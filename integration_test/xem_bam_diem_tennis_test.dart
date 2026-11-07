@@ -15,6 +15,8 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   // A stuck test must fail with a stack trace instead of eating the 40 min job budget.
   binding.defaultTestTimeout = const Timeout(Duration(minutes: 3));
+  // Without fullyLive the emulator keeps showing "Test starting..." and the screen recording never shows the UI.
+  binding.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
 
   testWidgets(
     'TC-CBD-APP-05 tennis chuan: 15-30-40, Deuce, Advantage, doi giao',
