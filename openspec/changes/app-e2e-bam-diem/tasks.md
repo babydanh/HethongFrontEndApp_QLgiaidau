@@ -1,6 +1,6 @@
 ## 1. Hạ tầng dùng chung
 
-- [ ] 1.1 Tạo `support/bam_diem.dart`: repo ghi giả (`updateScoreDetails` nuốt), `matchFixture({doubles})`, `pumpPanel(tester, panel, state)`, `tapLabel(tester, text)`. Tiêu chí: `flutter analyze --no-pub integration_test/support` → exit 0
+- [x] 1.1 Tạo `support/bam_diem.dart`: repo ghi giả (`updateScoreDetails` nuốt), `matchFixture({doubles})`, `pumpPanel(tester, panel, state)`, `tapLabel(tester, text)`. Tiêu chí: `flutter analyze --no-pub integration_test/support` → exit 0
   - Files: tạo `integration_test/support/bam_diem.dart`
   - Giao: `Future<void> pumpPanel(WidgetTester tester, Widget panel, ScorePanelState state, {bool doubles = false})` · Nhận: `xemApp`, `XemShooter` từ `support/xem.dart`
   - Chủ file chung: 1.1 giữ file mới; 2.1–2.4 chỉ đọc
