@@ -28,14 +28,16 @@ class TennisScorePanel extends ConsumerWidget {
     final ts = state.config;
 
     // Fetch team names
-    final matchAsync = ref.watch(
+    // Select only the names: a socket echo or poll with the same names must
+    // not rebuild the whole panel.
+    final names = ref.watch(
       singleMatchProvider((
         tournamentId: params.tournamentId,
         matchId: params.matchId,
-      )),
+      )).select((m) => (m.value?.team1Name, m.value?.team2Name)),
     );
-    final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
-    final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
+    final team1Name = names.$1 ?? l10n.pickleballTeam1;
+    final team2Name = names.$2 ?? l10n.pickleballTeam2;
 
     // A match tie-break has no game to start it, so it is derived from the
     // sets as well as from the point state.

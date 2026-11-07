@@ -472,7 +472,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         ? ref.read(tournamentProvider(effectiveId))
         : null;
     final sport = match.sportKey ?? tournamentAsync?.value?.sport ?? 'other';
-    final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
@@ -490,15 +489,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 )),
               )
               .addPenalty(isT1, sport, option.id, option.name, reason);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.livePenaltyRecorded(option.name)),
-                backgroundColor: context.colors.success,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
         },
       ),
     );
@@ -516,7 +506,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         : null;
     final sport = match.sportKey ?? tournamentAsync?.value?.sport ?? 'other';
     final isTeam1 = teamSide == 1;
-    final l10n = AppLocalizations.of(context)!;
     await ref
         .read(
           matchControllerProvider((
@@ -525,19 +514,6 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           )),
         )
         .addPenalty(isTeam1, sport, option.id, option.name, reason);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          l10n.livePenaltyRecordedFor(
-            option.name,
-            matchSideLabel(match, teamSide),
-          ),
-        ),
-        backgroundColor: context.colors.success,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   void _showFoulSelectionDialog(MatchModel match) {

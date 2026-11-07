@@ -154,9 +154,8 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       score.rallyRemovePoint(isTeam1);
     } else if (isSideOut && _receiverWonStrictRally(isTeam1)) {
       // Strict side-out: only the serving team scores. The receiver winning
-      // the rally just takes the serve step, the score stays; say so, because
-      // the score does not move.
-      _explainReceiverWon(team, court);
+      // the rally just takes the serve step, the score stays. No toast: it
+      // floated over the lower "+" button; the serve badge already shows it.
       _loseServe(court);
     } else if (isSideOut) {
       score.pickleballAwardPoint(isTeam1);
@@ -185,19 +184,6 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     final toSecond =
         court.isDoubles && serve.openingDone && serve.serverNumber == 1;
     return toSecond ? LoseServeNext.secondServer : LoseServeNext.handOver;
-  }
-
-  void _explainReceiverWon(int team, CourtContext court) {
-    final panel = ref.read(scorePanelNotifierProvider(widget.params));
-    final l10n = AppLocalizations.of(context)!;
-    final message = _loseServeNext(panel, court) == LoseServeNext.secondServer
-        ? l10n.cbdPbReceiverWonServerTwo(team)
-        : l10n.cbdPbReceiverWonHandOver(team);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(behavior: SnackBarBehavior.floating, content: Text(message)),
-      );
   }
 
   /// Chọn đội giao đầu ván (0-0: chỉ một lượt lỗi); người giao do [_applyDrop]
