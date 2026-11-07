@@ -18,7 +18,7 @@
 
 ## 2. Kiểm tra cuối
 
-- [ ] 2.1 `flutter analyze --no-pub lib/features/match` → exit 0 (đã chạy), CI nhánh xanh và E2E cloud pickleball xanh. Tiêu chí: `cloud-test-runner.py run --target app-e2e --app-ref app-nhap-diem-muot --specs integration_test/xem_bam_diem_pickleball_test.dart` → exit 0
+- [x] 2.1 `flutter analyze --no-pub lib/features/match` → exit 0 (đã chạy), CI nhánh xanh và E2E cloud pickleball xanh. Tiêu chí: `cloud-test-runner.py run --target app-e2e --app-ref app-nhap-diem-muot --specs integration_test/xem_bam_diem_pickleball_test.dart` → exit 0
   - Files: (không sửa file)
   - Giao: (không) · Nhận: 1.1–1.3
   - Chủ file chung: (không)
