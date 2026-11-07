@@ -167,13 +167,14 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
     final courtMode = kind == SportRuleKind.pickleball;
 
     // Sideways, the pickleball court runs to both edges, also under the
-    // camera inset on the right: its controls stay clear of the hole.
+    // camera inset on either side: its controls stay clear of the hole.
     final bleedRight =
         courtMode && MediaQuery.orientationOf(context) == Orientation.landscape;
     _syncSystemBars(bleedRight);
     return Scaffold(
       backgroundColor: colors.bgCard,
       body: SafeArea(
+        left: !bleedRight,
         right: !bleedRight,
         child: OrientationBuilder(
           builder: (context, orientation) {

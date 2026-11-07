@@ -97,15 +97,22 @@ class CourtScoreboard extends StatelessWidget {
     final left = _leftTeam;
     final right = 3 - left;
     final upright = axis == Axis.vertical;
+    // The court may run under a camera cutout on either side; the control
+    // rows keep clear of it.
+    final inset = MediaQuery.paddingOf(context);
+    final clearOfCutout = EdgeInsets.only(left: inset.left, right: inset.right);
     return ColoredBox(
       color: _surface,
       child: Column(
         children: [
-          _TopRow(
-            net: net,
-            overrideEnabled: overrideEnabled,
-            // Upright: no room in the bar, the clock moves to the top row.
-            clockStart: upright ? startedAt : null,
+          Padding(
+            padding: clearOfCutout,
+            child: _TopRow(
+              net: net,
+              overrideEnabled: overrideEnabled,
+              // Upright: no room in the bar, the clock moves to the top row.
+              clockStart: upright ? startedAt : null,
+            ),
           ),
           Expanded(
             child: _CourtBlock(
@@ -114,18 +121,21 @@ class CourtScoreboard extends StatelessWidget {
               rightTeam: right,
             ),
           ),
-          _BottomBar(
-            leftTeam: left,
-            rightTeam: right,
-            scoreOf: scoreOf,
-            lockReceiverPlus: lockReceiverPlus,
-            servingTeam: layout.servingTeam,
-            onScoreChange: onScoreChange,
-            onLoseServe: net.onLoseServe,
-            loseServeNext: loseServeNext,
-            onUndo: net.menu.onUndo,
-            startedAt: upright ? null : startedAt,
-            upright: upright,
+          Padding(
+            padding: clearOfCutout,
+            child: _BottomBar(
+              leftTeam: left,
+              rightTeam: right,
+              scoreOf: scoreOf,
+              lockReceiverPlus: lockReceiverPlus,
+              servingTeam: layout.servingTeam,
+              onScoreChange: onScoreChange,
+              onLoseServe: net.onLoseServe,
+              loseServeNext: loseServeNext,
+              onUndo: net.menu.onUndo,
+              startedAt: upright ? null : startedAt,
+              upright: upright,
+            ),
           ),
         ],
       ),
