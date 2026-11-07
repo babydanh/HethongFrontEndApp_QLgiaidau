@@ -4160,6 +4160,30 @@ abstract class AppLocalizations {
   /// **'Mất giao'**
   String get pickleballCourtLoseServe;
 
+  /// No description provided for @cbdPbNextServerTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'→ Giao 2'**
+  String get cbdPbNextServerTwo;
+
+  /// No description provided for @cbdPbNextHandOver.
+  ///
+  /// In vi, this message translates to:
+  /// **'→ đổi giao'**
+  String get cbdPbNextHandOver;
+
+  /// No description provided for @cbdPbReceiverWonServerTwo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội {team} thắng pha nhưng đội kia đang giao: người giao 2 giao tiếp (không ai được điểm)'**
+  String cbdPbReceiverWonServerTwo(int team);
+
+  /// No description provided for @cbdPbReceiverWonHandOver.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội {team} thắng pha nhưng đội kia đang giao: đổi giao sang Đội {team} (không ai được điểm)'**
+  String cbdPbReceiverWonHandOver(int team);
+
   /// No description provided for @pickleballCourtEnd.
   ///
   /// In vi, this message translates to:

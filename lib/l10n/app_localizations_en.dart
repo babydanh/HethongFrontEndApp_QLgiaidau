@@ -2163,6 +2163,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballCourtLoseServe => 'Lose serve';
 
   @override
+  String get cbdPbNextServerTwo => '→ Serve 2';
+
+  @override
+  String get cbdPbNextHandOver => '→ Hand over';
+
+  @override
+  String cbdPbReceiverWonServerTwo(int team) {
+    return 'Team $team won the rally but the other team is serving: server 2 serves next (no point awarded)';
+  }
+
+  @override
+  String cbdPbReceiverWonHandOver(int team) {
+    return 'Team $team won the rally but the other team is serving: the serve passes to team $team (no point awarded)';
+  }
+
+  @override
   String get pickleballCourtEnd => 'End';
 
   @override

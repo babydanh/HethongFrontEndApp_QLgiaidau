@@ -33,6 +33,9 @@ const _minBandHeight = 120.0;
 /// Narrowest upright bar that still fits UNDO beside the four +/- buttons.
 const _minUprightUndoWidth = 300.0;
 
+/// What the lose-serve button does next in strict side-out.
+enum LoseServeNext { secondServer, handOver }
+
 final _cellColor = courtTeam1.court;
 final _servingCellColor = courtTeam2.court;
 
@@ -60,6 +63,7 @@ class CourtScoreboard extends StatelessWidget {
     required this.dragEnabled,
     required this.resolve,
     required this.onDrop,
+    this.loseServeNext,
   });
 
   /// Horizontal: halves side by side. Vertical (upright phone): halves stacked,
@@ -81,6 +85,10 @@ class CourtScoreboard extends StatelessWidget {
   final bool dragEnabled;
   final ResolveCourtDrop resolve;
   final void Function(CourtDropAction action) onDrop;
+
+  /// Strict side-out only: the lose-serve button then reads LOSE SERVE with
+  /// what follows; null keeps the plain CHANGE SERVE label.
+  final LoseServeNext? loseServeNext;
 
   int get _leftTeam => layout.team1First ? 1 : 2;
 
@@ -114,6 +122,7 @@ class CourtScoreboard extends StatelessWidget {
             servingTeam: layout.servingTeam,
             onScoreChange: onScoreChange,
             onLoseServe: net.onLoseServe,
+            loseServeNext: loseServeNext,
             onUndo: net.menu.onUndo,
             startedAt: upright ? null : startedAt,
             upright: upright,
@@ -1084,6 +1093,7 @@ class _BottomBar extends StatelessWidget {
     required this.servingTeam,
     required this.onScoreChange,
     required this.onLoseServe,
+    required this.loseServeNext,
     required this.onUndo,
     required this.startedAt,
     required this.upright,
@@ -1096,6 +1106,7 @@ class _BottomBar extends StatelessWidget {
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
   final VoidCallback? onLoseServe;
+  final LoseServeNext? loseServeNext;
 
   /// Takes back the last change; null (button greyed) when there is none.
   final VoidCallback? onUndo;
@@ -1150,14 +1161,29 @@ class _BottomBar extends StatelessWidget {
     AppLocalizations l10n, {
     required bool flexible,
   }) {
-    final label = Text(
-      l10n.pickleballCourtChangeServe.toUpperCase(),
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 15,
-        fontWeight: FontWeight.w800,
-      ),
+    const style = TextStyle(
+      color: Colors.white,
+      fontSize: 15,
+      fontWeight: FontWeight.w800,
     );
+    final next = loseServeNext;
+    final label = next == null
+        ? Text(l10n.pickleballCourtChangeServe.toUpperCase(), style: style)
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(l10n.pickleballCourtLoseServe.toUpperCase(), style: style),
+              Text(
+                next == LoseServeNext.secondServer
+                    ? l10n.cbdPbNextServerTwo
+                    : l10n.cbdPbNextHandOver,
+                style: style.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          );
     return _BarButton(
       tooltip: l10n.pickleballCourtChangeServe,
       color: context.colors.success,

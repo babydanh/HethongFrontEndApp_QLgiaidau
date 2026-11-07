@@ -45,6 +45,7 @@ class PickleballCourtView extends StatelessWidget {
     this.onFinishSet,
     this.onPickWinner,
     this.onLoseServe,
+    this.loseServeNext,
     this.onToggleOverride,
     this.onForceWin,
   });
@@ -108,6 +109,9 @@ class PickleballCourtView extends StatelessWidget {
 
   /// Null ở rally và Lite: không có lượt giao để mất.
   final VoidCallback? onLoseServe;
+
+  /// Strict side-out: what the lose-serve button leads to (label hint).
+  final LoseServeNext? loseServeNext;
 
   /// Null ở Lite: không có ngoại lệ.
   final VoidCallback? onToggleOverride;
@@ -183,6 +187,7 @@ class PickleballCourtView extends StatelessWidget {
       team2Players: team2Players,
       scoreOf: _scoreOf,
       lockReceiverPlus: isSideOut && !receiverCanScore,
+      loseServeNext: loseServeNext,
       onScoreChange: onScoreChange,
       callText: _callText,
       net: _net,

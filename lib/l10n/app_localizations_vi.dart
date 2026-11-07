@@ -2158,6 +2158,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtLoseServe => 'Mất giao';
 
   @override
+  String get cbdPbNextServerTwo => '→ Giao 2';
+
+  @override
+  String get cbdPbNextHandOver => '→ đổi giao';
+
+  @override
+  String cbdPbReceiverWonServerTwo(int team) {
+    return 'Đội $team thắng pha nhưng đội kia đang giao: người giao 2 giao tiếp (không ai được điểm)';
+  }
+
+  @override
+  String cbdPbReceiverWonHandOver(int team) {
+    return 'Đội $team thắng pha nhưng đội kia đang giao: đổi giao sang Đội $team (không ai được điểm)';
+  }
+
+  @override
   String get pickleballCourtEnd => 'Kết thúc';
 
   @override
