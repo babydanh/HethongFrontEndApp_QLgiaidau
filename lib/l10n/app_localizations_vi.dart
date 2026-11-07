@@ -19208,4 +19208,31 @@ class AppLocalizationsVi extends AppLocalizations {
   String seriesLegsLinkTitle(String leg) {
     return 'Gắn giải vào $leg';
   }
+
+  @override
+  String get cbdRallyServe => '● GIAO';
+
+  @override
+  String get cbdRallyServeRight => 'ô phải';
+
+  @override
+  String get cbdRallyServeLeft => 'ô trái';
+
+  @override
+  String cbdRallyServePlayer(int n) {
+    return 'VĐV $n';
+  }
+
+  @override
+  String get cbdRallyBreak60 => 'Nghỉ 60 giây (bên dẫn đạt 11)';
+
+  @override
+  String get cbdRallyBreak60ChangeEnds =>
+      'Nghỉ 60 giây (bên dẫn đạt 11), đổi sân';
+
+  @override
+  String get cbdRallyBreakBetweenGames => 'Nghỉ giữa game 120 giây, đổi sân';
+
+  @override
+  String get cbdRallyChangeEnds => 'Game cuối: đổi sân (một bên đạt 5)';
 }

@@ -7628,5 +7628,14 @@
   "seriesLegsUnlinkMessage": "Unlink \"{name}\" from this leg?",
   "@seriesLegsUnlinkMessage": {"placeholders": {"name": {"type": "String"}}},
   "seriesLegsLinkTitle": "Link a tournament to {leg}",
-  "@seriesLegsLinkTitle": {"placeholders": {"leg": {"type": "String"}}}
+  "@seriesLegsLinkTitle": {"placeholders": {"leg": {"type": "String"}}},
+  "cbdRallyServe": "● SERVE",
+  "cbdRallyServeRight": "right court",
+  "cbdRallyServeLeft": "left court",
+  "cbdRallyServePlayer": "Player {n}",
+  "@cbdRallyServePlayer": {"placeholders": {"n": {"type": "int"}}},
+  "cbdRallyBreak60": "60-second interval (leader reached 11)",
+  "cbdRallyBreak60ChangeEnds": "60-second interval (leader reached 11), change ends",
+  "cbdRallyBreakBetweenGames": "120-second rest between games, change ends",
+  "cbdRallyChangeEnds": "Deciding game: change ends (a side reached 5)"
 }

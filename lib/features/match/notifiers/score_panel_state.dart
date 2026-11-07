@@ -46,11 +46,29 @@ class RallySetState {
   final int currentP1;
   final int currentP2;
 
-  const RallySetState({this.currentP1 = 0, this.currentP2 = 0});
+  /// Team (1 or 2) that won the last rally of this game, kept only for
+  /// badminton and table tennis. Null when unknown (e.g. after a reload).
+  final int? lastWinner;
+
+  /// How often each team won a rally while serving (badminton doubles swaps
+  /// the pair on each). Null when the count is not known.
+  final int? swaps1;
+  final int? swaps2;
+
+  const RallySetState({
+    this.currentP1 = 0,
+    this.currentP2 = 0,
+    this.lastWinner,
+    this.swaps1,
+    this.swaps2,
+  });
 
   RallySetState copyWith({int? currentP1, int? currentP2}) => RallySetState(
     currentP1: currentP1 ?? this.currentP1,
     currentP2: currentP2 ?? this.currentP2,
+    lastWinner: lastWinner,
+    swaps1: swaps1,
+    swaps2: swaps2,
   );
 }
 

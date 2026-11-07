@@ -34608,6 +34608,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Gắn giải vào {leg}'**
   String seriesLegsLinkTitle(String leg);
+
+  /// No description provided for @cbdRallyServe.
+  ///
+  /// In vi, this message translates to:
+  /// **'● GIAO'**
+  String get cbdRallyServe;
+
+  /// No description provided for @cbdRallyServeRight.
+  ///
+  /// In vi, this message translates to:
+  /// **'ô phải'**
+  String get cbdRallyServeRight;
+
+  /// No description provided for @cbdRallyServeLeft.
+  ///
+  /// In vi, this message translates to:
+  /// **'ô trái'**
+  String get cbdRallyServeLeft;
+
+  /// No description provided for @cbdRallyServePlayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'VĐV {n}'**
+  String cbdRallyServePlayer(int n);
+
+  /// No description provided for @cbdRallyBreak60.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ 60 giây (bên dẫn đạt 11)'**
+  String get cbdRallyBreak60;
+
+  /// No description provided for @cbdRallyBreak60ChangeEnds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ 60 giây (bên dẫn đạt 11), đổi sân'**
+  String get cbdRallyBreak60ChangeEnds;
+
+  /// No description provided for @cbdRallyBreakBetweenGames.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nghỉ giữa game 120 giây, đổi sân'**
+  String get cbdRallyBreakBetweenGames;
+
+  /// No description provided for @cbdRallyChangeEnds.
+  ///
+  /// In vi, this message translates to:
+  /// **'Game cuối: đổi sân (một bên đạt 5)'**
+  String get cbdRallyChangeEnds;
 }
 
 class _AppLocalizationsDelegate

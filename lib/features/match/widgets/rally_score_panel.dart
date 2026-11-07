@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
@@ -34,6 +36,47 @@ class RallyScorePanel extends ConsumerWidget {
     final team1Name = matchAsync.value?.team1Name ?? l10n.pickleballTeam1;
     final team2Name = matchAsync.value?.team2Name ?? l10n.pickleballTeam2;
 
+    // Serve line and reminders: badminton and table tennis on a strict match
+    // only. Pickleball rally and Lite scorecards keep the plain panel.
+    final kind = state.config.kind;
+    final showServe =
+        !state.isOpenScoring &&
+        (kind == SportRuleKind.badminton || kind == SportRuleKind.tableTennis);
+    final match = matchAsync.value;
+    final doubles =
+        (match?.team1Members?.length ?? 0) >= 2 ||
+        (match?.team2Members?.length ?? 0) >= 2;
+    final gameIndex = state.finishedSets.length;
+    final lastSet = state.finishedSets.isEmpty ? null : state.finishedSets.last;
+    final serve = showServe
+        ? rallyServe(
+            kind: kind,
+            p1: r.currentP1,
+            p2: r.currentP2,
+            gameIndex: gameIndex,
+            doubles: doubles,
+            lastWinner: r.lastWinner,
+            prevGameWinner: lastSet == null
+                ? null
+                : (lastSet.score1 > lastSet.score2 ? 1 : 2),
+            swaps1: r.swaps1,
+            swaps2: r.swaps2,
+          )
+        : null;
+    final breakNote = showServe
+        ? _breakText(
+            l10n,
+            rallyServeBanner(
+              kind: kind,
+              p1: r.currentP1,
+              p2: r.currentP2,
+              gameIndex: gameIndex,
+              bestOf: state.config.bestOf,
+              lastWinner: r.lastWinner,
+            ),
+          )
+        : null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       child: OrientationBuilder(
@@ -45,6 +88,8 @@ class RallyScorePanel extends ConsumerWidget {
             score: r.currentP1,
             colors: colors,
             teamName: team1Name,
+            serveLabel: _serveLabel(l10n, serve, 1),
+            showServeLine: showServe,
             onIncrement: () => notifier.rallyAddPoint(true),
             onDecrement: () => notifier.rallyRemovePoint(true),
           );
@@ -54,28 +99,77 @@ class RallyScorePanel extends ConsumerWidget {
             score: r.currentP2,
             colors: colors,
             teamName: team2Name,
+            serveLabel: _serveLabel(l10n, serve, 2),
+            showServeLine: showServe,
             onIncrement: () => notifier.rallyAddPoint(false),
             onDecrement: () => notifier.rallyRemovePoint(false),
           );
 
-          if (isLandscape) {
-            return Row(
-              children: [
-                Expanded(child: team1Widget),
-                const SizedBox(width: 10),
-                Expanded(child: team2Widget),
-              ],
-            );
-          }
-
+          final cards = isLandscape
+              ? Row(
+                  children: [
+                    Expanded(child: team1Widget),
+                    const SizedBox(width: 10),
+                    Expanded(child: team2Widget),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Expanded(child: team1Widget),
+                    const SizedBox(height: 10),
+                    Expanded(child: team2Widget),
+                  ],
+                );
+          if (breakNote == null) return cards;
           return Column(
             children: [
-              Expanded(child: team1Widget),
-              const SizedBox(height: 10),
-              Expanded(child: team2Widget),
+              _buildBreakBanner(breakNote),
+              Expanded(child: cards),
             ],
           );
         },
+      ),
+    );
+  }
+
+  /// "● GIAO · ô phải · VĐV 1" for the serving team, empty for the other.
+  String? _serveLabel(AppLocalizations l10n, RallyServe? serve, int team) {
+    if (serve == null || serve.serverTeam != team) return null;
+    return [
+      l10n.cbdRallyServe,
+      if (serve.rightCourt != null)
+        serve.rightCourt! ? l10n.cbdRallyServeRight : l10n.cbdRallyServeLeft,
+      if (serve.serverPlayer != null)
+        l10n.cbdRallyServePlayer(serve.serverPlayer!),
+    ].join(' · ');
+  }
+
+  String? _breakText(AppLocalizations l10n, RallyBreak b) => switch (b) {
+    RallyBreak.none => null,
+    RallyBreak.interval60 => l10n.cbdRallyBreak60,
+    RallyBreak.interval60ChangeEnds => l10n.cbdRallyBreak60ChangeEnds,
+    RallyBreak.betweenGames => l10n.cbdRallyBreakBetweenGames,
+    RallyBreak.changeEnds => l10n.cbdRallyChangeEnds,
+  };
+
+  Widget _buildBreakBanner(String text) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF7A00), Color(0xFFFF4500)],
+        ),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -85,6 +179,8 @@ class RallyScorePanel extends ConsumerWidget {
     required int score,
     required AppColorsExtension colors,
     required String teamName,
+    required String? serveLabel,
+    required bool showServeLine,
     required VoidCallback onIncrement,
     required VoidCallback onDecrement,
   }) {
@@ -116,7 +212,22 @@ class RallyScorePanel extends ConsumerWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          if (showServeLine)
+            SizedBox(
+              height: 16,
+              child: Center(
+                child: Text(
+                  serveLabel ?? '',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF16A34A),
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox(height: 4),
 
           // HÀNG NGANG: [- SÁT VIỀN TRÁI] | [SỐ ĐIỂM Ở GIỮA] | [+ SÁT VIỀN PHẢI]
           Expanded(

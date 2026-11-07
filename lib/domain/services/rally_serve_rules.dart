@@ -76,7 +76,8 @@ RallyServe rallyServe({
       final server = _isOpening(p1, p2) ? first : lastWinner;
       if (server == null) return const RallyServe();
       final score = server == 1 ? p1 : p2;
-      final swaps = server == 1 ? swaps1 : swaps2;
+      // A game opens with no swaps, so the count is known at 0-0.
+      final swaps = _isOpening(p1, p2) ? 0 : (server == 1 ? swaps1 : swaps2);
       final onRight = score.isEven;
       return RallyServe(
         serverTeam: server,

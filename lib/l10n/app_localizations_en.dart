@@ -19285,4 +19285,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String seriesLegsLinkTitle(String leg) {
     return 'Link a tournament to $leg';
   }
+
+  @override
+  String get cbdRallyServe => '● SERVE';
+
+  @override
+  String get cbdRallyServeRight => 'right court';
+
+  @override
+  String get cbdRallyServeLeft => 'left court';
+
+  @override
+  String cbdRallyServePlayer(int n) {
+    return 'Player $n';
+  }
+
+  @override
+  String get cbdRallyBreak60 => '60-second interval (leader reached 11)';
+
+  @override
+  String get cbdRallyBreak60ChangeEnds =>
+      '60-second interval (leader reached 11), change ends';
+
+  @override
+  String get cbdRallyBreakBetweenGames =>
+      '120-second rest between games, change ends';
+
+  @override
+  String get cbdRallyChangeEnds =>
+      'Deciding game: change ends (a side reached 5)';
 }

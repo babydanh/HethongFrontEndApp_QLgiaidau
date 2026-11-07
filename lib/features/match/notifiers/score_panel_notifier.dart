@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
+import 'package:app_quanly_giaidau/domain/services/rally_serve_rules.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/domain/services/score_validator.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -697,18 +698,54 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     final r = state.rally ?? const RallySetState();
     if (!_canAddRallyPoint(isTeam1 ? r.currentP1 : r.currentP2)) return;
     state = state.copyWith(
-      rally: RallySetState(
-        currentP1: isTeam1 ? r.currentP1 + 1 : r.currentP1,
-        currentP2: !isTeam1 ? r.currentP2 + 1 : r.currentP2,
-      ),
+      rally: _rallyAfterPoint(r, isTeam1),
       errorMessage: null,
     );
     _checkRallySetEnd();
     _scheduleLiveSync();
   }
 
+  /// Next rally state after a point. Badminton and table tennis also remember
+  /// who won it (and how often a team won on serve) so the panel can show who
+  /// serves; other sports keep only the score.
+  RallySetState _rallyAfterPoint(RallySetState r, bool isTeam1) {
+    final p1 = isTeam1 ? r.currentP1 + 1 : r.currentP1;
+    final p2 = isTeam1 ? r.currentP2 : r.currentP2 + 1;
+    final kind = state.config.kind;
+    if (kind != SportRuleKind.badminton && kind != SportRuleKind.tableTennis) {
+      return RallySetState(currentP1: p1, currentP2: p2);
+    }
+    final winner = isTeam1 ? 1 : 2;
+    final opening = r.currentP1 + r.currentP2 == 0;
+    final prev = state.finishedSets.isEmpty ? null : state.finishedSets.last;
+    final server = opening
+        ? rallyGameFirstServer(
+            kind: kind,
+            gameIndex: state.finishedSets.length,
+            prevGameWinner: prev == null
+                ? null
+                : (prev.score1 > prev.score2 ? 1 : 2),
+          )
+        : r.lastWinner;
+    int? swaps(int team, int? current) {
+      final base = opening ? 0 : current;
+      if (base == null) return null;
+      return winner == team && server == team ? base + 1 : base;
+    }
+
+    return RallySetState(
+      currentP1: p1,
+      currentP2: p2,
+      lastWinner: winner,
+      swaps1: swaps(1, r.swaps1),
+      swaps2: swaps(2, r.swaps2),
+    );
+  }
+
   void rallyRemovePoint(bool isTeam1) {
     final r = state.rally ?? const RallySetState();
+    // A correction makes the serve history unknown; the panel hides the serve
+    // line until the next point instead of showing a wrong server.
     state = state.copyWith(
       rally: RallySetState(
         currentP1: isTeam1
