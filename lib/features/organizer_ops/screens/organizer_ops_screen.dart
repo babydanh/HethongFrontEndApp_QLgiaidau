@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/core/widgets/match_card/stale_live_widgets.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -3835,6 +3836,10 @@ class _OpsMatchCard extends StatelessWidget {
                     ),
                 ],
               ),
+              if (match.isStaleLive) ...[
+                const SizedBox(height: 10),
+                StaleLiveReminder(match: match),
+              ],
             ],
           ),
         ),

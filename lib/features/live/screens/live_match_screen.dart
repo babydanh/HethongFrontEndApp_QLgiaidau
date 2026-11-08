@@ -113,8 +113,18 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
     final showCompleted =
         _statusFilter == 'all' || _statusFilter == 'completed';
 
+    // Forgotten matches (Backend flag) get their own "Tạm dừng" group, not LIVE.
     final liveMatches = showLive
-        ? validMatches.where((m) => m.status == AppConstants.matchLive).toList()
+        ? validMatches
+              .where(
+                (m) => m.status == AppConstants.matchLive && !m.isStaleLive,
+              )
+              .toList()
+        : <MatchModel>[];
+    final staleMatches = showLive
+        ? validMatches
+              .where((m) => m.status == AppConstants.matchLive && m.isStaleLive)
+              .toList()
         : <MatchModel>[];
     final completedMatches = showCompleted
         ? validMatches
@@ -128,7 +138,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
         : <MatchModel>[];
 
     final liveCount = validMatches
-        .where((m) => m.status == AppConstants.matchLive)
+        .where((m) => m.status == AppConstants.matchLive && !m.isStaleLive)
         .length;
 
     return RefreshIndicator(
@@ -235,6 +245,33 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
           ],
 
+          // ─── Stale (Tạm dừng) Matches Section ───
+          if (staleMatches.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: _buildSectionHeader(
+                context,
+                icon: Icons.hourglass_bottom_rounded,
+                title: l10n.matchStaleLiveStatus,
+                count: staleMatches.length,
+                color: context.colors.warning,
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => LiveMatchCardV2(
+                    match: staleMatches[index],
+                    isLive: true,
+                    onTap: () => _openMatch(staleMatches[index]),
+                  ),
+                  childCount: staleMatches.length,
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          ],
+
           // ─── Upcoming Matches Section ───
           if (upcomingMatches.isNotEmpty) ...[
             SliverToBoxAdapter(
@@ -289,6 +326,7 @@ class _LiveMatchScreenState extends ConsumerState<LiveMatchScreen> {
 
           // Empty state for filtered matches
           if (liveMatches.isEmpty &&
+              staleMatches.isEmpty &&
               upcomingMatches.isEmpty &&
               completedMatches.isEmpty)
             SliverToBoxAdapter(

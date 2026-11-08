@@ -2,12 +2,17 @@ import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-MatchModel _match(String status, {DateTime? completedAt}) => MatchModel(
+MatchModel _match(
+  String status, {
+  DateTime? completedAt,
+  bool isStaleLive = false,
+}) => MatchModel(
   id: 'm',
   round: 1,
   matchNumber: 1,
   status: status,
   completedAt: completedAt,
+  isStaleLive: isStaleLive,
   bracketPosition: const BracketPosition(bracket: 'winners', round: 1, position: 0),
   updatedAt: DateTime(2026, 11, 1),
 );
@@ -41,6 +46,18 @@ void main() {
       expect(MatchStatusFilter.live.accepts(_match('live')), isTrue);
       expect(MatchStatusFilter.live.accepts(_match('scheduled')), isFalse);
       expect(MatchStatusFilter.live.accepts(_match('completed')), isFalse);
+    });
+
+    test('TC-SLM-APP-03 live drops an abandoned (stale) live match', () {
+      expect(MatchStatusFilter.live.accepts(_match('ONGOING')), isTrue);
+      expect(
+        MatchStatusFilter.live.accepts(_match('ONGOING', isStaleLive: true)),
+        isFalse,
+      );
+      expect(
+        MatchStatusFilter.all.accepts(_match('ONGOING', isStaleLive: true)),
+        isTrue,
+      );
     });
 
     test('completed accepts every ended alias and a match with completedAt', () {

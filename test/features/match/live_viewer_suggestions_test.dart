@@ -209,6 +209,35 @@ void main() {
     await _dispose(tester);
   });
 
+  testWidgets('TC-LIVEVIEW-18 a first page filtered out still pulls the next', (
+    tester,
+  ) async {
+    final repo = _FakeRepo([
+      _page([_item('short', durationSec: 60)], next: 'c2'),
+      _page([_item('ok', durationSec: 600)]),
+    ]);
+    await _pump(tester, repo);
+
+    expect(repo.cursors, [null, 'c2']);
+    expect(find.byKey(const ValueKey('live-suggestion-ok')), findsOneWidget);
+    expect(find.text('No other matches to watch yet'), findsNothing);
+    await _dispose(tester);
+  });
+
+  testWidgets('TC-LIVEVIEW-19 all pages filtered out shows the empty message', (
+    tester,
+  ) async {
+    final repo = _FakeRepo([
+      _page([_item('short', durationSec: 60)], next: 'c2'),
+      _page([_item('short2', durationSec: null)]),
+    ]);
+    await _pump(tester, repo);
+
+    expect(repo.cursors, [null, 'c2']);
+    expect(find.text('No other matches to watch yet'), findsOneWidget);
+    await _dispose(tester);
+  });
+
   testWidgets('a failed first load shows the error text', (tester) async {
     await _pump(tester, _FakeRepo(const [], error: Exception('boom')));
 

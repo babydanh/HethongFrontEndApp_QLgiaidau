@@ -3794,6 +3794,24 @@ abstract class AppLocalizations {
   /// **'LIVE'**
   String get matchLiveStatus;
 
+  /// No description provided for @matchStaleLiveStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạm dừng'**
+  String get matchStaleLiveStatus;
+
+  /// No description provided for @matchStaleLiveReminder.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa cập nhật {hours} giờ. Hãy kết thúc hoặc hủy trận.'**
+  String matchStaleLiveReminder(Object hours);
+
+  /// No description provided for @matchStaleLiveReminderNoHours.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trận chưa được cập nhật gần đây. Hãy kết thúc hoặc hủy trận.'**
+  String get matchStaleLiveReminderNoHours;
+
   /// No description provided for @matchCompletedStatus.
   ///
   /// In vi, this message translates to:

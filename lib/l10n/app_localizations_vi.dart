@@ -1944,6 +1944,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchLiveStatus => 'LIVE';
 
   @override
+  String get matchStaleLiveStatus => 'Tạm dừng';
+
+  @override
+  String matchStaleLiveReminder(Object hours) {
+    return 'Chưa cập nhật $hours giờ. Hãy kết thúc hoặc hủy trận.';
+  }
+
+  @override
+  String get matchStaleLiveReminderNoHours =>
+      'Trận chưa được cập nhật gần đây. Hãy kết thúc hoặc hủy trận.';
+
+  @override
   String get matchCompletedStatus => 'KẾT THÚC';
 
   @override

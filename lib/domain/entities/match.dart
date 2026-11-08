@@ -196,6 +196,13 @@ class MatchModel {
   final int? durationMinutes;
   final DateTime updatedAt;
 
+  /// Backend flag: ONGOING but untouched past its stale threshold (forgotten).
+  /// The app never computes the threshold; [isLive] stays true for organizers.
+  final bool isStaleLive;
+
+  /// Last activity time from Backend; only used to show "N hours" to organizers.
+  final DateTime? lastActivityAt;
+
   /// Monotonic version from backend (optimistic lock + realtime ordering, NOTE-7).
   final int? revision;
   final String? refereeName;
@@ -288,6 +295,8 @@ class MatchModel {
     this.timeLimitMinutes,
     this.durationMinutes,
     required this.updatedAt,
+    this.isStaleLive = false,
+    this.lastActivityAt,
     this.revision,
     this.refereeName,
     this.playedDate,
@@ -679,6 +688,8 @@ class MatchModel {
       timeLimitMinutes: json['timeLimitMinutes'] as int?,
       durationMinutes: durationMinutesFromJson(json),
       updatedAt: DateParser.parseDate(json['updatedAt']),
+      isStaleLive: json['isStaleLive'] == true,
+      lastActivityAt: DateParser.parseDateOptional(json['lastActivityAt']),
       refereeName: json['refereeName'],
       playedDate: _clipText(json['playedDate'], 10),
       playedTime: _clipText(json['playedTime'], 5),
@@ -795,6 +806,9 @@ class MatchModel {
       'timeLimitMinutes': timeLimitMinutes,
       'durationMinutes': durationMinutes,
       'updatedAt': updatedAt.toIso8601String(),
+      'isStaleLive': isStaleLive,
+      if (lastActivityAt != null)
+        'lastActivityAt': lastActivityAt!.toIso8601String(),
       if (revision != null) 'revision': revision,
       if (clubMatchSessionId != null) 'clubMatchSessionId': clubMatchSessionId,
       if (refereeName != null) 'refereeName': refereeName,
@@ -858,6 +872,8 @@ class MatchModel {
     int? timeLimitMinutes,
     int? durationMinutes,
     DateTime? updatedAt,
+    bool? isStaleLive,
+    DateTime? lastActivityAt,
     int? revision,
     String? refereeName,
     String? playedDate,
@@ -926,6 +942,8 @@ class MatchModel {
       timeLimitMinutes: timeLimitMinutes ?? this.timeLimitMinutes,
       durationMinutes: durationMinutes ?? this.durationMinutes,
       updatedAt: updatedAt ?? this.updatedAt,
+      isStaleLive: isStaleLive ?? this.isStaleLive,
+      lastActivityAt: lastActivityAt ?? this.lastActivityAt,
       revision: revision ?? this.revision,
       refereeName: refereeName ?? this.refereeName,
       playedDate: playedDate ?? this.playedDate,

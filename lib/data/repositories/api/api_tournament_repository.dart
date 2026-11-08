@@ -1467,6 +1467,8 @@ class ApiTournamentRepository implements ITournamentRepository {
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
+      isStaleLive: json['isStaleLive'] == true,
+      lastActivityAt: DateParser.parseDateOptional(json['lastActivityAt']),
       refereeId: json['refereeId']?.toString(),
       sportRules: sportRules,
       tournamentConfig: tournamentConfig,

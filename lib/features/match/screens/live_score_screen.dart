@@ -37,6 +37,7 @@ import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
+import 'package:app_quanly_giaidau/core/widgets/match_card/stale_live_widgets.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_discussion_message.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
@@ -2264,7 +2265,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 fill: landscape,
                 fullscreen: landscape,
                 onToggleFullscreen: _toggleFullscreen,
-                showLiveDot: match.isLive,
+                showLiveDot: match.isLive && !match.isStaleLive,
               ),
 
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
@@ -2400,6 +2401,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return Column(
       children: [
         videoBox,
+        // Forgotten match: organizers get the finish/cancel reminder (existing
+        // buttons), everyone else sees the neutral Tạm dừng label instead of LIVE.
+        if (match.isStaleLive)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: canControl
+                ? StaleLiveReminder(match: match)
+                : const Align(
+                    alignment: Alignment.centerLeft,
+                    child: StaleLiveBadge(),
+                  ),
+          ),
         ..._buildViewerBottom(match, effectiveId),
       ],
     );
@@ -2565,7 +2578,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           ? match.tournamentName!.trim()
           : l10n.matchLiveTitle,
       webUrl: 'https://sporto.asia/live/${match.id}',
-      badgeText: match.isLive ? l10n.matchLiveStatus : null,
+      badgeText: match.isStaleLive
+          ? l10n.matchStaleLiveStatus
+          : match.isLive
+          ? l10n.matchLiveStatus
+          : null,
     );
   }
 
@@ -2632,7 +2649,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       ),
       score1: score.score1,
       score2: score.score2,
-      live: match.isLive,
+      live: match.isLive && !match.isStaleLive,
       sets: _detailsSetChips(match, state),
       rows: _detailsRows(match, tournament, tournamentId, sheetContext),
       extra: match.penalties.isEmpty ? null : _buildViewerPenaltyLog(match),
@@ -2812,7 +2829,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           final viewers = ref.watch(viewerCountProvider(widget.matchId)).value;
           return LiveViewerHeader(
             title: _viewerTitle(match),
-            viewersLabel: match.isLive && viewers != null
+            viewersLabel: match.isLive && !match.isStaleLive && viewers != null
                 ? l10n.liveViewerCount(viewers)
                 : null,
             roundLabel: round,

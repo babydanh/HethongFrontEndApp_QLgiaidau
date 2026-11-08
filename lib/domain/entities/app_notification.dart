@@ -101,6 +101,7 @@ class AppNotification {
     switch (type) {
       case 'MATCH_LIVE':
       case 'MATCH_RESULT':
+      case 'MATCH_STALE_LIVE':
         return _liveMatchRoute;
 
       case 'MATCH_REMINDER':
@@ -335,6 +336,8 @@ class AppNotification {
       case 'MATCH_REMINDER':
       case 'MATCH_COMPLETED':
         return Icons.sports_tennis_rounded;
+      case 'MATCH_STALE_LIVE':
+        return Icons.hourglass_bottom_rounded;
       case 'PAYMENT':
       case 'PAYOUT_APPROVED':
       case 'PAYOUT_REJECTED':
@@ -384,6 +387,8 @@ class AppNotification {
       case 'MATCH_REMINDER':
       case 'MATCH_COMPLETED':
         return const Color(0xFF2979FF);
+      case 'MATCH_STALE_LIVE':
+        return const Color(0xFFF59E0B);
       case 'PAYMENT':
       case 'PAYOUT_APPROVED':
       case 'PAYOUT_REJECTED':
