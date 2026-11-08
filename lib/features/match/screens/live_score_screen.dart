@@ -1853,23 +1853,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _setOverlayVisibility(match, kind, visible: !flag);
   }
 
-  /// H2H / bracket panels are only as see-through as their own gradient, the
-  /// same as the Web; no Opacity wrapper fades the text and border on top.
-  Widget _withCloseButton(Widget overlay, {required VoidCallback onClose}) {
-    return Stack(
-      fit: StackFit.passthrough,
-      children: [
-        overlay,
-        Positioned(
-          top: 4,
-          right: 4,
-          child: LiveOverlayCloseButton(onPressed: onClose),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildH2hOverlay(MatchModel match) {
+  /// H2H / bracket panels are frosted glass (translucent gradient + blur); no
+  /// Opacity wrapper fades the text and border on top. Both size themselves
+  /// from the video width and carry their own close button.
+  Widget _buildH2hOverlay(MatchModel match, {required VoidCallback onClose}) {
     final l10n = AppLocalizations.of(context)!;
     final tournament = (match.tournamentName ?? '').trim();
     final roundLabel = MatchRoundLabel.formatRound(
@@ -1898,20 +1885,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     final left = side(1, LiveH2hOverlay.leftRing);
     final right = side(2, LiveH2hOverlay.rightRing);
 
+    // The overlay spans the video width; only the panel itself should swallow
+    // taps, so the video beside it stays tappable.
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.deferToChild,
       child: LiveH2hOverlay(
         title: l10n.liveH2hTitle,
         roundLabel: pill.toUpperCase(),
         left: left,
         right: right,
+        onClose: onClose,
         semanticsLabel:
             '${l10n.liveH2hTitle}: ${left.name} ${l10n.matchVsLabel} ${right.name}',
       ),
     );
   }
 
-  Widget _buildBracketOverlay(MatchModel match) {
+  Widget _buildBracketOverlay(
+    MatchModel match, {
+    required VoidCallback onClose,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final tournamentId = _effectiveTournamentId(match);
     final bracketAsync = tournamentId.isEmpty
@@ -1923,106 +1916,156 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             )),
           );
     final tournament = (match.tournamentName ?? '').trim();
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        // Chừa 48 px bên phải cho nút đóng.
-        padding: const EdgeInsets.fromLTRB(8, 8, 48, 8),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xEE091B3E), Color(0xF2050F26)],
-          ),
-          border: Border.all(
-            color: const Color.fromRGBO(11, 107, 184, 0.85),
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Đầu thẻ như web: thanh xanh, nhãn sơ đồ + tên giải.
-            Container(
-              height: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0D3FA8), Color(0xFF0A2C74)],
-                ),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF2A85FE), Color(0xFF1473FC)],
-                      ),
-                      borderRadius: BorderRadius.circular(5),
+    // The slot is the video area between the header strip and the control bar;
+    // the panel takes 80% x 72% of it, centred, scaled to the video width.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = liveOverlayScale(constraints.maxWidth);
+        double font(double size) => math.max(8, size * scale);
+        return Center(
+          child: LiveOverlayCloseFrame(
+            onClose: onClose,
+            child: SizedBox(
+              width: constraints.maxWidth * 0.8,
+              height: constraints.maxHeight * 0.72,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    // Translucent navy (alpha 0.55 -> 0.62) over the blur.
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0x8C091B3E), Color(0x9E050F26)],
                     ),
-                    child: Text(
-                      l10n.liveBracketTitle.toUpperCase(),
-                      maxLines: 1,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.4,
-                      ),
+                    border: Border.all(
+                      color: const Color.fromRGBO(11, 107, 184, 0.85),
+                      width: math.max(1, 1.5 * scale),
                     ),
+                    borderRadius: BorderRadius.circular(12 * scale),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      (tournament.isNotEmpty
-                              ? tournament
-                              : l10n.liveBracketTournamentFallback)
-                          .toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Flexible(
-              child: bracketAsync == null
-                  ? _bracketEmpty(l10n)
-                  : bracketAsync.when(
-                      loading: () => const Center(
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10.5 * scale),
+                    child: liveGlassBackdrop(
+                      child: Padding(
+                        padding: EdgeInsets.all(8 * scale),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Đầu thẻ như web: thanh xanh, nhãn sơ đồ + tên giải.
+                            Container(
+                              height: 24 * scale,
+                              padding: EdgeInsets.only(
+                                left: 8 * scale,
+                                // Room for the close button over the corner.
+                                right: liveOverlayCloseReserve,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF0D3FA8),
+                                    Color(0xFF0A2C74),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(6 * scale),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 7 * scale,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF2A85FE),
+                                          Color(0xFF1473FC),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        5 * scale,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      l10n.liveBracketTitle.toUpperCase(),
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: font(9),
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.4 * scale,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8 * scale),
+                                  Expanded(
+                                    child: Text(
+                                      (tournament.isNotEmpty
+                                              ? tournament
+                                              : l10n
+                                                    .liveBracketTournamentFallback)
+                                          .toUpperCase(),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: font(10.5),
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 8 * scale),
+                            Flexible(
+                              child: bracketAsync == null
+                                  ? _bracketEmpty(l10n)
+                                  : bracketAsync.when(
+                                      loading: () => const Center(
+                                        child: SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      error: (_, _) => _bracketEmpty(l10n),
+                                      // DESIGN.md §3: sơ đồ nhánh đấu bọc để zoom/pan.
+                                      data: (bracketMatches) {
+                                        final scoped = liveBracketScope(
+                                          bracketMatches,
+                                          match,
+                                        );
+                                        if (scoped.isEmpty) {
+                                          return _bracketEmpty(l10n);
+                                        }
+                                        return InteractiveViewer(
+                                          constrained: false,
+                                          minScale: 0.8,
+                                          maxScale: 3,
+                                          child: _bracketRounds(
+                                            match,
+                                            scoped,
+                                            l10n,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
                         ),
                       ),
-                      error: (_, _) => _bracketEmpty(l10n),
-                      // DESIGN.md §3: sơ đồ nhánh đấu bọc để zoom/pan.
-                      data: (bracketMatches) {
-                        final scoped = liveBracketScope(bracketMatches, match);
-                        if (scoped.isEmpty) return _bracketEmpty(l10n);
-                        return InteractiveViewer(
-                          constrained: false,
-                          minScale: 0.8,
-                          maxScale: 3,
-                          child: _bracketRounds(match, scoped, l10n),
-                        );
-                      },
                     ),
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -2273,8 +2316,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               Positioned(
                 top: 8,
                 left: 8,
+                // Both sides set: the board sees the video width (to scale
+                // itself) and the switcher pins it to the top-left.
+                right: 8,
                 child: IgnorePointer(
                   child: AnimatedSwitcher(
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.topLeft,
+                    children: [...previous, ?current],
+                  ),
                   duration: liveOverlayMotionDuration(context),
                   reverseDuration: liveOverlayReverseDuration(context),
                   switchInCurve: liveOverlayMotionCurve,
@@ -2301,8 +2351,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               ),
               // Overlay theo cờ server: một overlay một lúc, 240 ms easeOutCubic.
               Positioned(
-                left: 8,
-                right: 8,
+                left: 0,
+                right: 0,
                 bottom: liveOverlayBottomInset,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
@@ -2318,8 +2368,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   child: overlayToShow == LiveOverlayKind.h2h
                       ? KeyedSubtree(
                           key: const ValueKey('live-overlay-h2h'),
-                          child: _withCloseButton(
-                            _buildH2hOverlay(match),
+                          child: _buildH2hOverlay(
+                            match,
                             onClose: () =>
                                 _dismissOverlay(LiveOverlayKind.h2h),
                           ),
@@ -2330,8 +2380,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
               Positioned(
-                left: 8,
-                right: 8,
+                left: 0,
+                right: 0,
                 // Leave the header strip clear so its buttons never cover the
                 // overlay's own close button.
                 top: _viewerHeaderHeight,
@@ -2350,8 +2400,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                   child: overlayToShow == LiveOverlayKind.bracket
                       ? KeyedSubtree(
                           key: const ValueKey('live-overlay-bracket'),
-                          child: _withCloseButton(
-                            _buildBracketOverlay(match),
+                          child: _buildBracketOverlay(
+                            match,
                             onClose: () =>
                                 _dismissOverlay(LiveOverlayKind.bracket),
                           ),
