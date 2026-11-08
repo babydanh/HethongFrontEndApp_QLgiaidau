@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/utils/date_parser.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match_event.dart';
 import 'package:app_quanly_giaidau/domain/entities/penalty.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 
 class SetScore {
   final int score1;
@@ -525,13 +526,15 @@ class MatchModel {
               ? tournamentPayload['tournamentConfig']
               : null,
         );
-    final parsedRules =
-        asMap(json['effectiveSportRules']) ??
-        asMap(json['sportRules']) ??
-        asMap(
-          tournamentPayload is Map ? tournamentPayload['sportRules'] : null,
-        ) ??
-        asMap(parsedTournamentConfig?['sportRules']);
+    final parsedRules = withMatchConfigScoring(
+      asMap(json['effectiveSportRules']) ??
+          asMap(json['sportRules']) ??
+          asMap(
+            tournamentPayload is Map ? tournamentPayload['sportRules'] : null,
+          ) ??
+          asMap(parsedTournamentConfig?['sportRules']),
+      json['matchConfig'],
+    );
     final openScoringMarker =
         parsedTournamentConfig?['scoringMode'] ??
         parsedTournamentConfig?['scoring_mode'] ??

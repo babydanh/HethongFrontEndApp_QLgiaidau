@@ -4142,6 +4142,24 @@ abstract class AppLocalizations {
   /// **'Thêm thao tác'**
   String get pickleballCourtMenu;
 
+  /// No description provided for @pickleballScoringMenu.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách tính điểm'**
+  String get pickleballScoringMenu;
+
+  /// No description provided for @pickleballScoringLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã có điểm, không đổi được'**
+  String get pickleballScoringLocked;
+
+  /// No description provided for @pickleballScoringSaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đổi được cách tính điểm. Hãy thử lại.'**
+  String get pickleballScoringSaveError;
+
   /// No description provided for @pickleballCourtFinishSet.
   ///
   /// In vi, this message translates to:

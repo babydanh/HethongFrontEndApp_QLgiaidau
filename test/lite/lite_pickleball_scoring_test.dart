@@ -1,15 +1,44 @@
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
-import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
-import 'package:app_quanly_giaidau/features/community/screens/create_club_tournament_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/utils/lite_pickleball_scoring.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/core/services/match_socket_service.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/fake_api_adapter.dart';
+
+class _UnusedMatchSocketService implements MatchSocketService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+const _sideOutConfig = {
+  'kind': 'PICKLEBALL_SIDE_OUT',
+  'scoringModel': 'PICKLEBALL_SIDE_OUT',
+};
+const _rallyConfig = {
+  'kind': 'PICKLEBALL_RALLY',
+  'scoringModel': 'RALLY_POINT_SET',
+};
+
+Map<String, dynamic> _matchJson({
+  Map<String, dynamic>? matchConfig,
+  String tournamentModel = 'RALLY_POINT_SET',
+}) => {
+  'id': 'match-1',
+  'tournamentId': 'tournament-1',
+  'status': 'LIVE',
+  'sportRules': {
+    'mode': 'LITE',
+    'kind': 'PICKLEBALL',
+    'scoringModel': tournamentModel,
+  },
+  'matchConfig': ?matchConfig,
+};
+
+ApiMatchRepository _repository(FakeApiAdapter adapter) =>
+    ApiMatchRepository(fakeDioClient(adapter), _UnusedMatchSocketService());
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -17,126 +46,133 @@ void main() {
     envString: 'API_BASE_URL=https://api.example.test/api/v1',
   );
 
-  group('TC-LPK-APP-08 payload field', () {
-    test('pickleball sends the chosen scoring, Side-out by default', () {
-      expect(LitePickleballScoring.values.first, LitePickleballScoring.sideOut);
+  group('TC-LMT-APP-01 matchConfig overrides the tournament scoring', () {
+    test('side-out match config beats a rally tournament, mode LITE stays', () {
+      final rules = withMatchConfigScoring({
+        'mode': 'LITE',
+        'kind': 'PICKLEBALL',
+        'scoringModel': 'RALLY_POINT_SET',
+      }, _sideOutConfig);
+
       expect(
-        litePickleballScoringPayload(
-          sport: AppConstants.sportPickleball,
-          scoring: LitePickleballScoring.sideOut,
-        ),
-        {'pickleballScoring': 'SIDE_OUT'},
+        resolveSportConfig(rules).scoringModel,
+        SportScoringModel.pickleballSideOut,
       );
+      expect(isLiteScoringMode(sportRules: rules), isTrue);
+    });
+
+    test('rally match config beats a side-out tournament', () {
+      final rules = withMatchConfigScoring({
+        'mode': 'LITE',
+        'kind': 'PICKLEBALL',
+        'scoringModel': 'PICKLEBALL_SIDE_OUT',
+      }, _rallyConfig);
+
       expect(
-        litePickleballScoringPayload(
-          sport: AppConstants.sportPickleball,
-          scoring: LitePickleballScoring.rally,
-        ),
-        {'pickleballScoring': 'RALLY'},
+        resolveSportConfig(rules).scoringModel,
+        SportScoringModel.rallyPointSet,
       );
     });
 
-    test('other sports send nothing', () {
-      for (final sport in [
-        AppConstants.sportBadminton,
-        AppConstants.sportTennis,
-        AppConstants.sportTableTennis,
-        AppConstants.sportFootball,
-      ]) {
-        expect(
-          litePickleballScoringPayload(
-            sport: sport,
-            scoring: LitePickleballScoring.sideOut,
-          ),
-          isEmpty,
-        );
-      }
+    test('no kind / scoringModel (duration only) leaves the rules alone', () {
+      final rules = {'mode': 'LITE'};
+      expect(
+        withMatchConfigScoring(rules, {'durationMinutes': 30}),
+        same(rules),
+      );
+      expect(withMatchConfigScoring(null, null), isNull);
+    });
+
+    test('MatchModel.fromJson reads the match config on top of the rules', () {
+      final match = MatchModel.fromJson(
+        _matchJson(matchConfig: _sideOutConfig),
+        'match-1',
+      );
+
+      expect(
+        resolveSportConfig(match.sportRules).scoringModel,
+        SportScoringModel.pickleballSideOut,
+      );
+      expect(match.sportRules?['mode'], 'LITE');
+    });
+
+    test('a socket payload without matchConfig keeps the previous flag', () {
+      final merged = carryMatchConfigScoring(
+        incoming: {'mode': 'LITE', 'kind': 'PICKLEBALL'},
+        previous: {
+          'mode': 'LITE',
+          'kind': 'PICKLEBALL_SIDE_OUT',
+          'scoringModel': 'PICKLEBALL_SIDE_OUT',
+        },
+      );
+
+      expect(
+        resolveSportConfig(merged).scoringModel,
+        SportScoringModel.pickleballSideOut,
+      );
+      expect(isLiteScoringMode(sportRules: merged), isTrue);
     });
   });
 
-  group('TC-LPK-APP-09 club tournament create screen', () {
-    const sideOutKey = ValueKey('lite-pickleball-scoring-SIDE_OUT');
-    const rallyKey = ValueKey('lite-pickleball-scoring-RALLY');
+  group('TC-LMT-APP-02 setPickleballScoring', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
 
-    Future<FakeApiAdapter> pump(WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1000, 4000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final adapter = FakeApiAdapter({});
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            dioClientProvider.overrideWithValue(fakeDioClient(adapter)),
-          ],
-          child: MaterialApp(
-            theme: ThemeData.light(),
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const CreateClubTournamentScreen(clubId: ''),
+    test('PATCHes the scoring and parses the saved match config', () async {
+      final adapter = FakeApiAdapter({
+        'PATCH /matches/match-1/pickleball-scoring': FakeReply(200, {
+          'data': _matchJson(matchConfig: _sideOutConfig),
+        }),
+      });
+
+      final match = await _repository(
+        adapter,
+      ).setPickleballScoring('match-1', SportScoringModel.pickleballSideOut);
+
+      expect(adapter.requests, hasLength(1));
+      expect(adapter.requests.single.method, 'PATCH');
+      expect(adapter.requests.single.body, {'scoring': 'SIDE_OUT'});
+      expect(
+        resolveSportConfig(match.sportRules).scoringModel,
+        SportScoringModel.pickleballSideOut,
+      );
+    });
+
+    test('rally sends RALLY', () async {
+      final adapter = FakeApiAdapter({
+        'PATCH /matches/match-1/pickleball-scoring': FakeReply(200, {
+          'data': _matchJson(
+            matchConfig: _rallyConfig,
+            tournamentModel: 'PICKLEBALL_SIDE_OUT',
+          ),
+        }),
+      });
+
+      await _repository(
+        adapter,
+      ).setPickleballScoring('match-1', SportScoringModel.rallyPointSet);
+
+      expect(adapter.requests.single.body, {'scoring': 'RALLY'});
+    });
+
+    test('throws the backend message when the server refuses', () async {
+      final adapter = FakeApiAdapter({
+        'PATCH /matches/match-1/pickleball-scoring': const FakeReply(400, {
+          'message': 'Trận đã có điểm',
+        }),
+      });
+
+      await expectLater(
+        _repository(
+          adapter,
+        ).setPickleballScoring('match-1', SportScoringModel.rallyPointSet),
+        throwsA(
+          isA<Exception>().having(
+            (error) => error.toString(),
+            'message',
+            contains('Trận đã có điểm'),
           ),
         ),
       );
-      await tester.pump();
-      return adapter;
-    }
-
-    Future<Map<String, dynamic>?> submit(
-      WidgetTester tester,
-      FakeApiAdapter adapter,
-    ) async {
-      await tester.enterText(find.byType(TextFormField).first, 'Giải thử');
-      await tester.tap(find.text('Create tournament'));
-      for (var i = 0; i < 20 && adapter.requests.isEmpty; i++) {
-        await tester.runAsync(
-          () => Future<void>.delayed(const Duration(milliseconds: 50)),
-        );
-        await tester.pump(const Duration(milliseconds: 50));
-      }
-      return adapter.postsTo('/tournaments/lite').first.body;
-    }
-
-    bool selected(WidgetTester tester, Key key) =>
-        tester.widget<LavishChoiceTile>(find.byKey(key)).selected;
-
-    testWidgets('pickleball shows the choice, Side-out selected by default', (
-      tester,
-    ) async {
-      final adapter = await pump(tester);
-
-      expect(find.byKey(sideOutKey), findsOneWidget);
-      expect(find.byKey(rallyKey), findsOneWidget);
-      expect(selected(tester, sideOutKey), isTrue);
-      expect(selected(tester, rallyKey), isFalse);
-
-      final body = await submit(tester, adapter);
-      expect(body?['pickleballScoring'], 'SIDE_OUT');
-    });
-
-    testWidgets('choosing Rally sends RALLY', (tester) async {
-      final adapter = await pump(tester);
-
-      await tester.tap(find.byKey(rallyKey));
-      await tester.pump();
-      expect(selected(tester, rallyKey), isTrue);
-
-      final body = await submit(tester, adapter);
-      expect(body?['pickleballScoring'], 'RALLY');
-    });
-
-    testWidgets('another sport hides the choice and sends no field', (
-      tester,
-    ) async {
-      final adapter = await pump(tester);
-
-      await tester.tap(find.text('Badminton'));
-      await tester.pump();
-      expect(find.byKey(sideOutKey), findsNothing);
-
-      final body = await submit(tester, adapter);
-      expect(body, isNotNull);
-      expect(body!.containsKey('pickleballScoring'), isFalse);
     });
   });
 }

@@ -127,6 +127,14 @@ abstract class IMatchRepository {
     Map<String, dynamic> courtState,
   );
 
+  /// Lite pickleball: đổi cách tính điểm của một trận còn 0-0
+  /// (`PATCH /matches/:id/pickleball-scoring`, `SIDE_OUT` hoặc `RALLY`).
+  /// Trả về trận đã cập nhật, cùng shape với GET match.
+  Future<MatchModel> setPickleballScoring(
+    String matchId,
+    SportScoringModel scoringModel,
+  );
+
   Future<void> advanceWinner(
     String tournamentId,
     String nextMatchId, {

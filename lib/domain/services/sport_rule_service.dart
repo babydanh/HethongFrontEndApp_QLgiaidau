@@ -233,6 +233,39 @@ const _sportDefaults = <SportRuleKind, SportConfig>{
   ),
 };
 
+// ─── Match-level scoring flag ───
+
+/// Puts the per-match `matchConfig.kind` / `scoringModel` (the Lite pickleball
+/// scoring choice) on top of [rules], so it beats the tournament preset while
+/// marks such as `mode: LITE` stay. Both fields are needed: the resolver reads
+/// the side-out rule only from `scoringModel`.
+Map<String, dynamic>? withMatchConfigScoring(
+  Map<String, dynamic>? rules,
+  Object? matchConfig,
+) {
+  if (matchConfig is! Map) return rules;
+  final kind = matchConfig['kind']?.toString().trim();
+  final model = matchConfig['scoringModel']?.toString().trim();
+  final hasKind = kind != null && kind.isNotEmpty;
+  final hasModel = model != null && model.isNotEmpty;
+  if (!hasKind && !hasModel) return rules;
+  return {
+    ...?rules,
+    if (hasKind) 'kind': kind,
+    if (hasModel) 'scoringModel': model,
+  };
+}
+
+/// A payload without `matchConfig` (partial socket event) must not drop the
+/// flag the match already had: carry [previous]'s pair onto [incoming].
+Map<String, dynamic>? carryMatchConfigScoring({
+  required Map<String, dynamic>? incoming,
+  required Map<String, dynamic>? previous,
+}) => withMatchConfigScoring(incoming, {
+  'kind': previous?['kind'],
+  'scoringModel': previous?['scoringModel'],
+});
+
 // ─── Resolve ───
 
 /// Giải SportConfig từ tournament sportRules (Map từ BE JSONB) hoặc fallback

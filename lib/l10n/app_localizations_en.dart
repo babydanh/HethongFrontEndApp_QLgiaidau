@@ -2154,6 +2154,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballCourtMenu => 'More actions';
 
   @override
+  String get pickleballScoringMenu => 'Scoring rule';
+
+  @override
+  String get pickleballScoringLocked => 'Points already scored, cannot change';
+
+  @override
+  String get pickleballScoringSaveError =>
+      'Could not change the scoring rule. Try again.';
+
+  @override
   String get pickleballCourtFinishSet => 'Finish set';
 
   @override

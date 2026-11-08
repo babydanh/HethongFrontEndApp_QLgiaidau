@@ -2149,6 +2149,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtMenu => 'Thêm thao tác';
 
   @override
+  String get pickleballScoringMenu => 'Cách tính điểm';
+
+  @override
+  String get pickleballScoringLocked => 'Đã có điểm, không đổi được';
+
+  @override
+  String get pickleballScoringSaveError =>
+      'Chưa đổi được cách tính điểm. Hãy thử lại.';
+
+  @override
   String get pickleballCourtFinishSet => 'Chốt set';
 
   @override
