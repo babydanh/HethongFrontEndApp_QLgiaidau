@@ -1,10 +1,25 @@
+import 'dart:math' as math;
+
+import 'package:app_quanly_giaidau/core/config/app_constants.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_side_avatars.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Same navy + blue family as the Web `LiveHeadToHeadOverlay` and the bracket
 /// overlay.
 const _accent = Color(0xFF1E90FF);
 const _ink = Color(0xFF0B1B3A);
+
+/// Panel width as a share of the video width, kept in a readable range.
+const _widthShare = 0.7;
+const _minPanelWidth = 220.0;
+const _maxPanelWidth = 420.0;
+
+/// Smallest text drawn on the video.
+const _minFontSize = 8.0;
+
+double _font(double size, double scale) => math.max(_minFontSize, size * scale);
 
 /// One side of the head-to-head strip.
 class LiveH2hSideData {
@@ -23,8 +38,11 @@ class LiveH2hSideData {
 }
 
 /// Head-to-head overlay drawn at the bottom of the video, same look as the Web:
-/// navy panel with a blue edge, a thin header (title + round pill) and two
-/// light slanted cards with a coloured avatar ring, "VS" in between.
+/// frosted navy panel with a blue edge, a thin header (logo, title, round pill)
+/// and two light slanted cards with a coloured avatar ring, "VS" in between.
+///
+/// It sizes itself from the width it is given (the video width): centred,
+/// about 70% wide, every dimension scaled by [liveOverlayScale].
 class LiveH2hOverlay extends StatelessWidget {
   const LiveH2hOverlay({
     super.key,
@@ -33,6 +51,7 @@ class LiveH2hOverlay extends StatelessWidget {
     required this.left,
     required this.right,
     this.semanticsLabel,
+    this.onClose,
   });
 
   /// Ring colours of the two sides (blue / red, like the Web).
@@ -47,9 +66,34 @@ class LiveH2hOverlay extends StatelessWidget {
   /// Spoken summary ("A vs B"); the drawn text is hidden from screen readers.
   final String? semanticsLabel;
 
+  /// When set, a close button hangs off the panel's top-right corner.
+  final VoidCallback? onClose;
+
   @override
   Widget build(BuildContext context) {
-    final card = _card();
+    final card = LayoutBuilder(
+      builder: (context, constraints) {
+        final video = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : 400.0;
+        final gutter = onClose == null ? 0.0 : liveOverlayCloseGutter;
+        final width = math.min(
+          (video * _widthShare).clamp(_minPanelWidth, _maxPanelWidth),
+          video - 2 * gutter,
+        );
+        return Align(
+          heightFactor: 1,
+          child: LiveOverlayCloseFrame(
+            onClose: onClose,
+            child: SizedBox(
+              key: const ValueKey('live-h2h-panel'),
+              width: width,
+              child: _card(liveOverlayScale(video)),
+            ),
+          ),
+        );
+      },
+    );
     final label = semanticsLabel;
     if (label == null) return card;
     return Semantics(
@@ -59,56 +103,73 @@ class LiveH2hOverlay extends StatelessWidget {
     );
   }
 
-  Widget _card() {
+  Widget _card(double scale) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12 * scale),
         border: Border.all(
           color: const Color.fromRGBO(11, 107, 184, 0.85),
-          width: 1.5,
+          width: math.max(1, 1.5 * scale),
         ),
+        // Translucent navy (alpha 0.52 -> 0.60); the blur below does the rest.
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xF2091F40), Color(0xF5061832)],
+          colors: [Color(0x85091F40), Color(0x99061832)],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.45),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10.5),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _Header(title: title, roundLabel: roundLabel),
-            Padding(
-              // Right side keeps room for the screen's 44dp close button.
-              padding: const EdgeInsets.fromLTRB(6, 8, 48, 8),
-              child: Row(
-                children: [
-                  Expanded(child: _PlayerCard(data: left, mirrored: false)),
-                  const SizedBox(
-                    width: 26,
-                    child: Text(
-                      'VS',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
+        borderRadius: BorderRadius.circular(10.5 * scale),
+        child: liveGlassBackdrop(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _Header(
+                title: title,
+                roundLabel: roundLabel,
+                scale: scale,
+                closeReserve: onClose == null ? 0 : liveOverlayCloseReserve,
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  6 * scale,
+                  8 * scale,
+                  6 * scale,
+                  8 * scale,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _PlayerCard(
+                        data: left,
+                        mirrored: false,
+                        scale: scale,
                       ),
                     ),
-                  ),
-                  Expanded(child: _PlayerCard(data: right, mirrored: true)),
-                ],
+                    SizedBox(
+                      width: 26 * scale,
+                      child: Text(
+                        'VS',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: _font(12, scale),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: _PlayerCard(
+                        data: right,
+                        mirrored: true,
+                        scale: scale,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -116,10 +177,19 @@ class LiveH2hOverlay extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.title, required this.roundLabel});
+  const _Header({
+    required this.title,
+    required this.roundLabel,
+    required this.scale,
+    required this.closeReserve,
+  });
 
   final String title;
   final String roundLabel;
+  final double scale;
+
+  /// Right-hand room for the close button hanging over the corner (0 = none).
+  final double closeReserve;
 
   @override
   Widget build(BuildContext context) {
@@ -128,39 +198,50 @@ class _Header extends StatelessWidget {
         ? '${words.sublist(0, words.length - 1).join(' ')} '
         : '';
     final tail = words.last;
+    final height = 28 * scale;
     return Container(
-      height: 28,
-      // Room for the 44dp close button the screen puts on the right.
-      padding: const EdgeInsets.only(left: 8, right: 48),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF0C2C5E), Color(0xFF0A2148), Color(0xFF0B2A58)],
+      height: height,
+      padding: EdgeInsets.only(
+        left: 8 * scale,
+        right: 8 * scale + closeReserve,
+      ),
+      decoration: BoxDecoration(
+        // The band is denser than the panel so the title stays crisp.
+        gradient: const LinearGradient(
+          colors: [Color(0xB30C2C5E), Color(0xB30A2148), Color(0xB30B2A58)],
           stops: [0, 0.55, 1],
         ),
         border: Border(
-          bottom: BorderSide(color: Color(0xA61E90FF), width: 1.5),
+          bottom: BorderSide(
+            color: const Color(0xA61E90FF),
+            width: math.max(1, 1.5 * scale),
+          ),
         ),
       ),
       child: Row(
         children: [
-          Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(
-              color: _accent,
-              borderRadius: BorderRadius.circular(4),
+          // The logo asset is a 2049:552 wordmark, 70% of the header tall.
+          SizedBox(
+            height: height * 0.7,
+            child: AspectRatio(
+              aspectRatio: 2049 / 552,
+              child: SvgPicture.asset(
+                AppConstants.logoIconSvg,
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
+              ),
             ),
           ),
-          const SizedBox(width: 7),
-          Container(width: 1, height: 10, color: Colors.white54),
-          const SizedBox(width: 7),
+          SizedBox(width: 7 * scale),
+          Container(width: 1, height: 10 * scale, color: Colors.white54),
+          SizedBox(width: 7 * scale),
           Text.rich(
             TextSpan(
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 10,
+                fontSize: _font(10, scale),
                 fontWeight: FontWeight.w900,
-                letterSpacing: 0.6,
+                letterSpacing: 0.6 * scale,
               ),
               children: [
                 TextSpan(text: lead),
@@ -176,7 +257,10 @@ class _Header extends StatelessWidget {
             Flexible(
               child: Container(
                 key: const ValueKey('live-h2h-round'),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 8 * scale,
+                  vertical: scale,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(999),
@@ -188,11 +272,12 @@ class _Header extends StatelessWidget {
                   roundLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFFD8E4F7),
-                    fontSize: 9,
+                  style: TextStyle(
+                    color: const Color(0xFFD8E4F7),
+                    fontSize: _font(9, scale),
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 0.4,
+                    letterSpacing: 0.4 * scale,
+                    height: 1.1,
                   ),
                 ),
               ),
@@ -204,10 +289,15 @@ class _Header extends StatelessWidget {
 }
 
 class _PlayerCard extends StatelessWidget {
-  const _PlayerCard({required this.data, required this.mirrored});
+  const _PlayerCard({
+    required this.data,
+    required this.mirrored,
+    required this.scale,
+  });
 
   final LiveH2hSideData data;
   final bool mirrored;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
@@ -215,9 +305,9 @@ class _PlayerCard extends StatelessWidget {
       avatars: data.avatars.isEmpty
           ? [LiveAvatarData(name: data.name)]
           : data.avatars,
-      diameter: 28,
+      diameter: 28 * scale,
       borderColor: data.ringColor,
-      borderWidth: 2.5,
+      borderWidth: math.max(1.5, 2.5 * scale),
     );
     final name = Expanded(
       child: Text(
@@ -225,9 +315,9 @@ class _PlayerCard extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         textAlign: mirrored ? TextAlign.end : TextAlign.start,
-        style: const TextStyle(
+        style: TextStyle(
           color: _ink,
-          fontSize: 10.5,
+          fontSize: _font(10.5, scale),
           fontWeight: FontWeight.w900,
         ),
       ),
@@ -235,19 +325,27 @@ class _PlayerCard extends StatelessWidget {
     return ClipPath(
       clipper: _SlantClipper(mirrored: mirrored),
       child: Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        height: 38 * scale,
+        padding: EdgeInsets.symmetric(horizontal: 8 * scale),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: mirrored
-                ? const [Color(0xFFDDE7F2), Color(0xFFEEF3FA), Color(0xFFE8DFEA)]
-                : const [Color(0xFFD3E2F5), Color(0xFFEEF4FB), Color(0xFFDCE7F3)],
+                ? const [
+                    Color(0xFFDDE7F2),
+                    Color(0xFFEEF3FA),
+                    Color(0xFFE8DFEA),
+                  ]
+                : const [
+                    Color(0xFFD3E2F5),
+                    Color(0xFFEEF4FB),
+                    Color(0xFFDCE7F3),
+                  ],
           ),
         ),
         child: Row(
           children: mirrored
-              ? [name, const SizedBox(width: 6), ring]
-              : [ring, const SizedBox(width: 6), name],
+              ? [name, SizedBox(width: 6 * scale), ring]
+              : [ring, SizedBox(width: 6 * scale), name],
         ),
       ),
     );

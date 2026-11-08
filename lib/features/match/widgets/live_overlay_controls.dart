@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -6,6 +8,25 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Chừa đúng chiều cao thanh điều khiển video (6 + 44 + 6) phía dưới overlay.
 const double liveOverlayBottomInset = 64;
+
+/// Overlays are drawn for a 400dp-wide video at 70% of their old size; a
+/// narrower video shrinks them further (floor 0.55 of that), a wider one never
+/// grows them past the old 0.7.
+double liveOverlayScale(double videoWidth) {
+  final width = videoWidth.isFinite ? videoWidth : 400;
+  return (width / 400).clamp(0.55, 1.0) * 0.7;
+}
+
+/// Frosted-glass blur behind a translucent overlay panel. Wrap it in the
+/// panel's own ClipRRect so the blur stops at the rounded edge. The picture is
+/// a platform view on some devices; there the blur is a no-op and the
+/// translucent fill alone keeps the panel readable.
+Widget liveGlassBackdrop({required Widget child}) {
+  return BackdropFilter(
+    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+    child: child,
+  );
+}
 
 const Curve liveOverlayMotionCurve = Curves.easeOutCubic;
 
@@ -206,7 +227,15 @@ class _OverlayChip extends StatelessWidget {
   }
 }
 
-/// Nút đóng cục bộ của overlay: chạm được (≥ 44 px) và có nhãn qua tooltip.
+/// Outer margin [LiveOverlayCloseFrame] keeps above and beside its panel so
+/// the close button's touch area stays inside the hit-testable bounds.
+const double liveOverlayCloseGutter = 16;
+
+/// Room a panel header leaves on its right so the button never covers it.
+const double liveOverlayCloseReserve = 24;
+
+/// Nút đóng cục bộ của overlay: chấm tròn 24 px nhìn thấy, vùng chạm 44 px,
+/// có nhãn qua tooltip.
 class LiveOverlayCloseButton extends StatelessWidget {
   const LiveOverlayCloseButton({super.key, required this.onPressed});
 
@@ -218,12 +247,55 @@ class LiveOverlayCloseButton extends StatelessWidget {
     return IconButton(
       tooltip: l10n.close,
       onPressed: onPressed,
+      padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-      style: IconButton.styleFrom(
-        backgroundColor: context.colors.bgCard,
-        foregroundColor: context.colors.textPrimary,
+      icon: DecoratedBox(
+        key: const ValueKey('live-overlay-close-dot'),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFF0B1B3A),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+        ),
+        child: const SizedBox(
+          width: 24,
+          height: 24,
+          child: Icon(Icons.close, size: 14, color: Colors.white),
+        ),
       ),
-      icon: const Icon(Icons.close, size: 18),
+    );
+  }
+}
+
+/// Puts [child] (a panel) under a [LiveOverlayCloseButton] hanging off its
+/// top-right corner. Without [onClose] the child is returned untouched.
+class LiveOverlayCloseFrame extends StatelessWidget {
+  const LiveOverlayCloseFrame({super.key, required this.child, this.onClose});
+
+  final Widget child;
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final onClose = this.onClose;
+    if (onClose == null) return child;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            liveOverlayCloseGutter,
+            liveOverlayCloseGutter,
+            liveOverlayCloseGutter,
+            0,
+          ),
+          child: child,
+        ),
+        Positioned(
+          top: 0,
+          right: 0,
+          child: LiveOverlayCloseButton(onPressed: onClose),
+        ),
+      ],
     );
   }
 }
