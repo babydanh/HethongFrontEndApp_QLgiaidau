@@ -7,8 +7,6 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/sport_choice_tile.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
-import 'package:app_quanly_giaidau/features/tournament/utils/lite_pickleball_scoring.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/lite_pickleball_scoring_picker.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:intl/intl.dart';
@@ -46,7 +44,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
   String _selectedSport = AppConstants.sportPickleball;
   String _selectedFormat = AppConstants.formatDoubles;
   String _selectedBracket = AppConstants.bracketSingleElimination;
-  LitePickleballScoring _pickleballScoring = LitePickleballScoring.sideOut;
   DateTime? _startDate;
   int _durationHours = 1;
   int _durationMinutes = 30;
@@ -166,10 +163,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
         'sport': resolvedSport,
         'format': resolvedFormat,
         'bracketType': _selectedBracket,
-        ...litePickleballScoringPayload(
-          sport: resolvedSport,
-          scoring: _pickleballScoring,
-        ),
         'maxTeams': int.tryParse(_maxTeamsCtrl.text) ?? 16,
         'description': _descCtrl.text.trim(),
         'isRanked': _isRanked,
@@ -429,17 +422,6 @@ class _CreateClubTournamentScreenState extends ConsumerState<CreateClubTournamen
               const SizedBox(height: 6),
               _buildFormatSelector(),
               const SizedBox(height: 20),
-
-              // ─── Cách tính điểm (chỉ pickleball) ───
-              if (activeSport == AppConstants.sportPickleball) ...[
-                _label(l10n.divisionEditorPickleballMode, colors),
-                const SizedBox(height: 6),
-                LitePickleballScoringPicker(
-                  value: _pickleballScoring,
-                  onChanged: (v) => setState(() => _pickleballScoring = v),
-                ),
-                const SizedBox(height: 20),
-              ],
 
               // ─── Thể thức ───
               _label(l10n.createClubTournament_bracketLabel, colors),
