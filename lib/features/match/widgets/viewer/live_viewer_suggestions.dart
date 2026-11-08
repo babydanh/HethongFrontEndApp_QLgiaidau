@@ -173,12 +173,19 @@ class _LiveViewerSuggestionsState extends ConsumerState<LiveViewerSuggestions> {
     final items = _items;
     if (items == null) return const _SuggestionSkeleton(rows: 3);
     if (_failed) return Center(child: Text(l10n.homeMatchesLoadError));
-    if (items.isEmpty) return Center(child: Text(l10n.liveSuggestionsEmpty));
 
+    // Runs before the empty check: a first page that is all filtered out must
+    // still pull the next page instead of ending on "no videos".
     if (_nextCursor != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _maybeLoadMore();
       });
+    }
+    if (items.isEmpty) {
+      final waitingForPage = _nextCursor != null && !_moreFailed;
+      return waitingForPage
+          ? const _SuggestionSkeleton(rows: 3)
+          : Center(child: Text(l10n.liveSuggestionsEmpty));
     }
     final shown = filterSuggestions(items, _filter);
     return Column(
