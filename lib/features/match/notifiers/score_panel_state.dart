@@ -263,6 +263,12 @@ class ScorePanelState {
   /// source so a stale snapshot cannot silently fall back to BO3.
   bool get isOpenScoring => isLite || config.isOpenScoring;
 
+  /// Pickleball side-out rule (only the serving team scores). It applies to
+  /// Lite too: Lite stays an open scorecard (no target, no auto set close) but
+  /// follows the serve rule when the tournament chose side-out.
+  bool get isPickleballSideOut =>
+      config.scoringModel == SportScoringModel.pickleballSideOut;
+
   /// Football uses its own phase/goal state instead of finished sets.
   ///
   /// Super Lite is an open scorecard: each manually closed set is history,

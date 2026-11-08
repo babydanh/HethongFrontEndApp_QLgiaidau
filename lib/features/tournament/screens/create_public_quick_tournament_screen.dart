@@ -12,7 +12,9 @@ import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/providers/regions_provider.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/lite_pickleball_scoring.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lite_pickleball_scoring_picker.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/public_tournament_create_entry.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/quick_tournament_format_mapping.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -185,6 +187,7 @@ class _CreatePublicQuickTournamentScreenState
   bool _isPublic = true;
   bool _isRanked = false;
   String _bracket = AppConstants.bracketSingleElimination;
+  LitePickleballScoring _pickleballScoring = LitePickleballScoring.sideOut;
   final String _registrationMode = 'APPROVAL';
   // Không còn công tắc trên màn tạo nữa: luật ghép đôi do BTC quyết, mặc
   // định 'ORGANIZER' đúng như web (web cũng không có control này khi tạo).
@@ -595,6 +598,10 @@ class _CreatePublicQuickTournamentScreenState
       final payload = <String, dynamic>{
         'name': name,
         'sport': _mapSportSlug(),
+        ...litePickleballScoringPayload(
+          sport: _mapSportSlug(),
+          scoring: _pickleballScoring,
+        ),
         ...primaryFormatFields,
         'bracketType': _bracket,
         'maxTeams': maxTeams,
@@ -785,6 +792,17 @@ class _CreatePublicQuickTournamentScreenState
             const SizedBox(height: 8),
             _buildSportGrid(colors),
             const SizedBox(height: 18),
+
+            // ─── Cách tính điểm (chỉ pickleball) ───
+            if (_sport == AppConstants.sportPickleball) ...[
+              _sectionLabel(l10n.divisionEditorPickleballMode, colors),
+              const SizedBox(height: 8),
+              LitePickleballScoringPicker(
+                value: _pickleballScoring,
+                onChanged: (v) => setState(() => _pickleballScoring = v),
+              ),
+              const SizedBox(height: 18),
+            ],
 
             // ─── Thể thức thi đấu ───
             _sectionLabel('${l10n.quickCreateBracketLabel} *', colors),

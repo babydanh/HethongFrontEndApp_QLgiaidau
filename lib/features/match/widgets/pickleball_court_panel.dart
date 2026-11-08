@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
-import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/pickleball_court_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
@@ -166,20 +165,16 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
 
   bool _receiverWonStrictRally(bool isTeam1) {
     final panel = ref.read(scorePanelNotifierProvider(widget.params));
-    if (!_isStrictSideOut(panel)) return false;
+    if (!panel.isPickleballSideOut) return false;
     final serve = panel.pickleball ?? const PickleballServeState();
     return serve.isTeam1Serving != isTeam1;
   }
-
-  bool _isStrictSideOut(ScorePanelState panel) =>
-      !panel.isOpenScoring &&
-      panel.config.scoringModel == SportScoringModel.pickleballSideOut;
 
   /// Where the lose-serve button leads, mirroring `pickleballSwitchServer`
   /// (doubles: server 1 -> 2, otherwise the serve changes team). Null outside
   /// strict side-out.
   LoseServeNext? _loseServeNext(ScorePanelState panel, CourtContext court) {
-    if (!_isStrictSideOut(panel)) return null;
+    if (!panel.isPickleballSideOut) return null;
     final serve = panel.pickleball ?? const PickleballServeState();
     final toSecond =
         court.isDoubles && serve.openingDone && serve.serverNumber == 1;

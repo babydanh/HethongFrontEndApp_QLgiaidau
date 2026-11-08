@@ -236,7 +236,7 @@ void main() {
   group('TC-SERVE-03 Lite and rally follow the serve too', () {
     const lite = SportConfig(
       kind: SportRuleKind.pickleball,
-      scoringModel: SportScoringModel.pickleballSideOut,
+      scoringModel: SportScoringModel.rallyPointSet,
       isOpenScoring: true,
       bestOf: 3,
       setsToWin: 2,
@@ -303,6 +303,86 @@ void main() {
       );
 
       expect(_panel(c).pickleballAwardPoint(false), isFalse);
+    });
+  });
+
+  group('TC-LPK-APP Lite with the side-out scoring model', () {
+    const liteSideOut = SportConfig(
+      kind: SportRuleKind.pickleball,
+      scoringModel: SportScoringModel.pickleballSideOut,
+      isOpenScoring: true,
+      bestOf: 3,
+      setsToWin: 2,
+      pointsPerSet: 11,
+      mustWinByTwo: true,
+      maxPoints: 0,
+      tiebreakAt: 0,
+    );
+    const serverOne = PickleballServeState(
+      isTeam1Serving: true,
+      serverNumber: 1,
+      openingDone: true,
+    );
+
+    test('TC-LPK-APP-01 the receiving team cannot score, the serving can', () {
+      final c = _container(serve: serverOne, config: liteSideOut);
+
+      expect(_panel(c).pickleballAwardPoint(false), isFalse);
+      expect(c.read(scorePanelNotifierProvider(_params)).rally!.currentP2, 0);
+      expect(_panel(c).pickleballAwardPoint(true), isTrue);
+
+      final state = c.read(scorePanelNotifierProvider(_params));
+      expect(state.rally!.currentP1, 1);
+      expect(state.pickleball!.isTeam1Serving, isTrue);
+    });
+
+    test(
+      'TC-LPK-APP-02 lose serve goes server 1 -> server 2 -> other team',
+      () {
+        final c = _container(serve: serverOne, config: liteSideOut);
+
+        _panel(c).pickleballSwitchServer();
+        expect(_serve(c).isTeam1Serving, isTrue);
+        expect(_serve(c).serverNumber, 2);
+
+        _panel(c).pickleballSwitchServer();
+        expect(_serve(c).isTeam1Serving, isFalse);
+        expect(_serve(c).serverNumber, 1);
+      },
+    );
+
+    test('TC-LPK-APP-03 no target score: 20-3 does not close the set', () {
+      final c = _container(
+        serve: serverOne,
+        score1: 19,
+        score2: 3,
+        config: liteSideOut,
+      );
+
+      expect(_panel(c).pickleballAwardPoint(true), isTrue);
+
+      final state = c.read(scorePanelNotifierProvider(_params));
+      expect(state.rally!.currentP1, 20);
+      expect(state.finishedSets, isEmpty);
+      expect(state.isOpenScoring, isTrue);
+    });
+
+    test('TC-LPK-APP-04 Lite rally is unchanged: the receiver scores', () {
+      const liteRally = SportConfig(
+        kind: SportRuleKind.pickleball,
+        scoringModel: SportScoringModel.rallyPointSet,
+        isOpenScoring: true,
+        bestOf: 3,
+        setsToWin: 2,
+        pointsPerSet: 11,
+        mustWinByTwo: true,
+        maxPoints: 0,
+        tiebreakAt: 0,
+      );
+      final c = _container(serve: serverOne, config: liteRally);
+
+      expect(_panel(c).pickleballAwardPoint(false), isTrue);
+      expect(_serve(c).isTeam1Serving, isFalse);
     });
   });
 
@@ -393,7 +473,7 @@ void main() {
     test('(d) open scoring: the receiving team scores and the opening ends', () {
       const lite = SportConfig(
         kind: SportRuleKind.pickleball,
-        scoringModel: SportScoringModel.pickleballSideOut,
+        scoringModel: SportScoringModel.rallyPointSet,
         isOpenScoring: true,
         bestOf: 3,
         setsToWin: 2,

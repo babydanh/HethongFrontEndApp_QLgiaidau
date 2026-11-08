@@ -649,10 +649,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool pickleballAwardPoint(bool isTeam1) {
     if (_rejectIfMaxSetsReached()) return false;
     final pb = state.pickleball ?? const PickleballServeState();
-    final strictSideOut =
-        !state.isOpenScoring &&
-        state.config.scoringModel == SportScoringModel.pickleballSideOut;
-    if (strictSideOut && pb.isTeam1Serving != isTeam1) {
+    if (state.isPickleballSideOut && pb.isTeam1Serving != isTeam1) {
       state = state.copyWith(errorMessage: _l10n.scorePanel_servingTeamOnly);
       return false;
     }
