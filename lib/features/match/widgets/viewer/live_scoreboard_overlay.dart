@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'scoreboard_set_columns.dart';
+
 /// Brand blue shared with the H2H / bracket overlays and the Web scoreboard.
 const _accent = Color(0xFF1E90FF);
 const _panel = Color(0xFF020617);
 // Broadcast-size score bug: slim rows, translucent so the picture shows.
 const _rowHeight = 20.0;
 const _scoreWidth = 32.0;
+const _setCellWidth = 22.0;
+const _headerHeight = 12.0;
 const _panelAlpha = 0.6;
 const _scoreAlpha = 0.85;
 
@@ -21,6 +25,7 @@ class LiveScoreboardOverlay extends StatelessWidget {
     required this.score1,
     required this.score2,
     this.finished = false,
+    this.setColumns = const [],
     this.semanticsLabel,
   });
 
@@ -29,6 +34,10 @@ class LiveScoreboardOverlay extends StatelessWidget {
   final int score1;
   final int score2;
   final bool finished;
+
+  /// Sets played so far (oldest first, current last); empty draws the single
+  /// score of the current set only.
+  final List<SetColumn> setColumns;
 
   /// Spoken summary ("A 3, B 2"); the drawn rows are hidden from screen readers.
   final String? semanticsLabel;
@@ -47,8 +56,15 @@ class LiveScoreboardOverlay extends StatelessWidget {
   }
 
   Widget _board() {
+    final finishedSets = [
+      for (final column in setColumns)
+        if (column.state == SetColumnState.finished) column,
+    ];
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 120, maxWidth: 170),
+      constraints: BoxConstraints(
+        minWidth: 120,
+        maxWidth: 170 + finishedSets.length * _setCellWidth,
+      ),
       child: DecoratedBox(
         key: const ValueKey('live-scoreboard-panel'),
         decoration: BoxDecoration(
@@ -63,9 +79,23 @@ class LiveScoreboardOverlay extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _Row(name: team1, score: score1, finished: finished),
+                if (finishedSets.isNotEmpty)
+                  _SetHeader(sets: finishedSets, current: setColumns.last),
+                _Row(
+                  name: team1,
+                  score: score1,
+                  finished: finished,
+                  sets: finishedSets,
+                  side: 1,
+                ),
                 const SizedBox(height: 2),
-                _Row(name: team2, score: score2, finished: finished),
+                _Row(
+                  name: team2,
+                  score: score2,
+                  finished: finished,
+                  sets: finishedSets,
+                  side: 2,
+                ),
               ],
             ),
           ),
@@ -75,12 +105,82 @@ class LiveScoreboardOverlay extends StatelessWidget {
   }
 }
 
+/// "S1 S2 … Sn" labels above the finished-set cells and the current score cell.
+class _SetHeader extends StatelessWidget {
+  const _SetHeader({required this.sets, required this.current});
+
+  final List<SetColumn> sets;
+  final SetColumn current;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget label(SetColumn set, double width) => SizedBox(
+      width: width,
+      child: Center(
+        child: Text(
+          'S${set.setNumber}',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: 8,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+    return SizedBox(
+      height: _headerHeight,
+      child: Row(
+        children: [
+          const SizedBox(width: 4),
+          const Expanded(child: SizedBox.shrink()),
+          for (final set in sets) label(set, _setCellWidth),
+          label(current, _scoreWidth),
+        ],
+      ),
+    );
+  }
+}
+
+/// Score of one finished set for one side: the set winner bold, the loser dim.
+class _SetCell extends StatelessWidget {
+  const _SetCell({required this.score, required this.won});
+
+  final int score;
+  final bool won;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _setCellWidth,
+      child: Center(
+        child: Text(
+          '$score',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: won ? 1 : 0.55),
+            fontSize: 12,
+            fontWeight: won ? FontWeight.w900 : FontWeight.w600,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _Row extends StatelessWidget {
-  const _Row({required this.name, required this.score, required this.finished});
+  const _Row({
+    required this.name,
+    required this.score,
+    required this.finished,
+    required this.sets,
+    required this.side,
+  });
 
   final Widget name;
   final int score;
   final bool finished;
+  final List<SetColumn> sets;
+  final int side;
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +195,11 @@ class _Row extends StatelessWidget {
               child: Align(alignment: Alignment.centerLeft, child: name),
             ),
           ),
+          for (final set in sets)
+            _SetCell(
+              score: side == 1 ? set.team1 : set.team2,
+              won: set.winner == side,
+            ),
           _ScoreCell(score: score, finished: finished),
         ],
       ),

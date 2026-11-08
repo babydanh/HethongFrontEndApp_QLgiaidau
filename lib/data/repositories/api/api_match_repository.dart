@@ -623,6 +623,10 @@ class ApiMatchRepository implements IMatchRepository {
 
     return MatchModel(
       id: json['id'] ?? '',
+      // Keep the server overlay flags: a REST refresh must not reset them to defaults.
+      scoreboardVisible: json['scoreboardVisible'] != false,
+      h2hOverlayVisible: json['h2hOverlayVisible'] == true,
+      bracketOverlayVisible: json['bracketOverlayVisible'] == true,
       tournamentId:
           json['tournamentId']?.toString() ??
           json['tournament_id']?.toString() ??

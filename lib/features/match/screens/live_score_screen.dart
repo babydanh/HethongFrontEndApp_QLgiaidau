@@ -45,6 +45,7 @@ import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_hea
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_comment_input.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_h2h_overlay.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_scoreboard_overlay.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/scoreboard_set_columns.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_viewer_suggestions.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_chat_grouping.dart';
@@ -1852,15 +1853,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     _setOverlayVisibility(match, kind, visible: !flag);
   }
 
-  /// H2H / bracket panels let the picture show through; the close button
-  /// stays fully opaque.
-  static const double _overlayOpacity = 0.75;
-
+  /// H2H / bracket panels are only as see-through as their own gradient, the
+  /// same as the Web; no Opacity wrapper fades the text and border on top.
   Widget _withCloseButton(Widget overlay, {required VoidCallback onClose}) {
     return Stack(
       fit: StackFit.passthrough,
       children: [
-        Opacity(opacity: _overlayOpacity, child: overlay),
+        overlay,
         Positioned(
           top: 4,
           right: 4,
@@ -2910,10 +2909,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       score1: score.score1 as int,
       score2: score.score2 as int,
       finished: match.isCompleted == true,
+      setColumns: _scoreboardSetColumns(match, score as SetScoreData),
       semanticsLabel:
           '${matchSideLabel(match, 1)} ${score.score1}, '
           '${matchSideLabel(match, 2)} ${score.score2}',
     );
+  }
+
+  /// Every set played so far next to the current one, like the Web. The open
+  /// set uses [live] so a local optimistic point shows before the server echo.
+  List<SetColumn> _scoreboardSetColumns(MatchModel match, SetScoreData live) {
+    final sets = _scoreDetailsSets(match);
+    final activeIdx = activeSetIndex(sets);
+    if (sets.isNotEmpty) {
+      sets[activeIdx] = SetScoreData(
+        score1: live.score1,
+        score2: live.score2,
+        isFinished: sets[activeIdx].isFinished,
+      );
+    }
+    return scoreboardSetColumns(sets, activeIdx);
   }
 
   String _penaltyLabel(Penalty penalty) {

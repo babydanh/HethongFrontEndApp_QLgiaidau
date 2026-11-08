@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_scoreboard_overlay.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/viewer/scoreboard_set_columns.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -216,5 +217,71 @@ void main() {
 
     expect(find.bySemanticsLabel('odi695 3, son bao b 2'), findsOneWidget);
     handle.dispose();
+  });
+
+  testWidgets('TC-SETCOL-07 finished sets show their scores next to the current one', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        const LiveScoreboardOverlay(
+          team1: Text('Alpha'),
+          team2: Text('Beta'),
+          score1: 4,
+          score2: 3,
+          setColumns: [
+            SetColumn(
+              setNumber: 1,
+              team1: 11,
+              team2: 5,
+              state: SetColumnState.finished,
+              winner: 1,
+            ),
+            SetColumn(
+              setNumber: 2,
+              team1: 8,
+              team2: 11,
+              state: SetColumnState.finished,
+              winner: 2,
+            ),
+            SetColumn(
+              setNumber: 3,
+              team1: 4,
+              team2: 3,
+              state: SetColumnState.current,
+              winner: null,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    for (final text in ['S1', 'S2', 'S3', '11', '5', '8', '4', '3']) {
+      expect(find.text(text), findsWidgets, reason: text);
+    }
+    expect(find.text('11'), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+    // Still one blue score cell per row for the current set.
+    expect(
+      find.byKey(const ValueKey('live-scoreboard-score-bg')),
+      findsNWidgets(2),
+    );
+  });
+
+  testWidgets('TC-SETCOL-08 no columns keeps the single-set board without a header', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        const LiveScoreboardOverlay(
+          team1: Text('Alpha'),
+          team2: Text('Beta'),
+          score1: 4,
+          score2: 3,
+        ),
+      ),
+    );
+
+    expect(find.text('S1'), findsNothing);
   });
 }

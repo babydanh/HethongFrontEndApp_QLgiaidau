@@ -240,4 +240,67 @@ void main() {
       expect(ctx.requests, hasLength(1));
     },
   );
+
+  test(
+    'TC-OVL-REST-01: REST snapshot keeps the overlay and scoreboard flags the server sent',
+    () async {
+      // Regression: _parseMatch dropped these flags, so every REST refresh
+      // (invalidate after PATCH, 12 s reconciliation) reset the overlay to off.
+      final ctx = _repositoryWith(
+        _FakeMatchSocketService(),
+        (options) => Response<dynamic>(
+          requestOptions: options,
+          statusCode: 200,
+          data: {
+            'data': {
+              ..._matchJson(h2h: true, bracket: false),
+              'scoreboardVisible': false,
+            },
+            'meta': {},
+          },
+        ),
+      );
+
+      final first = await ctx.repository
+          .watchMatch('tournament-1', 'match-1')
+          .firstWhere((match) => match != null);
+
+      expect(first!.h2hOverlayVisible, isTrue);
+      expect(first.bracketOverlayVisible, isFalse);
+      expect(first.scoreboardVisible, isFalse);
+    },
+  );
+
+  test(
+    'TC-OVL-REST-02: REST snapshot without the flags falls back to defaults',
+    () async {
+      final ctx = _repositoryWith(
+        _FakeMatchSocketService(),
+        (options) => Response<dynamic>(
+          requestOptions: options,
+          statusCode: 200,
+          data: {
+            'data': {
+              'id': 'match-1',
+              'tournamentId': 'tournament-1',
+              'round': 1,
+              'status': 'LIVE',
+              'team1Name': 'Doi A',
+              'team2Name': 'Doi B',
+              'updatedAt': '2026-07-15T08:00:00Z',
+            },
+            'meta': {},
+          },
+        ),
+      );
+
+      final first = await ctx.repository
+          .watchMatch('tournament-1', 'match-1')
+          .firstWhere((match) => match != null);
+
+      expect(first!.h2hOverlayVisible, isFalse);
+      expect(first.bracketOverlayVisible, isFalse);
+      expect(first.scoreboardVisible, isTrue);
+    },
+  );
 }

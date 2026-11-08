@@ -71,8 +71,10 @@ MatchModel _match({
   int round = 1,
   String? matchCode,
   bool h2hOverlayVisible = false,
+  Map<String, dynamic>? scoreDetails,
 }) {
   return MatchModel(
+    scoreDetails: scoreDetails,
     id: _matchId,
     tournamentId: _tournamentId,
     round: round,
@@ -215,7 +217,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('H2H panel is translucent and comes back from the menu after X', (
+    testWidgets('H2H panel keeps the Web translucency (no extra fade) and comes back from the menu after X', (
       tester,
     ) async {
       await _pumpLiveScreen(
@@ -226,10 +228,17 @@ void main() {
       );
       final h2h = find.byKey(const ValueKey('live-overlay-h2h'));
       expect(h2h, findsOneWidget);
-      final opacity = tester.widget<Opacity>(
-        find.descendant(of: h2h, matching: find.byType(Opacity)).first,
+      // TC-OVL-OPA-01: the Web panel is only as see-through as its own
+      // gradient; no Opacity wrapper may fade the text and border on top.
+      expect(
+        find.descendant(
+          of: h2h,
+          matching: find.byWidgetPredicate(
+            (widget) => widget is Opacity && widget.opacity < 1,
+          ),
+        ),
+        findsNothing,
       );
-      expect(opacity.opacity, lessThan(1));
 
       // Hide it with its own X: the server flag is still on.
       await tester.tap(find.descendant(of: h2h, matching: find.byIcon(Icons.close)));
@@ -369,6 +378,39 @@ void main() {
 
       // The scoreboard writes the short name in upper case, like the Web.
       expect(find.text('TEAM ALPHA'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
+    'TC-SETCOL-09 scoreboard shows every played set at once, like the Web',
+    (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _viewerAuth,
+        match: _match(
+          scoreboardVisible: true,
+          scoreDetails: {
+            'sets': [
+              {'team1Score': 11, 'team2Score': 7, 'isFinished': true},
+              {'team1Score': 6, 'team2Score': 11, 'isFinished': true},
+              {'team1Score': 4, 'team2Score': 2, 'isFinished': false},
+            ],
+          },
+        ),
+        isViewer: true,
+      );
+
+      final board = find.byType(LiveScoreboardOverlay);
+      for (final label in ['S1', 'S2', 'S3']) {
+        expect(
+          find.descendant(of: board, matching: find.text(label)),
+          findsOneWidget,
+          reason: label,
+        );
+      }
+      // Finished sets stay on screen; the blue cell holds the open set.
+      expect(find.descendant(of: board, matching: find.text('7')), findsOneWidget);
+      expect(find.descendant(of: board, matching: find.text('4')), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
