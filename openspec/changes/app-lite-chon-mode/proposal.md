@@ -1,3 +1,5 @@
+> Cập nhật: phần "chọn khi tạo giải" (ô Side-out/Rally ở hai màn tạo giải Lite) đã được thay bởi `app-lite-mode-trong-tran` (chọn trong màn bấm điểm của từng trận). Luật side-out ở bảng chấm điểm vẫn giữ.
+
 ## Why
 Giải Lite pickleball trên App luôn là rally: không chọn được cách tính điểm khi tạo giải, và bảng chấm điểm không áp luật giao bóng side-out ở Lite (code chặn bằng `!isOpenScoring`). Backend (change song song) thêm field `pickleballScoring` cho `POST /tournaments/lite` và lưu `sportRules.scoringModel`.
 

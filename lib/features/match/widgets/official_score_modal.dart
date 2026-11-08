@@ -215,6 +215,12 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                       colors,
                       l10n,
                       isLite: isLite,
+                      // The rule in use now: a Lite pickleball match can have
+                      // been switched after this screen opened.
+                      scoringModel: ref
+                          .read(scorePanelNotifierProvider(params))
+                          .config
+                          .scoringModel,
                     );
                   },
                 ),
@@ -1570,6 +1576,7 @@ void _showMatchInfoDialog(
   AppColorsExtension colors,
   AppLocalizations l10n, {
   required bool isLite,
+  required SportScoringModel scoringModel,
 }) {
   showDialog(
     context: context,
@@ -1629,8 +1636,8 @@ void _showMatchInfoDialog(
                     label: l10n.officialScore_maxPoints(config.maxPoints),
                   ),
               ],
-              if (!isLite)
-                _RuleChip(label: _scoringModelLabel(config.scoringModel, l10n)),
+              if (!isLite || kind == SportRuleKind.pickleball)
+                _RuleChip(label: _scoringModelLabel(scoringModel, l10n)),
               if (match.court.isNotEmpty)
                 _RuleChip(label: l10n.officialScore_court(match.court)),
               _RuleChip(label: l10n.officialScore_round(match.round)),

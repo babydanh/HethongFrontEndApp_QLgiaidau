@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/pickleball_court_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_dialogs.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
@@ -254,6 +256,31 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     }
   }
 
+  /// Lite only: asks which rule the match is scored by and saves it. The
+  /// notifier refuses a second save while one is in flight; a failure shows
+  /// the error and leaves the rule as it was.
+  Future<void> _changeScoring() async {
+    final current = ref.read(scorePanelNotifierProvider(widget.params)).config;
+    final picked = await showDialog<SportScoringModel>(
+      context: context,
+      builder: (_) => PickleballScoringDialog(current: current.scoringModel),
+    );
+    if (picked == null || picked == current.scoringModel || !mounted) return;
+    final error = await ref
+        .read(scorePanelNotifierProvider(widget.params).notifier)
+        .setPickleballScoring(picked);
+    if (error == null || !mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text(
+          ErrorParser.parse(error, l10n.pickleballScoringSaveError, l10n),
+        ),
+      ),
+    );
+  }
+
   void _applyDrop(CourtDropAction action) {
     switch (action) {
       case SwapPlaces(:final team):
@@ -356,6 +383,15 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       loseServeNext: _loseServeNext(score, courtContext),
       onToggleOverride: canEdit && !isLite ? _toggleOverride : null,
       onForceWin: canEdit ? widget.onForceWin : null,
+      scoringMenu: canEdit && isLite
+          ? CourtScoringMenu(
+              currentLabel: pickleballScoringLabel(
+                AppLocalizations.of(context)!,
+                score.config.scoringModel,
+              ),
+              onTap: score.hasNoPoints ? _changeScoring : null,
+            )
+          : null,
       onUndo: canEdit && court.history.isNotEmpty
           ? () => unawaited(_apply((state, _) => undoCourtChange(state)))
           : null,

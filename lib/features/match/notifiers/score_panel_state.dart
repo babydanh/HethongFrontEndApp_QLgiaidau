@@ -269,6 +269,13 @@ class ScorePanelState {
   bool get isPickleballSideOut =>
       config.scoringModel == SportScoringModel.pickleballSideOut;
 
+  /// No point yet: every set, the open one included, is 0-0. Only then may a
+  /// Lite match change its scoring rule.
+  bool get hasNoPoints =>
+      (rally?.currentP1 ?? 0) == 0 &&
+      (rally?.currentP2 ?? 0) == 0 &&
+      finishedSets.every((set) => set.score1 == 0 && set.score2 == 0);
+
   /// Football uses its own phase/goal state instead of finished sets.
   ///
   /// Super Lite is an open scorecard: each manually closed set is history,

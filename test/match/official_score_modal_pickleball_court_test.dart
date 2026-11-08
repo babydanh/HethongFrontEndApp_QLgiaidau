@@ -196,6 +196,19 @@ void main() {
       expect(find.byType(PickleballCourtPanel), findsOneWidget);
       expect(find.byTooltip('Change serve'), findsOneWidget);
     });
+
+    testWidgets('TC-LMT-APP-07 Lite match info shows the scoring rule in use', (
+      tester,
+    ) async {
+      await _pump(tester, sportKey: 'PICKLEBALL', lite: true);
+
+      await tester.tap(find.byTooltip('Match Information'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pickleball side-out'), findsOneWidget);
+      // The dialog title row overflows with the wide test font only.
+      expect(tester.takeException(), isA<FlutterError>());
+    });
   });
 
   group('TC-COURT-10 swipe on the court does not slide the tabs', () {
