@@ -48,13 +48,19 @@ Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
 
   final tournament = asMap(json['tournament']);
   final config = tournamentConfig(tournament);
+  // The per-match scoring flag (matchConfig) always sits on top of the rules.
+  Map<String, dynamic>? withMatchFlag(Map<String, dynamic>? rules) =>
+      carryOpenScoringMarker(
+        withMatchConfigScoring(rules, json['matchConfig']),
+        config,
+      );
   final effectiveRules = asMap(json['effectiveSportRules']);
   if (effectiveRules != null && effectiveRules.isNotEmpty) {
-    return carryOpenScoringMarker(effectiveRules, config);
+    return withMatchFlag(effectiveRules);
   }
   final matchRules = asMap(json['sportRules']);
   if (matchRules != null && matchRules.isNotEmpty) {
-    return carryOpenScoringMarker(matchRules, config);
+    return withMatchFlag(matchRules);
   }
   final tournamentRules =
       asMap(tournament?['sportRules']) ??
@@ -68,7 +74,7 @@ Map<String, dynamic>? _readSportRules(Map<String, dynamic> json) {
             ? (json['tournamentConfig'] as Map)['sportRules']
             : null,
       );
-  return carryOpenScoringMarker(tournamentRules, config);
+  return withMatchFlag(tournamentRules);
 }
 
 class ApiMatchRepository implements IMatchRepository {
@@ -905,7 +911,12 @@ class ApiMatchRepository implements IMatchRepository {
           : incoming.team2Players,
       tournamentName: incoming.tournamentName ?? previous.tournamentName,
       sportKey: incoming.sportKey ?? previous.sportKey,
-      sportRules: incoming.sportRules ?? previous.sportRules,
+      sportRules: payload.containsKey('matchConfig')
+          ? incoming.sportRules ?? previous.sportRules
+          : carryMatchConfigScoring(
+              incoming: incoming.sportRules ?? previous.sportRules,
+              previous: previous.sportRules,
+            ),
       tournamentConfig: incoming.tournamentConfig ?? previous.tournamentConfig,
       scoreDetails: mergeCourtState(
         selected: hasScorePayload
@@ -1331,6 +1342,43 @@ class ApiMatchRepository implements IMatchRepository {
         message?.trim().isNotEmpty == true
             ? message
             : _l10n.pickleballCourtSaveError,
+      );
+    }
+  }
+
+  @override
+  Future<MatchModel> setPickleballScoring(
+    String matchId,
+    SportScoringModel scoringModel,
+  ) async {
+    try {
+      final response = await _dioClient.dio.patch(
+        '/matches/$matchId/pickleball-scoring',
+        data: {
+          'scoring': scoringModel == SportScoringModel.pickleballSideOut
+              ? 'SIDE_OUT'
+              : 'RALLY',
+        },
+      );
+      final body = response.data;
+      final raw = body is Map && body['data'] is Map ? body['data'] : body;
+      if (raw is! Map) {
+        throw Exception(_l10n.pickleballScoringSaveError);
+      }
+      return _parseMatch(Map<String, dynamic>.from(raw));
+    } on DioException catch (error) {
+      final body = error.response?.data;
+      final rawMessage = body is Map ? body['message'] : null;
+      final message = rawMessage is List
+          ? rawMessage
+                .whereType<Object>()
+                .map((item) => item.toString())
+                .join('\n')
+          : rawMessage?.toString();
+      throw Exception(
+        message?.trim().isNotEmpty == true
+            ? message
+            : _l10n.pickleballScoringSaveError,
       );
     }
   }

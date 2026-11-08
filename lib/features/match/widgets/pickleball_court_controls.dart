@@ -6,6 +6,17 @@ import 'package:flutter/material.dart';
 const _iconButtonSize = 44.0;
 const _finishColor = Color(0xFF16A34A);
 
+/// The "Scoring rule" item of the ⋯ menu (Lite pickleball only).
+class CourtScoringMenu {
+  const CourtScoringMenu({required this.currentLabel, this.onTap});
+
+  /// The rule in use, shown under the item while it can be changed.
+  final String currentLabel;
+
+  /// Null while the rule cannot be changed (the match already has points).
+  final VoidCallback? onTap;
+}
+
 /// Actions of the ⋯ menu; a null callback hides (or disables) its item.
 class CourtMenuActions {
   const CourtMenuActions({
@@ -17,6 +28,7 @@ class CourtMenuActions {
     this.onToggleOverride,
     this.overrideEnabled = false,
     this.onForceWin,
+    this.scoring,
   });
 
   final VoidCallback? onSwitchEnds;
@@ -32,7 +44,11 @@ class CourtMenuActions {
   /// Null when the caller offers no quick-win action.
   final VoidCallback? onForceWin;
 
+  /// Null outside Lite: the item is not drawn.
+  final CourtScoringMenu? scoring;
+
   bool get hasAny =>
+      scoring != null ||
       onSwitchEnds != null ||
       onUndo != null ||
       onRestoreAutomatic != null ||
@@ -62,7 +78,15 @@ class CourtNetActions {
   final VoidCallback? onLoseServe;
 }
 
-enum _MenuItem { switchEnds, undo, restore, autoSwitch, override, forceWin }
+enum _MenuItem {
+  switchEnds,
+  undo,
+  restore,
+  autoSwitch,
+  override,
+  forceWin,
+  scoring,
+}
 
 /// The ⋯ button and its popup menu.
 class CourtMenuButton extends StatelessWidget {
@@ -77,6 +101,7 @@ class CourtMenuButton extends StatelessWidget {
     required bool enabled,
     bool? checked,
     Color? color,
+    String? subtitle,
   }) {
     return PopupMenuItem<_MenuItem>(
       value: value,
@@ -86,7 +111,15 @@ class CourtMenuButton extends StatelessWidget {
           Icon(icon, size: 20, color: color),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label, style: TextStyle(color: color)),
+            child: subtitle == null
+                ? Text(label, style: TextStyle(color: color))
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label, style: TextStyle(color: color)),
+                      Text(subtitle, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
           ),
           if (checked ?? false)
             const Icon(Icons.check_rounded, size: 18, color: _finishColor),
@@ -109,6 +142,8 @@ class CourtMenuButton extends StatelessWidget {
         actions.onToggleOverride?.call();
       case _MenuItem.forceWin:
         actions.onForceWin?.call();
+      case _MenuItem.scoring:
+        actions.scoring?.onTap?.call();
     }
   }
 
@@ -152,6 +187,16 @@ class CourtMenuButton extends StatelessWidget {
             l10n.matchOverrideLabel,
             enabled: true,
             checked: actions.overrideEnabled,
+          ),
+        if (actions.scoring case final scoring?)
+          _item(
+            _MenuItem.scoring,
+            Icons.sports_score_rounded,
+            l10n.pickleballScoringMenu,
+            enabled: scoring.onTap != null,
+            subtitle: scoring.onTap == null
+                ? l10n.pickleballScoringLocked
+                : scoring.currentLabel,
           ),
         if (actions.onForceWin != null)
           _item(

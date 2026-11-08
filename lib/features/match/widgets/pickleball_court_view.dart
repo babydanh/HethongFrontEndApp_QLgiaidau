@@ -48,6 +48,7 @@ class PickleballCourtView extends StatelessWidget {
     this.loseServeNext,
     this.onToggleOverride,
     this.onForceWin,
+    this.scoringMenu,
   });
 
   static const _motion = Duration(milliseconds: 240);
@@ -117,6 +118,9 @@ class PickleballCourtView extends StatelessWidget {
   final VoidCallback? onToggleOverride;
   final VoidCallback? onForceWin;
 
+  /// Null outside Lite: no "Scoring rule" item in the ⋯ menu.
+  final CourtScoringMenu? scoringMenu;
+
   int _scoreOf(int team) => team == 1 ? team1Score : team2Score;
 
   CourtDropAction? _resolve(CourtDragSource source, CourtDropTarget target) {
@@ -170,6 +174,7 @@ class PickleballCourtView extends StatelessWidget {
       onToggleOverride: onToggleOverride,
       overrideEnabled: overrideEnabled,
       onForceWin: onForceWin,
+      scoring: scoringMenu,
     ),
     onFinishSet: onFinishSet,
     finishSetEnabled: finishSetEnabled,

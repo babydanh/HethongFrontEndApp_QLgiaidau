@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/domain/services/football_rules.dart';
@@ -167,6 +168,43 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   /// Feeds a server snapshot through the same path as the match stream.
   @visibleForTesting
   void applyMatchSnapshot(MatchModel match) => _updateStateFromMatch(match);
+
+  bool _scoringChangeInFlight = false;
+
+  /// Lite pickleball: saves this match's scoring rule (Side-out or Rally).
+  /// Only while the match has no point (the server checks it too). Returns the
+  /// error when the save fails (the rule stays as it was), null on success or
+  /// when there is nothing to send. A second call while one is in flight is a
+  /// no-op.
+  Future<Object?> setPickleballScoring(SportScoringModel model) async {
+    if (_scoringChangeInFlight ||
+        !state.isOpenScoring ||
+        !state.hasNoPoints ||
+        state.config.scoringModel == model) {
+      return null;
+    }
+    _scoringChangeInFlight = true;
+    try {
+      final saved = await ref
+          .read(matchRepositoryProvider)
+          .setPickleballScoring(arg.matchId, model);
+      if (_isDisposed) return null;
+      // Switch the board now instead of waiting for the socket echo; the
+      // refetch brings the same flag from the server.
+      state = state.copyWith(
+        config: resolveSportConfig(
+          _effectiveSportRules(saved, ref, arg),
+          SportRuleKind.fromString(saved.sportKey),
+        ),
+      );
+      ref.invalidate(singleMatchProvider(arg));
+      return null;
+    } catch (error) {
+      return error;
+    } finally {
+      _scoringChangeInFlight = false;
+    }
+  }
 
   void _updateStateFromMatch(MatchModel match) {
     final incomingRevision = match.revision;
@@ -649,10 +687,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
   bool pickleballAwardPoint(bool isTeam1) {
     if (_rejectIfMaxSetsReached()) return false;
     final pb = state.pickleball ?? const PickleballServeState();
-    final strictSideOut =
-        !state.isOpenScoring &&
-        state.config.scoringModel == SportScoringModel.pickleballSideOut;
-    if (strictSideOut && pb.isTeam1Serving != isTeam1) {
+    if (state.isPickleballSideOut && pb.isTeam1Serving != isTeam1) {
       state = state.copyWith(errorMessage: _l10n.scorePanel_servingTeamOnly);
       return false;
     }

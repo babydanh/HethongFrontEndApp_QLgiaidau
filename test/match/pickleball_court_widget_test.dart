@@ -852,9 +852,29 @@ void main() {
       expect(calls, ['award:1']);
     });
 
-    testWidgets('open scoring (Lite): the receiving team scores as rally', (
+    testWidgets('open scoring (Lite rally): the receiver scores as rally', (
       tester,
     ) async {
+      final calls = <String>[];
+      await _pumpPanel(
+        tester,
+        canScore: true,
+        repository: _EchoCourtRepository(),
+        scoreState: _scoreState(
+          SportScoringModel.rallyPointSet,
+          open: true,
+          serve: const PickleballServeState(),
+        ),
+        scoreCalls: calls,
+      );
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+
+      expect(calls, ['award:2']);
+    });
+
+    testWidgets('TC-LPK-APP-10 open scoring (Lite side-out): the receiver plus '
+        'loses the serve and awards no point', (tester) async {
       final calls = <String>[];
       await _pumpPanel(
         tester,
@@ -870,7 +890,7 @@ void main() {
 
       await tester.tap(find.byTooltip('Add point for team 2'));
 
-      expect(calls, ['award:2']);
+      expect(calls, ['switchServer']);
     });
 
     testWidgets('rally rule: both teams score and the serve follows', (

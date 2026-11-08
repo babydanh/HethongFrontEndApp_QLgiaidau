@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_dialogs.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
@@ -166,20 +167,16 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
 
   bool _receiverWonStrictRally(bool isTeam1) {
     final panel = ref.read(scorePanelNotifierProvider(widget.params));
-    if (!_isStrictSideOut(panel)) return false;
+    if (!panel.isPickleballSideOut) return false;
     final serve = panel.pickleball ?? const PickleballServeState();
     return serve.isTeam1Serving != isTeam1;
   }
-
-  bool _isStrictSideOut(ScorePanelState panel) =>
-      !panel.isOpenScoring &&
-      panel.config.scoringModel == SportScoringModel.pickleballSideOut;
 
   /// Where the lose-serve button leads, mirroring `pickleballSwitchServer`
   /// (doubles: server 1 -> 2, otherwise the serve changes team). Null outside
   /// strict side-out.
   LoseServeNext? _loseServeNext(ScorePanelState panel, CourtContext court) {
-    if (!_isStrictSideOut(panel)) return null;
+    if (!panel.isPickleballSideOut) return null;
     final serve = panel.pickleball ?? const PickleballServeState();
     final toSecond =
         court.isDoubles && serve.openingDone && serve.serverNumber == 1;
@@ -257,6 +254,31 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     if (!latest.isSubmitting && latest.errorMessage == null) {
       Navigator.of(context).pop();
     }
+  }
+
+  /// Lite only: asks which rule the match is scored by and saves it. The
+  /// notifier refuses a second save while one is in flight; a failure shows
+  /// the error and leaves the rule as it was.
+  Future<void> _changeScoring() async {
+    final current = ref.read(scorePanelNotifierProvider(widget.params)).config;
+    final picked = await showDialog<SportScoringModel>(
+      context: context,
+      builder: (_) => PickleballScoringDialog(current: current.scoringModel),
+    );
+    if (picked == null || picked == current.scoringModel || !mounted) return;
+    final error = await ref
+        .read(scorePanelNotifierProvider(widget.params).notifier)
+        .setPickleballScoring(picked);
+    if (error == null || !mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text(
+          ErrorParser.parse(error, l10n.pickleballScoringSaveError, l10n),
+        ),
+      ),
+    );
   }
 
   void _applyDrop(CourtDropAction action) {
@@ -361,6 +383,15 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       loseServeNext: _loseServeNext(score, courtContext),
       onToggleOverride: canEdit && !isLite ? _toggleOverride : null,
       onForceWin: canEdit ? widget.onForceWin : null,
+      scoringMenu: canEdit && isLite
+          ? CourtScoringMenu(
+              currentLabel: pickleballScoringLabel(
+                AppLocalizations.of(context)!,
+                score.config.scoringModel,
+              ),
+              onTap: score.hasNoPoints ? _changeScoring : null,
+            )
+          : null,
       onUndo: canEdit && court.history.isNotEmpty
           ? () => unawaited(_apply((state, _) => undoCourtChange(state)))
           : null,

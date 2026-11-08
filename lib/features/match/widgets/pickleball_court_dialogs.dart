@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
+import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
@@ -56,6 +57,43 @@ bool _reasonMissing(ScorePanelState state) =>
 
 bool _needsReason(ScorePanelState state) =>
     !state.isOpenScoring && state.overrideEnabled;
+
+/// Label of a pickleball scoring rule: Side-out or Rally.
+String pickleballScoringLabel(AppLocalizations l10n, SportScoringModel model) =>
+    model == SportScoringModel.pickleballSideOut
+    ? l10n.divisionEditorSideOutScoring
+    : l10n.divisionEditorRallyScoring;
+
+/// Picks the scoring rule of a Lite pickleball match. Pops the rule tapped;
+/// the one in use is ticked.
+class PickleballScoringDialog extends StatelessWidget {
+  const PickleballScoringDialog({super.key, required this.current});
+
+  final SportScoringModel current;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SimpleDialog(
+      title: Text(l10n.pickleballScoringMenu),
+      children: [
+        for (final model in const [
+          SportScoringModel.pickleballSideOut,
+          SportScoringModel.rallyPointSet,
+        ])
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, model),
+            child: Row(
+              children: [
+                Expanded(child: Text(pickleballScoringLabel(l10n, model))),
+                if (model == current) const Icon(Icons.check_rounded, size: 18),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
 
 /// Confirms finishing the current set. Pops `true` on confirm.
 class FinishSetDialog extends ConsumerWidget {

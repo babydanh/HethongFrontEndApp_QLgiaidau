@@ -736,18 +736,56 @@ void main() {
   });
 
   group('Lite', () {
-    testWidgets('both teams can score, no side-out lock', (tester) async {
+    testWidgets('rally: both teams can score, no side-out lock', (
+      tester,
+    ) async {
       final log = <String>[];
       await _pumpPanel(
         tester,
         log: log,
-        state: _state(lite: true),
+        state: _state(model: SportScoringModel.rallyPointSet, lite: true),
         context: _context(mode: CourtScoringMode.rally),
       );
 
       await tester.tap(find.byTooltip('Add point for team 2'));
 
       expect(log, ['award:2']);
+    });
+
+    testWidgets('TC-LPK-APP-05 side-out: plus of the receiver loses the serve, '
+        'no point', (tester) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log, state: _state(lite: true));
+
+      await tester.tap(find.byTooltip('Add point for team 2'));
+
+      expect(log, ['switchServer']);
+    });
+
+    testWidgets('TC-LPK-APP-06 side-out: plus of the serving team awards the '
+        'point', (tester) async {
+      final log = <String>[];
+      await _pumpPanel(tester, log: log, state: _state(lite: true));
+
+      await tester.tap(find.byTooltip('Add point for team 1'));
+
+      expect(log, ['award:1']);
+    });
+
+    testWidgets('TC-LPK-APP-07 side-out: lose serve button says server 2 is '
+        'next', (tester) async {
+      await _pumpPanel(
+        tester,
+        log: <String>[],
+        context: _context(serverNumber: 1),
+        state: _state(
+          lite: true,
+          serve: const PickleballServeState(serverNumber: 1, openingDone: true),
+        ),
+      );
+
+      expect(find.text('LOSE SERVE'), findsOneWidget);
+      expect(find.text('→ Serve 2'), findsOneWidget);
     });
 
     test('the court context tracks serve turns in Lite', () async {
