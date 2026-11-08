@@ -1949,6 +1949,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchLiveStatus => 'LIVE';
 
   @override
+  String get matchStaleLiveStatus => 'Paused';
+
+  @override
+  String matchStaleLiveReminder(Object hours) {
+    return 'No update for $hours hours. Please finish or cancel the match.';
+  }
+
+  @override
+  String get matchStaleLiveReminderNoHours =>
+      'This match has had no recent update. Please finish or cancel it.';
+
+  @override
   String get matchCompletedStatus => 'ENDED';
 
   @override

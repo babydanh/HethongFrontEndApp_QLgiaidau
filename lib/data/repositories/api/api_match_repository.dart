@@ -689,6 +689,8 @@ class ApiMatchRepository implements IMatchRepository {
             json['updatedAt'] ?? json['updated_at'],
           ) ??
           DateTime.now(),
+      isStaleLive: json['isStaleLive'] == true,
+      lastActivityAt: DateParser.parseDateOptional(json['lastActivityAt']),
       revision: json['revision'] as int?,
       refereeId: json['refereeId']?.toString(),
       refereeName: json['refereeName']?.toString(),

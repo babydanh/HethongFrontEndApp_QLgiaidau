@@ -25,7 +25,7 @@ enum MatchStatusFilter {
   };
 
   bool accepts(MatchModel match) => switch (this) {
-    live => match.isLive,
+    live => match.isLive && !match.isStaleLive,
     scheduled => match.isScheduled && !match.isCompleted,
     completed => match.isCompleted,
     all => true,

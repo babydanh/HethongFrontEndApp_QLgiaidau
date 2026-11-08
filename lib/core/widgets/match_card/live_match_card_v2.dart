@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
+import 'package:app_quanly_giaidau/core/widgets/match_card/stale_live_widgets.dart';
 import 'package:app_quanly_giaidau/core/utils/tennis_game_point_display.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -52,14 +53,16 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
         ? widget.match.currentLiveScore
         : SetScore(score1: widget.match.score1, score2: widget.match.score2);
 
-    final cardBorder = widget.isLive
+    // A forgotten (stale) live match keeps its score but loses the red LIVE look.
+    final isStale = widget.isLive && widget.match.isStaleLive;
+    final cardBorder = widget.isLive && !isStale
         ? Border.all(
             color: const Color(0xFFEF4444).withValues(alpha: 0.35),
             width: 1.2,
           )
         : Border.all(color: colors.border.withValues(alpha: 0.6), width: 1);
 
-    final cardShadow = widget.isLive
+    final cardShadow = widget.isLive && !isStale
         ? [
             BoxShadow(
               color: const Color(
@@ -179,6 +182,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
   Widget _buildLiveBar(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isStale = widget.match.isStaleLive;
     final courtName = TournamentLocationFormatter.matchShortCourt(
       widget.match.court,
     );
@@ -192,12 +196,16 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: isDark
+        color: isStale
+            ? context.colors.bgSurface
+            : isDark
             ? const Color(0xFF450A0A).withValues(alpha: 0.4)
             : const Color(0xFFFEF2F2),
         border: Border(
           bottom: BorderSide(
-            color: isDark
+            color: isStale
+                ? context.colors.border.withValues(alpha: 0.5)
+                : isDark
                 ? const Color(0xFFEF4444).withValues(alpha: 0.2)
                 : const Color(0xFFFEE2E2),
             width: 1,
@@ -206,46 +214,49 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       ),
       child: Row(
         children: [
-          // Live Pulse Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDC2626),
-              borderRadius: BorderRadius.circular(6),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFDC2626).withValues(alpha: 0.35),
-                  blurRadius: 6,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                      width: 5.5,
-                      height: 5.5,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                    )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scaleXY(begin: 0.7, end: 1.25, duration: 750.ms),
-                const SizedBox(width: 5),
-                Text(
-                  l10n.matchLiveStatus.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: 0.8,
+          // Live Pulse Badge (neutral Tạm dừng pill when stale)
+          if (isStale)
+            const StaleLiveBadge()
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDC2626),
+                borderRadius: BorderRadius.circular(6),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFDC2626).withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
                   ),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                        width: 5.5,
+                        height: 5.5,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scaleXY(begin: 0.7, end: 1.25, duration: 750.ms),
+                  const SizedBox(width: 5),
+                  Text(
+                    l10n.matchLiveStatus.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
           if (roundName.isNotEmpty) ...[
             const SizedBox(width: 8),
             Flexible(

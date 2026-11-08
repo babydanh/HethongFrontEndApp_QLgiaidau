@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/cursor_pagination.dart';
 import 'package:app_quanly_giaidau/core/utils/match_status_filter.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
+import 'package:app_quanly_giaidau/core/widgets/match_card/stale_live_widgets.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
@@ -724,6 +725,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
 
   Widget _buildMatchCard(MatchModel match, AppColorsExtension colors) {
     final isLive = match.isLive;
+    final isStale = isLive && match.isStaleLive;
     final cardScore = isLive
         ? match.currentLiveScore
         : SetScore(score1: match.score1, score2: match.score2);
@@ -747,7 +749,7 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
           color: colors.bgCard,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isLive
+            color: isLive && !isStale
                 ? const Color(0xFF2979FF).withValues(alpha: 0.3)
                 : colors.border,
           ),
@@ -787,19 +789,28 @@ class _MatchesListScreenState extends ConsumerState<MatchesListScreen>
                 color: colors.bgSurface,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                match.isCompleted || match.isLive
-                    ? '${cardScore.score1} - ${cardScore.score2}'
-                    : 'VS',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: isLive
-                      ? const Color(0xFF2979FF)
-                      : match.isCompleted
-                      ? colors.success
-                      : colors.textPrimary,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    match.isCompleted || match.isLive
+                        ? '${cardScore.score1} - ${cardScore.score2}'
+                        : 'VS',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isLive && !isStale
+                          ? const Color(0xFF2979FF)
+                          : match.isCompleted
+                          ? colors.success
+                          : colors.textPrimary,
+                    ),
+                  ),
+                  if (isStale) ...[
+                    const SizedBox(height: 4),
+                    const StaleLiveBadge(),
+                  ],
+                ],
               ),
             ),
             // Team 2
