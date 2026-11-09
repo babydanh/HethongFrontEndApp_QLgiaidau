@@ -231,8 +231,8 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       data: (session) {
         final host = session.isHost;
         final showPayment = host && session.feePerSlot > 0;
-        final showMatchTab = (session.communityId ?? '').trim().isNotEmpty;
-        final tabLength = 3 + (showMatchTab ? 1 : 0) + (showPayment ? 1 : 0);
+        // Tab Trận đấu luôn có: buổi cá nhân lọc theo socialSessionId.
+        final tabLength = 4 + (showPayment ? 1 : 0);
         if (_tabController.length != tabLength) {
           final previousIndex = _tabController.index.clamp(0, tabLength - 1);
           _tabController.dispose();
@@ -291,21 +291,19 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                             isActive: activeIndex == 1,
                             colors: colors,
                           ),
-                          if (showMatchTab) ...[
-                            const SizedBox(width: 14),
-                            _buildTabItem(
-                              index: 2,
-                              label: AppLocalizations.of(context)!.social_matchTab,
-                              isActive: activeIndex == 2,
-                              colors: colors,
-                            ),
-                          ],
+                          const SizedBox(width: 14),
+                          _buildTabItem(
+                            index: 2,
+                            label: AppLocalizations.of(context)!.social_matchTab,
+                            isActive: activeIndex == 2,
+                            colors: colors,
+                          ),
                           if (showPayment) ...[
                             const SizedBox(width: 14),
                             _buildTabItem(
-                              index: showMatchTab ? 3 : 2,
+                              index: 3,
                               label: 'Thanh toán',
-                              isActive: activeIndex == (showMatchTab ? 3 : 2),
+                              isActive: activeIndex == 3,
                               colors: colors,
                             ),
                           ],
@@ -349,9 +347,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       isHost: host,
                       onRemoveParticipant: _removeParticipant,
                       removingParticipantId: _removingParticipantId,
-                      onAddParticipant: (slot) {
+                      onAddParticipant: () {
                         if (session.status.toUpperCase() == 'COMPLETED') return;
-                        SocialAddParticipantSheet.show(context, session, slot);
+                        SocialAddParticipantSheet.show(context, session);
                       },
                       onApproveParticipant: host && !_reviewing
                           ? (p) => _reviewRequest(p, true)
@@ -360,11 +358,12 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                           ? (p) => _reviewRequest(p, false)
                           : null,
                     ),
-                    if (showMatchTab)
-                      SocialMatchTab(
-                        communityId: session.communityId!.trim(),
-                        approvedParticipants: session.participants,
-                      ),
+                    SocialMatchTab(
+                      communityId: session.communityId?.trim(),
+                      sessionId: session.id,
+                      isHost: host,
+                      approvedParticipants: session.participants,
+                    ),
                     if (showPayment) SocialPaymentTab(session: session),
                     SocialChatTab(
                       key: ObjectKey(ref.watch(authProvider)),

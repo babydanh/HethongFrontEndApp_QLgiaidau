@@ -6965,6 +6965,16 @@
     }
   },
   "participantUnpaired": "Pair split. Both athletes are waiting for a partner.",
+  "orgMgmtParticipantKick": "Remove from tournament",
+  "orgMgmtParticipantKickConfirm": "Remove {name} from the tournament?",
+  "@orgMgmtParticipantKickConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "orgMgmtParticipantKicked": "Removed from the tournament.",
   "participantDetailContact": "Contact",
   "participantDetailEditContacts": "Edit athlete contacts",
   "participantDetailNoMembers": "No members in this profile.",

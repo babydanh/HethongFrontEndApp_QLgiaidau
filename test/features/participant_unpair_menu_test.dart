@@ -15,6 +15,8 @@ class _ParticipantsRepository implements ITournamentRepository {
 
   final List<OrganizerOpsParticipant> participants;
   int calls = 0;
+  final kicked = <String>[];
+  final kickReasons = <String>[];
 
   @override
   Future<List<OrganizerOpsParticipant>> getOrganizerParticipants(
@@ -23,6 +25,16 @@ class _ParticipantsRepository implements ITournamentRepository {
   }) async {
     calls += 1;
     return participants;
+  }
+
+  @override
+  Future<void> kickParticipant({
+    required String tournamentId,
+    required String participantId,
+    required String reason,
+  }) async {
+    kicked.add(participantId);
+    kickReasons.add(reason);
   }
 
   @override
@@ -135,7 +147,7 @@ void main() {
     expect(repo.calls, 2);
   });
 
-  testWidgets('TC-WP-03-05: server không cho tách thì không có menu', (
+  testWidgets('server không cho tách thì menu chỉ còn Loại khỏi giải', (
     tester,
   ) async {
     final management = _RecordingManagementRepository();
@@ -146,13 +158,43 @@ void main() {
       canUnpair: false,
     );
 
-    expect(
-      find.byKey(const ValueKey('participant-row-menu-p-1')),
-      findsNothing,
-    );
+    await tester.tap(find.byKey(const ValueKey('participant-row-menu-p-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('participant-unpair-p-1')), findsNothing);
+    expect(find.byKey(const ValueKey('participant-kick-p-1')), findsOneWidget);
   });
 
-  testWidgets('TC-WP-03-05: giải đã kết thúc thì ẩn menu tách cặp', (
+  testWidgets('Loại khỏi giải: confirm rồi gọi kick với lý do mặc định Web', (
+    tester,
+  ) async {
+    final management = _RecordingManagementRepository();
+    final repo = await _pump(
+      tester,
+      management,
+      tournamentStatus: 'IN_PROGRESS',
+      canUnpair: true,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('participant-row-menu-p-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('participant-kick-p-1')));
+    await tester.pumpAndSettle();
+    expect(repo.kicked, isEmpty);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(FilledButton, 'Loại khỏi giải'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.kicked, ['p-1']);
+    expect(repo.kickReasons, ['Loại khỏi giải theo điều lệ']);
+    expect(repo.calls, 2);
+  });
+
+  testWidgets('TC-WP-03-05: giải đã kết thúc thì ẩn menu dòng', (
     tester,
   ) async {
     final management = _RecordingManagementRepository();

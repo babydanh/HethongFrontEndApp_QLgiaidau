@@ -6990,6 +6990,16 @@
     }
   },
   "participantUnpaired": "Đã tách cặp. Hai VĐV đang chờ ghép lại.",
+  "orgMgmtParticipantKick": "Loại khỏi giải",
+  "orgMgmtParticipantKickConfirm": "Loại {name} khỏi giải?",
+  "@orgMgmtParticipantKickConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "orgMgmtParticipantKicked": "Đã loại khỏi giải.",
   "participantDetailContact": "Liên hệ",
   "participantDetailEditContacts": "Sửa liên hệ VĐV",
   "participantDetailNoMembers": "Chưa có thành viên trong hồ sơ.",
