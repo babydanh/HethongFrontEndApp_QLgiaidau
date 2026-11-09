@@ -219,6 +219,7 @@ class SocialMatchModel {
 
 class SocialChatMessageModel {
   final String id;
+  final String? senderId;
   final String senderName;
   final String? senderAvatar;
   final String senderInitials;
@@ -231,6 +232,7 @@ class SocialChatMessageModel {
 
   const SocialChatMessageModel({
     required this.id,
+    this.senderId,
     required this.senderName,
     this.senderAvatar,
     required this.senderInitials,
@@ -271,12 +273,18 @@ class SocialChatMessageModel {
 
     return SocialChatMessageModel(
       id: json['id']?.toString() ?? '',
+      senderId: json['senderId']?.toString(),
       senderName: sName,
       senderAvatar:
+          json['senderAvatarUrl']?.toString() ??
           json['senderAvatar']?.toString() ??
           json['sender']?['avatarUrl']?.toString(),
       senderInitials: initials,
-      message: json['message']?.toString() ?? json['content']?.toString() ?? '',
+      message:
+          json['messageText']?.toString() ??
+          json['message']?.toString() ??
+          json['content']?.toString() ??
+          '',
       time: parsedTime,
       isHost: json['isHost'] == true,
       isMe: json['isMe'] == true,
