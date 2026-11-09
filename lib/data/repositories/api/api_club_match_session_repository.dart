@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
+import 'package:app_quanly_giaidau/data/models/standalone_match_owner.dart';
 import 'package:dio/dio.dart';
 
 class CursorPage<T> {
@@ -182,12 +183,18 @@ class ApiClubMatchSessionRepository {
     return _mapPage(page, ClubSessionMatchModel.fromJson);
   }
 
+  /// Owner là [communityId] HOẶC [socialSessionId] (đúng một).
   Future<List<ClubSessionMatchModel>> standaloneMatches(
-    String communityId,
-  ) async {
+    String? communityId, {
+    String? socialSessionId,
+  }) async {
+    final owner = StandaloneMatchOwner(
+      communityId: communityId,
+      socialSessionId: socialSessionId,
+    );
     final rows = await _allCursorRows(
       '/club-match-sessions/standalone-matches',
-      query: {'communityId': communityId},
+      query: owner.toJson(),
     );
     return rows.map(ClubSessionMatchModel.fromJson).toList();
   }
@@ -206,18 +213,24 @@ class ApiClubMatchSessionRepository {
     return _mapPage(page, ClubSessionMatchModel.fromJson);
   }
 
+  /// Owner là [communityId] HOẶC [socialSessionId] (đúng một, Backend có CHECK XOR).
   Future<ClubSessionMatchModel> createStandaloneMatch({
-    required String communityId,
+    String? communityId,
+    String? socialSessionId,
     required List<String> sideA,
     required List<String> sideB,
     required String key,
     required bool isRanked,
     String? matchType,
   }) async {
+    final owner = StandaloneMatchOwner(
+      communityId: communityId,
+      socialSessionId: socialSessionId,
+    );
     final response = await _client.dio.post(
       '/club-match-sessions/standalone-matches',
       data: {
-        'communityId': communityId,
+        ...owner.toJson(),
         'sideAUserIds': sideA,
         'sideBUserIds': sideB,
         'isRanked': isRanked,
