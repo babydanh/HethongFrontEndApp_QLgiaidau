@@ -7678,5 +7678,17 @@
   "cbdRallyBreakBetweenGames": "120-second rest between games, change ends",
   "cbdRallyChangeEnds": "Deciding game: change ends (a side reached 5)",
   "cbdTennisServe": "● SERVE",
-  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)"
+  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)",
+  "bracketMgmt_manageTooltip": "Manage",
+  "bracketMgmt_create": "Create bracket",
+  "bracketMgmt_delete": "Delete bracket",
+  "bracketMgmt_minParticipants": "At least 2 players or teams are needed to create a bracket.",
+  "bracketMgmt_createDone": "Bracket created.",
+  "bracketMgmt_deleteConfirmTitle": "Delete this division's bracket?",
+  "bracketMgmt_deleteConfirmBody": "All {matchCount} matches and the schedule of this division only will be deleted. Registrations and other divisions are kept. This cannot be undone.",
+  "@bracketMgmt_deleteConfirmBody": {"placeholders": {"matchCount": {"type": "int"}}},
+  "bracketMgmt_deleteConfirm": "Confirm delete",
+  "bracketMgmt_deleteDone": "Bracket deleted: {stageCount} stages, {matchCount} matches.",
+  "@bracketMgmt_deleteDone": {"placeholders": {"stageCount": {"type": "int"}, "matchCount": {"type": "int"}}},
+  "bracketMgmt_cancel": "Back"
 }
