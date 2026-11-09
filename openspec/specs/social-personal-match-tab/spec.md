@@ -1,7 +1,7 @@
 # social-personal-match-tab Specification
 
 ## Purpose
-TBD - created by archiving change tran-dau-buoi-ca-nhan-app. Update Purpose after archive.
+Cho buổi Social không gắn CLB có tab "Trận đấu" trên App: host tạo trận và nhập kết quả qua `socialSessionId`, người xem đọc danh sách trận của buổi.
 
 ## Requirements
 
