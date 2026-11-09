@@ -3821,6 +3821,7 @@
   "scorePanel_footballSyncError": "Unable to sync the football score.",
   "scorePanel_completeOverrideInvalid": "Enter a reason and make sure the team awarded the win is leading by sets/games.",
   "scorePanel_matchNotReady": "The match does not meet the configured completion conditions.",
+  "scorePanel_pickleballTieNeedsWinner": "The score is tied. One side must be ahead to finish the set.",
   "scorePanel_footballWinnerNotFound": "Could not find the winning team for this football match.",
   "scorePanel_footballShootoutRequired": "A tied match requires different shootout scores to determine the winner.",
   "scorePanel_completeError": "Error: {error}",

@@ -226,6 +226,7 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       return;
     }
     final score = ref.read(scorePanelNotifierProvider(widget.params).notifier);
+    if (score.rejectTiedRallySet()) return;
     final message = score.finishSetConfirmMessage();
     if (message == null) return;
     final confirmed = await showDialog<bool>(
