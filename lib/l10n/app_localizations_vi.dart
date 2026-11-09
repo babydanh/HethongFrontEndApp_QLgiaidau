@@ -19345,4 +19345,20 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cbdTennisMatchTiebreak =>
       'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)';
+
+  @override
+  String get schedMgmt_courtsTooltip => 'Tạo sân và quản lý sân';
+
+  @override
+  String get schedMgmt_hoursTooltip => 'Khung giờ sân';
+
+  @override
+  String get schedMgmt_arrangeTooltip => 'Xếp lịch trận';
+
+  @override
+  String get schedMgmt_createCourtCta => 'Tạo sân';
+
+  @override
+  String get schedMgmt_emptyHint =>
+      'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.';
 }

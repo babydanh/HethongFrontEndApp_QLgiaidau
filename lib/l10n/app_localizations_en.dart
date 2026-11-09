@@ -19425,4 +19425,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cbdTennisMatchTiebreak =>
       'MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)';
+
+  @override
+  String get schedMgmt_courtsTooltip => 'Create and manage courts';
+
+  @override
+  String get schedMgmt_hoursTooltip => 'Court hours';
+
+  @override
+  String get schedMgmt_arrangeTooltip => 'Schedule matches';
+
+  @override
+  String get schedMgmt_createCourtCta => 'Create court';
+
+  @override
+  String get schedMgmt_emptyHint =>
+      'No courts yet. Create a court to start scheduling.';
 }

@@ -34836,6 +34836,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)'**
   String get cbdTennisMatchTiebreak;
+
+  /// No description provided for @schedMgmt_courtsTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo sân và quản lý sân'**
+  String get schedMgmt_courtsTooltip;
+
+  /// No description provided for @schedMgmt_hoursTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khung giờ sân'**
+  String get schedMgmt_hoursTooltip;
+
+  /// No description provided for @schedMgmt_arrangeTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp lịch trận'**
+  String get schedMgmt_arrangeTooltip;
+
+  /// No description provided for @schedMgmt_createCourtCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo sân'**
+  String get schedMgmt_createCourtCta;
+
+  /// No description provided for @schedMgmt_emptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.'**
+  String get schedMgmt_emptyHint;
 }
 
 class _AppLocalizationsDelegate
