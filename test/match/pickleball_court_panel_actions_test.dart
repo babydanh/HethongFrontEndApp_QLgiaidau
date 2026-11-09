@@ -225,33 +225,15 @@ Future<void> _openMenu(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('lose serve is one button', () {
-    testWidgets('doubles, server 1 or 2: hands the serve on step by step', (
-      tester,
-    ) async {
-      final log = <String>[];
-      await _pumpPanel(tester, log: log, context: _context(serverNumber: 1));
+  group('TC-SERVE-APP-05 no separate lose-serve button', () {
+    testWidgets('strict side-out: the receiver plus does it', (tester) async {
+      await _pumpPanel(tester, log: <String>[], context: _context(serverNumber: 1));
 
-      await tester.tap(find.byTooltip('Change serve'));
-
-      // The score panel moves 1 -> 2 and then to the other team.
-      expect(log, ['switchServer']);
+      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.text('LOSE SERVE'), findsNothing);
     });
 
-    testWidgets('singles: goes straight to the other team', (tester) async {
-      final log = <String>[];
-      await _pumpPanel(
-        tester,
-        log: log,
-        context: _context(isDoubles: false, serverNumber: 1),
-      );
-
-      await tester.tap(find.byTooltip('Change serve'));
-
-      expect(log, ['sideOut']);
-    });
-
-    testWidgets('rally rule keeps the lose serve button too', (tester) async {
+    testWidgets('rally rule has none either', (tester) async {
       await _pumpPanel(
         tester,
         log: <String>[],
@@ -259,15 +241,13 @@ void main() {
         state: _state(model: SportScoringModel.rallyPointSet),
       );
 
-      expect(find.byTooltip('Change serve'), findsOneWidget);
+      expect(find.byTooltip('Change serve'), findsNothing);
     });
 
-    testWidgets('Lite keeps the lose serve button so the referee can move it', (
-      tester,
-    ) async {
+    testWidgets('Lite has none either', (tester) async {
       await _pumpPanel(tester, log: <String>[], state: _state(lite: true));
 
-      expect(find.byTooltip('Change serve'), findsOneWidget);
+      expect(find.byTooltip('Change serve'), findsNothing);
     });
   });
 
@@ -315,8 +295,8 @@ void main() {
     const secondDone = PickleballServeState(serverNumber: 1, openingDone: true);
     const serverTwo = PickleballServeState(serverNumber: 2, openingDone: true);
 
-    testWidgets('TC-CBD-PB-01 doubles, server 1: button and toast say server 2 '
-        'serves next', (tester) async {
+    testWidgets('TC-CBD-PB-01 doubles, server 1: the receiver plus moves the '
+        'serve to server 2', (tester) async {
       final log = <String>[];
       await _pumpPanel(
         tester,
@@ -324,9 +304,6 @@ void main() {
         context: _context(serverNumber: 1),
         state: _state(serve: secondDone),
       );
-
-      expect(find.text('LOSE SERVE'), findsOneWidget);
-      expect(find.text('→ Serve 2'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Add point for team 2'));
       await tester.pump();
@@ -339,16 +316,14 @@ void main() {
       );
     });
 
-    testWidgets('TC-CBD-PB-02 doubles, server 2: the button says the '
-        'serve is handed over, no toast', (tester) async {
+    testWidgets('TC-CBD-PB-02 doubles, server 2: the receiver plus hands the '
+        'serve over, no toast', (tester) async {
       final log = <String>[];
       await _pumpPanel(
         tester,
         log: log,
         state: _state(serve: serverTwo),
       );
-
-      expect(find.text('→ Hand over'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Add point for team 2'));
       await tester.pump();
@@ -365,9 +340,6 @@ void main() {
         'at once', (tester) async {
       final log = <String>[];
       await _pumpPanel(tester, log: log);
-
-      expect(find.text('→ Hand over'), findsOneWidget);
-      expect(find.text('→ Serve 2'), findsNothing);
 
       await tester.tap(find.byTooltip('Add point for team 2'));
       await tester.pump();
@@ -386,8 +358,6 @@ void main() {
         context: _context(isDoubles: false, serverNumber: 1),
         state: _state(serve: secondDone),
       );
-
-      expect(find.text('→ Hand over'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Add point for team 2'));
       await tester.pump();
@@ -432,9 +402,6 @@ void main() {
 
         expect(log, ['award:2']);
         expect(find.textContaining('no point awarded'), findsNothing);
-        // The button keeps the plain label: there is no "→ next" hint.
-        expect(find.text('CHANGE SERVE'), findsOneWidget);
-        expect(find.textContaining('→'), findsNothing);
       });
     }
   });
@@ -770,22 +737,6 @@ void main() {
       await tester.tap(find.byTooltip('Add point for team 1'));
 
       expect(log, ['award:1']);
-    });
-
-    testWidgets('TC-LPK-APP-07 side-out: lose serve button says server 2 is '
-        'next', (tester) async {
-      await _pumpPanel(
-        tester,
-        log: <String>[],
-        context: _context(serverNumber: 1),
-        state: _state(
-          lite: true,
-          serve: const PickleballServeState(serverNumber: 1, openingDone: true),
-        ),
-      );
-
-      expect(find.text('LOSE SERVE'), findsOneWidget);
-      expect(find.text('→ Serve 2'), findsOneWidget);
     });
 
     test('the court context tracks serve turns in Lite', () async {

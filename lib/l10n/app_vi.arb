@@ -760,6 +760,14 @@
   "pickleballCourtActionSwapPlaces": "Đổi chỗ phải/trái",
   "pickleballCourtActionSwitchEnds": "Đổi sân",
   "pickleballCourtActionServeHere": "Giao bóng cho người này",
+  "pickleballCourtMakeServer": "Chuyển thành giao {number}",
+  "@pickleballCourtMakeServer": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "pickleballCourtLabel": "Sân pickleball",
   "pickleballCourtUndo": "Hoàn tác",
   "pickleballCourtRestoreAutomatic": "Khôi phục tự động",

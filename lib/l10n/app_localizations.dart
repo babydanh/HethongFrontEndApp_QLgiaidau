@@ -4112,6 +4112,12 @@ abstract class AppLocalizations {
   /// **'Giao bóng cho người này'**
   String get pickleballCourtActionServeHere;
 
+  /// No description provided for @pickleballCourtMakeServer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyển thành giao {number}'**
+  String pickleballCourtMakeServer(int number);
+
   /// No description provided for @pickleballCourtLabel.
   ///
   /// In vi, this message translates to:

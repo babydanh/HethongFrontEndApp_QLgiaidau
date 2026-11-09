@@ -30,12 +30,6 @@ const _minMiddleHeight = 244.0;
 /// Upright phone: the score band between the halves never gets shorter.
 const _minBandHeight = 120.0;
 
-/// Narrowest upright bar that still fits UNDO beside the four +/- buttons.
-const _minUprightUndoWidth = 300.0;
-
-/// What the lose-serve button does next in strict side-out.
-enum LoseServeNext { secondServer, handOver }
-
 final _cellColor = courtTeam1.court;
 final _servingCellColor = courtTeam2.court;
 
@@ -63,7 +57,6 @@ class CourtScoreboard extends StatelessWidget {
     required this.dragEnabled,
     required this.resolve,
     required this.onDrop,
-    this.loseServeNext,
   });
 
   /// Horizontal: halves side by side. Vertical (upright phone): halves stacked,
@@ -86,10 +79,6 @@ class CourtScoreboard extends StatelessWidget {
   final ResolveCourtDrop resolve;
   final void Function(CourtDropAction action) onDrop;
 
-  /// Strict side-out only: the lose-serve button then reads LOSE SERVE with
-  /// what follows; null keeps the plain CHANGE SERVE label.
-  final LoseServeNext? loseServeNext;
-
   int get _leftTeam => layout.team1First ? 1 : 2;
 
   @override
@@ -110,6 +99,8 @@ class CourtScoreboard extends StatelessWidget {
             child: _TopRow(
               net: net,
               overrideEnabled: overrideEnabled,
+              // A viewer has no score buttons, so no undo either.
+              showUndo: onScoreChange != null,
               // Upright: no room in the bar, the clock moves to the top row.
               clockStart: upright ? startedAt : null,
             ),
@@ -130,9 +121,6 @@ class CourtScoreboard extends StatelessWidget {
               lockReceiverPlus: lockReceiverPlus,
               servingTeam: layout.servingTeam,
               onScoreChange: onScoreChange,
-              onLoseServe: net.onLoseServe,
-              loseServeNext: loseServeNext,
-              onUndo: net.menu.onUndo,
               startedAt: upright ? null : startedAt,
               upright: upright,
             ),
@@ -147,11 +135,15 @@ class _TopRow extends StatelessWidget {
   const _TopRow({
     required this.net,
     required this.overrideEnabled,
+    required this.showUndo,
     this.clockStart,
   });
 
   final CourtNetActions net;
   final bool overrideEnabled;
+
+  /// Draws UNDO at the top centre; greyed while there is nothing to take back.
+  final bool showUndo;
 
   /// Shows the elapsed clock at the right end when set.
   final DateTime? clockStart;
@@ -244,6 +236,12 @@ class _TopRow extends StatelessWidget {
             ),
           ),
           child: Text(l10n.pickleballCourtEnd.toUpperCase()),
+        ),
+      if (showUndo)
+        _RoundControl(
+          icon: Icons.undo_rounded,
+          tooltip: l10n.pickleballCourtUndo,
+          onPressed: net.menu.onUndo,
         ),
       if (net.menu.hasAny) CourtMenuButton(actions: net.menu),
     ];
@@ -420,21 +418,26 @@ class _RoundControl extends StatelessWidget {
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onPressed;
+
+  /// Null greys the button out.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: Material(
-        color: _ink,
-        shape: const CircleBorder(side: BorderSide(color: Colors.white)),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: SizedBox.square(
-            dimension: _controlSize,
-            child: Icon(icon, color: Colors.white, size: 26),
+      child: Opacity(
+        opacity: onPressed == null ? 0.4 : 1,
+        child: Material(
+          color: _ink,
+          shape: const CircleBorder(side: BorderSide(color: Colors.white)),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: SizedBox.square(
+              dimension: _controlSize,
+              child: Icon(icon, color: Colors.white, size: 26),
+            ),
           ),
         ),
       ),
@@ -680,6 +683,10 @@ class _ScoreboardCell extends StatelessWidget {
         ? l10n.pickleballCourtRightCell
         : l10n.pickleballCourtLeftCell;
     final color = isServing ? _servingCellColor : _cellColor;
+    // The serve moves smoothly between the two players; reduced motion snaps.
+    final motion = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 200);
     final name = playerName;
     final index = playerIndex;
     if (name == null || index == null) {
@@ -706,7 +713,8 @@ class _ScoreboardCell extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: actions.isEmpty ? null : () => _showActions(context, name),
-        child: ColoredBox(
+        child: AnimatedContainer(
+          duration: motion,
           color: color,
           child: Stack(
             alignment: Alignment.center,
@@ -722,18 +730,30 @@ class _ScoreboardCell extends StatelessWidget {
                       child: SizedBox.expand(child: Center(child: person)),
                     )
                   : person,
-              if (isServing)
-                Positioned(
-                  // Clear of the screen edge, where a camera hole may sit.
-                  top: 0,
-                  right: 20,
-                  child: _ServeTag(
-                    team: team,
-                    playerIndex: index,
-                    serverNumber: serverNumber,
-                    dragEnabled: dragEnabled,
+              Positioned(
+                // Clear of the screen edge, where a camera hole may sit.
+                top: 0,
+                right: 20,
+                child: AnimatedSwitcher(
+                  duration: motion,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.8, end: 1).animate(animation),
+                      child: child,
+                    ),
                   ),
+                  child: isServing
+                      ? _ServeTag(
+                          key: const ValueKey('serve-tag'),
+                          team: team,
+                          playerIndex: index,
+                          serverNumber: serverNumber,
+                          dragEnabled: dragEnabled,
+                        )
+                      : const SizedBox.shrink(key: ValueKey('no-serve-tag')),
                 ),
+              ),
             ],
           ),
         ),
@@ -781,6 +801,7 @@ class _PersonLabel extends StatelessWidget {
 /// ball to another player, like the ball of the portrait court.
 class _ServeTag extends StatelessWidget {
   const _ServeTag({
+    super.key,
     required this.team,
     required this.playerIndex,
     required this.serverNumber,
@@ -1092,8 +1113,7 @@ class _ScoreChip extends StatelessWidget {
   }
 }
 
-/// Clock, then + − of the left team, UNDO and CHANGE SERVE, − + of the right
-/// team.
+/// Clock, then + − of the left team and − + of the right team.
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.leftTeam,
@@ -1102,9 +1122,6 @@ class _BottomBar extends StatelessWidget {
     required this.lockReceiverPlus,
     required this.servingTeam,
     required this.onScoreChange,
-    required this.onLoseServe,
-    required this.loseServeNext,
-    required this.onUndo,
     required this.startedAt,
     required this.upright,
   });
@@ -1115,11 +1132,6 @@ class _BottomBar extends StatelessWidget {
   final bool lockReceiverPlus;
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
-  final VoidCallback? onLoseServe;
-  final LoseServeNext? loseServeNext;
-
-  /// Takes back the last change; null (button greyed) when there is none.
-  final VoidCallback? onUndo;
   final DateTime? startedAt;
 
   /// Upright phone: the buttons share the width instead of a fixed row.
@@ -1152,85 +1164,15 @@ class _BottomBar extends StatelessWidget {
     return plusFirst ? [plus, minus] : [minus, plus];
   }
 
-  /// Icon-only button between the two minus buttons. Hidden for a viewer
-  /// (no score buttons); greyed while there is nothing to take back.
-  Widget? _undoButton(AppLocalizations l10n, {double buttonWidth = 56}) {
-    if (onScoreChange == null) return null;
-    return _BarButton(
-      tooltip: l10n.pickleballCourtUndo,
-      color: _ink,
-      minWidth: buttonWidth,
-      onPressed: onUndo,
-      child: const Icon(Icons.undo_rounded, color: Colors.white, size: 24),
-    );
-  }
-
-  /// [flexible]: no minimum width; the label scales down to the width it gets.
-  Widget _serveButton(
-    BuildContext context,
-    AppLocalizations l10n, {
-    required bool flexible,
-  }) {
-    const style = TextStyle(
-      color: Colors.white,
-      fontSize: 15,
-      fontWeight: FontWeight.w800,
-    );
-    final next = loseServeNext;
-    final label = next == null
-        ? Text(l10n.pickleballCourtChangeServe.toUpperCase(), style: style)
-        : Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.pickleballCourtLoseServe.toUpperCase(), style: style),
-              Text(
-                next == LoseServeNext.secondServer
-                    ? l10n.cbdPbNextServerTwo
-                    : l10n.cbdPbNextHandOver,
-                style: style.copyWith(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          );
-    return _BarButton(
-      tooltip: l10n.pickleballCourtChangeServe,
-      color: context.colors.success,
-      minWidth: flexible ? 0 : 120,
-      onPressed: onLoseServe,
-      child: flexible
-          ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: FittedBox(fit: BoxFit.scaleDown, child: label),
-            )
-          : label,
-    );
-  }
-
-  /// Upright row: the width left over goes to CHANGE SERVE (or a gap), so the
-  /// buttons keep their full height and the pairs sit at the two edges.
-  Widget _uprightRow(
-    BuildContext context,
-    AppLocalizations l10n, {
-    required bool withUndo,
-  }) {
-    final undo = withUndo ? _undoButton(l10n, buttonWidth: 40) : null;
+  /// Upright row: the two +/- pairs sit at the two edges.
+  Widget _uprightRow(AppLocalizations l10n) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         spacing: 6,
         children: [
           ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
-          if (onLoseServe != null) ...[
-            ?undo,
-            Expanded(child: _serveButton(context, l10n, flexible: true)),
-          ] else ...[
-            // UNDO stays in the middle between the two pairs.
-            const Spacer(),
-            ?undo,
-            const Spacer(),
-          ],
+          const Spacer(),
           ..._teamButtons(l10n, rightTeam, plusFirst: false, buttonWidth: 48),
         ],
       ),
@@ -1240,12 +1182,9 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final loseServe = onLoseServe;
-    final undo = _undoButton(l10n);
     final controls = <Widget>[
       ..._teamButtons(l10n, leftTeam, plusFirst: true),
-      ?undo,
-      if (loseServe != null) _serveButton(context, l10n, flexible: false),
+      if (onScoreChange != null) const SizedBox(width: 24),
       ..._teamButtons(l10n, rightTeam, plusFirst: false),
     ];
     final start = startedAt;
@@ -1256,16 +1195,7 @@ class _BottomBar extends StatelessWidget {
       children: controls,
     );
     if (upright) {
-      return SizedBox(
-        height: 64,
-        child: LayoutBuilder(
-          builder: (context, c) => _uprightRow(
-            context,
-            l10n,
-            withUndo: c.maxWidth >= _minUprightUndoWidth,
-          ),
-        ),
-      );
+      return SizedBox(height: 64, child: _uprightRow(l10n));
     }
     return SizedBox(
       height: 64,

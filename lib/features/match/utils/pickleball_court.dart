@@ -515,6 +515,33 @@ CourtState setServerOverride(
   return reconcileCourtState(next, context);
 }
 
+/// Sau khi số giao đổi (1↔2): đặt [serverIndex] làm người giao của lượt hiện tại
+/// và xoá chỉ định tay cũ. Không ghi history: số giao nằm ở bảng điểm nên hoàn
+/// tác của sân sẽ làm nhãn lệch người giao; muốn lùi thì chọn lại số kia.
+CourtState setServerTurn(
+  CourtState state,
+  CourtContext context,
+  int serverIndex,
+) {
+  _checkPlayerIndex(serverIndex);
+  final base = reconcileCourtState(state, context);
+  final team = context.servingTeam;
+  final turn = base.turnStart;
+  if (team == null || turn == null || turn.team != team) return base;
+  return reconcileCourtState(
+    base.copyWith(
+      turnStart: CourtTurnStart(
+        team: team,
+        serverNumber: context.effectiveServerNumber,
+        teamScoreAtStart: turn.teamScoreAtStart,
+        serverPlayerIndex: serverIndex,
+      ),
+      clearServerOverride: true,
+    ),
+    context,
+  );
+}
+
 /// Khôi phục tự động: xoá endsOverride và serverOverride, bật tự đổi sân,
 /// xoá cờ lật giữa set (để tính lại theo luật). Giữ startingRight và turnStart.
 CourtState restoreAutomaticCourt(CourtState state, CourtContext context) {

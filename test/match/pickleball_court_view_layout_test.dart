@@ -43,7 +43,6 @@ Widget _view(
   _Spy spy, {
   Axis axis = Axis.horizontal,
   bool interactive = true,
-  bool withLoseServe = true,
   bool withOverride = false,
   bool withForceWin = false,
   bool finishSetEnabled = true,
@@ -74,9 +73,6 @@ Widget _view(
     onToggleAutoSwitch: interactive ? () => spy.calls.add('auto') : null,
     onFinishSet: interactive ? () => spy.calls.add('finishSet') : null,
     onPickWinner: interactive ? () => spy.calls.add('pickWinner') : null,
-    onLoseServe: interactive && withLoseServe
-        ? () => spy.calls.add('loseServe')
-        : null,
     onToggleOverride: interactive && withOverride
         ? () => spy.calls.add('override')
         : null,

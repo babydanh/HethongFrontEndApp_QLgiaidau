@@ -2141,6 +2141,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballCourtActionServeHere => 'Give serve here';
 
   @override
+  String pickleballCourtMakeServer(int number) {
+    return 'Make server $number';
+  }
+
+  @override
   String get pickleballCourtLabel => 'Pickleball court';
 
   @override

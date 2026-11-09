@@ -57,7 +57,7 @@ class CourtMenuActions {
       onForceWin != null;
 }
 
-/// Icon controls drawn on the net: ⋯, finish set, winner cup, lose serve.
+/// Icon controls drawn on the net: ⋯, finish set, winner cup.
 class CourtNetActions {
   const CourtNetActions({
     this.menu = const CourtMenuActions(),
@@ -65,7 +65,6 @@ class CourtNetActions {
     this.finishSetEnabled = true,
     this.onPickWinner,
     this.pickWinnerEnabled = true,
-    this.onLoseServe,
   });
 
   final CourtMenuActions menu;
@@ -73,9 +72,6 @@ class CourtNetActions {
   final bool finishSetEnabled;
   final VoidCallback? onPickWinner;
   final bool pickWinnerEnabled;
-
-  /// Null in rally and Lite: there is no serve turn to lose.
-  final VoidCallback? onLoseServe;
 }
 
 enum _MenuItem {

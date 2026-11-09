@@ -733,6 +733,19 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _scheduleLiveSync();
   }
 
+  /// Referee correction in doubles: serve number 1 or 2 of the serving team.
+  /// The team and the score stay; [openingDone] is left as it is so the
+  /// opening serve keeps its single fault.
+  void pickleballSetServerNumber(int number) {
+    final pb = state.pickleball ?? const PickleballServeState();
+    if (pb.serverNumber == number || (number != 1 && number != 2)) return;
+    state = state.copyWith(
+      pickleball: pb.copyWith(serverNumber: number),
+      errorMessage: null,
+    );
+    _scheduleLiveSync();
+  }
+
   void pickleballSideOut() {
     final pb = state.pickleball ?? const PickleballServeState();
     state = state.copyWith(

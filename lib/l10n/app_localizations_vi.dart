@@ -2136,6 +2136,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtActionServeHere => 'Giao bóng cho người này';
 
   @override
+  String pickleballCourtMakeServer(int number) {
+    return 'Chuyển thành giao $number';
+  }
+
+  @override
   String get pickleballCourtLabel => 'Sân pickleball';
 
   @override

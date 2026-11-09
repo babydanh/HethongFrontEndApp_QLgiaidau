@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_palette.dart';
@@ -44,7 +42,6 @@ Widget _board(
   Axis axis = Axis.horizontal,
   bool interactive = true,
   bool isDoubles = true,
-  bool withLoseServe = true,
   bool finishSetEnabled = true,
   int score1 = 0,
   int score2 = 0,
@@ -77,6 +74,7 @@ Widget _board(
         ? (action) => spy.calls.add(switch (action) {
             SwapPlaces(:final team) => 'swap:$team',
             SwitchEnds() => 'switchEndsDrop',
+            SetServerNumber(:final number) => 'serverNumber:$number',
             SetServer(:final team, :final playerIndex) =>
               'server:$team:$playerIndex',
           })
@@ -87,9 +85,6 @@ Widget _board(
     onToggleAutoSwitch: interactive ? () => spy.calls.add('auto') : null,
     onFinishSet: interactive ? () => spy.calls.add('finishSet') : null,
     onPickWinner: interactive ? () => spy.calls.add('pickWinner') : null,
-    onLoseServe: interactive && withLoseServe
-        ? () => spy.calls.add('loseServe')
-        : null,
   );
 }
 
@@ -233,22 +228,18 @@ void main() {
   });
 
   group('TC-COURT-03 bottom bar', () {
-    testWidgets('plus, minus and change serve call their actions', (
-      tester,
-    ) async {
+    testWidgets('plus and minus call their actions', (tester) async {
       final spy = _Spy();
       await _pump(tester, _board(spy, score1: 2, score2: 1));
 
       await tester.tap(find.byTooltip('Add point for team 1'));
       await tester.tap(find.byTooltip('Remove point for team 1'));
       await tester.tap(find.byTooltip('Remove point for team 2'));
-      await tester.tap(find.text('CHANGE SERVE'));
 
       expect(spy.calls, [
         'score:1:true',
         'score:1:false',
         'score:2:false',
-        'loseServe',
       ]);
     });
 
@@ -264,12 +255,13 @@ void main() {
       expect(spy.calls, isEmpty);
     });
 
-    testWidgets('change serve is absent when the mode has no serve turns', (
+    testWidgets('there is no change-serve button: the receiver plus does it', (
       tester,
     ) async {
-      await _pump(tester, _board(_Spy(), withLoseServe: false));
+      await _pump(tester, _board(_Spy()));
 
       expect(find.text('CHANGE SERVE'), findsNothing);
+      expect(find.text('LOSE SERVE'), findsNothing);
     });
 
     testWidgets('team 1 buttons are orange, team 2 blue, also after the swap', (
@@ -476,6 +468,34 @@ void main() {
       expect(spy.calls, ['serving:2', 'server:2:0']);
     });
 
+    testWidgets('TC-SERVE-APP-03 tapping the server offers the other serve '
+        'number', (tester) async {
+      final spy = _Spy();
+      await _pump(tester, _board(spy));
+
+      // Team 1 serves as server 1: Lan Anh ("L. Anh") is the server.
+      await tester.tap(find.text('L. Anh'));
+      await tester.pumpAndSettle();
+      expect(find.text('Make server 2'), findsOneWidget);
+      expect(find.text('Make server 1'), findsNothing);
+
+      await tester.tap(find.text('Make server 2'));
+      await tester.pumpAndSettle();
+
+      expect(spy.calls, ['serverNumber:2']);
+    });
+
+    testWidgets('TC-SERVE-APP-04 only the server offers a serve number', (
+      tester,
+    ) async {
+      await _pump(tester, _board(_Spy()));
+
+      await tester.tap(find.text('Minh'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Make server'), findsNothing);
+    });
+
     testWidgets('a viewer tapping a player gets nothing', (tester) async {
       await _pump(tester, _board(_Spy(), interactive: false));
 
@@ -600,15 +620,12 @@ void main() {
       expect(one.dx, greaterThan(two.dx));
     });
 
-    testWidgets('bar, END dialog and change serve call their actions', (
-      tester,
-    ) async {
+    testWidgets('bar and END dialog call their actions', (tester) async {
       final spy = _Spy();
       await pumpUpright(tester, spy, score1: 11);
 
       await tester.tap(find.byTooltip('Add point for team 1'));
       await tester.tap(find.byTooltip('Remove point for team 1'));
-      await tester.tap(find.byTooltip('Change serve'));
       await tester.tap(find.text('END'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Finish set'));
@@ -617,35 +634,26 @@ void main() {
       expect(spy.calls, [
         'score:1:true',
         'score:1:false',
-        'loseServe',
         'finishSet',
       ]);
     });
 
     testWidgets(
-      'the +/- buttons are spread to both edges, with or without change serve',
+      'the +/- buttons are spread to both edges',
       (tester) async {
-        for (final withServe in [true, false]) {
-          await _pump(
-            tester,
-            _board(_Spy(), axis: Axis.vertical, withLoseServe: withServe),
-            size: phone,
-          );
+        await _pump(
+          tester,
+          _board(_Spy(), axis: Axis.vertical),
+          size: phone,
+        );
 
-          final left = tester.getTopLeft(
-            find.byTooltip('Add point for team 1'),
-          );
-          final right = tester.getTopRight(
-            find.byTooltip('Add point for team 2'),
-          );
-          expect(left.dx, lessThan(16), reason: 'left edge, serve=$withServe');
-          expect(
-            phone.width - right.dx,
-            lessThan(16),
-            reason: 'right edge, serve=$withServe',
-          );
-          expect(tester.takeException(), isNull);
-        }
+        final left = tester.getTopLeft(find.byTooltip('Add point for team 1'));
+        final right = tester.getTopRight(
+          find.byTooltip('Add point for team 2'),
+        );
+        expect(left.dx, lessThan(16), reason: 'left edge');
+        expect(phone.width - right.dx, lessThan(16), reason: 'right edge');
+        expect(tester.takeException(), isNull);
       },
     );
 
@@ -705,7 +713,7 @@ void main() {
         for (final tip in [
           'Add point for team 1',
           'Remove point for team 2',
-          'Change serve',
+          'Undo',
           'More actions',
         ]) {
           final finder = find.byTooltip(tip);
@@ -718,46 +726,35 @@ void main() {
     }
   });
 
-  group('TC-COURT-11 undo button sits between the two minus buttons', () {
-    for (final withServe in [true, false]) {
-      for (final upright in [false, true]) {
-        testWidgets(
-          '${upright ? 'upright' : 'sideways'}, change serve: $withServe',
-          (tester) async {
-            final spy = _Spy();
-            await _pump(
-              tester,
-              _board(
-                spy,
-                axis: upright ? Axis.vertical : Axis.horizontal,
-                withLoseServe: withServe,
-                score1: 3,
-                score2: 2,
-              ),
-              size: upright ? const Size(360, 640) : const Size(844, 390),
-            );
-
-            final undo = tester.getCenter(find.byTooltip('Undo'));
-            final minus1 = tester.getCenter(
-              find.byTooltip('Remove point for team 1'),
-            );
-            final minus2 = tester.getCenter(
-              find.byTooltip('Remove point for team 2'),
-            );
-            expect(
-              undo.dx,
-              inExclusiveRange(
-                math.min(minus1.dx, minus2.dx),
-                math.max(minus1.dx, minus2.dx),
-              ),
-            );
-            expect(tester.takeException(), isNull);
-
-            await tester.tap(find.byTooltip('Undo'));
-            expect(spy.calls, ['undo']);
-          },
+  group('TC-COURT-11 undo button sits at the top centre of the court', () {
+    for (final upright in [false, true]) {
+      testWidgets(upright ? 'upright' : 'sideways', (tester) async {
+        final spy = _Spy();
+        final size = upright ? const Size(360, 640) : const Size(844, 390);
+        await _pump(
+          tester,
+          _board(
+            spy,
+            axis: upright ? Axis.vertical : Axis.horizontal,
+            score1: 3,
+            score2: 2,
+          ),
+          size: size,
         );
-      }
+
+        final undo = tester.getCenter(find.byTooltip('Undo'));
+        final minus1 = tester.getCenter(
+          find.byTooltip('Remove point for team 1'),
+        );
+        // Over the court, next to END and the menu, never in the bottom bar.
+        expect(undo.dy, lessThan(70));
+        expect(undo.dy, lessThan(minus1.dy));
+        expect((undo.dx - size.width / 2).abs(), lessThan(size.width / 4));
+        expect(tester.takeException(), isNull);
+
+        await tester.tap(find.byTooltip('Undo'));
+        expect(spy.calls, ['undo']);
+      });
     }
 
     testWidgets('a viewer without edit rights has no undo button', (

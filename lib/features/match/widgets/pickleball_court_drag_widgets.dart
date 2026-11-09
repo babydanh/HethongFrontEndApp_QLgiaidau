@@ -67,6 +67,14 @@ Map<String, VoidCallback> courtPlayerActions({
       CourtDropTarget.player(team: team, playerIndex: playerIndex),
     );
   }
+  // The shown server can be corrected to the other serve number (doubles
+  // side-out only: that is when the "SERVE n" number exists).
+  final current = layout.callServerNumber;
+  if (current != null && servingTeam == team && server == playerIndex) {
+    final other = current == 1 ? 2 : 1;
+    actions[l10n.pickleballCourtMakeServer(other)] = () =>
+        onDrop(SetServerNumber(other));
+  }
   return actions;
 }
 

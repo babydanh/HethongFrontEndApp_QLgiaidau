@@ -758,6 +758,14 @@
   "pickleballCourtActionSwapPlaces": "Swap left and right",
   "pickleballCourtActionSwitchEnds": "Switch ends",
   "pickleballCourtActionServeHere": "Give serve here",
+  "pickleballCourtMakeServer": "Make server {number}",
+  "@pickleballCourtMakeServer": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "pickleballCourtLabel": "Pickleball court",
   "pickleballCourtUndo": "Undo",
   "pickleballCourtRestoreAutomatic": "Restore automatic",

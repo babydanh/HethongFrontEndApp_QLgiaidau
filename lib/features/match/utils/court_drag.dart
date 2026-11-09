@@ -66,6 +66,14 @@ class SetServer extends CourtDropAction {
   final bool changesServingTeam;
 }
 
+/// Make the serving team's server number 1 or 2 (the partner takes the ball).
+/// Offered by tapping the server, never by a drop.
+class SetServerNumber extends CourtDropAction {
+  const SetServerNumber(this.number);
+
+  final int number;
+}
+
 /// Returns the action for dropping [source] on [target], or null when the
 /// drop must do nothing. [servingTeam] is the team currently serving.
 CourtDropAction? resolveCourtDrop(

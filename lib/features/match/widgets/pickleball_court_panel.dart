@@ -11,7 +11,6 @@ import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_dialogs.dart';
-import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_scoreboard.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
@@ -172,17 +171,6 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     return serve.isTeam1Serving != isTeam1;
   }
 
-  /// Where the lose-serve button leads, mirroring `pickleballSwitchServer`
-  /// (doubles: server 1 -> 2, otherwise the serve changes team). Null outside
-  /// strict side-out.
-  LoseServeNext? _loseServeNext(ScorePanelState panel, CourtContext court) {
-    if (!panel.isPickleballSideOut) return null;
-    final serve = panel.pickleball ?? const PickleballServeState();
-    final toSecond =
-        court.isDoubles && serve.openingDone && serve.serverNumber == 1;
-    return toSecond ? LoseServeNext.secondServer : LoseServeNext.handOver;
-  }
-
   /// Chọn đội giao đầu ván (0-0: chỉ một lượt lỗi); người giao do [_applyDrop]
   /// đặt ngay sau đó.
   void _setServingTeam(int team, CourtContext court) {
@@ -192,7 +180,7 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
         .pickleballSetServingTeam(team == 1);
   }
 
-  /// Mất giao bằng một nút: đôi đi từng bước (người giao 1 → 2 → đội kia) qua
+  /// Bên nhận thắng pha bóng: đôi đi từng bước (người giao 1 → 2 → đội kia) qua
   /// `pickleballSwitchServer`; đánh đơn chuyển thẳng sang đội kia.
   void _loseServe(CourtContext court) {
     final score = ref.read(scorePanelNotifierProvider(widget.params).notifier);
@@ -304,7 +292,24 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
                 setServerOverride(state, context, team, playerIndex),
           ),
         );
+      case SetServerNumber(:final number):
+        _pickServerNumber(number);
     }
+  }
+
+  /// Referee picks serve 1 or 2: the number lives in the score panel, the ball
+  /// moves to the partner of the player shown now.
+  void _pickServerNumber(int number) {
+    final context = ref.read(pickleballCourtContextProvider(widget.params));
+    final court = ref.read(pickleballCourtNotifierProvider(widget.params));
+    if (context == null) return;
+    final layout = resolveCourtLayout(court, context);
+    final server = layout.serverPlayerIndex;
+    if (server == null || layout.callServerNumber == number) return;
+    ref
+        .read(scorePanelNotifierProvider(widget.params).notifier)
+        .pickleballSetServerNumber(number);
+    unawaited(_apply((state, ctx) => setServerTurn(state, ctx, 1 - server)));
   }
 
   @override
@@ -378,10 +383,6 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       // second tap would save twice.
       onFinishSet: canChangeScore ? _confirmFinishSet : null,
       onPickWinner: canChangeScore ? _pickWinner : null,
-      onLoseServe: canChangeScore && isSideOut
-          ? () => _loseServe(courtContext)
-          : null,
-      loseServeNext: _loseServeNext(score, courtContext),
       onToggleOverride: canEdit && !isLite ? _toggleOverride : null,
       onForceWin: canEdit ? widget.onForceWin : null,
       scoringMenu: canEdit && isLite
