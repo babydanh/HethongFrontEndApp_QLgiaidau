@@ -225,7 +225,7 @@ Future<void> _openMenu(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('TC-SERVE-APP-05 one serve button, only in strict side-out', () {
+  group('TC-SERVE-APP-05 one serve button, only where serve turns exist', () {
     testWidgets('strict side-out: exactly one serve button in the bar', (tester) async {
       await _pumpPanel(tester, log: <String>[], context: _context(serverNumber: 1));
 
@@ -244,10 +244,10 @@ void main() {
       expect(find.byTooltip('Change serve'), findsNothing);
     });
 
-    testWidgets('Lite has none either', (tester) async {
+    testWidgets('Lite with side-out serve turns has it too', (tester) async {
       await _pumpPanel(tester, log: <String>[], state: _state(lite: true));
 
-      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
     });
   });
 

@@ -491,10 +491,10 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
           : null,
       // Same step as the receiver's "+": Giao 1 → Giao 2 → other team, one undo.
       // No serving team yet (0-0, nobody chosen) means nothing to hand over.
-      // Serve 1/2 only exist in strict side-out, so rally and Lite have none.
+      // Serve 1/2 exist wherever the court follows side-out turns (Lite too);
+      // a rally court has none.
       onLoseServe:
           canChangeScore &&
-              !isLite &&
               courtContext.scoringMode == CourtScoringMode.sideOut &&
               courtContext.servingTeam != null
           ? () => _runScoringStep(() => _loseServe(courtContext))

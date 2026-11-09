@@ -183,7 +183,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Lite shows the court too, without a lose-serve button', (
+    testWidgets('Lite shows the court too, with the one serve button', (
       tester,
     ) async {
       await _pump(
@@ -194,7 +194,7 @@ void main() {
       );
 
       expect(find.byType(PickleballCourtPanel), findsOneWidget);
-      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
     });
 
     testWidgets('TC-LMT-APP-07 Lite match info shows the scoring rule in use', (

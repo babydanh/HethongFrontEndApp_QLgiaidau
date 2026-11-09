@@ -18,6 +18,10 @@ The court scoreboard SHALL show one serve button on the middle of the bottom bar
 - **WHEN** người dùng chỉ xem, hoặc chưa chọn đội giao
 - **THEN** không có nút "Đổi giao"
 
-#### Scenario: Chỉ luật side-out
-- **WHEN** trận chấm theo luật rally hoặc Lite (không có Giao 1/Giao 2)
+#### Scenario: Cả Lite có lượt giao
+- **WHEN** trận Lite mà sân vẫn theo lượt giao side-out (có nhãn Giao 1/Giao 2)
+- **THEN** có nút "Đổi giao" như trận thường
+
+#### Scenario: Sân rally không có lượt giao
+- **WHEN** sân chấm theo luật rally (không có Giao 1/Giao 2)
 - **THEN** không có nút "Đổi giao"
