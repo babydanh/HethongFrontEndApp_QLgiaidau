@@ -794,6 +794,7 @@
   "@cbdPbReceiverWonHandOver": {"placeholders": {"team": {"type": "int"}}},
   "pickleballCourtEnd": "End",
   "pickleballCourtChangeServe": "Change serve",
+  "pickleballCourtSwitchServer": "Switch server",
   "pickleballCourtServeTag": "SERVE",
   "pickleballCourtSportName": "pickleball",
   "pickleballCourtSetNumber": "Set {number}",

@@ -4274,6 +4274,12 @@ abstract class AppLocalizations {
   /// **'Đổi giao'**
   String get pickleballCourtChangeServe;
 
+  /// No description provided for @pickleballCourtSwitchServer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi tay'**
+  String get pickleballCourtSwitchServer;
+
   /// No description provided for @pickleballCourtServeTag.
   ///
   /// In vi, this message translates to:

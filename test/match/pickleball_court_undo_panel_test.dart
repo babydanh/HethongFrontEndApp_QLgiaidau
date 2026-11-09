@@ -293,11 +293,13 @@ void main() {
     ScorePanelState read() =>
         container.read(scorePanelNotifierProvider(_params));
 
-    await tester.tap(find.byTooltip('Change serve'));
+    // Serve 1 after the opening: the button is "Switch server" (hand change).
+    await tester.tap(find.byTooltip('Switch server'));
     await tester.pumpAndSettle();
     expect(read().pickleball!.isTeam1Serving, isTrue);
     expect(read().pickleball!.serverNumber, 2);
 
+    // Serve 2: the same button now reads "Change serve" (hand the serve over).
     await tester.tap(find.byTooltip('Change serve'));
     await tester.pumpAndSettle();
     expect(read().pickleball!.isTeam1Serving, isFalse);

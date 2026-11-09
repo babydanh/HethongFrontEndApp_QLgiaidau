@@ -796,6 +796,7 @@
   "@cbdPbReceiverWonHandOver": {"placeholders": {"team": {"type": "int"}}},
   "pickleballCourtEnd": "Kết thúc",
   "pickleballCourtChangeServe": "Đổi giao",
+  "pickleballCourtSwitchServer": "Đổi tay",
   "pickleballCourtServeTag": "GIAO",
   "pickleballCourtSportName": "pickleball",
   "pickleballCourtSetNumber": "Set {number}",

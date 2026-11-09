@@ -256,6 +256,14 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     );
   }
 
+  /// True when the next lose-serve press only moves the serve to the partner
+  /// (doubles, after the opening serve, server 1): the bar button then reads
+  /// "Switch server". Every other press hands the serve over.
+  bool _nextPressChangesHand(ScorePanelState score, CourtContext court) {
+    final serve = score.pickleball ?? const PickleballServeState();
+    return court.isDoubles && serve.openingDone && serve.serverNumber == 1;
+  }
+
   /// Bên nhận thắng pha bóng: đôi đi từng bước (người giao 1 → 2 → đội kia) qua
   /// `pickleballSwitchServer`; đánh đơn chuyển thẳng sang đội kia.
   void _loseServe(CourtContext court) {
@@ -493,6 +501,7 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
       // No serving team yet (0-0, nobody chosen) means nothing to hand over.
       // Serve 1/2 exist wherever the court follows side-out turns (Lite too);
       // a rally court has none.
+      loseServeChangesHand: _nextPressChangesHand(score, courtContext),
       onLoseServe:
           canChangeScore &&
               courtContext.scoringMode == CourtScoringMode.sideOut &&

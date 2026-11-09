@@ -5,6 +5,7 @@ Người dùng không thấy giao diện đổi tay (Giao 1 <-> Giao 2) và đ�
 ## What Changes
 
 - Thêm một nút "Đổi giao" ở giữa thanh dưới của bảng điểm sân (ngang và dọc). Bấm một lần = một bước mất giao, dùng đúng bước của "+" bên nhận: Giao 1 -> Giao 2 -> đội kia (đánh đơn: sang đội kia ngay), điểm giữ nguyên, một lần hoàn tác trả lại.
+- Một nút, tên theo bước kế tiếp: đang Giao 1 (đôi, sau lượt mở đầu) ghi "Đổi tay"; còn lại ghi "Đổi giao" (2026-11-10).
 - Nút ẩn với người xem và khi chưa chọn đội giao.
 - Nút nằm đúng giữa chiều ngang màn hình, cùng hàng với −/+.
 

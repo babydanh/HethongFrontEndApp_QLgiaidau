@@ -14,6 +14,12 @@ The court scoreboard SHALL show one serve button on the middle of the bottom bar
 - **AND** bấm lần nữa thì đội 2 giao Giao 1, điểm giữ nguyên
 - **AND** mỗi lần hoàn tác trả lại một bước
 
+#### Scenario: Tên nút theo bước kế tiếp
+- **WHEN** đánh đôi, đã qua lượt giao mở đầu và đang Giao 1
+- **THEN** nút ghi "Đổi tay" (bấm sang Giao 2)
+- **AND** khi đang Giao 2, đang lượt giao mở đầu hoặc đánh đơn, nút ghi "Đổi giao" (bấm sang đội kia Giao 1)
+- **AND** Lite và side-out nghiêm ngặt dùng chung quy tắc này; điểm không đổi
+
 #### Scenario: Người xem hoặc chưa có đội giao
 - **WHEN** người dùng chỉ xem, hoặc chưa chọn đội giao
 - **THEN** không có nút "Đổi giao"

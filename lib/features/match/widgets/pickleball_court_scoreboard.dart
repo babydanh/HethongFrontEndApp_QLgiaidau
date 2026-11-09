@@ -48,6 +48,7 @@ class CourtScoreboard extends StatelessWidget {
     required this.lockReceiverPlus,
     required this.onScoreChange,
     required this.onLoseServe,
+    required this.loseServeChangesHand,
     required this.callText,
     required this.net,
     required this.onSwitchEnds,
@@ -70,6 +71,7 @@ class CourtScoreboard extends StatelessWidget {
   final bool lockReceiverPlus;
   final void Function(int team, bool increment)? onScoreChange;
   final VoidCallback? onLoseServe;
+  final bool loseServeChangesHand;
   final String? callText;
   final CourtNetActions net;
   final VoidCallback? onSwitchEnds;
@@ -124,6 +126,7 @@ class CourtScoreboard extends StatelessWidget {
               servingTeam: layout.servingTeam,
               onScoreChange: onScoreChange,
               onLoseServe: onLoseServe,
+              loseServeChangesHand: loseServeChangesHand,
               startedAt: upright ? null : startedAt,
               upright: upright,
             ),
@@ -1127,6 +1130,7 @@ class _BottomBar extends StatelessWidget {
     required this.servingTeam,
     required this.onScoreChange,
     required this.onLoseServe,
+    required this.loseServeChangesHand,
     required this.startedAt,
     required this.upright,
   });
@@ -1138,6 +1142,7 @@ class _BottomBar extends StatelessWidget {
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
   final VoidCallback? onLoseServe;
+  final bool loseServeChangesHand;
   final DateTime? startedAt;
 
   /// Upright phone: the buttons share the width instead of a fixed row.
@@ -1170,20 +1175,31 @@ class _BottomBar extends StatelessWidget {
     return plusFirst ? [plus, minus] : [minus, plus];
   }
 
-  /// One button for the serving side losing the rally (Giao 1 → Giao 2 → other
-  /// team). Hidden for a viewer, who has no score buttons either.
+  /// One button for the serving side losing the rally. Its name is its next
+  /// step: "Switch server" (serve 1 -> 2) or "Change serve" (hand it over).
+  /// Hidden for a viewer, who has no score buttons either.
   Widget? _serveButton(AppLocalizations l10n, double buttonWidth) {
     final lose = onLoseServe;
     if (lose == null || onScoreChange == null) return null;
+    final label = loseServeChangesHand
+        ? l10n.pickleballCourtSwitchServer
+        : l10n.pickleballCourtChangeServe;
     return _BarButton(
-      tooltip: l10n.pickleballCourtChangeServe,
+      tooltip: label,
       color: _ink,
       minWidth: buttonWidth,
       onPressed: lose,
-      child: const Icon(
-        Icons.directions_run_rounded,
-        color: Colors.white,
-        size: 26,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Text(
+          label,
+          maxLines: 1,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }
@@ -1198,8 +1214,14 @@ class _BottomBar extends StatelessWidget {
         spacing: 6,
         children: [
           ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
-          const Spacer(),
-          if (serve != null) ...[serve, const Spacer()],
+          if (serve == null)
+            const Spacer()
+          else
+            Expanded(
+              child: Center(
+                child: FittedBox(fit: BoxFit.scaleDown, child: serve),
+              ),
+            ),
           ..._teamButtons(l10n, rightTeam, plusFirst: false, buttonWidth: 48),
         ],
       ),

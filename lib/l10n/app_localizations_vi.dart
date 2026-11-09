@@ -2228,6 +2228,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtChangeServe => 'Đổi giao';
 
   @override
+  String get pickleballCourtSwitchServer => 'Đổi tay';
+
+  @override
   String get pickleballCourtServeTag => 'GIAO';
 
   @override

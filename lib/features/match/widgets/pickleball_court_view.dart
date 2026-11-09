@@ -41,6 +41,7 @@ class PickleballCourtView extends StatelessWidget {
     this.onSwitchEnds,
     this.onUndo,
     this.onLoseServe,
+    this.loseServeChangesHand = false,
     this.onRestoreAutomatic,
     this.onToggleAutoSwitch,
     this.onFinishSet,
@@ -106,6 +107,10 @@ class PickleballCourtView extends StatelessWidget {
   /// The serving side loses the rally: Giao 1 → Giao 2 → other team. Null hides
   /// the serve button in the middle of the bottom bar.
   final VoidCallback? onLoseServe;
+
+  /// The next press only moves the serve to the partner (serve 1 -> serve 2): the button reads
+  /// "Switch server". False: the press hands the serve over, it reads "Change serve".
+  final bool loseServeChangesHand;
   final VoidCallback? onRestoreAutomatic;
   final VoidCallback? onToggleAutoSwitch;
   final VoidCallback? onFinishSet;
@@ -190,6 +195,7 @@ class PickleballCourtView extends StatelessWidget {
       lockReceiverPlus: isSideOut && !receiverCanScore,
       onScoreChange: onScoreChange,
       onLoseServe: onLoseServe,
+      loseServeChangesHand: loseServeChangesHand,
       callText: _callText,
       net: _net,
       onSwitchEnds: onSwitchEnds,

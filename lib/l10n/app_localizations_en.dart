@@ -2233,6 +2233,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballCourtChangeServe => 'Change serve';
 
   @override
+  String get pickleballCourtSwitchServer => 'Switch server';
+
+  @override
   String get pickleballCourtServeTag => 'SERVE';
 
   @override

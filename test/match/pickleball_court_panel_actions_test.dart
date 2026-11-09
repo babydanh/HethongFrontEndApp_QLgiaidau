@@ -233,6 +233,47 @@ void main() {
       expect(find.text('LOSE SERVE'), findsNothing);
     });
 
+    testWidgets('TC-SERVE-APP-08 serve 1 after the opening reads "Switch server"', (
+      tester,
+    ) async {
+      await _pumpPanel(
+        tester,
+        log: <String>[],
+        context: _context(serverNumber: 1),
+        state: _state(
+          serve: const PickleballServeState(serverNumber: 1, openingDone: true),
+        ),
+      );
+      expect(find.byTooltip('Switch server'), findsOneWidget);
+      expect(find.byTooltip('Change serve'), findsNothing);
+    });
+
+    testWidgets('TC-SERVE-APP-08 the opening serve reads "Change serve"', (
+      tester,
+    ) async {
+      await _pumpPanel(
+        tester,
+        log: <String>[],
+        context: _context(serverNumber: 1),
+        state: _state(),
+      );
+      expect(find.byTooltip('Change serve'), findsOneWidget);
+      expect(find.byTooltip('Switch server'), findsNothing);
+    });
+
+    testWidgets('TC-SERVE-APP-08 singles reads "Change serve"', (tester) async {
+      await _pumpPanel(
+        tester,
+        log: <String>[],
+        context: _context(isDoubles: false),
+        state: _state(
+          serve: const PickleballServeState(serverNumber: 1, openingDone: true),
+        ),
+      );
+      expect(find.byTooltip('Change serve'), findsOneWidget);
+      expect(find.byTooltip('Switch server'), findsNothing);
+    });
+
     testWidgets('rally rule has none either', (tester) async {
       await _pumpPanel(
         tester,

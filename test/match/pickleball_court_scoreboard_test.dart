@@ -44,6 +44,7 @@ Widget _board(
   bool isDoubles = true,
   bool finishSetEnabled = true,
   bool loseServe = true,
+  bool loseServeChangesHand = false,
   int score1 = 0,
   int score2 = 0,
   bool flipped = false,
@@ -85,6 +86,7 @@ Widget _board(
     onLoseServe: interactive && loseServe
         ? () => spy.calls.add('loseServe')
         : null,
+    loseServeChangesHand: loseServeChangesHand,
     onRestoreAutomatic: interactive ? () => spy.calls.add('restore') : null,
     onToggleAutoSwitch: interactive ? () => spy.calls.add('auto') : null,
     onFinishSet: interactive ? () => spy.calls.add('finishSet') : null,
@@ -817,5 +819,49 @@ void main() {
       await _pump(tester, _board(_Spy(), loseServe: false));
       expect(find.byTooltip('Change serve'), findsNothing);
     });
+  });
+
+  group('TC-SERVE-APP-08 the one button is named after its next step', () {
+    testWidgets('serve 1: "Switch server" (hand change), same press', (
+      tester,
+    ) async {
+      final spy = _Spy();
+      await _pump(tester, _board(spy, loseServeChangesHand: true));
+
+      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.text('Switch server'), findsOneWidget);
+      await tester.tap(find.byTooltip('Switch server'));
+      expect(spy.calls, ['loseServe']);
+    });
+
+    testWidgets('serve 2, opening serve or singles: "Change serve"', (
+      tester,
+    ) async {
+      await _pump(tester, _board(_Spy()));
+
+      expect(find.byTooltip('Switch server'), findsNothing);
+      expect(find.text('Change serve'), findsOneWidget);
+    });
+
+    for (final size in [const Size(844, 390), const Size(390, 844)]) {
+      testWidgets('the labelled button stays centred on $size', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _board(
+            _Spy(),
+            loseServeChangesHand: true,
+            axis: size.width > size.height ? Axis.horizontal : Axis.vertical,
+            startedAt: DateTime(2026, 11, 9),
+          ),
+          size: size,
+        );
+
+        final centre = tester.getCenter(find.byTooltip('Switch server'));
+        expect((centre.dx - size.width / 2).abs(), lessThan(1));
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }
