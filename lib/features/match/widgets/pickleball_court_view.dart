@@ -40,6 +40,7 @@ class PickleballCourtView extends StatelessWidget {
     this.onDrop,
     this.onSwitchEnds,
     this.onUndo,
+    this.onLoseServe,
     this.onRestoreAutomatic,
     this.onToggleAutoSwitch,
     this.onFinishSet,
@@ -101,6 +102,10 @@ class PickleballCourtView extends StatelessWidget {
   final void Function(CourtDropAction action)? onDrop;
   final VoidCallback? onSwitchEnds;
   final VoidCallback? onUndo;
+
+  /// The serving side loses the rally: Giao 1 → Giao 2 → other team. Null hides
+  /// the serve button in the middle of the bottom bar.
+  final VoidCallback? onLoseServe;
   final VoidCallback? onRestoreAutomatic;
   final VoidCallback? onToggleAutoSwitch;
   final VoidCallback? onFinishSet;
@@ -184,6 +189,7 @@ class PickleballCourtView extends StatelessWidget {
       scoreOf: _scoreOf,
       lockReceiverPlus: isSideOut && !receiverCanScore,
       onScoreChange: onScoreChange,
+      onLoseServe: onLoseServe,
       callText: _callText,
       net: _net,
       onSwitchEnds: onSwitchEnds,

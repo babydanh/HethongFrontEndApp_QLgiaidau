@@ -286,4 +286,33 @@ void main() {
       expect(_undoTap(tester), isNull, reason: 'one step only');
     });
   });
+
+  testWidgets('TC-SERVE-APP-07 the middle serve button walks Giao 1 -> Giao 2 '
+      '-> other team, score kept, each press undoable', (tester) async {
+    final container = await _pump(tester, followScore: true);
+    ScorePanelState read() =>
+        container.read(scorePanelNotifierProvider(_params));
+
+    await tester.tap(find.byTooltip('Change serve'));
+    await tester.pumpAndSettle();
+    expect(read().pickleball!.isTeam1Serving, isTrue);
+    expect(read().pickleball!.serverNumber, 2);
+
+    await tester.tap(find.byTooltip('Change serve'));
+    await tester.pumpAndSettle();
+    expect(read().pickleball!.isTeam1Serving, isFalse);
+    expect(read().pickleball!.serverNumber, 1);
+    expect(read().rally!.currentP1, 2);
+    expect(read().rally!.currentP2, 1);
+
+    await tester.tap(find.byTooltip('Undo'));
+    await tester.pumpAndSettle();
+    expect(read().pickleball!.isTeam1Serving, isTrue);
+    expect(read().pickleball!.serverNumber, 2);
+
+    await tester.tap(find.byTooltip('Undo'));
+    await tester.pumpAndSettle();
+    expect(read().pickleball!.serverNumber, 1);
+    expect(_undoTap(tester), isNull, reason: 'back at the start');
+  });
 }

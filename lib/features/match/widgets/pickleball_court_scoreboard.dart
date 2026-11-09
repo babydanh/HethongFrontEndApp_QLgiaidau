@@ -47,6 +47,7 @@ class CourtScoreboard extends StatelessWidget {
     required this.scoreOf,
     required this.lockReceiverPlus,
     required this.onScoreChange,
+    required this.onLoseServe,
     required this.callText,
     required this.net,
     required this.onSwitchEnds,
@@ -68,6 +69,7 @@ class CourtScoreboard extends StatelessWidget {
   final int Function(int team) scoreOf;
   final bool lockReceiverPlus;
   final void Function(int team, bool increment)? onScoreChange;
+  final VoidCallback? onLoseServe;
   final String? callText;
   final CourtNetActions net;
   final VoidCallback? onSwitchEnds;
@@ -121,6 +123,7 @@ class CourtScoreboard extends StatelessWidget {
               lockReceiverPlus: lockReceiverPlus,
               servingTeam: layout.servingTeam,
               onScoreChange: onScoreChange,
+              onLoseServe: onLoseServe,
               startedAt: upright ? null : startedAt,
               upright: upright,
             ),
@@ -1113,7 +1116,8 @@ class _ScoreChip extends StatelessWidget {
   }
 }
 
-/// Clock, then + − of the left team and − + of the right team.
+/// Clock, then + − of the left team, the serve button, and − + of the right
+/// team. The serve button sits on the middle of the bar.
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.leftTeam,
@@ -1122,6 +1126,7 @@ class _BottomBar extends StatelessWidget {
     required this.lockReceiverPlus,
     required this.servingTeam,
     required this.onScoreChange,
+    required this.onLoseServe,
     required this.startedAt,
     required this.upright,
   });
@@ -1132,6 +1137,7 @@ class _BottomBar extends StatelessWidget {
   final bool lockReceiverPlus;
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
+  final VoidCallback? onLoseServe;
   final DateTime? startedAt;
 
   /// Upright phone: the buttons share the width instead of a fixed row.
@@ -1164,8 +1170,28 @@ class _BottomBar extends StatelessWidget {
     return plusFirst ? [plus, minus] : [minus, plus];
   }
 
-  /// Upright row: the two +/- pairs sit at the two edges.
+  /// One button for the serving side losing the rally (Giao 1 → Giao 2 → other
+  /// team). Hidden for a viewer, who has no score buttons either.
+  Widget? _serveButton(AppLocalizations l10n, double buttonWidth) {
+    final lose = onLoseServe;
+    if (lose == null || onScoreChange == null) return null;
+    return _BarButton(
+      tooltip: l10n.pickleballCourtChangeServe,
+      color: _ink,
+      minWidth: buttonWidth,
+      onPressed: lose,
+      child: const Icon(
+        Icons.directions_run_rounded,
+        color: Colors.white,
+        size: 26,
+      ),
+    );
+  }
+
+  /// Upright row: the two +/- pairs sit at the two edges, the serve button
+  /// between them. Both pairs are as wide as each other, so it is centred.
   Widget _uprightRow(AppLocalizations l10n) {
+    final serve = _serveButton(l10n, 48);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
@@ -1173,6 +1199,7 @@ class _BottomBar extends StatelessWidget {
         children: [
           ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
           const Spacer(),
+          if (serve != null) ...[serve, const Spacer()],
           ..._teamButtons(l10n, rightTeam, plusFirst: false, buttonWidth: 48),
         ],
       ),
@@ -1184,7 +1211,8 @@ class _BottomBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final controls = <Widget>[
       ..._teamButtons(l10n, leftTeam, plusFirst: true),
-      if (onScoreChange != null) const SizedBox(width: 24),
+      if (onScoreChange != null)
+        _serveButton(l10n, 56) ?? const SizedBox(width: 24),
       ..._teamButtons(l10n, rightTeam, plusFirst: false),
     ];
     final start = startedAt;

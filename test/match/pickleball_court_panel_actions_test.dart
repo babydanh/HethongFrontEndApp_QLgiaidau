@@ -225,11 +225,11 @@ Future<void> _openMenu(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('TC-SERVE-APP-05 no separate lose-serve button', () {
-    testWidgets('strict side-out: the receiver plus does it', (tester) async {
+  group('TC-SERVE-APP-05 one serve button, only in strict side-out', () {
+    testWidgets('strict side-out: exactly one serve button in the bar', (tester) async {
       await _pumpPanel(tester, log: <String>[], context: _context(serverNumber: 1));
 
-      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
       expect(find.text('LOSE SERVE'), findsNothing);
     });
 
@@ -381,6 +381,7 @@ void main() {
       await _pumpPanel(tester, log: <String>[], canScore: false);
 
       expect(find.byTooltip('Add point for team 2'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsNothing);
       expect(find.text('LOSE SERVE'), findsNothing);
     });
   });
