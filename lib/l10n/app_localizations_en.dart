@@ -7836,6 +7836,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeNoTournaments => 'No tournaments found';
 
   @override
+  String get exploreNewOpenedTitle => 'Just opened registration';
+
+  @override
+  String get exploreNewStartedTitle => 'Just started';
+
+  @override
+  String get exploreNewBadgeOpen => 'Registration open';
+
+  @override
+  String get exploreNewBadgeLive => 'Live now';
+
+  @override
+  String exploreNewSlots(int current, int max) {
+    return '$current/$max slots';
+  }
+
+  @override
+  String get exploreNewFree => 'Free';
+
+  @override
   String get homeNoTournamentsHint =>
       'Try changing the filters or search keyword';
 

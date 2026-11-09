@@ -7,14 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/widgets/liquid_glass_surface.dart';
-import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
 
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/notification_provider.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
 import 'package:app_quanly_giaidau/core/widgets/sporto_header.dart';
-import 'package:app_quanly_giaidau/features/home/widgets/featured_tournament_banner_card.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/tournament_card_with_banner.dart';
 import 'package:app_quanly_giaidau/core/widgets/status_segment.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
@@ -23,7 +21,6 @@ import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/screens/leaderboard_screen.dart';
 import 'package:app_quanly_giaidau/features/social/screens/social_list_view.dart';
 
-import 'package:app_quanly_giaidau/data/models/home_projection.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -210,9 +207,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   final ScrollController _scrollController = ScrollController();
-  PageController? _carouselController;
-  Timer? _carouselTimer;
-  int _carouselCurrentPage = 0;
 
   double get _safeAreaTop => MediaQuery.of(context).padding.top;
   double get _headerHeight => 84.0 + _safeAreaTop;
@@ -231,7 +225,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
 
     _currentIndex = widget.initialTab;
-    _carouselController = PageController(viewportFraction: 1.0);
     if (_currentIndex == 1) _fetchServerTournamentPage(isLoadMore: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -251,28 +244,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  void _startCarouselTimer(int itemCount) {
-    _carouselTimer?.cancel();
-    if (itemCount <= 1) return;
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_carouselController == null ||
-          !_carouselController!.hasClients ||
-          _carouselController!.positions.length != 1) {
-        return;
-      }
-      _carouselCurrentPage = (_carouselCurrentPage + 1) % itemCount;
-      _carouselController!.animateToPage(
-        _carouselCurrentPage,
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
-
   @override
   void dispose() {
-    _carouselTimer?.cancel();
-    _carouselController?.dispose();
     _scrollController.dispose();
     _collapseAnimController.dispose();
 
@@ -714,19 +687,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   return sportMatch;
                 }).toList();
 
-                final now = DateTime.now();
-                final featuredTournaments = allTournaments
-                    .where((t) {
-                      final s = t.status.toLowerCase();
-                      if (s == 'completed' || s == 'finished') {
-                        final endedDate = t.endDate ?? t.updatedAt;
-                        return now.difference(endedDate).inDays <= 14;
-                      }
-                      return true;
-                    })
-                    .take(10)
-                    .toList();
-
                 return CustomScrollView(
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
@@ -738,20 +698,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       SliverToBoxAdapter(
                         child: _buildGuestLoginNoticeBanner(l10n),
                       ),
-                    if (featuredTournaments.isNotEmpty) ...[
-                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                      SliverToBoxAdapter(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: KeyedSubtree(
-                            key: ValueKey("featured_$_exploreSport"),
-                            child: _buildTournamentCarousel(
-                              featuredTournaments,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                     SliverToBoxAdapter(child: _buildExploreSegmentTabBar(l10n)),
                     TournamentSectionList(
                       tournaments: allTournaments,
@@ -776,12 +722,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 slivers: [
                   SliverToBoxAdapter(
                     child: SizedBox(height: _pinnedHeaderHeight),
-                  ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
-                  SliverToBoxAdapter(
-                    child: HomeBannerSkeleton(
-                      height: _bannerSlotHeight(context),
-                    ),
                   ),
                   SliverToBoxAdapter(child: _buildExploreSegmentTabBar(l10n)),
                   SliverToBoxAdapter(
@@ -1096,81 +1036,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
       ),
     );
-  }
-
-  Widget _buildTournamentCarousel(List<Tournament> items) {
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    // Khởi động timer chuyển trang tự động nếu chưa có
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_carouselTimer == null) {
-        _startCarouselTimer(items.length);
-      }
-    });
-
-    final registrationStatusById = _featuredRegistrationStatusById();
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Ô carousel không cao hơn card 16:9 (card cách mép 16px mỗi bên),
-        // nên tab trạng thái nằm sát đáy banner. Trần vẫn là bannerHeight.
-        SizedBox(
-          height: _bannerSlotHeight(context),
-          child: PageView.builder(
-            controller: _carouselController,
-            physics: const BouncingScrollPhysics(),
-            itemCount: items.length,
-            onPageChanged: (index) {
-              setState(() {
-                _carouselCurrentPage = index;
-              });
-            },
-            itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: FeaturedTournamentBannerCard(
-                  tournament: HomeFeaturedTournament.fromTournament(
-                    items[i],
-                    registrationStatus: registrationStatusById[items[i].id],
-                  ),
-                  onTap: () => context.push("/intro/${items[i].id}"),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Trạng thái đăng ký (OPEN/CLOSED) do server tính, lấy từ projection Khám
-  /// phá theo id giải. Giải không có trong projection thì không có badge.
-  Map<String, String?> _featuredRegistrationStatusById() {
-    final statusById = <String, String?>{};
-    for (final matchStatus in const ['ONGOING', 'COMPLETED']) {
-      final projection = ref.watch(
-        homeProjectionProvider((sport: _exploreSport, matchStatus: matchStatus)),
-      );
-      if (projection case AsyncData(:final value)) {
-        for (final featured in value.featuredTournaments) {
-          statusById[featured.id] = featured.registrationStatus;
-        }
-      }
-    }
-    return statusById;
-  }
-
-  double _bannerSlotHeight(BuildContext context) {
-    const sidePadding = 16.0;
-    final size = MediaQuery.sizeOf(context);
-    final cardHeight = (size.width - 2 * sidePadding) * 9 / 16;
-    final bannerHeight = AppResponsive.bannerHeight(
-      size.height,
-      viewportWidth: size.width,
-    );
-    return cardHeight < bannerHeight ? cardHeight : bannerHeight;
   }
 
   Widget _buildEmpty() {

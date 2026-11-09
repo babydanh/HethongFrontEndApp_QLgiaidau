@@ -14540,6 +14540,42 @@ abstract class AppLocalizations {
   /// **'Không tìm thấy giải đấu'**
   String get homeNoTournaments;
 
+  /// No description provided for @exploreNewOpenedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa mở đăng ký'**
+  String get exploreNewOpenedTitle;
+
+  /// No description provided for @exploreNewStartedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa bắt đầu'**
+  String get exploreNewStartedTitle;
+
+  /// No description provided for @exploreNewBadgeOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở đăng ký'**
+  String get exploreNewBadgeOpen;
+
+  /// No description provided for @exploreNewBadgeLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get exploreNewBadgeLive;
+
+  /// No description provided for @exploreNewSlots.
+  ///
+  /// In vi, this message translates to:
+  /// **'{current}/{max} suất'**
+  String exploreNewSlots(int current, int max);
+
+  /// No description provided for @exploreNewFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get exploreNewFree;
+
   /// No description provided for @homeNoTournamentsHint.
   ///
   /// In vi, this message translates to:

@@ -7828,6 +7828,26 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeNoTournaments => 'Không tìm thấy giải đấu';
 
   @override
+  String get exploreNewOpenedTitle => 'Vừa mở đăng ký';
+
+  @override
+  String get exploreNewStartedTitle => 'Vừa bắt đầu';
+
+  @override
+  String get exploreNewBadgeOpen => 'Mở đăng ký';
+
+  @override
+  String get exploreNewBadgeLive => 'Đang diễn ra';
+
+  @override
+  String exploreNewSlots(int current, int max) {
+    return '$current/$max suất';
+  }
+
+  @override
+  String get exploreNewFree => 'Miễn phí';
+
+  @override
   String get homeNoTournamentsHint => 'Thử thay đổi bộ lọc hoặc từ khoá';
 
   @override
