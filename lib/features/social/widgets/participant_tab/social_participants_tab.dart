@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'social_ticket_slots.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
@@ -18,7 +19,7 @@ class SocialParticipantsTab extends StatelessWidget {
 
   final SocialSessionModel session;
   final bool isHost;
-  final ValueChanged<int> onAddParticipant;
+  final VoidCallback onAddParticipant;
   final ValueChanged<SocialParticipantModel> onRemoveParticipant;
   final ValueChanged<SocialParticipantModel>? onApproveParticipant;
   final ValueChanged<SocialParticipantModel>? onRejectParticipant;
@@ -68,16 +69,12 @@ class SocialParticipantsTab extends StatelessWidget {
                 ),
               ),
             ),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: Icon(
-                Icons.more_horiz_rounded,
-                color: colors.textSecondary,
-                size: 22,
+            if (isHost && !isCompleted)
+              TextButton.icon(
+                onPressed: onAddParticipant,
+                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                label: const Text('Thêm người'),
               ),
-              onPressed: () {},
-            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -106,7 +103,7 @@ class SocialParticipantsTab extends StatelessWidget {
             ),
             mainAxisSpacing: 16,
             crossAxisSpacing: 12,
-            mainAxisExtent: 72 + MediaQuery.textScalerOf(context).scale(18),
+            mainAxisExtent: 72 + MediaQuery.textScalerOf(context).scale(36),
           ),
           itemCount: math.max(totalSlots, confirmedCount),
           itemBuilder: (context, index) {
@@ -136,25 +133,18 @@ class SocialParticipantsTab extends StatelessWidget {
                           SizedBox(
                             width: 58,
                             height: 58,
-                            child: ClipOval(
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  ColoredBox(
-                                    color: colors.success.withValues(
-                                      alpha: 0.35,
-                                    ),
-                                    child: Center(child: Text(p.initials)),
-                                  ),
-                                  if (p.avatarUrl?.trim().isNotEmpty == true)
-                                    Image.network(
-                                      p.avatarUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, error, stack) =>
-                                          Center(child: Text(p.initials)),
-                                    ),
-                                  if (slot.ticketIndex > 0)
-                                    ColoredBox(
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                SocialAvatar(
+                                  name: p.name,
+                                  imageUrl: p.avatarUrl,
+                                  size: 58,
+                                  isHost: p.isHost,
+                                ),
+                                if (slot.ticketIndex > 0)
+                                  ClipOval(
+                                    child: ColoredBox(
                                       color: Colors.black54,
                                       child: Center(
                                         child: Text(
@@ -167,8 +157,8 @@ class SocialParticipantsTab extends StatelessWidget {
                                         ),
                                       ),
                                     ),
-                                ],
-                              ),
+                                  ),
+                              ],
                             ),
                           ),
                           if (canRemove)
@@ -209,6 +199,7 @@ class SocialParticipantsTab extends StatelessWidget {
                           color: colors.textPrimary,
                         ),
                       ),
+                      if (p.isHost) const SocialHostChip(),
                     ],
                   ),
                 ),
@@ -217,7 +208,7 @@ class SocialParticipantsTab extends StatelessWidget {
               // Empty slot with '+' icon
               return InkWell(
                 onTap: (isHost && !isCompleted)
-                    ? () => onAddParticipant(index + 1)
+                    ? onAddParticipant
                     : null,
                 borderRadius: BorderRadius.circular(28),
                 child: Column(
@@ -287,28 +278,10 @@ class SocialParticipantsTab extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    // Avatar
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colors.success.withValues(alpha: 0.35),
-                        border: Border.all(
-                          color: colors.success.withValues(alpha: 0.7),
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          p.initials,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
+                    SocialAvatar(
+                      name: p.name,
+                      imageUrl: p.avatarUrl,
+                      size: 54,
                     ),
                     const SizedBox(width: 14),
                     // Name and Actions

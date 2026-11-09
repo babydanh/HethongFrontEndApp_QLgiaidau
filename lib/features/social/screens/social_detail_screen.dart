@@ -349,9 +349,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       isHost: host,
                       onRemoveParticipant: _removeParticipant,
                       removingParticipantId: _removingParticipantId,
-                      onAddParticipant: (slot) {
+                      onAddParticipant: () {
                         if (session.status.toUpperCase() == 'COMPLETED') return;
-                        SocialAddParticipantSheet.show(context, session, slot);
+                        SocialAddParticipantSheet.show(context, session);
                       },
                       onApproveParticipant: host && !_reviewing
                           ? (p) => _reviewRequest(p, true)
