@@ -17470,6 +17470,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get participantUnpaired => 'Đã tách cặp. Hai VĐV đang chờ ghép lại.';
 
   @override
+  String get orgMgmtParticipantKick => 'Loại khỏi giải';
+
+  @override
+  String orgMgmtParticipantKickConfirm(String name) {
+    return 'Loại $name khỏi giải?';
+  }
+
+  @override
+  String get orgMgmtParticipantKicked => 'Đã loại khỏi giải.';
+
+  @override
   String get participantDetailContact => 'Liên hệ';
 
   @override

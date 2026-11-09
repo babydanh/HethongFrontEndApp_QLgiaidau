@@ -65,7 +65,6 @@ class _TournamentManagementHubScreenState
   ];
   static const _otherSections = [
     TournamentManagementSection.liveOperations,
-    TournamentManagementSection.teams,
     TournamentManagementSection.draw,
     TournamentManagementSection.sponsors,
     TournamentManagementSection.finance,
