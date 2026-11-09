@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/explore_new_tournaments.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_nearby_filter.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.dart';
@@ -56,6 +57,9 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
         slivers: [
           // Offset for top header
           SliverToBoxAdapter(child: SizedBox(height: widget.topPadding)),
+
+          // Just-opened / just-started tournaments (same rules as Web).
+          const SliverToBoxAdapter(child: ExploreNewTournaments()),
 
           // Nearby is future-based and is not constrained by the date picker.
           if (!filterState.nearbyOnly)

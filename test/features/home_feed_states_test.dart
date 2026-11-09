@@ -56,7 +56,7 @@ void main() {
     await tester.pumpWidget(_homeApp(tournaments: tournaments.stream));
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(HomeBannerSkeleton), findsOneWidget);
+    expect(find.byType(HomeBannerSkeleton), findsNothing);
     expect(find.byType(TournamentMatchesCardSkeleton), findsWidgets);
     expect(find.byType(CircularProgressIndicator), findsNothing);
     // The status tabs stay real so the user can switch while it loads.
@@ -193,8 +193,11 @@ void main() {
       expect(find.text('Upcoming Matches'), findsNothing);
       expect(find.text('View All'), findsNothing);
 
+      // Băng chuyền giải đã chuyển sang tab Khám phá nên Trang chủ không còn
+      // hiện tên giải ở banner.
+      expect(find.text('Synthetic tournament'), findsNothing);
+
       // Bỏ tiêu đề không được nuốt mất nội dung của section.
-      expect(find.text('Synthetic tournament'), findsWidgets);
       expect(find.text('No upcoming matches'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
