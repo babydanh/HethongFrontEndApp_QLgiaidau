@@ -70,12 +70,15 @@ abstract class ISocialSessionRepository {
   /// 4.8b - Xóa kèo vĩnh viễn (DELETE /social-sessions/:id)
   Future<void> delete(String sessionId);
 
-  /// 4.9 - Lấy tin nhắn chat (GET /social-sessions/:id/messages)
+  /// 4.9 - Lấy tin nhắn chat mới nhất, cũ → mới (GET /social-sessions/:id/messages).
+  /// Backend chỉ nhận `limit` (1-50) và `cursor`; không có `page`.
   Future<List<SocialChatMessageModel>> getMessages(
     String sessionId, {
-    int page = 1,
-    int limit = 50,
+    int limit = 30,
   });
+
+  /// 4.9b - Gửi tin nhắn chat (POST /social-sessions/:id/messages).
+  Future<void> sendMessage(String sessionId, String text);
 
   /// 4.4 - Member tự join (POST /social-sessions/:id/join)
   Future<JoinSessionResponse> join(String sessionId, {int ticketCount = 1});
