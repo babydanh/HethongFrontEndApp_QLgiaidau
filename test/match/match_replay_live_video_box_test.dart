@@ -61,6 +61,8 @@ Future<void> _pumpBox(
   WidgetTester tester,
   _FakeMatchPlaybackRepository repository, {
   VoidCallback? onToggleFullscreen,
+  bool fill = false,
+  Size? box,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -73,9 +75,12 @@ Future<void> _pumpBox(
         home: Scaffold(
           body: Center(
             child: SizedBox(
-              width: 320,
+              width: box?.width ?? 320,
+              height: box?.height,
               child: LiveVideoBox(
                 matchId: 'match-1',
+                fill: fill,
+                fullscreen: fill,
                 onToggleFullscreen: onToggleFullscreen,
               ),
             ),
@@ -133,6 +138,27 @@ void main() {
       picture.contains(tester.getCenter(find.byIcon(Icons.volume_off))),
       isTrue,
     );
+  });
+
+  testWidgets('TC-FULLVID-01 replay fills a wide landscape box with no side bars', (
+    tester,
+  ) async {
+    final repository = _FakeMatchPlaybackRepository(_replay(available: true));
+
+    // A phone in landscape is wider than 16:9 (here 800x300).
+    await _pumpBox(
+      tester,
+      repository,
+      onToggleFullscreen: () {},
+      fill: true,
+      box: const Size(800, 300),
+    );
+
+    final size = tester.getSize(
+      find.byKey(const ValueKey<String>('match-replay-player')),
+    );
+    expect(size.width, closeTo(800, 0.5));
+    expect(size.height, closeTo(300, 0.5));
   });
 
   testWidgets('sound button toggles the replay mute icon', (tester) async {

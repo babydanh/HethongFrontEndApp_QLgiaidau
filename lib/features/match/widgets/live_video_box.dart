@@ -111,9 +111,9 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
           fullscreen: widget.fullscreen,
           onToggleFullscreen: widget.onToggleFullscreen,
         );
-        // The replay is just the 16:9 picture now (controls float over it),
-        // so in a bounded landscape box it only needs centring.
-        return widget.fill ? Center(child: player) : player;
+        // In a bounded landscape box the player fills it (see
+        // MatchReplayPlayer.fullscreen); inline it keeps its 16:9 shape.
+        return player;
       },
       orElse: () => const _NoSignalBox(),
     );

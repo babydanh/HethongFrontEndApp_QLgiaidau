@@ -2246,26 +2246,37 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           decoration: BoxDecoration(
             color: Colors.black,
             borderRadius: BorderRadius.zero,
-            border: Border.all(color: context.colors.border, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            // Fullscreen landscape is edge to edge: no border or shadow.
+            border: landscape
+                ? null
+                : Border.all(color: context.colors.border, width: 1),
+            boxShadow: landscape
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Stack(
+            // Landscape: the picture reaches under the camera cutout (the
+            // overlays stay inside the SafeArea of the parent).
+            clipBehavior: landscape ? Clip.none : Clip.hardEdge,
             children: [
               // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
               // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
-              LiveVideoBox(
-                matchId: widget.matchId,
-                showStreamStats: _canSeeStreamStats(effectiveId),
-                fill: landscape,
-                fullscreen: landscape,
-                onToggleFullscreen: _toggleFullscreen,
-                showLiveDot: match.isLive && !match.isStaleLive,
+              _wrapVideoUnderCutout(
+                landscape,
+                LiveVideoBox(
+                  matchId: widget.matchId,
+                  showStreamStats: _canSeeStreamStats(effectiveId),
+                  fill: landscape,
+                  fullscreen: landscape,
+                  onToggleFullscreen: _toggleFullscreen,
+                  showLiveDot: match.isLive && !match.isStaleLive,
+                ),
               ),
 
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
@@ -2778,6 +2789,20 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         text: referee,
       ),
     ];
+  }
+
+  /// In landscape, stretches [video] over the camera cutout / rounded corners
+  /// by the amount the parent SafeArea insets it; portrait leaves it as is.
+  Widget _wrapVideoUnderCutout(bool landscape, Widget video) {
+    if (!landscape) return video;
+    final inset = MediaQuery.of(context).padding;
+    return Positioned(
+      left: -inset.left,
+      right: -inset.right,
+      top: 0,
+      bottom: 0,
+      child: video,
+    );
   }
 
   /// Landscape: the video fills the screen, the chat floats over its right side.

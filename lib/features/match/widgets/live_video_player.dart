@@ -228,7 +228,10 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                 children: [
                   if (ready)
                     FittedBox(
-                      fit: BoxFit.contain,
+                      // Landscape fullscreen fills the whole screen (crops the
+                      // edges of a 16:9 picture on a wider phone) instead of
+                      // leaving black side bars.
+                      fit: widget.fill ? BoxFit.cover : BoxFit.contain,
                       child: SizedBox(
                         width: controller.value.size.width,
                         height: controller.value.size.height,

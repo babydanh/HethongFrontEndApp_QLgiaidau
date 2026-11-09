@@ -303,18 +303,23 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final controller = _controller;
-    return ColoredBox(
-      key: const ValueKey<String>('match-replay-player'),
-      color: Colors.black,
-      // The picture is the whole player: controls float over its bottom edge
-      // like the live player, instead of a black strip underneath.
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Stack(
+    final picture = Stack(
           fit: StackFit.expand,
           children: [
             if (controller != null && controller.value.isInitialized)
-              VideoPlayer(controller)
+              widget.fullscreen
+                  // Fullscreen fills the screen, cropping a 16:9 picture on a
+                  // wider phone instead of leaving black side bars.
+                  ? FittedBox(
+                      fit: BoxFit.cover,
+                      clipBehavior: Clip.hardEdge,
+                      child: SizedBox(
+                        width: controller.value.size.width,
+                        height: controller.value.size.height,
+                        child: VideoPlayer(controller),
+                      ),
+                    )
+                  : VideoPlayer(controller)
             else
               Center(
                 child: _failed.length >= widget.replay.segments.length
@@ -337,8 +342,15 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
               child: _buildControls(l10n, controller),
             ),
           ],
-        ),
-      ),
+        );
+    return ColoredBox(
+      key: const ValueKey<String>('match-replay-player'),
+      color: Colors.black,
+      // The picture is the whole player: controls float over its bottom edge
+      // like the live player, instead of a black strip underneath.
+      child: widget.fullscreen
+          ? picture
+          : AspectRatio(aspectRatio: 16 / 9, child: picture),
     );
   }
 
