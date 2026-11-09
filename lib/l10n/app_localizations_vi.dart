@@ -19356,4 +19356,55 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cbdTennisMatchTiebreak =>
       'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)';
+
+  @override
+  String get bracketMgmt_manageTooltip => 'Quản lý';
+
+  @override
+  String get bracketMgmt_create => 'Tạo bracket';
+
+  @override
+  String get bracketMgmt_delete => 'Xoá bracket';
+
+  @override
+  String get bracketMgmt_minParticipants =>
+      'Cần ít nhất 2 người hoặc đội để tạo bracket.';
+
+  @override
+  String get bracketMgmt_createDone => 'Đã tạo bracket.';
+
+  @override
+  String get bracketMgmt_deleteConfirmTitle => 'Xoá bracket của nội dung này?';
+
+  @override
+  String bracketMgmt_deleteConfirmBody(int matchCount) {
+    return 'Toàn bộ $matchCount trận và lịch của riêng nội dung này sẽ bị xoá. Danh sách đăng ký và các nội dung khác được giữ nguyên. Không thể khôi phục.';
+  }
+
+  @override
+  String get bracketMgmt_deleteConfirm => 'Xác nhận xoá';
+
+  @override
+  String bracketMgmt_deleteDone(int stageCount, int matchCount) {
+    return 'Đã xoá bracket: $stageCount giai đoạn, $matchCount trận.';
+  }
+
+  @override
+  String get bracketMgmt_cancel => 'Quay lại';
+
+  @override
+  String get schedMgmt_courtsTooltip => 'Tạo sân và quản lý sân';
+
+  @override
+  String get schedMgmt_hoursTooltip => 'Khung giờ sân';
+
+  @override
+  String get schedMgmt_arrangeTooltip => 'Xếp lịch trận';
+
+  @override
+  String get schedMgmt_createCourtCta => 'Tạo sân';
+
+  @override
+  String get schedMgmt_emptyHint =>
+      'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.';
 }

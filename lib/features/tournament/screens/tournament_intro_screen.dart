@@ -84,6 +84,19 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshHeldDetail());
+  }
+
+  /// Data kept from an earlier visit is shown at once; fetch a fresh copy in
+  /// the background so it never stays stale. Nothing to do on a first open,
+  /// where the request is already in flight.
+  void _refreshHeldDetail() {
+    if (!mounted) return;
+    final provider = tournamentIntroWithInviteProvider((
+      id: widget.tournamentId,
+      invite: widget.inviteCode,
+    ));
+    if (ref.read(provider).hasValue) ref.invalidate(provider);
   }
 
   void _onScroll() {
@@ -176,6 +189,11 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       body: ColoredBox(
         color: context.colors.bgDark,
         child: tournamentAsync.when(
+          // A failed background refresh keeps the content already shown;
+          // only a revoked access replaces it.
+          skipError:
+              tournamentAsync.hasValue &&
+              !_isAccessDenied(tournamentAsync.error),
           data: (tournament) {
             if (tournament == null) {
               return NotFoundView(onGoHome: () => context.go('/home'));
@@ -418,16 +436,17 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
     );
   }
 
+  static bool _isAccessDenied(Object? err) =>
+      err != null &&
+      (err is TournamentAccessDeniedException ||
+          err.toString().contains('403') ||
+          err.toString().contains('nội bộ') ||
+          err.toString().contains('thành viên'));
+
   Widget _buildErrorState(Object err) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final isAccessDenied =
-        err is TournamentAccessDeniedException ||
-        err.toString().contains('403') ||
-        err.toString().contains('nội bộ') ||
-        err.toString().contains('thành viên');
-
-    if (isAccessDenied) {
+    if (_isAccessDenied(err)) {
       return SafeArea(
         child: Stack(
           children: [
@@ -1157,6 +1176,12 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
                       ? Image.network(
                           _resolveImageUrl(images.first),
                           fit: BoxFit.cover,
+                          // Brand placeholder instead of an empty banner
+                          // while the image is still downloading.
+                          frameBuilder: (ctx, child, frame, wasSync) =>
+                              wasSync || frame != null
+                              ? child
+                              : fallbackBanner(),
                           errorBuilder: (ctx, err, stack) => fallbackBanner(),
                         )
                       : fallbackBanner(),

@@ -7716,5 +7716,22 @@
   "cbdRallyBreakBetweenGames": "Nghỉ giữa game 120 giây, đổi sân",
   "cbdRallyChangeEnds": "Game cuối: đổi sân (một bên đạt 5)",
   "cbdTennisServe": "● GIAO",
-  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)"
+  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)",
+  "bracketMgmt_manageTooltip": "Quản lý",
+  "bracketMgmt_create": "Tạo bracket",
+  "bracketMgmt_delete": "Xoá bracket",
+  "bracketMgmt_minParticipants": "Cần ít nhất 2 người hoặc đội để tạo bracket.",
+  "bracketMgmt_createDone": "Đã tạo bracket.",
+  "bracketMgmt_deleteConfirmTitle": "Xoá bracket của nội dung này?",
+  "bracketMgmt_deleteConfirmBody": "Toàn bộ {matchCount} trận và lịch của riêng nội dung này sẽ bị xoá. Danh sách đăng ký và các nội dung khác được giữ nguyên. Không thể khôi phục.",
+  "@bracketMgmt_deleteConfirmBody": {"placeholders": {"matchCount": {"type": "int"}}},
+  "bracketMgmt_deleteConfirm": "Xác nhận xoá",
+  "bracketMgmt_deleteDone": "Đã xoá bracket: {stageCount} giai đoạn, {matchCount} trận.",
+  "@bracketMgmt_deleteDone": {"placeholders": {"stageCount": {"type": "int"}, "matchCount": {"type": "int"}}},
+  "bracketMgmt_cancel": "Quay lại",
+  "schedMgmt_courtsTooltip": "Tạo sân và quản lý sân",
+  "schedMgmt_hoursTooltip": "Khung giờ sân",
+  "schedMgmt_arrangeTooltip": "Xếp lịch trận",
+  "schedMgmt_createCourtCta": "Tạo sân",
+  "schedMgmt_emptyHint": "Chưa có sân nào. Tạo sân để bắt đầu xếp lịch."
 }
