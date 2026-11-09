@@ -780,6 +780,16 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     _scheduleLiveSync();
   }
 
+  /// Undo: puts the points and the serve of the current game back as they
+  /// were before a step the referee took (point, lose-serve, server pick).
+  void pickleballRestoreStep({
+    required RallySetState rally,
+    required PickleballServeState serve,
+  }) {
+    state = state.copyWith(rally: rally, pickleball: serve, errorMessage: null);
+    _scheduleLiveSync();
+  }
+
   /// Who serves, in the shape `_hydrateState` reads back: without it the serve
   /// falls back to team 1 at the opening serve whenever the match is reopened.
   Map<String, dynamic>? _pickleballLiveState() {

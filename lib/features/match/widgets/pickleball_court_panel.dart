@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/pickleball_court_not
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.dart';
 import 'package:app_quanly_giaidau/features/match/utils/court_drag.dart';
+import 'package:app_quanly_giaidau/features/match/utils/court_undo.dart';
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_dialogs.dart';
@@ -57,6 +58,9 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
   /// and, if one was asked for, run once the last action is done.
   int _pendingApplies = 0;
   bool _syncSkipped = false;
+
+  /// Scoring steps the referee can take back, oldest first (session only).
+  List<ScoreUndoStep> _undoSteps = const [];
 
   @override
   void initState() {
@@ -142,7 +146,77 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     );
   }
 
+  /// Runs one scoring action and remembers how things were before it, so undo
+  /// can take it back. Nothing is remembered when the action changed nothing
+  /// (a rejected point) or closed a game (older steps no longer apply).
+  void _runScoringStep(void Function() action) {
+    final before = ref.read(scorePanelNotifierProvider(widget.params));
+    final court = ref.read(pickleballCourtNotifierProvider(widget.params));
+    action();
+    final after = ref.read(scorePanelNotifierProvider(widget.params));
+    if (after.finishedSets.length != before.finishedSets.length) return;
+    final rally = before.rally ?? const RallySetState();
+    final serve = before.pickleball ?? const PickleballServeState();
+    final unchanged =
+        after.rally?.currentP1 == rally.currentP1 &&
+        after.rally?.currentP2 == rally.currentP2 &&
+        after.pickleball?.isTeam1Serving == serve.isTeam1Serving &&
+        after.pickleball?.serverNumber == serve.serverNumber &&
+        after.pickleball?.openingDone == serve.openingDone;
+    if (unchanged) return;
+    setState(() {
+      _undoSteps = pushUndoStep(
+        _undoSteps,
+        ScoreUndoStep(
+          rally: rally,
+          serve: serve,
+          court: court,
+          finishedSetCount: before.finishedSets.length,
+        ),
+      );
+    });
+  }
+
+  /// Takes back the newest thing the referee did: a court edit made after the
+  /// last scoring step first, then scoring steps one by one.
+  void _undo() {
+    final score = ref.read(scorePanelNotifierProvider(widget.params));
+    final court = ref.read(pickleballCourtNotifierProvider(widget.params));
+    final action = resolveUndoAction(
+      _undoSteps,
+      courtDepth: court.history.length,
+      finishedSetCount: score.finishedSets.length,
+    );
+    if (action == UndoAction.court) {
+      unawaited(_apply((state, _) => undoCourtChange(state)));
+      return;
+    }
+    if (action != UndoAction.score) return;
+    final step = _undoSteps.last;
+    setState(() => _undoSteps = _undoSteps.sublist(0, _undoSteps.length - 1));
+    ref
+        .read(scorePanelNotifierProvider(widget.params).notifier)
+        .pickleballRestoreStep(rally: step.rally, serve: step.serve);
+    unawaited(_apply((_, _) => step.court));
+  }
+
   void _changeScore(
+    int team,
+    bool increment, {
+    required bool isSideOut,
+    required CourtContext court,
+  }) {
+    _runScoringStep(
+      () => _applyScoreChange(
+        team,
+        increment,
+        isSideOut: isSideOut,
+        court: court,
+      ),
+    );
+  }
+
+  void _applyScoreChange(
     int team,
     bool increment, {
     required bool isSideOut,
@@ -175,9 +249,11 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
   /// đặt ngay sau đó.
   void _setServingTeam(int team, CourtContext court) {
     if (court.servingTeam == team) return;
-    ref
-        .read(scorePanelNotifierProvider(widget.params).notifier)
-        .pickleballSetServingTeam(team == 1);
+    _runScoringStep(
+      () => ref
+          .read(scorePanelNotifierProvider(widget.params).notifier)
+          .pickleballSetServingTeam(team == 1),
+    );
   }
 
   /// Bên nhận thắng pha bóng: đôi đi từng bước (người giao 1 → 2 → đội kia) qua
@@ -306,9 +382,11 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
     final layout = resolveCourtLayout(court, context);
     final server = layout.serverPlayerIndex;
     if (server == null || layout.callServerNumber == number) return;
-    ref
-        .read(scorePanelNotifierProvider(widget.params).notifier)
-        .pickleballSetServerNumber(number);
+    _runScoringStep(
+      () => ref
+          .read(scorePanelNotifierProvider(widget.params).notifier)
+          .pickleballSetServerNumber(number),
+    );
     unawaited(_apply((state, ctx) => setServerTurn(state, ctx, 1 - server)));
   }
 
@@ -394,8 +472,15 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
               onTap: score.hasNoPoints ? _changeScoring : null,
             )
           : null,
-      onUndo: canEdit && court.history.isNotEmpty
-          ? () => unawaited(_apply((state, _) => undoCourtChange(state)))
+      onUndo:
+          canEdit &&
+              resolveUndoAction(
+                    _undoSteps,
+                    courtDepth: court.history.length,
+                    finishedSetCount: score.finishedSets.length,
+                  ) !=
+                  null
+          ? _undo
           : null,
       onRestoreAutomatic: canEdit
           ? () => unawaited(_apply(restoreAutomaticCourt))
