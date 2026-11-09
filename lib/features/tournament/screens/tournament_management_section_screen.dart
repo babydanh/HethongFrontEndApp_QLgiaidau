@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
-import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_brands_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
@@ -38,12 +37,10 @@ enum TournamentManagementSection {
   registration,
   divisions,
   teams,
-  draw,
   sponsors,
   finance,
   livestream,
   permissions,
-  liveOperations,
 }
 
 /// The exact thing a manager tapped on the overview; the section opens
@@ -126,17 +123,9 @@ class TournamentManagementSectionScreen extends ConsumerWidget {
         tournamentId: tournament.id,
         communityId: tournament.communityId,
       ),
-    TournamentManagementSection.liveOperations => OrganizerOpsScreen(
-      tournamentId: tournament.id,
-      isEmbedded: true,
-    ),
     TournamentManagementSection.teams => _ExistingOperationsDestination(
       route: '$actionRouteBase/teams',
       icon: Icons.groups_rounded,
-    ),
-    TournamentManagementSection.draw => _ExistingOperationsDestination(
-      route: '$actionRouteBase/draw',
-      icon: Icons.casino_rounded,
     ),
   };
 }
