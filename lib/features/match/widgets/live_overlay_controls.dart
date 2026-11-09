@@ -6,8 +6,13 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
-/// Chừa đúng chiều cao thanh điều khiển video (6 + 44 + 6) phía dưới overlay.
+/// Chiều cao thanh điều khiển video (6 + 44 + 6): overlay nằm trên nó khi thanh
+/// đang hiện.
 const double liveOverlayBottomInset = 64;
+
+/// Gap between an overlay and the picture's bottom edge while the control bar
+/// is hidden.
+const double liveOverlayRestingInset = 8;
 
 /// Overlays are drawn for a 400dp-wide video at 70% of their old size; a
 /// narrower video shrinks them further (floor 0.55 of that), a wider one never

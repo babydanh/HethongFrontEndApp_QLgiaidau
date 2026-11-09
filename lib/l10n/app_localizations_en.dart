@@ -16300,6 +16300,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get matchReplayFinished => 'Replay finished.';
 
   @override
+  String get matchReplaySkipBack => 'Back 3 seconds';
+
+  @override
+  String get matchReplaySkipForward => 'Forward 3 seconds';
+
+  @override
+  String get matchPictureInPicture => 'Mini player';
+
+  @override
   String get rankingTierSourceDupr => 'Tiers powered by DUPR';
 
   @override

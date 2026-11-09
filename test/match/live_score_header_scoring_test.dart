@@ -71,6 +71,7 @@ MatchModel _match({
   int round = 1,
   String? matchCode,
   bool h2hOverlayVisible = false,
+  bool bracketOverlayVisible = false,
   Map<String, dynamic>? scoreDetails,
 }) {
   return MatchModel(
@@ -92,8 +93,33 @@ MatchModel _match({
     refereeName: 'Trong tai A',
     scoreboardVisible: scoreboardVisible,
     h2hOverlayVisible: h2hOverlayVisible,
+    bracketOverlayVisible: bracketOverlayVisible,
   );
 }
+
+/// One knockout match for the bracket overlay; team names carry round/number.
+MatchModel _bracketMatch(int round, int number) {
+  return MatchModel(
+    id: 'bracket-$round-$number',
+    tournamentId: _tournamentId,
+    round: round,
+    matchNumber: number,
+    team1Id: 't-$round-$number-a',
+    team2Id: 't-$round-$number-b',
+    team1Name: 'R${round}M$number Alpha',
+    team2Name: 'R${round}M$number Beta',
+    status: 'SCHEDULED',
+    bracketPosition: BracketPosition(round: round, position: number),
+    updatedAt: DateTime.utc(2026, 10, 15),
+  );
+}
+
+/// Four, two and one match: three columns, the first one four cards tall.
+final _bracketMatches = [
+  for (var n = 1; n <= 4; n++) _bracketMatch(1, n),
+  for (var n = 1; n <= 2; n++) _bracketMatch(2, n),
+  _bracketMatch(3, 1),
+];
 
 final _livePlayback = MatchPlaybackModel.fromJson(<String, Object?>{
   'matchId': _matchId,
@@ -109,8 +135,9 @@ Future<void> _pumpLiveScreen(
   bool isViewer = true,
   bool? scoreAccess,
   bool withVideo = true,
+  Size size = const Size(390, 844),
 }) async {
-  tester.view.physicalSize = const Size(390, 844);
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(() {
     tester.view.resetPhysicalSize();
@@ -128,6 +155,9 @@ Future<void> _pumpLiveScreen(
           (ref, id) => Future.value(withVideo ? _livePlayback : null),
         ),
         matchReplayProvider.overrideWith((ref, id) => Future.value(null)),
+        bracketMatchesWithDivisionProvider.overrideWith(
+          (ref, params) => Stream.value(_bracketMatches),
+        ),
         matchScoreAccessProvider.overrideWith(
           (ref, id) => Future.value(scoreAccess),
         ),
@@ -561,5 +591,86 @@ void main() {
 
     expect(_appBarScoringIcon(), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+
+  group('TC-LIVEOVL-12 overlays sit on the picture', () {
+    testWidgets('H2H rests 8dp above the bottom of the video', (tester) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _refereeAuth,
+        match: _match(h2hOverlayVisible: true),
+        isViewer: true,
+        withVideo: false,
+      );
+
+      final video = tester.getRect(find.byType(LiveVideoBox));
+      final panel = tester.getRect(
+        find.byKey(const ValueKey('live-h2h-panel')),
+      );
+      expect(video.bottom - panel.bottom, closeTo(8, 1));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('H2H lifts above the control bar while the bar is showing', (
+      tester,
+    ) async {
+      await _pumpLiveScreen(
+        tester,
+        auth: _refereeAuth,
+        match: _match(h2hOverlayVisible: true),
+        isViewer: true,
+      );
+      // The test player never gets a stream, so its bar stays up: one frame
+      // delivers the report, the next ones slide the overlay up.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final video = tester.getRect(find.byType(LiveVideoBox));
+      final panel = tester.getRect(
+        find.byKey(const ValueKey('live-h2h-panel')),
+      );
+      expect(
+        video.bottom - panel.bottom,
+        closeTo(liveOverlayBottomInset, 1),
+      );
+    });
+
+    for (final width in [400.0, 360.0]) {
+      testWidgets('whole bracket fits inside its frame on a ${width}dp video', (
+        tester,
+      ) async {
+        await _pumpLiveScreen(
+          tester,
+          auth: _refereeAuth,
+          match: _match(bracketOverlayVisible: true),
+          isViewer: true,
+          withVideo: false,
+          size: Size(width, 844),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+
+        final panel = tester.getRect(
+          find.byKey(const ValueKey('live-bracket-panel')),
+        );
+        final video = tester.getRect(find.byType(LiveVideoBox));
+        expect(video.width, closeTo(width, 2.5)); // minus the 1dp border
+        expect(video.height, closeTo(width * 9 / 16, 2.5));
+        expect(panel.width, lessThanOrEqualTo(width * 0.8 + 0.5));
+        for (final match in _bracketMatches) {
+          final card = find.textContaining(
+            'R${match.round}M${match.matchNumber} Alpha',
+          );
+          expect(card, findsOneWidget, reason: match.id);
+          final rect = tester.getRect(card);
+          expect(
+            panel.inflate(0.5).contains(rect.topLeft) &&
+                panel.inflate(0.5).contains(rect.bottomRight),
+            isTrue,
+            reason: '${match.id} $rect outside $panel',
+          );
+        }
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

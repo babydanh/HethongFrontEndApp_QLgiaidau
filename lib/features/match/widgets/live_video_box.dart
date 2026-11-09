@@ -47,9 +47,13 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     this.fullscreen = false,
     this.onToggleFullscreen,
     this.showLiveDot = false,
+    this.onControlsVisibleChanged,
   });
 
   final String matchId;
+
+  /// Forwarded to whichever player shows: true while its control bar is up.
+  final ValueChanged<bool>? onControlsVisibleChanged;
 
   /// Forwarded to the live player: red LIVE dot beside the sound button.
   final bool showLiveDot;
@@ -95,6 +99,7 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         fullscreen: widget.fullscreen,
         onToggleFullscreen: widget.onToggleFullscreen,
         showLiveDot: widget.showLiveDot,
+        onControlsVisibleChanged: widget.onControlsVisibleChanged,
       );
     }
 
@@ -110,6 +115,7 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
           replay: value,
           fullscreen: widget.fullscreen,
           onToggleFullscreen: widget.onToggleFullscreen,
+          onControlsVisibleChanged: widget.onControlsVisibleChanged,
         );
         // The replay is just the 16:9 picture now (controls float over it),
         // so in a bounded landscape box it only needs centring.

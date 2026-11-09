@@ -35,9 +35,13 @@ class LiveVideoPlayer extends StatefulWidget {
     this.fullscreen = false,
     this.onToggleFullscreen,
     this.showLiveDot = false,
+    this.onControlsVisibleChanged,
   });
 
   final String url;
+
+  /// Reports whether the control bar is up, so overlays can make room.
+  final ValueChanged<bool>? onControlsVisibleChanged;
 
   /// Fill the parent's bounded height instead of sizing by aspect ratio
   /// (landscape fullscreen).
@@ -68,7 +72,11 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
 
   VideoPlayerController? _controller;
   Timer? _hideTimer;
-  bool _muted = true;
+  // A phone has no autoplay block for sound, so the stream opens with sound
+  // on like the Web replay; the sound button still mutes.
+  bool _muted = false;
+  bool? _reportedVisible;
+
   /// Tỉ lệ khung hình của luồng. Lúc stream chưa có metadata thì tạm dùng 16/9,
   /// rồi thay bằng tỉ lệ thật ngay khi player khởi tạo xong.
   double _aspectRatio = 16 / 9;
@@ -76,7 +84,6 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
   bool _controlsVisible = true;
   bool _behindLive = false;
   String? _error;
-
 
   @override
   void initState() {
@@ -160,9 +167,19 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
       if (mounted) setState(() => _controlsVisible = false);
     });
   }
+
   void _revealControls() {
     setState(() => _controlsVisible = true);
     _scheduleHide();
+  }
+
+  /// Tells the page when the bar changes, so overlays can make room.
+  void _reportControlsVisible(bool visible) {
+    if (_reportedVisible == visible) return;
+    _reportedVisible = visible;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onControlsVisibleChanged?.call(visible);
+    });
   }
 
   void _toggleMute() {
@@ -172,7 +189,6 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     controller.setVolume(_muted ? 0 : 1);
     _revealControls();
   }
-
 
   void _goLive() {
     final controller = _controller;
@@ -194,8 +210,6 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     _revealControls();
   }
 
-
-
   @override
   void dispose() {
     _hideTimer?.cancel();
@@ -208,6 +222,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
     final controller = _controller;
     final ready = controller != null && controller.value.isInitialized;
     final visible = _controlsVisible || !ready;
+    _reportControlsVisible(visible);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(widget.fill ? 0 : AppTheme.radiusXL),
@@ -315,9 +330,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                           child: Row(
                             children: [
                               _ControlButton(
-                                icon: _playing
-                                    ? Icons.pause
-                                    : Icons.play_arrow,
+                                icon: _playing ? Icons.pause : Icons.play_arrow,
                                 label: _playing ? 'Tạm dừng' : 'Phát',
                                 onPressed: _togglePlay,
                               ),
@@ -337,7 +350,9 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                                 TextButton(
                                   onPressed: _goLive,
                                   child: Text(
-                                    AppLocalizations.of(context)!.liveBackToLive,
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.liveBackToLive,
                                     style: const TextStyle(
                                       color: Color(0xFFEF4444),
                                       fontSize: 12,

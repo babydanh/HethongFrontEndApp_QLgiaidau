@@ -150,6 +150,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   LiveOverlayKind? _pendingOverlayKind;
   // Overlay bị nút đóng ẩn cục bộ; đổi cờ server sẽ xóa trạng thái này.
   LiveOverlayKind? _dismissedOverlay;
+
+  /// True while the video's control bar is up (reported by the player); the
+  /// H2H / bracket overlays then sit on top of it instead of under its buttons.
+  bool _videoControlsVisible = false;
   final List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = false;
   StreamSubscription? _commentSub;
@@ -1927,6 +1931,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
           child: LiveOverlayCloseFrame(
             onClose: onClose,
             child: SizedBox(
+              key: const ValueKey('live-bracket-panel'),
               width: constraints.maxWidth * 0.8,
               height: constraints.maxHeight * 0.72,
               child: GestureDetector(
@@ -2043,14 +2048,18 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                                         if (scoped.isEmpty) {
                                           return _bracketEmpty(l10n);
                                         }
+                                        // The whole diagram is shrunk to fit
+                                        // the frame; pinch to zoom in and pan.
                                         return InteractiveViewer(
-                                          constrained: false,
-                                          minScale: 0.8,
-                                          maxScale: 3,
-                                          child: _bracketRounds(
-                                            match,
-                                            scoped,
-                                            l10n,
+                                          minScale: 1,
+                                          maxScale: 4,
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: _bracketRounds(
+                                              match,
+                                              scoped,
+                                              l10n,
+                                            ),
                                           ),
                                         );
                                       },
@@ -2278,6 +2287,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         : serverOverlay;
     final landscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
+    // Overlays rest just above the picture's bottom edge and ride up over the
+    // control bar while it shows.
+    final overlayBottom = _videoControlsVisible && _isVideoShowing()
+        ? liveOverlayBottomInset
+        : liveOverlayRestingInset;
 
     // ─── Live Video Stream Player Box (Mockup) ───
     final videoBox = Container(
@@ -2309,6 +2323,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 fullscreen: landscape,
                 onToggleFullscreen: _toggleFullscreen,
                 showLiveDot: match.isLive && !match.isStaleLive,
+                onControlsVisibleChanged: (visible) {
+                  if (mounted && visible != _videoControlsVisible) {
+                    setState(() => _videoControlsVisible = visible);
+                  }
+                },
               ),
 
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
@@ -2351,10 +2370,12 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
               // Overlay theo cờ server: một overlay một lúc, 240 ms easeOutCubic.
-              Positioned(
+              AnimatedPositioned(
+                duration: liveOverlayMotionDuration(context),
+                curve: liveOverlayMotionCurve,
                 left: 0,
                 right: 0,
-                bottom: liveOverlayBottomInset,
+                bottom: overlayBottom,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
                   reverseDuration: liveOverlayReverseDuration(context),
@@ -2380,13 +2401,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                         ),
                 ),
               ),
-              Positioned(
+              AnimatedPositioned(
+                duration: liveOverlayMotionDuration(context),
+                curve: liveOverlayMotionCurve,
                 left: 0,
                 right: 0,
                 // Leave the header strip clear so its buttons never cover the
                 // overlay's own close button.
                 top: _viewerHeaderHeight,
-                bottom: liveOverlayBottomInset,
+                bottom: overlayBottom,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
                   reverseDuration: liveOverlayReverseDuration(context),

@@ -6543,6 +6543,9 @@
   "matchReplayPlay": "Phát",
   "matchReplayPause": "Tạm dừng",
   "matchReplayFinished": "Đã phát hết bản ghi",
+  "matchReplaySkipBack": "Lùi 3 giây",
+  "matchReplaySkipForward": "Tiến 3 giây",
+  "matchPictureInPicture": "Cửa sổ nhỏ",
   "rankingTierSourceDupr": "Bậc theo DUPR",
   "rankingTierDuprFrom": "Từ {value}",
   "@rankingTierDuprFrom": {

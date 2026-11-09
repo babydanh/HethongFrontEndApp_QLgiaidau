@@ -118,9 +118,9 @@ void main() {
       find.byKey(const ValueKey<String>('match-replay-player')),
     );
     expect(size.height, closeTo(320 * 9 / 16, 0.5));
-    // Same controls as the live player: play, sound (muted by default),
+    // Same controls as the live player: play, sound (on by default),
     // timeline and fullscreen, all inside the picture.
-    expect(find.byIcon(Icons.volume_off), findsOneWidget);
+    expect(find.byIcon(Icons.volume_up), findsOneWidget);
     expect(find.byIcon(Icons.fullscreen), findsOneWidget);
     expect(
       find.byKey(const ValueKey<String>('match-replay-timeline')),
@@ -130,7 +130,7 @@ void main() {
       find.byKey(const ValueKey<String>('match-replay-player')),
     );
     expect(
-      picture.contains(tester.getCenter(find.byIcon(Icons.volume_off))),
+      picture.contains(tester.getCenter(find.byIcon(Icons.volume_up))),
       isTrue,
     );
   });
@@ -139,10 +139,10 @@ void main() {
     final repository = _FakeMatchPlaybackRepository(_replay(available: true));
 
     await _pumpBox(tester, repository);
-    await tester.tap(find.byIcon(Icons.volume_off));
+    await tester.tap(find.byIcon(Icons.volume_up));
     await tester.pump();
 
-    expect(find.byIcon(Icons.volume_up), findsOneWidget);
+    expect(find.byIcon(Icons.volume_off), findsOneWidget);
   });
 
   testWidgets(
