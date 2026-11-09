@@ -7690,5 +7690,10 @@
   "bracketMgmt_deleteConfirm": "Confirm delete",
   "bracketMgmt_deleteDone": "Bracket deleted: {stageCount} stages, {matchCount} matches.",
   "@bracketMgmt_deleteDone": {"placeholders": {"stageCount": {"type": "int"}, "matchCount": {"type": "int"}}},
-  "bracketMgmt_cancel": "Back"
+  "bracketMgmt_cancel": "Back",
+  "schedMgmt_courtsTooltip": "Create and manage courts",
+  "schedMgmt_hoursTooltip": "Court hours",
+  "schedMgmt_arrangeTooltip": "Schedule matches",
+  "schedMgmt_createCourtCta": "Create court",
+  "schedMgmt_emptyHint": "No courts yet. Create a court to start scheduling."
 }

@@ -7718,5 +7718,10 @@
   "bracketMgmt_deleteConfirm": "Xác nhận xoá",
   "bracketMgmt_deleteDone": "Đã xoá bracket: {stageCount} giai đoạn, {matchCount} trận.",
   "@bracketMgmt_deleteDone": {"placeholders": {"stageCount": {"type": "int"}, "matchCount": {"type": "int"}}},
-  "bracketMgmt_cancel": "Quay lại"
+  "bracketMgmt_cancel": "Quay lại",
+  "schedMgmt_courtsTooltip": "Tạo sân và quản lý sân",
+  "schedMgmt_hoursTooltip": "Khung giờ sân",
+  "schedMgmt_arrangeTooltip": "Xếp lịch trận",
+  "schedMgmt_createCourtCta": "Tạo sân",
+  "schedMgmt_emptyHint": "Chưa có sân nào. Tạo sân để bắt đầu xếp lịch."
 }
