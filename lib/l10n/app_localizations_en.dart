@@ -17539,6 +17539,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pair split. Both athletes are waiting for a partner.';
 
   @override
+  String get orgMgmtParticipantKick => 'Remove from tournament';
+
+  @override
+  String orgMgmtParticipantKickConfirm(String name) {
+    return 'Remove $name from the tournament?';
+  }
+
+  @override
+  String get orgMgmtParticipantKicked => 'Removed from the tournament.';
+
+  @override
   String get participantDetailContact => 'Contact';
 
   @override

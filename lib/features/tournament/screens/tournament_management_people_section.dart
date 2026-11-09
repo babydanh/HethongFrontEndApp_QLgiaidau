@@ -1,12 +1,14 @@
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/participant_row_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/permission_rows.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/participant_detail_sheet.dart';
@@ -292,6 +294,48 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
     }
   }
 
+  /// Loại khỏi giải: confirm rồi POST participants/:pid/kick với lý do mặc
+  /// định của Web (`kickDefaultReason`), làm mới danh sách.
+  Future<void> _kick(OrganizerOpsParticipant participant) async {
+    if (_busyParticipantId != null) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.orgMgmtParticipantKick,
+      message: l10n.orgMgmtParticipantKickConfirm(
+        participantLabel(
+          teamName: participant.teamName,
+          players: participant.players,
+        ),
+      ),
+      confirmLabel: l10n.orgMgmtParticipantKick,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() {
+      _busyParticipantId = participant.id;
+      _mutationError = null;
+    });
+    try {
+      await ref
+          .read(tournamentRepositoryProvider)
+          .kickParticipant(
+            tournamentId: widget.tournament.id,
+            participantId: participant.id,
+            reason: kickDefaultReason,
+          );
+      if (!mounted) return;
+      _reload();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.orgMgmtParticipantKicked)));
+    } catch (_) {
+      if (mounted) setState(() => _mutationError = 'error');
+    } finally {
+      if (mounted) setState(() => _busyParticipantId = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -381,6 +425,7 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
                       _setParticipantStatus(participant, 'REJECTED'),
                   onOpenDetail: () => _openDetail(participant),
                   onUnpair: () => _unpair(participant),
+                  onKick: () => _kick(participant),
                 ),
                 Divider(height: 1, color: context.colors.border),
               ],
@@ -1004,6 +1049,7 @@ class _ParticipantCard extends StatelessWidget {
     required this.onReject,
     required this.onOpenDetail,
     required this.onUnpair,
+    required this.onKick,
     required this.showPresence,
     required this.isPresent,
     required this.onTogglePresence,
@@ -1018,6 +1064,7 @@ class _ParticipantCard extends StatelessWidget {
   final VoidCallback onReject;
   final VoidCallback onOpenDetail;
   final VoidCallback onUnpair;
+  final VoidCallback onKick;
 
   /// Whether the check-in circle shows (not while registration is open).
   final bool showPresence;
@@ -1033,6 +1080,9 @@ class _ParticipantCard extends StatelessWidget {
         'COMPLETED',
         'CANCELLED',
       }.contains(tournamentStatus.toUpperCase());
+
+  bool get _canKick =>
+      canKickParticipant(participant.teamStatus, tournamentStatus);
 
   @override
   Widget build(BuildContext context) {
@@ -1101,8 +1151,8 @@ class _ParticipantCard extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         ..._trailing(context, l10n, status, pending),
-        // Menu dòng: Tách cặp (task 3.3) — chỉ khi server cho phép.
-        if (_canUnpair)
+        // Menu dòng như Web: Tách cặp (server cho phép) và Loại khỏi giải.
+        if (_canUnpair || _canKick)
           PopupMenuButton<String>(
             key: ValueKey('participant-row-menu-${participant.id}'),
             tooltip: l10n.participantRowActions(rowLabel),
@@ -1110,13 +1160,24 @@ class _ParticipantCard extends StatelessWidget {
             icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
             onSelected: (value) {
               if (value == 'unpair') onUnpair();
+              if (value == 'kick') onKick();
             },
             itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                key: ValueKey('participant-unpair-${participant.id}'),
-                value: 'unpair',
-                child: Text(l10n.participantUnpair),
-              ),
+              if (_canUnpair)
+                PopupMenuItem<String>(
+                  key: ValueKey('participant-unpair-${participant.id}'),
+                  value: 'unpair',
+                  child: Text(l10n.participantUnpair),
+                ),
+              if (_canKick)
+                PopupMenuItem<String>(
+                  key: ValueKey('participant-kick-${participant.id}'),
+                  value: 'kick',
+                  child: Text(
+                    l10n.orgMgmtParticipantKick,
+                    style: TextStyle(color: colors.error),
+                  ),
+                ),
             ],
           ),
       ],

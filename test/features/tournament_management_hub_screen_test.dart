@@ -1092,7 +1092,8 @@ void main() {
 
     // Nhóm Hệ thống luôn mở: các mục nằm sẵn trong danh sách.
     expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
-    expect(find.text(l10n.manageTeams), findsOneWidget);
+    // Quản lý đội/VĐV đã bỏ khỏi Cài đặt: dùng tab VĐV.
+    expect(find.text(l10n.manageTeams), findsNothing);
     expect(find.text(l10n.manageDraw), findsOneWidget);
     expect(find.text(l10n.tournamentManagementSponsors), findsOneWidget);
     expect(find.text(l10n.tournamentManagementFinance), findsOneWidget);

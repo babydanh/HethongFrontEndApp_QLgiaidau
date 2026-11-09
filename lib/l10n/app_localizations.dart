@@ -31483,6 +31483,24 @@ abstract class AppLocalizations {
   /// **'Đã tách cặp. Hai VĐV đang chờ ghép lại.'**
   String get participantUnpaired;
 
+  /// No description provided for @orgMgmtParticipantKick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại khỏi giải'**
+  String get orgMgmtParticipantKick;
+
+  /// No description provided for @orgMgmtParticipantKickConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại {name} khỏi giải?'**
+  String orgMgmtParticipantKickConfirm(String name);
+
+  /// No description provided for @orgMgmtParticipantKicked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã loại khỏi giải.'**
+  String get orgMgmtParticipantKicked;
+
   /// No description provided for @participantDetailContact.
   ///
   /// In vi, this message translates to:

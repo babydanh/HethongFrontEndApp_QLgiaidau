@@ -252,6 +252,9 @@ void main() {
       mode: 'PUSH',
       courtId: null,
     ));
+    // PUSH vừa tạo: popup QR mở luôn, không qua hộp xác nhận, và xin key ngay.
+    expect(find.byType(StreamKeyQrSheet), findsOneWidget);
+    expect(server.streamKeyCalls, ['cam-100']);
     final card = _card('cam-100');
     expect(card, findsOneWidget);
     expect(
