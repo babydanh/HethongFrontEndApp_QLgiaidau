@@ -361,11 +361,19 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
         );
       case SwitchEnds():
         unawaited(_apply(swapEndsNow));
-      case SetServer(:final team, :final playerIndex):
+      // Handing the serve to the other team is one scoring step (taken just
+      // before by onSetServingTeam, court included): the ball move must not
+      // add a court undo entry, or undo would need two presses.
+      case SetServer(
+        :final team,
+        :final playerIndex,
+        :final changesServingTeam,
+      ):
         unawaited(
           _apply(
-            (state, context) =>
-                setServerOverride(state, context, team, playerIndex),
+            (state, context) => changesServingTeam
+                ? setServerAfterTeamChange(state, context, team, playerIndex)
+                : setServerOverride(state, context, team, playerIndex),
           ),
         );
       case SetServerNumber(:final number):
@@ -444,13 +452,12 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
           scoreNotifier.finishSetConfirmMessage() != null,
       pickWinnerEnabled: !score.isSubmitting,
       onScoreChange: canChangeScore
-          ? (team, increment) =>
-                _changeScore(
-                  team,
-                  increment,
-                  isSideOut: isSideOut,
-                  court: courtContext,
-                )
+          ? (team, increment) => _changeScore(
+              team,
+              increment,
+              isSideOut: isSideOut,
+              court: courtContext,
+            )
           : null,
       onSetServingTeam: canEdit && isSideOut
           ? (team) => _setServingTeam(team, courtContext)

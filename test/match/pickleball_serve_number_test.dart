@@ -453,6 +453,30 @@ void main() {
       expect(_serve(c).openingDone, isTrue);
     });
 
+    test('TC-SERVE-APP-04 manual team change at any score keeps the points; '
+        'picking the team that serves changes nothing', () {
+      final c = _container(
+        serve: const PickleballServeState(
+          isTeam1Serving: true,
+          serverNumber: 2,
+          openingDone: true,
+        ),
+        score1: 5,
+        score2: 3,
+      );
+
+      _panel(c).pickleballSetServingTeam(false);
+      final after = c.read(scorePanelNotifierProvider(_params));
+      expect(_serve(c).isTeam1Serving, isFalse);
+      expect(_serve(c).serverNumber, 1);
+      expect(_serve(c).openingDone, isTrue);
+      expect(after.rally!.currentP1, 5);
+      expect(after.rally!.currentP2, 3);
+
+      _panel(c).pickleballSetServingTeam(false);
+      expect(c.read(scorePanelNotifierProvider(_params)), same(after));
+    });
+
     test('a new game opens again: one fault, even after a hand-over', () {
       final c = _container(
         serve: const PickleballServeState(

@@ -223,7 +223,9 @@ class CourtState {
   }) => CourtState(
     startingRightTeam1: startingRightTeam1 ?? this.startingRightTeam1,
     startingRightTeam2: startingRightTeam2 ?? this.startingRightTeam2,
-    endsOverride: clearEndsOverride ? null : (endsOverride ?? this.endsOverride),
+    endsOverride: clearEndsOverride
+        ? null
+        : (endsOverride ?? this.endsOverride),
     autoSwitchEnds: autoSwitchEnds ?? this.autoSwitchEnds,
     midSetSwitchDone: midSetSwitchDone ?? this.midSetSwitchDone,
     serverOverride: clearServerOverride
@@ -487,12 +489,13 @@ CourtState swapEndsNow(CourtState state, CourtContext context) {
 }
 
 /// Bật/tắt tự đổi sân. Ghi history.
-CourtState setAutoSwitchEnds(CourtState state, CourtContext context, bool value) {
+CourtState setAutoSwitchEnds(
+  CourtState state,
+  CourtContext context,
+  bool value,
+) {
   final base = reconcileCourtState(state, context);
-  final next = _recordChange(
-    base,
-    (s) => s.copyWith(autoSwitchEnds: value),
-  );
+  final next = _recordChange(base, (s) => s.copyWith(autoSwitchEnds: value));
   return reconcileCourtState(next, context);
 }
 
@@ -513,6 +516,27 @@ CourtState setServerOverride(
     ),
   );
   return reconcileCourtState(next, context);
+}
+
+/// Đổi đội giao bằng tay ("Giao ở đây"/kéo bóng sang đội kia): [playerIndex]
+/// của [team] giao. Không ghi history: đổi đội là một bước hoàn tác của bảng
+/// điểm, bước đó đã giữ cả sân trước khi đổi, nên một lần hoàn tác trả lại tất
+/// cả (như Web).
+CourtState setServerAfterTeamChange(
+  CourtState state,
+  CourtContext context,
+  int team,
+  int playerIndex,
+) {
+  _checkTeam(team);
+  _checkPlayerIndex(playerIndex);
+  final base = reconcileCourtState(state, context);
+  return reconcileCourtState(
+    base.copyWith(
+      serverOverride: CourtServerOverride(team: team, playerIndex: playerIndex),
+    ),
+    context,
+  );
 }
 
 /// Sau khi số giao đổi (1↔2): đặt [serverIndex] làm người giao của lượt hiện tại

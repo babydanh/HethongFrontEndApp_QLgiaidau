@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_state.da
 import 'package:app_quanly_giaidau/features/match/utils/pickleball_court.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,6 +61,29 @@ class _LiveScorePanel extends ScorePanelNotifier {
     );
   }
 
+  /// Same rule as the real notifier: 0-0 reopens the game (single fault),
+  /// any other score is a plain side-out. The score never changes.
+  @override
+  void pickleballSetServingTeam(bool isTeam1) {
+    final pb = state.pickleball!;
+    if (pb.isTeam1Serving == isTeam1) return;
+    final r = state.rally!;
+    state = state.copyWith(
+      pickleball: pb.copyWith(
+        isTeam1Serving: isTeam1,
+        serverNumber: 1,
+        openingDone: r.currentP1 != 0 || r.currentP2 != 0,
+      ),
+    );
+  }
+
+  @override
+  void pickleballSetServerNumber(int number) {
+    final pb = state.pickleball!;
+    if (pb.serverNumber == number) return;
+    state = state.copyWith(pickleball: pb.copyWith(serverNumber: number));
+  }
+
   @override
   void pickleballRestoreStep({
     required RallySetState rally,
@@ -80,7 +104,29 @@ class _EchoCourtRepository extends Fake implements IMatchRepository {
   }, matchId);
 }
 
-Future<ProviderContainer> _pump(WidgetTester tester) async {
+/// Court context that follows the score panel, as the real provider does.
+CourtContext _contextFromScore(Ref ref, MatchControlParams params) {
+  final score = ref.watch(scorePanelNotifierProvider(params));
+  final serve = score.pickleball!;
+  return CourtContext(
+    score1: score.rally!.currentP1,
+    score2: score.rally!.currentP2,
+    isDoubles: true,
+    team1PlayerCount: 2,
+    team2PlayerCount: 2,
+    servingTeam: serve.isTeam1Serving ? 1 : 2,
+    serverNumber: serve.serverNumber,
+    scoringMode: CourtScoringMode.sideOut,
+    setIndex: 0,
+    targetPoints: 11,
+    isDecidingSet: false,
+  );
+}
+
+Future<ProviderContainer> _pump(
+  WidgetTester tester, {
+  bool followScore = false,
+}) async {
   tester.view.physicalSize = const Size(360, 700);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -99,23 +145,23 @@ Future<ProviderContainer> _pump(WidgetTester tester) async {
           ),
         ),
         pickleballCourtContextProvider.overrideWith(
-          (ref, params) => const CourtContext(
-            score1: 2,
-            score2: 1,
-            isDoubles: true,
-            team1PlayerCount: 2,
-            team2PlayerCount: 2,
-            servingTeam: 1,
-            serverNumber: 1,
-            scoringMode: CourtScoringMode.sideOut,
-            setIndex: 0,
-            targetPoints: 11,
-            isDecidingSet: false,
-          ),
+          (ref, params) => followScore
+              ? _contextFromScore(ref, params)
+              : const CourtContext(
+                  score1: 2,
+                  score2: 1,
+                  isDoubles: true,
+                  team1PlayerCount: 2,
+                  team2PlayerCount: 2,
+                  servingTeam: 1,
+                  serverNumber: 1,
+                  scoringMode: CourtScoringMode.sideOut,
+                  setIndex: 0,
+                  targetPoints: 11,
+                  isDecidingSet: false,
+                ),
         ),
-        scorePanelNotifierProvider.overrideWith2(
-          (arg) => _LiveScorePanel(arg),
-        ),
+        scorePanelNotifierProvider.overrideWith2((arg) => _LiveScorePanel(arg)),
         matchRepositoryProvider.overrideWithValue(_EchoCourtRepository()),
       ],
       child: MaterialApp(
@@ -158,11 +204,14 @@ void main() {
   testWidgets('TC-UNDO-APP-03 undo walks back point, lose-serve and point, '
       'as often as pressed', (tester) async {
     final container = await _pump(tester);
-    ScorePanelState read() => container.read(scorePanelNotifierProvider(_params));
+    ScorePanelState read() =>
+        container.read(scorePanelNotifierProvider(_params));
 
     await tester.tap(find.byTooltip('Add point for team 1')); // 3-1
     await tester.pump();
-    await tester.tap(find.byTooltip('Add point for team 2')); // lose serve -> server 2
+    await tester.tap(
+      find.byTooltip('Add point for team 2'),
+    ); // lose serve -> server 2
     await tester.pump();
     await tester.tap(find.byTooltip('Add point for team 1')); // 4-1
     await tester.pump();
@@ -184,5 +233,57 @@ void main() {
     expect(read().rally!.currentP2, 1);
 
     expect(_undoTap(tester), isNull, reason: 'nothing left to undo');
+  });
+
+  group('TC-SERVE-APP-03 manual serve change is one undo step', () {
+    testWidgets('give serve to the other team: score kept, one undo restores '
+        'team, number and court', (tester) async {
+      final container = await _pump(tester, followScore: true);
+      ScorePanelState read() =>
+          container.read(scorePanelNotifierProvider(_params));
+      CourtState court() =>
+          container.read(pickleballCourtNotifierProvider(_params));
+      final courtBefore = court();
+
+      await tester.tap(find.text('Bảo'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Give serve here'));
+      await tester.pumpAndSettle();
+      expect(read().pickleball!.isTeam1Serving, isFalse);
+      expect(read().pickleball!.serverNumber, 1);
+      expect(read().pickleball!.openingDone, isTrue);
+      expect(read().rally!.currentP1, 2);
+      expect(read().rally!.currentP2, 1);
+
+      await tester.tap(find.byTooltip('Undo'));
+      await tester.pumpAndSettle();
+      expect(read().pickleball!.isTeam1Serving, isTrue);
+      expect(read().pickleball!.serverNumber, 1);
+      expect(read().pickleball!.openingDone, isTrue);
+      expect(court().serverOverride, courtBefore.serverOverride);
+      expect(court().history, isEmpty);
+      expect(_undoTap(tester), isNull, reason: 'one step only');
+    });
+
+    testWidgets('serve 1 -> 2: score kept, one undo puts serve 1 back', (
+      tester,
+    ) async {
+      final container = await _pump(tester, followScore: true);
+      ScorePanelState read() =>
+          container.read(scorePanelNotifierProvider(_params));
+
+      await tester.tap(find.text('L. Anh'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Make server 2'));
+      await tester.pumpAndSettle();
+      expect(read().pickleball!.isTeam1Serving, isTrue);
+      expect(read().pickleball!.serverNumber, 2);
+      expect(read().rally!.currentP1, 2);
+
+      await tester.tap(find.byTooltip('Undo'));
+      await tester.pumpAndSettle();
+      expect(read().pickleball!.serverNumber, 1);
+      expect(_undoTap(tester), isNull, reason: 'one step only');
+    });
   });
 }
