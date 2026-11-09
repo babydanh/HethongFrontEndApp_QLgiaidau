@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/data/models/standalone_match_owner.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
@@ -14,7 +15,11 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 
-/// Tab "Trận đấu" bên trong một buổi Social đã gắn CLB (`communityId`).
+/// Tab "Trận đấu" bên trong một buổi Social.
+///
+/// - Buổi gắn CLB (`communityId`): hành vi cũ, danh sách theo CLB.
+/// - Buổi cá nhân (không CLB): danh sách lọc đúng theo `socialSessionId`,
+///   chỉ host được tạo trận, ghép đội từ người tham gia có tài khoản (như Web).
 ///
 /// Tái dùng nguyên [ClubStandaloneMatchDialog] (ghép đội thủ công) và
 /// [ClubStandaloneMatchResultDialog] (nhập kết quả) của CLB — không viết
@@ -23,12 +28,16 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 /// `them-tab-tao-tran-trong-social`): trận hiển thị là của cả CLB, không chỉ
 /// riêng buổi này.
 class SocialMatchTab extends ConsumerStatefulWidget {
-  final String communityId;
+  final String? communityId;
+  final String sessionId;
+  final bool isHost;
   final List<SocialParticipantModel> approvedParticipants;
 
   const SocialMatchTab({
     super.key,
-    required this.communityId,
+    this.communityId,
+    required this.sessionId,
+    this.isHost = false,
     required this.approvedParticipants,
   });
 
@@ -42,11 +51,16 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   String? _loadError;
   Set<String> _clubMemberUserIds = const {};
 
+  late final StandaloneMatchOwner _owner = StandaloneMatchOwner.forSession(
+    communityId: widget.communityId,
+    sessionId: widget.sessionId,
+  );
+
   @override
   void initState() {
     super.initState();
     _fetchMatches();
-    _fetchClubMemberIds();
+    if (!_owner.isPersonalSession) _fetchClubMemberIds();
   }
 
   Future<void> _fetchMatches() async {
@@ -56,7 +70,10 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     });
     try {
       final repo = ref.read(clubMatchSessionRepositoryProvider);
-      final matches = await repo.standaloneMatches(widget.communityId);
+      final matches = await repo.standaloneMatches(
+        _owner.communityId,
+        socialSessionId: _owner.socialSessionId,
+      );
       if (!mounted) return;
       setState(() {
         _matches = matches;
@@ -77,7 +94,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     try {
       final repo = ref.read(communityRepositoryProvider);
       final members = await repo.getMembers(
-        widget.communityId,
+        _owner.communityId!,
         limit: 100,
         status: 'JOINED',
       );
@@ -95,12 +112,16 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   /// `ClubStandaloneMatchDialog` đã biết cách hiển thị/ghép đội.
   List<CommunityMemberModel> get _preselectedMembers => widget
       .approvedParticipants
-      .where((p) => !p.isGuest && _clubMemberUserIds.contains(p.userId))
+      .where(
+        (p) =>
+            !p.isGuest &&
+            (_owner.isPersonalSession || _clubMemberUserIds.contains(p.userId)),
+      )
       .map(
         (p) => CommunityMemberModel(
           id: p.id,
           userId: p.userId,
-          communityId: widget.communityId,
+          communityId: _owner.communityId ?? '',
           status: 'JOINED',
           userFullName: p.fullName,
           userAvatarUrl: p.avatarUrl,
@@ -110,15 +131,17 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       .toList(growable: false);
 
   bool _canCreateMatch() {
+    if (_owner.isPersonalSession) return widget.isHost;
+    final communityId = _owner.communityId!;
     final membership = ref
-        .watch(myCommunityMembershipProvider(widget.communityId))
+        .watch(myCommunityMembershipProvider(communityId))
         .asData
         ?.value;
     if (membership?.status.toUpperCase() != 'JOINED') return false;
     final role = (membership?.role ?? '').toUpperCase();
     final isManager = const {'OWNER', 'ADMIN', 'MODERATOR'}.contains(role);
     final settings = ref
-        .watch(communitySocialSettingsProvider(widget.communityId))
+        .watch(communitySocialSettingsProvider(communityId))
         .asData
         ?.value;
     return isManager || settings?.memberMatchCreationEnabled != false;
@@ -127,7 +150,8 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   Future<void> _createMatch() async {
     final createdMatch = await ClubStandaloneMatchDialog.show(
       context,
-      communityId: widget.communityId,
+      communityId: _owner.communityId,
+      socialSessionId: _owner.socialSessionId,
       preselectedMembers: _preselectedMembers,
       onMatchCreated: _fetchMatches,
     );
@@ -212,7 +236,9 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
             children: [
               Expanded(
                 child: Text(
-                  l10n.social_matchListNote,
+                  _owner.isPersonalSession
+                      ? 'Các trận đấu được tạo trong buổi này.'
+                      : l10n.social_matchListNote,
                   style: TextStyle(fontSize: 11.5, color: colors.textMuted),
                 ),
               ),
@@ -280,7 +306,9 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
               ),
               const SizedBox(height: 10),
               Text(
-                l10n.social_matchEmptyTitle,
+                _owner.isPersonalSession
+                    ? 'Chưa có trận đấu nào trong buổi này.'
+                    : l10n.social_matchEmptyTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13.5, color: colors.textSecondary),
               ),

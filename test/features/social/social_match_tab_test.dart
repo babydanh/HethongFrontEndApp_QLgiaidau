@@ -21,12 +21,15 @@ class _FakeMatchSessionRepository extends Fake
 
   final List<ClubSessionMatchModel> standaloneMatchesToReturn;
   String? lastCommunityId;
+  String? lastSocialSessionId;
 
   @override
   Future<List<ClubSessionMatchModel>> standaloneMatches(
-    String communityId,
-  ) async {
+    String? communityId, {
+    String? socialSessionId,
+  }) async {
     lastCommunityId = communityId;
+    lastSocialSessionId = socialSessionId;
     return standaloneMatchesToReturn;
   }
 }
@@ -75,7 +78,9 @@ CommunityMemberModel _clubMember(String id) => CommunityMemberModel(
 );
 
 Widget _buildTestApp({
-  required String communityId,
+  String? communityId,
+  String sessionId = 'session-1',
+  bool isHost = false,
   required List<SocialParticipantModel> approvedParticipants,
   required ApiClubMatchSessionRepository repository,
   List<CommunityMemberModel> clubMembers = const [],
@@ -95,6 +100,8 @@ Widget _buildTestApp({
       home: Scaffold(
         body: SocialMatchTab(
           communityId: communityId,
+          sessionId: sessionId,
+          isHost: isHost,
           approvedParticipants: approvedParticipants,
         ),
       ),
@@ -218,5 +225,98 @@ void main() {
       find.text('Chưa có trận đấu nào được tạo cho CLB này.'),
       findsNothing,
     );
+  });
+
+  group('buổi cá nhân không gắn CLB', () {
+    final four = [
+      _participant('1'),
+      _participant('2'),
+      _participant('3'),
+      _participant('4'),
+    ];
+
+    testWidgets('liệt kê theo socialSessionId, không gọi theo communityId', (
+      tester,
+    ) async {
+      final repo = _FakeMatchSessionRepository(const []);
+      await tester.pumpWidget(
+        _buildTestApp(
+          communityId: '',
+          approvedParticipants: four,
+          repository: repo,
+          isHost: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repo.lastSocialSessionId, 'session-1');
+      expect(repo.lastCommunityId, isNull);
+      expect(find.text('Chưa có trận đấu nào trong buổi này.'), findsOneWidget);
+    });
+
+    testWidgets('host: nút tạo bật và không cảnh báo thiếu người khi đủ 4', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          approvedParticipants: four,
+          repository: _FakeMatchSessionRepository(const []),
+          isHost: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNotNull);
+      expect(
+        find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('không phải host: nút tạo bị khoá', (tester) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          approvedParticipants: four,
+          repository: _FakeMatchSessionRepository(const []),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('khách không có tài khoản không tính vào số người ghép đội', (
+      tester,
+    ) async {
+      final withGuests = [
+        _participant('1'),
+        _participant('2'),
+        SocialParticipantModel(
+          id: 'g1',
+          joinedAt: DateTime(2026, 1, 1),
+          guestName: 'Khách 1',
+        ),
+        SocialParticipantModel(
+          id: 'g2',
+          joinedAt: DateTime(2026, 1, 1),
+          guestName: 'Khách 2',
+        ),
+      ];
+      await tester.pumpWidget(
+        _buildTestApp(
+          approvedParticipants: withGuests,
+          repository: _FakeMatchSessionRepository(const []),
+          isHost: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
+        findsOneWidget,
+      );
+    });
   });
 }
