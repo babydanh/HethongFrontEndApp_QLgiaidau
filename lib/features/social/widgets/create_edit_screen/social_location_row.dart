@@ -8,10 +8,14 @@ class SocialLocationRow extends StatelessWidget {
     super.key,
     required this.place,
     required this.onTap,
+    this.errorText,
   });
 
   final SocialPlace? place;
   final VoidCallback onTap;
+
+  /// When set, the row turns red and the message is shown under it.
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +27,8 @@ class SocialLocationRow extends StatelessWidget {
         ? ''
         : selected?.formattedAddress.trim() ?? '';
 
-    return Semantics(
+    final error = errorText;
+    final row = Semantics(
       button: true,
       label: name.isEmpty ? l10n.socialPlaceSelect : '$name, $address',
       child: InkWell(
@@ -32,9 +37,9 @@ class SocialLocationRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.location_on_outlined,
-                color: AppTheme.primary,
+                color: error == null ? AppTheme.primary : colors.error,
                 size: 22,
               ),
               const SizedBox(width: 14),
@@ -83,6 +88,17 @@ class SocialLocationRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+    if (error == null) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        row,
+        Padding(
+          padding: const EdgeInsets.only(left: 36),
+          child: Text(error, style: TextStyle(fontSize: 12, color: colors.error)),
+        ),
+      ],
     );
   }
 }

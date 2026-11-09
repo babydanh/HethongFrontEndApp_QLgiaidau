@@ -35,8 +35,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tạo buổi giao lưu').last);
     await tester.pump();
+    // SnackBar summary stays; the location row repeats the message inline.
     expect(
-      find.text("Vui lòng chọn địa điểm hoặc 'Quyết định sau'."),
+      find.descendant(
+        of: find.byType(SnackBar),
+        matching: find.text("Vui lòng chọn địa điểm hoặc 'Quyết định sau'."),
+      ),
       findsOneWidget,
     );
   });
