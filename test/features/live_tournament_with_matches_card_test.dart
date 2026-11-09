@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/widgets/skeleton/home_skeletons.dart';
 import 'package:app_quanly_giaidau/providers/home_match_feed_provider.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with_matches_card.dart';
@@ -316,9 +317,40 @@ void main() {
     expect(find.text('Phan Anh Khoa / Hồ Minh Trí'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('TC-LIVECARD-01 live card puts the score below both names', (
+    tester,
+  ) async {
+    _phone(tester);
+    final match = _liveMatch();
+    final repository = _PagedMatchRepository({
+      null: (matches: [match], nextCursor: null),
+    });
+
+    await tester.pumpWidget(_cardApp(repository, MatchStatusFilter.live));
+    await tester.pumpAndSettle();
+
+    final score = tester.getRect(find.text('4 - 4'));
+    final labels = find
+        .byType(ParticipantLabel)
+        .evaluate()
+        .map((e) => tester.getRect(find.byWidget(e.widget)))
+        .toList();
+    expect(labels, hasLength(2));
+    for (final label in labels) {
+      // The score must not share a row with the names, and each name keeps
+      // close to half of the 275 px card instead of ~88 px.
+      expect(score.top, greaterThanOrEqualTo(label.bottom - 0.5));
+      expect(label.width, greaterThan(110));
+    }
+    expect(tester.takeException(), isNull);
+  });
 }
 
-Widget _cardApp(IMatchRepository repository) {
+Widget _cardApp(
+  IMatchRepository repository, [
+  MatchStatusFilter filter = MatchStatusFilter.scheduled,
+]) {
   return ProviderScope(
     overrides: [matchRepositoryProvider.overrideWith((ref) => repository)],
     child: MaterialApp(
@@ -330,7 +362,7 @@ Widget _cardApp(IMatchRepository repository) {
         body: SingleChildScrollView(
           child: LiveTournamentWithMatchesCard(
             tournament: _tournament,
-            filter: MatchStatusFilter.scheduled,
+            filter: filter,
             initialPage: _firstPage(repository),
           ),
         ),
@@ -392,6 +424,28 @@ final _secondPageMatch = _match(
   team2Id: 'team-gamma-id',
   team2Name: 'Second Page Team',
 );
+
+MatchModel _liveMatch() {
+  return MatchModel(
+    id: 'live-match',
+    tournamentId: _tournament.id,
+    round: 1,
+    matchNumber: 1,
+    team1Id: 'team-lm-id',
+    team2Id: 'team-ld-id',
+    team1Name: 'Phan Anh Khoa / Hồ Minh Trí',
+    team2Name: 'Nguyễn Văn Luân / Trần Quốc Dũng',
+    status: 'live',
+    court: 'Sân 1',
+    scoreDetails: {
+      'sets': [
+        {'score1': 4, 'score2': 4, 'isFinished': false},
+      ],
+    },
+    bracketPosition: const BracketPosition(round: 1, position: 1),
+    updatedAt: DateTime.utc(2026, 9, 27),
+  );
+}
 
 MatchModel _match({
   required String id,

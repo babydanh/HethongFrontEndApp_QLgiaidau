@@ -851,68 +851,73 @@ class _LiveTournamentWithMatchesCardState
               ],
             ),
 
-            // Middle Row: Centered Team 1 (Avatar + Name) -- Score -- Team 2 (Avatar + Name)
+            // Middle: both team names side by side, score centered below them
+            // so the names keep half of the card each instead of ~88 px.
             Expanded(
               child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Team 1
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ParticipantLabel(
-                            teamName: matchSideTeamName(match, 1),
-                            players: matchSidePlayers(match, 1),
-                            teamOnly: isFootballMatch(match),
-                            compact: true,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
-                            textAlign: TextAlign.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Team 1
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ParticipantLabel(
+                                teamName: matchSideTeamName(match, 1),
+                                players: matchSidePlayers(match, 1),
+                                teamOnly: isFootballMatch(match),
+                                compact: true,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                                textAlign: TextAlign.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        // Team 2
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ParticipantLabel(
+                                teamName: matchSideTeamName(match, 2),
+                                players: matchSidePlayers(match, 2),
+                                teamOnly: isFootballMatch(match),
+                                compact: true,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                                textAlign: TextAlign.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
 
                     // Big Score (Set hiện tại)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Text(
-                        '${match.currentLiveScore.score1} - ${match.currentLiveScore.score2}',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: colors.textPrimary,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-
-                    // Team 2
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ParticipantLabel(
-                            teamName: matchSideTeamName(match, 2),
-                            players: matchSidePlayers(match, 2),
-                            teamOnly: isFootballMatch(match),
-                            compact: true,
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w700,
-                              color: colors.textPrimary,
-                            ),
-                            textAlign: TextAlign.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                          ),
-                        ],
+                    const SizedBox(height: 4),
+                    Text(
+                      '${match.currentLiveScore.score1} - ${match.currentLiveScore.score2}',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: colors.textPrimary,
+                        letterSpacing: 1.5,
                       ),
                     ),
                   ],
