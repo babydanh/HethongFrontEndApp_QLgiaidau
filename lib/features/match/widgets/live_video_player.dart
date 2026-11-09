@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/services/pip_service.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_stream_stats_badge.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -36,12 +37,16 @@ class LiveVideoPlayer extends StatefulWidget {
     this.onToggleFullscreen,
     this.showLiveDot = false,
     this.onControlsVisibleChanged,
+    this.pipService,
   });
 
   final String url;
 
   /// Reports whether the control bar is up, so overlays can make room.
   final ValueChanged<bool>? onControlsVisibleChanged;
+
+  /// Picture-in-picture bridge; defaults to the app-wide one.
+  final PipService? pipService;
 
   /// Fill the parent's bounded height instead of sizing by aspect ratio
   /// (landscape fullscreen).
@@ -76,6 +81,9 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
   // on like the Web replay; the sound button still mutes.
   bool _muted = false;
   bool? _reportedVisible;
+  bool _pipSupported = false;
+
+  PipService get _pip => widget.pipService ?? PipService.instance;
 
   /// Tỉ lệ khung hình của luồng. Lúc stream chưa có metadata thì tạm dùng 16/9,
   /// rồi thay bằng tỉ lệ thật ngay khi player khởi tạo xong.
@@ -88,7 +96,26 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
   @override
   void initState() {
     super.initState();
+    _pip.active.addListener(_onPipChanged);
+    _pip.isSupported().then((supported) {
+      if (mounted && supported) setState(() => _pipSupported = true);
+    });
     _initPlayer();
+  }
+
+  void _onPipChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// The button only works once a frame exists to float.
+  bool get _hasFrame {
+    final value = _controller?.value;
+    return value != null && value.isInitialized && value.size.width > 0;
+  }
+
+  Future<void> _enterPip() async {
+    _revealControls();
+    await _pip.enter();
   }
 
   @override
@@ -212,6 +239,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
 
   @override
   void dispose() {
+    _pip.active.removeListener(_onPipChanged);
     _hideTimer?.cancel();
     _controller?.dispose();
     super.dispose();
@@ -221,7 +249,9 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
   Widget build(BuildContext context) {
     final controller = _controller;
     final ready = controller != null && controller.value.isInitialized;
-    final visible = _controlsVisible || !ready;
+    // In the small window only the picture is left.
+    final inPip = _pip.active.value;
+    final visible = (_controlsVisible || !ready) && !inPip;
     _reportControlsVisible(visible);
 
     return ClipRRect(
@@ -277,7 +307,9 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                       ),
                     ),
 
-                  if (widget.label != null && widget.label!.isNotEmpty)
+                  if (!inPip &&
+                      widget.label != null &&
+                      widget.label!.isNotEmpty)
                     Positioned(
                       top: 8,
                       right: 8,
@@ -301,7 +333,7 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                       ),
                     ),
 
-                  if (widget.showStreamStats)
+                  if (!inPip && widget.showStreamStats)
                     Positioned(
                       top: 8,
                       left: 8,
@@ -361,6 +393,14 @@ class _LiveVideoPlayerState extends State<LiveVideoPlayer> {
                                   ),
                                 ),
                               const Spacer(),
+                              if (_pipSupported)
+                                _ControlButton(
+                                  icon: Icons.picture_in_picture_alt,
+                                  label: AppLocalizations.of(
+                                    context,
+                                  )!.matchPictureInPicture,
+                                  onPressed: _hasFrame ? _enterPip : null,
+                                ),
                               if (widget.onToggleFullscreen != null)
                                 _ControlButton(
                                   icon: widget.fullscreen
@@ -400,7 +440,9 @@ class _ControlButton extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final VoidCallback onPressed;
+
+  /// Null locks the button (dimmed, no tap).
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +461,13 @@ class _ControlButton extends StatelessWidget {
           child: SizedBox(
             width: 48,
             height: 48,
-            child: Icon(icon, color: const Color(0xFFCBD5E1), size: 20),
+            child: Icon(
+              icon,
+              color: const Color(
+                0xFFCBD5E1,
+              ).withValues(alpha: onPressed == null ? 0.35 : 1),
+              size: 20,
+            ),
           ),
         ),
       ),

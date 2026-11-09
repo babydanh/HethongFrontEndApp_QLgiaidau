@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:app_quanly_giaidau/core/services/pip_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_replay_player.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
@@ -13,6 +15,9 @@ class _FakeVideoPlayerPlatform extends VideoPlayerPlatform {
   final seeks = <Duration>[];
   final _events = <int, StreamController<VideoEvent>>{};
   Duration duration = const Duration(seconds: 60);
+
+  /// False keeps the player "loading": no first frame yet.
+  bool initializes = true;
 
   @override
   Future<void> init() async {}
@@ -24,13 +29,16 @@ class _FakeVideoPlayerPlatform extends VideoPlayerPlatform {
   Future<int?> createWithOptions(VideoCreationOptions options) async {
     final id = _events.length + 1;
     _events[id] = StreamController<VideoEvent>(
-      onListen: () => _events[id]!.add(
-        VideoEvent(
-          eventType: VideoEventType.initialized,
-          duration: duration,
-          size: const Size(1280, 720),
-        ),
-      ),
+      onListen: () {
+        if (!initializes) return;
+        _events[id]!.add(
+          VideoEvent(
+            eventType: VideoEventType.initialized,
+            duration: duration,
+            size: const Size(1280, 720),
+          ),
+        );
+      },
     );
     return id;
   }
@@ -94,9 +102,12 @@ Future<_FakeVideoPlayerPlatform> _pump(
   WidgetTester tester, {
   int durationSec = 60,
   List<bool>? visibility,
+  PipService? pip,
+  bool initializes = true,
 }) async {
   final platform = _FakeVideoPlayerPlatform()
-    ..duration = Duration(seconds: durationSec);
+    ..duration = Duration(seconds: durationSec)
+    ..initializes = initializes;
   VideoPlayerPlatform.instance = platform;
   await tester.pumpWidget(
     MaterialApp(
@@ -110,6 +121,7 @@ Future<_FakeVideoPlayerPlatform> _pump(
             child: MatchReplayPlayer(
               replay: _replay(durationSec),
               onControlsVisibleChanged: visibility?.add,
+              pipService: pip,
             ),
           ),
         ),
@@ -216,5 +228,78 @@ void main() {
 
     await tester.pump(const Duration(seconds: 4));
     expect(seen, [true, false]);
+  });
+
+  group('TC-PIP-07 picture-in-picture button', () {
+    const pipChannel = MethodChannel(PipService.channelName);
+    final entered = <String>[];
+
+    void nativeSays({required bool supported}) {
+      entered.clear();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(pipChannel, (call) async {
+            entered.add(call.method);
+            return call.method == 'isSupported' ? supported : true;
+          });
+    }
+
+    tearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(pipChannel, null),
+    );
+
+    final button = find.widgetWithIcon(
+      IconButton,
+      Icons.picture_in_picture_alt,
+    );
+
+    testWidgets('hidden when the device has no picture-in-picture', (
+      tester,
+    ) async {
+      nativeSays(supported: false);
+      await _pump(tester, pip: PipService(isAndroid: true));
+
+      expect(button, findsNothing);
+    });
+
+    testWidgets('locked while the video has no first frame', (tester) async {
+      nativeSays(supported: true);
+      await _pump(tester, pip: PipService(isAndroid: true), initializes: false);
+
+      expect(button, findsOneWidget);
+      expect(tester.widget<IconButton>(button).onPressed, isNull);
+    });
+
+    testWidgets('enters the small window once there is a picture', (
+      tester,
+    ) async {
+      nativeSays(supported: true);
+      await _pump(tester, pip: PipService(isAndroid: true));
+
+      expect(tester.widget<IconButton>(button).onPressed, isNotNull);
+      await tester.tap(button);
+      await tester.pump();
+      expect(entered, contains('enter'));
+    });
+
+    testWidgets('in the small window the controls go and the video plays on', (
+      tester,
+    ) async {
+      nativeSays(supported: true);
+      final pip = PipService(isAndroid: true);
+      final seen = <bool>[];
+      await _pump(tester, pip: pip, visibility: seen);
+      expect(_shown(tester, _centre), isTrue);
+
+      pip.active.value = true;
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(_shown(tester, _centre), isFalse);
+      expect(_shown(tester, _timeline), isFalse);
+      expect(seen.last, isFalse);
+
+      pip.active.value = false;
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(_shown(tester, _centre), isTrue);
+    });
   });
 }

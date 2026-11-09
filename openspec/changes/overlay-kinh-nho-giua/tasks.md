@@ -19,3 +19,9 @@
   - Files: `match_replay_player.dart`, `live_video_player.dart`, `test/match/match_replay_live_video_box_test.dart` (đổi kỳ vọng icon tiếng mặc định, hợp đồng cũ "tắt tiếng mặc định" đổi theo yêu cầu)
 - [x] 2.4 Trang xem lại: chạm vào video hiện/ẩn lớp giữa (lùi 3s, phát/dừng, tiến 3s) cùng thanh dưới, tự ẩn sau 3s. Trang live không tua được nên giữ thanh dưới cũ, không thêm lớp giữa. Tiêu chí: cùng lệnh 2.3 → exit 0
   - Files: `match_replay_player.dart`, `lib/l10n/app_{vi,en}.arb` + `app_localizations*.dart` (sinh), `test/match/match_replay_player_controls_test.dart`
+
+## 3. Cửa sổ nhỏ (Picture-in-Picture, chỉ Android, không thêm package)
+- [x] 3.1 Native: `supportsPictureInPicture` trong `AndroidManifest.xml`; `MainActivity.kt` có MethodChannel `vn.vnsport.quanlygiaidau/pip` (`isSupported`, `enter` 16:9 không bắt exception thành false, `pipChanged` gửi về Dart), không tự vào PiP. Tiêu chí: CHƯA build native; build qua `app-run.py`, thử bấm nút trên máy Android thật
+  - Files: `android/app/src/main/AndroidManifest.xml`, `android/app/src/main/kotlin/vn/vnsport/quanlygiaidau/MainActivity.kt`
+- [x] 3.2 Dart: `PipService` (ẩn nút khi không phải Android hoặc không hỗ trợ), nút PiP trên thanh trang xem lại và trang live, khoá khi chưa có khung hình; trong PiP trang chỉ còn video đang phát, ẩn thanh điều khiển, lớp giữa, overlay, bảng điểm. Tiêu chí: `flutter test --no-pub test/core/pip_service_test.dart test/match/match_replay_player_controls_test.dart` → exit 0
+  - Files: `lib/core/services/pip_service.dart`, `match_replay_player.dart`, `live_video_player.dart`, `live_score_screen.dart`, `test/core/pip_service_test.dart`, `test/match/match_replay_player_controls_test.dart`

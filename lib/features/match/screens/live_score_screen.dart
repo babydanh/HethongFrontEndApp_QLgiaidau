@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/services/pip_service.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart';
@@ -154,6 +155,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// True while the video's control bar is up (reported by the player); the
   /// H2H / bracket overlays then sit on top of it instead of under its buttons.
   bool _videoControlsVisible = false;
+
+  /// Keeps the player alive when the page collapses to just the picture in the
+  /// small (picture-in-picture) window and back.
+  final _videoKey = GlobalKey();
   final List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = false;
   StreamSubscription? _commentSub;
@@ -245,6 +250,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   @override
   void initState() {
     super.initState();
+    PipService.instance.active.addListener(_onPipChanged);
     _livePulseCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -323,8 +329,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     await ReportSheet.show(context, targetId: match.id, targetType: 'match');
   }
 
+  void _onPipChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    PipService.instance.active.removeListener(_onPipChanged);
     _maxScoreController.dispose();
     _timeLimitController.dispose();
     _chatScroll.dispose();
@@ -2294,6 +2305,26 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         : liveOverlayRestingInset;
 
     // ─── Live Video Stream Player Box (Mockup) ───
+    final videoPlayer = LiveVideoBox(
+      key: _videoKey,
+      matchId: widget.matchId,
+      showStreamStats: _canSeeStreamStats(effectiveId),
+      fill: landscape,
+      fullscreen: landscape,
+      onToggleFullscreen: _toggleFullscreen,
+      showLiveDot: match.isLive && !match.isStaleLive,
+      onControlsVisibleChanged: (visible) {
+        if (mounted && visible != _videoControlsVisible) {
+          setState(() => _videoControlsVisible = visible);
+        }
+      },
+    );
+    // Small window: nothing but the picture. The same keyed player moves here,
+    // so the stream keeps playing across the switch.
+    if (PipService.instance.active.value) {
+      return ColoredBox(color: Colors.black, child: Center(child: videoPlayer));
+    }
+
     final videoBox = Container(
           width: double.infinity,
           height: landscape ? double.infinity : null,
@@ -2316,19 +2347,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
             children: [
               // Luồng phát thật từ backend. Chưa có URL thì widget tự hiện
               // khung 'chưa có tín hiệu', không cần mockup gradient nữa.
-              LiveVideoBox(
-                matchId: widget.matchId,
-                showStreamStats: _canSeeStreamStats(effectiveId),
-                fill: landscape,
-                fullscreen: landscape,
-                onToggleFullscreen: _toggleFullscreen,
-                showLiveDot: match.isLive && !match.isStaleLive,
-                onControlsVisibleChanged: (visible) {
-                  if (mounted && visible != _videoControlsVisible) {
-                    setState(() => _videoControlsVisible = visible);
-                  }
-                },
-              ),
+              videoPlayer,
 
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
               // hình video, tạm ẩn khi overlay H2H / Sơ đồ đang hiện. Người

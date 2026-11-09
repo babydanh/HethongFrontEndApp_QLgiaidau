@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_quanly_giaidau/core/services/pip_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_replay_timeline.dart';
@@ -15,6 +16,7 @@ class MatchReplayPlayer extends StatefulWidget {
     this.fullscreen = false,
     this.onToggleFullscreen,
     this.onControlsVisibleChanged,
+    this.pipService,
   });
 
   final MatchReplay replay;
@@ -27,6 +29,9 @@ class MatchReplayPlayer extends StatefulWidget {
 
   /// Reports whether the control layer is up, so overlays can make room.
   final ValueChanged<bool>? onControlsVisibleChanged;
+
+  /// Picture-in-picture bridge; defaults to the app-wide one.
+  final PipService? pipService;
 
   @override
   State<MatchReplayPlayer> createState() => _MatchReplayPlayerState();
@@ -58,12 +63,37 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   Timer? _hideTimer;
   bool _controlsVisible = true;
   bool? _reportedVisible;
+  bool _pipSupported = false;
+
+  PipService get _pip => widget.pipService ?? PipService.instance;
+
+  /// In the small window only the picture is left: no controls.
+  bool get _controlsUp => _controlsVisible && !_pip.active.value;
 
   @override
   void initState() {
     super.initState();
     _scheduleHide();
+    _pip.active.addListener(_onPipChanged);
+    _pip.isSupported().then((supported) {
+      if (mounted && supported) setState(() => _pipSupported = true);
+    });
     _openSegment(0);
+  }
+
+  void _onPipChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// The button only works once a frame exists to float.
+  bool get _hasFrame {
+    final value = _controller?.value;
+    return value != null && value.isInitialized && value.size.width > 0;
+  }
+
+  Future<void> _enterPip() async {
+    _revealControls();
+    await _pip.enter();
   }
 
   void _scheduleHide() {
@@ -357,6 +387,7 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
 
   @override
   void dispose() {
+    _pip.active.removeListener(_onPipChanged);
     _hideTimer?.cancel();
     _controller?.dispose();
     _nextController?.dispose();
@@ -367,7 +398,7 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final controller = _controller;
-    _reportControlsVisible(_controlsVisible);
+    _reportControlsVisible(_controlsUp);
     return ColoredBox(
       key: const ValueKey<String>('match-replay-player'),
       color: Colors.black,
@@ -416,9 +447,9 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   /// Fades [child] out and lets taps through while the controls are hidden.
   Widget _fadeWhenIdle(Widget child) {
     return IgnorePointer(
-      ignoring: !_controlsVisible,
+      ignoring: !_controlsUp,
       child: AnimatedOpacity(
-        opacity: _controlsVisible ? 1 : 0,
+        opacity: _controlsUp ? 1 : 0,
         duration: const Duration(milliseconds: 200),
         child: child,
       ),
@@ -578,6 +609,12 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ),
+              if (_pipSupported)
+                button(
+                  Icons.picture_in_picture_alt,
+                  l10n.matchPictureInPicture,
+                  _hasFrame ? _enterPip : null,
+                ),
               if (widget.onToggleFullscreen != null)
                 button(
                   widget.fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
