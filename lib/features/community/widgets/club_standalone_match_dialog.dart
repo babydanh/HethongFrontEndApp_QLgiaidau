@@ -18,12 +18,18 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
   final String? sessionId;
   final VoidCallback? onMatchCreated;
 
+  /// Danh sách người để chọn đã biết trước (vd: người tham gia đã duyệt của
+  /// một buổi Social gắn CLB). `null` = hành vi cũ: tự tải toàn bộ thành viên
+  /// CLB đã JOIN qua `communityRepositoryProvider`.
+  final List<CommunityMemberModel>? preselectedMembers;
+
   const ClubStandaloneMatchDialog({
     super.key,
     required this.communityId,
     this.clubName,
     this.sessionId,
     this.onMatchCreated,
+    this.preselectedMembers,
   });
 
   static Future<MatchModel?> show(
@@ -32,6 +38,7 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
     String? clubName,
     String? sessionId,
     VoidCallback? onMatchCreated,
+    List<CommunityMemberModel>? preselectedMembers,
   }) {
     return showDialog<MatchModel>(
       context: context,
@@ -41,6 +48,7 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
         clubName: clubName,
         sessionId: sessionId,
         onMatchCreated: onMatchCreated,
+        preselectedMembers: preselectedMembers,
       ),
     );
   }
@@ -68,7 +76,18 @@ class _ClubStandaloneMatchDialogState
   @override
   void initState() {
     super.initState();
-    _loadMembers();
+    final preselected = widget.preselectedMembers;
+    if (preselected != null) {
+      final uniqueMembers = <String, CommunityMemberModel>{};
+      for (final member in preselected) {
+        final userId = member.userId.trim();
+        if (userId.isNotEmpty) uniqueMembers[userId] = member;
+      }
+      _allMembers = uniqueMembers.values.toList(growable: false);
+      _isLoadingMembers = false;
+    } else {
+      _loadMembers();
+    }
   }
 
   @override

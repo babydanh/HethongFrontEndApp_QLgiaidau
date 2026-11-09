@@ -18,16 +18,29 @@ enum ClubStandaloneMatchAction { saved, openScoreboard }
 class ClubStandaloneMatchResultDialog extends ConsumerStatefulWidget {
   final MatchModel match;
 
-  const ClubStandaloneMatchResultDialog({super.key, required this.match});
+  /// Hiện CTA chính "Mở bảng điểm sống". Social không có đủ `sportKey`/
+  /// `tournamentConfig`/`sportRules` để mở bảng điểm chính thức như CLB, nên
+  /// đặt `false` ở đó để chỉ còn lựa chọn "Lưu kết quả thủ công".
+  final bool showScoreboardAction;
+
+  const ClubStandaloneMatchResultDialog({
+    super.key,
+    required this.match,
+    this.showScoreboardAction = true,
+  });
 
   static Future<ClubStandaloneMatchAction?> show(
     BuildContext context, {
     required MatchModel match,
+    bool showScoreboardAction = true,
   }) {
     return showDialog<ClubStandaloneMatchAction>(
       context: context,
       barrierDismissible: true,
-      builder: (_) => ClubStandaloneMatchResultDialog(match: match),
+      builder: (_) => ClubStandaloneMatchResultDialog(
+        match: match,
+        showScoreboardAction: showScoreboardAction,
+      ),
     );
   }
 
@@ -781,54 +794,84 @@ class _ClubStandaloneMatchResultDialogState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // CTA chính: Mở bảng điểm sống
-          SizedBox(
-            height: 42,
-            child: FilledButton.icon(
-              onPressed: _isSaving
-                  ? null
-                  : () => Navigator.of(
-                      context,
-                    ).pop(ClubStandaloneMatchAction.openScoreboard),
-              icon: const Icon(Icons.scoreboard_rounded, size: 18),
-              label: Text(
-                l10n.club_openScoreboard,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Link phụ: Lưu kết quả thủ công
-          if (!_isReadOnly)
-            Center(
-              child: TextButton.icon(
-                onPressed: _isSaving ? null : _saveResult,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save_outlined, size: 16),
+          if (widget.showScoreboardAction) ...[
+            // CTA chính: Mở bảng điểm sống
+            SizedBox(
+              height: 42,
+              child: FilledButton.icon(
+                onPressed: _isSaving
+                    ? null
+                    : () => Navigator.of(
+                        context,
+                      ).pop(ClubStandaloneMatchAction.openScoreboard),
+                icon: const Icon(Icons.scoreboard_rounded, size: 18),
                 label: Text(
-                  _isSaving ? 'Đang lưu...' : 'Lưu kết quả thủ công',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textSecondary,
+                  l10n.club_openScoreboard,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
             ),
+            const SizedBox(height: 6),
+          ],
+          // Lưu kết quả thủ công: nút chính khi không có bảng điểm sống,
+          // ngược lại chỉ là link phụ.
+          if (!_isReadOnly)
+            widget.showScoreboardAction
+                ? Center(
+                    child: TextButton.icon(
+                      onPressed: _isSaving ? null : _saveResult,
+                      icon: _isSaving
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save_outlined, size: 16),
+                      label: Text(
+                        _isSaving ? 'Đang lưu...' : 'Lưu kết quả thủ công',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  )
+                : SizedBox(
+                    height: 42,
+                    child: FilledButton.icon(
+                      onPressed: _isSaving ? null : _saveResult,
+                      icon: _isSaving
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save_outlined, size: 18),
+                      label: Text(
+                        _isSaving ? 'Đang lưu...' : 'Lưu kết quả thủ công',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
         ],
       ),
     );

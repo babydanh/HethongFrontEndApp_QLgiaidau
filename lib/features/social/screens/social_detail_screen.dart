@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/providers/social_provider.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_join_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_details_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participants_tab.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/match_tab/social_match_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/payment_tab/social_payment_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/chat_tab/social_chat_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_cancel_session_dialog.dart';
@@ -230,10 +231,16 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       data: (session) {
         final host = session.isHost;
         final showPayment = host && session.feePerSlot > 0;
-        final tabLength = 3 + (showPayment ? 1 : 0);
+        final showMatchTab = (session.communityId ?? '').trim().isNotEmpty;
+        final tabLength = 3 + (showMatchTab ? 1 : 0) + (showPayment ? 1 : 0);
         if (_tabController.length != tabLength) {
+          final previousIndex = _tabController.index.clamp(0, tabLength - 1);
           _tabController.dispose();
-          _tabController = TabController(length: tabLength, vsync: this);
+          _tabController = TabController(
+            length: tabLength,
+            vsync: this,
+            initialIndex: previousIndex,
+          );
         }
 
         return Scaffold(
@@ -284,20 +291,29 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                             isActive: activeIndex == 1,
                             colors: colors,
                           ),
-                          if (showPayment) ...[
+                          if (showMatchTab) ...[
                             const SizedBox(width: 14),
                             _buildTabItem(
                               index: 2,
-                              label: 'Thanh toán',
+                              label: AppLocalizations.of(context)!.social_matchTab,
                               isActive: activeIndex == 2,
+                              colors: colors,
+                            ),
+                          ],
+                          if (showPayment) ...[
+                            const SizedBox(width: 14),
+                            _buildTabItem(
+                              index: showMatchTab ? 3 : 2,
+                              label: 'Thanh toán',
+                              isActive: activeIndex == (showMatchTab ? 3 : 2),
                               colors: colors,
                             ),
                           ],
                           const SizedBox(width: 14),
                           _buildTabItem(
-                            index: showPayment ? 3 : 2,
+                            index: tabLength - 1,
                             label: 'Trò chuyện',
-                            isActive: activeIndex == (showPayment ? 3 : 2),
+                            isActive: activeIndex == tabLength - 1,
                             colors: colors,
                           ),
                         ],
@@ -344,6 +360,11 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                           ? (p) => _reviewRequest(p, false)
                           : null,
                     ),
+                    if (showMatchTab)
+                      SocialMatchTab(
+                        communityId: session.communityId!.trim(),
+                        approvedParticipants: session.participants,
+                      ),
                     if (showPayment) SocialPaymentTab(session: session),
                     SocialChatTab(
                       key: ObjectKey(ref.watch(authProvider)),
@@ -749,8 +770,7 @@ Link: $shareUrl''';
     SocialContactHostSheet.show(
       context,
       session,
-      onOpenChat: () =>
-          _tabController.animateTo((_isHost && session.feePerSlot > 0) ? 3 : 2),
+      onOpenChat: () => _tabController.animateTo(_tabController.length - 1),
     );
   }
 
@@ -922,7 +942,7 @@ Link: $shareUrl''';
                             : ClubNetworkImage(
                                 logoUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(
+                                errorBuilder: (_, _, _) => Icon(
                                   Icons.groups_rounded,
                                   color: colors.textSecondary,
                                   size: 36,
