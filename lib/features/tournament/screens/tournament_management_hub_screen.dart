@@ -6,7 +6,6 @@ import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/responsive_layout.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
-import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
@@ -64,9 +63,7 @@ class _TournamentManagementHubScreenState
     TournamentManagementSection.registration,
   ];
   static const _otherSections = [
-    TournamentManagementSection.liveOperations,
     TournamentManagementSection.teams,
-    TournamentManagementSection.draw,
     TournamentManagementSection.sponsors,
     TournamentManagementSection.finance,
     TournamentManagementSection.livestream,
@@ -717,12 +714,6 @@ class _TournamentManagementHubScreenState
           isEmbedded: true,
           managementRouteBase: widget.actionRouteBase,
         );
-      case TournamentManagementSection.draw:
-        return AutoDrawScreen(
-          tournamentId: tournament.id,
-          isEmbedded: true,
-          managementRouteBase: widget.actionRouteBase,
-        );
       default:
         return TournamentManagementSectionScreen(
           tournament: tournament,
@@ -938,8 +929,6 @@ class _TournamentManagementHubScreenState
         TournamentManagementSection.sponsors ||
         TournamentManagementSection.finance => LavishTone.ok,
         TournamentManagementSection.livestream => LavishTone.bad,
-        TournamentManagementSection.liveOperations ||
-        TournamentManagementSection.draw => LavishTone.neutral,
         _ => LavishTone.accent,
       };
 
@@ -977,12 +966,6 @@ class _TournamentManagementHubScreenState
       l10n.manageTeamsSubtitle,
       AppTheme.primary,
     ),
-    TournamentManagementSection.draw => _SectionDetails(
-      Icons.casino_rounded,
-      l10n.manageDraw,
-      l10n.manageDrawSubtitle,
-      context.colors.warning,
-    ),
     TournamentManagementSection.sponsors => _SectionDetails(
       Icons.handshake_outlined,
       l10n.tournamentManagementSponsors,
@@ -1006,12 +989,6 @@ class _TournamentManagementHubScreenState
       l10n.tournamentManagementPermissions,
       l10n.tournamentManagementPermissionsDescription,
       AppTheme.primary,
-    ),
-    TournamentManagementSection.liveOperations => _SectionDetails(
-      Icons.sports_score_rounded,
-      l10n.tournamentManagementLiveOperations,
-      l10n.tournamentManagementLiveOperationsDescription,
-      context.colors.warning,
     ),
   };
 
