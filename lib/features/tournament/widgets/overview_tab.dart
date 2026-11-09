@@ -1048,24 +1048,29 @@ class _OverviewTabState extends State<OverviewTab> {
       );
     }
     final firstUrl = widget.resolveImageUrl(images.first);
+    Widget fallback() {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Container(
+        width: double.infinity,
+        color: isDark ? const Color(0xFF16233A) : const Color(0xFFE8EEFB),
+        child: const SportoBrandFallback(
+          withTagline: true,
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+          semanticsLabel: 'SportO tournament fallback banner',
+        ),
+      );
+    }
+
     return Stack(
       fit: StackFit.expand,
       children: [
         Image.network(
           firstUrl,
           fit: BoxFit.cover,
-          errorBuilder: (ctx, err, stack) {
-            final isDark = Theme.of(context).brightness == Brightness.dark;
-            return Container(
-              width: double.infinity,
-              color: isDark ? const Color(0xFF16233A) : const Color(0xFFE8EEFB),
-              child: const SportoBrandFallback(
-                withTagline: true,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-                semanticsLabel: 'SportO tournament fallback banner',
-              ),
-            );
-          },
+          // Brand placeholder instead of an empty banner while downloading.
+          frameBuilder: (ctx, child, frame, wasSync) =>
+              wasSync || frame != null ? child : fallback(),
+          errorBuilder: (ctx, err, stack) => fallback(),
         ),
         Container(
           decoration: BoxDecoration(
