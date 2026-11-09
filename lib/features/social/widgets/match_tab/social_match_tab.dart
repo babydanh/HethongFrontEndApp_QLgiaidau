@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_ma
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
+import 'package:app_quanly_giaidau/providers/community_provider.dart';
 
 /// Tab "Trận đấu" bên trong một buổi Social đã gắn CLB (`communityId`).
 ///
@@ -39,11 +40,13 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   List<ClubSessionMatchModel> _matches = const [];
   bool _isLoading = true;
   String? _loadError;
+  Set<String> _clubMemberUserIds = const {};
 
   @override
   void initState() {
     super.initState();
     _fetchMatches();
+    _fetchClubMemberIds();
   }
 
   Future<void> _fetchMatches() async {
@@ -68,10 +71,31 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     }
   }
 
-  /// Người tham gia đã duyệt của buổi Social, chuyển sang kiểu thành viên CLB
-  /// mà `ClubStandaloneMatchDialog` đã biết cách hiển thị/ghép đội.
+  /// Danh sách userId của thành viên CLB đã JOINED — dùng để lọc khách mời /
+  /// người không thuộc CLB ra khỏi danh sách ghép đội.
+  Future<void> _fetchClubMemberIds() async {
+    try {
+      final repo = ref.read(communityRepositoryProvider);
+      final members = await repo.getMembers(
+        widget.communityId,
+        limit: 100,
+        status: 'JOINED',
+      );
+      if (!mounted) return;
+      setState(() {
+        _clubMemberUserIds = members.map((m) => m.userId).toSet();
+      });
+    } catch (_) {
+      // Giữ danh sách rỗng; ghép đội sẽ không có sẵn gợi ý nhưng không chặn thao tác thủ công.
+    }
+  }
+
+  /// Người tham gia đã duyệt của buổi Social VÀ là thành viên CLB đã JOINED
+  /// (loại khách mời), chuyển sang kiểu thành viên CLB mà
+  /// `ClubStandaloneMatchDialog` đã biết cách hiển thị/ghép đội.
   List<CommunityMemberModel> get _preselectedMembers => widget
       .approvedParticipants
+      .where((p) => !p.isGuest && _clubMemberUserIds.contains(p.userId))
       .map(
         (p) => CommunityMemberModel(
           id: p.id,
@@ -85,6 +109,21 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       )
       .toList(growable: false);
 
+  bool _canCreateMatch() {
+    final membership = ref
+        .watch(myCommunityMembershipProvider(widget.communityId))
+        .asData
+        ?.value;
+    if (membership?.status.toUpperCase() != 'JOINED') return false;
+    final role = (membership?.role ?? '').toUpperCase();
+    final isManager = const {'OWNER', 'ADMIN', 'MODERATOR'}.contains(role);
+    final settings = ref
+        .watch(communitySocialSettingsProvider(widget.communityId))
+        .asData
+        ?.value;
+    return isManager || settings?.memberMatchCreationEnabled != false;
+  }
+
   Future<void> _createMatch() async {
     final createdMatch = await ClubStandaloneMatchDialog.show(
       context,
@@ -93,8 +132,12 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       onMatchCreated: _fetchMatches,
     );
     if (!mounted || createdMatch == null) return;
-    await ClubStandaloneMatchResultDialog.show(context, match: createdMatch);
-    if (!mounted) return;
+    final action = await ClubStandaloneMatchResultDialog.show(
+      context,
+      match: createdMatch,
+      showScoreboardAction: false,
+    );
+    if (!mounted || action != ClubStandaloneMatchAction.saved) return;
     unawaited(_fetchMatches());
   }
 
@@ -102,6 +145,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     final action = await ClubStandaloneMatchResultDialog.show(
       context,
       match: _toMatchModel(match),
+      showScoreboardAction: false,
     );
     if (!mounted || action != ClubStandaloneMatchAction.saved) return;
     unawaited(_fetchMatches());
@@ -155,7 +199,8 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
-    final notEnoughParticipants = widget.approvedParticipants.length < 2;
+    final canCreateMatch = _canCreateMatch();
+    final notEnoughParticipants = _preselectedMembers.length < 4;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -173,7 +218,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
               ),
               const SizedBox(width: 8),
               FilledButton.icon(
-                onPressed: _createMatch,
+                onPressed: canCreateMatch ? _createMatch : null,
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: Text(l10n.club_createMatchStandalone),
                 style: FilledButton.styleFrom(

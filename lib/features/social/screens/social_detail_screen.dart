@@ -231,11 +231,16 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
       data: (session) {
         final host = session.isHost;
         final showPayment = host && session.feePerSlot > 0;
-        final showMatchTab = (session.communityId ?? '').isNotEmpty;
+        final showMatchTab = (session.communityId ?? '').trim().isNotEmpty;
         final tabLength = 3 + (showMatchTab ? 1 : 0) + (showPayment ? 1 : 0);
         if (_tabController.length != tabLength) {
+          final previousIndex = _tabController.index.clamp(0, tabLength - 1);
           _tabController.dispose();
-          _tabController = TabController(length: tabLength, vsync: this);
+          _tabController = TabController(
+            length: tabLength,
+            vsync: this,
+            initialIndex: previousIndex,
+          );
         }
 
         return Scaffold(
@@ -357,7 +362,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     ),
                     if (showMatchTab)
                       SocialMatchTab(
-                        communityId: session.communityId!,
+                        communityId: session.communityId!.trim(),
                         approvedParticipants: session.participants,
                       ),
                     if (showPayment) SocialPaymentTab(session: session),
@@ -765,8 +770,7 @@ Link: $shareUrl''';
     SocialContactHostSheet.show(
       context,
       session,
-      onOpenChat: () =>
-          _tabController.animateTo((_isHost && session.feePerSlot > 0) ? 3 : 2),
+      onOpenChat: () => _tabController.animateTo(_tabController.length - 1),
     );
   }
 
