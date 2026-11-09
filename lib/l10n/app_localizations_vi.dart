@@ -126,6 +126,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_matchScoreSaved => 'Đã lưu và chốt kết quả trận.';
 
   @override
+  String get social_matchTab => 'Trận đấu';
+
+  @override
+  String get social_matchListNote =>
+      'Hiển thị toàn bộ trận đấu riêng của CLB, chưa lọc chính xác theo buổi này.';
+
+  @override
+  String get social_matchEmptyTitle =>
+      'Chưa có trận đấu nào được tạo cho CLB này.';
+
+  @override
+  String get social_matchNotEnoughParticipants =>
+      'Buổi chưa đủ người tham gia đã duyệt để ghép đội.';
+
+  @override
+  String get social_matchStatusScheduled => 'Đã lên lịch';
+
+  @override
+  String get social_matchStatusCompleted => 'Đã hoàn thành';
+
+  @override
   String get appTagline => 'Chơi cùng nhau';
 
   @override
