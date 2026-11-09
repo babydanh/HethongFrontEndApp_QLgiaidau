@@ -332,6 +332,12 @@ abstract class AppLocalizations {
   /// **'Chưa có trận đấu nào được tạo cho CLB này.'**
   String get social_matchEmptyTitle;
 
+  /// No description provided for @social_matchEmptyTitleSession.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận đấu nào được tạo cho buổi này.'**
+  String get social_matchEmptyTitleSession;
+
   /// No description provided for @social_matchNotEnoughParticipants.
   ///
   /// In vi, this message translates to:

@@ -137,6 +137,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No matches have been created for this club yet.';
 
   @override
+  String get social_matchEmptyTitleSession =>
+      'No matches have been created for this session yet.';
+
+  @override
   String get social_matchNotEnoughParticipants =>
       'Not enough approved participants to form teams yet.';
 

@@ -192,6 +192,16 @@ class ApiClubMatchSessionRepository {
     return rows.map(ClubSessionMatchModel.fromJson).toList();
   }
 
+  Future<List<ClubSessionMatchModel>> standaloneMatchesBySocialSession(
+    String socialSessionId,
+  ) async {
+    final rows = await _allCursorRows(
+      '/club-match-sessions/standalone-matches',
+      query: {'socialSessionId': socialSessionId},
+    );
+    return rows.map(ClubSessionMatchModel.fromJson).toList();
+  }
+
   Future<CursorPage<ClubSessionMatchModel>> standaloneMatchesPage(
     String communityId, {
     String? cursor,
@@ -206,18 +216,28 @@ class ApiClubMatchSessionRepository {
     return _mapPage(page, ClubSessionMatchModel.fromJson);
   }
 
+  /// Đúng một trong [communityId] (trận CLB) hoặc [socialSessionId] (trận của
+  /// buổi Social cá nhân không gắn CLB); Backend từ chối nếu thiếu hoặc thừa.
   Future<ClubSessionMatchModel> createStandaloneMatch({
-    required String communityId,
+    String? communityId,
+    String? socialSessionId,
     required List<String> sideA,
     required List<String> sideB,
     required String key,
     required bool isRanked,
     String? matchType,
   }) async {
+    assert(
+      (communityId == null) != (socialSessionId == null),
+      'Pass exactly one of communityId or socialSessionId',
+    );
     final response = await _client.dio.post(
       '/club-match-sessions/standalone-matches',
       data: {
-        'communityId': communityId,
+        ...?(communityId == null ? null : {'communityId': communityId}),
+        ...?(socialSessionId == null
+            ? null
+            : {'socialSessionId': socialSessionId}),
         'sideAUserIds': sideA,
         'sideBUserIds': sideB,
         'isRanked': isRanked,

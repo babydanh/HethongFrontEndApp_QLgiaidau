@@ -39,6 +39,7 @@
   "social_matchTab": "Trận đấu",
   "social_matchListNote": "Hiển thị toàn bộ trận đấu riêng của CLB, chưa lọc chính xác theo buổi này.",
   "social_matchEmptyTitle": "Chưa có trận đấu nào được tạo cho CLB này.",
+  "social_matchEmptyTitleSession": "Chưa có trận đấu nào được tạo cho buổi này.",
   "social_matchNotEnoughParticipants": "Buổi chưa đủ người tham gia đã duyệt để ghép đội.",
   "social_matchStatusScheduled": "Đã lên lịch",
   "social_matchStatusCompleted": "Đã hoàn thành",

@@ -13,7 +13,11 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 
 class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
-  final String communityId;
+  /// Trận CLB. `null` khi tạo trận cho buổi Social cá nhân ([socialSessionId]).
+  final String? communityId;
+
+  /// Buổi Social không gắn CLB; khi dùng thì bắt buộc có [preselectedMembers].
+  final String? socialSessionId;
   final String? clubName;
   final String? sessionId;
   final VoidCallback? onMatchCreated;
@@ -25,7 +29,8 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
 
   const ClubStandaloneMatchDialog({
     super.key,
-    required this.communityId,
+    this.communityId,
+    this.socialSessionId,
     this.clubName,
     this.sessionId,
     this.onMatchCreated,
@@ -34,7 +39,8 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
 
   static Future<MatchModel?> show(
     BuildContext context, {
-    required String communityId,
+    String? communityId,
+    String? socialSessionId,
     String? clubName,
     String? sessionId,
     VoidCallback? onMatchCreated,
@@ -45,6 +51,7 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
       barrierDismissible: true,
       builder: (_) => ClubStandaloneMatchDialog(
         communityId: communityId,
+        socialSessionId: socialSessionId,
         clubName: clubName,
         sessionId: sessionId,
         onMatchCreated: onMatchCreated,
@@ -85,8 +92,11 @@ class _ClubStandaloneMatchDialogState
       }
       _allMembers = uniqueMembers.values.toList(growable: false);
       _isLoadingMembers = false;
-    } else {
+    } else if (widget.communityId != null) {
       _loadMembers();
+    } else {
+      // Buổi cá nhân không có danh sách thành viên CLB để tự tải.
+      _isLoadingMembers = false;
     }
   }
 
@@ -105,7 +115,7 @@ class _ClubStandaloneMatchDialogState
     try {
       final repo = ref.read(communityRepositoryProvider);
       final members = await repo.getMembers(
-        widget.communityId,
+        widget.communityId!,
         limit: 100,
         status: 'JOINED',
       );
@@ -162,6 +172,7 @@ class _ClubStandaloneMatchDialogState
       final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
       final createdSessionMatch = await sessionRepo.createStandaloneMatch(
         communityId: widget.communityId,
+        socialSessionId: widget.socialSessionId,
         sideA: sideAList,
         sideB: sideBList,
         key: requestKey,

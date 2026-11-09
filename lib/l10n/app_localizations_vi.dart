@@ -137,6 +137,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa có trận đấu nào được tạo cho CLB này.';
 
   @override
+  String get social_matchEmptyTitleSession =>
+      'Chưa có trận đấu nào được tạo cho buổi này.';
+
+  @override
   String get social_matchNotEnoughParticipants =>
       'Buổi chưa đủ người tham gia đã duyệt để ghép đội.';
 

@@ -21,12 +21,21 @@ class _FakeMatchSessionRepository extends Fake
 
   final List<ClubSessionMatchModel> standaloneMatchesToReturn;
   String? lastCommunityId;
+  String? lastSocialSessionId;
 
   @override
   Future<List<ClubSessionMatchModel>> standaloneMatches(
     String communityId,
   ) async {
     lastCommunityId = communityId;
+    return standaloneMatchesToReturn;
+  }
+
+  @override
+  Future<List<ClubSessionMatchModel>> standaloneMatchesBySocialSession(
+    String socialSessionId,
+  ) async {
+    lastSocialSessionId = socialSessionId;
     return standaloneMatchesToReturn;
   }
 }
@@ -39,6 +48,7 @@ class _FakeCommunityRepository extends Fake implements ICommunityRepository {
   _FakeCommunityRepository(this.membersToReturn);
 
   final List<CommunityMemberModel> membersToReturn;
+  int getMembersCalls = 0;
 
   @override
   Future<List<CommunityMemberModel>> getMembers(
@@ -47,7 +57,10 @@ class _FakeCommunityRepository extends Fake implements ICommunityRepository {
     String? status,
     String? search,
     bool mentionableOnly = false,
-  }) async => membersToReturn;
+  }) async {
+    getMembersCalls++;
+    return membersToReturn;
+  }
 
   @override
   Future<Map<String, dynamic>?> getMyMembership(String communityId) async =>
@@ -75,16 +88,18 @@ CommunityMemberModel _clubMember(String id) => CommunityMemberModel(
 );
 
 Widget _buildTestApp({
-  required String communityId,
+  String? communityId,
+  bool isHost = false,
   required List<SocialParticipantModel> approvedParticipants,
   required ApiClubMatchSessionRepository repository,
   List<CommunityMemberModel> clubMembers = const [],
+  _FakeCommunityRepository? communityRepository,
 }) {
   return ProviderScope(
     overrides: [
       clubMatchSessionRepositoryProvider.overrideWithValue(repository),
       communityRepositoryProvider.overrideWithValue(
-        _FakeCommunityRepository(clubMembers),
+        communityRepository ?? _FakeCommunityRepository(clubMembers),
       ),
     ],
     child: MaterialApp(
@@ -94,7 +109,9 @@ Widget _buildTestApp({
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SocialMatchTab(
+          sessionId: 'session-1',
           communityId: communityId,
+          isHost: isHost,
           approvedParticipants: approvedParticipants,
         ),
       ),
@@ -218,5 +235,106 @@ void main() {
       find.text('Chưa có trận đấu nào được tạo cho CLB này.'),
       findsNothing,
     );
+  });
+  group('buổi cá nhân (không gắn CLB)', () {
+    testWidgets('lists matches by session id and never loads club members', (
+      tester,
+    ) async {
+      final repo = _FakeMatchSessionRepository(const []);
+      final clubRepo = _FakeCommunityRepository(const []);
+      final participants = [
+        _participant('1'),
+        _participant('2'),
+        _participant('3'),
+        _participant('4'),
+      ];
+      await tester.pumpWidget(
+        _buildTestApp(
+          isHost: true,
+          approvedParticipants: participants,
+          repository: repo,
+          communityRepository: clubRepo,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repo.lastSocialSessionId, 'session-1');
+      expect(repo.lastCommunityId, isNull);
+      expect(clubRepo.getMembersCalls, 0);
+      expect(
+        find.text('Chưa có trận đấu nào được tạo cho buổi này.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Hiển thị toàn bộ trận đấu riêng của CLB, chưa lọc chính xác theo buổi này.'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('enables create button for the host with 4 approved players', (
+      tester,
+    ) async {
+      final participants = [
+        _participant('1'),
+        _participant('2'),
+        _participant('3'),
+        _participant('4'),
+      ];
+      await tester.pumpWidget(
+        _buildTestApp(
+          isHost: true,
+          approvedParticipants: participants,
+          repository: _FakeMatchSessionRepository(const []),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<FilledButton>(find.byWidgetPredicate((w) => w is FilledButton)).onPressed,
+        isNotNull,
+      );
+      expect(
+        find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('disables create button for a non-host', (tester) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          approvedParticipants: [
+            _participant('1'),
+            _participant('2'),
+            _participant('3'),
+            _participant('4'),
+          ],
+          repository: _FakeMatchSessionRepository(const []),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<FilledButton>(find.byWidgetPredicate((w) => w is FilledButton)).onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('warns when fewer than 4 approved non-guest players', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          isHost: true,
+          approvedParticipants: [_participant('1'), _participant('2')],
+          repository: _FakeMatchSessionRepository(const []),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
+        findsOneWidget,
+      );
+    });
   });
 }

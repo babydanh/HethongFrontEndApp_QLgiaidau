@@ -14,7 +14,11 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 
-/// Tab "Trận đấu" bên trong một buổi Social đã gắn CLB (`communityId`).
+/// Tab "Trận đấu" bên trong một buổi Social.
+///
+/// - Buổi gắn CLB (`communityId`): như mô tả bên dưới.
+/// - Buổi cá nhân (không có `communityId`): trận lấy/tạo theo `socialSessionId`;
+///   chỉ host tạo được, người chơi là người tham gia đã duyệt của buổi.
 ///
 /// Tái dùng nguyên [ClubStandaloneMatchDialog] (ghép đội thủ công) và
 /// [ClubStandaloneMatchResultDialog] (nhập kết quả) của CLB — không viết
@@ -23,12 +27,16 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 /// `them-tab-tao-tran-trong-social`): trận hiển thị là của cả CLB, không chỉ
 /// riêng buổi này.
 class SocialMatchTab extends ConsumerStatefulWidget {
-  final String communityId;
+  final String sessionId;
+  final String? communityId;
+  final bool isHost;
   final List<SocialParticipantModel> approvedParticipants;
 
   const SocialMatchTab({
     super.key,
-    required this.communityId,
+    required this.sessionId,
+    this.communityId,
+    required this.isHost,
     required this.approvedParticipants,
   });
 
@@ -42,11 +50,14 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   String? _loadError;
   Set<String> _clubMemberUserIds = const {};
 
+  /// Buổi cá nhân không gắn CLB nên không có luật/thành viên CLB.
+  bool get _isPersonal => widget.communityId == null;
+
   @override
   void initState() {
     super.initState();
     _fetchMatches();
-    _fetchClubMemberIds();
+    if (!_isPersonal) _fetchClubMemberIds();
   }
 
   Future<void> _fetchMatches() async {
@@ -56,7 +67,10 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     });
     try {
       final repo = ref.read(clubMatchSessionRepositoryProvider);
-      final matches = await repo.standaloneMatches(widget.communityId);
+      final communityId = widget.communityId;
+      final matches = communityId == null
+          ? await repo.standaloneMatchesBySocialSession(widget.sessionId)
+          : await repo.standaloneMatches(communityId);
       if (!mounted) return;
       setState(() {
         _matches = matches;
@@ -77,7 +91,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     try {
       final repo = ref.read(communityRepositoryProvider);
       final members = await repo.getMembers(
-        widget.communityId,
+        widget.communityId!,
         limit: 100,
         status: 'JOINED',
       );
@@ -95,12 +109,16 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   /// `ClubStandaloneMatchDialog` đã biết cách hiển thị/ghép đội.
   List<CommunityMemberModel> get _preselectedMembers => widget
       .approvedParticipants
-      .where((p) => !p.isGuest && _clubMemberUserIds.contains(p.userId))
+      .where(
+        (p) =>
+            !p.isGuest &&
+            (_isPersonal || _clubMemberUserIds.contains(p.userId)),
+      )
       .map(
         (p) => CommunityMemberModel(
           id: p.id,
           userId: p.userId,
-          communityId: widget.communityId,
+          communityId: widget.communityId ?? '',
           status: 'JOINED',
           userFullName: p.fullName,
           userAvatarUrl: p.avatarUrl,
@@ -110,15 +128,18 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       .toList(growable: false);
 
   bool _canCreateMatch() {
+    final communityId = widget.communityId;
+    // Buổi cá nhân: chỉ host (Backend vẫn là chốt cuối).
+    if (communityId == null) return widget.isHost;
     final membership = ref
-        .watch(myCommunityMembershipProvider(widget.communityId))
+        .watch(myCommunityMembershipProvider(communityId))
         .asData
         ?.value;
     if (membership?.status.toUpperCase() != 'JOINED') return false;
     final role = (membership?.role ?? '').toUpperCase();
     final isManager = const {'OWNER', 'ADMIN', 'MODERATOR'}.contains(role);
     final settings = ref
-        .watch(communitySocialSettingsProvider(widget.communityId))
+        .watch(communitySocialSettingsProvider(communityId))
         .asData
         ?.value;
     return isManager || settings?.memberMatchCreationEnabled != false;
@@ -128,6 +149,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     final createdMatch = await ClubStandaloneMatchDialog.show(
       context,
       communityId: widget.communityId,
+      socialSessionId: _isPersonal ? widget.sessionId : null,
       preselectedMembers: _preselectedMembers,
       onMatchCreated: _fetchMatches,
     );
@@ -211,10 +233,15 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: Text(
-                  l10n.social_matchListNote,
-                  style: TextStyle(fontSize: 11.5, color: colors.textMuted),
-                ),
+                child: _isPersonal
+                    ? const SizedBox.shrink()
+                    : Text(
+                        l10n.social_matchListNote,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: colors.textMuted,
+                        ),
+                      ),
               ),
               const SizedBox(width: 8),
               FilledButton.icon(
@@ -280,7 +307,9 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
               ),
               const SizedBox(height: 10),
               Text(
-                l10n.social_matchEmptyTitle,
+                _isPersonal
+                    ? l10n.social_matchEmptyTitleSession
+                    : l10n.social_matchEmptyTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13.5, color: colors.textSecondary),
               ),
