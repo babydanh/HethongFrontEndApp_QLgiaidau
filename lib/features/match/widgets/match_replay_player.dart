@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:app_quanly_giaidau/core/services/pip_service.dart';
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_overlay_controls.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/match_replay_timeline.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,8 @@ class MatchReplayPlayer extends StatefulWidget {
     required this.replay,
     this.fullscreen = false,
     this.onToggleFullscreen,
+    this.onControlsVisibleChanged,
+    this.pipService,
   });
 
   final MatchReplay replay;
@@ -23,12 +27,24 @@ class MatchReplayPlayer extends StatefulWidget {
   /// Shows a fullscreen button when set (same as the live player).
   final VoidCallback? onToggleFullscreen;
 
+  /// Reports whether the control layer is up, so overlays can make room.
+  final ValueChanged<bool>? onControlsVisibleChanged;
+
+  /// Picture-in-picture bridge; defaults to the app-wide one.
+  final PipService? pipService;
+
   @override
   State<MatchReplayPlayer> createState() => _MatchReplayPlayerState();
 }
 
 class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   static const _preloadThreshold = Duration(seconds: 10);
+
+  /// Controls fade out after this long without a touch (same as the live player).
+  static const _hideDelay = Duration(seconds: 3);
+
+  /// Same step as the Web `REPLAY_BUTTON_SKIP_SEC`.
+  static const _skipSeconds = 3;
 
   VideoPlayerController? _controller;
   VideoPlayerController? _nextController;
@@ -40,13 +56,76 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   bool _advancing = false;
   bool _showSkipped = false;
   bool _finished = false;
-  bool _muted = true;
+  // Playback starts when the page opens, and a phone has no autoplay block
+  // for sound, so the replay opens with sound on like the Web.
+  bool _muted = false;
   int _displayedSeconds = 0;
+  Timer? _hideTimer;
+  bool _controlsVisible = true;
+  bool? _reportedVisible;
+  bool _pipSupported = false;
+
+  PipService get _pip => widget.pipService ?? PipService.instance;
+
+  /// In the small window only the picture is left: no controls.
+  bool get _controlsUp => _controlsVisible && !_pip.active.value;
 
   @override
   void initState() {
     super.initState();
+    _scheduleHide();
+    _pip.active.addListener(_onPipChanged);
+    _pip.isSupported().then((supported) {
+      if (mounted && supported) setState(() => _pipSupported = true);
+    });
     _openSegment(0);
+  }
+
+  void _onPipChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// The button only works once a frame exists to float.
+  bool get _hasFrame {
+    final value = _controller?.value;
+    return value != null && value.isInitialized && value.size.width > 0;
+  }
+
+  Future<void> _enterPip() async {
+    _revealControls();
+    await _pip.enter();
+  }
+
+  void _scheduleHide() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(_hideDelay, () {
+      if (mounted) setState(() => _controlsVisible = false);
+    });
+  }
+
+  /// Brings the controls back and restarts the idle timer.
+  void _revealControls() {
+    setState(() => _controlsVisible = true);
+    _scheduleHide();
+  }
+
+  /// Tap on the picture: hide the controls when they are up, else show them.
+  void _onPictureTap() {
+    if (!_controlsVisible) {
+      _revealControls();
+      return;
+    }
+    _hideTimer?.cancel();
+    setState(() => _controlsVisible = false);
+  }
+
+  /// Tells the page when the controls change, so overlays can make room.
+  void _reportControlsVisible(bool visible) {
+    if (_reportedVisible == visible) return;
+    _reportedVisible = visible;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onControlsVisibleChanged?.call(visible);
+    });
   }
 
   @override
@@ -254,21 +333,34 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
     final position = matchReplayPositionAt(widget.replay.segments, target);
     if (position == null) return;
     _finished = false;
-    if (position.segmentIndex == _segmentIndex && _controller != null) {
+    final controller = _controller;
+    if (position.segmentIndex == _segmentIndex && controller != null) {
       final segment = widget.replay.segments[position.segmentIndex];
-      await _controller!.seekTo(
+      // Seeking to the very end can finish the segment and drop
+      // [_controller] meanwhile, so keep a local reference.
+      await controller.seekTo(
         Duration(seconds: matchReplayMediaSeconds(segment, position.offsetSec)),
       );
-      if (!_controller!.value.isPlaying) await _controller!.play();
+      if (_controller == controller && !controller.value.isPlaying) {
+        await controller.play();
+      }
       return;
     }
     _failed.remove(position.segmentIndex);
     await _openSegment(position.segmentIndex, offsetSec: position.offsetSec);
   }
 
+  /// Skip by [delta] seconds on the whole-match timeline; [_seekGlobal] keeps
+  /// it inside [0, duration] and crosses segment boundaries.
+  Future<void> _skipBy(int delta) {
+    _revealControls();
+    return _seekGlobal((_displayedSeconds + delta).toDouble());
+  }
+
   Future<void> _togglePlayback() async {
     final controller = _controller;
     if (controller == null) return;
+    _revealControls();
     if (controller.value.isPlaying) {
       await controller.pause();
     } else {
@@ -279,6 +371,7 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
 
   Future<void> _toggleMute() async {
     setState(() => _muted = !_muted);
+    _scheduleHide();
     await _controller?.setVolume(_muted ? 0 : 1);
   }
 
@@ -294,6 +387,8 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
 
   @override
   void dispose() {
+    _pip.active.removeListener(_onPipChanged);
+    _hideTimer?.cancel();
     _controller?.dispose();
     _nextController?.dispose();
     super.dispose();
@@ -303,54 +398,138 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final controller = _controller;
-    final picture = Stack(
-          fit: StackFit.expand,
-          children: [
-            if (controller != null && controller.value.isInitialized)
-              widget.fullscreen
-                  // Fullscreen fills the screen, cropping a 16:9 picture on a
-                  // wider phone instead of leaving black side bars.
-                  ? FittedBox(
-                      fit: BoxFit.cover,
-                      clipBehavior: Clip.hardEdge,
-                      child: SizedBox(
-                        width: controller.value.size.width,
-                        height: controller.value.size.height,
-                        child: VideoPlayer(controller),
-                      ),
-                    )
-                  : VideoPlayer(controller)
-            else
-              Center(
-                child: _failed.length >= widget.replay.segments.length
-                    ? Text(
-                        l10n.matchReplayUnableToPlay,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white70),
-                      )
-                    : _finished
-                    ? Text(
-                        l10n.matchReplayFinished,
-                        style: const TextStyle(color: Colors.white70),
-                      )
-                    : const CircularProgressIndicator(),
-              ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _buildControls(l10n, controller),
-            ),
-          ],
-        );
+    _reportControlsVisible(_controlsUp);
     return ColoredBox(
       key: const ValueKey<String>('match-replay-player'),
       color: Colors.black,
       // The picture is the whole player: controls float over its bottom edge
       // like the live player, instead of a black strip underneath.
-      child: widget.fullscreen
-          ? picture
-          : AspectRatio(aspectRatio: 16 / 9, child: picture),
+      // picture shows or hides them.
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _onPictureTap,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (controller != null && controller.value.isInitialized)
+                // Contain: a segment that is not 16:9 gets black bars, not a
+                // stretched picture.
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: controller.value.aspectRatio > 0
+                        ? controller.value.aspectRatio
+                        : 16 / 9,
+                    child: VideoPlayer(controller),
+                  ),
+                )
+              else
+                Center(
+                  child: _failed.length >= widget.replay.segments.length
+                      ? Text(
+                          l10n.matchReplayUnableToPlay,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white70),
+                        )
+                      : _finished
+                      ? Text(
+                          l10n.matchReplayFinished,
+                          style: const TextStyle(color: Colors.white70),
+                        )
+                      : const CircularProgressIndicator(),
+                ),
+              Center(child: _buildCenterControls(l10n, controller)),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _fadeWhenIdle(_buildControls(l10n, controller)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Fades [child] out and lets taps through while the controls are hidden.
+  Widget _fadeWhenIdle(Widget child) {
+    return IgnorePointer(
+      ignoring: !_controlsUp,
+      child: AnimatedOpacity(
+        opacity: _controlsUp ? 1 : 0,
+        duration: const Duration(milliseconds: 200),
+        child: child,
+      ),
+    );
+  }
+
+  /// Small frosted pill in the middle of the picture: back 3s, play/pause,
+  /// forward 3s.
+  Widget _buildCenterControls(
+    AppLocalizations l10n,
+    VideoPlayerController? controller,
+  ) {
+    final playing = controller?.value.isPlaying == true;
+    final ready = controller != null;
+    Widget button(
+      Key key,
+      String tooltip,
+      VoidCallback? onPressed,
+      Widget icon,
+    ) => IconButton(
+      key: key,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      padding: EdgeInsets.zero,
+      color: Colors.white,
+      icon: icon,
+    );
+    return _fadeWhenIdle(
+      ClipRRect(
+        key: const ValueKey<String>('replay-center-controls'),
+        borderRadius: BorderRadius.circular(32),
+        child: liveGlassBackdrop(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B1B3A).withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  button(
+                    const ValueKey<String>('replay-skip-back'),
+                    l10n.matchReplaySkipBack,
+                    ready ? () => _skipBy(-_skipSeconds) : null,
+                    const _SkipIcon(Icons.replay_rounded),
+                  ),
+                  button(
+                    const ValueKey<String>('replay-play-pause'),
+                    playing ? l10n.matchReplayPause : l10n.matchReplayPlay,
+                    ready ? _togglePlayback : null,
+                    Icon(
+                      playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      size: 34,
+                    ),
+                  ),
+                  button(
+                    const ValueKey<String>('replay-skip-forward'),
+                    l10n.matchReplaySkipForward,
+                    ready ? () => _skipBy(_skipSeconds) : null,
+                    const _SkipIcon(Icons.refresh_rounded),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -408,7 +587,10 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
                 value: current.toDouble().clamp(0, maxDuration).toDouble(),
                 max: maxDuration > 0 ? maxDuration : 1,
                 onChanged: maxDuration > 0
-                    ? (value) => _seekGlobal(value)
+                    ? (value) {
+                        _revealControls();
+                        _seekGlobal(value);
+                      }
                     : null,
                 activeColor: Theme.of(context).colorScheme.primary,
                 inactiveColor: Colors.white24,
@@ -436,6 +618,12 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ),
+              if (_pipSupported)
+                button(
+                  Icons.picture_in_picture_alt,
+                  l10n.matchPictureInPicture,
+                  _hasFrame ? _enterPip : null,
+                ),
               if (widget.onToggleFullscreen != null)
                 button(
                   widget.fullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
@@ -449,6 +637,32 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Thin circular arrow with the skip step ("3") in its middle.
+class _SkipIcon extends StatelessWidget {
+  const _SkipIcon(this.icon);
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Icon(icon, size: 30),
+        const Text(
+          '3',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            height: 1,
+          ),
+        ),
+      ],
     );
   }
 }

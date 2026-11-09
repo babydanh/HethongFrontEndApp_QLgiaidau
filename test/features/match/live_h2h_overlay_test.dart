@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_h2h_overlay.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/viewer/live_side_avatars.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _app({String round = 'ROUND 1', double width = 360}) {
@@ -8,6 +10,7 @@ Widget _app({String round = 'ROUND 1', double width = 360}) {
     home: Scaffold(
       body: Center(
         child: SizedBox(
+          key: const ValueKey('host'),
           width: width,
           child: LiveH2hOverlay(
             title: 'ĐỐI ĐẦU',
@@ -118,5 +121,134 @@ void main() {
 
     expect(find.bySemanticsLabel('son bao b vs Sơn Bảo Phan'), findsOneWidget);
     handle.dispose();
+  });
+
+  testWidgets('TC-LIVEOVL-06 glass panel: blur backdrop, no fading Opacity', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+
+    final inOverlay = find.descendant(
+      of: find.byType(LiveH2hOverlay),
+      matching: find.byType(Opacity),
+    );
+    for (final opacity in tester.widgetList<Opacity>(inOverlay)) {
+      expect(opacity.opacity, 1);
+    }
+    expect(
+      find.descendant(
+        of: find.byType(LiveH2hOverlay),
+        matching: find.byType(BackdropFilter),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'TC-LIVEOVL-07 panel is half the video width at any size, centred',
+    (tester) async {
+      // 360dp is where the scale floor (0.45) starts to apply.
+      for (final width in [360.0, 400.0, 700.0]) {
+        await tester.pumpWidget(_app(width: width));
+
+        final host = tester.getRect(find.byKey(const ValueKey('host')));
+        final panel = tester.getRect(
+          find.byKey(const ValueKey('live-h2h-panel')),
+        );
+        expect(panel.width / host.width, closeTo(0.5, 0.03), reason: '$width');
+        expect(panel.center.dx, closeTo(host.center.dx, 0.5));
+      }
+    },
+  );
+
+  testWidgets('TC-LIVEOVL-08 height follows the video width, no overflow', (
+    tester,
+  ) async {
+    double panelHeight() =>
+        tester.getSize(find.byKey(const ValueKey('live-h2h-panel'))).height;
+
+    await tester.pumpWidget(_app(width: 800));
+    final wide = panelHeight();
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(_app(width: 500));
+    final narrow = panelHeight();
+    expect(tester.takeException(), isNull);
+
+    // Scale is 1.0 at 800dp and 0.625 at 500dp: the narrow panel is about 62%
+    // as tall (hairline borders keep a 1dp floor, hence the slack).
+    expect(narrow, inInclusiveRange(wide * 0.55, wide * 0.72));
+
+    // A 400dp video gets a card well under the old fixed layout (82dp).
+    await tester.pumpWidget(_app(width: 400));
+    expect(panelHeight(), lessThan(82 * 0.75));
+  });
+
+  testWidgets('TC-LIVEOVL-09 the header carries the Sporto logo', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+
+    expect(
+      find.descendant(
+        of: find.byType(LiveH2hOverlay),
+        matching: find.byType(SvgPicture),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('TC-LIVEOVL-11 small round close button hangs off the corner', (
+    tester,
+  ) async {
+    var closed = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('vi'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              key: const ValueKey('host'),
+              width: 400,
+              child: LiveH2hOverlay(
+                title: 'ĐỐI ĐẦU',
+                roundLabel: 'ROUND 1',
+                onClose: () => closed++,
+                left: const LiveH2hSideData(
+                  name: 'son bao b',
+                  ringColor: LiveH2hOverlay.leftRing,
+                ),
+                right: const LiveH2hSideData(
+                  name: 'Sơn Bảo Phan',
+                  ringColor: LiveH2hOverlay.rightRing,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final dot = tester.getRect(
+      find.byKey(const ValueKey('live-overlay-close-dot')),
+    );
+    final panel = tester.getRect(find.byKey(const ValueKey('live-h2h-panel')));
+    final pill = tester.getRect(find.byKey(const ValueKey('live-h2h-round')));
+    final touch = tester.getRect(find.byType(IconButton));
+    final host = tester.getRect(find.byKey(const ValueKey('host')));
+    expect(dot.width, greaterThanOrEqualTo(24));
+    expect(touch.shortestSide, greaterThanOrEqualTo(40));
+    // Sits on the panel's top-right corner, partly outside it.
+    expect(dot.top, lessThan(panel.top));
+    expect(dot.right, greaterThan(panel.right));
+    // Never covers the round pill, and the panel stays centred on the video.
+    expect(pill.right, lessThanOrEqualTo(dot.left));
+    expect(panel.center.dx, closeTo(host.center.dx, 0.5));
+
+    await tester.tap(find.byTooltip('Đóng'));
+    expect(closed, 1);
+    expect(tester.takeException(), isNull);
   });
 }

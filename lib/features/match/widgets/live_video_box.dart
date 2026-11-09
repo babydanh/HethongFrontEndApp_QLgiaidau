@@ -47,9 +47,17 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     this.fullscreen = false,
     this.onToggleFullscreen,
     this.showLiveDot = false,
+    this.onControlsVisibleChanged,
+    this.onAspectRatioChanged,
   });
 
   final String matchId;
+
+  /// Forwarded to whichever player shows: true while its control bar is up.
+  final ValueChanged<bool>? onControlsVisibleChanged;
+
+  /// Forwarded to the live player: the stream's real width / height.
+  final ValueChanged<double>? onAspectRatioChanged;
 
   /// Forwarded to the live player: red LIVE dot beside the sound button.
   final bool showLiveDot;
@@ -95,6 +103,8 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         fullscreen: widget.fullscreen,
         onToggleFullscreen: widget.onToggleFullscreen,
         showLiveDot: widget.showLiveDot,
+        onControlsVisibleChanged: widget.onControlsVisibleChanged,
+        onAspectRatioChanged: widget.onAspectRatioChanged,
       );
     }
 
@@ -110,9 +120,9 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
           replay: value,
           fullscreen: widget.fullscreen,
           onToggleFullscreen: widget.onToggleFullscreen,
+          onControlsVisibleChanged: widget.onControlsVisibleChanged,
         );
-        // In a bounded landscape box the player fills it (see
-        // MatchReplayPlayer.fullscreen); inline it keeps its 16:9 shape.
+        // The player keeps its own 16:9 shape; the page aligns it.
         return player;
       },
       orElse: () => const _NoSignalBox(),

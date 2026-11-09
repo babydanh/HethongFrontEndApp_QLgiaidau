@@ -6527,6 +6527,9 @@
   "matchReplayPlay": "Play",
   "matchReplayPause": "Pause",
   "matchReplayFinished": "Replay finished.",
+  "matchReplaySkipBack": "Back 3 seconds",
+  "matchReplaySkipForward": "Forward 3 seconds",
+  "matchPictureInPicture": "Mini player",
   "rankingTierSourceDupr": "Tiers powered by DUPR",
   "rankingTierDuprFrom": "From {value}",
   "@rankingTierDuprFrom": {

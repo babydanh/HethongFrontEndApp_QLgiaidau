@@ -29354,6 +29354,24 @@ abstract class AppLocalizations {
   /// **'Đã phát hết bản ghi'**
   String get matchReplayFinished;
 
+  /// No description provided for @matchReplaySkipBack.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lùi 3 giây'**
+  String get matchReplaySkipBack;
+
+  /// No description provided for @matchReplaySkipForward.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiến 3 giây'**
+  String get matchReplaySkipForward;
+
+  /// No description provided for @matchPictureInPicture.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cửa sổ nhỏ'**
+  String get matchPictureInPicture;
+
   /// No description provided for @rankingTierSourceDupr.
   ///
   /// In vi, this message translates to:

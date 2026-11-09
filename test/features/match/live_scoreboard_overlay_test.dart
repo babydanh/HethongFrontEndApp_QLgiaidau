@@ -70,13 +70,20 @@ void main() {
   testWidgets('TC-LIVEVIEW-21 broadcast-size board: two slim rows', (
     tester,
   ) async {
+    // A portrait-sized picture (the scale follows the width it is given).
     await tester.pumpWidget(
       _host(
-        const LiveScoreboardOverlay(
-          team1: Text('Alpha'),
-          team2: Text('Beta'),
-          score1: 3,
-          score2: 1,
+        const SizedBox(
+          width: 411,
+          child: Align(
+            alignment: Alignment.bottomLeft,
+            child: LiveScoreboardOverlay(
+              team1: Text('Alpha'),
+              team2: Text('Beta'),
+              score1: 3,
+              score2: 1,
+            ),
+          ),
         ),
       ),
     );
@@ -283,5 +290,38 @@ void main() {
     );
 
     expect(find.text('S1'), findsNothing);
+  });
+
+  testWidgets('TC-LIVEOVL-10 board shrinks with a 400dp video and is glass', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        const SizedBox(
+          width: 400,
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: LiveScoreboardOverlay(
+              team1: Text('Alpha'),
+              team2: Text('Beta'),
+              score1: 3,
+              score2: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final size = tester.getSize(find.byType(LiveScoreboardOverlay));
+    // Old board: 42dp tall, up to 170dp wide; now 70% of that.
+    expect(size.height, lessThanOrEqualTo(42 * 0.7 + 1));
+    expect(size.width, lessThanOrEqualTo(170 * 0.7 + 1));
+    expect(
+      find.descendant(
+        of: find.byType(LiveScoreboardOverlay),
+        matching: find.byType(BackdropFilter),
+      ),
+      findsOneWidget,
+    );
   });
 }

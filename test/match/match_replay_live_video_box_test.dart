@@ -7,6 +7,10 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:video_player/video_player.dart';
+import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+
+import 'fake_video_player_platform.dart';
 
 class _FakeMatchPlaybackRepository implements IMatchPlaybackRepository {
   _FakeMatchPlaybackRepository(this.replay);
@@ -123,9 +127,9 @@ void main() {
       find.byKey(const ValueKey<String>('match-replay-player')),
     );
     expect(size.height, closeTo(320 * 9 / 16, 0.5));
-    // Same controls as the live player: play, sound (muted by default),
+    // Same controls as the live player: play, sound (on by default),
     // timeline and fullscreen, all inside the picture.
-    expect(find.byIcon(Icons.volume_off), findsOneWidget);
+    expect(find.byIcon(Icons.volume_up), findsOneWidget);
     expect(find.byIcon(Icons.fullscreen), findsOneWidget);
     expect(
       find.byKey(const ValueKey<String>('match-replay-timeline')),
@@ -135,40 +139,43 @@ void main() {
       find.byKey(const ValueKey<String>('match-replay-player')),
     );
     expect(
-      picture.contains(tester.getCenter(find.byIcon(Icons.volume_off))),
+      picture.contains(tester.getCenter(find.byIcon(Icons.volume_up))),
       isTrue,
     );
   });
 
-  testWidgets('TC-FULLVID-01 replay fills a wide landscape box with no side bars', (
-    tester,
-  ) async {
-    final repository = _FakeMatchPlaybackRepository(_replay(available: true));
+  testWidgets(
+    'TC-FULLVID-01 replay in a wide landscape box shows the whole picture',
+    (tester) async {
+      VideoPlayerPlatform.instance = FakeVideoPlayerPlatform();
+      final repository = _FakeMatchPlaybackRepository(_replay(available: true));
 
-    // A phone in landscape is wider than 16:9 (here 800x300).
-    await _pumpBox(
-      tester,
-      repository,
-      onToggleFullscreen: () {},
-      fill: true,
-      box: const Size(800, 300),
-    );
+      // A phone in landscape is wider than 16:9 (here 800x300). The picture is
+      // contained (full height, 16:9, black bars), never cropped to fill.
+      await _pumpBox(
+        tester,
+        repository,
+        onToggleFullscreen: () {},
+        fill: true,
+        box: const Size(800, 300),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
 
-    final size = tester.getSize(
-      find.byKey(const ValueKey<String>('match-replay-player')),
-    );
-    expect(size.width, closeTo(800, 0.5));
-    expect(size.height, closeTo(300, 0.5));
-  });
+      final video = tester.getRect(find.byType(VideoPlayer));
+      expect(video.height, closeTo(300, 0.5));
+      expect(video.width / video.height, closeTo(16 / 9, 0.02));
+      expect(video.center.dx, closeTo(400, 0.5));
+    },
+  );
 
   testWidgets('sound button toggles the replay mute icon', (tester) async {
     final repository = _FakeMatchPlaybackRepository(_replay(available: true));
 
     await _pumpBox(tester, repository);
-    await tester.tap(find.byIcon(Icons.volume_off));
+    await tester.tap(find.byIcon(Icons.volume_up));
     await tester.pump();
 
-    expect(find.byIcon(Icons.volume_up), findsOneWidget);
+    expect(find.byIcon(Icons.volume_off), findsOneWidget);
   });
 
   testWidgets(

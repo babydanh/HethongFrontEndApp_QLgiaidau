@@ -16251,6 +16251,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get matchReplayFinished => 'Đã phát hết bản ghi';
 
   @override
+  String get matchReplaySkipBack => 'Lùi 3 giây';
+
+  @override
+  String get matchReplaySkipForward => 'Tiến 3 giây';
+
+  @override
+  String get matchPictureInPicture => 'Cửa sổ nhỏ';
+
+  @override
   String get rankingTierSourceDupr => 'Bậc theo DUPR';
 
   @override
