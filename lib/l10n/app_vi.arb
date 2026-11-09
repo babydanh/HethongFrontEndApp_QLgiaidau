@@ -7706,5 +7706,10 @@
   "cbdRallyBreakBetweenGames": "Nghỉ giữa game 120 giây, đổi sân",
   "cbdRallyChangeEnds": "Game cuối: đổi sân (một bên đạt 5)",
   "cbdTennisServe": "● GIAO",
-  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)"
+  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)",
+  "schedMgmt_courtsTooltip": "Tạo sân và quản lý sân",
+  "schedMgmt_hoursTooltip": "Khung giờ sân",
+  "schedMgmt_arrangeTooltip": "Xếp lịch trận",
+  "schedMgmt_createCourtCta": "Tạo sân",
+  "schedMgmt_emptyHint": "Chưa có sân nào. Tạo sân để bắt đầu xếp lịch."
 }

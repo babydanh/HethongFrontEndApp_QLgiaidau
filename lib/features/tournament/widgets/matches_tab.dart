@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_grid.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/schedule_manager_bar.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 class MatchesTab extends ConsumerStatefulWidget {
@@ -184,7 +185,13 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-              child: _buildSearchField(colors, l10n),
+              child: Row(
+                children: [
+                  Expanded(child: _buildSearchField(colors, l10n)),
+                  // Manager-only icons; renders nothing for other viewers.
+                  ScheduleManagerBar(tournamentId: widget.tournamentId),
+                ],
+              ),
             ),
             if (scheduleDates.length > 1)
               _buildDateSelector(scheduleDates, selectedDate, colors),
@@ -537,6 +544,10 @@ class _MatchesTabState extends ConsumerState<MatchesTab> {
               description,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: colors.textMuted),
+            ),
+            ScheduleManagerBar(
+              tournamentId: widget.tournamentId,
+              createCourtCta: true,
             ),
           ],
         ),

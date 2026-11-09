@@ -7678,5 +7678,10 @@
   "cbdRallyBreakBetweenGames": "120-second rest between games, change ends",
   "cbdRallyChangeEnds": "Deciding game: change ends (a side reached 5)",
   "cbdTennisServe": "● SERVE",
-  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)"
+  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)",
+  "schedMgmt_courtsTooltip": "Create and manage courts",
+  "schedMgmt_hoursTooltip": "Court hours",
+  "schedMgmt_arrangeTooltip": "Schedule matches",
+  "schedMgmt_createCourtCta": "Create court",
+  "schedMgmt_emptyHint": "No courts yet. Create a court to start scheduling."
 }
