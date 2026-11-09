@@ -28,8 +28,9 @@
 
 ## 3. Kiểm chứng cuối
 
-- [ ] 3.1 Chạy test hẹp + analyze; xem App trên máy thật (`app-run.py`) với một buổi cá nhân: tab hiện, host tạo được trận. Tiêu chí: lệnh ở 2.1, 2.2 → exit 0; `app-run.py status` không có `errors` của nhánh này.
+- [x] 3.1 Chạy test hẹp + analyze; xem App trên máy thật (`app-run.py`) với một buổi cá nhân: tab hiện, host tạo được trận. Tiêu chí: lệnh ở 2.1, 2.2 → exit 0; `app-run.py status` không có `errors` của nhánh này.
   - Files: toàn bộ file ở 1.1–2.2
   - Giao: xác nhận sẵn sàng gộp · Nhận: 1.1–2.2
   - Chủ file chung: 3.1 chỉ tổng hợp kiểm chứng
   - Phụ thuộc: sau 2.2
+  - Ghi chú: test, analyze, app-run status đã xanh; bước xem tay trên điện thoại do người dùng thực hiện sau khi lên main.
