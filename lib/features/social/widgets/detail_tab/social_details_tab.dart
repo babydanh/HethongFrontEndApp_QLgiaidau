@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/social/logic/social_add_people.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_avatar.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -40,121 +42,12 @@ class SocialDetailsTab extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ─── UPPER PART (IMG2) ───
-
-                // 1. Club Host Banner Card (Light green background matching IMG2)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? colors.bgCard
-                        : colors.success.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: colors.success.withValues(
-                        alpha: isDark ? 0.3 : 0.2,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      // Club Logo Avatar
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark ? Colors.black26 : Colors.white,
-                          border: Border.all(color: colors.success, width: 1.5),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.sports_tennis_rounded,
-                            size: 22,
-                            color: colors.success,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-
-                      // Host Club Name only
-                      Expanded(
-                        child: Text(
-                          session.hostClubName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // Host: logo CLB (hoặc ảnh/chữ cái đầu của host) + nhãn Host.
+                _HostCard(session: session),
                 const SizedBox(height: 18),
 
-                // 2. Participants Avatars Row & 'Liên hệ BTC' (IMG2)
-                Row(
-                  children: [
-                    // Host Avatar Circle (e.g. MQ)
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colors.success.withValues(alpha: 0.25),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'MQ',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // Empty Slot Circles (Dashed/Grey border circles)
-                    for (int i = 0; i < 3; i++)
-                      Container(
-                        width: 40,
-                        height: 40,
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colors.bgSurface,
-                        ),
-                      ),
-
-                    // '+4' Counter Badge
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colors.borderLight,
-                      ),
-                      child: const Center(
-                        child: Text(
-                          '+4',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // Người tham gia thật (host đứng đầu), không ô giả.
+                _ParticipantsPreview(session: session),
                 const SizedBox(height: 6),
 
                 // 'Liên hệ BTC' link
@@ -433,6 +326,128 @@ class SocialDetailsTab extends StatelessWidget {
             ),
           ),
         if (!isHost && viewerFooter != null) viewerFooter!,
+      ],
+    );
+  }
+}
+
+class _HostCard extends StatelessWidget {
+  const _HostCard({required this.session});
+  final SocialSessionModel session;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final host = session.participants.where((p) => p.isHost).firstOrNull;
+    final hasClub = session.community != null;
+    final title = session.hostClubName;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? colors.bgCard : colors.success.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colors.success.withValues(alpha: isDark ? 0.3 : 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          SocialAvatar(
+            name: title,
+            imageUrl: hasClub ? session.hostClubAvatar : host?.avatarUrl,
+            isHost: true,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                if (hasClub && host != null)
+                  Text(
+                    'Host: ${host.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const SocialHostChip(),
+        ],
+      ),
+    );
+  }
+}
+
+class _ParticipantsPreview extends StatelessWidget {
+  const _ParticipantsPreview({required this.session});
+  final SocialSessionModel session;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final preview = previewParticipants(session.participants);
+    if (preview.shown.isEmpty) return const SizedBox.shrink();
+    return Row(
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final p in preview.shown)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: SocialAvatar(
+                      name: p.name,
+                      imageUrl: p.avatarUrl,
+                      size: 40,
+                      isHost: p.isHost,
+                    ),
+                  ),
+                if (preview.overflow > 0)
+                  Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: colors.borderLight,
+                    ),
+                    child: Text(
+                      '+${preview.overflow}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${session.currentSlots}/${session.maxSlots}',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: colors.textSecondary,
+          ),
+        ),
       ],
     );
   }
