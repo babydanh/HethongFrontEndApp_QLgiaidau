@@ -1390,6 +1390,22 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
     return null;
   }
 
+  /// A finished rally/side-out set needs a winner; the server rejects a tied
+  /// one ("Không được phép hòa"). Returns true and sets a clear message when
+  /// the open set is tied, so callers can stop before any write.
+  bool rejectTiedRallySet() {
+    final rally = state.rally;
+    final model = state.config.scoringModel;
+    final isRallyModel = model == SportScoringModel.pickleballSideOut ||
+        model == SportScoringModel.rallyPointSet;
+    if (!isRallyModel || rally == null) return false;
+    if (rally.currentP1 != rally.currentP2) return false;
+    state = state.copyWith(
+      errorMessage: _l10n.scorePanel_pickleballTieNeedsWinner,
+    );
+    return true;
+  }
+
   Future<void> finishSet() async {
     if (state.isMatchComplete) {
       state = state.copyWith(
@@ -1398,6 +1414,7 @@ class ScorePanelNotifier extends Notifier<ScorePanelState> {
       return;
     }
     if (_rejectIfMaxSetsReached()) return;
+    if (rejectTiedRallySet()) return;
     final rally = state.rally;
     final tennis = state.tennis;
     state = state.copyWith(isSubmitting: true, errorMessage: null);

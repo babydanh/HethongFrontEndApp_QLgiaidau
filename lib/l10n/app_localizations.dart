@@ -18314,6 +18314,12 @@ abstract class AppLocalizations {
   /// **'Trận chưa đạt điều kiện kết thúc theo cấu hình.'**
   String get scorePanel_matchNotReady;
 
+  /// No description provided for @scorePanel_pickleballTieNeedsWinner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tỉ số đang hòa. Phải có bên thắng mới kết thúc được set.'**
+  String get scorePanel_pickleballTieNeedsWinner;
+
   /// No description provided for @scorePanel_footballWinnerNotFound.
   ///
   /// In vi, this message translates to:

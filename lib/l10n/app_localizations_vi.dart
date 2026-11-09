@@ -9958,6 +9958,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Trận chưa đạt điều kiện kết thúc theo cấu hình.';
 
   @override
+  String get scorePanel_pickleballTieNeedsWinner =>
+      'Tỉ số đang hòa. Phải có bên thắng mới kết thúc được set.';
+
+  @override
   String get scorePanel_footballWinnerNotFound =>
       'Không tìm thấy đội thắng của trận bóng đá.';
 

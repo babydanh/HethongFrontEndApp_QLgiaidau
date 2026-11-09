@@ -9982,6 +9982,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The match does not meet the configured completion conditions.';
 
   @override
+  String get scorePanel_pickleballTieNeedsWinner =>
+      'The score is tied. One side must be ahead to finish the set.';
+
+  @override
   String get scorePanel_footballWinnerNotFound =>
       'Could not find the winning team for this football match.';
 

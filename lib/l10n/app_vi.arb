@@ -3849,6 +3849,7 @@
   "scorePanel_footballSyncError": "Không thể đồng bộ tỉ số bóng đá.",
   "scorePanel_completeOverrideInvalid": "Nhập lý do và bảo đảm đội được xử thắng đang dẫn theo số set/game.",
   "scorePanel_matchNotReady": "Trận chưa đạt điều kiện kết thúc theo cấu hình.",
+  "scorePanel_pickleballTieNeedsWinner": "Tỉ số đang hòa. Phải có bên thắng mới kết thúc được set.",
   "scorePanel_footballWinnerNotFound": "Không tìm thấy đội thắng của trận bóng đá.",
   "scorePanel_footballShootoutRequired": "Trận hòa cần tỷ số luân lưu khác nhau để phân định.",
   "scorePanel_completeError": "Lỗi: {error}",
