@@ -17,6 +17,27 @@ const _fakeUrl = 'rtsp://camera.example.test/stream';
 
 class _VenuesRepository implements TournamentManagementRepository {
   final removedCourts = <String>[];
+  final created = <Map<String, Object?>>[];
+
+  @override
+  Future<Map<String, dynamic>> createVenue(
+    String id, {
+    required String name,
+    required String locationAddress,
+    String? venueId,
+    bool? isDefault,
+    int? initialCourtCount,
+    String? courtPrefix,
+  }) async {
+    created.add({
+      'name': name,
+      'address': locationAddress,
+      'isDefault': isDefault,
+      'courts': initialCourtCount,
+      'prefix': courtPrefix,
+    });
+    return {};
+  }
 
   @override
   Future<List<Map<String, dynamic>>> getVenues(String id) async => [
@@ -109,7 +130,95 @@ AppLocalizations _l10n(WidgetTester tester) => AppLocalizations.of(
   tester.element(find.byType(TournamentManagementVenuesSection)),
 )!;
 
+FilledButton _submit(WidgetTester tester) => tester.widget<FilledButton>(
+  find.byKey(const ValueKey('venue-dialog-submit')),
+);
+
+Future<void> _openAddDialog(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('venue-add')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  testWidgets('TC-VENUE-DLG-01 create stays disabled until name and address are filled', (
+    tester,
+  ) async {
+    final repo = await _pump(tester);
+    await _openAddDialog(tester);
+
+    expect(find.byIcon(Icons.location_on_rounded), findsOneWidget);
+    expect(find.byKey(const ValueKey('venue-dialog-close')), findsOneWidget);
+    expect(_submit(tester).onPressed, isNull);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-name')),
+      'Sunrise Club',
+    );
+    await tester.pump();
+    expect(_submit(tester).onPressed, isNull);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-address')),
+      '1 Lake Road',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-count')),
+      '4',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-prefix')),
+      'Court',
+    );
+    await tester.tap(find.byKey(const ValueKey('venue-dialog-default')));
+    await tester.pump();
+    expect(_submit(tester).onPressed, isNotNull);
+
+    await tester.tap(find.byKey(const ValueKey('venue-dialog-submit')));
+    await tester.pumpAndSettle();
+
+    expect(repo.created, [
+      {
+        'name': 'Sunrise Club',
+        'address': '1 Lake Road',
+        'isDefault': true,
+        'courts': 4,
+        'prefix': 'Court',
+      },
+    ]);
+    expect(find.byKey(const ValueKey('venue-dialog-submit')), findsNothing);
+  });
+
+  testWidgets('TC-VENUE-DLG-02 footer buttons stay above the keyboard', (
+    tester,
+  ) async {
+    await _pump(tester);
+    tester.view.physicalSize = const Size(390, 844);
+    await _openAddDialog(tester);
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+    await tester.pumpAndSettle();
+
+    final submit = tester.getRect(
+      find.byKey(const ValueKey('venue-dialog-submit')),
+    );
+    expect(submit.bottom, lessThanOrEqualTo(844 - 320));
+    expect(submit.top, greaterThanOrEqualTo(0));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TC-VENUE-DLG-03 the close button dismisses without creating', (
+    tester,
+  ) async {
+    final repo = await _pump(tester);
+    await _openAddDialog(tester);
+
+    await tester.tap(find.byKey(const ValueKey('venue-dialog-close')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('venue-dialog-submit')), findsNothing);
+    expect(repo.created, isEmpty);
+  });
+
   testWidgets('TC-EDIT-04 editFirstVenue opens the default venue editor at once', (
     tester,
   ) async {

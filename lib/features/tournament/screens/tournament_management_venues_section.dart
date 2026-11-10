@@ -374,87 +374,283 @@ class _VenueDialogState extends State<_VenueDialog> {
     super.dispose();
   }
 
+  bool get _canSubmit =>
+      _name.text.trim().isNotEmpty && _address.text.trim().isNotEmpty;
+
+  void _submit() {
+    final parsedCount = int.tryParse(_count.text.trim());
+    Navigator.pop(
+      context,
+      _VenueValues(
+        name: _name.text,
+        address: _address.text,
+        isDefault: _default,
+        initialCourtCount:
+            widget.showCourtFields && parsedCount != null && parsedCount > 0
+            ? parsedCount
+            : null,
+        courtPrefix: _prefix.text,
+      ),
+    );
+  }
+
+  OutlineInputBorder _border(Color color, [double width = 1]) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
+  /// Web-like field: the label sits above the box, a red star marks required.
+  Widget _field({
+    required Key key,
+    required String label,
+    required TextEditingController controller,
+    bool required = false,
+    bool autofocus = false,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    final colors = LavishColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            text: label,
+            children: [
+              if (required)
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: LavishColors.bad),
+                ),
+            ],
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: colors.text,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          key: key,
+          controller: controller,
+          autofocus: autofocus,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 13,
+            ),
+            border: _border(colors.chipLine),
+            enabledBorder: _border(colors.chipLine),
+            focusedBorder: _border(LavishColors.accent, 1.5),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _header(LavishColors colors, AppLocalizations l10n) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 14, 8, 14),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colors.soft(LavishTone.accent),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.location_on_rounded,
+            color: LavishColors.accent,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            widget.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: colors.text,
+            ),
+          ),
+        ),
+        IconButton(
+          key: const ValueKey('venue-dialog-close'),
+          tooltip: l10n.tournamentManagementCancel,
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.close_rounded, color: colors.muted),
+        ),
+      ],
+    ),
+  );
+
+  /// Courts block like the Web: count (+ prefix) and the default-venue tick in
+  /// one soft card. Only when creating a venue.
+  Widget _courtCard(LavishColors colors, AppLocalizations l10n) => Container(
+    padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
+    decoration: BoxDecoration(
+      color: colors.rowLine,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: colors.line),
+    ),
+    child: Column(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _field(
+                key: const ValueKey('venue-dialog-count'),
+                label: l10n.tournamentManagementInitialCourtCount,
+                controller: _count,
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _field(
+                key: const ValueKey('venue-dialog-prefix'),
+                label: l10n.tournamentManagementCourtPrefix,
+                controller: _prefix,
+              ),
+            ),
+          ],
+        ),
+        Material(
+          type: MaterialType.transparency,
+          child: CheckboxListTile(
+            key: const ValueKey('venue-dialog-default'),
+            value: _default,
+            onChanged: (value) => setState(() => _default = value ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Text(
+              l10n.tournamentManagementSetAsDefault,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: colors.text,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _footer(LavishColors colors, AppLocalizations l10n) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+    child: Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: colors.text,
+              side: BorderSide(color: colors.chipLine),
+              minimumSize: const Size(0, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(l10n.tournamentManagementCancel),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          flex: 2,
+          child: FilledButton.icon(
+            key: const ValueKey('venue-dialog-submit'),
+            onPressed: _canSubmit ? _submit : null,
+            style: FilledButton.styleFrom(
+              backgroundColor: LavishColors.accent,
+              minimumSize: const Size(0, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: Icon(
+              widget.showCourtFields ? Icons.add_rounded : Icons.check_rounded,
+              size: 18,
+            ),
+            label: Text(
+              widget.showCourtFields
+                  ? l10n.tournamentManagementAddVenue
+                  : l10n.tournamentManagementSave,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      title: Text(widget.title),
-      content: SingleChildScrollView(
+    final colors = LavishColors.of(context);
+    return Dialog(
+      backgroundColor: colors.surface,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        // Header and footer stay put; only the fields scroll, so the buttons
+        // never hide behind the keyboard.
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: _name,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementVenueName,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _address,
-              decoration: InputDecoration(
-                labelText: l10n.tournamentManagementVenueAddress,
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
-            if (widget.showCourtFields) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: _count,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementInitialCourtCount,
-                  border: const OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _prefix,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementCourtPrefix,
-                  border: const OutlineInputBorder(),
+            _header(colors, l10n),
+            Divider(height: 1, color: colors.line),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _field(
+                      key: const ValueKey('venue-dialog-name'),
+                      label: l10n.tournamentManagementVenueName,
+                      controller: _name,
+                      required: true,
+                      autofocus: true,
+                    ),
+                    const SizedBox(height: 14),
+                    _field(
+                      key: const ValueKey('venue-dialog-address'),
+                      label: l10n.tournamentManagementVenueAddress,
+                      controller: _address,
+                      required: true,
+                      maxLines: 2,
+                    ),
+                    if (widget.showCourtFields) ...[
+                      const SizedBox(height: 14),
+                      _courtCard(colors, l10n),
+                    ],
+                  ],
                 ),
               ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _default,
-                title: Text(l10n.tournamentManagementSetAsDefault),
-                onChanged: (value) => setState(() => _default = value),
-              ),
-            ],
+            ),
+            Divider(height: 1, color: colors.line),
+            _footer(colors, l10n),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.tournamentManagementCancel),
-        ),
-        FilledButton(
-          onPressed: () {
-            final parsedCount = int.tryParse(_count.text.trim());
-            Navigator.pop(
-              context,
-              _VenueValues(
-                name: _name.text,
-                address: _address.text,
-                isDefault: _default,
-                initialCourtCount:
-                    widget.showCourtFields &&
-                        parsedCount != null &&
-                        parsedCount > 0
-                    ? parsedCount
-                    : null,
-                courtPrefix: _prefix.text,
-              ),
-            );
-          },
-          child: Text(l10n.tournamentManagementSave),
-        ),
-      ],
     );
   }
 }
