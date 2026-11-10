@@ -1245,14 +1245,12 @@ void main() {
       for (final group in [
         l10n.manageInfoGroupGeneral,
         l10n.manageInfoGroupIdentity,
-        l10n.manageInfoGroupPrizes,
         l10n.manageInfoGroupContact,
       ]) {
         expect(find.text(group.toUpperCase()), findsOneWidget);
       }
-      // Branding is collapsed by default; opening it reveals the image tiles.
-      await tester.tap(find.text(l10n.manageInfoGroupIdentity.toUpperCase()));
-      await tester.pumpAndSettle();
+      // TC-INFO-GROUPS-01: no prizes group, every group is open from the start.
+      expect(find.text(l10n.manageInfoGroupPrizes.toUpperCase()), findsNothing);
       expect(find.text(l10n.tournamentManagementLogo), findsOneWidget);
       expect(find.text(l10n.tournamentManagementChooseDate), findsNothing);
       expect(find.text(l10n.tournamentManagementPublic), findsNothing);

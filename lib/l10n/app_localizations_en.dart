@@ -15260,8 +15260,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeSocialCreateAction => 'Create session';
 
   @override
-  String get tournamentManagementHideFeaturedCardText =>
-      'Hide headline text on tournament cards';
+  String get tournamentManagementHideFeaturedCardText => 'Hide title';
 
   @override
   String get tournamentManagementHideFeaturedCardTextDescription =>

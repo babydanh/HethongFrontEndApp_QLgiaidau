@@ -179,29 +179,26 @@ typedef _InfoValues = ({
 });
 
 /// One collapsible group of the information page: the design's `.hd` header
-/// with an accent "Thu gọn / Mở" toggle; the body stays mounted while hidden so
-/// unsaved edits survive a collapse.
+/// with an accent arrow toggle, open by default; the body stays mounted while
+/// hidden so unsaved edits survive a collapse.
 class _InfoGroup extends StatefulWidget {
   const _InfoGroup({
     required this.title,
     required this.children,
-    this.initiallyExpanded = false,
   });
 
   final String title;
   final List<Widget> children;
-  final bool initiallyExpanded;
 
   @override
   State<_InfoGroup> createState() => _InfoGroupState();
 }
 
 class _InfoGroupState extends State<_InfoGroup> {
-  late bool _open = widget.initiallyExpanded;
+  bool _open = true;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -210,29 +207,12 @@ class _InfoGroupState extends State<_InfoGroup> {
           onTap: () => setState(() => _open = !_open),
           child: LavishGroupHeader(
             widget.title,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  (_open
-                          ? l10n.manageInfoGroupCollapse
-                          : l10n.manageInfoGroupExpand)
-                      .toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.66,
-                    color: LavishColors.accent,
-                  ),
-                ),
-                Icon(
-                  _open
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 16,
-                  color: LavishColors.accent,
-                ),
-              ],
+            trailing: Icon(
+              _open
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              size: 20,
+              color: LavishColors.accent,
             ),
           ),
         ),
@@ -285,7 +265,7 @@ class _TournamentSettingsFormState
   // Mô tả lưu dạng HTML (Editor.js của web xuất ra HTML). Dùng state thay vì
   // TextEditingController vì RichTextField là WebView, không nhận controller.
   late String _description = widget.tournament.description;
-  late String _prize = widget.tournament.prizeDescription ?? '';
+  late final String _prize = widget.tournament.prizeDescription ?? '';
   // The whole `contactInfo` JSON: the server replaces it, so keys the form
   // does not show (hidden...) travel along untouched.
   late Map<String, dynamic> _contactInfo = {...?widget.tournament.contactInfo};
@@ -529,34 +509,19 @@ class _TournamentSettingsFormState
     );
   }
 
-  /// Bốn nhóm như Web; mỗi nhóm thu gọn/mở được, chỉ nhóm Chung mở sẵn.
+  /// Ba nhóm (Chung, Nhận diện, Liên hệ); mỗi nhóm thu gọn/mở được, mở sẵn hết.
   Widget _informationGroups(BuildContext context, AppLocalizations l10n) =>
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _InfoGroup(
             title: l10n.manageInfoGroupGeneral,
-            initiallyExpanded: true,
             children: _generalFields(l10n),
           ),
           _InfoGroup(
             title: l10n.manageInfoGroupIdentity,
             children: [
               TournamentManagementBrandsSection(tournament: widget.tournament),
-            ],
-          ),
-          _InfoGroup(
-            title: l10n.manageInfoGroupPrizes,
-            children: [
-              RichTextField(
-                value: _prize,
-                label: l10n.manageInfoPrizeLabel,
-                onChanged: (html) {
-                  if (html == _prize) return;
-                  _prize = html;
-                  _syncDirty();
-                },
-              ),
             ],
           ),
           _InfoGroup(
@@ -651,18 +616,30 @@ class _TournamentSettingsFormState
       },
     ),
     const SizedBox(height: 12),
-    // Design 16: `.li` row with the green switch on the right.
-    LavishRow(
-      key: const ValueKey('hide-featured-card-text'),
-      title: l10n.tournamentManagementHideFeaturedCardText,
-      subtitle: l10n.tournamentManagementHideFeaturedCardTextDescription,
-      onTap: _isSaving ? null : () => _setHideCardText(!_hideFeaturedCardText),
-      trailing: [
-        LavishSwitch(
-          value: _hideFeaturedCardText,
-          onChanged: _isSaving ? null : _setHideCardText,
+    // One short chip button instead of a title + description + switch row.
+    Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: FilterChip(
+        key: const ValueKey('hide-featured-card-text'),
+        avatar: Icon(
+          _hideFeaturedCardText
+              ? Icons.visibility_off_rounded
+              : Icons.visibility_outlined,
+          size: 18,
+          color: _hideFeaturedCardText ? LavishColors.accent : null,
         ),
-      ],
+        label: Text(l10n.tournamentManagementHideFeaturedCardText),
+        selected: _hideFeaturedCardText,
+        showCheckmark: false,
+        selectedColor: LavishColors.accent.withValues(alpha: 0.14),
+        side: BorderSide(
+          color: _hideFeaturedCardText
+              ? LavishColors.accent
+              : LavishColors.of(context).chipLine,
+          width: 1.5,
+        ),
+        onSelected: _isSaving ? null : _setHideCardText,
+      ),
     ),
   ];
 

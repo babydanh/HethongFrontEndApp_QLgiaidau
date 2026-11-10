@@ -7,7 +7,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -170,13 +169,18 @@ void main() {
     final l10n = _l10n(tester);
 
     final toggle = find.byKey(const ValueKey('hide-featured-card-text'));
+    // TC-INFO-HIDE-01: one short chip button, no description line.
+    expect(tester.widget<FilterChip>(toggle).selected, isTrue);
     expect(
-      tester
-          .widget<LavishSwitch>(
-            find.descendant(of: toggle, matching: find.byType(LavishSwitch)),
-          )
-          .value,
-      isTrue,
+      find.descendant(
+        of: toggle,
+        matching: find.text(l10n.tournamentManagementHideFeaturedCardText),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text(l10n.tournamentManagementHideFeaturedCardTextDescription),
+      findsNothing,
     );
     await tester.ensureVisible(toggle);
     await tester.pumpAndSettle();
@@ -681,11 +685,19 @@ void main() {
       for (final title in [
         l10n.manageInfoGroupGeneral,
         l10n.manageInfoGroupIdentity,
-        l10n.manageInfoGroupPrizes,
         l10n.manageInfoGroupContact,
       ]) {
         expect(find.text(title.toUpperCase()), findsOneWidget);
       }
+      expect(
+        find.text(l10n.manageInfoGroupPrizes.toUpperCase()),
+        findsNothing,
+      );
+      // The "collapse / expand" words are gone; the arrow alone toggles.
+      expect(
+        find.text(l10n.manageInfoGroupCollapse.toUpperCase()),
+        findsNothing,
+      );
       expect(find.widgetWithText(FilledButton, l10n.manageInfoSaveChanges),
           findsOneWidget);
       expect(find.widgetWithText(FilledButton, l10n.tournamentManagementSave),
@@ -743,8 +755,6 @@ void main() {
       );
       final l10n = _l10n(tester);
 
-      await tester.tap(find.text(l10n.manageInfoGroupContact.toUpperCase()));
-      await tester.pumpAndSettle();
       await tester.enterText(
         find.byKey(const ValueKey('info-contact-phone')),
         '0911111111',
