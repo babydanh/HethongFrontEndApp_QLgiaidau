@@ -5,7 +5,7 @@ import 'support/app_driver.dart';
 import 'support/backend_api.dart';
 import 'support/chup.dart';
 
-/// Chụp ảnh Hồ sơ, Dashboard và các trang quản trị bằng tài khoản Admin (seed:data).
+/// Chụp ảnh Hồ sơ, Dashboard và các trang quản trị bằng tài khoản E2E e2eadmin (ADMIN).
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -18,7 +18,7 @@ void main() {
       tester,
       binding,
       email: kAdminEmail,
-      password: kAdminPassword,
+      password: kE2ePassword,
       prefix: 'admin',
     );
     await chup.pages(const [
