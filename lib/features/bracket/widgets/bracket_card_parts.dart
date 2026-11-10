@@ -155,9 +155,7 @@ class BracketSideRow extends StatelessWidget {
         match.winnerId == (side == 1 ? match.team1Id : match.team2Id);
     final scores = bracketSideScores(match, side);
     final empty = teamName == null && players.isEmpty;
-    final waiting = match.isBye || isBye
-        ? l10n.bracketBye
-        : l10n.playoff_slotNA;
+    final byeSide = match.isBye || isBye;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
@@ -171,15 +169,17 @@ class BracketSideRow extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: empty
                   ? (placeholder ??
-                        Text(
-                          waiting,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: colors.textMuted,
-                          ),
-                        ))
+                        (byeSide
+                            ? _ByeChip(label: l10n.bracketBye)
+                            : Text(
+                                l10n.playoff_slotNA,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: colors.textMuted,
+                                ),
+                              )))
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -213,6 +213,39 @@ class BracketSideRow extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Miễn đấu" tag: an amber pill so a BYE side stands out from an empty "N/A".
+class _ByeChip extends StatelessWidget {
+  const _ByeChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final warning = context.colors.warning;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    // Plain amber is too pale as text on a light card.
+    final textColor = dark ? warning : const Color(0xFFB45309);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: warning.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: warning.withValues(alpha: 0.55)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: textColor,
+        ),
       ),
     );
   }

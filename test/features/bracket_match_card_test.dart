@@ -6,7 +6,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// TC-BMC-01..04: the match card of the full-screen diagram uses the same
+// TC-BMC-01..05: the match card of the full-screen diagram uses the same
 // design as the card of the paged board in the tab.
 MatchModel _match({
   String status = 'SCHEDULED',
@@ -112,6 +112,16 @@ void main() {
 
     expect(find.text('Miễn đấu'), findsOneWidget);
     expect(find.text('BYE'), findsNothing);
+    // The tag stands out: amber pill, bold text (TC-BMC-05).
+    final label = tester.widget<Text>(find.text('Miễn đấu'));
+    expect(label.style?.fontWeight, FontWeight.w800);
+    final pill = tester.widget<Container>(
+      find
+          .ancestor(of: find.text('Miễn đấu'), matching: find.byType(Container))
+          .first,
+    );
+    final decoration = pill.decoration as BoxDecoration;
+    expect(decoration.color, const Color(0xFFF59E0B).withValues(alpha: 0.16));
   });
 
   testWidgets(
