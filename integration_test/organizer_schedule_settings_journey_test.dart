@@ -666,8 +666,7 @@ void main() {
       await _tapText(tester, 'Lịch sử thanh toán');
       await _expectText(tester, 'Chưa có yêu cầu thanh toán.');
       await shooter.snap('77-lich-su-thanh-toan');
-      await _closeRoute(tester, find.text('Chưa có yêu cầu thanh toán.'));
-      await _waitGone(tester, find.text('Chưa có yêu cầu thanh toán.'), 'sheet lịch sử đóng');
+      // Lịch sử thanh toán nằm ngay trên trang Tài chính (không phải sheet): không có gì để đóng.
     },
   );
 
