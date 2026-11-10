@@ -95,11 +95,11 @@ void main() {
       await shooter.snap('62-dialog-them-san');
       await _tap(tester, _inDialog('Lưu'));
       venues = await venuesUntil(
-        (list) => list.any((v) => v['name'] == venueA && _courtsOf(v).any((c) => c['name'] == extraCourt)),
+        (list) => list.any((v) => v['name'] == venueA && _courtsOf(v).any((c) => _courtName(c) == extraCourt)),
         'Backend có sân "$extraCourt"',
       );
       final extraId = _courtsOf(venues.firstWhere((v) => v['name'] == venueA))
-          .firstWhere((c) => c['name'] == extraCourt)['id'] as String;
+          .firstWhere((c) => _courtName(c) == extraCourt)['id'] as String;
       await pumpUntilFound(tester, find.text(extraCourt), what: 'sân "$extraCourt" trong danh sách');
       await shooter.snap('62-da-them-san');
       await tapKey(tester, 'court-edit-$extraId');
@@ -175,7 +175,7 @@ void main() {
       final venues = await api.listVenues(token: seeded.token, tournamentId: seeded.tournamentId);
       expect(venues, isNotEmpty, reason: 'Giải dùng chung chưa có địa điểm: chạy sau TC-QLGD-APP-60..63');
       final court = _courtsOf(venues.first).first;
-      final courtName = court['name'] as String;
+      final courtName = _courtName(court);
       final courtId = court['id'] as String;
       await api.generateBracket(token: seeded.token, tournamentId: seeded.tournamentId, divisionId: seeded.divisionId);
       Future<List<Map<String, dynamic>>> matchesNow() =>
@@ -678,6 +678,7 @@ void main() {
       final container = await signInAsOrganizer(tester);
       await openManageHub(tester, container, seeded.tournamentId);
       await openHubTab(tester, 'Cài đặt');
+      await _scrollSettingsTo(tester, find.byKey(const ValueKey('lifecycle-share')));
       await expectKey(tester, 'lifecycle-share', step: 'dòng Chia sẻ ở tab Cài đặt');
       await shooter.snap('78-tab-cai-dat');
 
@@ -732,6 +733,7 @@ void main() {
       final container = await signInAsOrganizer(tester);
       await openManageHub(tester, container, doomed.tournamentId);
       await openHubTab(tester, 'Cài đặt');
+      await _scrollSettingsTo(tester, find.byKey(const ValueKey('lifecycle-delete')));
       await expectKey(tester, 'lifecycle-delete', step: 'dòng Xóa giải đấu ở tab Cài đặt');
       await shooter.snap('79-tab-cai-dat');
 
@@ -885,6 +887,17 @@ Future<Map<String, dynamic>> _tournamentConfig(BackendApi api, SeededTournament 
   return Map<String, dynamic>.from(config as Map);
 }
 
+/// Backend trả tên sân ở trường `courtName`.
+String _courtName(Map<String, dynamic> court) => (court['courtName'] ?? court['name']).toString();
+
+/// Cuộn tab Cài đặt tới khi [finder] được dựng (danh sách lazy), tối đa 20 lần kéo.
+Future<void> _scrollSettingsTo(WidgetTester tester, Finder finder) async {
+  for (var i = 0; i < 20 && finder.evaluate().isEmpty; i++) {
+    await tester.drag(find.byType(TabBarView), const Offset(0, -300));
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+}
+
 List<Map<String, dynamic>> _courtsOf(Map<String, dynamic> venue) {
   final courts = venue['courts'];
   expect(courts, isA<List>(), reason: 'Địa điểm từ Backend phải có danh sách courts: $venue');
@@ -937,7 +950,9 @@ void _clearSnackBars(WidgetTester tester) {
 Future<void> _openSettingsSection(WidgetTester tester, String title) async {
   await openHubTab(tester, 'Cài đặt');
   final row = find.widgetWithText(LavishRow, title);
+  await _scrollSettingsTo(tester, row);
   await pumpUntilFound(tester, row, what: 'dòng cài đặt "$title"');
+  await tester.ensureVisible(row);
   await _tap(tester, row);
 }
 
