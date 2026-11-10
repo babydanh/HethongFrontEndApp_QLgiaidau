@@ -485,6 +485,20 @@ class _NoGpsLocation extends UserLocationNotifier {
   Future<void> refreshSilently() async {}
 }
 
+/// Container của các lần dựng app trước trong cùng tiến trình test. Phải huỷ hết: provider `HomeMatchFeedNotifier`
+/// hẹn giờ 60s đóng keepAlive khi hết người nghe, huỷ container mới cancel được hẹn giờ đó. Để sót thì hẹn giờ bắn
+/// giữa hai ca và Flutter tính lỗi "Cannot schedule a task on an unmounted element" vào ca vừa chạy xong.
+final List<ProviderContainer> _liveContainers = [];
+
+void _disposeLiveContainersExcept(ProviderContainer keep) {
+  for (final old in _liveContainers.where((c) => !identical(c, keep))) {
+    old.dispose();
+  }
+  _liveContainers
+    ..clear()
+    ..add(keep);
+}
+
 /// Giống `pumpApp` của app_driver, chỉ thêm override vị trí ở trên.
 Future<ProviderContainer> _pumpAppWithoutGps(WidgetTester tester) async {
   final container = ProviderContainer(
@@ -508,6 +522,8 @@ Future<ProviderContainer> _pumpAppWithoutGps(WidgetTester tester) async {
     timeout: const Duration(seconds: 60),
     what: 'SplashScreen chuyển khỏi đường dẫn "/"',
   );
+  _liveContainers.add(container);
+  _disposeLiveContainersExcept(container);
   return container;
 }
 
@@ -538,5 +554,6 @@ Future<void> leaveSocialSession(WidgetTester tester, ProviderContainer container
   // (lỗi "Cannot schedule a task on an unmounted element" bị tính vào ca chạy sau).
   await tester.pumpWidget(const SizedBox.shrink());
   drainKnownProductErrors(tester);
+  _liveContainers.remove(container);
   container.dispose();
 }

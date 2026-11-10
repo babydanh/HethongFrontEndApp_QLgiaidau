@@ -58,6 +58,7 @@ void main() {
         timeout: const Duration(seconds: 30),
       );
       await shooter.snap('nguoi-choi-thay-tin');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -125,6 +126,7 @@ void main() {
       await socialWait(tester, const Duration(seconds: 2));
       expect(find.byType(TextField), findsNothing, reason: 'buổi đã đóng: tab Trò chuyện chỉ đọc, không có ô nhập');
       await shooter.snap('tro-chuyen-chi-doc');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -168,6 +170,7 @@ void main() {
         isTrue,
         reason: 'Backend phải có một người PAID: $people',
       );
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -215,6 +218,7 @@ void main() {
         what: 'thông báo sau khi báo cáo',
       );
       await shooter.snap('da-bao-cao');
+      await leaveSocialSession(tester, container);
     },
   );
 
