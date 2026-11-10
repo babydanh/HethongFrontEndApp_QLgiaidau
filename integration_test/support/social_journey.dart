@@ -5,7 +5,6 @@ import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -134,7 +133,7 @@ class SocialApi {
     final payload = <String, dynamic>{
       'sport': await sportSlug(),
       'title': title,
-      if (description != null) 'description': description,
+      'description': ?description,
       'playFormat': playFormat,
       'startAt': start.toIso8601String(),
       'durationMinutes': 120,
@@ -197,6 +196,24 @@ class SocialApi {
       token: token,
       data: {'ticketCount': 1},
     );
+  }
+
+  /// Id của buổi có đúng tiêu đề [title], hoặc null khi chưa có.
+  Future<String?> idByTitle(String token, String title) async {
+    final body = _unwrap(
+      await _send(
+        'GET',
+        '/social-sessions',
+        token: token,
+        query: {'search': title, 'limit': 20},
+      ),
+    );
+    final items = body is Map ? body['items'] : body;
+    if (items is! List) return null;
+    for (final e in items) {
+      if (e is Map && e['title'] == title) return '${e['id']}';
+    }
+    return null;
   }
 
   /// Số buổi có đúng tiêu đề [title] (tìm bằng `search`, không cần ngày).
@@ -419,5 +436,27 @@ Future<void> openCreateSocialForm(WidgetTester tester) async {
     tester,
     find.text('Tạo kèo'),
     what: 'form tạo kèo (tiêu đề "Tạo kèo")',
+  );
+}
+
+/// Từ trang chủ sang tab Khám phá, cuộn tới thẻ buổi [title] của ngày đang chọn rồi bấm mở chi tiết.
+Future<void> openSessionFromExplore(WidgetTester tester, String title) async {
+  final navExplore = find.descendant(
+    of: find.byType(FloatingBottomNav),
+    matching: find.text('Khám phá'),
+  );
+  await tapFinder(tester, navExplore, what: 'nhãn Khám phá trên thanh điều hướng');
+  await pumpUntilFound(
+    tester,
+    find.byKey(const ValueKey('explore_social')),
+    what: 'danh sách Khám phá (explore_social)',
+  );
+  await scrollToText(tester, title);
+  await tapCentered(tester, find.text(title));
+  await pumpUntilFound(
+    tester,
+    find.text(title.toUpperCase()),
+    what: 'chi tiết buổi "$title" mở từ thẻ ở Khám phá',
+    timeout: const Duration(seconds: 45),
   );
 }
