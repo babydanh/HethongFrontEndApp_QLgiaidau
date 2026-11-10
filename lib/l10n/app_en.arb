@@ -6032,7 +6032,7 @@
   "homeGlobalSearchExpandFilters": "Expand filters",
   "homeGlobalSearchHiddenMatches": "Matches on this page are hidden because team details are incomplete.",
   "homeSocialCreateAction": "Create session",
-  "tournamentManagementHideFeaturedCardText": "Hide headline text on tournament cards",
+  "tournamentManagementHideFeaturedCardText": "Hide title",
   "tournamentManagementHideFeaturedCardTextDescription": "Keep the featured tournament banner headline off public tournament cards.",
   "tournamentManagementForbidden": "You do not have permission to access this management section.",
   "tournamentManagementLivestreamDevices": "Camera devices",

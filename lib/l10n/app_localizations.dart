@@ -27577,7 +27577,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementHideFeaturedCardText.
   ///
   /// In vi, this message translates to:
-  /// **'Ẩn tiêu đề trên thẻ giải đấu'**
+  /// **'Ẩn tiêu đề'**
   String get tournamentManagementHideFeaturedCardText;
 
   /// No description provided for @tournamentManagementHideFeaturedCardTextDescription.

@@ -15203,8 +15203,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeSocialCreateAction => 'Tạo kèo';
 
   @override
-  String get tournamentManagementHideFeaturedCardText =>
-      'Ẩn tiêu đề trên thẻ giải đấu';
+  String get tournamentManagementHideFeaturedCardText => 'Ẩn tiêu đề';
 
   @override
   String get tournamentManagementHideFeaturedCardTextDescription =>
