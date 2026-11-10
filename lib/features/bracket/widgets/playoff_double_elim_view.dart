@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.da
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_layout.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_seed_labels.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -110,11 +111,15 @@ class PlayoffDoubleElimView extends StatefulWidget {
     required this.matches,
     required this.tournamentId,
     this.canScoreMatch = false,
+    this.seedLabels,
   });
 
   final List<MatchModel> matches;
   final String tournamentId;
   final bool canScoreMatch;
+
+  /// "Nhất A / Nhì B" placeholders for empty round-one slots; null hides them.
+  final PlayoffSeedLabels? seedLabels;
 
   @override
   State<PlayoffDoubleElimView> createState() => _PlayoffDoubleElimViewState();
@@ -253,6 +258,7 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
                               feeders: buildFeeders(widget.matches),
                               cardWidth: cardWidth,
                               gap: _bracketGap,
+                              seedLabels: widget.seedLabels,
                               onTap: (match) => showGroupMatchSheet(
                                 context,
                                 match: match,

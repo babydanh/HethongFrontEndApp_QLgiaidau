@@ -11106,6 +11106,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playoff_slotNA => 'N/A';
 
   @override
+  String playoff_seedFirst(String group) {
+    return 'Nhất $group';
+  }
+
+  @override
+  String playoff_seedSecond(String group) {
+    return 'Nhì $group';
+  }
+
+  @override
+  String playoff_seedRank(int rank, String group) {
+    return 'Hạng $rank $group';
+  }
+
+  @override
+  String get playoff_seedWildcard => 'Hạng 3 xuất sắc nhất';
+
+  @override
+  String playoff_seedSaveError(String error) {
+    return 'Không thể đổi vị trí: $error';
+  }
+
+  @override
   String playoff_waitWinner(String code) {
     return 'Thắng $code';
   }

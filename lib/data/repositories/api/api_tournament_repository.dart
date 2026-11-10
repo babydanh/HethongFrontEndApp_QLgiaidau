@@ -1134,6 +1134,19 @@ class ApiTournamentRepository implements ITournamentRepository {
   }
 
   @override
+  Future<void> updateSeedOrder(
+    String tournamentId, {
+    required String divisionId,
+    required String stageId,
+    required List<Map<String, dynamic>> slotOrder,
+  }) async {
+    await _dioClient.dio.patch(
+      '/tournaments/$tournamentId/divisions/$divisionId/bracket/seed-order',
+      data: {'stageId': stageId, 'slotOrder': slotOrder},
+    );
+  }
+
+  @override
   Future<void> updateStageRoundConfig(
     String tournamentId,
     String stageId,

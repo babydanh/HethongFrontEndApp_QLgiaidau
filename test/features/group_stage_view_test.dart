@@ -208,8 +208,9 @@ void main() {
       bool editLocked = false,
       GroupStageConfig editableConfig = config,
       List<Team> teams = const [],
+      double viewHeight = 1200,
     }) async {
-      tester.view.physicalSize = const Size(400, 1200);
+      tester.view.physicalSize = Size(400, viewHeight);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -484,6 +485,127 @@ void main() {
       await tester.pumpAndSettle();
       await dragTeamToGroupB(tester, 'Đội Hai');
       expect(calls, 2);
+    });
+
+    testWidgets(
+      'TC-GROUP-DND-13 dropping on a team inserts before it, no-op keeps config',
+      (tester) async {
+        final saved = <GroupStageConfig>[];
+        await pumpEditable(
+          tester,
+          onConfigChanged: (next) async => saved.add(next),
+        );
+
+        // Same group: Hai goes before Một.
+        await dragTeamTo(tester, 'Đội Hai', 'Đội Một');
+        expect(saved, hasLength(1));
+        expect(saved.last.groups[0].participantIds, ['t2', 't1']);
+
+        // Other group: Ba goes before Một, group B becomes empty.
+        await dragTeamTo(tester, 'Đội Ba', 'Đội Một');
+        expect(saved, hasLength(2));
+        expect(saved.last.groups[0].participantIds, ['t3', 't1', 't2']);
+        expect(saved.last.groups[1].participantIds, isEmpty);
+
+        // Already right before the target, or dropped on itself: no save.
+        await dragTeamTo(tester, 'Đội Một', 'Đội Hai');
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('Đội Một')),
+        );
+        await tester.pump(kLongPressTimeout);
+        await gesture.moveBy(const Offset(2, 0));
+        await tester.pump();
+        await gesture.up();
+        await tester.pumpAndSettle();
+        expect(saved, hasLength(2));
+      },
+    );
+
+    testWidgets(
+      'TC-GROUP-DND-14 unassigned lane takes a team back and shows while dragging',
+      (tester) async {
+        final saved = <GroupStageConfig>[];
+        await pumpEditable(
+          tester,
+          onConfigChanged: (next) async => saved.add(next),
+        );
+        expect(find.text('Chưa xếp'), findsNothing);
+
+        // The lane appears once a drag starts, even with no unassigned team.
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('Đội Hai')),
+        );
+        await tester.pump(kLongPressTimeout);
+        await tester.pump();
+        expect(find.text('Chưa xếp'), findsOneWidget);
+        expect(find.text('Kéo đội vào đây'), findsOneWidget);
+        await gesture.moveTo(tester.getCenter(find.text('Chưa xếp')));
+        await tester.pump();
+        await gesture.up();
+        await tester.pumpAndSettle();
+
+        expect(saved, hasLength(1));
+        expect(saved.single.groups[0].participantIds, ['t1']);
+        expect(saved.single.unassignedParticipantIds, ['t2']);
+        expect(find.text('Chưa xếp'), findsNothing);
+      },
+    );
+
+    testWidgets('TC-GROUP-DND-14b dropping an unassigned team on its lane is '
+        'ignored', (tester) async {
+      final saved = <GroupStageConfig>[];
+      await pumpEditable(
+        tester,
+        editableConfig: configWith(
+          groups: const [
+            GroupStageGroup(name: 'A', participantIds: ['t1', 't2']),
+            GroupStageGroup(name: 'B', participantIds: ['t3']),
+          ],
+          unassigned: const ['t4'],
+        ),
+        teams: [
+          Team(
+            id: 't4',
+            name: 'Đội Bốn',
+            approvalStatus: 'COMPLETE',
+            createdAt: DateTime.utc(2026),
+          ),
+        ],
+        onConfigChanged: (next) async => saved.add(next),
+      );
+
+      await dragTeamTo(tester, 'Đội Bốn', 'Chưa xếp');
+
+      expect(saved, isEmpty);
+    });
+
+    testWidgets('TC-GROUP-DND-15 dragging near the bottom edge auto-scrolls', (
+      tester,
+    ) async {
+      await pumpEditable(
+        tester,
+        viewHeight: 300,
+        onConfigChanged: (next) async {},
+      );
+      final scrollable = tester.state<ScrollableState>(
+        find.byType(Scrollable).first,
+      );
+      expect(scrollable.position.maxScrollExtent, greaterThan(0));
+      expect(scrollable.position.pixels, 0);
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Đội Một')),
+      );
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveTo(const Offset(200, 290));
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(scrollable.position.pixels, greaterThan(0));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
     });
   });
 }

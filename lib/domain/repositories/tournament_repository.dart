@@ -170,6 +170,16 @@ abstract class ITournamentRepository {
     required String divisionId,
   });
 
+  /// Lưu thứ tự các ô vòng 1 của playoff (đổi "Nhất A" / "Nhì B" cho nhau):
+  /// `PATCH /tournaments/:id/divisions/:divisionId/bracket/seed-order`.
+  /// [slotOrder] là danh sách `{groupIndex, rank}` hoặc `{wildcard: true}`.
+  Future<void> updateSeedOrder(
+    String tournamentId, {
+    required String divisionId,
+    required String stageId,
+    required List<Map<String, dynamic>> slotOrder,
+  });
+
   /// Server sinh sơ đồ chính thức; bản xem trước phía client có thể khác.
   /// Response có thể kèm `autoPaired`/`unpairedNames` (thiếu thì coi là rỗng).
   Future<Map<String, dynamic>> generateBracket(

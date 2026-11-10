@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_seed_labels.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
@@ -38,6 +39,7 @@ class PublicBracketView extends StatelessWidget {
     this.editableConfig,
     this.onConfigChanged,
     this.editLocked = false,
+    this.canEditSeeds = false,
   });
 
   final String tournamentId;
@@ -53,6 +55,7 @@ class PublicBracketView extends StatelessWidget {
   final GroupStageConfig? editableConfig;
   final Future<void> Function(GroupStageConfig next)? onConfigChanged;
   final bool editLocked;
+  final bool canEditSeeds;
 
   _Kind _kindOf(List<MatchModel> all) {
     final raw = (bracketType ?? '').trim().toLowerCase();
@@ -117,6 +120,7 @@ class PublicBracketView extends StatelessWidget {
         editableConfig: editableConfig,
         onConfigChanged: onConfigChanged,
         editLocked: editLocked,
+        canEditSeeds: canEditSeeds,
         matches: matches,
         knockoutMatches: matches.where(isKnockoutMatch).toList(growable: false),
       );
@@ -227,6 +231,7 @@ class _GroupPlayoffTabs extends StatefulWidget {
     required this.editableConfig,
     required this.onConfigChanged,
     required this.editLocked,
+    required this.canEditSeeds,
   });
 
   final String tournamentId;
@@ -236,6 +241,7 @@ class _GroupPlayoffTabs extends StatefulWidget {
   final GroupStageConfig? editableConfig;
   final Future<void> Function(GroupStageConfig next)? onConfigChanged;
   final bool editLocked;
+  final bool canEditSeeds;
   final List<MatchModel> matches;
   final List<MatchModel> knockoutMatches;
 
@@ -323,10 +329,17 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
             ),
           )
         else
-          PlayoffDoubleElimView(
-            matches: widget.knockoutMatches,
+          PlayoffSeedHost(
             tournamentId: widget.tournamentId,
-            canScoreMatch: widget.canScoreMatch,
+            divisionId: widget.divisionId,
+            matches: widget.knockoutMatches,
+            canEdit: widget.canEditSeeds,
+            builder: (context, seedLabels) => PlayoffDoubleElimView(
+              matches: widget.knockoutMatches,
+              tournamentId: widget.tournamentId,
+              canScoreMatch: widget.canScoreMatch,
+              seedLabels: seedLabels,
+            ),
           ),
       ],
     );
@@ -345,6 +358,7 @@ class PublicBracketLoader extends ConsumerWidget {
     this.editableConfig,
     this.onConfigChanged,
     this.editLocked = false,
+    this.canEditSeeds = false,
   });
 
   final String tournamentId;
@@ -354,6 +368,7 @@ class PublicBracketLoader extends ConsumerWidget {
   final GroupStageConfig? editableConfig;
   final Future<void> Function(GroupStageConfig next)? onConfigChanged;
   final bool editLocked;
+  final bool canEditSeeds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -376,6 +391,7 @@ class PublicBracketLoader extends ConsumerWidget {
             editableConfig: editableConfig,
             onConfigChanged: onConfigChanged,
             editLocked: editLocked,
+            canEditSeeds: canEditSeeds,
           ),
           loading: () => const BoneBracketLoading(),
           error: (error, _) => Padding(

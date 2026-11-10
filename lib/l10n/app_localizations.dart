@@ -20334,6 +20334,36 @@ abstract class AppLocalizations {
   /// **'N/A'**
   String get playoff_slotNA;
 
+  /// No description provided for @playoff_seedFirst.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhất {group}'**
+  String playoff_seedFirst(String group);
+
+  /// No description provided for @playoff_seedSecond.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhì {group}'**
+  String playoff_seedSecond(String group);
+
+  /// No description provided for @playoff_seedRank.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng {rank} {group}'**
+  String playoff_seedRank(int rank, String group);
+
+  /// No description provided for @playoff_seedWildcard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạng 3 xuất sắc nhất'**
+  String get playoff_seedWildcard;
+
+  /// No description provided for @playoff_seedSaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể đổi vị trí: {error}'**
+  String playoff_seedSaveError(String error);
+
   /// No description provided for @playoff_waitWinner.
   ///
   /// In vi, this message translates to:
