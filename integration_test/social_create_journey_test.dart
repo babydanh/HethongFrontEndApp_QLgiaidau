@@ -88,7 +88,8 @@ void main() {
       expect(find.text('Thanh toán'), findsOneWidget, reason: 'buổi có phí thì host có tab Thanh toán');
       expect(find.text('Quyết định sau'), findsWidgets);
       expect(find.text('Đánh đôi'), findsWidgets);
-      expect(find.textContaining('50.000'), findsWidgets);
+      // Dòng giá là RichText (TextSpan), phải bật findRichText.
+      expect(find.textContaining('50.000', findRichText: true), findsWidgets);
       expect(find.text('Mang vợt và nước uống'), findsOneWidget);
 
       // Backend phải lưu đúng những gì form gửi.
