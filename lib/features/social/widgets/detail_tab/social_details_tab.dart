@@ -378,7 +378,10 @@ class _HostCard extends StatelessWidget {
                     'Host: ${host.name}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12.5, color: colors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: colors.textSecondary,
+                    ),
                   ),
               ],
             ),
@@ -398,8 +401,11 @@ class _ParticipantsPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final preview = previewParticipants(session.participants);
-    if (preview.shown.isEmpty) return const SizedBox.shrink();
+    // The host card above already shows the host, so the row lists the others.
+    final preview = previewParticipants([
+      for (final p in session.participants)
+        if (!p.isHost) p,
+    ]);
     return Row(
       children: [
         Flexible(

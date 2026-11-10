@@ -56,19 +56,26 @@ void main() {
       _session([_p('h', 'Nguyễn Minh Danh', host: true), _p('a', 'An Bình')]),
     );
     expect(find.text('Host'), findsOneWidget);
-    expect(find.text('ND'), findsNWidgets(2)); // thẻ host + hàng avatar
+    // TC-GL-AVATAR-01: the host avatar shows once (host card only).
+    expect(find.text('ND'), findsOneWidget);
     expect(find.text('AB'), findsOneWidget);
     expect(find.text('MQ'), findsNothing);
     expect(find.text('+4'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('9 người: chỉ +4 thật, không tràn ở 360px', (tester) async {
-    await _pump(tester, _session([
-      _p('h', 'Host Một', host: true),
-      for (var i = 0; i < 8; i++) _p('$i', 'Người $i'),
-    ]));
-    expect(find.text('+4'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    '9 người: host ở thẻ riêng, hàng avatar chỉ +3 thật, không tràn ở 360px',
+    (tester) async {
+      await _pump(
+        tester,
+        _session([
+          _p('h', 'Host Một', host: true),
+          for (var i = 0; i < 8; i++) _p('$i', 'Người $i'),
+        ]),
+      );
+      expect(find.text('+3'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
