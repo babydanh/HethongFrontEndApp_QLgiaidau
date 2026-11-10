@@ -348,13 +348,14 @@ Future<ProviderContainer> signInAs(
   return container;
 }
 
-/// Mở màn chi tiết buổi (route `/social/:id`) và chờ tiêu đề cùng thanh tab hiện ra.
+/// Mở màn chi tiết buổi (route `/social/:id`, đẩy lên trên trang hiện tại) và chờ tiêu đề cùng thanh tab hiện ra.
 Future<void> openSession(
   WidgetTester tester,
   ProviderContainer container,
   SeededSession session,
 ) async {
-  container.read(routerProvider).go('/social/${session.id}');
+  // push (không go): thoát buổi (huỷ buổi, nút back) cần còn trang bên dưới để pop.
+  container.read(routerProvider).push('/social/${session.id}');
   await pumpUntilFound(
     tester,
     find.text(session.title.toUpperCase()),
