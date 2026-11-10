@@ -2443,7 +2443,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 right: 0,
                 // Leave the header strip clear so its buttons never cover the
                 // overlay's own close button.
-                top: _viewerHeaderHeight,
+                top: _viewerHeaderHeight + _headerTopInset,
                 bottom: overlayBottom,
                 child: AnimatedSwitcher(
                   duration: liveOverlayMotionDuration(context),
@@ -2573,6 +2573,14 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// Height of the header strip (one 40dp button row plus padding).
   static const double _viewerHeaderHeight = 44;
 
+  /// Landscape draws the picture edge to edge, under the status bar, whose
+  /// band swallows taps: the header buttons start below it. Portrait already
+  /// pads the video box by the same inset, and hidden bars report zero.
+  double get _headerTopInset =>
+      MediaQuery.of(context).orientation == Orientation.landscape
+      ? MediaQuery.of(context).padding.top
+      : 0;
+
   /// Back / share / more, drawn over the top of the video. LIVE is no longer
   /// a pill here: it is a dot beside the sound button (see LiveVideoPlayer).
   Widget _buildViewerTopBar(MatchModel match, {required bool canControl}) {
@@ -2587,7 +2595,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: EdgeInsets.fromLTRB(6, 2 + _headerTopInset, 6, 2),
       child: Row(
         children: [
           round(

@@ -123,6 +123,27 @@ void main() {
     expect(find.byType(LiveLandscapeChat), findsOneWidget);
   });
 
+  testWidgets('TC-LIVEFS-14 landscape: header buttons sit below the status bar', (
+    tester,
+  ) async {
+    // A phone in landscape with its status bar showing: taps inside the
+    // status bar band never reach the app, so the buttons must start below it.
+    const statusBar = 24.0;
+    tester.view.padding = const FakeViewPadding(top: statusBar);
+    tester.view.viewPadding = const FakeViewPadding(top: statusBar);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
+    await _pump(tester, const Size(800, 360));
+
+    for (final tooltip in ['Back', 'Hide chat']) {
+      expect(
+        tester.getTopLeft(find.byTooltip(tooltip)).dy,
+        greaterThanOrEqualTo(statusBar),
+        reason: '$tooltip must not sit under the status bar',
+      );
+    }
+  });
+
   testWidgets('TC-LIVEFS-12 portrait: no Report chip under the video, no AppBar', (
     tester,
   ) async {
