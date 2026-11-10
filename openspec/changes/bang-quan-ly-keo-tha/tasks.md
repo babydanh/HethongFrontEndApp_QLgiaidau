@@ -8,7 +8,7 @@
 
 ## 2. Drag-drop trong GroupStageView
 
-- [ ] 2.1 Thêm tham số chỉnh sửa tuỳ chọn và kéo thả đội giữa các `_GroupCard`; truyền qua `PublicBracketView`/`_GroupPlayoffTabs`/`PublicBracketLoader` (chỉ thêm tham số). Tiêu chí: `flutter test --no-pub test/features/group_stage_view_test.dart test/features/public_bracket_view_test.dart` → exit 0 (TC-GROUP-DND-01..03)
+- [x] 2.1 Thêm tham số chỉnh sửa tuỳ chọn và kéo thả đội giữa các `_GroupCard`; truyền qua `PublicBracketView`/`_GroupPlayoffTabs`/`PublicBracketLoader` (chỉ thêm tham số). Tiêu chí: `flutter test --no-pub test/features/group_stage_view_test.dart test/features/public_bracket_view_test.dart` → exit 0 (TC-GROUP-DND-01..03)
   - Files: sửa `lib/features/bracket/widgets/group_stage_view.dart`, `lib/features/bracket/widgets/public_bracket_view.dart`; test `test/features/group_stage_view_test.dart`, `test/features/public_bracket_view_test.dart`
   - Giao: `GroupStageView(editableConfig: GroupStageConfig?, onConfigChanged: Future<void> Function(GroupStageConfig)?, editLocked: bool)` (mặc định: chỉ đọc) · Nhận: `GroupStageConfig.moveParticipant` có sẵn
   - Chủ file chung: 2.1 giữ cả hai widget file
