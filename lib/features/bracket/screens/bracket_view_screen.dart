@@ -16,8 +16,7 @@ import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
@@ -1587,36 +1586,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
             isLite: _resolveIsLite,
             onApplied: _refreshBracketAfterEdit,
             builder: (context, tray, onSlotDrop) {
-              // Embedded in the hub: horizontal scroll only, height follows the
-              // canvas and the hub page owns vertical scrolling. A fixed 420
-              // frame with pan/zoom fights the hub's own scroll view.
-              final scrollOnly = _isHubEmbedded;
-              final onDoubleTap = widget.canEditBracket
-                  ? _handleDoubleTapMatch
-                  : null;
-              final diagram = isDoubleElimination
-                  ? DoubleElimDiagram(
-                      matches: bracketMatches,
-                      tournamentId: widget.tournamentId,
-                      isReferee: isReferee,
-                      isReadOnly: isReadOnly,
-                      isEditable: widget.canEditBracket,
-                      canScoreMatch: canScoreMatch,
-                      onSlotDrop: onSlotDrop,
-                      onDoubleTapMatch: onDoubleTap,
-                      scrollOnly: scrollOnly,
-                    )
-                  : SingleElimDiagram(
-                      matches: bracketMatches,
-                      tournamentId: widget.tournamentId,
-                      isReferee: isReferee,
-                      isReadOnly: isReadOnly,
-                      isEditable: widget.canEditBracket,
-                      canScoreMatch: canScoreMatch,
-                      onSlotDrop: onSlotDrop,
-                      onDoubleTapMatch: onDoubleTap,
-                      scrollOnly: scrollOnly,
-                    );
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1626,10 +1595,15 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: tray,
                     ),
-                  if (scrollOnly)
-                    diagram
-                  else
-                    SizedBox(height: 420, child: diagram),
+                  PlayoffDoubleElimView(
+                    matches: bracketMatches,
+                    tournamentId: widget.tournamentId,
+                    canScoreMatch: canScoreMatch,
+                    onSlotDrop: onSlotDrop,
+                    onDoubleTapMatch: widget.canEditBracket
+                        ? _handleDoubleTapMatch
+                        : null,
+                  ),
                 ],
               );
             },

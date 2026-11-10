@@ -371,7 +371,7 @@ void main() {
       expect(repo.calls, isEmpty);
     });
 
-    testWidgets('chế độ sửa thẻ: bấm header thẻ vẫn mở nhập điểm', (
+    testWidgets('TC-BRK-SCR-05 sửa thẻ: bấm header thẻ vẫn mở nhập điểm', (
       tester,
     ) async {
       await _pump(
@@ -385,7 +385,8 @@ void main() {
           canScoreMatch: true,
         ),
       );
-
+      // The two team rows own their taps (tap-tap move); the card header is
+      // the part that still opens scoring.
       final header = find.byType(BracketCardHeader);
       expect(header, findsWidgets);
       await tester.tap(header.first);

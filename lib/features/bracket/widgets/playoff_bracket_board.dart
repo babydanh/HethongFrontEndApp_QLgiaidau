@@ -37,6 +37,7 @@ class PlayoffBracketBoard extends StatelessWidget {
     required this.onTap,
     this.seedLabels,
     this.editing,
+    this.onDoubleTap,
   });
 
   final List<List<MatchModel>> columns;
@@ -50,6 +51,9 @@ class PlayoffBracketBoard extends StatelessWidget {
 
   /// Manager mode: slots with a participant can be dragged onto other slots.
   final BracketEditing? editing;
+
+  /// Double tap on a card (managers open the ops page); null leaves single tap instant.
+  final ValueChanged<MatchModel>? onDoubleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +91,9 @@ class PlayoffBracketBoard extends StatelessWidget {
                   match: match,
                   feeders: feeders[match.id] ?? const [],
                   onTap: () => onTap(match),
+                  onDoubleTap: onDoubleTap == null
+                      ? null
+                      : () => onDoubleTap!(match),
                   seedLabels: seedLabels,
                   editing: editing,
                 ),
@@ -199,6 +206,7 @@ class _BracketCard extends StatelessWidget {
     required this.match,
     required this.feeders,
     required this.onTap,
+    this.onDoubleTap,
     this.seedLabels,
     this.editing,
   });
@@ -206,6 +214,7 @@ class _BracketCard extends StatelessWidget {
   final MatchModel match;
   final List<BracketFeeder> feeders;
   final VoidCallback onTap;
+  final VoidCallback? onDoubleTap;
   final PlayoffSeedLabels? seedLabels;
   final BracketEditing? editing;
 
@@ -275,6 +284,7 @@ class _BracketCard extends StatelessWidget {
     final status = groupMatchStatus(context, match);
     return InkWell(
       onTap: onTap,
+      onDoubleTap: onDoubleTap,
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

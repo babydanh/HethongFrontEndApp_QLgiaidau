@@ -119,6 +119,7 @@ class PlayoffDoubleElimView extends StatefulWidget {
     this.seedLabels,
     this.onOpenFull,
     this.onSlotDrop,
+    this.onDoubleTapMatch,
   });
 
   final List<MatchModel> matches;
@@ -134,6 +135,9 @@ class PlayoffDoubleElimView extends StatefulWidget {
   /// Manager mode: moves a participant between slots (long-press and drag, or
   /// tap one slot then another). Null keeps the view read-only.
   final BracketSlotDropCallback? onSlotDrop;
+
+  /// Manager shortcut: double tap a card to open it in the ops page.
+  final ValueChanged<MatchModel>? onDoubleTapMatch;
 
   @override
   State<PlayoffDoubleElimView> createState() => _PlayoffDoubleElimViewState();
@@ -323,6 +327,7 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
                               cardWidth: cardWidth,
                               gap: _bracketGap,
                               seedLabels: widget.seedLabels,
+                              onDoubleTap: widget.onDoubleTapMatch,
                               editing: widget.onSlotDrop == null
                                   ? null
                                   : BracketEditing(

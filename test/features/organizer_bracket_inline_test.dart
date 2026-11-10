@@ -6,10 +6,9 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -154,7 +153,7 @@ Finder _diagramFrame(Finder diagram) => find.ancestor(
 );
 
 void main() {
-  testWidgets('knockout: không còn danh sách trận, sơ đồ nằm trong khung 420', (
+  testWidgets('TC-BRK-SCR-03 knockout: sơ đồ playoff mới, không danh sách', (
     tester,
   ) async {
     await _pumpOrganizer(
@@ -164,16 +163,16 @@ void main() {
     );
 
     expect(find.byType(MatchTableRow), findsNothing);
-    final diagram = find.byType(SingleElimDiagram);
+    final diagram = find.byType(PlayoffDoubleElimView);
     expect(diagram, findsOneWidget);
-    expect(_diagramFrame(diagram), findsOneWidget);
+    expect(_diagramFrame(diagram), findsNothing);
     expect(
-      tester.widget<SingleElimDiagram>(diagram).matches.map((m) => m.id),
+      tester.widget<PlayoffDoubleElimView>(diagram).matches.map((m) => m.id),
       containsAll(['k1', 'k2']),
     );
   });
 
-  testWidgets('double elimination: dùng DoubleElimDiagram trong khung 420', (
+  testWidgets('TC-BRK-SCR-04 double elimination: sơ đồ playoff mới đủ nhánh', (
     tester,
   ) async {
     await _pumpOrganizer(
@@ -191,10 +190,13 @@ void main() {
     );
 
     expect(find.byType(MatchTableRow), findsNothing);
-    expect(find.byType(SingleElimDiagram), findsNothing);
-    final diagram = find.byType(DoubleElimDiagram);
+    final diagram = find.byType(PlayoffDoubleElimView);
     expect(diagram, findsOneWidget);
-    expect(_diagramFrame(diagram), findsOneWidget);
+    expect(_diagramFrame(diagram), findsNothing);
+    expect(
+      tester.widget<PlayoffDoubleElimView>(diagram).matches.map((m) => m.id),
+      containsAll(['w1', 'l1']),
+    );
   });
 
   testWidgets(
@@ -214,10 +216,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(MatchTableRow), findsNWidgets(2));
-      final diagram = find.byType(SingleElimDiagram);
+      final diagram = find.byType(PlayoffDoubleElimView);
       expect(diagram, findsOneWidget);
       expect(
-        tester.widget<SingleElimDiagram>(diagram).matches.map((m) => m.id),
+        tester.widget<PlayoffDoubleElimView>(diagram).matches.map((m) => m.id),
         ['k1'],
       );
     },
@@ -236,7 +238,7 @@ void main() {
 
     expect(
       tester
-          .widget<SingleElimDiagram>(find.byType(SingleElimDiagram))
+          .widget<PlayoffDoubleElimView>(find.byType(PlayoffDoubleElimView))
           .matches
           .map((m) => m.id),
       unorderedEquals(['k1', 'k2']),
@@ -268,7 +270,7 @@ void main() {
       expect(find.byType(MatchTableRow), findsNothing);
       expect(
         tester
-            .widget<SingleElimDiagram>(find.byType(SingleElimDiagram))
+            .widget<PlayoffDoubleElimView>(find.byType(PlayoffDoubleElimView))
             .matches
             .map((m) => m.id),
         unorderedEquals(['k1', 'k2']),
@@ -305,7 +307,7 @@ void main() {
     expect(find.byType(MatchTableRow), findsOneWidget);
     expect(
       tester
-          .widget<SingleElimDiagram>(find.byType(SingleElimDiagram))
+          .widget<PlayoffDoubleElimView>(find.byType(PlayoffDoubleElimView))
           .matches
           .map((m) => m.id),
       unorderedEquals(['k1', 'k2']),

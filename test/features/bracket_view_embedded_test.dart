@@ -1,7 +1,7 @@
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -71,8 +71,8 @@ Widget _hubHost(Widget screen) => CustomScrollView(
   slivers: [SliverToBoxAdapter(child: screen)],
 );
 
-Finder _frame420(Finder diagram) => find.ancestor(
-  of: diagram,
+Finder _frame420(Finder view) => find.ancestor(
+  of: view,
   matching: find.byWidgetPredicate((w) => w is SizedBox && w.height == 420),
 );
 
@@ -142,64 +142,54 @@ void main() {
       findsNothing,
     );
     expect(find.byType(TextField), findsOneWidget);
-    expect(find.byType(SingleElimDiagram), findsOneWidget);
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
   });
 
   testWidgets(
-    'nhúng trong hub: sơ đồ cuộn ngang, cao theo sơ đồ (không khung 420)',
+    'TC-BRK-SCR-01 nhúng trong hub: dùng sơ đồ playoff mới, cao theo nội dung (không khung 420)',
     (tester) async {
       await _pumpEmbedded(tester);
-      final diagram = find.byType(SingleElimDiagram);
+      final view = find.byType(PlayoffDoubleElimView);
 
-      expect(tester.widget<SingleElimDiagram>(diagram).scrollOnly, isTrue);
-      expect(_frame420(diagram), findsNothing);
-
-      final horizontal = find.descendant(
-        of: diagram,
-        matching: find.byWidgetPredicate(
-          (w) => w is Scrollable && w.axisDirection == AxisDirection.right,
-        ),
-      );
-      expect(horizontal, findsOneWidget);
-      final position = tester.state<ScrollableState>(horizontal).position;
-      expect(position.maxScrollExtent, greaterThan(0));
-
-      await tester.drag(diagram, const Offset(-200, 0));
-      await tester.pumpAndSettle();
-      expect(position.pixels, greaterThan(0));
+      expect(view, findsOneWidget);
+      expect(_frame420(view), findsNothing);
+      expect(find.byKey(const ValueKey('playoff-card-r1-0')), findsOneWidget);
+      expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets(
-    'nhúng trong hub: không còn nút Sơ đồ Knockout, kéo thả ngay trên tab',
+    'TC-BRK-SCR-02 nhúng trong hub: quản lý kéo thả và chạm đúp ngay trên sơ đồ mới',
     (tester) async {
       await _pumpEmbedded(tester);
       final l10n = lookupAppLocalizations(const Locale('vi'));
 
       expect(find.byKey(const Key('bracket-open-full-diagram')), findsNothing);
       expect(find.text(l10n.bracketView_knockoutMap), findsNothing);
+      final view = tester.widget<PlayoffDoubleElimView>(
+        find.byType(PlayoffDoubleElimView),
+      );
+      expect(view.onSlotDrop, isNotNull);
+      expect(view.onDoubleTapMatch, isNotNull);
       expect(
-        tester
-            .widget<SingleElimDiagram>(find.byType(SingleElimDiagram))
-            .isEditable,
-        isTrue,
+        find.byKey(const ValueKey('bracket-slot-r1-0-participant1')),
+        findsOneWidget,
       );
     },
   );
 
-  testWidgets('màn riêng (không nhúng): giữ banner và khung sơ đồ 420', (
+  testWidgets('màn riêng (không nhúng): giữ banner, sơ đồ mới không tràn', (
     tester,
   ) async {
     await _pumpEmbedded(tester, isEmbedded: false, host: (screen) => screen);
     final l10n = lookupAppLocalizations(const Locale('vi'));
-    final diagram = find.byType(SingleElimDiagram);
 
     expect(find.text(l10n.bracketView_knockoutTitle), findsWidgets);
-    expect(tester.widget<SingleElimDiagram>(diagram).scrollOnly, isFalse);
-    expect(_frame420(diagram), findsOneWidget);
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Lite nhúng trong khung cao cố định: giữ banner và khung 420', (
+  testWidgets('Lite nhúng trong khung cao cố định: sơ đồ mới không tràn', (
     tester,
   ) async {
     await _pumpEmbedded(
@@ -208,11 +198,9 @@ void main() {
       host: (screen) => Column(children: [Expanded(child: screen)]),
     );
     final l10n = lookupAppLocalizations(const Locale('vi'));
-    final diagram = find.byType(SingleElimDiagram);
 
     expect(find.text(l10n.bracketView_knockoutTitle), findsWidgets);
-    expect(tester.widget<SingleElimDiagram>(diagram).scrollOnly, isFalse);
-    expect(_frame420(diagram), findsOneWidget);
+    expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

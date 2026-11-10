@@ -8,8 +8,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
@@ -188,14 +187,13 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
                 matches: _bracketMatches!,
               ),
             )
-          : _buildDiagram(colors, isRoundRobin, isDouble, isGroupStageKnockout),
+          : _buildDiagram(colors, isRoundRobin, isGroupStageKnockout),
     );
   }
 
   Widget _buildDiagram(
     AppColorsExtension colors,
     bool isRoundRobin,
-    bool isDouble,
     bool isGroupStageKnockout,
   ) {
     final matches = _bracketMatches!;
@@ -221,9 +219,6 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
     final diagramMatches = isGroupStageKnockout
         ? matches.where(isKnockoutMatch).toList()
         : matches;
-    final useDouble = isGroupStageKnockout
-        ? diagramMatches.any(isDoubleEliminationMatch)
-        : isDouble;
 
     return BracketSlotEditingScope(
       enabled: widget.canEditBracket,
@@ -238,36 +233,22 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         final onDoubleTap = widget.canEditBracket
             ? _handleDoubleTapMatch
             : null;
-        final diagram = useDouble
-            ? DoubleElimDiagram(
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (tray != null)
+                Padding(padding: const EdgeInsets.only(bottom: 8), child: tray),
+              PlayoffDoubleElimView(
                 matches: diagramMatches,
                 tournamentId: widget.tournamentId,
-                isReferee: widget.isReferee,
-                isReadOnly: widget.isReadOnly,
-                isEditable: widget.canEditBracket,
                 canScoreMatch: widget.canScoreMatch,
                 onSlotDrop: onSlotDrop,
                 onDoubleTapMatch: onDoubleTap,
-              )
-            : SingleElimDiagram(
-                matches: diagramMatches,
-                tournamentId: widget.tournamentId,
-                isReferee: widget.isReferee,
-                isReadOnly: widget.isReadOnly,
-                isEditable: widget.canEditBracket,
-                canScoreMatch: widget.canScoreMatch,
-                onSlotDrop: onSlotDrop,
-                onDoubleTapMatch: onDoubleTap,
-              );
-        if (tray == null) return diagram;
-        return Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-              child: tray,
-            ),
-            Expanded(child: diagram),
-          ],
+              ),
+            ],
+          ),
         );
       },
     );

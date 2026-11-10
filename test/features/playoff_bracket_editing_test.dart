@@ -188,6 +188,32 @@ void main() {
       expect(find.text('Alpha'), findsWidgets);
     });
 
+    testWidgets('TC-BRK-DND-10 double tap on a card reports that match', (
+      tester,
+    ) async {
+      final opened = <String>[];
+      await _setSize(tester);
+      await tester.pumpWidget(
+        _host(
+          PlayoffDoubleElimView(
+            matches: _bracket(),
+            tournamentId: 't-1',
+            onDoubleTapMatch: (match) => opened.add(match.id),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final card = find.byKey(const ValueKey('playoff-card-m1'));
+      final header = tester.getTopLeft(card) + const Offset(20, 10);
+      await tester.tapAt(header);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tapAt(header);
+      await tester.pumpAndSettle();
+
+      expect(opened, ['m1']);
+    });
+
     testWidgets('TC-BRK-DND-07 a second drop waits for the running save', (
       tester,
     ) async {
