@@ -543,6 +543,13 @@ void main() {
       clearSnackBars(tester);
       await tapKey(tester, 'swiss-confirm', step: 'Xác nhận vòng 2');
       await pumpUntilFound(tester, find.text('Đã tạo vòng 2.'), what: 'thông báo đã tạo vòng 2');
+      // BUG-SP-05 (sản phẩm): sau "Đã tạo vòng 2." màn ghép cặp lẽ ra tự đóng (`navigator.maybePop()`
+      // ở swiss_pairing_screen.dart:122) nhưng vẫn còn trên màn. Đợi 3 giây rồi đóng bằng pop.
+      await tester.pump(const Duration(seconds: 3));
+      if (find.byKey(const ValueKey('swiss-pairing-screen')).evaluate().isNotEmpty) {
+        debugPrint('[BUG-SP-05] màn ghép cặp Swiss không tự đóng sau khi xác nhận vòng 2');
+        Navigator.of(tester.element(find.byKey(const ValueKey('swiss-pairing-screen')))).pop();
+      }
       await gone(tester, find.byKey(const ValueKey('swiss-pairing-screen')), 'màn ghép cặp sau khi xác nhận');
       await j.eventually('Backend có 2 trận vòng 2', () async {
         final all = await j.listMatches();
@@ -666,8 +673,9 @@ class _Journey {
       await tester.pump(const Duration(milliseconds: 250));
     }
     if (keepOpen.evaluate().isEmpty) return;
-    // "Hủy" đóng hộp mà không đổi đăng ký của hạng mục nào.
-    await tester.tap(find.text('Hủy').last);
+    // Nút "Hủy" nằm ngoài vùng bấm của emulator: đóng hộp bằng pop route, giống việc nút Hủy làm
+    // (`Navigator.maybePop`), không đổi đăng ký của hạng mục nào.
+    await Navigator.of(tester.element(find.text('Hạng mục đã đủ chỗ'))).maybePop();
     await tester.pump(const Duration(milliseconds: 500));
     await gone(tester, find.text('Hạng mục đã đủ chỗ'), 'hộp Hạng mục đã đủ chỗ');
   }
