@@ -397,8 +397,14 @@ void main() {
         what: 'roundConfig có luật chuẩn (STRICT) trên Backend',
       );
       debugPrint('TC-80: roundConfig sau: ${jsonEncode(saved['roundConfig'])}');
-      final rules = jsonEncode(saved['roundConfig']);
-      expect(rules, contains('15'), reason: 'Điểm mỗi set 15 phải được lưu');
+      final rules = saved['roundConfig'] as Map<String, dynamic>;
+      expect(rules['mode'], 'STRICT', reason: 'Luật chuẩn phải được lưu');
+      expect(rules['pointsPerSet'], 15, reason: 'Điểm mỗi set 15 phải được lưu');
+      expect(
+        rules['winByTwo'],
+        !winByTwoBefore,
+        reason: 'Thắng cách 2 điểm phải đảo so với lúc mở sheet',
+      );
     },
     timeout: _testTimeout,
   );
