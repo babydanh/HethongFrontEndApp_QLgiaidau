@@ -221,6 +221,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not enough approved participants to form teams yet.';
 
   @override
+  String get social_matchActionQuickEntry => 'Quick entry';
+
+  @override
+  String get social_matchActionLiveScore => 'Live scoring';
+
+  @override
   String get social_matchStatusScheduled => 'Scheduled';
 
   @override

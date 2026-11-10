@@ -482,6 +482,18 @@ abstract class AppLocalizations {
   /// **'Buổi chưa đủ người tham gia đã duyệt để ghép đội.'**
   String get social_matchNotEnoughParticipants;
 
+  /// No description provided for @social_matchActionQuickEntry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập nhanh'**
+  String get social_matchActionQuickEntry;
+
+  /// No description provided for @social_matchActionLiveScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm điểm'**
+  String get social_matchActionLiveScore;
+
   /// No description provided for @social_matchStatusScheduled.
   ///
   /// In vi, this message translates to:

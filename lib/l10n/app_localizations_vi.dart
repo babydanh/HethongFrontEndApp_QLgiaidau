@@ -216,6 +216,12 @@ class AppLocalizationsVi extends AppLocalizations {
       'Buổi chưa đủ người tham gia đã duyệt để ghép đội.';
 
   @override
+  String get social_matchActionQuickEntry => 'Nhập nhanh';
+
+  @override
+  String get social_matchActionLiveScore => 'Bấm điểm';
+
+  @override
   String get social_matchStatusScheduled => 'Đã lên lịch';
 
   @override

@@ -65,6 +65,8 @@
   "social_matchListNote": "Shows every standalone match of this club, not filtered exactly to this session.",
   "social_matchEmptyTitle": "No matches have been created for this club yet.",
   "social_matchNotEnoughParticipants": "Not enough approved participants to form teams yet.",
+  "social_matchActionQuickEntry": "Quick entry",
+  "social_matchActionLiveScore": "Live scoring",
   "social_matchStatusScheduled": "Scheduled",
   "social_matchStatusCompleted": "Completed",
   "appTagline": "Play together",

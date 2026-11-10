@@ -5,14 +5,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/standalone_match_owner.dart';
+import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
@@ -193,6 +198,23 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     unawaited(_fetchMatches());
   }
 
+  /// Live scoring (same page the CLB tab opens); refreshes the list on return.
+  Future<void> _openScoreboard(ClubSessionMatchModel sm) async {
+    final match = _toMatchModel(sm);
+    final repository = ref.read(matchRepositoryProvider);
+    if (repository is ApiMatchRepository) repository.primeMatch(match);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => OfficialScorePage(
+          tournamentId: '',
+          matchId: match.id,
+          match: match,
+        ),
+      ),
+    );
+    if (mounted) unawaited(_fetchMatches());
+  }
+
   MatchModel _toMatchModel(ClubSessionMatchModel sm) {
     final sideAMembers = sm.sideAMembers
         .map(
@@ -357,15 +379,41 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     );
   }
 
+  List<ParticipantPlayer> _playersOf(
+    List<ClubSessionMatchMemberModel> members,
+  ) => [
+    for (var i = 0; i < members.length; i++)
+      if (members[i].displayName.isNotEmpty)
+        ParticipantPlayer(
+          slot: i,
+          userId: members[i].userId,
+          fullName: members[i].displayName,
+          avatarUrl: members[i].avatarUrl,
+          isGuest: members[i].isMock,
+        ),
+  ];
+
   Widget _buildMatchCard(
     ClubSessionMatchModel match,
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
     final isCompleted = match.status.toUpperCase() == 'COMPLETED';
-    final sideAName = match.sideANames.join(' · ').trim();
-    final sideBName = match.sideBNames.join(' · ').trim();
     final statusColor = isCompleted ? Colors.green.shade700 : AppTheme.primary;
+    final sideAWon = isCompleted && match.sideAScore > match.sideBScore;
+    final sideBWon = isCompleted && match.sideBScore > match.sideAScore;
+    // Backend is the real gate (MATCH_SCORE_PERMISSION_REQUIRED shows in the
+    // dialog); the app only hides the buttons for signed-out viewers.
+    final canScore =
+        !isCompleted &&
+        ref.watch(authProvider).status == AuthStatus.authenticated;
+
+    TextStyle scoreStyle(bool won) => TextStyle(
+      fontSize: 18,
+      fontWeight: won ? FontWeight.w900 : FontWeight.w600,
+      color: won ? colors.textPrimary : colors.textMuted,
+      height: 1.3,
+    );
 
     return InkWell(
       onTap: () => _openResult(match),
@@ -378,53 +426,94 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
           border: Border.all(color: colors.borderLight),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    '${sideAName.isEmpty ? 'Đội A' : sideAName} vs ${sideBName.isEmpty ? 'Đội B' : sideBName}',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ParticipantSideLines(
+                        key: ValueKey('match-side-a-${match.id}'),
+                        teamName: null,
+                        players: _playersOf(match.sideAMembers),
+                        won: sideAWon,
+                        abbreviate: false,
+                      ),
+                      const SizedBox(height: 6),
+                      ParticipantSideLines(
+                        key: ValueKey('match-side-b-${match.id}'),
+                        teamName: null,
+                        players: _playersOf(match.sideBMembers),
+                        won: sideBWon,
+                        abbreviate: false,
+                      ),
+                    ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    isCompleted
-                        ? l10n.social_matchStatusCompleted
-                        : l10n.social_matchStatusScheduled,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: statusColor,
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isCompleted
+                            ? l10n.social_matchStatusCompleted
+                            : l10n.social_matchStatusScheduled,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: statusColor,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isCompleted) ...[
+                      const SizedBox(height: 6),
+                      Text('${match.sideAScore}', style: scoreStyle(sideAWon)),
+                      Text('${match.sideBScore}', style: scoreStyle(sideBWon)),
+                    ],
+                  ],
                 ),
               ],
             ),
-            if (isCompleted) ...[
-              const SizedBox(height: 6),
-              Text(
-                '${match.sideAScore} - ${match.sideBScore}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                ),
+            if (canScore) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: ValueKey('match-quick-entry-${match.id}'),
+                      onPressed: () => _openResult(match),
+                      icon: const Icon(Icons.bolt_rounded, size: 16),
+                      label: Text(l10n.social_matchActionQuickEntry),
+                      style: _actionStyle(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton.icon(
+                      key: ValueKey('match-live-score-${match.id}'),
+                      onPressed: () => _openScoreboard(match),
+                      icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                      label: Text(l10n.social_matchActionLiveScore),
+                      style: _actionStyle().copyWith(
+                        backgroundColor: const WidgetStatePropertyAll(
+                          AppTheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -432,4 +521,15 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       ),
     );
   }
+
+  ButtonStyle _actionStyle() => ButtonStyle(
+    minimumSize: const WidgetStatePropertyAll(Size.fromHeight(36)),
+    padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
+    textStyle: const WidgetStatePropertyAll(
+      TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+    ),
+    shape: WidgetStatePropertyAll(
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+  );
 }

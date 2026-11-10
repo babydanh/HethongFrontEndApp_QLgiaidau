@@ -5,8 +5,10 @@ import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_club_match_session_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/match_tab/social_match_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +64,11 @@ class _FakeCommunityRepository extends Fake implements ICommunityRepository {
   ) async => const CommunitySocialSettings();
 }
 
+class _SignedInAuth extends AuthNotifier {
+  @override
+  AuthState build() => const AuthState(status: AuthStatus.authenticated);
+}
+
 SocialParticipantModel _participant(String id) => SocialParticipantModel(
   id: id,
   userId: 'user-$id',
@@ -85,9 +92,11 @@ Widget _buildTestApp({
   required ApiClubMatchSessionRepository repository,
   List<CommunityMemberModel> clubMembers = const [],
   String? bracketTournamentId,
+  bool signedIn = false,
 }) {
   return ProviderScope(
     overrides: [
+      if (signedIn) authProvider.overrideWith(_SignedInAuth.new),
       clubMatchSessionRepositoryProvider.overrideWithValue(repository),
       communityRepositoryProvider.overrideWithValue(
         _FakeCommunityRepository(clubMembers),
@@ -227,6 +236,103 @@ void main() {
       find.text('Chưa có trận đấu nào được tạo cho CLB này.'),
       findsNothing,
     );
+  });
+
+  group('thẻ trận', () {
+    ClubSessionMatchModel match(String status, {int a = 0, int b = 0}) =>
+        ClubSessionMatchModel(
+          id: 'match-1',
+          status: status,
+          sideAUserIds: const ['user-1'],
+          sideBUserIds: const ['user-2'],
+          sideAScore: a,
+          sideBScore: b,
+          revision: 1,
+          eloStatus: 'PENDING',
+          sideAMembers: const [
+            ClubSessionMatchMemberModel(
+              userId: 'user-1',
+              displayName: 'Nguyễn Minh Danh',
+            ),
+          ],
+          sideBMembers: const [
+            ClubSessionMatchMemberModel(
+              userId: 'user-2',
+              displayName: 'sigma6969',
+            ),
+          ],
+        );
+
+    Future<void> pump(
+      WidgetTester tester,
+      ClubSessionMatchModel m, {
+      bool signedIn = true,
+    }) async {
+      final participants = [_participant('1'), _participant('2')];
+      await tester.pumpWidget(
+        _buildTestApp(
+          approvedParticipants: participants,
+          repository: _FakeMatchSessionRepository([m]),
+          signedIn: signedIn,
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    final quick = find.byKey(const ValueKey('match-quick-entry-match-1'));
+    final live = find.byKey(const ValueKey('match-live-score-match-1'));
+
+    testWidgets('TC-SOC-CARD-01 players without a photo show initials', (
+      tester,
+    ) async {
+      await pump(tester, match('SCHEDULED'));
+
+      expect(find.text('ND'), findsOneWidget);
+      expect(find.text('S'), findsOneWidget);
+      expect(find.text('Nguyễn Minh Danh'), findsOneWidget);
+    });
+
+    testWidgets('TC-SOC-CARD-02 an unfinished match has both score buttons', (
+      tester,
+    ) async {
+      await pump(tester, match('SCHEDULED'));
+
+      expect(quick, findsOneWidget);
+      expect(live, findsOneWidget);
+      expect(find.text('Nhập nhanh'), findsOneWidget);
+      expect(find.text('Bấm điểm'), findsOneWidget);
+    });
+
+    testWidgets('TC-SOC-CARD-03 a finished match shows the score, no buttons', (
+      tester,
+    ) async {
+      await pump(tester, match('COMPLETED', a: 11, b: 7));
+
+      expect(quick, findsNothing);
+      expect(live, findsNothing);
+      expect(find.text('11'), findsOneWidget);
+      expect(find.text('7'), findsOneWidget);
+    });
+
+    testWidgets('TC-SOC-CARD-04 signed-out viewers get no score buttons', (
+      tester,
+    ) async {
+      await pump(tester, match('SCHEDULED'), signedIn: false);
+
+      expect(quick, findsNothing);
+      expect(live, findsNothing);
+    });
+
+    testWidgets('TC-SOC-CARD-05 "Nhập nhanh" opens the result dialog', (
+      tester,
+    ) async {
+      await pump(tester, match('SCHEDULED'));
+
+      await tester.tap(quick);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ClubStandaloneMatchResultDialog), findsOneWidget);
+    });
   });
 
   group('buổi cá nhân không gắn CLB', () {
