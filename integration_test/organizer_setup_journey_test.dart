@@ -88,13 +88,19 @@ void main() {
       await tapCentered(tester, find.text('Đôi tự do').first);
       await tester.pump(const Duration(milliseconds: 500));
 
+      // The start field opens SocialDateTimePickerSheet; its default (now + 7 days) is in range.
       await scrollToText(tester, 'Thời gian bắt đầu *');
-      await tester.tap(find.text('Thời gian bắt đầu *'));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn ngày (OK)');
-      await tester.tap(find.text('OK').first);
-      await tester.pump(const Duration(seconds: 1));
-      await pumpUntilFound(tester, find.text('OK'), what: 'hộp chọn giờ (OK)');
-      await tester.tap(find.text('OK').first);
+      await tapCentered(
+        tester,
+        find.byKey(const ValueKey('quick-schedule-start')),
+      );
+      await pumpUntilFound(
+        tester,
+        find.text('Chọn ngày và giờ'),
+        what: 'sheet chọn ngày giờ bắt đầu',
+      );
+      await snap(tester, 'sheet-chon-ngay-gio-bat-dau');
+      await tester.tap(find.text('Xác nhận'));
       await tester.pump(const Duration(seconds: 1));
       await snap(tester, 'form-tao-giai-da-dien');
 
@@ -884,14 +890,15 @@ void main() {
 const _testTimeout = Timeout(Duration(minutes: 10));
 
 late IntegrationTestWidgetsFlutterBinding _binding;
-var _surfaceConverted = false;
+WidgetTester? _convertedFor;
 var _shotCount = 0;
 
 /// Chụp một ảnh đánh số tăng dần; ảnh in ra log dạng base64 (xem support/shot.dart).
+/// The surface must be converted once per test (each test has its own WidgetTester).
 Future<void> snap(WidgetTester tester, String name) async {
-  if (!_surfaceConverted) {
+  if (!identical(_convertedFor, tester)) {
     await _binding.convertFlutterSurfaceToImage();
-    _surfaceConverted = true;
+    _convertedFor = tester;
   }
   await tester.pump();
   _shotCount++;
