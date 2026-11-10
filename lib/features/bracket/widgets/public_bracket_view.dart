@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_editing_host.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_seed_labels.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -154,18 +155,24 @@ class PublicBracketView extends StatelessWidget {
         onConfigChanged: onConfigChanged,
         editLocked: editLocked,
       ),
-      _Kind.double || _Kind.single => PlayoffDoubleElimView(
-        matches: knockoutOnly,
+      _Kind.double || _Kind.single => PlayoffEditingHost(
+        enabled: canEditBracket,
         tournamentId: tournamentId,
-        canScoreMatch: canScoreMatch,
-        onOpenFull: () => openFullBracket(
-          context,
+        divisionId: divisionId,
+        builder: (context, onSlotDrop) => PlayoffDoubleElimView(
+          matches: knockoutOnly,
           tournamentId: tournamentId,
-          divisionId: divisionId,
-          bracketType: bracketType,
-          matches: matches,
           canScoreMatch: canScoreMatch,
-          canEditBracket: canEditBracket,
+          onSlotDrop: onSlotDrop,
+          onOpenFull: () => openFullBracket(
+            context,
+            tournamentId: tournamentId,
+            divisionId: divisionId,
+            bracketType: bracketType,
+            matches: matches,
+            canScoreMatch: canScoreMatch,
+            canEditBracket: canEditBracket,
+          ),
         ),
       ),
     };
@@ -346,24 +353,30 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
             ),
           )
         else
-          PlayoffSeedHost(
+          PlayoffEditingHost(
+            enabled: widget.canEditBracket,
             tournamentId: widget.tournamentId,
             divisionId: widget.divisionId,
-            matches: widget.knockoutMatches,
-            canEdit: widget.canEditSeeds,
-            builder: (context, seedLabels) => PlayoffDoubleElimView(
-              matches: widget.knockoutMatches,
+            builder: (context, onSlotDrop) => PlayoffSeedHost(
               tournamentId: widget.tournamentId,
-              canScoreMatch: widget.canScoreMatch,
-              seedLabels: seedLabels,
-              onOpenFull: () => openFullBracket(
-                context,
+              divisionId: widget.divisionId,
+              matches: widget.knockoutMatches,
+              canEdit: widget.canEditSeeds,
+              builder: (context, seedLabels) => PlayoffDoubleElimView(
+                matches: widget.knockoutMatches,
                 tournamentId: widget.tournamentId,
-                divisionId: widget.divisionId,
-                bracketType: widget.bracketType,
-                matches: widget.matches,
                 canScoreMatch: widget.canScoreMatch,
-                canEditBracket: widget.canEditBracket,
+                seedLabels: seedLabels,
+                onSlotDrop: onSlotDrop,
+                onOpenFull: () => openFullBracket(
+                  context,
+                  tournamentId: widget.tournamentId,
+                  divisionId: widget.divisionId,
+                  bracketType: widget.bracketType,
+                  matches: widget.matches,
+                  canScoreMatch: widget.canScoreMatch,
+                  canEditBracket: widget.canEditBracket,
+                ),
               ),
             ),
           ),

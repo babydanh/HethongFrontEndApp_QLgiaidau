@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_layout.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_seed_labels.dart';
@@ -52,6 +53,7 @@ class PlayoffBracketBoard extends StatelessWidget {
     required this.gap,
     required this.onTap,
     this.seedLabels,
+    this.editing,
   });
 
   final List<List<MatchModel>> columns;
@@ -62,6 +64,9 @@ class PlayoffBracketBoard extends StatelessWidget {
 
   /// Placeholders ("Nhất A") for empty round-one slots; null shows "N/A".
   final PlayoffSeedLabels? seedLabels;
+
+  /// Manager mode: slots with a participant can be dragged onto other slots.
+  final BracketEditing? editing;
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +105,7 @@ class PlayoffBracketBoard extends StatelessWidget {
                   feeders: feeders[match.id] ?? const [],
                   onTap: () => onTap(match),
                   seedLabels: seedLabels,
+                  editing: editing,
                 ),
               ),
         ],
@@ -211,12 +217,14 @@ class _BracketCard extends StatelessWidget {
     required this.feeders,
     required this.onTap,
     this.seedLabels,
+    this.editing,
   });
 
   final MatchModel match;
   final List<BracketFeeder> feeders;
   final VoidCallback onTap;
   final PlayoffSeedLabels? seedLabels;
+  final BracketEditing? editing;
 
   String _code() {
     final code = (match.matchCode ?? '').trim();
@@ -227,6 +235,46 @@ class _BracketCard extends StatelessWidget {
   /// the whole match as a BYE; the connector lines already show who feeds it.
   String _waiting(AppLocalizations l10n) =>
       match.isBye ? l10n.bracketBye : l10n.playoff_slotNA;
+
+  /// [_side] wrapped for drag and drop in manager mode. A slot holding a seed
+  /// label is left alone: the label itself drags (see [_SeedLabelSlot]).
+  Widget _slot(BuildContext context, int side) {
+    final row = _side(context, side);
+    final edit = editing;
+    if (edit == null) return row;
+    final teamName = matchSideTeamName(match, side);
+    final players = matchSidePlayers(match, side);
+    final empty = teamName == null && players.isEmpty;
+    final hasSeedLabel =
+        empty &&
+        !match.isBye &&
+        seedLabels?.slotIndexFor(match.id, side) != null;
+    if (hasSeedLabel) return row;
+    final participantId = side == 1 ? match.team1Id : match.team2Id;
+    final data = BracketSlotDragData(
+      matchId: match.id,
+      slot: side == 1 ? 'participant1' : 'participant2',
+      participantId: participantId,
+      isBye:
+          participantId == 'BYE' ||
+          (side == 1 ? match.team1Name : match.team2Name) == 'BYE',
+      // The backend treats a BYE match as unplayed even though it is COMPLETED.
+      isLocked: !match.isScheduled && !match.isBye,
+      label: participantLabel(
+        teamName: teamName,
+        players: players,
+        teamOnly: isFootballMatch(match),
+        abbreviated: true,
+      ),
+    );
+    return BracketSlotRow(
+      data: data,
+      selected: edit.selectedSlot == data,
+      onTap: edit.onSlotTap,
+      onDrop: edit.onSlotDrop,
+      child: row,
+    );
+  }
 
   Widget _side(BuildContext context, int side) {
     final l10n = AppLocalizations.of(context)!;
@@ -391,7 +439,7 @@ class _BracketCard extends StatelessWidget {
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [_side(context, 1), _side(context, 2)],
+                children: [_slot(context, 1), _slot(context, 2)],
               ),
             ),
           ],
