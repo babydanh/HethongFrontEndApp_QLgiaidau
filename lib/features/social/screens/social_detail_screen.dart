@@ -364,6 +364,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       sessionId: session.id,
                       isHost: host,
                       approvedParticipants: session.participants,
+                      bracketTournamentId: session.bracketTournamentId,
                     ),
                     if (showPayment) SocialPaymentTab(session: session),
                     SocialChatTab(

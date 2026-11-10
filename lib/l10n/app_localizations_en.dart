@@ -44,6 +44,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get club_createMatchStandalone => 'Create Match';
 
   @override
+  String get socialBracket_formatLabel => 'Format';
+
+  @override
+  String get socialBracket_formatSingle => 'Single match';
+
+  @override
+  String get socialBracket_formatBracket => 'Bracket';
+
+  @override
+  String get socialBracket_matchSingles => 'Singles';
+
+  @override
+  String get socialBracket_matchDoubles => 'Doubles';
+
+  @override
+  String get socialBracket_typeSingleElimination => 'Single elimination';
+
+  @override
+  String get socialBracket_typeDoubleElimination => 'Double elimination';
+
+  @override
+  String get socialBracket_typeRoundRobin => 'Round robin';
+
+  @override
+  String get socialBracket_typeGroupKnockout => 'Group stage + knockout';
+
+  @override
+  String get socialBracket_players => 'Players';
+
+  @override
+  String get socialBracket_selectAll => 'Select all';
+
+  @override
+  String get socialBracket_clearAll => 'Clear all';
+
+  @override
+  String socialBracket_selected(int count, int total) {
+    return '$count/$total selected';
+  }
+
+  @override
+  String get socialBracket_hintSingles => 'Select at least 2 players.';
+
+  @override
+  String get socialBracket_hintDoubles =>
+      'Select an even number of players, at least 4.';
+
+  @override
+  String get socialBracket_submit => 'Create bracket';
+
+  @override
+  String get socialBracket_submitting => 'Creating...';
+
+  @override
+  String get socialBracket_created => 'Bracket created';
+
+  @override
+  String get socialBracket_view => 'View bracket';
+
+  @override
+  String get socialBracket_error =>
+      'Could not create the bracket. Please try again.';
+
+  @override
+  String get socialBracket_errorInvalidPlayers =>
+      'The player list is not valid for this bracket.';
+
+  @override
+  String get socialBracket_errorNotHost =>
+      'Only the host can create a bracket.';
+
+  @override
+  String get socialBracket_errorClosed =>
+      'This session has ended or was cancelled.';
+
+  @override
+  String get socialBracket_errorClub =>
+      'Club sessions cannot create a bracket from here.';
+
+  @override
   String get club_createActivity => 'Create activity';
 
   @override

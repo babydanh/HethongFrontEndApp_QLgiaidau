@@ -164,6 +164,150 @@ abstract class AppLocalizations {
   /// **'Tạo trận đấu'**
   String get club_createMatchStandalone;
 
+  /// No description provided for @socialBracket_formatLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thể thức'**
+  String get socialBracket_formatLabel;
+
+  /// No description provided for @socialBracket_formatSingle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Một trận'**
+  String get socialBracket_formatSingle;
+
+  /// No description provided for @socialBracket_formatBracket.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bracket'**
+  String get socialBracket_formatBracket;
+
+  /// No description provided for @socialBracket_matchSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đơn'**
+  String get socialBracket_matchSingles;
+
+  /// No description provided for @socialBracket_matchDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đôi'**
+  String get socialBracket_matchDoubles;
+
+  /// No description provided for @socialBracket_typeSingleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại trực tiếp'**
+  String get socialBracket_typeSingleElimination;
+
+  /// No description provided for @socialBracket_typeDoubleElimination.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại kép'**
+  String get socialBracket_typeDoubleElimination;
+
+  /// No description provided for @socialBracket_typeRoundRobin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng tròn'**
+  String get socialBracket_typeRoundRobin;
+
+  /// No description provided for @socialBracket_typeGroupKnockout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vòng bảng + knock-out'**
+  String get socialBracket_typeGroupKnockout;
+
+  /// No description provided for @socialBracket_players.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người chơi'**
+  String get socialBracket_players;
+
+  /// No description provided for @socialBracket_selectAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn tất cả'**
+  String get socialBracket_selectAll;
+
+  /// No description provided for @socialBracket_clearAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ chọn tất cả'**
+  String get socialBracket_clearAll;
+
+  /// No description provided for @socialBracket_selected.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chọn {count}/{total}'**
+  String socialBracket_selected(int count, int total);
+
+  /// No description provided for @socialBracket_hintSingles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ít nhất 2 người chơi.'**
+  String get socialBracket_hintSingles;
+
+  /// No description provided for @socialBracket_hintDoubles.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn số chẵn người chơi, ít nhất 4.'**
+  String get socialBracket_hintDoubles;
+
+  /// No description provided for @socialBracket_submit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo bracket'**
+  String get socialBracket_submit;
+
+  /// No description provided for @socialBracket_submitting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo...'**
+  String get socialBracket_submitting;
+
+  /// No description provided for @socialBracket_created.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo bracket'**
+  String get socialBracket_created;
+
+  /// No description provided for @socialBracket_view.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem bracket'**
+  String get socialBracket_view;
+
+  /// No description provided for @socialBracket_error.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tạo được bracket. Vui lòng thử lại.'**
+  String get socialBracket_error;
+
+  /// No description provided for @socialBracket_errorInvalidPlayers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Danh sách người chơi không hợp lệ cho bracket này.'**
+  String get socialBracket_errorInvalidPlayers;
+
+  /// No description provided for @socialBracket_errorNotHost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ chủ kèo mới tạo được bracket.'**
+  String get socialBracket_errorNotHost;
+
+  /// No description provided for @socialBracket_errorClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo đã kết thúc hoặc bị hủy.'**
+  String get socialBracket_errorClosed;
+
+  /// No description provided for @socialBracket_errorClub.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kèo của CLB không tạo bracket từ đây.'**
+  String get socialBracket_errorClub;
+
   /// No description provided for @club_createActivity.
   ///
   /// In vi, this message translates to:

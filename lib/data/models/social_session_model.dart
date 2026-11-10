@@ -408,6 +408,9 @@ class SocialSessionModel {
   final bool isHost;
   final String? chatRoomId;
 
+  /// Lite tournament created from this session's players (null = none yet).
+  final String? bracketTournamentId;
+
   // Local phase 2 fields (matches & chat)
   final List<SocialMatchModel> matches;
   final List<SocialChatMessageModel> chatMessages;
@@ -451,6 +454,7 @@ class SocialSessionModel {
     this.isPending = false,
     this.isHost = false,
     this.chatRoomId,
+    this.bracketTournamentId,
     this.matches = const [],
     this.chatMessages = const [],
   });
@@ -737,6 +741,7 @@ class SocialSessionModel {
               : json['isPending'] == true),
       isHost: json['isHost'] == true,
       chatRoomId: json['chatRoomId']?.toString(),
+      bracketTournamentId: json['bracketTournamentId']?.toString(),
       chatMessages: (json['chatMessages'] ?? json['messages']) is List
           ? ((json['chatMessages'] ?? json['messages']) as List)
                 .whereType<Map>()
@@ -788,6 +793,7 @@ class SocialSessionModel {
     'isPending': isPending,
     'isHost': isHost,
     if (chatRoomId != null) 'chatRoomId': chatRoomId,
+    if (bracketTournamentId != null) 'bracketTournamentId': bracketTournamentId,
     if (chatMessages.isNotEmpty)
       'chatMessages': chatMessages.map((m) => m.toJson()).toList(),
   };
@@ -831,6 +837,7 @@ class SocialSessionModel {
     bool? isPending,
     bool? isHost,
     String? chatRoomId,
+    String? bracketTournamentId,
     List<SocialMatchModel>? matches,
     List<SocialChatMessageModel>? chatMessages,
   }) {
@@ -874,6 +881,7 @@ class SocialSessionModel {
       isPending: isPending ?? this.isPending,
       isHost: isHost ?? this.isHost,
       chatRoomId: chatRoomId ?? this.chatRoomId,
+      bracketTournamentId: bracketTournamentId ?? this.bracketTournamentId,
       matches: matches ?? this.matches,
       chatMessages: chatMessages ?? this.chatMessages,
     );

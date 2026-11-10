@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
@@ -14,6 +15,7 @@ import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_ma
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/social_provider.dart';
 
 /// Tab "Trận đấu" bên trong một buổi Social.
 ///
@@ -33,12 +35,16 @@ class SocialMatchTab extends ConsumerStatefulWidget {
   final bool isHost;
   final List<SocialParticipantModel> approvedParticipants;
 
+  /// Lite tournament already created from this session (null = none yet).
+  final String? bracketTournamentId;
+
   const SocialMatchTab({
     super.key,
     this.communityId,
     required this.sessionId,
     this.isHost = false,
     required this.approvedParticipants,
+    this.bracketTournamentId,
   });
 
   @override
@@ -147,6 +153,15 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     return isManager || settings?.memberMatchCreationEnabled != false;
   }
 
+  /// Reload the session so `bracketTournamentId` (and the View button) show up.
+  void _refreshSession() {
+    unawaited(
+      ref
+          .read(socialSessionDetailProvider(widget.sessionId).notifier)
+          .refresh(),
+    );
+  }
+
   Future<void> _createMatch() async {
     final createdMatch = await ClubStandaloneMatchDialog.show(
       context,
@@ -154,6 +169,9 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       socialSessionId: _owner.socialSessionId,
       preselectedMembers: _preselectedMembers,
       onMatchCreated: _fetchMatches,
+      // Only the host of a club-less session can turn it into a bracket.
+      allowBracket: _owner.isPersonalSession && widget.isHost,
+      onBracketCreated: _refreshSession,
     );
     if (!mounted || createdMatch == null) return;
     final action = await ClubStandaloneMatchResultDialog.show(
@@ -225,6 +243,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     final l10n = AppLocalizations.of(context)!;
     final canCreateMatch = _canCreateMatch();
     final notEnoughParticipants = _preselectedMembers.length < 4;
+    final bracketId = widget.bracketTournamentId;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -257,6 +276,15 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
             ],
           ),
         ),
+        if (bracketId != null && bracketId.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/tournaments/$bracketId'),
+              icon: const Icon(Icons.account_tree_rounded, size: 18),
+              label: Text(l10n.socialBracket_view),
+            ),
+          ),
         if (notEnoughParticipants)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),

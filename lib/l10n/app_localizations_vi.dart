@@ -44,6 +44,81 @@ class AppLocalizationsVi extends AppLocalizations {
   String get club_createMatchStandalone => 'Tạo trận đấu';
 
   @override
+  String get socialBracket_formatLabel => 'Thể thức';
+
+  @override
+  String get socialBracket_formatSingle => 'Một trận';
+
+  @override
+  String get socialBracket_formatBracket => 'Bracket';
+
+  @override
+  String get socialBracket_matchSingles => 'Đơn';
+
+  @override
+  String get socialBracket_matchDoubles => 'Đôi';
+
+  @override
+  String get socialBracket_typeSingleElimination => 'Loại trực tiếp';
+
+  @override
+  String get socialBracket_typeDoubleElimination => 'Loại kép';
+
+  @override
+  String get socialBracket_typeRoundRobin => 'Vòng tròn';
+
+  @override
+  String get socialBracket_typeGroupKnockout => 'Vòng bảng + knock-out';
+
+  @override
+  String get socialBracket_players => 'Người chơi';
+
+  @override
+  String get socialBracket_selectAll => 'Chọn tất cả';
+
+  @override
+  String get socialBracket_clearAll => 'Bỏ chọn tất cả';
+
+  @override
+  String socialBracket_selected(int count, int total) {
+    return 'Đã chọn $count/$total';
+  }
+
+  @override
+  String get socialBracket_hintSingles => 'Chọn ít nhất 2 người chơi.';
+
+  @override
+  String get socialBracket_hintDoubles => 'Chọn số chẵn người chơi, ít nhất 4.';
+
+  @override
+  String get socialBracket_submit => 'Tạo bracket';
+
+  @override
+  String get socialBracket_submitting => 'Đang tạo...';
+
+  @override
+  String get socialBracket_created => 'Đã tạo bracket';
+
+  @override
+  String get socialBracket_view => 'Xem bracket';
+
+  @override
+  String get socialBracket_error => 'Không tạo được bracket. Vui lòng thử lại.';
+
+  @override
+  String get socialBracket_errorInvalidPlayers =>
+      'Danh sách người chơi không hợp lệ cho bracket này.';
+
+  @override
+  String get socialBracket_errorNotHost => 'Chỉ chủ kèo mới tạo được bracket.';
+
+  @override
+  String get socialBracket_errorClosed => 'Kèo đã kết thúc hoặc bị hủy.';
+
+  @override
+  String get socialBracket_errorClub => 'Kèo của CLB không tạo bracket từ đây.';
+
+  @override
   String get club_createActivity => 'Tạo hoạt động';
 
   @override

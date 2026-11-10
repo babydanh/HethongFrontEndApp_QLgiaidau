@@ -84,6 +84,7 @@ Widget _buildTestApp({
   required List<SocialParticipantModel> approvedParticipants,
   required ApiClubMatchSessionRepository repository,
   List<CommunityMemberModel> clubMembers = const [],
+  String? bracketTournamentId,
 }) {
   return ProviderScope(
     overrides: [
@@ -103,6 +104,7 @@ Widget _buildTestApp({
           sessionId: sessionId,
           isHost: isHost,
           approvedParticipants: approvedParticipants,
+          bracketTournamentId: bracketTournamentId,
         ),
       ),
     ),
@@ -318,5 +320,53 @@ void main() {
         findsOneWidget,
       );
     });
+  });
+
+  testWidgets('TC-SOCIAL-BRACKET-APP-12: Xem bracket chỉ hiện khi kèo đã có bracket', (
+    tester,
+  ) async {
+    final participants = [for (final id in ['1', '2', '3', '4']) _participant(id)];
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        isHost: true,
+        approvedParticipants: participants,
+        repository: _FakeMatchSessionRepository(const []),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Xem bracket'), findsNothing);
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        isHost: true,
+        approvedParticipants: participants,
+        repository: _FakeMatchSessionRepository(const []),
+        bracketTournamentId: 't1',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Xem bracket'), findsOneWidget);
+  });
+
+  testWidgets('TC-SOCIAL-BRACKET-APP-13: chỉ host kèo cá nhân thấy Thể thức Bracket khi tạo trận', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final participants = [for (final id in ['1', '2', '3', '4']) _participant(id)];
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        isHost: true,
+        approvedParticipants: participants,
+        repository: _FakeMatchSessionRepository(const []),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Tạo trận đấu'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bracket'), findsOneWidget);
   });
 }

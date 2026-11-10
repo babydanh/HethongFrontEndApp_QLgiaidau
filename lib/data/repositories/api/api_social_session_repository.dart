@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/dio_client.dart';
+import 'package:app_quanly_giaidau/data/models/social_bracket_model.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
 import 'package:dio/dio.dart';
@@ -669,6 +670,46 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       _log.error('addParticipantsBatch unexpected error', error, stack);
       rethrow;
     }
+  }
+
+  @override
+  Future<SocialBracketResult> createBracket(
+    String sessionId, {
+    required String bracketType,
+    required String matchType,
+    required List<String> participantUserIds,
+  }) async {
+    try {
+      final response = await _dioClient.dio.post(
+        '/social-sessions/$sessionId/bracket',
+        data: {
+          'bracketType': bracketType,
+          'matchType': matchType,
+          'participantUserIds': participantUserIds,
+        },
+        // Never auto-retry: a second POST would race the server-side lock.
+        options: Options(extra: {'noRetry': true}),
+      );
+      final body = _asMap(response.data);
+      return SocialBracketResult.fromJson(
+        body['data'] is Map ? _asMap(body['data']) : body,
+      );
+    } on DioException catch (error, stack) {
+      final existingId = _existingBracketId(error);
+      if (existingId != null) throw SocialBracketExistsException(existingId);
+      _log.error('createBracket error for session: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    }
+  }
+
+  /// 409 SOCIAL_BRACKET_EXISTS carries the existing tournament id at top level.
+  String? _existingBracketId(DioException error) {
+    final response = error.response;
+    if (response?.statusCode != 409) return null;
+    final body = _asMap(response?.data);
+    if (body['code'] != 'SOCIAL_BRACKET_EXISTS') return null;
+    final id = body['tournamentId']?.toString();
+    return (id == null || id.isEmpty) ? null : id;
   }
 
   @override

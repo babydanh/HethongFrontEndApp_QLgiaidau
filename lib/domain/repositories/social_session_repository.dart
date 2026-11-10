@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/data/models/social_bracket_model.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 
 abstract class ISocialSessionRepository {
@@ -103,6 +104,16 @@ abstract class ISocialSessionRepository {
     String sessionId, {
     required List<String> userIds,
     int ticketCount = 1,
+  });
+
+  /// Host của kèo không thuộc CLB tạo giải Lite từ người chơi đã chọn
+  /// (POST /social-sessions/:id/bracket). Throws [SocialBracketExistsException]
+  /// khi kèo đã có bracket (409).
+  Future<SocialBracketResult> createBracket(
+    String sessionId, {
+    required String bracketType,
+    required String matchType,
+    required List<String> participantUserIds,
   });
 
   /// 4.8 - Xóa người khỏi kèo (DELETE /social-sessions/:id/participants/:userId)

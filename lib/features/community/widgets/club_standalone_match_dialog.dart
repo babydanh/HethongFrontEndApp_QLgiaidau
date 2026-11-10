@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:dio/dio.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -11,6 +12,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/match_tab/social_bracket_form.dart';
 
 class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
   /// Đúng một trong [communityId] / [socialSessionId] (buổi Social cá nhân
@@ -26,6 +28,13 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
   /// CLB đã JOIN qua `communityRepositoryProvider`.
   final List<CommunityMemberModel>? preselectedMembers;
 
+  /// Host của buổi Social cá nhân (không CLB) có thể chọn thể thức Bracket.
+  /// Chỉ có tác dụng khi [socialSessionId] có giá trị.
+  final bool allowBracket;
+
+  /// Gọi sau khi tạo (hoặc gặp sẵn) bracket, trước khi mở màn giải.
+  final VoidCallback? onBracketCreated;
+
   const ClubStandaloneMatchDialog({
     super.key,
     this.communityId,
@@ -34,6 +43,8 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
     this.sessionId,
     this.onMatchCreated,
     this.preselectedMembers,
+    this.allowBracket = false,
+    this.onBracketCreated,
   });
 
   static Future<MatchModel?> show(
@@ -44,6 +55,8 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
     String? sessionId,
     VoidCallback? onMatchCreated,
     List<CommunityMemberModel>? preselectedMembers,
+    bool allowBracket = false,
+    VoidCallback? onBracketCreated,
   }) {
     return showDialog<MatchModel>(
       context: context,
@@ -55,6 +68,8 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
         sessionId: sessionId,
         onMatchCreated: onMatchCreated,
         preselectedMembers: preselectedMembers,
+        allowBracket: allowBracket,
+        onBracketCreated: onBracketCreated,
       ),
     );
   }
@@ -78,6 +93,14 @@ class _ClubStandaloneMatchDialogState
   // Mặc định không tính điểm ELO cho trận riêng
   // bool _isRanked = true;
   final bool _isRanked = false;
+
+  /// 'DOUBLES' by default; 'SINGLES' = one player per side.
+  String _matchType = 'DOUBLES';
+  bool _bracketMode = false;
+
+  int get _sideSize => _matchType == 'SINGLES' ? 1 : 2;
+  bool get _bracketAvailable =>
+      widget.allowBracket && (widget.socialSessionId ?? '').isNotEmpty;
 
   @override
   void initState() {
@@ -148,9 +171,25 @@ class _ClubStandaloneMatchDialogState
 
   bool get _canSubmit {
     if (_isCreating) return false;
-    final aCount = _sideAUserIds.length;
-    final bCount = _sideBUserIds.length;
-    return aCount == 2 && bCount == 2;
+    return _sideAUserIds.length == _sideSize &&
+        _sideBUserIds.length == _sideSize;
+  }
+
+  void _setMatchType(String matchType) {
+    if (matchType == _matchType) return;
+    setState(() {
+      _matchType = matchType;
+      _sideAUserIds.clear();
+      _sideBUserIds.clear();
+    });
+  }
+
+  void _openBracket(String tournamentId) {
+    // Capture the router before the dialog's context is popped.
+    final router = GoRouter.of(context);
+    Navigator.of(context).pop();
+    widget.onBracketCreated?.call();
+    router.push('/tournaments/$tournamentId');
   }
 
   Future<void> _handleCreateMatch() async {
@@ -173,7 +212,7 @@ class _ClubStandaloneMatchDialogState
         sideB: sideBList,
         key: requestKey,
         isRanked: _isRanked,
-        matchType: sideAList.length == 1 ? 'SINGLES' : 'DOUBLES',
+        matchType: _matchType,
       );
 
       final sideAMembersInfo = createdSessionMatch.sideAMembers
@@ -283,47 +322,19 @@ class _ClubStandaloneMatchDialogState
           children: [
             // ─── Header ───
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 12, 10),
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
               child: Row(
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.sports_tennis_rounded,
-                      color: AppTheme.primary,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.club_createMatchStandalone,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: colors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          l10n.club_standaloneMatchDesc,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: colors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    child: Text(
+                      l10n.club_createMatchStandalone,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
@@ -340,235 +351,303 @@ class _ClubStandaloneMatchDialogState
 
             const Divider(height: 1),
 
-            // ─── Tóm tắt phe A vs phe B ───
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildSideSummaryCard(
-                      title: 'ĐỘI A',
-                      userIds: _sideAUserIds,
-                      badgeColor: const Color(0xFF2563EB),
-                      colors: colors,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      'VS',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: colors.textMuted,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildSideSummaryCard(
-                      title: 'ĐỘI B',
-                      userIds: _sideBUserIds,
-                      badgeColor: const Color(0xFFEA580C),
-                      colors: colors,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildModeSelectors(l10n, colors),
 
-            // ─── Thanh tìm kiếm gọn gàng ───
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              child: SizedBox(
-                height: 38,
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                  style: TextStyle(fontSize: 13, color: colors.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: l10n.club_searchMemberHint,
-                    hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      size: 17,
-                      color: colors.textMuted,
-                    ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, size: 15),
-                            padding: EdgeInsets.zero,
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 10,
-                    ),
-                    fillColor: colors.bgSurface,
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: colors.borderLight),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: colors.borderLight),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: AppTheme.primary),
+            if (_bracketMode && _bracketAvailable)
+              Expanded(
+                child: _isLoadingMembers
+                    ? const CommunityListSkeleton(itemCount: 6)
+                    : SocialBracketForm(
+                        key: ValueKey(_matchType),
+                        sessionId: widget.socialSessionId!,
+                        members: _allMembers,
+                        matchType: _matchType,
+                        onDone: _openBracket,
+                      ),
+              )
+            else ...[
+                // ─── Tóm tắt phe A vs phe B ───
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildSideSummaryCard(
+                          title: 'ĐỘI A',
+                          userIds: _sideAUserIds,
+                          badgeColor: const Color(0xFF2563EB),
+                          colors: colors,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          'VS',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildSideSummaryCard(
+                          title: 'ĐỘI B',
+                          userIds: _sideBUserIds,
+                          badgeColor: const Color(0xFFEA580C),
+                          colors: colors,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ─── Thanh tìm kiếm gọn gàng ───
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  child: SizedBox(
+                    height: 36,
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                      style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: l10n.club_searchMemberHint,
+                        hintStyle: TextStyle(fontSize: 12, color: colors.textMuted),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          size: 17,
+                          color: colors.textMuted,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear_rounded, size: 15),
+                                padding: EdgeInsets.zero,
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 10,
+                        ),
+                        fillColor: colors.bgSurface,
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colors.borderLight),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: colors.borderLight),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: AppTheme.primary),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 4),
+                const SizedBox(height: 2),
 
-            // ─── Danh sách thành viên ───
-            Expanded(
-              child: _isLoadingMembers
-                  ? const CommunityListSkeleton(itemCount: 6)
-                  : _loadError != null
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _loadError!,
+                // ─── Danh sách thành viên ───
+                Expanded(
+                  child: _isLoadingMembers
+                      ? const CommunityListSkeleton(itemCount: 6)
+                      : _loadError != null
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _loadError!,
+                                style: TextStyle(
+                                  color: colors.textMuted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _loadMembers,
+                                child: Text(l10n.infoRetry),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _filteredMembers.isEmpty
+                      ? Center(
+                          child: Text(
+                            l10n.club_noMembersFound,
                             style: TextStyle(
-                              color: colors.textMuted,
-                              fontSize: 12,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: _loadMembers,
-                            child: Text(l10n.infoRetry),
-                          ),
-                        ],
-                      ),
-                    )
-                  : _filteredMembers.isEmpty
-                  ? Center(
-                      child: Text(
-                        l10n.club_noMembersFound,
-                        style: TextStyle(
-                          color: colors.textSecondary,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      itemCount: _filteredMembers.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final member = _filteredMembers[index];
-                        return _buildMemberRow(member, colors);
-                      },
-                    ),
-            ),
-
-            const Divider(height: 1),
-
-            // ─── Bottom Actions ───
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Ẩn option tính điểm ELO khỏi modal (comment lại theo yêu cầu)
-                  /*
-                  // Checkbox ELO có label giải thích
-                  InkWell(
-                    onTap: () => setState(() => _isRanked = !_isRanked),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: Checkbox(
-                              value: _isRanked,
-                              onChanged: (val) =>
-                                  setState(() => _isRanked = val ?? true),
-                              activeColor: AppTheme.primary,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Tính điểm ELO cho trận này',
-                            style: TextStyle(
+                              color: colors.textSecondary,
                               fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                              color: colors.textPrimary,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  */
-                  // Nút Tạo trận đấu với trạng thái disabled rõ ràng
-                  SizedBox(
-                    height: 44,
-                    child: FilledButton(
-                      onPressed: _canSubmit ? _handleCreateMatch : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        disabledBackgroundColor:
-                            AppTheme.primary.withValues(alpha: 0.25),
-                        disabledForegroundColor:
-                            Colors.white.withValues(alpha: 0.7),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          itemCount: _filteredMembers.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final member = _filteredMembers[index];
+                            return _buildMemberRow(member, colors);
+                          },
+                        ),
+                ),
+
+                const Divider(height: 1),
+
+                // ─── Bottom Actions ───
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Ẩn option tính điểm ELO khỏi modal (comment lại theo yêu cầu)
+                      /*
+                      // Checkbox ELO có label giải thích
+                      InkWell(
+                        onTap: () => setState(() => _isRanked = !_isRanked),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: Checkbox(
+                                  value: _isRanked,
+                                  onChanged: (val) =>
+                                      setState(() => _isRanked = val ?? true),
+                                  activeColor: AppTheme.primary,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Tính điểm ELO cho trận này',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      child: _isCreating
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              l10n.club_createMatchStandalone,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
+                      const SizedBox(height: 8),
+                      */
+                      // Nút Tạo trận đấu với trạng thái disabled rõ ràng
+                      SizedBox(
+                        height: 44,
+                        child: FilledButton(
+                          onPressed: _canSubmit ? _handleCreateMatch : null,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            disabledBackgroundColor:
+                                AppTheme.primary.withValues(alpha: 0.25),
+                            disabledForegroundColor:
+                                Colors.white.withValues(alpha: 0.7),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                    ),
+                          ),
+                          child: _isCreating
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  l10n.club_createMatchStandalone,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Chạm vào avatar để chuyển Đội A → Đội B → Bỏ chọn',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: colors.textMuted,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildModeSelectors(AppLocalizations l10n, dynamic colors) {
+    // Compact segments so both toggles fit on one row.
+    final segmentStyle = ButtonStyle(
+      visualDensity: VisualDensity.compact,
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 6),
+      ),
+      textStyle: const WidgetStatePropertyAll(
+        TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+      ),
+    );
+    final matchTypeToggle = SegmentedButton<String>(
+      showSelectedIcon: false,
+      style: segmentStyle,
+      segments: [
+        ButtonSegment(
+          value: 'SINGLES',
+          label: Text(l10n.socialBracket_matchSingles),
+        ),
+        ButtonSegment(
+          value: 'DOUBLES',
+          label: Text(l10n.socialBracket_matchDoubles),
+        ),
+      ],
+      selected: {_matchType},
+      onSelectionChanged: _isCreating
+          ? null
+          : (value) => _setMatchType(value.first),
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+      child: Row(
+        children: [
+          if (_bracketAvailable) ...[
+            Expanded(
+              child: SegmentedButton<bool>(
+                showSelectedIcon: false,
+                style: segmentStyle,
+                segments: [
+                  ButtonSegment(
+                    value: false,
+                    label: Text(l10n.socialBracket_formatSingle),
+                  ),
+                  ButtonSegment(
+                    value: true,
+                    label: Text(l10n.socialBracket_formatBracket),
+                  ),
+                ],
+                selected: {_bracketMode},
+                onSelectionChanged: _isCreating
+                    ? null
+                    : (value) => setState(() => _bracketMode = value.first),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(child: matchTypeToggle),
+        ],
       ),
     );
   }
@@ -589,7 +668,7 @@ class _ClubStandaloneMatchDialogState
         .toList();
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: badgeColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
@@ -616,7 +695,7 @@ class _ClubStandaloneMatchDialogState
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '${userIds.length}/2',
+                  '${userIds.length}/$_sideSize',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -626,9 +705,9 @@ class _ClubStandaloneMatchDialogState
               ),
             ],
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 2),
           Text(
-            names.isEmpty ? 'Chưa chọn VĐV' : names.join(' · '),
+            names.isEmpty ? '—' : names.join(' · '),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w500,
@@ -789,15 +868,15 @@ class _ClubStandaloneMatchDialogState
     setState(() {
       if (_sideAUserIds.contains(userId)) {
         _sideAUserIds.remove(userId);
-        if (_sideBUserIds.length < 2) {
+        if (_sideBUserIds.length < _sideSize) {
           _sideBUserIds.add(userId);
         }
       } else if (_sideBUserIds.contains(userId)) {
         _sideBUserIds.remove(userId);
       } else {
-        if (_sideAUserIds.length < 2) {
+        if (_sideAUserIds.length < _sideSize) {
           _sideAUserIds.add(userId);
-        } else if (_sideBUserIds.length < 2) {
+        } else if (_sideBUserIds.length < _sideSize) {
           _sideBUserIds.add(userId);
         }
       }
