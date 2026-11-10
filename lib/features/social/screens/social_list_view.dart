@@ -58,15 +58,16 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
           // Offset for top header
           SliverToBoxAdapter(child: SizedBox(height: widget.topPadding)),
 
-          // Just-opened / just-started tournaments (same rules as Web).
-          const SliverToBoxAdapter(child: ExploreNewTournaments()),
-
           // Nearby is future-based and is not constrained by the date picker.
           if (!filterState.nearbyOnly)
             const SliverToBoxAdapter(child: SocialDateSelector()),
 
           // Toggle "Gần bạn" + chips bán kính + banner quyền vị trí
           const SliverToBoxAdapter(child: SocialNearbyFilter()),
+
+          // Just-opened / just-started tournaments (same rules as Web), right
+          // above the time-grouped list instead of on top of the screen.
+          const SliverToBoxAdapter(child: ExploreNewTournaments()),
 
           const SliverToBoxAdapter(child: SizedBox(height: 6)),
 
