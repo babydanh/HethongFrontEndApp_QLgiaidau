@@ -1,9 +1,9 @@
-import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/save_group_assignment.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -34,16 +34,6 @@ class _GroupStageAssignmentScreenState
     super.dispose();
   }
 
-  bool _hasStartedOrResult(MatchModel match) =>
-      match.startedAt != null ||
-      match.isLive ||
-      match.isCompleted ||
-      match.score1 != 0 ||
-      match.score2 != 0 ||
-      match.winnerId.isNotEmpty ||
-      match.sets.any((set) => set.score1 != 0 || set.score2 != 0) ||
-      (match.scoreDetails?.isNotEmpty ?? false);
-
   void _change(GroupStageConfig config, {required bool locked}) {
     if (!locked && !_saving) setState(() => _draft = config);
   }
@@ -58,84 +48,48 @@ class _GroupStageAssignmentScreenState
     if (locked || _saving) return;
     setState(() => _saving = true);
     final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final SaveGroupAssignmentResult result;
     try {
-      await ref
-          .read(tournamentManagementRepositoryProvider)
-          .updateDivisionConfig(
-            widget.tournamentId,
-            widget.divisionId,
-            buildDivisionConfigPatchPayload(
-              currentRoundConfig: division.roundConfig,
-              config: config,
-            ),
-          );
+      result = await saveGroupAssignment(
+        ref,
+        tournamentId: widget.tournamentId,
+        divisionId: widget.divisionId,
+        division: division,
+        config: config,
+        matches: matches,
+      );
     } catch (error) {
-      if (mounted) {
-        setState(() {
-          _draft = savedConfig;
-          _saving = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.groupAssignmentSaveError(error.toString())),
-          ),
-        );
-      }
+      if (!mounted) return;
+      setState(() {
+        _draft = savedConfig;
+        _saving = false;
+      });
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.groupAssignmentSaveError(error.toString())),
+        ),
+      );
       return;
     }
 
-    ref.invalidate(tournamentProvider(widget.tournamentId));
-    final params = (
-      tournamentId: widget.tournamentId,
-      divisionId: widget.divisionId,
+    if (!mounted) return;
+    setState(() {
+      _draft = config;
+      _saving = false;
+    });
+    final regenerationError = result.regenerationError;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          regenerationError == null
+              ? l10n.groupAssignmentSaved
+              : l10n.groupAssignmentRegenerateError(
+                  regenerationError.toString(),
+                ),
+        ),
+      ),
     );
-    ref.invalidate(bracketMatchesWithDivisionProvider(params));
-    ref.invalidate(bracketMatchesProvider(widget.tournamentId));
-    ref.invalidate(matchesProvider(widget.tournamentId));
-
-    var generationFailed = false;
-    final groupMatches = matches.where(isGroupStageMatch);
-    if (groupMatches.isNotEmpty && !groupMatches.any(_hasStartedOrResult)) {
-      try {
-        await ref
-            .read(tournamentRepositoryProvider)
-            .generateBracket(
-              widget.tournamentId,
-              divisionId: widget.divisionId,
-              seedingType: 'RANDOM',
-              allowReset: true,
-            );
-        ref.invalidate(bracketMatchesWithDivisionProvider(params));
-        ref.invalidate(bracketMatchesProvider(widget.tournamentId));
-        ref.invalidate(matchesProvider(widget.tournamentId));
-      } catch (error) {
-        generationFailed = true;
-        ref.invalidate(bracketMatchesWithDivisionProvider(params));
-        ref.invalidate(bracketMatchesProvider(widget.tournamentId));
-        ref.invalidate(matchesProvider(widget.tournamentId));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n.groupAssignmentRegenerateError(error.toString()),
-              ),
-            ),
-          );
-        }
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _draft = config;
-        _saving = false;
-      });
-      if (!generationFailed) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.groupAssignmentSaved)));
-      }
-    }
   }
 
   @override
@@ -188,7 +142,7 @@ class _GroupStageAssignmentScreenState
                 final config = _draft ?? savedConfig;
                 final locked = matches
                     .where(isGroupStageMatch)
-                    .any(_hasStartedOrResult);
+                    .any(groupMatchHasStartedOrResult);
                 return Column(
                   children: [
                     if (locked)

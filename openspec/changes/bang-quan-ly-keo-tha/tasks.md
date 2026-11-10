@@ -1,6 +1,6 @@
 ## 1. Shared save helper
 
-- [ ] 1.1 Tách logic lưu xếp bảng khỏi `GroupStageAssignmentScreen._save` thành hàm dùng chung, màn cũ gọi lại hàm đó. Tiêu chí: `flutter test --no-pub test/features/group_stage_assignment_test.dart` → exit 0
+- [x] 1.1 Tách logic lưu xếp bảng khỏi `GroupStageAssignmentScreen._save` thành hàm dùng chung, màn cũ gọi lại hàm đó. Tiêu chí: `flutter test --no-pub test/features/group_stage_assignment_test.dart` → exit 0
   - Files: tạo `lib/features/bracket/utils/save_group_assignment.dart`; sửa `lib/features/bracket/screens/group_stage_assignment_screen.dart:48-130`; test `test/features/group_stage_assignment_test.dart`
   - Giao: `Future<SaveGroupAssignmentResult> saveGroupAssignment(WidgetRef ref, {required String tournamentId, required String divisionId, required TournamentDivision division, required GroupStageConfig config, required List<MatchModel> matches})` với `SaveGroupAssignmentResult { saved, regenerated, regenerationError }` · Nhận: (không)
   - Chủ file chung: 1.1 giữ `group_stage_assignment_screen.dart`

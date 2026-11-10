@@ -5,6 +5,8 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/group_stage_assignment_screen.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/save_group_assignment.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/gestures.dart';
@@ -335,5 +337,121 @@ void main() {
       ),
     );
     expect(tester.takeException(), isNull);
+  });
+
+  group('saveGroupAssignment (TC-GROUP-SAVE)', () {
+    late WidgetRef capturedRef;
+    Future<void> pumpHarness(WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            tournamentRepositoryProvider.overrideWithValue(tournamentRepo),
+            tournamentManagementRepositoryProvider.overrideWithValue(
+              managementRepo,
+            ),
+          ],
+          child: Consumer(
+            builder: (context, ref, _) {
+              capturedRef = ref;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+    }
+
+    Future<SaveGroupAssignmentResult> run(List<MatchModel> groupMatches) {
+      final division = _tournament().divisions.first;
+      final config = resolveGroupStageConfig(
+        division: division,
+        tournamentConfig: const {},
+        teams: _teams(),
+      );
+      return saveGroupAssignment(
+        capturedRef,
+        tournamentId: _tournamentId,
+        divisionId: _divisionId,
+        division: division,
+        config: config,
+        matches: groupMatches,
+      );
+    }
+
+    testWidgets('TC-GROUP-SAVE-01 patches then regenerates when unplayed', (
+      tester,
+    ) async {
+      await pumpHarness(tester);
+      final result = await run([_match()]);
+      expect(result.regenerated, isTrue);
+      expect(result.regenerationError, isNull);
+      verify(
+        () => managementRepo.updateDivisionConfig(
+          _tournamentId,
+          _divisionId,
+          any(),
+        ),
+      ).called(1);
+      verify(
+        () => tournamentRepo.generateBracket(
+          _tournamentId,
+          divisionId: _divisionId,
+          seedingType: 'RANDOM',
+          allowReset: true,
+        ),
+      ).called(1);
+    });
+
+    testWidgets('TC-GROUP-SAVE-02 PATCH failure throws and never regenerates', (
+      tester,
+    ) async {
+      when(
+        () => managementRepo.updateDivisionConfig(any(), any(), any()),
+      ).thenThrow(StateError('PATCH failed'));
+      await pumpHarness(tester);
+      await expectLater(run([_match()]), throwsStateError);
+      verifyNever(
+        () => tournamentRepo.generateBracket(
+          any(),
+          divisionId: any(named: 'divisionId'),
+          seedingType: any(named: 'seedingType'),
+          allowReset: any(named: 'allowReset'),
+        ),
+      );
+    });
+
+    testWidgets('TC-GROUP-SAVE-03 skips regeneration once a match started', (
+      tester,
+    ) async {
+      await pumpHarness(tester);
+      final result = await run([_match(status: 'live')]);
+      expect(result.regenerated, isFalse);
+      expect(result.regenerationError, isNull);
+      verifyNever(
+        () => tournamentRepo.generateBracket(
+          any(),
+          divisionId: any(named: 'divisionId'),
+          seedingType: any(named: 'seedingType'),
+          allowReset: any(named: 'allowReset'),
+        ),
+      );
+    });
+
+    testWidgets(
+      'TC-GROUP-SAVE-04 reports regeneration error without throwing',
+      (tester) async {
+        when(
+          () => tournamentRepo.generateBracket(
+            any(),
+            divisionId: any(named: 'divisionId'),
+            seedingType: any(named: 'seedingType'),
+            allowReset: any(named: 'allowReset'),
+          ),
+        ).thenThrow(StateError('generation failed'));
+        await pumpHarness(tester);
+        final result = await run([_match()]);
+        expect(result.regenerated, isFalse);
+        expect(result.regenerationError, isA<StateError>());
+      },
+    );
   });
 }
