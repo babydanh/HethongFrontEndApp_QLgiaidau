@@ -360,8 +360,7 @@ void main() {
           .firstWhere((d) => d['id'] == single.divisionId);
       debugPrint('TC-80: roundConfig trước: ${jsonEncode(before['roundConfig'])}');
 
-      // Mở mục luật, bật "Luật chuẩn" (nếu đang ở chế độ Lite), đặt 15 điểm/set, tắt thắng cách 2.
-      await press(tester, 'division-editor-section-rules', step: 'mở mục luật');
+      // Mục luật luôn hiện công tắc "Luật chuẩn" (không phải accordion): bật nó (nếu đang ở chế độ Lite), đặt 15 điểm/set, tắt thắng cách 2.
       await expectKey(
         tester,
         'division-editor-standard-rules',
