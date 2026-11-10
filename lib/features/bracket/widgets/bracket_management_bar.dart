@@ -45,6 +45,12 @@ class BracketManagementBar extends ConsumerStatefulWidget {
       _BracketManagementBarState();
 }
 
+/// Compact (mini) look shared by Create and Delete bracket.
+const _miniIconSize = 16.0;
+const _miniMinSize = Size(0, 32);
+const _miniPadding = EdgeInsets.symmetric(horizontal: 12);
+const _miniText = TextStyle(fontSize: 13, fontWeight: FontWeight.w600);
+
 class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
   /// True while a request is in flight: both buttons are locked (double tap).
   bool _busy = false;
@@ -177,8 +183,16 @@ class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
               onPressed: _busy ? null : _confirmDelete,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.error,
+                minimumSize: _miniMinSize,
+                padding: _miniPadding,
+                textStyle: _miniText,
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              icon: const Icon(Icons.delete_outline_rounded),
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                size: _miniIconSize,
+              ),
               label: Text(l10n.bracketMgmt_delete),
             )
           else
@@ -187,7 +201,17 @@ class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
               child: FilledButton.icon(
                 key: const Key('bracket-mgmt-create'),
                 onPressed: _busy || tooLittle ? null : _create,
-                icon: const Icon(Icons.account_tree_outlined),
+                style: FilledButton.styleFrom(
+                  minimumSize: _miniMinSize,
+                  padding: _miniPadding,
+                  textStyle: _miniText,
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                icon: const Icon(
+                  Icons.account_tree_outlined,
+                  size: _miniIconSize,
+                ),
                 label: Text(l10n.bracketMgmt_create),
               ),
             ),
