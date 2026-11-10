@@ -494,7 +494,7 @@ void main() {
       expect(find.text('Vòng 1 đang đấu'), findsOneWidget);
       await j.eventually('Backend có 2 trận vòng 1', () async {
         final all = await j.listMatches();
-        return all.where((m) => _intOf(m['round']) == 1).length == 2 ? all : null;
+        return all.where((m) => _intOf(m['roundNumber'] ?? m['round']) == 1).length == 2 ? all : null;
       });
       await j.snap('vong-1');
       final bracket = find.byType(BracketViewScreen);
@@ -546,7 +546,7 @@ void main() {
       await gone(tester, find.byKey(const ValueKey('swiss-pairing-screen')), 'màn ghép cặp sau khi xác nhận');
       await j.eventually('Backend có 2 trận vòng 2', () async {
         final all = await j.listMatches();
-        return all.where((m) => _intOf(m['round']) == 2 && _status(m) != 'CANCELLED').length == 2 ? all : null;
+        return all.where((m) => _intOf(m['roundNumber'] ?? m['round']) == 2 && _status(m) != 'CANCELLED').length == 2 ? all : null;
       });
 
       // Vận hành giai đoạn của Swiss: đã có trận bắt đầu nên không hủy được sơ đồ.
@@ -566,7 +566,7 @@ void main() {
       await pumpUntilFound(tester, find.text('Đã hoàn tác vòng 2.'), what: 'thông báo đã hoàn tác vòng 2');
       await j.eventually('vòng 2 đã bị bỏ trên Backend', () async {
         final all = await j.listMatches();
-        final live = all.where((m) => _intOf(m['round']) == 2 && _status(m) != 'CANCELLED');
+        final live = all.where((m) => _intOf(m['roundNumber'] ?? m['round']) == 2 && _status(m) != 'CANCELLED');
         return live.isEmpty ? true : null;
       });
       await expectKey(tester, 'swiss-next-round', step: 'nút ghép cặp vòng 2 quay lại');
@@ -658,15 +658,16 @@ class _Journey {
   Future<List<Map<String, dynamic>>> listMatches() =>
       api.listMatches(token: seeded.token, tournamentId: tid, divisionId: did);
 
-  /// Giải dựng đủ 8/8 VĐV nên hộp "Hạng mục đã đủ chỗ" có thể bật lên và chắn sheet: chọn "Giữ mở"
-  /// (giữ đăng ký như cũ) nếu hộp xuất hiện trong vài giây đầu.
+  /// Giải dựng đủ 8/8 VĐV nên hộp "Hạng mục đã đủ chỗ" có thể bật lên và chắn sheet: bấm "Hủy"
+  /// (không đổi đăng ký) nếu hộp xuất hiện trong vài giây đầu.
   Future<void> dismissFullDivisionPrompt() async {
     final keepOpen = find.text('Giữ mở');
     for (var i = 0; i < 12 && keepOpen.evaluate().isEmpty; i++) {
       await tester.pump(const Duration(milliseconds: 250));
     }
     if (keepOpen.evaluate().isEmpty) return;
-    await tester.tap(keepOpen.first);
+    // "Hủy" đóng hộp mà không đổi đăng ký của hạng mục nào.
+    await tester.tap(find.text('Hủy').last);
     await tester.pump(const Duration(milliseconds: 500));
     await gone(tester, find.text('Hạng mục đã đủ chỗ'), 'hộp Hạng mục đã đủ chỗ');
   }
