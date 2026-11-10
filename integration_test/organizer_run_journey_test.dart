@@ -397,6 +397,10 @@ void main() {
       final m1 = playable[0]['id'] as String;
       final m2 = playable[1]['id'] as String;
       final row1 = find.byKey(ValueKey('results-row-$m1'));
+      // BUG-SP-03 (sản phẩm): sheet nhập điểm ở tab Kết quả gửi PATCH /matches/:id/score cho trận
+      // SCHEDULED và Backend trả 400 "Hãy bắt đầu trận trước"; sheet không tự bắt đầu trận.
+      // Điều kiện đầu: bắt đầu trận 1 bằng API TRƯỚC khi App tải danh sách (revision mới, tránh 409).
+      await api.startMatch(token: token, matchId: m1);
       await openManageHub(tester, container, run.tournamentId);
       await openHubTab(tester, 'Kết quả');
 
@@ -410,7 +414,14 @@ void main() {
       for (final name in ['live', 'upcoming', 'finished', 'unfinished', 'all']) {
         await tapKey(tester, 'results-filter-$name', step: 'TC-QLGD-APP-31');
         await shots.snap('loc-$name');
-        if (name == 'live' || name == 'finished') {
+        if (name == 'live') {
+          await pumpUntilFound(
+            tester,
+            row1,
+            what: 'TC-QLGD-APP-31: chip live thấy trận 1 đang đấu',
+          );
+        }
+        if (name == 'finished') {
           await _expectText(
             tester,
             'Không có trận phù hợp',
@@ -494,10 +505,6 @@ void main() {
       );
 
       // TC-QLGD-APP-32: nhập điểm inline; hòa số set thì không lưu được.
-      // BUG-SP-03 (sản phẩm): sheet nhập điểm ở tab Kết quả gửi PATCH /matches/:id/score cho trận
-      // SCHEDULED và Backend trả 400 "Hãy bắt đầu trận trước"; sheet không tự bắt đầu trận.
-      // Điều kiện đầu: bắt đầu trận bằng API để kiểm phần còn lại của luồng lưu điểm.
-      await api.startMatch(token: token, matchId: m1);
       await tapKey(tester, 'results-score-$m1', step: 'TC-QLGD-APP-32');
       await expectKey(tester, 'results-score-sheet', step: 'TC-QLGD-APP-32');
       await shots.snap('sheet-nhap-diem');
@@ -945,7 +952,8 @@ Future<void> _openEndSheet(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 400));
   final item = find.text('Kết thúc giải đấu');
   await pumpUntilFound(tester, item, what: 'mục "Kết thúc giải đấu" trong menu');
-  await tester.tap(item.first);
+  // Chữ cùng tên còn nằm ở lộ trình trên trang: mục menu nằm trong lớp phủ nên là phần tử cuối.
+  await tester.tap(item.last);
   await tester.pump(const Duration(milliseconds: 400));
   await pumpUntilFound(
     tester,
