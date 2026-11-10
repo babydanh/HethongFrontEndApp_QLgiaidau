@@ -646,7 +646,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       return null;
     }
     if (!(widget.canEditBracket || auth.role == UserRole.admin)) return null;
-    if (widget.isLite || tournament.isLite) return null;
+    // Only the dedicated Lite management screen keeps its own pairing flow. A quick
+    // (Lite-family) tournament opened in the hub still needs Create/Delete bracket.
+    if (widget.isLite) return null;
     final matches = ref
         .watch(
           bracketMatchesWithDivisionProvider((
