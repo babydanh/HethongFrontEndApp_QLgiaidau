@@ -51,3 +51,10 @@
   - Phụ thuộc: sau 6.1
 - [ ] 7.2 Xem trên điện thoại: kéo thả đổi chỗ, kéo tới mép lật trang, chuyển động mượt, giảm chuyển động. Tiêu chí: người dùng xác nhận trên máy thật (cần máy kết nối lại; không báo xong nếu chưa xem)
   - Phụ thuộc: sau 7.1
+
+## 8. Tiến độ thực tế (2026-11-10)
+
+- [x] 8.1 Đã làm (gọn hơn kế hoạch): `BracketEditing` + `BracketSlotRow` (kéo thả SWAP/MOVE, chạm-chạm, khóa trận đã bắt đầu), `PlayoffDoubleElimView.onSlotDrop` (chặn thao tác đôi khi đang lưu), `PlayoffEditingHost` (khay chờ + gọi `updateBracketSlots` + tải lại), nối vào `PublicBracketView` (loại trực tiếp, nhánh thắng-thua, playoff sau vòng bảng) cho trang chi tiết (`canEditBracket: canManage`) và màn quản lý có vòng bảng. Tiêu chí: `flutter test --no-pub test/features/playoff_bracket_editing_test.dart` → exit 0 (TC-BRK-DND-01..09)
+  - Files: tạo `lib/features/bracket/widgets/bracket_slot_row.dart`, `lib/features/bracket/widgets/playoff_editing_host.dart`; sửa `playoff_bracket_board.dart`, `playoff_double_elim_view.dart`, `public_bracket_view.dart`, `lib/features/tournament/screens/tournament_intro_screen.dart`; test `test/features/playoff_bracket_editing_test.dart`
+  - Chưa làm: 1.2 (`openBracketMatch`), 2.1 (lật trang theo mép khi kéo), 4.2 (màn quản lý đơn/đôi loại không có vòng bảng vẫn dùng sơ đồ cũ, giữ chạm đúp mở trang vận hành), 5.1 (chuyển động), 6.1 (xóa bản cũ). Nên bỏ chữ "chấm điểm" khỏi 3.1 vì thẻ vẫn mở bảng trận khi chạm.
+

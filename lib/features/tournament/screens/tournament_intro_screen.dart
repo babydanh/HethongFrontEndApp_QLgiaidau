@@ -807,6 +807,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           // global ADMIN role alone must not grant it.
           canScoreMatch: canManage,
           canEditSeeds: canManage,
+          canEditBracket: canManage,
         );
     tabViews.add(
       SingleChildScrollView(

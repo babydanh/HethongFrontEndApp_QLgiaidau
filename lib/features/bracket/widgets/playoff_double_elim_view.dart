@@ -1,7 +1,9 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
@@ -116,6 +118,7 @@ class PlayoffDoubleElimView extends StatefulWidget {
     this.canScoreMatch = false,
     this.seedLabels,
     this.onOpenFull,
+    this.onSlotDrop,
   });
 
   final List<MatchModel> matches;
@@ -127,6 +130,10 @@ class PlayoffDoubleElimView extends StatefulWidget {
 
   /// "Nhất A / Nhì B" placeholders for empty round-one slots; null hides them.
   final PlayoffSeedLabels? seedLabels;
+
+  /// Manager mode: moves a participant between slots (long-press and drag, or
+  /// tap one slot then another). Null keeps the view read-only.
+  final BracketSlotDropCallback? onSlotDrop;
 
   @override
   State<PlayoffDoubleElimView> createState() => _PlayoffDoubleElimViewState();
@@ -140,8 +147,40 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
   // Which way the last page turn went, so the new window slides in from there.
   bool _forward = true;
 
-  // Which way the last page turn went, so the new window slides in from there.
-  bool _forward = true;
+  // Source slot picked by the first tap of a tap-tap move, and a guard so a
+  // second drop cannot start while the first request is still running.
+  BracketSlotDragData? _selectedSlot;
+  bool _updating = false;
+
+  Future<void> _dropSlot(
+    BracketSlotDragData source,
+    BracketSlotDragData target,
+  ) async {
+    final handler = widget.onSlotDrop;
+    if (handler == null || _updating) return;
+    setState(() {
+      _updating = true;
+      _selectedSlot = null;
+    });
+    try {
+      await handler(source, target);
+    } finally {
+      if (mounted) setState(() => _updating = false);
+    }
+  }
+
+  void _tapSlot(BracketSlotDragData slot) {
+    final picked = _selectedSlot;
+    if (picked == null) {
+      if (slot.hasParticipant && !slot.isLocked) {
+        setState(() => _selectedSlot = slot);
+      }
+    } else if (picked == slot) {
+      setState(() => _selectedSlot = null);
+    } else {
+      _dropSlot(picked, slot);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,6 +323,13 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
                               cardWidth: cardWidth,
                               gap: _bracketGap,
                               seedLabels: widget.seedLabels,
+                              editing: widget.onSlotDrop == null
+                                  ? null
+                                  : BracketEditing(
+                                      onSlotDrop: _dropSlot,
+                                      onSlotTap: _tapSlot,
+                                      selectedSlot: _selectedSlot,
+                                    ),
                               onTap: (match) => showGroupMatchSheet(
                                 context,
                                 match: match,
