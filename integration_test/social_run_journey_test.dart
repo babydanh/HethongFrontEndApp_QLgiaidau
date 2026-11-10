@@ -450,12 +450,13 @@ void main() {
       // App mở trang giải vừa tạo.
       await pumpUntilCondition(
         tester,
+        // `uri` của cấu hình chỉ là trang nền (/home); trang vừa push nằm ở phần tử cuối.
         () => container
             .read(routerProvider)
             .routerDelegate
             .currentConfiguration
-            .uri
-            .path
+            .last
+            .matchedLocation
             .startsWith('/tournaments/'),
         what: 'app mở trang giải của bracket',
         timeout: const Duration(seconds: 60),

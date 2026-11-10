@@ -520,7 +520,9 @@ int drainKnownProductErrors(WidgetTester tester) {
     final error = tester.takeException();
     if (error == null) return count;
     final text = '$error';
-    final known = text.contains('overflowed by') || text.contains('_lifecycleState');
+    final known = text.contains('overflowed by') ||
+        text.contains('_lifecycleState') ||
+        text.contains('Cannot schedule a task on an unmounted element');
     if (!known) fail('Lỗi ngoài danh sách đã biết: $text');
     count++;
     debugPrint('BUG-SAN-PHAM đã biết: ${text.split('\n').first}');
@@ -532,4 +534,9 @@ Future<void> leaveSocialSession(WidgetTester tester, ProviderContainer container
   container.read(routerProvider).go('/home');
   await socialWait(tester, const Duration(seconds: 2));
   drainKnownProductErrors(tester);
+  // Gỡ cây widget rồi huỷ container: bộ hẹn giờ keepAlive của provider cũ không được bắn sau khi test kết thúc
+  // (lỗi "Cannot schedule a task on an unmounted element" bị tính vào ca chạy sau).
+  await tester.pumpWidget(const SizedBox.shrink());
+  drainKnownProductErrors(tester);
+  container.dispose();
 }
