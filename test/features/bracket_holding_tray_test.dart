@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_card_parts.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
@@ -370,7 +371,7 @@ void main() {
       expect(repo.calls, isEmpty);
     });
 
-    testWidgets('chế độ sửa thẻ: bấm footer thẻ vẫn mở nhập điểm', (
+    testWidgets('chế độ sửa thẻ: bấm header thẻ vẫn mở nhập điểm', (
       tester,
     ) async {
       await _pump(
@@ -384,11 +385,10 @@ void main() {
           canScoreMatch: true,
         ),
       );
-      final l10n = lookupAppLocalizations(const Locale('vi'));
 
-      final scoreLabel = find.text(l10n.bracketScoreAction);
-      expect(scoreLabel, findsWidgets);
-      await tester.tap(scoreLabel.first);
+      final header = find.byType(BracketCardHeader);
+      expect(header, findsWidgets);
+      await tester.tap(header.first);
       // The card also listens for double-tap, so a single tap fires only
       // after the double-tap window (~300ms) closes.
       await tester.pump(const Duration(milliseconds: 400));

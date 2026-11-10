@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
@@ -11,7 +12,6 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 //  LAYOUT CONSTANTS
 // ══════════════════════════════════════════════════════════════════════════════
 const _kCardW = 240.0;
-const _kCardH = 88.0;
 const _kColGap = 80.0;
 const _kRowGap = 36.0;
 const _kBandGap = 90.0; // gap between winners and losers bands
@@ -54,6 +54,10 @@ class DoubleElimDiagram extends StatefulWidget {
 }
 
 class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
+  /// Card height follows the content (doubles show two player lines a
+  /// side), same as the paged board in the tab.
+  double get _cardH => bracketCardHeight([widget.matches]);
+
   final TransformationController _tc = TransformationController();
   bool _didCenterInitialView = false;
   BracketSlotDragData? _selectedSlot;
@@ -181,9 +185,9 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
     final wRounds = bands.winners.keys.toList()..sort();
     final lRounds = bands.losers.keys.toList()..sort();
 
-    const calculator = DoubleElimLayoutCalculator(
+    final calculator = DoubleElimLayoutCalculator(
       cardWidth: _kCardW,
-      cardHeight: _kCardH,
+      cardHeight: _cardH,
       columnGap: _kColGap,
       rowGap: _kRowGap,
       bandGap: _kBandGap,
@@ -254,7 +258,7 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                           matches: widget.matches,
                           positions: positions,
                           cardW: _kCardW,
-                          cardH: _kCardH,
+                          cardH: _cardH,
                           primaryColor: colors.border.withValues(alpha: 0.8),
                           loserColor: colors.border.withValues(alpha: 0.8),
                         ),
@@ -319,14 +323,13 @@ class _DoubleElimDiagramState extends State<DoubleElimDiagram> {
                       left: pos.dx,
                       top: pos.dy,
                       width: _kCardW,
-                      height: _kCardH,
+                      height: _cardH,
                       child: BracketMatchCard(
                         match: match,
                         tournamentId: widget.tournamentId,
                         isReferee: widget.isReferee,
                         isReadOnly: widget.isReadOnly,
                         canScoreMatch: widget.canScoreMatch,
-                        isGrandFinal: match.nextMatchId.isEmpty,
                         isSlotEditable: widget.isEditable && !_isUpdating,
                         selectedSlot: _selectedSlot,
                         onSlotTap: _handleSlotTap,

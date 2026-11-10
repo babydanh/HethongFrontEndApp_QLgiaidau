@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -7,7 +8,6 @@ import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dar
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 const _kCardW = 240.0;
-const _kCardH = 88.0;
 const _kColGap = 80.0;
 const _kRowGap = 36.0;
 
@@ -48,6 +48,10 @@ class SingleElimDiagram extends StatefulWidget {
 }
 
 class _SingleElimDiagramState extends State<SingleElimDiagram> {
+  /// Card height follows the content (doubles show two player lines a
+  /// side), same as the paged board in the tab.
+  double get _cardH => bracketCardHeight([widget.matches]);
+
   final TransformationController _tc = TransformationController();
   bool _didCenterInitialView = false;
   BracketSlotDragData? _selectedSlot;
@@ -137,7 +141,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
       final colX = ci * (_kCardW + _kColGap);
       final matches = roundMap[sortedRounds[ci]]!;
       for (var mi = 0; mi < matches.length; mi++) {
-        positions[matches[mi].id] = Offset(colX, mi * (_kCardH + _kRowGap));
+        positions[matches[mi].id] = Offset(colX, mi * (_cardH + _kRowGap));
       }
     }
 
@@ -162,34 +166,17 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
         for (final childId in children) {
           final pos = positions[childId];
           if (pos == null) continue;
-          totalY += pos.dy + _kCardH / 2;
+          totalY += pos.dy + _cardH / 2;
           count++;
         }
         if (count == 0) continue;
 
-        final centerY = totalY / count - _kCardH / 2;
+        final centerY = totalY / count - _cardH / 2;
         positions[match.id] = Offset(positions[match.id]!.dx, centerY);
       }
     }
 
     return positions;
-  }
-
-  String? _findFinalMatchId(List<MatchModel> matches) {
-    final terminalMatches =
-        matches
-            .where(
-              (match) =>
-                  match.nextMatchId.isEmpty && match.loserNextMatchId.isEmpty,
-            )
-            .toList()
-          ..sort((a, b) {
-            final roundCompare = b.round.compareTo(a.round);
-            if (roundCompare != 0) return roundCompare;
-            return a.matchNumber.compareTo(b.matchNumber);
-          });
-
-    return terminalMatches.isEmpty ? null : terminalMatches.first.id;
   }
 
   void _centerInitialView(Size viewport, Size canvas) {
@@ -224,14 +211,13 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
     final diagramMatches = [
       for (final round in sortedRounds) ...roundMap[round]!,
     ];
-    final finalMatchId = _findFinalMatchId(diagramMatches);
     final positions = _computePositions(roundMap, sortedRounds);
 
     var maxX = 0.0;
     var maxY = 0.0;
     for (final pos in positions.values) {
       if (pos.dx + _kCardW > maxX) maxX = pos.dx + _kCardW;
-      if (pos.dy + _kCardH > maxY) maxY = pos.dy + _kCardH;
+      if (pos.dy + _cardH > maxY) maxY = pos.dy + _cardH;
     }
     final canvasW = maxX + 80;
     final canvasH = maxY + 80;
@@ -263,7 +249,7 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                           positions: positions,
                           lineColor: colors.border.withValues(alpha: 0.8),
                           cardW: _kCardW,
-                          cardH: _kCardH,
+                          cardH: _cardH,
                           colGap: _kColGap,
                         ),
                       ),
@@ -287,14 +273,13 @@ class _SingleElimDiagramState extends State<SingleElimDiagram> {
                       left: pos.dx,
                       top: pos.dy,
                       width: _kCardW,
-                      height: _kCardH,
+                      height: _cardH,
                       child: BracketMatchCard(
                         match: match,
                         tournamentId: widget.tournamentId,
                         isReferee: widget.isReferee,
                         isReadOnly: widget.isReadOnly,
                         canScoreMatch: widget.canScoreMatch,
-                        isGrandFinal: match.id == finalMatchId,
                         isSlotEditable: widget.isEditable && !_isUpdating,
                         selectedSlot: _selectedSlot,
                         onSlotTap: _handleSlotTap,

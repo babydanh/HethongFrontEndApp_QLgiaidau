@@ -1,14 +1,12 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
-import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_card_parts.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_layout.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_seed_labels.dart';
-import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 const double _singlesCardHeight = 92;
 const double _doublesCardHeight = 128;
@@ -25,22 +23,6 @@ double bracketCardHeight(List<List<MatchModel>> columns) {
   );
   return doubles ? _doublesCardHeight : _singlesCardHeight;
 }
-
-/// Score of [side] per set. Unlike the finished-only group lines it also
-/// returns the sets of a live match, so the card can show the running score.
-List<String> _sideScores(MatchModel match, int side) {
-  if (!isFootballMatch(match) && match.sets.isNotEmpty) {
-    return [for (final s in match.sets) '${side == 1 ? s.score1 : s.score2}'];
-  }
-  return groupSideScores(match, side);
-}
-
-/// Width of one score cell; narrower once a match runs past three sets so the
-/// names keep their room.
-double _scoreCellWidth(int cells) => cells > 3 ? 16 : 20;
-
-/// Cap for the LIVE tag + time on the card header so the code keeps its room.
-const double _headerRightMaxWidth = 96;
 
 /// The visible rounds as columns of cards joined by connector lines.
 class PlayoffBracketBoard extends StatelessWidget {
@@ -218,154 +200,23 @@ class _BracketCard extends StatelessWidget {
   final VoidCallback onTap;
   final PlayoffSeedLabels? seedLabels;
 
-  String _code() {
-    final code = (match.matchCode ?? '').trim();
-    return code.isEmpty ? '#${match.matchNumber}' : code;
-  }
-
-  /// An empty side is N/A (same as the web), or "bye" when the backend marked
-  /// the whole match as a BYE; the connector lines already show who feeds it.
-  String _waiting(AppLocalizations l10n) =>
-      match.isBye ? l10n.bracketBye : l10n.playoff_slotNA;
-
-  Widget _side(BuildContext context, int side) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final teamName = matchSideTeamName(match, side);
-    final players = matchSidePlayers(match, side);
-    final won =
-        match.isCompleted &&
-        match.winnerId.isNotEmpty &&
-        match.winnerId == (side == 1 ? match.team1Id : match.team2Id);
-    final scores = _sideScores(match, side);
-    final empty = teamName == null && players.isEmpty;
+  Widget _side(int side) {
+    final empty =
+        matchSideTeamName(match, side) == null &&
+        matchSidePlayers(match, side).isEmpty;
     final seedIndex = empty && !match.isBye
         ? seedLabels?.slotIndexFor(match.id, side)
         : null;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        color: won ? AppTheme.primary.withValues(alpha: 0.08) : null,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: seedIndex != null
-                  ? _SeedLabelSlot(
-                      text: seedLabels!.textFor(seedIndex),
-                      index: seedIndex,
-                      onSwap: seedLabels!.onSwap,
-                    )
-                  : empty
-                  ? Text(
-                      _waiting(l10n),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11.5, color: colors.textMuted),
-                    )
-                  : ParticipantSideLines(
-                      teamName: teamName,
-                      players: players,
-                      teamOnly: isFootballMatch(match),
-                      won: won,
-                    ),
+    return BracketSideRow(
+      match: match,
+      side: side,
+      placeholder: seedIndex == null
+          ? null
+          : _SeedLabelSlot(
+              text: seedLabels!.textFor(seedIndex),
+              index: seedIndex,
+              onSwap: seedLabels!.onSwap,
             ),
-          ),
-          for (final score in scores)
-            SizedBox(
-              width: _scoreCellWidth(scores.length),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  score,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: won ? FontWeight.w900 : FontWeight.w700,
-                    color: won ? AppTheme.primary : colors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// "TK01 · Sân 2" on the left, a LIVE tag and "09:30 08/11" on the right.
-  Widget _header(BuildContext context, ({Color color, String label}) status) {
-    final colors = context.colors;
-    final court = (match.courtName ?? '').trim();
-    final time = match.scheduledTime;
-    final timeText = time == null
-        ? ''
-        : DateFormat('HH:mm dd/MM').format(time.toLocal());
-    final muted = TextStyle(
-      fontSize: 10,
-      fontWeight: FontWeight.w600,
-      color: colors.textMuted,
-    );
-    return Row(
-      children: [
-        Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: _code(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                if (court.isNotEmpty) TextSpan(text: ' · $court'),
-              ],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: muted,
-          ),
-        ),
-        if (match.isLive || timeText.isNotEmpty)
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _headerRightMaxWidth),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (match.isLive) ...[
-                    const SizedBox(width: 4),
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: status.color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      status.label,
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                        color: status.color,
-                      ),
-                    ),
-                  ],
-                  if (timeText.isNotEmpty) ...[
-                    const SizedBox(width: 4),
-                    Text(timeText, style: muted),
-                  ],
-                ],
-              ),
-            ),
-          ),
-      ],
     );
   }
 
@@ -387,11 +238,11 @@ class _BracketCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            _header(context, status),
+            BracketCardHeader(match: match),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [_side(context, 1), _side(context, 2)],
+                children: [_side(1), _side(2)],
               ),
             ),
           ],

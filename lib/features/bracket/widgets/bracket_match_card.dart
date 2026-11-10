@@ -4,21 +4,23 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/match_card_detail.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/team_row.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_card_parts.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
-/// Unified bracket match card used in both single-elim and double-elim diagrams.
-/// Replaces the former _BracketMatchCard (single_elim_diagram) and _DeBracketMatchCard (double_elim_diagram).
+/// Match card of the full-screen single / double elimination diagrams. Looks
+/// like the cards of the paged board in the tab (header with code, court, LIVE
+/// and time; tinted winner; "Miễn đấu" for a BYE side) and keeps what the
+/// organizer needs here: tap / drag a side to move players, double tap to open
+/// the match in operations.
 class BracketMatchCard extends StatelessWidget {
   final MatchModel match;
   final String tournamentId;
   final bool isReferee;
   final bool isReadOnly;
-  final bool isGrandFinal;
   final bool canScoreMatch;
   final bool isSlotEditable;
   final BracketSlotDragData? selectedSlot;
@@ -33,7 +35,6 @@ class BracketMatchCard extends StatelessWidget {
     required this.isReferee,
     required this.isReadOnly,
     this.canScoreMatch = false,
-    this.isGrandFinal = false,
     this.isSlotEditable = false,
     this.selectedSlot,
     this.onSlotTap,
@@ -80,59 +81,58 @@ class BracketMatchCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSlotRow({
-    required BuildContext context,
-    required String? teamName,
-    required List<ParticipantPlayer> players,
-    required String? logoUrl,
-    required int score,
-    required List<int>? sets,
-    required List<int>? opponentSets,
-    required int maxSetsCount,
-    required bool isWinner,
-    required bool isLive,
-    required bool isBye,
-    required bool isGrandFinalWinner,
-    required String slot,
-    required String participantId,
-    String? eloDelta,
-  }) {
-    final label = participantLabel(
-      teamName: teamName,
-      players: players,
-      teamOnly: isFootballMatch(match),
-      abbreviated: true,
-    );
+  /// "+12" / "-8" rating change of the team's player, once Elo was applied.
+  String? _eloDelta(List<MatchMemberInfo> members) {
+    if (!match.isCompleted ||
+        match.eloStatus.toUpperCase() != 'APPLIED' ||
+        match.eloDelta.isEmpty) {
+      return null;
+    }
+    for (final member in members) {
+      final userId = member.userId;
+      if (userId == null || userId.isEmpty) continue;
+      final delta = match.eloDelta[userId];
+      if (delta != null) return '${delta > 0 ? '+' : ''}$delta';
+    }
+    return null;
+  }
+
+  Widget _buildSlotRow(BuildContext context, int side) {
+    final l10n = AppLocalizations.of(context)!;
+    final participantId = side == 1 ? match.team1Id : match.team2Id;
+    final teamName = side == 1 ? match.team1Name : match.team2Name;
+    final isBye = teamName == 'BYE' || participantId == 'BYE';
+    final label = isBye
+        ? l10n.bracketBye
+        : participantLabel(
+            teamName: matchSideTeamName(match, side),
+            players: matchSidePlayers(match, side),
+            teamOnly: isFootballMatch(match),
+            abbreviated: true,
+          );
     final dragData = BracketSlotDragData(
       matchId: match.id,
-      slot: slot,
+      slot: side == 1 ? 'participant1' : 'participant2',
       participantId: participantId,
       isBye: isBye,
       // Backend treats a BYE match as unplayed even though it is COMPLETED.
       isLocked: !match.isScheduled && !match.isBye,
       label: label,
     );
-    final row = TeamRow(
-      teamName: teamName,
-      players: players,
-      teamOnly: isFootballMatch(match),
-      logoUrl: logoUrl,
-      score: score,
-      sets: sets,
-      opponentSets: opponentSets,
-      maxSetsCount: maxSetsCount,
-      isWinner: isWinner,
-      isLive: isLive,
+    final row = BracketSideRow(
+      match: match,
+      side: side,
       isBye: isBye,
-      isGrandFinalWinner: isGrandFinalWinner,
-      eloDelta: eloDelta,
+      eloDelta: _eloDelta(
+        side == 1 ? match.team1MemberInfos : match.team2MemberInfos,
+      ),
     );
     if (!isSlotEditable || onSlotDrop == null || onSlotTap == null) return row;
     final isSelected = selectedSlot == dragData;
     final canDrag = dragData.hasParticipant && !dragData.isLocked;
 
     return DragTarget<BracketSlotDragData>(
-      key: ValueKey('bracket-slot-${match.id}-$slot'),
+      key: ValueKey('bracket-slot-${match.id}-${dragData.slot}'),
       onWillAcceptWithDetails: (details) =>
           bracketSlotOperation(details.data, dragData) != null,
       onAcceptWithDetails: (details) => onSlotDrop!(details.data, dragData),
@@ -206,199 +206,36 @@ class BracketMatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final l10n = AppLocalizations.of(context)!;
-    final isBye1 = match.team1Name == 'BYE' || match.team1Id == 'BYE';
-    final isBye2 = match.team2Name == 'BYE' || match.team2Id == 'BYE';
-
-    final isFinal = isGrandFinal || match.nextMatchId.isEmpty;
-    final isGrandFinalWinner = isFinal && match.isCompleted;
-
-    Color statusColor = colors.textMuted;
-    String statusLabel = l10n.bracketStatusUpcoming;
-    Color borderColor = colors.border;
-    Color cardBgColor = colors.bgCard;
-
-    if (match.isLive) {
-      statusColor = colors.error;
-      statusLabel = l10n.bracketStatusLive;
-      borderColor = colors.error.withValues(alpha: 0.5);
-      cardBgColor = colors.error.withValues(alpha: 0.06);
-    } else if (match.isCompleted) {
-      statusColor = colors.success;
-      statusLabel = l10n.bracketStatusCompleted;
-    }
-
-    if (isGrandFinalWinner) {
-      borderColor = colors.warning;
-      cardBgColor = colors.warning.withValues(alpha: 0.15);
-      statusColor = colors.warning;
-      statusLabel = l10n.bracketStatusChampion;
-    }
-
-    String? teamEloDelta(List<MatchMemberInfo> members) {
-      if (!match.isCompleted ||
-          match.eloStatus.toUpperCase() != 'APPLIED' ||
-          match.eloDelta.isEmpty) {
-        return null;
-      }
-      for (final member in members) {
-        final userId = member.userId;
-        if (userId == null || userId.isEmpty) continue;
-        final delta = match.eloDelta[userId];
-        if (delta != null) return '${delta > 0 ? '+' : ''}$delta';
-      }
-      return null;
-    }
-
-    final t1EloDelta = teamEloDelta(match.team1MemberInfos);
-    final t2EloDelta = teamEloDelta(match.team2MemberInfos);
-
     return GestureDetector(
       onTap: isSlotEditable ? null : () => _onTap(context),
       onDoubleTap: onDoubleTapMatch == null
           ? null
           : () => onDoubleTapMatch!(match),
       child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: cardBgColor,
-          borderRadius: BorderRadius.circular(12),
+          color: colors.bgCard,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: borderColor,
-            width: isGrandFinalWinner ? 2.0 : 1.0,
+            color: match.isLive ? colors.error : colors.border,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: isGrandFinalWinner
-                  ? colors.warning.withValues(alpha: 0.2)
-                  : colors.textPrimary.withValues(alpha: 0.06),
-              blurRadius: isGrandFinalWinner ? 12 : 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Column(
           children: [
-            // ── Team 1 ──
-            Expanded(
-              child: _buildSlotRow(
-                context: context,
-                teamName: isBye1
-                    ? l10n.bracketBye
-                    : matchSideTeamName(match, 1),
-                players: isBye1 ? const [] : matchSidePlayers(match, 1),
-                logoUrl: isBye1 ? null : match.team1LogoUrl,
-                score: match.score1,
-                sets: match.sets.isNotEmpty
-                    ? match.sets.map((s) => s.score1).toList()
-                    : null,
-                opponentSets: match.sets.isNotEmpty
-                    ? match.sets.map((s) => s.score2).toList()
-                    : null,
-                maxSetsCount: match.sets.length,
-                isWinner: match.isCompleted && match.winnerId == match.team1Id,
-                isLive: match.isLive,
-                isBye: isBye1,
-                isGrandFinalWinner: isGrandFinalWinner,
-                slot: 'participant1',
-                participantId: match.team1Id,
-                eloDelta: t1EloDelta,
-              ),
-            ),
-            Divider(height: 1, thickness: 1, color: colors.border),
-            // ── Team 2 ──
-            Expanded(
-              child: _buildSlotRow(
-                context: context,
-                teamName: isBye2
-                    ? l10n.bracketBye
-                    : matchSideTeamName(match, 2),
-                players: isBye2 ? const [] : matchSidePlayers(match, 2),
-                logoUrl: isBye2 ? null : match.team2LogoUrl,
-                score: match.score2,
-                sets: match.sets.isNotEmpty
-                    ? match.sets.map((s) => s.score2).toList()
-                    : null,
-                opponentSets: match.sets.isNotEmpty
-                    ? match.sets.map((s) => s.score1).toList()
-                    : null,
-                maxSetsCount: match.sets.length,
-                isWinner: match.isCompleted && match.winnerId == match.team2Id,
-                isLive: match.isLive,
-                isBye: isBye2,
-                isGrandFinalWinner: isGrandFinalWinner,
-                slot: 'participant2',
-                participantId: match.team2Id,
-                eloDelta: t2EloDelta,
-              ),
-            ),
-            // ── Footer: status + action (tappable even while editing slots) ──
+            // The header opens the match (score / detail) even while the
+            // sides below are busy with slot editing.
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _onTap(context),
-              child: Container(
-                height: 22,
-                decoration: BoxDecoration(
-                  color: isGrandFinalWinner
-                      ? colors.warning.withValues(alpha: 0.15)
-                      : colors.bgSurface,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(11),
-                    bottomRight: Radius.circular(11),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      statusLabel,
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.w900,
-                        color: statusColor,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (canScoreMatch && match.hasTeams && !match.isBye ||
-                        (isReferee || !isReadOnly) && match.isLive)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Text(
-                          l10n.bracketScoreAction,
-                          style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: match.isLive
-                                ? colors.error
-                                : AppTheme.primary,
-                          ),
-                        ),
-                      )
-                    else
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Text(
-                          l10n.bracketViewAction,
-                          style: TextStyle(
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: isGrandFinalWinner
-                                ? colors.warning
-                                : colors.textMuted,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+              child: BracketCardHeader(match: match),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildSlotRow(context, 1),
+                  _buildSlotRow(context, 2),
+                ],
               ),
             ),
           ],
