@@ -395,7 +395,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
 
-      expect(find.byType(MatchScoreEntryChooser), findsOneWidget);
+      expect(find.text('Vào trang Live'), findsOneWidget);
+      expect(find.byType(MatchScoreEntryChooser), findsNothing);
     });
 
     testWidgets(

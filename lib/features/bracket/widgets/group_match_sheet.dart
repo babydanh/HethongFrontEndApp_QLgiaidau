@@ -4,7 +4,8 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_data.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_score_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -12,8 +13,8 @@ import 'package:intl/intl.dart';
 
 /// Bottom sheet with the full detail of one group match: full names, scores
 /// per set, court, time and a shortcut to the live screen. Viewers who may
-/// score ([canScore]: admin / organizer) get the score-entry popup instead, like
-/// the management bracket cards.
+/// score ([canScore]: admin / organizer) get the Results tab score sheet instead
+/// while the match still accepts a score.
 Future<void> showGroupMatchSheet(
   BuildContext context, {
   required MatchModel match,
@@ -21,8 +22,8 @@ Future<void> showGroupMatchSheet(
   required String title,
   bool canScore = false,
 }) {
-  if (canScore && match.hasTeams && !match.isBye) {
-    return MatchScoreEntryChooser.show(
+  if (canScore && canEnterScore(match)) {
+    return showBracketScoreSheet(
       context,
       match: match,
       tournamentId: tournamentId,

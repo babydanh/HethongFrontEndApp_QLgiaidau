@@ -1600,9 +1600,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     tournamentId: widget.tournamentId,
                     canScoreMatch: canScoreMatch,
                     onSlotDrop: onSlotDrop,
-                    onDoubleTapMatch: widget.canEditBracket
-                        ? _handleDoubleTapMatch
-                        : null,
                   ),
                 ],
               );

@@ -230,9 +230,6 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
         _fetchBracket();
       },
       builder: (context, tray, onSlotDrop) {
-        final onDoubleTap = widget.canEditBracket
-            ? _handleDoubleTapMatch
-            : null;
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
           child: Column(
@@ -245,7 +242,6 @@ class _BracketDiagramScreenState extends ConsumerState<BracketDiagramScreen> {
                 tournamentId: widget.tournamentId,
                 canScoreMatch: widget.canScoreMatch,
                 onSlotDrop: onSlotDrop,
-                onDoubleTapMatch: onDoubleTap,
               ),
             ],
           ),

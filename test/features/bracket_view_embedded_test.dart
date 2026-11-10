@@ -159,7 +159,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-BRK-SCR-02 nhúng trong hub: quản lý kéo thả và chạm đúp ngay trên sơ đồ mới',
+    'TC-BRK-SCR-02 nhúng trong hub: quản lý kéo thả ngay trên sơ đồ mới',
     (tester) async {
       await _pumpEmbedded(tester);
       final l10n = lookupAppLocalizations(const Locale('vi'));
@@ -170,7 +170,6 @@ void main() {
         find.byType(PlayoffDoubleElimView),
       );
       expect(view.onSlotDrop, isNotNull);
-      expect(view.onDoubleTapMatch, isNotNull);
       expect(
         find.byKey(const ValueKey('bracket-slot-r1-0-participant1')),
         findsOneWidget,

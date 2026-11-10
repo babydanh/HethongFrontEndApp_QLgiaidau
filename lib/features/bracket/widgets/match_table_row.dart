@@ -9,7 +9,8 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_score_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/results_rounds.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
@@ -169,8 +170,8 @@ class MatchTableRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: () {
-            if (canScoreMatch && match.hasTeams && !match.isBye) {
-              MatchScoreEntryChooser.show(
+            if (canScoreMatch && canEnterScore(match)) {
+              showBracketScoreSheet(
                 context,
                 match: match,
                 tournamentId: tournamentId,

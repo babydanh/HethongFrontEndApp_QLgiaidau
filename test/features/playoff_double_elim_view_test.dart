@@ -169,16 +169,54 @@ void main() {
     expect(find.text('Xem trận'), findsOneWidget);
   });
 
-  testWidgets('TC-PLF-09 a viewer who can score opens the score popup', (
+  testWidgets('TC-PLF-09 a viewer who can score opens the score sheet', (
     tester,
   ) async {
     await _pump(tester, canScoreMatch: true);
 
     await tester.tap(find.text('Đội w1-A'));
+    // Managers' cards also listen for double tap, so a single tap fires after
+    // the double-tap window (~300ms).
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
 
-    expect(find.byType(MatchScoreEntryChooser), findsOneWidget);
+    expect(find.text('Nhập điểm #1'), findsOneWidget);
+    expect(find.text('Vào trang Live'), findsOneWidget);
+    expect(find.byType(MatchScoreEntryChooser), findsNothing);
     expect(find.text('Xem trận'), findsNothing);
+  });
+
+  testWidgets('TC-PLF-10 a quick double tap opens the score sheet once', (
+    tester,
+  ) async {
+    await _pump(tester, canScoreMatch: true);
+
+    await tester.tap(find.text('Đội w1-A'));
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(find.text('Đội w1-A'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nhập điểm #1'), findsOneWidget);
+    expect(find.byType(MatchScoreEntryChooser), findsNothing);
+  });
+
+  testWidgets('TC-PLF-11 a finished match shows its detail, not the score sheet', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      canScoreMatch: true,
+      matches: [_m('w1', 'winners', 1, 0, status: 'COMPLETED')],
+    );
+
+    await tester.tap(find.text('Đội w1-A'));
+    // Managers' cards also listen for double tap, so a single tap fires after
+    // the double-tap window (~300ms).
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Xem trận'), findsOneWidget);
+    expect(find.text('Vào trang Live'), findsNothing);
   });
 
   testWidgets('TC-PLF-06 opens on the first round that is still unfinished', (
