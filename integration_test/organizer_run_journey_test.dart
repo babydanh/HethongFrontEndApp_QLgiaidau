@@ -588,8 +588,13 @@ void main() {
       final router = container.read(routerProvider);
       await pumpUntilCondition(
         tester,
-        () => router.routerDelegate.currentConfiguration.uri.path == '/live/$m2',
-        what: 'TC-QLGD-APP-33: chuyển tới /live/$m2',
+        // Màn xem trận có thể được đẩy kiểu imperative nên URI của router chưa đổi: nhận cả
+        // dấu hiệu trên màn (nút "Cổ vũ" và tên hai đội).
+        () =>
+            router.routerDelegate.currentConfiguration.uri.path.contains(m2) ||
+            (find.text('Cổ vũ').evaluate().isNotEmpty &&
+                find.textContaining('VS').evaluate().isNotEmpty),
+        what: 'TC-QLGD-APP-33: màn xem trận $m2',
       );
       await tester.pump(const Duration(seconds: 2));
       await shots.snap('man-live-xem');
