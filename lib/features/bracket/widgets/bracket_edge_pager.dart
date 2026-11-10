@@ -14,7 +14,7 @@ const double _edgeWidth = 36;
 /// of [child] turn the page: holding the dragged row there for
 /// [bracketEdgeHold] calls [onPrev] / [onNext] (null = no page that way) and
 /// repeats at the same pace until the row leaves the edge or is dropped.
-/// Dropping on an edge changes nothing.
+/// Dropping on an edge changes nothing (the drop is swallowed).
 class BracketEdgePager extends StatefulWidget {
   const BracketEdgePager({
     super.key,
@@ -81,11 +81,14 @@ class _BracketEdgePagerState extends State<BracketEdgePager> {
       width: _edgeWidth,
       child: DragTarget<BracketSlotDragData>(
         key: ValueKey('bracket-edge-${next ? 'next' : 'prev'}'),
-        // Rejecting keeps a drop on the edge harmless, yet onLeave still fires.
+        // Accepting without an onAccept swallows a drop on the edge: a reject
+        // would pass the drop to the slot lying under the zone.
         onWillAcceptWithDetails: (_) {
           if (turns) _enter(next);
-          return false;
+          return true;
         },
+        // A drop is not a leave for an accepting target: stop turning here too.
+        onAcceptWithDetails: (_) => _leave(),
         onLeave: (_) => _leave(),
         builder: (context, candidates, rejected) => IgnorePointer(
           child: AnimatedOpacity(

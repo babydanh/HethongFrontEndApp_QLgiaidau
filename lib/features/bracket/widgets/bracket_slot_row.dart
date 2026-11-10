@@ -49,6 +49,8 @@ class BracketSlotRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canDrag = data.hasParticipant && !data.isLocked;
+    // Reduced motion: jump straight to the end state.
+    final still = MediaQuery.disableAnimationsOf(context);
     return DragTarget<BracketSlotDragData>(
       key: ValueKey('bracket-slot-${data.matchId}-${data.slot}'),
       onWillAcceptWithDetails: (details) =>
@@ -57,7 +59,7 @@ class BracketSlotRow extends StatelessWidget {
       builder: (context, candidates, rejected) {
         final highlighted = candidates.isNotEmpty || selected;
         final row = AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
+          duration: still ? Duration.zero : const Duration(milliseconds: 140),
           decoration: BoxDecoration(
             color: highlighted
                 ? AppTheme.primary.withValues(alpha: 0.14)
@@ -68,7 +70,15 @@ class BracketSlotRow extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: child,
+          // A swap or move changes who sits here: the new name fades in.
+          child: AnimatedSwitcher(
+            duration: still ? Duration.zero : const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeOutCubic,
+            child: KeyedSubtree(
+              key: ValueKey(data.participantId),
+              child: child,
+            ),
+          ),
         );
         return LongPressDraggable<BracketSlotDragData>(
           data: data,
