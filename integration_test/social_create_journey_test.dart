@@ -245,10 +245,10 @@ void main() {
       // Giải mở đăng ký: đếm số mốc theo luật của danh sách Khám phá trên dữ liệu Backend thật.
       await pumpUntilCondition(
         tester,
-        () => container.read(tournamentsProvider).asData?.value != null,
+        () => container.read(tournamentsProvider).value != null,
         what: 'danh sách giải từ Backend',
       );
-      final all = container.read(tournamentsProvider).asData!.value;
+      final all = container.read(tournamentsProvider).value!;
       final today = DateUtils.dateOnly(DateTime.now());
       final milestones = <DateTime>[
         for (var offset = 0; offset <= 14; offset++)
