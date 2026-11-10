@@ -23,7 +23,6 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart
 import 'package:app_quanly_giaidau/features/tournament/widgets/matches_tab.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_accordion.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_tab_bar_delegate.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_share_modal.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
@@ -858,28 +857,36 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
       );
     }
 
-    // Kết quả (tab cuối): bục vinh danh rồi bảng trận của hạng mục đang chọn.
+    // Kết quả (tab cuối): bục vinh danh rồi bảng trận của hạng mục. Nhiều hạng
+    // mục thì dùng danh sách hạng mục mở/thu như tab Đội, nội dung ngay dưới hàng.
     if (showResultsTab) {
-      final manyDivisions = tournament.divisions.length > 1;
-      final merged = ResultsMergedTab(
-        key: ValueKey('results-$_selectedDivisionId'),
+      ResultsMergedTab resultsFor(
+        TournamentDivision? division, {
+        bool inline = false,
+      }) => ResultsMergedTab(
+        key: ValueKey('results-${division?.id ?? _selectedDivisionId}'),
         tournamentId: widget.tournamentId,
         isLite: tournament.isLite,
         canManage: canManage,
-        divisionId: manyDivisions ? _selectedDivisionId : null,
-        divisionName: _selectedDivision,
-        matchType: selectedMatchType,
+        divisionId: division?.id,
+        divisionName: division?.name ?? _selectedDivision,
+        matchType: division?.matchType ?? selectedMatchType,
         onShare: () => _shareTournament(tournament),
+        inline: inline,
       );
       tabViews.add(
-        manyDivisions
-            ? Column(
-                children: [
-                  _buildResultsDivisionStrip(tournament),
-                  Expanded(child: merged),
-                ],
+        tournament.divisions.length > 1
+            ? SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 160),
+                child: _buildDivisionsSelectorList(
+                  tournament,
+                  colors,
+                  selectedContentBuilder: (division) =>
+                      resultsFor(division, inline: true),
+                ),
               )
-            : merged,
+            : resultsFor(null),
       );
     }
 
@@ -992,33 +999,6 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           ),
         ],
       ),
-    );
-  }
-
-  /// Results tab picker: the same [DivisionStrip] the management tabs use.
-  Widget _buildResultsDivisionStrip(Tournament tournament) {
-    return DivisionStrip(
-      keyPrefix: 'results-division',
-      items: [
-        for (final division in tournament.divisions)
-          DivisionStripItem(
-            id: division.id,
-            name: division.name,
-            count: division.participantCount,
-            capacity: (division.maxParticipants ?? 0) > 0
-                ? division.maxParticipants
-                : null,
-          ),
-      ],
-      selectedId: _selectedDivisionId,
-      onChanged: (id) {
-        if (id == null || id == _selectedDivisionId) return;
-        final division = tournament.divisions.firstWhere((d) => d.id == id);
-        setState(() {
-          _selectedDivisionId = division.id;
-          _selectedDivision = division.name;
-        });
-      },
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/division_accordion.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/results_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
@@ -163,7 +164,12 @@ void main() {
   testWidgets('hạng mục DOUBLES hiện đủ hai người và avatar', (tester) async {
     await _pumpIntro(tester);
     await _openResultsTab(tester);
-    await tester.tap(find.byKey(const ValueKey('results-division-$_divisionId')));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DivisionAccordion),
+        matching: find.text('Đôi Nam'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     final results = find.byType(ResultsTab);
