@@ -18611,6 +18611,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupStage_groupPrefix => 'Group';
 
   @override
+  String get groupStage_emptyGroupDrop => 'Drag a team here';
+
+  @override
   String get groupStage_modeMatrix => 'Cross table';
 
   @override

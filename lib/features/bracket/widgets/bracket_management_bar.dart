@@ -8,9 +8,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Organizer-only action row of the bracket tab, like the Web one: an icon to
-/// manage the divisions, then "Tạo bracket" while the division has none, or
-/// "Xoá bracket" (confirmed) once it has one. Both buttons lock while a request
+/// Organizer-only action row of the bracket tab, like the Web one: "Tạo
+/// bracket" while the division has none, or "Xoá bracket" (confirmed) once it
+/// has one. Both buttons lock while a request
 /// is in flight and reload the bracket data afterwards.
 class BracketManagementBar extends ConsumerStatefulWidget {
   const BracketManagementBar({
@@ -21,7 +21,6 @@ class BracketManagementBar extends ConsumerStatefulWidget {
     required this.matchCount,
     required this.participantCount,
     required this.seedingType,
-    this.onManageDivisions,
   });
 
   final String tournamentId;
@@ -36,9 +35,6 @@ class BracketManagementBar extends ConsumerStatefulWidget {
 
   /// `SEEDED` or `RANDOM`, sent with `POST /tournaments/:id/generate-bracket`.
   final String seedingType;
-
-  /// Opens the divisions screen; null hides the manage icon.
-  final VoidCallback? onManageDivisions;
 
   @override
   ConsumerState<BracketManagementBar> createState() =>
@@ -160,13 +156,6 @@ class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          if (widget.onManageDivisions != null)
-            IconButton(
-              key: const Key('bracket-mgmt-manage'),
-              tooltip: l10n.bracketMgmt_manageTooltip,
-              onPressed: widget.onManageDivisions,
-              icon: const Icon(Icons.settings_outlined),
-            ),
           const Spacer(),
           if (_busy)
             const Padding(

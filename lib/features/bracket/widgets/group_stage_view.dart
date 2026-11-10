@@ -87,6 +87,19 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
     }
   }
 
+  /// Teams that belong to no group, resolved by name from the tournament teams.
+  List<Standing> _unassignedStandings(List<String> ids) {
+    if (ids.isEmpty) return const [];
+    final teams = ref.watch(teamsProvider(widget.tournamentId)).value;
+    if (teams == null) return const [];
+    final byId = {for (final team in teams) team.id: team};
+    return [
+      for (final id in ids)
+        if (byId[id] case final team?)
+          Standing(id: id, teamName: team.name, players: team.players),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -143,34 +156,62 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
         (widget.bracketType ?? '').trim().toLowerCase() ==
         AppConstants.bracketGroupStageKnockout;
 
+    // Edit mode: configured groups that hold no team yet still need a drop
+    // card, and teams outside every group are listed so they can be dragged in.
+    final prefix = l10n.groupStage_groupPrefix;
+    final shownIndexes = {for (final name in groupNames) groupIndexOf(name)};
+    // Name -> config index of the groups to render as empty drop cards.
+    final emptyIndexByName = {
+      if (editing)
+        for (var i = 0; i < config.groups.length; i++)
+          if (!shownIndexes.contains(i)) config.groups[i].name: i,
+    };
+    final allNames = [...groupNames, ...emptyIndexByName.keys];
+    if (emptyIndexByName.isNotEmpty) {
+      allNames.sort(
+        (a, b) =>
+            groupDisplayName(a, prefix).compareTo(groupDisplayName(b, prefix)),
+      );
+    }
+    final unassignedTeams = editing
+        ? _unassignedStandings(config.unassignedParticipantIds)
+        : const <Standing>[];
+
     return Column(
       children: [
-        for (final name in groupNames)
-          _GroupCard(
-            tournamentId: widget.tournamentId,
-            canScoreMatch: widget.canScoreMatch,
-            name: name,
-            title: groupDisplayName(name, l10n.groupStage_groupPrefix),
-            standings: grouped[name]!,
-            allMatches: matchesForGroup(
-              grouped[name]!,
-              name,
-              groupNames.length == 1,
-              matchSnapshot,
+        if (unassignedTeams.isNotEmpty) _UnassignedLane(teams: unassignedTeams),
+        for (final name in allNames)
+          if (!grouped.containsKey(name))
+            _EmptyGroupCard(
+              title: groupDisplayName(name, prefix),
+              onDrop: (id) => _drop(id, emptyIndexByName[name]!),
+            )
+          else
+            _GroupCard(
+              tournamentId: widget.tournamentId,
+              canScoreMatch: widget.canScoreMatch,
+              name: name,
+              title: groupDisplayName(name, l10n.groupStage_groupPrefix),
+              standings: grouped[name]!,
+              allMatches: matchesForGroup(
+                grouped[name]!,
+                name,
+                groupNames.length == 1,
+                matchSnapshot,
+              ),
+              configuredLegs: widget.configuredLegs,
+              advancingCount: isGsknockout
+                  ? (grouped[name]!.length / 2).ceil()
+                  : 0,
+              mode: _modes[name] ?? _Mode.matrix,
+              leg: _legs[name] ?? 1,
+              onMode: (mode) => setState(() => _modes[name] = mode),
+              onLeg: (leg) => setState(() => _legs[name] = leg),
+              dragEnabled: editing,
+              onDrop: editing && groupIndexOf(name) != null
+                  ? (id) => _drop(id, groupIndexOf(name)!)
+                  : null,
             ),
-            configuredLegs: widget.configuredLegs,
-            advancingCount: isGsknockout
-                ? (grouped[name]!.length / 2).ceil()
-                : 0,
-            mode: _modes[name] ?? _Mode.matrix,
-            leg: _legs[name] ?? 1,
-            onMode: (mode) => setState(() => _modes[name] = mode),
-            onLeg: (leg) => setState(() => _legs[name] = leg),
-            dragEnabled: editing,
-            onDrop: editing && groupIndexOf(name) != null
-                ? (id) => _drop(id, groupIndexOf(name)!)
-                : null,
-          ),
       ],
     );
   }
@@ -374,6 +415,123 @@ class ModeChip extends StatelessWidget {
             color: selected ? AppTheme.primary : colors.textSecondary,
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Drop card of a configured group that has no team yet (edit mode only).
+class _EmptyGroupCard extends StatelessWidget {
+  const _EmptyGroupCard({required this.title, required this.onDrop});
+
+  final String title;
+  final ValueChanged<String> onDrop;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return DragTarget<String>(
+      onAcceptWithDetails: (details) => onDrop(details.data),
+      builder: (context, candidates, _) {
+        final highlighted = candidates.isNotEmpty;
+        return Container(
+          key: ValueKey('group-empty-$title'),
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: colors.bgCard,
+            border: Border.symmetric(
+              horizontal: BorderSide(
+                color: highlighted ? AppTheme.primary : colors.border,
+                width: highlighted ? 2 : 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.shield_outlined,
+                size: 18,
+                color: AppTheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                l10n.groupStage_emptyGroupDrop,
+                style: TextStyle(fontSize: 12, color: colors.textMuted),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Teams outside every group; each row can be dragged onto a group card.
+class _UnassignedLane extends StatelessWidget {
+  const _UnassignedLane({required this.teams});
+
+  final List<Standing> teams;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.colors;
+    return Container(
+      key: const ValueKey('group-unassigned-lane'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: colors.bgCard,
+        border: Border.symmetric(horizontal: BorderSide(color: colors.border)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: colors.textMuted.withValues(alpha: 0.08),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.groupAssignmentUnassigned,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  l10n.standings_groupTeams(teams.length),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          for (final team in teams)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: _sideLines(context, team, draggable: true),
+            ),
+        ],
       ),
     );
   }

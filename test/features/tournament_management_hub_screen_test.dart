@@ -2012,31 +2012,6 @@ void main() {
     expect(find.byType(TournamentManagementDivisionsSection), findsOneWidget);
   });
 
-  testWidgets('bracket tab "Quản lý" chip jumps to the divisions tab', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 1200);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    await tester.pumpWidget(
-      _app(
-        _tournament('in_progress'),
-        managementRepository: _LifecycleRepository(),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final context = tester.element(find.byType(TournamentManagementHubScreen));
-    final l10n = AppLocalizations.of(context)!;
-    await _openTab(tester, l10n.tournamentManagementTabBracket);
-    tester
-        .widget<BracketViewScreen>(find.byType(BracketViewScreen).first)
-        .onManageDivisions!();
-    await tester.pumpAndSettle();
-
-    expect(find.byType(TournamentManagementDivisionsSection), findsOneWidget);
-  });
-
   testWidgets('settings tab no longer lists divisions (they have a tab)', (
     tester,
   ) async {
@@ -2050,26 +2025,6 @@ void main() {
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     expect(find.text(l10n.tournamentManagementDivisions), findsNothing);
-  });
-
-  testWidgets('bracket tab gives organizers a manage-divisions action', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(390, 1200);
-    tester.view.devicePixelRatio = 1;
-    await tester.pumpWidget(_app(_tournament('in_progress')));
-    await tester.pumpAndSettle();
-
-    final context = tester.element(find.byType(TournamentManagementHubScreen));
-    final l10n = AppLocalizations.of(context)!;
-    await _openTab(tester, l10n.tournamentManagementTabBracket);
-
-    final bracket = tester.widget<BracketViewScreen>(
-      find.byType(BracketViewScreen).first,
-    );
-    // The action opens the divisions screen; its providers need the real
-    // DioClient (.env), so only the wiring is asserted here.
-    expect(bracket.onManageDivisions, isNotNull);
   });
 
   testWidgets(

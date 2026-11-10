@@ -130,7 +130,6 @@ Future<_Backend> _pump(
   List<MatchModel> matches = const [],
   int participants = 4,
   String bracketType = 'single_elimination',
-  VoidCallback? onManage,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -171,7 +170,6 @@ Future<_Backend> _pump(
               divisionId: _divisionId,
               isEmbedded: true,
               canEditBracket: canEdit,
-              onManageDivisions: onManage,
             ),
           ),
         ),
@@ -387,26 +385,14 @@ void main() {
     });
   });
 
-  group('TC-BRACKET-MGMT-05 manage icon', () {
-    testWidgets('is an icon with a tooltip, not a text chip', (tester) async {
-      var opened = 0;
-      await _pump(tester, canEdit: true, onManage: () => opened++);
-
-      expect(find.byKey(const ValueKey('division-chip-manage')), findsNothing);
-      final icon = find.byKey(const Key('bracket-mgmt-manage'));
-      expect(icon, findsOneWidget);
-      expect(tester.widget<IconButton>(icon).tooltip, 'Manage');
-      expect(find.text('Manage'), findsNothing);
-
-      await tester.tap(icon);
-      expect(opened, 1);
-    });
-
-    testWidgets('is absent when the host gives no manage callback', (
+  group('TC-BRACKET-MGMT-05 no settings icon', () {
+    testWidgets('the bar has no manage icon (divisions have their own tab)', (
       tester,
     ) async {
       await _pump(tester, canEdit: true);
+
       expect(find.byKey(const Key('bracket-mgmt-manage')), findsNothing);
+      expect(find.byIcon(Icons.settings_outlined), findsNothing);
     });
   });
 }

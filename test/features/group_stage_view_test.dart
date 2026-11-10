@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
+import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -206,6 +207,7 @@ void main() {
       Future<void> Function(GroupStageConfig next)? onConfigChanged,
       bool editLocked = false,
       GroupStageConfig editableConfig = config,
+      List<Team> teams = const [],
     }) async {
       tester.view.physicalSize = const Size(400, 1200);
       tester.view.devicePixelRatio = 1;
@@ -222,6 +224,7 @@ void main() {
               tournamentId: 't-1',
               divisionId: null,
             )).overrideWith((ref) => Stream.value(const <MatchModel>[])),
+            teamsProvider('t-1').overrideWith((ref) => Stream.value(teams)),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -245,16 +248,130 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Future<void> dragTeamToGroupB(WidgetTester tester, String team) async {
+    Future<void> dragTeamTo(
+      WidgetTester tester,
+      String team,
+      String groupTitle,
+    ) async {
       final gesture = await tester.startGesture(
         tester.getCenter(find.text(team)),
       );
       await tester.pump(kLongPressTimeout);
-      await gesture.moveTo(tester.getCenter(find.text('Bảng B')));
+      await gesture.moveTo(tester.getCenter(find.text(groupTitle)));
       await tester.pump();
       await gesture.up();
       await tester.pumpAndSettle();
     }
+
+    Future<void> dragTeamToGroupB(WidgetTester tester, String team) =>
+        dragTeamTo(tester, team, 'Bảng B');
+
+    GroupStageConfig configWith({
+      required List<GroupStageGroup> groups,
+      List<String> unassigned = const [],
+    }) => GroupStageConfig(
+      groups: groups,
+      unassignedParticipantIds: unassigned,
+      participantIds: [
+        for (final group in groups) ...group.participantIds,
+        ...unassigned,
+      ],
+      teamsAdvancing: 1,
+      teamsPerGroup: 2,
+    );
+
+    testWidgets(
+      'TC-GROUP-DND-10 an empty group shows a card that takes a drop',
+      (tester) async {
+        final saved = <GroupStageConfig>[];
+        await pumpEditable(
+          tester,
+          editableConfig: configWith(
+            groups: const [
+              GroupStageGroup(name: 'A', participantIds: ['t1', 't2']),
+              GroupStageGroup(name: 'B', participantIds: ['t3']),
+              GroupStageGroup(name: 'C', participantIds: []),
+            ],
+          ),
+          onConfigChanged: (next) async => saved.add(next),
+        );
+
+        expect(
+          find.byKey(const ValueKey('group-empty-Bảng C')),
+          findsOneWidget,
+        );
+        await dragTeamTo(tester, 'Đội Hai', 'Bảng C');
+
+        expect(saved, hasLength(1));
+        expect(saved.single.groups[2].participantIds, ['t2']);
+      },
+    );
+
+    testWidgets(
+      'TC-GROUP-DND-11 an unassigned team can be dragged into a group',
+      (tester) async {
+        final saved = <GroupStageConfig>[];
+        await pumpEditable(
+          tester,
+          editableConfig: configWith(
+            groups: const [
+              GroupStageGroup(name: 'A', participantIds: ['t1', 't2']),
+              GroupStageGroup(name: 'B', participantIds: ['t3']),
+            ],
+            unassigned: const ['t4'],
+          ),
+          teams: [
+            Team(
+              id: 't4',
+              name: 'Đội Bốn',
+              approvalStatus: 'COMPLETE',
+              createdAt: DateTime.utc(2026),
+            ),
+          ],
+          onConfigChanged: (next) async => saved.add(next),
+        );
+
+        expect(
+          find.byKey(const ValueKey('group-unassigned-lane')),
+          findsOneWidget,
+        );
+        await dragTeamTo(tester, 'Đội Bốn', 'Bảng B');
+
+        expect(saved, hasLength(1));
+        expect(saved.single.groups[1].participantIds, ['t3', 't4']);
+        expect(saved.single.unassignedParticipantIds, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'TC-GROUP-DND-12 no lane or empty card without a need or edit',
+      (tester) async {
+        // Edit mode, every team already in a group: no unassigned lane.
+        await pumpEditable(tester, onConfigChanged: (next) async {});
+        expect(
+          find.byKey(const ValueKey('group-unassigned-lane')),
+          findsNothing,
+        );
+
+        // Read-only view: extra config groups and unassigned teams stay hidden.
+        await pumpEditable(
+          tester,
+          editableConfig: configWith(
+            groups: const [
+              GroupStageGroup(name: 'A', participantIds: ['t1', 't2']),
+              GroupStageGroup(name: 'B', participantIds: ['t3']),
+              GroupStageGroup(name: 'C', participantIds: []),
+            ],
+            unassigned: const ['t4'],
+          ),
+        );
+        expect(find.byKey(const ValueKey('group-empty-Bảng C')), findsNothing);
+        expect(
+          find.byKey(const ValueKey('group-unassigned-lane')),
+          findsNothing,
+        );
+      },
+    );
 
     testWidgets(
       'TC-GROUP-DND-01 dropping on another group reports new config',

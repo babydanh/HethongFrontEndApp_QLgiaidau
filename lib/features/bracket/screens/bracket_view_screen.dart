@@ -53,9 +53,6 @@ class BracketViewScreen extends ConsumerStatefulWidget {
   final bool isLite;
   final bool isEmbedded;
 
-  /// Organizers only: shows a "Quản lý" chip that opens the divisions screen.
-  final VoidCallback? onManageDivisions;
-
   /// Division chosen by the host (the management hub shares one choice across
   /// its tabs). Unlike [divisionId], which pins the screen to one division and
   /// hides the strip, the strip stays and follows this value.
@@ -76,7 +73,6 @@ class BracketViewScreen extends ConsumerStatefulWidget {
     this.canEditBracket = false,
     this.isLite = false,
     this.isEmbedded = false,
-    this.onManageDivisions,
     this.selectedDivisionId,
     this.onDivisionChanged,
     this.scrollController,
@@ -689,7 +685,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       matchCount: matches.length,
       participantCount: division?.participantCount ?? 0,
       seedingType: isGroupStageKnockout ? 'SEEDED' : 'RANDOM',
-      onManageDivisions: widget.onManageDivisions,
     );
   }
 
