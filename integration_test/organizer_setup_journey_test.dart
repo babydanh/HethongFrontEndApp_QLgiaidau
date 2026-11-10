@@ -63,12 +63,13 @@ void main() {
       final container = await signInAsOrganizer(tester);
 
       // TC-01: form tạo giải nhanh, thêm một nội dung đơn, bỏ nội dung mặc định "Đôi tự do".
-      container.read(routerProvider).go('/tournaments/create');
-      await pumpUntilFound(
-        tester,
-        find.byType(TextFormField),
-        what: 'form Tạo giải nhanh (ô tên giải)',
-      );
+      // Router có thể còn chuyển về trang chủ sau đăng nhập: gọi go() lại tới khi form hiện.
+      await pumpUntilCondition(tester, () {
+        if (find.byType(TextFormField).evaluate().isEmpty) {
+          container.read(routerProvider).go('/tournaments/create');
+        }
+        return find.byType(TextFormField).evaluate().isNotEmpty;
+      }, what: 'form Tạo giải nhanh (ô tên giải)');
       await snap(tester, 'form-tao-giai-nhanh');
       await tester.enterText(find.byType(TextFormField).first, name);
       await tester.pump();
@@ -614,19 +615,22 @@ void main() {
         (p) => p['isPresent'] == true,
         'VĐV 1 đã check-in',
       );
+      // Giải dựng bằng API là giải miễn phí: Backend coi hồ sơ miễn phí luôn là đã đóng phí
+      // (spec organizer-registration-payment-state), nên bỏ/đánh dấu phí không đổi `isPaid`.
+      // Kiểm: công tắc gọi được, hộp xác nhận hiện, sheet vẫn mở và Backend vẫn `isPaid` true.
       await tapSwitch(tester, 'participant-detail-fee-paid');
       await confirmDialog(tester, 'bỏ đã đóng phí');
-      await waitParticipant(
-        vdv1,
-        (p) => p['isPaid'] == false,
-        'VĐV 1 chưa đóng phí',
-      );
       await tapSwitch(tester, 'participant-detail-fee-paid');
       await confirmDialog(tester, 'đánh dấu đã đóng phí');
       await waitParticipant(
         vdv1,
-        (p) => p['isPaid'] == true,
-        'VĐV 1 đã đóng phí',
+        (p) => p['isPaid'] == true && p['isPresent'] == true,
+        'VĐV 1 vẫn đã đóng phí (giải miễn phí) và giữ check-in',
+      );
+      await expectKey(
+        tester,
+        'participant-detail-fee-paid',
+        step: 'sheet còn mở sau khi đổi phí',
       );
 
       final note = '${single.tag} ghi chú BTC';
