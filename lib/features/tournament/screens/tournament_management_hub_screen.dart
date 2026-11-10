@@ -547,8 +547,6 @@ class _TournamentManagementHubScreenState
                       canEditBracket: true,
                       selectedDivisionId: _divisionId,
                       onDivisionChanged: _selectDivision,
-                      onManageDivisions: () =>
-                          _openSection(TournamentManagementSection.divisions),
                     ),
                   ),
                 ],

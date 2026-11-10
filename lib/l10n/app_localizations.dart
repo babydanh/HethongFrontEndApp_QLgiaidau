@@ -33379,6 +33379,12 @@ abstract class AppLocalizations {
   /// **'Bảng'**
   String get groupStage_groupPrefix;
 
+  /// No description provided for @groupStage_emptyGroupDrop.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo đội vào đây'**
+  String get groupStage_emptyGroupDrop;
+
   /// No description provided for @groupStage_modeMatrix.
   ///
   /// In vi, this message translates to:

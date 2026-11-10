@@ -7386,6 +7386,7 @@
   "stepTodo_endDateExpected": "Enter the expected end date",
   "stepTodo_loadFailed": "Reload the data",
   "groupStage_groupPrefix": "Group",
+  "groupStage_emptyGroupDrop": "Drag a team here",
   "groupStage_modeMatrix": "Cross table",
   "groupStage_modeStandings": "Standings",
   "groupStage_modeRounds": "By leg",

@@ -7414,6 +7414,7 @@
   "stepTodo_endDateExpected": "Nhập ngày kết thúc dự kiến",
   "stepTodo_loadFailed": "Tải lại dữ liệu",
   "groupStage_groupPrefix": "Bảng",
+  "groupStage_emptyGroupDrop": "Kéo đội vào đây",
   "groupStage_modeMatrix": "Bảng chéo",
   "groupStage_modeStandings": "Bảng xếp hạng",
   "groupStage_modeRounds": "Theo lượt",

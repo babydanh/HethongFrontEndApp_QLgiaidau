@@ -18539,6 +18539,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupStage_groupPrefix => 'Bảng';
 
   @override
+  String get groupStage_emptyGroupDrop => 'Kéo đội vào đây';
+
+  @override
   String get groupStage_modeMatrix => 'Bảng chéo';
 
   @override

@@ -26,7 +26,6 @@ Future<void> _pump(WidgetTester tester, {required bool hasBracket}) async {
             matchCount: 8,
             participantCount: 8,
             seedingType: 'RANDOM',
-            onManageDivisions: () {},
           ),
         ),
       ),
