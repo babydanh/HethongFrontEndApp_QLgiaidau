@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
+import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
+import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/chat_tab/social_chat_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -150,5 +152,32 @@ void main() {
     await _pump(tester, repo);
 
     expect(find.text('Chưa có tin nhắn nào.'), findsOneWidget);
+  });
+
+  testWidgets('TC-SOCIAL-CHAT-08 session with a chat room embeds the app chat', (
+    tester,
+  ) async {
+    final repo = _FakeRepo([]);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [socialSessionRepositoryProvider.overrideWithValue(repo)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SocialChatTab(
+              session: _session().copyWith(chatRoomId: 'room-1'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final chat = tester.widget<ChatDetailScreen>(find.byType(ChatDetailScreen));
+    expect(chat.roomId, 'room-1');
+    expect(chat.embedded, isTrue);
+    expect(find.byType(AppBar), findsNothing);
+    expect(repo.getCalls, 0); // the old text-only list is not used
   });
 }

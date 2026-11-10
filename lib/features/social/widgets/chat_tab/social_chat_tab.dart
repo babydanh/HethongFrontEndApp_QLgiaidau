@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/social_chat_provider.dart';
+import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
 
 class SocialChatTab extends ConsumerStatefulWidget {
   const SocialChatTab({super.key, required this.session});
@@ -58,6 +59,18 @@ class _SocialChatTabState extends ConsumerState<SocialChatTab>
   Widget build(BuildContext context) {
     super.build(context);
     final session = widget.session;
+    final roomId = session.chatRoomId;
+    // Same chat as the app's messaging (images, copy, reactions, avatars).
+    // Closed sessions keep the read-only list below: Backend rejects writes.
+    if (roomId != null && roomId.isNotEmpty && !_isReadOnly) {
+      return ChatDetailScreen(
+        key: ValueKey(roomId),
+        roomId: roomId,
+        roomName: session.title,
+        roomType: 'GROUP',
+        embedded: true,
+      );
+    }
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final messagesAsync = ref.watch(socialChatMessagesProvider(session.id));

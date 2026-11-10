@@ -116,20 +116,20 @@ void main() {
     expect(newTournamentEntriesForDay(list, DateTime(2026, 11, 10), _now), isEmpty);
   });
 
-  test('TC-EXPLORE-MERGE-02 opened tournament shows on its start day, else today', () {
+  test('TC-EXPLORE-MERGE-02 opened tournament is placed once, at its opening time', () {
     final list = [
       _t('future', 'registration',
-          created: DateTime(2026, 11, 8), start: DateTime(2026, 11, 12, 14, 30)),
+          created: DateTime(2026, 11, 9, 8), start: DateTime(2026, 11, 12, 14, 30)),
       _t('nodate', 'registration', created: DateTime(2026, 11, 8, 7, 5)),
     ];
 
-    expect(
-      newTournamentEntriesForDay(list, DateTime(2026, 11, 12), _now)
-          .map((e) => '${e.tournament.id}@${e.timeSlot}'),
-      ['future@14:30'],
-    );
     final today = newTournamentEntriesForDay(list, DateTime(2026, 11, 9), _now);
-    expect(today.map((e) => '${e.tournament.id}@${e.timeSlot}'), ['nodate@07:05']);
-    expect(today.single.live, isFalse);
+    expect(today.map((e) => '${e.tournament.id}@${e.timeSlot}'), [
+      'future@08:00',
+      'nodate@07:05', // past anchor is shown on today, clock time kept
+    ]);
+    expect(today.every((e) => !e.live), isTrue);
+    // Its start day is not a second milestone: no duplicate entry there.
+    expect(newTournamentEntriesForDay(list, DateTime(2026, 11, 12), _now), isEmpty);
   });
 }

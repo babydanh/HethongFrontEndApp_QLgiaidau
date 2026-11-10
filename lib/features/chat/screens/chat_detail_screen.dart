@@ -51,6 +51,9 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
   final String? roomType;
   final String? communityId;
 
+  /// Inside another screen (e.g. a tab): no own AppBar / back button.
+  final bool embedded;
+
   const ChatDetailScreen({
     super.key,
     required this.roomId,
@@ -58,6 +61,7 @@ class ChatDetailScreen extends ConsumerStatefulWidget {
     this.roomAvatar,
     this.roomType,
     this.communityId,
+    this.embedded = false,
   });
 
   @override
@@ -1003,12 +1007,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               if (message.content.isNotEmpty && !message.isRevoked)
                 ListTile(
                   leading: const Icon(Icons.copy_rounded),
-                  title: Text(l10n!.chatCopyTextAction),
+                  title: Text(l10n.chatCopyTextAction),
                   onTap: () {
                     Navigator.pop(sheetCtx);
                     Clipboard.setData(ClipboardData(text: message.content));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n!.chatCopiedFeedback)),
+                      SnackBar(content: Text(l10n.chatCopiedFeedback)),
                     );
                   },
                 ),
@@ -1020,8 +1024,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 ),
                 title: Text(
                   message.isPinned
-                      ? (l10n!.chatUnpinMessageAction)
-                      : (l10n!.chatPinMessageAction),
+                      ? (l10n.chatUnpinMessageAction)
+                      : (l10n.chatPinMessageAction),
                 ),
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -1035,7 +1039,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                     color: colors.error,
                   ),
                   title: Text(
-                    l10n!.chatRevokeMessageAction,
+                    l10n.chatRevokeMessageAction,
                     style: TextStyle(color: colors.error),
                   ),
                   onTap: () {
@@ -1155,7 +1159,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       backgroundColor: isDark
           ? const Color(0xFF18191A)
           : const Color(0xFFF0F2F5),
-      appBar: AppBar(
+      appBar: widget.embedded
+          ? null
+          : AppBar(
         backgroundColor: colors.bgCard,
         elevation: 0.5,
         titleSpacing: 0,
@@ -1275,12 +1281,12 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.poll_outlined, size: 22),
-            tooltip: l10n!.chatDetailPollTooltip,
+            tooltip: l10n.chatDetailPollTooltip,
             onPressed: _openCreatePollDialog,
           ),
           IconButton(
             icon: const Icon(Icons.info_outline_rounded, size: 22),
-            tooltip: l10n!.chatDetailRoomSettingsTooltip,
+            tooltip: l10n.chatDetailRoomSettingsTooltip,
             onPressed: _openRoomSettings,
           ),
         ],
@@ -1357,8 +1363,8 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             _pinnedMessage!.content.trim().isNotEmpty
                                 ? _pinnedMessage!.content.trim()
                                 : (_pinnedMessage!.mediaUrls.isNotEmpty
-                                      ? (l10n!.chatDetailAttachedImage)
-                                      : (l10n!.chatDetailPollPlaceholder)),
+                                      ? (l10n.chatDetailAttachedImage)
+                                      : (l10n.chatDetailPollPlaceholder)),
                             style: TextStyle(
                               fontSize: 12.5,
                               color: isDark
@@ -1379,7 +1385,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       size: 18,
                       color: Color(0xFFD97706),
                     ),
-                    tooltip: l10n!.chatDetailViewMessage,
+                    tooltip: l10n.chatDetailViewMessage,
                     onPressed: () => _jumpToMessage(_pinnedMessage!.id),
                   ),
                 ],
@@ -1412,7 +1418,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              l10n!.chatDetailStartConversation,
+                              l10n.chatDetailStartConversation,
                               style: TextStyle(
                                 color: colors.textMuted.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -1681,7 +1687,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         ),
                         Text(
                           _replyingTo!.content.isEmpty
-                              ? (l10n!.chatDetailMediaPollPlaceholder)
+                              ? (l10n.chatDetailMediaPollPlaceholder)
                               : _replyingTo!.content,
                           style: TextStyle(
                             fontSize: 12,
@@ -1794,7 +1800,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                           color: AppTheme.primary,
                           size: 22,
                         ),
-                        tooltip: l10n!.chatDetailTakePhoto,
+                        tooltip: l10n.chatDetailTakePhoto,
                         onPressed: () => _pickImage(ImageSource.camera),
                       ),
                       IconButton(
@@ -1804,7 +1810,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                           color: AppTheme.primary,
                           size: 22,
                         ),
-                        tooltip: l10n!.chatDetailPollTooltip,
+                        tooltip: l10n.chatDetailPollTooltip,
                         onPressed: _isSending ? null : _openCreatePollDialog,
                       ),
 
@@ -1825,7 +1831,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             style: const TextStyle(fontSize: 14.5),
                             onChanged: (v) => setState(() {}),
                             decoration: InputDecoration(
-                              hintText: l10n!.chatDetailMessageHint,
+                              hintText: l10n.chatDetailMessageHint,
                               hintStyle: TextStyle(
                                 color: colors.textMuted,
                                 fontSize: 14.5,
@@ -1856,7 +1862,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                 : AppTheme.primary,
                             size: 22,
                           ),
-                          tooltip: l10n!.chatDetailSend,
+                          tooltip: l10n.chatDetailSend,
                           onPressed: _isSending ? null : () => _sendMessage(),
                         )
                       else
@@ -1867,7 +1873,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                             color: AppTheme.primary,
                             size: 22,
                           ),
-                          tooltip: l10n!.chatDetailLike,
+                          tooltip: l10n.chatDetailLike,
                           onPressed: _sendThumbsUp,
                         ),
                     ],
