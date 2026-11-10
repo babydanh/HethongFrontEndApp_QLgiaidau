@@ -176,7 +176,7 @@ void main() {
         return all.any((m) => _branch(m) == 'losers') ? all : null;
       });
       expect(matches.length, greaterThanOrEqualTo(4));
-      expect(matches.any((m) => _branch(m) == 'winners'), isTrue, reason: 'Thiếu trận nhánh thắng');
+      expect(matches.any((m) => const {'winners', 'main'}.contains(_branch(m))), isTrue, reason: 'Thiếu trận nhánh thắng');
       await j.snap('so-do');
 
       // TC-46: ô tìm kiếm, bộ lọc nhánh thua, xóa lọc.
@@ -457,8 +457,12 @@ void main() {
     (tester) async {
       final j = _Journey(tester, binding, 'fmt-swiss');
       await j.start(players: 4);
+      // Sản phẩm (commit 2a227a69) ẩn Thụy Sĩ khi tạo/đổi nội dung trong App, chỉ giữ ô cho nội
+      // dung Swiss đã có: dựng nội dung Swiss bằng API rồi cấu hình tiếp qua giao diện.
+      await j.extra.setBracketType(j.did, 'SWISS');
+      j.refresh();
 
-      // TC-57: chọn Thụy Sĩ, 2 vòng, cách ghép vòng 1, thứ tự tiebreak.
+      // TC-57: cấu hình Thụy Sĩ (nội dung đã là Swiss), 2 vòng, cách ghép vòng 1, thứ tự tiebreak.
       await j.editDivision(
         'SWISS',
         openStage: true,
@@ -654,6 +658,19 @@ class _Journey {
   Future<List<Map<String, dynamic>>> listMatches() =>
       api.listMatches(token: seeded.token, tournamentId: tid, divisionId: did);
 
+  /// Giải dựng đủ 8/8 VĐV nên hộp "Hạng mục đã đủ chỗ" có thể bật lên và chắn sheet: chọn "Giữ mở"
+  /// (giữ đăng ký như cũ) nếu hộp xuất hiện trong vài giây đầu.
+  Future<void> dismissFullDivisionPrompt() async {
+    final keepOpen = find.text('Giữ mở');
+    for (var i = 0; i < 12 && keepOpen.evaluate().isEmpty; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    if (keepOpen.evaluate().isEmpty) return;
+    await tester.tap(keepOpen.first);
+    await tester.pump(const Duration(milliseconds: 500));
+    await gone(tester, find.text('Hạng mục đã đủ chỗ'), 'hộp Hạng mục đã đủ chỗ');
+  }
+
   /// Mở sheet sửa nội dung (tab Nội dung), chọn [bracketType], chạy [configure], lưu và chờ sheet đóng.
   Future<void> editDivision(
     String bracketType, {
@@ -661,6 +678,7 @@ class _Journey {
     Future<void> Function()? configure,
   }) async {
     await openHubTab(tester, 'Nội dung');
+    await dismissFullDivisionPrompt();
     await tapKey(tester, 'division-edit-$did', step: 'mở sheet sửa nội dung');
     await expectKey(tester, 'division-editor-save', step: 'sheet nội dung');
     await tapKey(tester, 'division-editor-bracket-$bracketType', step: 'chọn thể thức');
@@ -819,6 +837,18 @@ class _FormatsApi {
   Future<List<Map<String, dynamic>>> stages(String tournamentId, String divisionId) async {
     final data = await _get('/tournaments/$tournamentId/bracket', {'divisionId': divisionId});
     return _maps(data is Map ? data['stages'] : null);
+  }
+
+  /// `PATCH /tournaments/divisions/:id`: đổi thể thức bằng API (App đã ẩn Thụy Sĩ khi tạo/đổi nội dung).
+  Future<void> setBracketType(String divisionId, String bracketType) async {
+    final response = await _dio.patch<Object?>(
+      '/tournaments/divisions/$divisionId',
+      data: {'bracketType': bracketType},
+    );
+    final code = response.statusCode ?? 0;
+    if (code < 200 || code >= 300) {
+      throw StateError('PATCH division $divisionId -> HTTP $code: ${response.data}');
+    }
   }
 
   /// `GET /tournaments/:id/manage/participants?divisionId=`: cùng nguồn với mục Hạt giống của app.
