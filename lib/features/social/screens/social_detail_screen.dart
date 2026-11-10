@@ -330,6 +330,9 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                     SocialDetailsTab(
                       session: session,
                       isHost: host,
+                      onEditLocation: host && session.isLocationDeferred
+                          ? () => _editSession(session)
+                          : null,
                       onContactHost: () => _handleContactHost(session),
                       onFindPlayers: () {
                         if (session.status.toUpperCase() == 'COMPLETED') return;
@@ -1012,6 +1015,23 @@ Link: $shareUrl''';
     );
   }
 
+  void _editSession(SocialSessionModel session) {
+    if (!const {'OPEN', 'FULL'}.contains(session.status.toUpperCase())) {
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CreateSocialScreen(
+        clubId: session.communityId ?? '',
+        clubName: session.hostClubName,
+        clubLogoUrl: session.hostClubAvatar,
+        initialSession: session,
+      ),
+    );
+  }
+
   void _showMoreOptions(SocialSessionModel session) {
     void comingSoon() {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1027,22 +1047,7 @@ Link: $shareUrl''';
       session,
       isHost: _isHost,
       onRepeat: comingSoon,
-      onEdit: () {
-        if (!const {'OPEN', 'FULL'}.contains(session.status.toUpperCase())) {
-          return;
-        }
-        showModalBottomSheet<void>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) => CreateSocialScreen(
-            clubId: session.communityId ?? '',
-            clubName: session.hostClubName,
-            clubLogoUrl: session.hostClubAvatar,
-            initialSession: session,
-          ),
-        );
-      },
+      onEdit: () => _editSession(session),
       onCancel: _cancelSession,
       onMute: comingSoon,
       onReport: () => ScaffoldMessenger.of(context).showSnackBar(

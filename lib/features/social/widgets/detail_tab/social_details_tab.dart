@@ -13,6 +13,7 @@ class SocialDetailsTab extends StatelessWidget {
     required this.isHost,
     required this.onContactHost,
     required this.onFindPlayers,
+    this.onEditLocation,
     this.viewerFooter,
   });
 
@@ -20,6 +21,10 @@ class SocialDetailsTab extends StatelessWidget {
   final bool isHost;
   final VoidCallback onContactHost;
   final VoidCallback onFindPlayers;
+
+  /// Host-only: tapping the location opens the edit form (set when the place
+  /// is still "Quyết định sau").
+  final VoidCallback? onEditLocation;
   final Widget? viewerFooter;
 
   @override
@@ -119,14 +124,20 @@ class SocialDetailsTab extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            session.isLocationDeferred
-                                ? session.venueName
-                                : session.venueName.toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.primary, // Blue location name
+                          InkWell(
+                            onTap: onEditLocation,
+                            child: Text(
+                              session.isLocationDeferred
+                                  ? session.venueName
+                                  : session.venueName.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.primary, // Blue location name
+                                decoration: onEditLocation == null
+                                    ? null
+                                    : TextDecoration.underline,
+                              ),
                             ),
                           ),
                           if (!session.isLocationDeferred) ...[

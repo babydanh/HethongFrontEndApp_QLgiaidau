@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/data/models/social_place.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_details_tab.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,11 @@ SocialParticipantModel _p(String id, String name, {bool host = false}) =>
       joinedAt: DateTime(2026, 11, 9),
     );
 
-Future<void> _pump(WidgetTester tester, SocialSessionModel session) async {
+Future<void> _pump(
+  WidgetTester tester,
+  SocialSessionModel session, {
+  VoidCallback? onEditLocation,
+}) async {
   tester.view.physicalSize = const Size(360, 780);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -26,6 +31,7 @@ Future<void> _pump(WidgetTester tester, SocialSessionModel session) async {
           isHost: true,
           onContactHost: () {},
           onFindPlayers: () {},
+          onEditLocation: onEditLocation,
         ),
       ),
     ),
@@ -78,4 +84,27 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('TC-SOCIAL-PLACE-TAP-01 bấm "Quyết định sau" gọi sửa địa điểm', (
+    tester,
+  ) async {
+    var taps = 0;
+    final base = _session([_p('h', 'Host', host: true)]);
+    final deferred = SocialSessionModel(
+      id: base.id,
+      hostUserId: base.hostUserId,
+      title: base.title,
+      playFormat: base.playFormat,
+      startAt: base.startAt,
+      venueName: SocialPlace.deferredLabel,
+      venueAddress: SocialPlace.deferredLabel,
+      sport: base.sport,
+      sportName: base.sportName,
+      participants: base.participants,
+      currentSlots: base.currentSlots,
+    );
+    await _pump(tester, deferred, onEditLocation: () => taps++);
+    await tester.tap(find.text(SocialPlace.deferredLabel));
+    expect(taps, 1);
+  });
 }
