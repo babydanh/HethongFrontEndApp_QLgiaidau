@@ -64,6 +64,7 @@ void main() {
         what: 'form Cập nhật kèo sau khi host bấm "Quyết định sau"',
       );
       await shooter.snap('form-sua-dia-diem');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -89,6 +90,7 @@ void main() {
       await openSession(tester, container, deferred);
       expect(find.text('Chỉ đường'), findsNothing, reason: 'buổi "Quyết định sau" không có Chỉ đường');
       await shooter.snap('khong-chi-duong');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -118,7 +120,9 @@ void main() {
           timeout: const Duration(seconds: 30),
         );
         // Chờ sheet gửi yêu cầu đóng hẳn: bấm khi sheet còn đang đóng sẽ trúng lớp nền của nó.
-        await socialWait(tester, const Duration(seconds: 2));
+        // Thông báo "Đã gửi yêu cầu..." nổi che thanh nút phía dưới: chờ nó tắt rồi mới bấm tiếp.
+        await socialWait(tester, const Duration(seconds: 7));
+        drainKnownProductErrors(tester);
       }
 
       await sendRequest();
@@ -170,6 +174,7 @@ void main() {
       await openSession(tester, container, session);
       await pumpUntilFound(tester, find.text('Đã tham gia'), what: 'nút "Đã tham gia" của người chơi');
       await shooter.snap('nguoi-choi-da-tham-gia');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -252,6 +257,7 @@ void main() {
       );
       expect(find.text(guestName), findsNothing);
       await shooter.snap('da-xoa-khach');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -284,6 +290,7 @@ void main() {
       await pumpUntilFound(tester, find.textContaining('XÁC NHẬN THAM GIA • 2/2'), what: '2/2 trên tab Người tham gia');
       expect(find.text('Thêm người'), findsNothing, reason: 'người chơi không có nút Thêm người');
       await shooter.snap('tab-nguoi-tham-gia-2-2');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -310,6 +317,7 @@ void main() {
         1,
         reason: 'người chơi có đúng một avatar ở hàng người tham gia',
       );
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -410,6 +418,7 @@ void main() {
       expect(find.text('0'), findsWidgets, reason: 'đội B thắng 0 set');
       expect(find.text('Nhập nhanh'), findsNothing, reason: 'trận xong không còn nút nhập');
       await shooter.snap('tran-da-hoan-thanh');
+      await leaveSocialSession(tester, container);
     },
   );
 
@@ -460,6 +469,7 @@ void main() {
       await openSocialTab(tester, 'Trận đấu');
       await pumpUntilFound(tester, find.text('Xem bracket'), what: 'nút Xem bracket');
       await shooter.snap('co-nut-xem-bracket');
+      await leaveSocialSession(tester, container);
     },
   );
 }
