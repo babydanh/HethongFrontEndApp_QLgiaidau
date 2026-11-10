@@ -9,13 +9,12 @@ const String kE2eApiBaseUrl = String.fromEnvironment(
   defaultValue: 'http://10.0.2.2:3000/api/v1',
 );
 
-/// Tài khoản seed trên CI (workflow test-app-e2e): admin1 = ORGANIZER,
-/// user8 = PLAYER, vndcsport = ADMIN (chỉ có khi seed:data).
+/// Tài khoản E2E tạo trên CI (workflow test-app-e2e): admin1 = ORGANIZER, user8 = PLAYER,
+/// e2eadmin = ADMIN (workflow cấp vai trò). Không dùng tài khoản admin của seed.
 const String kOrganizerEmail = 'admin1@gmail.com';
 const String kPlayerEmail = 'user8@gmail.com';
 const String kE2ePassword = '123456';
-const String kAdminEmail = 'vndcsport@gmail.com';
-const String kAdminPassword = 'Admin@123';
+const String kAdminEmail = 'e2eadmin@gmail.com';
 
 /// SĐT đúng định dạng của UpdateUserDto (0 + đầu 3/5/7/8/9 + 8 chữ số). Tài khoản seed chưa có SĐT.
 const String kPlayerPhone = '0912345678';
@@ -170,9 +169,9 @@ class BackendApi {
     );
   }
 
-  /// ADMIN duyệt giải (PENDING_APPROVAL -> mở đăng ký). Đăng nhập bằng vndcsport của seed:data.
+  /// ADMIN duyệt giải (PENDING_APPROVAL -> mở đăng ký). Đăng nhập bằng e2eadmin, tài khoản E2E chỉ có vai ADMIN do workflow tạo.
   Future<void> approveTournamentAsAdmin(String tournamentId) async {
-    final adminToken = await login(kAdminEmail, kAdminPassword);
+    final adminToken = await login(kAdminEmail, kE2ePassword);
     await _send(
       'POST',
       '/admin/tournaments/$tournamentId/approve',

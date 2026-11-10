@@ -1071,7 +1071,7 @@ void main() {
     expect(find.byType(TournamentManagementHubScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
-  testWidgets('settings retain every management section and action', (
+  testWidgets('TC-MGMT-HUB-01 settings list has no draw or live operations', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 1500);
@@ -1092,8 +1092,11 @@ void main() {
 
     // Nhóm Hệ thống luôn mở: các mục nằm sẵn trong danh sách.
     expect(find.text(l10n.tournamentManagementSystemGroup), findsOneWidget);
-    expect(find.text(l10n.manageTeams), findsOneWidget);
-    expect(find.text(l10n.manageDraw), findsOneWidget);
+    // Quản lý đội/VĐV đã bỏ khỏi Cài đặt: dùng tab VĐV.
+    expect(find.text(l10n.manageTeams), findsNothing);
+    // TC-MGMT-HUB-01: draw and live operations are no longer hub entries.
+    expect(find.text(l10n.manageDraw), findsNothing);
+    expect(find.text(l10n.tournamentManagementLiveOperations), findsNothing);
     expect(find.text(l10n.tournamentManagementSponsors), findsOneWidget);
     expect(find.text(l10n.tournamentManagementFinance), findsOneWidget);
     expect(find.text(l10n.tournamentManagementLivestream), findsOneWidget);
@@ -1397,7 +1400,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('operations retains live operations and the final section', (
+  testWidgets('TC-MGMT-HUB-02 every remaining section opens with a back button', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 800);
@@ -1428,19 +1431,25 @@ void main() {
     final context = tester.element(find.byType(TournamentManagementHubScreen));
     final l10n = AppLocalizations.of(context)!;
     await _openSettings(tester);
-    final liveOperations = find.text(l10n.tournamentManagementLiveOperations);
-    await tester.ensureVisible(liveOperations);
-    await tester.tap(liveOperations);
-    await tester.pumpAndSettle();
-    expect(find.byTooltip(l10n.opsRefresh), findsOneWidget);
-    expect(find.byTooltip(l10n.tournamentManagementBack), findsOneWidget);
+    for (final label in [
+      l10n.tournamentManagementSponsors,
+      l10n.tournamentManagementFinance,
+      l10n.tournamentManagementLivestream,
+    ]) {
+      final entry = find.text(label);
+      await tester.ensureVisible(entry);
+      await tester.tap(entry);
+      await tester.pumpAndSettle();
+      expect(find.byTooltip(l10n.tournamentManagementBack), findsOneWidget);
 
-    await tester.tap(find.byTooltip(l10n.tournamentManagementBack));
-    await tester.pumpAndSettle();
-    expect(
-      find.text(l10n.tournamentManagementLivestream, skipOffstage: false),
-      findsOneWidget,
-    );
+      await tester.tap(find.byTooltip(l10n.tournamentManagementBack));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(l10n.tournamentManagementSystemGroup),
+        findsOneWidget,
+        reason: 'back from $label returns to the settings list',
+      );
+    }
     expect(tester.takeException(), isNull);
   });
 

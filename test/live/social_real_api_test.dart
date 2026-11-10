@@ -142,7 +142,7 @@ void main() {
                     body: SocialParticipantsTab(
                       session: session,
                       isHost: session.isHost,
-                      onAddParticipant: (_) =>
+                      onAddParticipant: () =>
                           fail('Guest cannot add participants'),
                       onRemoveParticipant: (_) =>
                           fail('Guest cannot remove participants'),

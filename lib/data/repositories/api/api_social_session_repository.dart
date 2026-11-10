@@ -537,13 +537,12 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
   @override
   Future<List<SocialChatMessageModel>> getMessages(
     String sessionId, {
-    int page = 1,
-    int limit = 50,
+    int limit = 30,
   }) async {
     try {
       final response = await _dioClient.dio.get(
         '/social-sessions/$sessionId/messages',
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: {'limit': limit},
         options: Options(extra: {'noCache': true}),
       );
 
@@ -565,6 +564,22 @@ class ApiSocialSessionRepository implements ISocialSessionRepository {
       throw SocialApiException.fromDioException(error);
     } catch (error, stack) {
       _log.error('getMessages unexpected error', error, stack);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> sendMessage(String sessionId, String text) async {
+    try {
+      await _dioClient.dio.post(
+        '/social-sessions/$sessionId/messages',
+        data: {'messageText': text.trim()},
+      );
+    } on DioException catch (error, stack) {
+      _log.error('sendMessage error for: $sessionId', error, stack);
+      throw SocialApiException.fromDioException(error);
+    } catch (error, stack) {
+      _log.error('sendMessage unexpected error', error, stack);
       rethrow;
     }
   }

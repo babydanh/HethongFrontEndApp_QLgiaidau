@@ -32,50 +32,71 @@ CourtTurnStart _turn(int number, int player) => CourtTurnStart(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('TC-SERVE-APP-01 setServerTurn moves the ball to the chosen player', () {
-    test('server 2 -> 1: the partner gets the ball back, no undo entry', () {
-      final state = CourtState(turnStart: _turn(2, 1));
-      final ctx = _ctx(serverNumber: 1);
+  group(
+    'TC-SERVE-APP-01 setServerTurn moves the ball to the chosen player',
+    () {
+      test('server 2 -> 1: the partner gets the ball back, no undo entry', () {
+        final state = CourtState(turnStart: _turn(2, 1));
+        final ctx = _ctx(serverNumber: 1);
 
-      final next = setServerTurn(state, ctx, 0);
-      final layout = resolveCourtLayout(next, ctx);
+        final next = setServerTurn(state, ctx, 0);
+        final layout = resolveCourtLayout(next, ctx);
 
-      expect(layout.serverPlayerIndex, 0);
-      expect(layout.callServerNumber, 1);
-      expect(next.history, isEmpty);
-    });
+        expect(layout.serverPlayerIndex, 0);
+        expect(layout.callServerNumber, 1);
+        expect(next.history, isEmpty);
+      });
 
-    test('server 1 -> 2: the partner of the shown server takes the ball', () {
+      test('server 1 -> 2: the partner of the shown server takes the ball', () {
+        final state = CourtState(turnStart: _turn(1, 0));
+        final ctx = _ctx(serverNumber: 2);
+
+        final next = setServerTurn(state, ctx, 1);
+        final layout = resolveCourtLayout(next, ctx);
+
+        expect(layout.serverPlayerIndex, 1);
+        expect(layout.callServerNumber, 2);
+        expect(next.history, isEmpty);
+      });
+
+      test('a give-serve override is cleared so the pick wins', () {
+        final state = CourtState(
+          turnStart: _turn(1, 0),
+          serverOverride: const CourtServerOverride(team: 1, playerIndex: 1),
+        );
+        final ctx = _ctx(serverNumber: 2);
+
+        final next = setServerTurn(state, ctx, 0);
+
+        expect(next.serverOverride, isNull);
+        expect(resolveCourtLayout(next, ctx).serverPlayerIndex, 0);
+      });
+
+      test('without a serving team nothing changes', () {
+        final state = CourtState(turnStart: _turn(1, 0));
+
+        final next = setServerTurn(
+          state,
+          _ctx(serverNumber: 2, servingTeam: null),
+          1,
+        );
+
+        expect(next, state);
+      });
+    },
+  );
+
+  group('TC-SERVE-APP-03 setServerAfterTeamChange', () {
+    test('the chosen player of the new serving team serves, no undo entry', () {
       final state = CourtState(turnStart: _turn(1, 0));
-      final ctx = _ctx(serverNumber: 2);
+      final ctx = _ctx(serverNumber: 1, servingTeam: 2);
 
-      final next = setServerTurn(state, ctx, 1);
+      final next = setServerAfterTeamChange(state, ctx, 2, 1);
       final layout = resolveCourtLayout(next, ctx);
 
+      expect(layout.servingTeam, 2);
       expect(layout.serverPlayerIndex, 1);
-      expect(layout.callServerNumber, 2);
       expect(next.history, isEmpty);
-    });
-
-    test('a give-serve override is cleared so the pick wins', () {
-      final state = CourtState(
-        turnStart: _turn(1, 0),
-        serverOverride: const CourtServerOverride(team: 1, playerIndex: 1),
-      );
-      final ctx = _ctx(serverNumber: 2);
-
-      final next = setServerTurn(state, ctx, 0);
-
-      expect(next.serverOverride, isNull);
-      expect(resolveCourtLayout(next, ctx).serverPlayerIndex, 0);
-    });
-
-    test('without a serving team nothing changes', () {
-      final state = CourtState(turnStart: _turn(1, 0));
-
-      final next = setServerTurn(state, _ctx(serverNumber: 2, servingTeam: null), 1);
-
-      expect(next, state);
     });
   });
 
@@ -113,7 +134,9 @@ void main() {
         ],
       );
       addTearDown(c.dispose);
-      addTearDown(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+      addTearDown(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
       c.listen(scorePanelNotifierProvider(params), (_, _) {});
       return c;
     }
@@ -121,7 +144,9 @@ void main() {
     test('changes only the server number, not the team or the score', () {
       final c = container(serverNumber: 1);
 
-      c.read(scorePanelNotifierProvider(params).notifier).pickleballSetServerNumber(2);
+      c
+          .read(scorePanelNotifierProvider(params).notifier)
+          .pickleballSetServerNumber(2);
 
       final state = c.read(scorePanelNotifierProvider(params));
       expect(state.pickleball?.serverNumber, 2);
@@ -135,7 +160,9 @@ void main() {
       final c = container(serverNumber: 2);
       final before = c.read(scorePanelNotifierProvider(params));
 
-      c.read(scorePanelNotifierProvider(params).notifier).pickleballSetServerNumber(2);
+      c
+          .read(scorePanelNotifierProvider(params).notifier)
+          .pickleballSetServerNumber(2);
 
       expect(c.read(scorePanelNotifierProvider(params)), same(before));
     });

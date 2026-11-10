@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/providers/social_chat_provider.dart';
 
 class SocialChatTab extends ConsumerStatefulWidget {
   const SocialChatTab({super.key, required this.session});
@@ -14,6 +15,7 @@ class SocialChatTab extends ConsumerStatefulWidget {
 class _SocialChatTabState extends ConsumerState<SocialChatTab>
     with AutomaticKeepAliveClientMixin {
   final TextEditingController _chatInputController = TextEditingController();
+  bool _sending = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -23,47 +25,77 @@ class _SocialChatTabState extends ConsumerState<SocialChatTab>
     super.dispose();
   }
 
+  /// Backend rejects writes on a closed session (403), so the input is hidden.
+  bool get _isReadOnly {
+    final status = widget.session.status.toUpperCase();
+    return status == 'COMPLETED' || status == 'CANCELLED';
+  }
+
+  Future<void> _send() async {
+    final text = _chatInputController.text.trim();
+    if (text.isEmpty || _sending) return;
+    final sessionId = widget.session.id;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _sending = true);
+    try {
+      await ref
+          .read(socialSessionRepositoryProvider)
+          .sendMessage(sessionId, text);
+      if (!mounted) return;
+      _chatInputController.clear();
+      ref.invalidate(socialChatMessagesProvider(sessionId));
+    } catch (_) {
+      // Keep the typed text so the user can retry.
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Không gửi được tin nhắn. Thử lại sau.')),
+      );
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     final session = widget.session;
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final messagesAsync = ref.watch(socialChatMessagesProvider(session.id));
+    final messages = messagesAsync.asData?.value ?? const [];
     return Column(
       children: [
         Expanded(
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // System notification status matching IMG4
-              Center(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      'Sơn Bảo đã tham gia cuộc trò chuyện.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colors.textMuted,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Bạn đã cập nhật lệ phí tham dự.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colors.textMuted,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                  ],
+              if (messagesAsync.isLoading && messages.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
-              ),
+              if (messagesAsync.hasError && messages.isEmpty)
+                Center(
+                  child: TextButton(
+                    onPressed: () =>
+                        ref.invalidate(socialChatMessagesProvider(session.id)),
+                    child: const Text(
+                      'Không tải được tin nhắn. Bấm để thử lại.',
+                    ),
+                  ),
+                ),
+              if (messagesAsync.hasValue && messages.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text(
+                      'Chưa có tin nhắn nào.',
+                      style: TextStyle(fontSize: 13, color: colors.textMuted),
+                    ),
+                  ),
+                ),
 
               // Chat messages
-              ...session.chatMessages.map((msg) {
+              ...messages.map((msg) {
                 if (msg.sharedSession != null) {
                   return _buildSocialSessionChatCard(
                     context,
@@ -80,7 +112,8 @@ class _SocialChatTabState extends ConsumerState<SocialChatTab>
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: msg.isHost
+                        backgroundColor:
+                            (msg.isHost || msg.senderId == session.hostUserId)
                             ? colors.success.withValues(alpha: 0.25)
                             : AppTheme.primaryLight.withValues(alpha: 0.35),
                         child: Text(
@@ -147,69 +180,59 @@ class _SocialChatTabState extends ConsumerState<SocialChatTab>
           ),
         ),
 
-        // Chat Input Row (matching bottom of IMG4)
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: colors.bgCard,
-            border: Border(top: BorderSide(color: colors.border)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _chatInputController,
-                    decoration: InputDecoration(
-                      hintText: 'Viết tin nhắn...',
-                      hintStyle: TextStyle(
-                        fontSize: 13.5,
-                        color: colors.textMuted,
+        if (!_isReadOnly)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: colors.bgCard,
+              border: Border(top: BorderSide(color: colors.border)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _chatInputController,
+                      decoration: InputDecoration(
+                        hintText: 'Viết tin nhắn...',
+                        hintStyle: TextStyle(
+                          fontSize: 13.5,
+                          color: colors.textMuted,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: colors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: colors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(color: AppTheme.primary),
+                        ),
+                        filled: true,
+                        fillColor: colors.bgSurface,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: colors.border),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: AppTheme.primary),
-                      ),
-                      filled: true,
-                      fillColor: colors.bgSurface,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send_rounded, color: AppTheme.primary),
-                  onPressed: () {
-                    final text = _chatInputController.text.trim();
-                    if (text.isNotEmpty) {
-                      ref
-                          .read(
-                            socialSessionDetailProvider(session.id).notifier,
-                          )
-                          .addChatMessage(text);
-                      ref
-                          .read(socialSessionsProvider.notifier)
-                          .addChatMessage(session.id, text);
-                      _chatInputController.clear();
-                    }
-                  },
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: AppTheme.primary,
+                    ),
+                    onPressed: _sending ? null : _send,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
       ],
     );
   }

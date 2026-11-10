@@ -43,6 +43,8 @@ Widget _board(
   bool interactive = true,
   bool isDoubles = true,
   bool finishSetEnabled = true,
+  bool loseServe = true,
+  bool loseServeChangesHand = false,
   int score1 = 0,
   int score2 = 0,
   bool flipped = false,
@@ -81,6 +83,10 @@ Widget _board(
         : null,
     onSwitchEnds: interactive ? () => spy.calls.add('switchEnds') : null,
     onUndo: interactive ? () => spy.calls.add('undo') : null,
+    onLoseServe: interactive && loseServe
+        ? () => spy.calls.add('loseServe')
+        : null,
+    loseServeChangesHand: loseServeChangesHand,
     onRestoreAutomatic: interactive ? () => spy.calls.add('restore') : null,
     onToggleAutoSwitch: interactive ? () => spy.calls.add('auto') : null,
     onFinishSet: interactive ? () => spy.calls.add('finishSet') : null,
@@ -764,5 +770,98 @@ void main() {
 
       expect(find.byTooltip('Undo'), findsNothing);
     });
+  });
+
+  group('TC-SERVE-APP-06 one serve button in the middle of the bottom bar', () {
+    for (final size in [const Size(844, 390), const Size(390, 844)]) {
+      testWidgets('sits centred between the two +/- pairs on $size', (
+        tester,
+      ) async {
+        final spy = _Spy();
+        await _pump(
+          tester,
+          _board(
+            spy,
+            axis: size.width > size.height ? Axis.horizontal : Axis.vertical,
+            startedAt: DateTime(2026, 11, 9),
+          ),
+          size: size,
+        );
+
+        final serve = find.byTooltip('Change serve');
+        expect(serve, findsOneWidget);
+        final centre = tester.getCenter(serve);
+        final minus1 = tester.getCenter(
+          find.byTooltip('Remove point for team 1'),
+        );
+        final minus2 = tester.getCenter(
+          find.byTooltip('Remove point for team 2'),
+        );
+        // Same row as the +/- buttons, exactly on the middle of the screen,
+        // and between the two pairs.
+        expect((centre.dy - minus1.dy).abs(), lessThan(1));
+        expect((centre.dx - size.width / 2).abs(), lessThan(1));
+        expect(centre.dx, greaterThan(minus1.dx));
+        expect(centre.dx, lessThan(minus2.dx));
+        expect(tester.takeException(), isNull);
+
+        await tester.tap(serve);
+        expect(spy.calls, ['loseServe']);
+      });
+    }
+
+    testWidgets('a viewer, or a court without the callback, has no button', (
+      tester,
+    ) async {
+      await _pump(tester, _board(_Spy(), interactive: false));
+      expect(find.byTooltip('Change serve'), findsNothing);
+
+      await _pump(tester, _board(_Spy(), loseServe: false));
+      expect(find.byTooltip('Change serve'), findsNothing);
+    });
+  });
+
+  group('TC-SERVE-APP-08 the one button is named after its next step', () {
+    testWidgets('serve 1: "Switch server" (hand change), same press', (
+      tester,
+    ) async {
+      final spy = _Spy();
+      await _pump(tester, _board(spy, loseServeChangesHand: true));
+
+      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.text('Switch server'), findsOneWidget);
+      await tester.tap(find.byTooltip('Switch server'));
+      expect(spy.calls, ['loseServe']);
+    });
+
+    testWidgets('serve 2, opening serve or singles: "Change serve"', (
+      tester,
+    ) async {
+      await _pump(tester, _board(_Spy()));
+
+      expect(find.byTooltip('Switch server'), findsNothing);
+      expect(find.text('Change serve'), findsOneWidget);
+    });
+
+    for (final size in [const Size(844, 390), const Size(390, 844)]) {
+      testWidgets('the labelled button stays centred on $size', (
+        tester,
+      ) async {
+        await _pump(
+          tester,
+          _board(
+            _Spy(),
+            loseServeChangesHand: true,
+            axis: size.width > size.height ? Axis.horizontal : Axis.vertical,
+            startedAt: DateTime(2026, 11, 9),
+          ),
+          size: size,
+        );
+
+        final centre = tester.getCenter(find.byTooltip('Switch server'));
+        expect((centre.dx - size.width / 2).abs(), lessThan(1));
+        expect(tester.takeException(), isNull);
+      });
+    }
   });
 }

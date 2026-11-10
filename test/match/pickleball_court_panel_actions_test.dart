@@ -225,12 +225,53 @@ Future<void> _openMenu(WidgetTester tester) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('TC-SERVE-APP-05 no separate lose-serve button', () {
-    testWidgets('strict side-out: the receiver plus does it', (tester) async {
+  group('TC-SERVE-APP-05 one serve button, only where serve turns exist', () {
+    testWidgets('strict side-out: exactly one serve button in the bar', (tester) async {
       await _pumpPanel(tester, log: <String>[], context: _context(serverNumber: 1));
 
-      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
       expect(find.text('LOSE SERVE'), findsNothing);
+    });
+
+    testWidgets('TC-SERVE-APP-08 serve 1 after the opening reads "Switch server"', (
+      tester,
+    ) async {
+      await _pumpPanel(
+        tester,
+        log: <String>[],
+        context: _context(serverNumber: 1),
+        state: _state(
+          serve: const PickleballServeState(serverNumber: 1, openingDone: true),
+        ),
+      );
+      expect(find.byTooltip('Switch server'), findsOneWidget);
+      expect(find.byTooltip('Change serve'), findsNothing);
+    });
+
+    testWidgets('TC-SERVE-APP-08 the opening serve reads "Change serve"', (
+      tester,
+    ) async {
+      await _pumpPanel(
+        tester,
+        log: <String>[],
+        context: _context(serverNumber: 1),
+        state: _state(),
+      );
+      expect(find.byTooltip('Change serve'), findsOneWidget);
+      expect(find.byTooltip('Switch server'), findsNothing);
+    });
+
+    testWidgets('TC-SERVE-APP-08 singles reads "Change serve"', (tester) async {
+      await _pumpPanel(
+        tester,
+        log: <String>[],
+        context: _context(isDoubles: false),
+        state: _state(
+          serve: const PickleballServeState(serverNumber: 1, openingDone: true),
+        ),
+      );
+      expect(find.byTooltip('Change serve'), findsOneWidget);
+      expect(find.byTooltip('Switch server'), findsNothing);
     });
 
     testWidgets('rally rule has none either', (tester) async {
@@ -244,10 +285,10 @@ void main() {
       expect(find.byTooltip('Change serve'), findsNothing);
     });
 
-    testWidgets('Lite has none either', (tester) async {
+    testWidgets('Lite with side-out serve turns has it too', (tester) async {
       await _pumpPanel(tester, log: <String>[], state: _state(lite: true));
 
-      expect(find.byTooltip('Change serve'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsOneWidget);
     });
   });
 
@@ -381,6 +422,7 @@ void main() {
       await _pumpPanel(tester, log: <String>[], canScore: false);
 
       expect(find.byTooltip('Add point for team 2'), findsNothing);
+      expect(find.byTooltip('Change serve'), findsNothing);
       expect(find.text('LOSE SERVE'), findsNothing);
     });
   });

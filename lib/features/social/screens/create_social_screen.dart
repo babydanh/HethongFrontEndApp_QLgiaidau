@@ -138,6 +138,50 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
   bool _isSubmitting = false;
   bool _locationChanged = false;
 
+  // Set after a submit attempt hit missing fields; rows then show red hints.
+  bool _showErrors = false;
+  final _dateKey = GlobalKey();
+  final _locationKey = GlobalKey();
+  final _venueKey = GlobalKey();
+  final _privacyKey = GlobalKey();
+
+  bool get _isDateInvalid => !_selectedDateTime.isAfter(DateTime.now());
+
+  bool get _isLocationInvalid {
+    final place = _selectedPlace;
+    if (place == null) return true;
+    if (place.isDeferred) return false;
+    return !place.canApply ||
+        (widget.initialSession == null && !place.hasPin);
+  }
+
+  bool get _isVenueTextMissing {
+    final place = _selectedPlace;
+    if (place == null || place.isDeferred) return false;
+    return _venueNameController.text.trim().isEmpty ||
+        _venueAddressController.text.trim().isEmpty;
+  }
+
+  bool get _isClubOnlyWithoutClub =>
+      _privacy == 'Nội bộ CLB' && !_isClubAttached;
+
+  /// Scrolls the form to the first row that failed validation.
+  void _scrollToFirstError() {
+    final firstInvalid = [
+      if (_isDateInvalid) _dateKey,
+      if (_isLocationInvalid) _locationKey,
+      if (_isVenueTextMissing) _venueKey,
+      if (_isClubOnlyWithoutClub) _privacyKey,
+    ].firstOrNull;
+    final target = firstInvalid?.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      alignment: 0.2,
+      duration: const Duration(milliseconds: 250),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -576,16 +620,9 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     final selectedPlace = _selectedPlace;
     final missing = <String>[];
     if (sport.slug.isEmpty) missing.add(l10n.socialCreatePickSportError);
-    if (!_selectedDateTime.isAfter(DateTime.now())) {
-      missing.add(l10n.socialCreatePickFutureTimeError);
-    }
-    if (selectedPlace == null) {
-      missing.add(l10n.socialCreatePickLocationError);
-    } else if (!selectedPlace.isDeferred) {
-      if (!selectedPlace.canApply ||
-          (widget.initialSession == null && !selectedPlace.hasPin)) {
-        missing.add(l10n.socialCreatePickLocationError);
-      }
+    if (_isDateInvalid) missing.add(l10n.socialCreatePickFutureTimeError);
+    if (_isLocationInvalid) missing.add(l10n.socialCreatePickLocationError);
+    if (selectedPlace != null && !selectedPlace.isDeferred) {
       if (_venueNameController.text.trim().isEmpty) {
         missing.add(l10n.socialCreateVenueNameRequired);
       }
@@ -593,7 +630,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
         missing.add(l10n.socialCreateVenueAddressRequired);
       }
     }
-    if (_privacy == 'Nội bộ CLB' && !_isClubAttached) {
+    if (_isClubOnlyWithoutClub) {
       missing.add(l10n.socialCreateClubOnlyRequiresClub);
     }
     final formValid = _formKey.currentState?.validate() ?? false;
@@ -601,6 +638,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       missing.add(l10n.socialCreateLocationRequired);
     }
     if (missing.isNotEmpty) {
+      setState(() => _showErrors = true);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scrollToFirstError(),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(missing.join('\n')),
@@ -1136,6 +1177,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       const SizedBox(height: 12),
 
                       SocialSettingTile(
+                        key: _dateKey,
+                        errorText: _showErrors && _isDateInvalid
+                            ? l10n.socialCreatePickFutureTimeError
+                            : null,
                         icon: Icons.calendar_month_outlined,
                         label: l10n.socialCreatePickDateTime,
                         value: _formatDateTimeDisplay(_selectedDateTime),
@@ -1152,13 +1197,18 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       const SizedBox(height: 10),
 
                       SocialLocationRow(
+                        key: _locationKey,
                         place: _selectedPlace,
                         onTap: _chooseLocation,
+                        errorText: _showErrors && _isLocationInvalid
+                            ? l10n.socialCreatePickLocationError
+                            : null,
                       ),
                       if (_selectedPlace != null &&
                           !_selectedPlace!.isDeferred) ...[
                         const SizedBox(height: 10),
                         TextFormField(
+                          key: _venueKey,
                           controller: _venueNameController,
                           maxLength: 255,
                           decoration: InputDecoration(
@@ -1195,6 +1245,10 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
                       const SizedBox(height: 14),
 
                       SocialSettingTile(
+                        key: _privacyKey,
+                        errorText: _showErrors && _isClubOnlyWithoutClub
+                            ? l10n.socialCreateClubOnlyRequiresClub
+                            : null,
                         icon: Icons.lock_outline_rounded,
                         label: l10n.socialCreatePrivacyLabel,
                         value: _privacyLabel(l10n),

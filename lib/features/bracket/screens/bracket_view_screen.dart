@@ -11,6 +11,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
+import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
@@ -29,6 +31,7 @@ import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_filter_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_search_filter_bar.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_management_bar.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
@@ -204,7 +207,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
           setState(() => _selectedDivisionId = id);
           widget.onDivisionChanged?.call(id);
         },
-        onManage: widget.onManageDivisions,
       ),
     );
   }
@@ -460,13 +462,20 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
 
                   final effectiveIsLite =
                       widget.isLite || tournament?.isLite == true;
+                  // A global ADMIN role must not leak scoring rights across
+                  // tournaments: only the creator admin keeps them.
+                  final adminLocked = isAdminScoringLocked(
+                    userId: ref.watch(userProfileProvider).value?.id,
+                    isAdmin: auth.role == UserRole.admin,
+                    createdBy: tournament?.creatorId,
+                  );
+                  final adminMayScore =
+                      auth.role == UserRole.admin && !adminLocked;
                   final canActAsReferee =
-                      effectiveIsLite ||
-                      auth.role == UserRole.admin ||
-                      widget.isReferee;
+                      effectiveIsLite || adminMayScore || widget.isReferee;
                   final canScoreMatch =
-                      auth.role == UserRole.admin ||
-                      widget.canEditBracket ||
+                      adminMayScore ||
+                      (widget.canEditBracket && !adminLocked) ||
                       widget.isReferee;
                   final isReadOnlyMode =
                       !effectiveIsLite && auth.role == UserRole.viewer;
@@ -540,17 +549,17 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
               );
     final divisions = _divisions;
     final showStrip =
-        !_hasRequestedDivision &&
-        divisions.isNotEmpty &&
-        (divisions.length > 1 || widget.onManageDivisions != null);
+        !_hasRequestedDivision && divisions.isNotEmpty && divisions.length > 1;
+    final managementBar = _buildManagementBar(tournament, auth);
     final stageOps = _buildStageOperationsEntry(l10n, tournament, auth);
-    final bodyContent = showStrip || stageOps != null
+    final bodyContent = showStrip || stageOps != null || managementBar != null
         ? Column(
             mainAxisSize: widget.isEmbedded
                 ? MainAxisSize.min
                 : MainAxisSize.max,
             children: [
               if (showStrip) _buildDivisionSelector(divisions),
+              ?managementBar,
               ?stageOps,
               if (widget.isEmbedded)
                 matchContent
@@ -626,6 +635,48 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                 _buildGroupTabItem(2, l10n.bracketView_schedule),
               ],
       ),
+    );
+  }
+
+  /// Organizers/admins only: manage icon plus create/delete bracket. Hidden
+  /// until the tournament and the division's matches have loaded.
+  Widget? _buildManagementBar(Tournament? tournament, AuthState auth) {
+    final divisionId = _activeDivisionId;
+    if (divisionId == null || divisionId.isEmpty || tournament == null) {
+      return null;
+    }
+    if (!(widget.canEditBracket || auth.role == UserRole.admin)) return null;
+    // Only the dedicated Lite management screen keeps its own pairing flow. A quick
+    // (Lite-family) tournament opened in the hub still needs Create/Delete bracket.
+    if (widget.isLite) return null;
+    final matches = ref
+        .watch(
+          bracketMatchesWithDivisionProvider((
+            tournamentId: widget.tournamentId,
+            divisionId: divisionId,
+          )),
+        )
+        .value;
+    if (matches == null) return null;
+    final division = tournament.divisions
+        .where((division) => division.id == divisionId)
+        .firstOrNull;
+    final bracketType =
+        (widget.bracketType ?? division?.bracketType ?? tournament.bracketType)
+            .trim()
+            .toLowerCase();
+    final isGroupStageKnockout =
+        bracketType == 'group_stage_knockout' ||
+        bracketType == 'groupstageknockout';
+    return BracketManagementBar(
+      key: ValueKey('bracket-mgmt-bar-$divisionId'),
+      tournamentId: widget.tournamentId,
+      divisionId: divisionId,
+      hasBracket: matches.isNotEmpty,
+      matchCount: matches.length,
+      participantCount: division?.participantCount ?? 0,
+      seedingType: isGroupStageKnockout ? 'SEEDED' : 'RANDOM',
+      onManageDivisions: widget.onManageDivisions,
     );
   }
 

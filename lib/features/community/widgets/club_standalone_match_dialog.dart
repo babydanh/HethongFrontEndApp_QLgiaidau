@@ -13,7 +13,10 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
 
 class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
-  final String communityId;
+  /// Đúng một trong [communityId] / [socialSessionId] (buổi Social cá nhân
+  /// không gắn CLB; khi đó bắt buộc truyền [preselectedMembers]).
+  final String? communityId;
+  final String? socialSessionId;
   final String? clubName;
   final String? sessionId;
   final VoidCallback? onMatchCreated;
@@ -25,7 +28,8 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
 
   const ClubStandaloneMatchDialog({
     super.key,
-    required this.communityId,
+    this.communityId,
+    this.socialSessionId,
     this.clubName,
     this.sessionId,
     this.onMatchCreated,
@@ -34,7 +38,8 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
 
   static Future<MatchModel?> show(
     BuildContext context, {
-    required String communityId,
+    String? communityId,
+    String? socialSessionId,
     String? clubName,
     String? sessionId,
     VoidCallback? onMatchCreated,
@@ -45,6 +50,7 @@ class ClubStandaloneMatchDialog extends ConsumerStatefulWidget {
       barrierDismissible: true,
       builder: (_) => ClubStandaloneMatchDialog(
         communityId: communityId,
+        socialSessionId: socialSessionId,
         clubName: clubName,
         sessionId: sessionId,
         onMatchCreated: onMatchCreated,
@@ -77,9 +83,9 @@ class _ClubStandaloneMatchDialogState
   void initState() {
     super.initState();
     final preselected = widget.preselectedMembers;
-    if (preselected != null) {
+    if (preselected != null || (widget.communityId ?? '').isEmpty) {
       final uniqueMembers = <String, CommunityMemberModel>{};
-      for (final member in preselected) {
+      for (final member in preselected ?? const <CommunityMemberModel>[]) {
         final userId = member.userId.trim();
         if (userId.isNotEmpty) uniqueMembers[userId] = member;
       }
@@ -105,7 +111,7 @@ class _ClubStandaloneMatchDialogState
     try {
       final repo = ref.read(communityRepositoryProvider);
       final members = await repo.getMembers(
-        widget.communityId,
+        widget.communityId!,
         limit: 100,
         status: 'JOINED',
       );
@@ -162,6 +168,7 @@ class _ClubStandaloneMatchDialogState
       final sessionRepo = ref.read(clubMatchSessionRepositoryProvider);
       final createdSessionMatch = await sessionRepo.createStandaloneMatch(
         communityId: widget.communityId,
+        socialSessionId: widget.socialSessionId,
         sideA: sideAList,
         sideB: sideBList,
         key: requestKey,

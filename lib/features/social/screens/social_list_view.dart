@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/features/home/widgets/explore_new_tournaments.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_date_selector.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_nearby_filter.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.dart';
@@ -44,6 +46,15 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
     final filterState = ref.watch(socialFilterProvider);
     final locationState = ref.watch(userLocationProvider);
     final sessionsAsync = ref.watch(filteredSocialSessionsProvider);
+    // Just-opened / just-started tournaments join the time slots (not Nearby).
+    final tournaments = ref.watch(tournamentsProvider).asData?.value;
+    final newEntries = filterState.nearbyOnly || tournaments == null
+        ? const <NewTournamentEntry>[]
+        : newTournamentEntriesForDay(
+            tournaments,
+            filterState.selectedDate,
+            DateTime.now(),
+          );
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -63,6 +74,10 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
 
           // Toggle "Gần bạn" + chips bán kính + banner quyền vị trí
           const SliverToBoxAdapter(child: SocialNearbyFilter()),
+
+          // Nearby has no time slots, so the tournaments stay a block there.
+          if (filterState.nearbyOnly)
+            const SliverToBoxAdapter(child: ExploreNewTournaments()),
 
           const SliverToBoxAdapter(child: SizedBox(height: 6)),
 
@@ -123,7 +138,7 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
               ),
             ],
             data: (sessions) {
-              if (sessions.isEmpty) {
+              if (sessions.isEmpty && newEntries.isEmpty) {
                 final nearbyNotifier = ref.read(
                   socialSessionsProvider.notifier,
                 );
@@ -223,20 +238,28 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
                 ];
               }
 
-              // Regular list mode keeps the existing time-slot grouping.
+              // Regular list mode groups sessions and new tournaments by slot.
               final Map<String, List<SocialSessionModel>> groupedSessions = {};
               for (final session in sessions) {
                 groupedSessions
                     .putIfAbsent(session.timeSlot, () => [])
                     .add(session);
               }
-              final sortedTimeSlots = groupedSessions.keys.toList()..sort();
+              final Map<String, List<NewTournamentEntry>> groupedNew = {};
+              for (final entry in newEntries) {
+                groupedNew.putIfAbsent(entry.timeSlot, () => []).add(entry);
+              }
+              final sortedTimeSlots = {
+                ...groupedSessions.keys,
+                ...groupedNew.keys,
+              }.toList()..sort();
 
               return [
                 SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final timeSlot = sortedTimeSlots[index];
-                    final sessionsInSlot = groupedSessions[timeSlot]!;
+                    final sessionsInSlot = groupedSessions[timeSlot] ?? [];
+                    final newInSlot = groupedNew[timeSlot] ?? [];
                     final isCollapsed = filterState.collapsedTimeSlots.contains(
                       timeSlot,
                     );
@@ -247,7 +270,7 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
                         // Time Slot Group Header
                         _buildTimeSlotHeader(
                           timeSlot: timeSlot,
-                          count: sessionsInSlot.length,
+                          count: sessionsInSlot.length + newInSlot.length,
                           isCollapsed: isCollapsed,
                           isDark: isDark,
                           onToggle: () {
@@ -258,6 +281,15 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
                         ),
 
                         // Cards in this slot
+                        if (!isCollapsed)
+                          for (final entry in newInSlot)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                              child: NewTournamentCard(
+                                tournament: entry.tournament,
+                                live: entry.live,
+                              ),
+                            ),
                         if (!isCollapsed)
                           ...sessionsInSlot.map(
                             (session) => SocialSessionCard(

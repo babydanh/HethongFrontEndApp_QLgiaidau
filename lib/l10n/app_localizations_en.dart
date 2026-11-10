@@ -2233,6 +2233,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickleballCourtChangeServe => 'Change serve';
 
   @override
+  String get pickleballCourtSwitchServer => 'Switch server';
+
+  @override
   String get pickleballCourtServeTag => 'SERVE';
 
   @override
@@ -7834,6 +7837,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeNoTournaments => 'No tournaments found';
+
+  @override
+  String get exploreNewOpenedTitle => 'Just opened registration';
+
+  @override
+  String get exploreNewStartedTitle => 'Just started';
+
+  @override
+  String get exploreNewBadgeOpen => 'Registration open';
+
+  @override
+  String get exploreNewBadgeLive => 'Live now';
+
+  @override
+  String exploreNewSlots(int current, int max) {
+    return '$current/$max slots';
+  }
+
+  @override
+  String get exploreNewFree => 'Free';
 
   @override
   String get homeNoTournamentsHint =>
@@ -17539,6 +17562,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pair split. Both athletes are waiting for a partner.';
 
   @override
+  String get orgMgmtParticipantKick => 'Remove from tournament';
+
+  @override
+  String orgMgmtParticipantKickConfirm(String name) {
+    return 'Remove $name from the tournament?';
+  }
+
+  @override
+  String get orgMgmtParticipantKicked => 'Removed from the tournament.';
+
+  @override
   String get participantDetailContact => 'Contact';
 
   @override
@@ -19425,4 +19459,56 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cbdTennisMatchTiebreak =>
       'MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)';
+
+  @override
+  String get bracketMgmt_manageTooltip => 'Manage';
+
+  @override
+  String get bracketMgmt_create => 'Create bracket';
+
+  @override
+  String get bracketMgmt_delete => 'Delete bracket';
+
+  @override
+  String get bracketMgmt_minParticipants =>
+      'At least 2 players or teams are needed to create a bracket.';
+
+  @override
+  String get bracketMgmt_createDone => 'Bracket created.';
+
+  @override
+  String get bracketMgmt_deleteConfirmTitle =>
+      'Delete this division\'s bracket?';
+
+  @override
+  String bracketMgmt_deleteConfirmBody(int matchCount) {
+    return 'All $matchCount matches and the schedule of this division only will be deleted. Registrations and other divisions are kept. This cannot be undone.';
+  }
+
+  @override
+  String get bracketMgmt_deleteConfirm => 'Confirm delete';
+
+  @override
+  String bracketMgmt_deleteDone(int stageCount, int matchCount) {
+    return 'Bracket deleted: $stageCount stages, $matchCount matches.';
+  }
+
+  @override
+  String get bracketMgmt_cancel => 'Back';
+
+  @override
+  String get schedMgmt_courtsTooltip => 'Create and manage courts';
+
+  @override
+  String get schedMgmt_hoursTooltip => 'Court hours';
+
+  @override
+  String get schedMgmt_arrangeTooltip => 'Schedule matches';
+
+  @override
+  String get schedMgmt_createCourtCta => 'Create court';
+
+  @override
+  String get schedMgmt_emptyHint =>
+      'No courts yet. Create a court to start scheduling.';
 }

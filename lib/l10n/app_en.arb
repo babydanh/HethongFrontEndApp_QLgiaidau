@@ -794,6 +794,7 @@
   "@cbdPbReceiverWonHandOver": {"placeholders": {"team": {"type": "int"}}},
   "pickleballCourtEnd": "End",
   "pickleballCourtChangeServe": "Change serve",
+  "pickleballCourtSwitchServer": "Switch server",
   "pickleballCourtServeTag": "SERVE",
   "pickleballCourtSportName": "pickleball",
   "pickleballCourtSetNumber": "Set {number}",
@@ -2893,6 +2894,13 @@
   "homeClubFilterTitle": "Club filters",
   "homeRankingFilterTitle": "ELO ranking filters",
   "homeNoTournaments": "No tournaments found",
+  "exploreNewOpenedTitle": "Just opened registration",
+  "exploreNewStartedTitle": "Just started",
+  "exploreNewBadgeOpen": "Registration open",
+  "exploreNewBadgeLive": "Live now",
+  "exploreNewSlots": "{current}/{max} slots",
+  "@exploreNewSlots": {"placeholders": {"current": {"type": "int"}, "max": {"type": "int"}}},
+  "exploreNewFree": "Free",
   "homeNoTournamentsHint": "Try changing the filters or search keyword",
   "homeNoMatchingTournaments": "No matching tournaments found",
   "homeNoClubs": "No clubs found",
@@ -6965,6 +6973,16 @@
     }
   },
   "participantUnpaired": "Pair split. Both athletes are waiting for a partner.",
+  "orgMgmtParticipantKick": "Remove from tournament",
+  "orgMgmtParticipantKickConfirm": "Remove {name} from the tournament?",
+  "@orgMgmtParticipantKickConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "orgMgmtParticipantKicked": "Removed from the tournament.",
   "participantDetailContact": "Contact",
   "participantDetailEditContacts": "Edit athlete contacts",
   "participantDetailNoMembers": "No members in this profile.",
@@ -7678,5 +7696,22 @@
   "cbdRallyBreakBetweenGames": "120-second rest between games, change ends",
   "cbdRallyChangeEnds": "Deciding game: change ends (a side reached 5)",
   "cbdTennisServe": "● SERVE",
-  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)"
+  "cbdTennisMatchTiebreak": "MATCH TIE-BREAK · first to 10, win by 2, decides the match (replaces the deciding set)",
+  "bracketMgmt_manageTooltip": "Manage",
+  "bracketMgmt_create": "Create bracket",
+  "bracketMgmt_delete": "Delete bracket",
+  "bracketMgmt_minParticipants": "At least 2 players or teams are needed to create a bracket.",
+  "bracketMgmt_createDone": "Bracket created.",
+  "bracketMgmt_deleteConfirmTitle": "Delete this division's bracket?",
+  "bracketMgmt_deleteConfirmBody": "All {matchCount} matches and the schedule of this division only will be deleted. Registrations and other divisions are kept. This cannot be undone.",
+  "@bracketMgmt_deleteConfirmBody": {"placeholders": {"matchCount": {"type": "int"}}},
+  "bracketMgmt_deleteConfirm": "Confirm delete",
+  "bracketMgmt_deleteDone": "Bracket deleted: {stageCount} stages, {matchCount} matches.",
+  "@bracketMgmt_deleteDone": {"placeholders": {"stageCount": {"type": "int"}, "matchCount": {"type": "int"}}},
+  "bracketMgmt_cancel": "Back",
+  "schedMgmt_courtsTooltip": "Create and manage courts",
+  "schedMgmt_hoursTooltip": "Court hours",
+  "schedMgmt_arrangeTooltip": "Schedule matches",
+  "schedMgmt_createCourtCta": "Create court",
+  "schedMgmt_emptyHint": "No courts yet. Create a court to start scheduling."
 }

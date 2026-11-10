@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/data/models/team_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/bracket_format_icons.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -219,6 +220,9 @@ class _TeamsTabState extends State<TeamsTab> {
                   final items = <Widget>[];
                   for (final division in sortedDivisions) {
                     final teamsInDiv = grouped[division]!;
+                    final headingDivision = widget.divisions
+                        .where((d) => d.name == division)
+                        .firstOrNull;
                     final isFemale = division.contains('Nữ');
                     final isMale = division.contains('Nam');
                     final themeColor = isFemale
@@ -241,6 +245,14 @@ class _TeamsTabState extends State<TeamsTab> {
                                 ),
                               ),
                               const SizedBox(width: 8),
+                              if (headingDivision != null) ...[
+                                BracketFormatIcons.getIcon(
+                                  headingDivision.bracketType,
+                                  size: 16,
+                                  color: themeColor,
+                                ),
+                                const SizedBox(width: 6),
+                              ],
                               Text(
                                 division,
                                 style: TextStyle(

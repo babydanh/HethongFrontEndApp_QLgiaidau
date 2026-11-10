@@ -2228,6 +2228,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pickleballCourtChangeServe => 'Đổi giao';
 
   @override
+  String get pickleballCourtSwitchServer => 'Đổi tay';
+
+  @override
   String get pickleballCourtServeTag => 'GIAO';
 
   @override
@@ -7826,6 +7829,26 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeNoTournaments => 'Không tìm thấy giải đấu';
+
+  @override
+  String get exploreNewOpenedTitle => 'Vừa mở đăng ký';
+
+  @override
+  String get exploreNewStartedTitle => 'Vừa bắt đầu';
+
+  @override
+  String get exploreNewBadgeOpen => 'Mở đăng ký';
+
+  @override
+  String get exploreNewBadgeLive => 'Đang diễn ra';
+
+  @override
+  String exploreNewSlots(int current, int max) {
+    return '$current/$max suất';
+  }
+
+  @override
+  String get exploreNewFree => 'Miễn phí';
 
   @override
   String get homeNoTournamentsHint => 'Thử thay đổi bộ lọc hoặc từ khoá';
@@ -17470,6 +17493,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get participantUnpaired => 'Đã tách cặp. Hai VĐV đang chờ ghép lại.';
 
   @override
+  String get orgMgmtParticipantKick => 'Loại khỏi giải';
+
+  @override
+  String orgMgmtParticipantKickConfirm(String name) {
+    return 'Loại $name khỏi giải?';
+  }
+
+  @override
+  String get orgMgmtParticipantKicked => 'Đã loại khỏi giải.';
+
+  @override
   String get participantDetailContact => 'Liên hệ';
 
   @override
@@ -19345,4 +19379,55 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get cbdTennisMatchTiebreak =>
       'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)';
+
+  @override
+  String get bracketMgmt_manageTooltip => 'Quản lý';
+
+  @override
+  String get bracketMgmt_create => 'Tạo bracket';
+
+  @override
+  String get bracketMgmt_delete => 'Xoá bracket';
+
+  @override
+  String get bracketMgmt_minParticipants =>
+      'Cần ít nhất 2 người hoặc đội để tạo bracket.';
+
+  @override
+  String get bracketMgmt_createDone => 'Đã tạo bracket.';
+
+  @override
+  String get bracketMgmt_deleteConfirmTitle => 'Xoá bracket của nội dung này?';
+
+  @override
+  String bracketMgmt_deleteConfirmBody(int matchCount) {
+    return 'Toàn bộ $matchCount trận và lịch của riêng nội dung này sẽ bị xoá. Danh sách đăng ký và các nội dung khác được giữ nguyên. Không thể khôi phục.';
+  }
+
+  @override
+  String get bracketMgmt_deleteConfirm => 'Xác nhận xoá';
+
+  @override
+  String bracketMgmt_deleteDone(int stageCount, int matchCount) {
+    return 'Đã xoá bracket: $stageCount giai đoạn, $matchCount trận.';
+  }
+
+  @override
+  String get bracketMgmt_cancel => 'Quay lại';
+
+  @override
+  String get schedMgmt_courtsTooltip => 'Tạo sân và quản lý sân';
+
+  @override
+  String get schedMgmt_hoursTooltip => 'Khung giờ sân';
+
+  @override
+  String get schedMgmt_arrangeTooltip => 'Xếp lịch trận';
+
+  @override
+  String get schedMgmt_createCourtCta => 'Tạo sân';
+
+  @override
+  String get schedMgmt_emptyHint =>
+      'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.';
 }

@@ -4274,6 +4274,12 @@ abstract class AppLocalizations {
   /// **'Đổi giao'**
   String get pickleballCourtChangeServe;
 
+  /// No description provided for @pickleballCourtSwitchServer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi tay'**
+  String get pickleballCourtSwitchServer;
+
   /// No description provided for @pickleballCourtServeTag.
   ///
   /// In vi, this message translates to:
@@ -14539,6 +14545,42 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không tìm thấy giải đấu'**
   String get homeNoTournaments;
+
+  /// No description provided for @exploreNewOpenedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa mở đăng ký'**
+  String get exploreNewOpenedTitle;
+
+  /// No description provided for @exploreNewStartedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa bắt đầu'**
+  String get exploreNewStartedTitle;
+
+  /// No description provided for @exploreNewBadgeOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở đăng ký'**
+  String get exploreNewBadgeOpen;
+
+  /// No description provided for @exploreNewBadgeLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get exploreNewBadgeLive;
+
+  /// No description provided for @exploreNewSlots.
+  ///
+  /// In vi, this message translates to:
+  /// **'{current}/{max} suất'**
+  String exploreNewSlots(int current, int max);
+
+  /// No description provided for @exploreNewFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get exploreNewFree;
 
   /// No description provided for @homeNoTournamentsHint.
   ///
@@ -31483,6 +31525,24 @@ abstract class AppLocalizations {
   /// **'Đã tách cặp. Hai VĐV đang chờ ghép lại.'**
   String get participantUnpaired;
 
+  /// No description provided for @orgMgmtParticipantKick.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại khỏi giải'**
+  String get orgMgmtParticipantKick;
+
+  /// No description provided for @orgMgmtParticipantKickConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại {name} khỏi giải?'**
+  String orgMgmtParticipantKickConfirm(String name);
+
+  /// No description provided for @orgMgmtParticipantKicked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã loại khỏi giải.'**
+  String get orgMgmtParticipantKicked;
+
   /// No description provided for @participantDetailContact.
   ///
   /// In vi, this message translates to:
@@ -34836,6 +34896,96 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'MATCH TIE-BREAK · 10 điểm, cách 2 để thắng trận (thay set quyết định)'**
   String get cbdTennisMatchTiebreak;
+
+  /// No description provided for @bracketMgmt_manageTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý'**
+  String get bracketMgmt_manageTooltip;
+
+  /// No description provided for @bracketMgmt_create.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo bracket'**
+  String get bracketMgmt_create;
+
+  /// No description provided for @bracketMgmt_delete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá bracket'**
+  String get bracketMgmt_delete;
+
+  /// No description provided for @bracketMgmt_minParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần ít nhất 2 người hoặc đội để tạo bracket.'**
+  String get bracketMgmt_minParticipants;
+
+  /// No description provided for @bracketMgmt_createDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo bracket.'**
+  String get bracketMgmt_createDone;
+
+  /// No description provided for @bracketMgmt_deleteConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá bracket của nội dung này?'**
+  String get bracketMgmt_deleteConfirmTitle;
+
+  /// No description provided for @bracketMgmt_deleteConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Toàn bộ {matchCount} trận và lịch của riêng nội dung này sẽ bị xoá. Danh sách đăng ký và các nội dung khác được giữ nguyên. Không thể khôi phục.'**
+  String bracketMgmt_deleteConfirmBody(int matchCount);
+
+  /// No description provided for @bracketMgmt_deleteConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận xoá'**
+  String get bracketMgmt_deleteConfirm;
+
+  /// No description provided for @bracketMgmt_deleteDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá bracket: {stageCount} giai đoạn, {matchCount} trận.'**
+  String bracketMgmt_deleteDone(int stageCount, int matchCount);
+
+  /// No description provided for @bracketMgmt_cancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quay lại'**
+  String get bracketMgmt_cancel;
+
+  /// No description provided for @schedMgmt_courtsTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo sân và quản lý sân'**
+  String get schedMgmt_courtsTooltip;
+
+  /// No description provided for @schedMgmt_hoursTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khung giờ sân'**
+  String get schedMgmt_hoursTooltip;
+
+  /// No description provided for @schedMgmt_arrangeTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xếp lịch trận'**
+  String get schedMgmt_arrangeTooltip;
+
+  /// No description provided for @schedMgmt_createCourtCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo sân'**
+  String get schedMgmt_createCourtCta;
+
+  /// No description provided for @schedMgmt_emptyHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.'**
+  String get schedMgmt_emptyHint;
 }
 
 class _AppLocalizationsDelegate

@@ -47,6 +47,8 @@ class CourtScoreboard extends StatelessWidget {
     required this.scoreOf,
     required this.lockReceiverPlus,
     required this.onScoreChange,
+    required this.onLoseServe,
+    required this.loseServeChangesHand,
     required this.callText,
     required this.net,
     required this.onSwitchEnds,
@@ -68,6 +70,8 @@ class CourtScoreboard extends StatelessWidget {
   final int Function(int team) scoreOf;
   final bool lockReceiverPlus;
   final void Function(int team, bool increment)? onScoreChange;
+  final VoidCallback? onLoseServe;
+  final bool loseServeChangesHand;
   final String? callText;
   final CourtNetActions net;
   final VoidCallback? onSwitchEnds;
@@ -121,6 +125,8 @@ class CourtScoreboard extends StatelessWidget {
               lockReceiverPlus: lockReceiverPlus,
               servingTeam: layout.servingTeam,
               onScoreChange: onScoreChange,
+              onLoseServe: onLoseServe,
+              loseServeChangesHand: loseServeChangesHand,
               startedAt: upright ? null : startedAt,
               upright: upright,
             ),
@@ -1113,7 +1119,8 @@ class _ScoreChip extends StatelessWidget {
   }
 }
 
-/// Clock, then + − of the left team and − + of the right team.
+/// Clock, then + − of the left team, the serve button, and − + of the right
+/// team. The serve button sits on the middle of the bar.
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.leftTeam,
@@ -1122,6 +1129,8 @@ class _BottomBar extends StatelessWidget {
     required this.lockReceiverPlus,
     required this.servingTeam,
     required this.onScoreChange,
+    required this.onLoseServe,
+    required this.loseServeChangesHand,
     required this.startedAt,
     required this.upright,
   });
@@ -1132,6 +1141,8 @@ class _BottomBar extends StatelessWidget {
   final bool lockReceiverPlus;
   final int? servingTeam;
   final void Function(int team, bool increment)? onScoreChange;
+  final VoidCallback? onLoseServe;
+  final bool loseServeChangesHand;
   final DateTime? startedAt;
 
   /// Upright phone: the buttons share the width instead of a fixed row.
@@ -1164,15 +1175,53 @@ class _BottomBar extends StatelessWidget {
     return plusFirst ? [plus, minus] : [minus, plus];
   }
 
-  /// Upright row: the two +/- pairs sit at the two edges.
+  /// One button for the serving side losing the rally. Its name is its next
+  /// step: "Switch server" (serve 1 -> 2) or "Change serve" (hand it over).
+  /// Hidden for a viewer, who has no score buttons either.
+  Widget? _serveButton(AppLocalizations l10n, double buttonWidth) {
+    final lose = onLoseServe;
+    if (lose == null || onScoreChange == null) return null;
+    final label = loseServeChangesHand
+        ? l10n.pickleballCourtSwitchServer
+        : l10n.pickleballCourtChangeServe;
+    return _BarButton(
+      tooltip: label,
+      color: _ink,
+      minWidth: buttonWidth,
+      onPressed: lose,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Text(
+          label,
+          maxLines: 1,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Upright row: the two +/- pairs sit at the two edges, the serve button
+  /// between them. Both pairs are as wide as each other, so it is centred.
   Widget _uprightRow(AppLocalizations l10n) {
+    final serve = _serveButton(l10n, 48);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         spacing: 6,
         children: [
           ..._teamButtons(l10n, leftTeam, plusFirst: true, buttonWidth: 48),
-          const Spacer(),
+          if (serve == null)
+            const Spacer()
+          else
+            Expanded(
+              child: Center(
+                child: FittedBox(fit: BoxFit.scaleDown, child: serve),
+              ),
+            ),
           ..._teamButtons(l10n, rightTeam, plusFirst: false, buttonWidth: 48),
         ],
       ),
@@ -1184,7 +1233,8 @@ class _BottomBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final controls = <Widget>[
       ..._teamButtons(l10n, leftTeam, plusFirst: true),
-      if (onScoreChange != null) const SizedBox(width: 24),
+      if (onScoreChange != null)
+        _serveButton(l10n, 56) ?? const SizedBox(width: 24),
       ..._teamButtons(l10n, rightTeam, plusFirst: false),
     ];
     final start = startedAt;
