@@ -7,7 +7,9 @@ import 'package:app_quanly_giaidau/features/community/social/widgets/community_c
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_engine.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_helpers.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_poll_builder.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -461,64 +463,29 @@ class _CommunityPostComposerSheetState
       );
 }
 
-class _AuthorRow extends StatelessWidget {
+class _AuthorRow extends ConsumerWidget {
   final String name;
   final String? avatarUrl;
 
   const _AuthorRow({required this.name, this.avatarUrl});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final cleanAvatarUrl = avatarUrl?.trim();
-    final hasAvatar = cleanAvatarUrl != null && cleanAvatarUrl.isNotEmpty;
-    final initial = (name.trim().isNotEmpty ? name.trim()[0] : 'U')
-        .toUpperCase();
+    final profile = ref.watch(userProfileProvider).asData?.value;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppTheme.primary.withValues(alpha: 0.12),
-            border: Border.all(
-              color: colors.borderLight.withValues(alpha: 0.6),
-              width: 1,
-            ),
-          ),
-          child: ClipOval(
-            child: hasAvatar
-                ? Image.network(
-                    cleanAvatarUrl,
-                    width: 42,
-                    height: 42,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Center(
-                      child: Text(
-                        initial,
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  )
-                : Center(
-                    child: Text(
-                      initial,
-                      style: const TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-          ),
+        RankAvatar(
+          imageUrl: cleanAvatarUrl,
+          name: name,
+          elo: profile?.eloPoints ?? 0,
+          tierName: profile?.tierName,
+          matchesPlayed: (profile?.eloPoints ?? 0) > 0 ? 1 : 0,
+          size: 42,
         ),
         const SizedBox(width: 12),
         Expanded(

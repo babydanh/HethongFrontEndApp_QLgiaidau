@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CommunityCommentSheet extends ConsumerStatefulWidget {
@@ -719,30 +720,14 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                     // Current User Avatar
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4, right: 8),
-                      child: CircleAvatar(
-                        radius: 17,
-                        backgroundColor: AppTheme.primaryLight,
-                        backgroundImage: profile?.avatarUrl == null
-                            ? null
-                            : NetworkImage(profile!.avatarUrl!),
-                        child: profile?.avatarUrl == null
-                            ? Builder(
-                                builder: (_) {
-                                  final name = profile?.fullName?.trim() ?? '';
-                                  final initial = name.isNotEmpty
-                                      ? name.characters.first.toUpperCase()
-                                      : 'B';
-                                  return Text(
-                                    initial,
-                                    style: const TextStyle(
-                                      color: AppTheme.primaryDark,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12.5,
-                                    ),
-                                  );
-                                },
-                              )
-                            : null,
+                      child: RankAvatar(
+                        imageUrl: profile?.avatarUrl,
+                        name: profile?.fullName ?? 'B',
+                        elo: profile?.eloPoints ?? 0,
+                        tierName: profile?.tierName,
+                        matchesPlayed: (profile?.eloPoints ?? 0) > 0 ? 1 : 0,
+                        size: 34,
+                        ringWidth: 1.5,
                       ),
                     ),
 

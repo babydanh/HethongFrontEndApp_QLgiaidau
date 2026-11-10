@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/skeleton_scope.dart';
 import 'package:flutter/material.dart';
@@ -519,48 +520,16 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 
   Widget _buildAvatar(PlayerRanking ranking, AppColorsExtension colors) {
-    const size = 38.0;
-    final hasImage = ranking.avatarUrl != null && ranking.avatarUrl!.isNotEmpty;
-    return ClipOval(
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: hasImage
-            ? Image.network(
-                ranking.avatarUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) =>
-                    _avatarFallback(ranking.fullName, colors),
-              )
-            : _avatarFallback(ranking.fullName, colors),
-      ),
+    return RankAvatar(
+      imageUrl: ranking.avatarUrl,
+      name: ranking.fullName,
+      elo: ranking.eloPoints,
+      tierName: ranking.tierName,
+      tierSource: ranking.tierSource,
+      tierAvailable: ranking.tierAvailable,
+      matchesPlayed: ranking.matchesPlayed,
+      size: 38,
     );
-  }
-
-  Widget _avatarFallback(String name, AppColorsExtension colors) {
-    return Container(
-      color: colors.border.withValues(alpha: 0.35),
-      alignment: Alignment.center,
-      child: Text(
-        _initial(name),
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
-          color: colors.textSecondary,
-        ),
-      ),
-    );
-  }
-
-  String _initial(String name) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return '?';
-    final parts = trimmed.split(' ');
-    if (parts.length >= 2) {
-      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'
-          .toUpperCase();
-    }
-    return trimmed[0].toUpperCase();
   }
 
   Widget _buildMyRankBanner(
