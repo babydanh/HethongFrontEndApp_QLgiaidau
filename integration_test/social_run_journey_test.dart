@@ -322,7 +322,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-SOCIAL-APP-11 host tạo trận Đôi mặc định, thẻ trận có Nhập nhanh và Bấm điểm, nhập điểm ra người thắng',
+    'TC-SOCIAL-APP-11 host tạo trận Đôi mặc định, chạm thẻ mở bảng nhập điểm và bảng điểm, nhập 11-5 ra người thắng',
     (tester) async {
       final api = SocialApi();
       final tag = socialTag('SR11');
@@ -373,33 +373,31 @@ void main() {
       );
       await tester.pump();
 
-      // Tạo xong, hộp thoại Nhập kết quả mở ngay; đóng lại để trận ở trạng thái "Đã lên lịch".
+      // Tạo xong, hộp thoại Nhập kết quả mở ngay; đóng lại để trận ở trạng thái "Chưa bắt đầu".
       await pumpUntilFound(tester, find.text('Nhập kết quả'), what: 'hộp thoại Nhập kết quả sau khi tạo trận');
       await shooter.snap('hop-thoai-nhap-ket-qua');
       await tester.tap(find.descendant(of: find.byType(Dialog), matching: find.byIcon(Icons.close_rounded)).first);
       await socialWait(tester);
-      await pumpUntilFound(tester, find.text('Đã lên lịch'), what: 'thẻ trận Đã lên lịch');
-      expect(find.text('Nhập nhanh'), findsOneWidget);
-      expect(find.text('Bấm điểm'), findsOneWidget);
-      await shooter.snap('the-tran-da-len-lich');
+      await pumpUntilFound(tester, find.text('Chưa bắt đầu'), what: 'thẻ trận Chưa bắt đầu');
+      // Thẻ trận gọn: không còn nút Nhập nhanh / Bấm điểm trên thẻ; chạm thẻ mở bảng nhập điểm.
+      expect(find.text('Nhập nhanh'), findsNothing);
+      expect(find.text('Bấm điểm'), findsNothing);
+      await shooter.snap('the-tran-chua-bat-dau');
 
-      // Bấm cả thẻ cũng mở bảng Nhập kết quả.
+      // Chạm thẻ mở bảng Nhập kết quả, trong đó có nút Mở bảng điểm sang màn bấm điểm trực tiếp.
       await tester.tap(find.text(hostName).first);
       await tester.pump();
-      await pumpUntilFound(tester, find.text('Nhập kết quả'), what: 'bảng Nhập kết quả khi bấm thẻ trận');
-      await tester.tap(find.descendant(of: find.byType(Dialog), matching: find.byIcon(Icons.close_rounded)).first);
-      await socialWait(tester);
-
-      // Bấm điểm mở màn bấm điểm trực tiếp rồi quay lại.
-      await tapText(tester, 'Bấm điểm');
+      await pumpUntilFound(tester, find.text('Nhập kết quả'), what: 'bảng Nhập kết quả khi chạm thẻ trận');
+      await tapFinder(tester, find.text('Mở bảng điểm'), what: 'nút Mở bảng điểm trong bảng Nhập kết quả');
       await pumpUntilFound(tester, find.byType(OfficialScorePage), what: 'màn bấm điểm trực tiếp');
       await shooter.snap('man-bam-diem');
       container.read(routerProvider).pop();
       await socialWait(tester, const Duration(seconds: 2));
 
-      // Nhập nhanh: 11 - 5, lưu, thẻ chuyển Đã hoàn thành và hiện tỉ số.
-      await tapText(tester, 'Nhập nhanh');
-      await pumpUntilFound(tester, find.text('Nhập kết quả'), what: 'bảng Nhập kết quả từ nút Nhập nhanh');
+      // Chạm thẻ lần nữa: nhập 11 - 5, lưu, thẻ chuyển Đã hoàn thành và hiện tỉ số.
+      await tester.tap(find.text(hostName).first);
+      await tester.pump();
+      await pumpUntilFound(tester, find.text('Nhập kết quả'), what: 'bảng Nhập kết quả (lần 2)');
       final scoreFields = find.descendant(of: find.byType(Dialog), matching: find.byType(TextField));
       await tester.enterText(scoreFields.at(0), '11');
       await tester.enterText(scoreFields.at(1), '5');
@@ -416,7 +414,7 @@ void main() {
       // Thẻ trận hiện số set thắng (1-0) chứ không phải điểm 11-5 (xem Ghi chú sản phẩm trong báo cáo).
       expect(find.text('1'), findsWidgets, reason: 'đội A thắng 1 set');
       expect(find.text('0'), findsWidgets, reason: 'đội B thắng 0 set');
-      expect(find.text('Nhập nhanh'), findsNothing, reason: 'trận xong không còn nút nhập');
+      
       await shooter.snap('tran-da-hoan-thanh');
       await leaveSocialSession(tester, container);
     },
