@@ -363,6 +363,8 @@ Future<ProviderContainer> signInAs(
   String password = kE2ePassword,
 }) async {
   final container = await _pumpAppWithoutGps(tester);
+  // Dựng lại app gỡ cây cũ: chat đang mở của người dùng trước ném lỗi đã biết ở đây (xem drainKnownProductErrors).
+  drainKnownProductErrors(tester);
   await ensureSignedOut(tester, container);
   container.read(routerProvider).go('/login');
   await loginWithForm(tester, email: email, password: password);
