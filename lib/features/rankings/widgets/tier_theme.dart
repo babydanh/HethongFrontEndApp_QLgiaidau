@@ -153,8 +153,32 @@ class TierPalette {
   static TierPalette fromRank(int elo, String? name, String? tierSource) =>
       fromElo(tierSource == 'DUPR' ? 0 : elo, name);
 
+  /// Màu vòng bậc Pickleball (web: `RANK_BORDER_COLORS`), null nếu không phải bậc Pickleball.
+  static Color? _pickleballRing(String nameLower) {
+    if (!nameLower.contains('pickleball')) return null;
+    if (nameLower.contains('pro')) return const Color(0xFFFBBF24);
+    if (nameLower.contains('advanced')) return const Color(0xFF10B981);
+    if (nameLower.contains('intermediate')) return const Color(0xFF3B82F6);
+    if (nameLower.contains('beginner')) return const Color(0xFF94A3B8);
+    return null;
+  }
+
+  TierPalette _withRing(Color newRing) => TierPalette(
+    grade: grade,
+    label: label,
+    fullLabel: fullLabel,
+    color: color,
+    soft: soft,
+    badgeBg: badgeBg,
+    border: border,
+    ring: newRing,
+    gradient: gradient,
+  );
+
   static TierPalette fromElo(int elo, [String? name]) {
     final nameLower = (name ?? '').toLowerCase();
+    final pickleballRing = _pickleballRing(nameLower);
+    if (pickleballRing != null) return _lowD._withRing(pickleballRing);
     if (nameLower.contains('tier s') || nameLower == 's' || elo >= 1800) {
       return _tierS;
     }
