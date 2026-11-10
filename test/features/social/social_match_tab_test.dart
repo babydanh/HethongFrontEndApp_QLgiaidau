@@ -122,7 +122,7 @@ Widget _buildTestApp({
 
 void main() {
   testWidgets(
-    'shows empty state and no warning when enough eligible club members',
+    'shows empty state and the create button without any warning text',
     (tester) async {
       final repo = _FakeMatchSessionRepository(const []);
       final participants = [
@@ -155,15 +155,14 @@ void main() {
   );
 
   testWidgets(
-    'shows not-enough-participants warning when fewer than 4 eligible club members',
+    'TC-SOC-HEAD-01 never shows a warning or a note above the match list',
     (tester) async {
-      final repo = _FakeMatchSessionRepository(const []);
       final participants = [_participant('1'), _participant('2')];
       await tester.pumpWidget(
         _buildTestApp(
           communityId: 'club-1',
           approvedParticipants: participants,
-          repository: repo,
+          repository: _FakeMatchSessionRepository(const []),
           clubMembers: [for (final p in participants) _clubMember(p.id)],
         ),
       );
@@ -171,37 +170,9 @@ void main() {
 
       expect(
         find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
-        findsOneWidget,
+        findsNothing,
       );
-    },
-  );
-
-  testWidgets(
-    'shows not-enough-participants warning when approved guests are not club members',
-    (tester) async {
-      final repo = _FakeMatchSessionRepository(const []);
-      // 4 người tham gia đã duyệt nhưng chỉ 1 người là thành viên CLB JOINED
-      // thật (3 còn lại là khách mời/ngoài CLB) — vẫn phải cảnh báo thiếu người.
-      final participants = [
-        _participant('1'),
-        _participant('2'),
-        _participant('3'),
-        _participant('4'),
-      ];
-      await tester.pumpWidget(
-        _buildTestApp(
-          communityId: 'club-1',
-          approvedParticipants: participants,
-          repository: repo,
-          clubMembers: [_clubMember('1')],
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
-        findsOneWidget,
-      );
+      expect(find.text('Tạo trận đấu'), findsOneWidget);
     },
   );
 
@@ -231,7 +202,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Đã lên lịch'), findsOneWidget);
+    expect(find.text('Chưa bắt đầu'), findsOneWidget);
+    expect(find.text('Đã lên lịch'), findsNothing);
     expect(
       find.text('Chưa có trận đấu nào được tạo cho CLB này.'),
       findsNothing,
@@ -279,8 +251,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    final quick = find.byKey(const ValueKey('match-quick-entry-match-1'));
-    final live = find.byKey(const ValueKey('match-live-score-match-1'));
+    final openScoreboard = find.text('Mở bảng điểm');
 
     testWidgets('TC-SOC-CARD-01 players without a photo show initials', (
       tester,
@@ -292,46 +263,80 @@ void main() {
       expect(find.text('Nguyễn Minh Danh'), findsOneWidget);
     });
 
-    testWidgets('TC-SOC-CARD-02 an unfinished match has both score buttons', (
+    testWidgets('TC-SOC-CARD-02 the card has no inline action buttons', (
       tester,
     ) async {
       await pump(tester, match('SCHEDULED'));
 
-      expect(quick, findsOneWidget);
-      expect(live, findsOneWidget);
-      expect(find.text('Nhập nhanh'), findsOneWidget);
-      expect(find.text('Bấm điểm'), findsOneWidget);
+      expect(find.text('Nhập nhanh'), findsNothing);
+      expect(find.text('Bấm điểm'), findsNothing);
+      expect(find.byType(OutlinedButton), findsNothing);
     });
 
-    testWidgets('TC-SOC-CARD-03 a finished match shows the score, no buttons', (
+    testWidgets('TC-SOC-CARD-03 a finished match shows the score and status', (
       tester,
     ) async {
       await pump(tester, match('COMPLETED', a: 11, b: 7));
 
-      expect(quick, findsNothing);
-      expect(live, findsNothing);
+      expect(find.text('Đã hoàn thành'), findsOneWidget);
       expect(find.text('11'), findsOneWidget);
       expect(find.text('7'), findsOneWidget);
     });
 
-    testWidgets('TC-SOC-CARD-04 signed-out viewers get no score buttons', (
+    testWidgets('TC-SOC-CARD-04 signed-out viewers get no live scoring', (
       tester,
     ) async {
       await pump(tester, match('SCHEDULED'), signedIn: false);
 
-      expect(quick, findsNothing);
-      expect(live, findsNothing);
+      await tester.tap(find.text('Nguyễn Minh Danh'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ClubStandaloneMatchResultDialog), findsOneWidget);
+      expect(openScoreboard, findsNothing);
     });
 
-    testWidgets('TC-SOC-CARD-05 "Nhập nhanh" opens the result dialog', (
+    testWidgets('TC-SOC-CARD-05 tapping the card opens quick entry', (
       tester,
     ) async {
       await pump(tester, match('SCHEDULED'));
 
-      await tester.tap(quick);
+      await tester.tap(find.text('Nguyễn Minh Danh'));
       await tester.pumpAndSettle();
 
       expect(find.byType(ClubStandaloneMatchResultDialog), findsOneWidget);
+    });
+
+    testWidgets('TC-SOC-CARD-06 quick entry holds the live scoring button', (
+      tester,
+    ) async {
+      await pump(tester, match('SCHEDULED'));
+
+      await tester.tap(find.text('Nguyễn Minh Danh'));
+      await tester.pumpAndSettle();
+
+      expect(openScoreboard, findsOneWidget);
+    });
+
+    testWidgets('TC-SOC-CARD-07 a finished match offers no live scoring', (
+      tester,
+    ) async {
+      await pump(tester, match('COMPLETED', a: 11, b: 7));
+
+      await tester.tap(find.text('Nguyễn Minh Danh'));
+      await tester.pumpAndSettle();
+
+      expect(openScoreboard, findsNothing);
+    });
+
+    testWidgets('TC-SOC-CARD-08 status reads as a real match state', (
+      tester,
+    ) async {
+      await pump(tester, match('ONGOING', a: 5, b: 3));
+
+      expect(find.text('Đang diễn ra'), findsOneWidget);
+      expect(find.text('Đã lên lịch'), findsNothing);
+      expect(find.text('5'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
     });
   });
 
@@ -362,9 +367,7 @@ void main() {
       expect(find.text('Chưa có trận đấu nào trong buổi này.'), findsOneWidget);
     });
 
-    testWidgets('host: nút tạo bật và không cảnh báo thiếu người khi đủ 4', (
-      tester,
-    ) async {
+    testWidgets('host: nút tạo bật khi đủ 4 người', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
           approvedParticipants: four,
@@ -376,10 +379,6 @@ void main() {
 
       final button = tester.widget<FilledButton>(find.byType(FilledButton));
       expect(button.onPressed, isNotNull);
-      expect(
-        find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
-        findsNothing,
-      );
     });
 
     testWidgets('không phải host: nút tạo bị khoá', (tester) async {
@@ -395,37 +394,6 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('khách không có tài khoản không tính vào số người ghép đội', (
-      tester,
-    ) async {
-      final withGuests = [
-        _participant('1'),
-        _participant('2'),
-        SocialParticipantModel(
-          id: 'g1',
-          joinedAt: DateTime(2026, 1, 1),
-          guestName: 'Khách 1',
-        ),
-        SocialParticipantModel(
-          id: 'g2',
-          joinedAt: DateTime(2026, 1, 1),
-          guestName: 'Khách 2',
-        ),
-      ];
-      await tester.pumpWidget(
-        _buildTestApp(
-          approvedParticipants: withGuests,
-          repository: _FakeMatchSessionRepository(const []),
-          isHost: true,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Buổi chưa đủ người tham gia đã duyệt để ghép đội.'),
-        findsOneWidget,
-      );
-    });
   });
 
   testWidgets('TC-SOCIAL-BRACKET-APP-12: Xem bracket chỉ hiện khi kèo đã có bracket', (

@@ -204,25 +204,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get social_matchTab => 'Trận đấu';
 
   @override
-  String get social_matchListNote =>
-      'Hiển thị toàn bộ trận đấu riêng của CLB, chưa lọc chính xác theo buổi này.';
-
-  @override
   String get social_matchEmptyTitle =>
       'Chưa có trận đấu nào được tạo cho CLB này.';
 
   @override
-  String get social_matchNotEnoughParticipants =>
-      'Buổi chưa đủ người tham gia đã duyệt để ghép đội.';
+  String get social_matchStatusScheduled => 'Chưa bắt đầu';
 
   @override
-  String get social_matchActionQuickEntry => 'Nhập nhanh';
-
-  @override
-  String get social_matchActionLiveScore => 'Bấm điểm';
-
-  @override
-  String get social_matchStatusScheduled => 'Đã lên lịch';
+  String get social_matchStatusOngoing => 'Đang diễn ra';
 
   @override
   String get social_matchStatusCompleted => 'Đã hoàn thành';

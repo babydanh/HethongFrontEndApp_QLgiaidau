@@ -188,13 +188,26 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     unawaited(_fetchMatches());
   }
 
+  /// Backend is the real gate (MATCH_SCORE_PERMISSION_REQUIRED shows in the
+  /// dialog); the app only hides live scoring for finished matches and
+  /// signed-out viewers.
+  bool _canScore(ClubSessionMatchModel match) =>
+      match.status.toUpperCase() != 'COMPLETED' &&
+      ref.read(authProvider).status == AuthStatus.authenticated;
+
+  /// Tapping a match opens quick entry; live scoring is a button inside it.
   Future<void> _openResult(ClubSessionMatchModel match) async {
     final action = await ClubStandaloneMatchResultDialog.show(
       context,
       match: socialSessionMatchToMatchModel(match),
-      showScoreboardAction: false,
+      showScoreboardAction: _canScore(match),
     );
-    if (!mounted || action != ClubStandaloneMatchAction.saved) return;
+    if (!mounted) return;
+    if (action == ClubStandaloneMatchAction.openScoreboard) {
+      await _openScoreboard(match);
+      return;
+    }
+    if (action != ClubStandaloneMatchAction.saved) return;
     unawaited(_fetchMatches());
   }
 
@@ -220,7 +233,6 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final canCreateMatch = _canCreateMatch();
-    final notEnoughParticipants = _preselectedMembers.length < 4;
     final bracketId = widget.bracketTournamentId;
 
     return Column(
@@ -228,30 +240,20 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Text(
-                  _owner.isPersonalSession
-                      ? 'Các trận đấu được tạo trong buổi này.'
-                      : l10n.social_matchListNote,
-                  style: TextStyle(fontSize: 11.5, color: colors.textMuted),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              onPressed: canCreateMatch ? _createMatch : null,
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: Text(l10n.club_createMatchStandalone),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                visualDensity: VisualDensity.compact,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: canCreateMatch ? _createMatch : null,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text(l10n.club_createMatchStandalone),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         if (bracketId != null && bracketId.isNotEmpty)
@@ -261,18 +263,6 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
               onPressed: () => context.push('/tournaments/$bracketId'),
               icon: const Icon(Icons.account_tree_rounded, size: 18),
               label: Text(l10n.socialBracket_view),
-            ),
-          ),
-        if (notEnoughParticipants)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              l10n.social_matchNotEnoughParticipants,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: colors.error,
-              ),
             ),
           ),
         Expanded(child: _buildBody(colors, l10n)),
@@ -354,15 +344,16 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
     AppColorsExtension colors,
     AppLocalizations l10n,
   ) {
-    final isCompleted = match.status.toUpperCase() == 'COMPLETED';
-    final statusColor = isCompleted ? Colors.green.shade700 : AppTheme.primary;
+    final status = match.status.toUpperCase();
+    final isCompleted = status == 'COMPLETED';
+    final (statusLabel, statusColor) = switch (status) {
+      'COMPLETED' => (l10n.social_matchStatusCompleted, Colors.green.shade700),
+      'ONGOING' => (l10n.social_matchStatusOngoing, Colors.orange.shade800),
+      _ => (l10n.social_matchStatusScheduled, colors.textSecondary),
+    };
+    final showScore = isCompleted || status == 'ONGOING';
     final sideAWon = isCompleted && match.sideAScore > match.sideBScore;
     final sideBWon = isCompleted && match.sideBScore > match.sideAScore;
-    // Backend is the real gate (MATCH_SCORE_PERMISSION_REQUIRED shows in the
-    // dialog); the app only hides the buttons for signed-out viewers.
-    final canScore =
-        !isCompleted &&
-        ref.watch(authProvider).status == AuthStatus.authenticated;
 
     TextStyle scoreStyle(bool won) => TextStyle(
       fontSize: 18,
@@ -423,9 +414,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        isCompleted
-                            ? l10n.social_matchStatusCompleted
-                            : l10n.social_matchStatusScheduled,
+                        statusLabel,
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
@@ -433,7 +422,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
                         ),
                       ),
                     ),
-                    if (isCompleted) ...[
+                    if (showScore) ...[
                       const SizedBox(height: 6),
                       Text('${match.sideAScore}', style: scoreStyle(sideAWon)),
                       Text('${match.sideBScore}', style: scoreStyle(sideBWon)),
@@ -442,50 +431,9 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
                 ),
               ],
             ),
-            if (canScore) ...[
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      key: ValueKey('match-quick-entry-${match.id}'),
-                      onPressed: () => _openResult(match),
-                      icon: const Icon(Icons.bolt_rounded, size: 16),
-                      label: Text(l10n.social_matchActionQuickEntry),
-                      style: _actionStyle(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilledButton.icon(
-                      key: ValueKey('match-live-score-${match.id}'),
-                      onPressed: () => _openScoreboard(match),
-                      icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                      label: Text(l10n.social_matchActionLiveScore),
-                      style: _actionStyle().copyWith(
-                        backgroundColor: const WidgetStatePropertyAll(
-                          AppTheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),
     );
   }
-
-  ButtonStyle _actionStyle() => ButtonStyle(
-    minimumSize: const WidgetStatePropertyAll(Size.fromHeight(36)),
-    padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 10)),
-    textStyle: const WidgetStatePropertyAll(
-      TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
-    ),
-    shape: WidgetStatePropertyAll(
-      RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ),
-  );
 }

@@ -464,41 +464,23 @@ abstract class AppLocalizations {
   /// **'Trận đấu'**
   String get social_matchTab;
 
-  /// No description provided for @social_matchListNote.
-  ///
-  /// In vi, this message translates to:
-  /// **'Hiển thị toàn bộ trận đấu riêng của CLB, chưa lọc chính xác theo buổi này.'**
-  String get social_matchListNote;
-
   /// No description provided for @social_matchEmptyTitle.
   ///
   /// In vi, this message translates to:
   /// **'Chưa có trận đấu nào được tạo cho CLB này.'**
   String get social_matchEmptyTitle;
 
-  /// No description provided for @social_matchNotEnoughParticipants.
-  ///
-  /// In vi, this message translates to:
-  /// **'Buổi chưa đủ người tham gia đã duyệt để ghép đội.'**
-  String get social_matchNotEnoughParticipants;
-
-  /// No description provided for @social_matchActionQuickEntry.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nhập nhanh'**
-  String get social_matchActionQuickEntry;
-
-  /// No description provided for @social_matchActionLiveScore.
-  ///
-  /// In vi, this message translates to:
-  /// **'Bấm điểm'**
-  String get social_matchActionLiveScore;
-
   /// No description provided for @social_matchStatusScheduled.
   ///
   /// In vi, this message translates to:
-  /// **'Đã lên lịch'**
+  /// **'Chưa bắt đầu'**
   String get social_matchStatusScheduled;
+
+  /// No description provided for @social_matchStatusOngoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get social_matchStatusOngoing;
 
   /// No description provided for @social_matchStatusCompleted.
   ///

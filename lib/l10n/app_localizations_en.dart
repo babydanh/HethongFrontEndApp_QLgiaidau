@@ -209,25 +209,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get social_matchTab => 'Matches';
 
   @override
-  String get social_matchListNote =>
-      'Shows every standalone match of this club, not filtered exactly to this session.';
-
-  @override
   String get social_matchEmptyTitle =>
       'No matches have been created for this club yet.';
 
   @override
-  String get social_matchNotEnoughParticipants =>
-      'Not enough approved participants to form teams yet.';
+  String get social_matchStatusScheduled => 'Not started';
 
   @override
-  String get social_matchActionQuickEntry => 'Quick entry';
-
-  @override
-  String get social_matchActionLiveScore => 'Live scoring';
-
-  @override
-  String get social_matchStatusScheduled => 'Scheduled';
+  String get social_matchStatusOngoing => 'In progress';
 
   @override
   String get social_matchStatusCompleted => 'Completed';
