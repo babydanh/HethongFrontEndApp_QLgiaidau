@@ -109,12 +109,25 @@ Future<void> openManageHub(
   ProviderContainer container,
   String tournamentId,
 ) async {
-  container.read(routerProvider).go('/organizer/tournaments/$tournamentId/manage');
-  await pumpUntilFound(
-    tester,
-    find.widgetWithText(Tab, 'Tổng quan'),
-    what: 'hub quản lý giải (tab Tổng quan)',
-  );
+  final hubTab = find.widgetWithText(Tab, 'Tổng quan');
+  // Sau đăng nhập router có thể còn chuyển về trang chủ và đẩy hub đi: vào hub, đợi ổn định,
+  // thấy hub mất thì vào lại.
+  final deadline = DateTime.now().add(const Duration(seconds: 60));
+  while (true) {
+    if (hubTab.evaluate().isEmpty) {
+      container
+          .read(routerProvider)
+          .go('/organizer/tournaments/$tournamentId/manage');
+    }
+    await tester.pump(const Duration(milliseconds: 500));
+    if (hubTab.evaluate().isNotEmpty) {
+      await tester.pump(const Duration(seconds: 2));
+      if (hubTab.evaluate().isNotEmpty) return;
+    }
+    if (DateTime.now().isAfter(deadline)) {
+      fail('Hết 60s mà hub quản lý giải (tab Tổng quan) không ở lại trên màn');
+    }
+  }
 }
 
 /// Chuyển tab của hub: Tổng quan, Nội dung, VĐV, Bảng đấu, Lịch thi đấu, Kết quả, Cài đặt.
