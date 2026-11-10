@@ -400,7 +400,8 @@ Future<void> openSession(
 Future<void> openSocialTab(WidgetTester tester, String label) async {
   final tab = find.text(label);
   await pumpUntilFound(tester, tab, what: 'tab "$label"');
-  await tester.tap(tab.first);
+  // Thanh tab cuộn ngang: tab cuối (Thanh toán, Trò chuyện) nằm ngoài màn nên phải cuộn vào giữa trước khi bấm.
+  await tapCentered(tester, tab);
   await socialWait(tester, const Duration(milliseconds: 1500));
 }
 
