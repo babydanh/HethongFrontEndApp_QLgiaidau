@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_l
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,15 +24,19 @@ const double _cellWidth = 64;
 const double _statWidth = 48;
 const double _headerHeight = 36;
 const double _minRowHeight = 44;
+const double _autoScrollVelocityScalar = 50;
+const double _autoScrollProbeSize = 48;
 
 /// Public group stage: one edge-to-edge card per group with a cross matrix
 /// (default), a standings table and a by-round list; tapping a match opens a
 /// detail sheet. Mirrors the Web `PagedRoundRobinView`.
 ///
 /// Edit mode (both [editableConfig] and [onConfigChanged] set, not
-/// [editLocked]): long-press a team and drop it on another group card to move
-/// it; [onConfigChanged] receives the new config and must handle its own
-/// errors. Without them the view stays read-only.
+/// [editLocked]): long-press a team and drop it on a group card (append), on
+/// another team (insert before it) or on the "Chưa xếp" lane (unassign); the
+/// page auto-scrolls when dragging near its edge. [onConfigChanged] receives
+/// the new config and must handle its own errors. Without them the view stays
+/// read-only.
 class GroupStageView extends ConsumerStatefulWidget {
   const GroupStageView({
     super.key,
@@ -67,24 +72,88 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
   final Map<String, int> _legs = {};
   bool _saving = false;
 
-  /// Moves [participantId] into config group [groupIndex]; ignored while a
-  /// previous move is still being saved or when it is already in that group.
-  Future<void> _drop(String participantId, int groupIndex) async {
+  /// True while a team is being dragged: shows the "Chưa xếp" drop lane.
+  final ValueNotifier<bool> _dragging = ValueNotifier(false);
+  EdgeDraggingAutoScroller? _autoScroller;
+  late final _handlers = _TeamDragHandlers(
+    onDropBefore: _dropBefore,
+    onDragStarted: _onDragStarted,
+    onDragUpdate: _onDragUpdate,
+    onDragEnd: _onDragEnd,
+  );
+
+  @override
+  void dispose() {
+    _autoScroller?.stopAutoScroll();
+    _dragging.dispose();
+    super.dispose();
+  }
+
+  void _onDragStarted() {
+    final scrollable = Scrollable.maybeOf(context);
+    _autoScroller = scrollable == null
+        ? null
+        : EdgeDraggingAutoScroller(
+            scrollable,
+            velocityScalar: _autoScrollVelocityScalar,
+          );
+    _dragging.value = true;
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    _autoScroller?.startAutoScrollIfNecessary(
+      Rect.fromCenter(
+        center: details.globalPosition,
+        width: _autoScrollProbeSize,
+        height: _autoScrollProbeSize,
+      ),
+    );
+  }
+
+  void _onDragEnd() {
+    _autoScroller?.stopAutoScroll();
+    _autoScroller = null;
+    if (mounted) _dragging.value = false;
+  }
+
+  /// Moves [participantId] into config group [groupIndex] (null = unassigned),
+  /// before [beforeParticipantId] when given. Ignored while a previous move is
+  /// still being saved or when the layout would not change.
+  Future<void> _drop(
+    String participantId,
+    int? groupIndex, {
+    String? beforeParticipantId,
+  }) async {
     final config = widget.editableConfig;
     final save = widget.onConfigChanged;
     if (_saving || config == null || save == null) return;
-    if (config.groups[groupIndex].participantIds.contains(participantId)) {
-      return;
-    }
-    final next = config.moveParticipant(participantId, groupIndex: groupIndex);
-    // Unknown id (e.g. unapproved team): nothing moved, so do not save/regenerate.
-    if (identical(next, config)) return;
+    // Dropping on a card/lane (not on a team) never reorders inside it.
+    final target = groupIndex == null
+        ? config.unassignedParticipantIds
+        : config.groups[groupIndex].participantIds;
+    if (beforeParticipantId == null && target.contains(participantId)) return;
+    final next = config.moveParticipant(
+      participantId,
+      groupIndex: groupIndex,
+      beforeParticipantId: beforeParticipantId,
+    );
+    // Unknown id (e.g. unapproved team) or same order: nothing to save.
+    if (_sameLayout(config, next)) return;
     _saving = true;
     try {
       await save(next);
     } finally {
       _saving = false;
     }
+  }
+
+  /// Drops [participantId] on the team [beforeId]: it joins that team's group
+  /// right before it.
+  void _dropBefore(String participantId, String beforeId) {
+    final groups = widget.editableConfig?.groups ?? const [];
+    final index = groups.indexWhere((g) => g.participantIds.contains(beforeId));
+    if (participantId == beforeId || index < 0) return;
+    _drop(participantId, index, beforeParticipantId: beforeId);
   }
 
   /// Teams that belong to no group, resolved by name from the tournament teams.
@@ -177,44 +246,99 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
         ? _unassignedStandings(config.unassignedParticipantIds)
         : const <Standing>[];
 
-    return Column(
-      children: [
-        if (unassignedTeams.isNotEmpty) _UnassignedLane(teams: unassignedTeams),
-        for (final name in allNames)
-          if (!grouped.containsKey(name))
-            _EmptyGroupCard(
-              title: groupDisplayName(name, prefix),
-              onDrop: (id) => _drop(id, emptyIndexByName[name]!),
-            )
-          else
-            _GroupCard(
-              tournamentId: widget.tournamentId,
-              canScoreMatch: widget.canScoreMatch,
-              name: name,
-              title: groupDisplayName(name, l10n.groupStage_groupPrefix),
-              standings: grouped[name]!,
-              allMatches: matchesForGroup(
-                grouped[name]!,
-                name,
-                groupNames.length == 1,
-                matchSnapshot,
+    return _TeamDragScope(
+      handlers: _handlers,
+      child: Column(
+        children: [
+          // Always the first child so a drag starting never shifts the others.
+          ValueListenableBuilder<bool>(
+            valueListenable: _dragging,
+            builder: (context, dragging, _) =>
+                editing && (unassignedTeams.isNotEmpty || dragging)
+                ? _UnassignedLane(
+                    teams: unassignedTeams,
+                    onDrop: (id) => _drop(id, null),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          for (final name in allNames)
+            if (!grouped.containsKey(name))
+              _EmptyGroupCard(
+                title: groupDisplayName(name, prefix),
+                onDrop: (id) => _drop(id, emptyIndexByName[name]!),
+              )
+            else
+              _GroupCard(
+                tournamentId: widget.tournamentId,
+                canScoreMatch: widget.canScoreMatch,
+                name: name,
+                title: groupDisplayName(name, l10n.groupStage_groupPrefix),
+                standings: grouped[name]!,
+                allMatches: matchesForGroup(
+                  grouped[name]!,
+                  name,
+                  groupNames.length == 1,
+                  matchSnapshot,
+                ),
+                configuredLegs: widget.configuredLegs,
+                advancingCount: isGsknockout
+                    ? (grouped[name]!.length / 2).ceil()
+                    : 0,
+                mode: _modes[name] ?? _Mode.matrix,
+                leg: _legs[name] ?? 1,
+                onMode: (mode) => setState(() => _modes[name] = mode),
+                onLeg: (leg) => setState(() => _legs[name] = leg),
+                dragEnabled: editing,
+                onDrop: editing && groupIndexOf(name) != null
+                    ? (id) => _drop(id, groupIndexOf(name)!)
+                    : null,
               ),
-              configuredLegs: widget.configuredLegs,
-              advancingCount: isGsknockout
-                  ? (grouped[name]!.length / 2).ceil()
-                  : 0,
-              mode: _modes[name] ?? _Mode.matrix,
-              leg: _legs[name] ?? 1,
-              onMode: (mode) => setState(() => _modes[name] = mode),
-              onLeg: (leg) => setState(() => _legs[name] = leg),
-              dragEnabled: editing,
-              onDrop: editing && groupIndexOf(name) != null
-                  ? (id) => _drop(id, groupIndexOf(name)!)
-                  : null,
-            ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+/// Whether two configs place every team in the same group at the same index.
+bool _sameLayout(GroupStageConfig a, GroupStageConfig b) {
+  if (!listEquals(a.unassignedParticipantIds, b.unassignedParticipantIds) ||
+      a.groups.length != b.groups.length) {
+    return false;
+  }
+  for (var i = 0; i < a.groups.length; i++) {
+    if (!listEquals(a.groups[i].participantIds, b.groups[i].participantIds)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// Drag callbacks shared by every draggable team row under [GroupStageView].
+class _TeamDragHandlers {
+  const _TeamDragHandlers({
+    required this.onDropBefore,
+    required this.onDragStarted,
+    required this.onDragUpdate,
+    required this.onDragEnd,
+  });
+
+  final void Function(String participantId, String beforeId) onDropBefore;
+  final VoidCallback onDragStarted;
+  final ValueChanged<DragUpdateDetails> onDragUpdate;
+  final VoidCallback onDragEnd;
+}
+
+class _TeamDragScope extends InheritedWidget {
+  const _TeamDragScope({required this.handlers, required super.child});
+
+  final _TeamDragHandlers handlers;
+
+  static _TeamDragHandlers? maybeOf(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<_TeamDragScope>()?.handlers;
+
+  @override
+  bool updateShouldNotify(_TeamDragScope oldWidget) =>
+      handlers != oldWidget.handlers;
 }
 
 class _GroupCard extends StatelessWidget {
@@ -478,14 +602,24 @@ class _EmptyGroupCard extends StatelessWidget {
   }
 }
 
-/// Teams outside every group; each row can be dragged onto a group card.
+/// Teams outside every group: each row can be dragged onto a group card, and
+/// the lane itself takes a dropped team back out of its group.
 class _UnassignedLane extends StatelessWidget {
-  const _UnassignedLane({required this.teams});
+  const _UnassignedLane({required this.teams, required this.onDrop});
 
   final List<Standing> teams;
+  final ValueChanged<String> onDrop;
 
   @override
   Widget build(BuildContext context) {
+    return DragTarget<String>(
+      onAcceptWithDetails: (details) => onDrop(details.data),
+      builder: (context, candidates, _) =>
+          _lane(context, candidates.isNotEmpty),
+    );
+  }
+
+  Widget _lane(BuildContext context, bool highlighted) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     return Container(
@@ -494,7 +628,12 @@ class _UnassignedLane extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        border: Border.symmetric(horizontal: BorderSide(color: colors.border)),
+        border: Border.symmetric(
+          horizontal: BorderSide(
+            color: highlighted ? AppTheme.primary : colors.border,
+            width: highlighted ? 2 : 1,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,10 +665,19 @@ class _UnassignedLane extends StatelessWidget {
               ],
             ),
           ),
+          if (teams.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Text(
+                l10n.groupStage_emptyGroupDrop,
+                style: TextStyle(fontSize: 12, color: colors.textMuted),
+              ),
+            ),
           for (final team in teams)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _sideLines(context, team, draggable: true),
+              // Rows here are not reorder targets: the lane handles the drop.
+              child: _sideLines(context, team, draggable: true, reorder: false),
             ),
         ],
       ),
@@ -703,6 +851,7 @@ Widget _sideLines(
   Standing team, {
   bool teamOnly = false,
   bool draggable = false,
+  bool reorder = true,
 }) {
   Widget lines({double opacity = 1}) => Opacity(
     opacity: opacity,
@@ -715,11 +864,15 @@ Widget _sideLines(
       ),
     ),
   );
-  if (!draggable) return lines();
-  return LongPressDraggable<String>(
+  final drag = draggable ? _TeamDragScope.maybeOf(context) : null;
+  if (drag == null) return lines();
+  final row = LongPressDraggable<String>(
     key: ValueKey('group-team-drag-${team.id}'),
     data: team.id,
     delay: bracketDragDelay,
+    onDragStarted: drag.onDragStarted,
+    onDragUpdate: drag.onDragUpdate,
+    onDragEnd: (_) => drag.onDragEnd(),
     feedback: Material(
       color: context.colors.bgCard,
       elevation: 4,
@@ -729,6 +882,47 @@ Widget _sideLines(
     childWhenDragging: lines(opacity: 0.35),
     child: lines(),
   );
+  if (!reorder) return row;
+  return _ReorderDropSlot(
+    teamId: team.id,
+    onDrop: drag.onDropBefore,
+    child: row,
+  );
+}
+
+/// Drop zone over a team row: a dropped team is inserted before this one.
+/// The team's own row does not accept itself, so the group card handles that.
+class _ReorderDropSlot extends StatelessWidget {
+  const _ReorderDropSlot({
+    required this.teamId,
+    required this.onDrop,
+    required this.child,
+  });
+
+  final String teamId;
+  final void Function(String participantId, String beforeId) onDrop;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (details) => details.data != teamId,
+      onAcceptWithDetails: (details) => onDrop(details.data, teamId),
+      builder: (context, candidates, _) => DecoratedBox(
+        // Foreground so the insert marker never changes the row layout.
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: candidates.isEmpty ? Colors.transparent : AppTheme.primary,
+              width: 2,
+            ),
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
 }
 
 class _MatrixTable extends StatelessWidget {

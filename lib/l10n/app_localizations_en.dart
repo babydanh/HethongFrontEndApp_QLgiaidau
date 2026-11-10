@@ -11136,6 +11136,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playoff_slotNA => 'N/A';
 
   @override
+  String playoff_seedFirst(String group) {
+    return '1st $group';
+  }
+
+  @override
+  String playoff_seedSecond(String group) {
+    return '2nd $group';
+  }
+
+  @override
+  String playoff_seedRank(int rank, String group) {
+    return 'Rank $rank $group';
+  }
+
+  @override
+  String get playoff_seedWildcard => 'Best third-placed team';
+
+  @override
+  String playoff_seedSaveError(String error) {
+    return 'Could not change the position: $error';
+  }
+
+  @override
   String playoff_waitWinner(String code) {
     return 'Winner $code';
   }

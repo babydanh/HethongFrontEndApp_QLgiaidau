@@ -2,8 +2,10 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_layout.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_seed_labels.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -49,6 +51,7 @@ class PlayoffBracketBoard extends StatelessWidget {
     required this.cardWidth,
     required this.gap,
     required this.onTap,
+    this.seedLabels,
   });
 
   final List<List<MatchModel>> columns;
@@ -56,6 +59,9 @@ class PlayoffBracketBoard extends StatelessWidget {
   final double cardWidth;
   final double gap;
   final ValueChanged<MatchModel> onTap;
+
+  /// Placeholders ("Nhất A") for empty round-one slots; null shows "N/A".
+  final PlayoffSeedLabels? seedLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +99,7 @@ class PlayoffBracketBoard extends StatelessWidget {
                   match: match,
                   feeders: feeders[match.id] ?? const [],
                   onTap: () => onTap(match),
+                  seedLabels: seedLabels,
                 ),
               ),
         ],
@@ -145,16 +152,71 @@ class _LinkPainter extends CustomPainter {
   bool shouldRepaint(_LinkPainter old) => true;
 }
 
+/// A "Nhất A" placeholder; a manager long-presses it and drops it on another
+/// placeholder to swap the two seeds.
+class _SeedLabelSlot extends StatelessWidget {
+  const _SeedLabelSlot({
+    required this.text,
+    required this.index,
+    required this.onSwap,
+  });
+
+  final String text;
+  final int index;
+  final Future<void> Function(int from, int to)? onSwap;
+
+  Widget _label({bool highlighted = false}) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: AppTheme.primary.withValues(alpha: highlighted ? 0.2 : 0.08),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontSize: 11.5,
+        fontWeight: FontWeight.w700,
+        color: AppTheme.primary,
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final swap = onSwap;
+    if (swap == null) return _label();
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (details) => details.data != index,
+      onAcceptWithDetails: (details) => swap(details.data, index),
+      builder: (context, candidates, _) => LongPressDraggable<int>(
+        key: ValueKey('seed-slot-$index'),
+        data: index,
+        delay: bracketDragDelay,
+        feedback: Material(
+          color: Colors.transparent,
+          child: _label(highlighted: true),
+        ),
+        childWhenDragging: Opacity(opacity: 0.35, child: _label()),
+        child: _label(highlighted: candidates.isNotEmpty),
+      ),
+    );
+  }
+}
+
 class _BracketCard extends StatelessWidget {
   const _BracketCard({
     required this.match,
     required this.feeders,
     required this.onTap,
+    this.seedLabels,
   });
 
   final MatchModel match;
   final List<BracketFeeder> feeders;
   final VoidCallback onTap;
+  final PlayoffSeedLabels? seedLabels;
 
   String _code() {
     final code = (match.matchCode ?? '').trim();
@@ -177,6 +239,9 @@ class _BracketCard extends StatelessWidget {
         match.winnerId == (side == 1 ? match.team1Id : match.team2Id);
     final scores = _sideScores(match, side);
     final empty = teamName == null && players.isEmpty;
+    final seedIndex = empty && !match.isBye
+        ? seedLabels?.slotIndexFor(match.id, side)
+        : null;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
@@ -188,7 +253,13 @@ class _BracketCard extends StatelessWidget {
           Expanded(
             child: Align(
               alignment: Alignment.centerLeft,
-              child: empty
+              child: seedIndex != null
+                  ? _SeedLabelSlot(
+                      text: seedLabels!.textFor(seedIndex),
+                      index: seedIndex,
+                      onSwap: seedLabels!.onSwap,
+                    )
+                  : empty
                   ? Text(
                       _waiting(l10n),
                       maxLines: 1,

@@ -47,6 +47,7 @@ Future<AppLocalizations> _pump(
   WidgetTester tester, {
   List<MatchModel>? matches,
   bool canScoreMatch = false,
+  VoidCallback? onOpenFull,
 }) async {
   tester.view.physicalSize = const Size(400, 900);
   tester.view.devicePixelRatio = 1;
@@ -65,6 +66,7 @@ Future<AppLocalizations> _pump(
               matches: matches ?? _matches,
               tournamentId: 't-1',
               canScoreMatch: canScoreMatch,
+              onOpenFull: onOpenFull,
             ),
           ),
         ),
@@ -243,6 +245,53 @@ void main() {
     expect(find.text('ggg'), findsOneWidget);
     expect(find.text('Miễn đấu'), findsOneWidget);
     expect(find.text('N/A'), findsNothing);
+  });
+
+  testWidgets('TC-PLF-EXPAND-01 no expand button without a handler', (
+    tester,
+  ) async {
+    await _pump(tester);
+
+    expect(find.byKey(const ValueKey('playoff-open-full')), findsNothing);
+  });
+
+  testWidgets('TC-PLF-EXPAND-02 expand button sits in the stepper row', (
+    tester,
+  ) async {
+    var opened = 0;
+    await _pump(tester, onOpenFull: () => opened++);
+
+    final button = find.byKey(const ValueKey('playoff-open-full'));
+    expect(button, findsOneWidget);
+    expect(find.byTooltip('Phóng to'), findsOneWidget);
+    // Same row as the arrows: vertically level with the next-round arrow.
+    expect(
+      tester.getCenter(button).dy,
+      tester.getCenter(find.byTooltip('Vòng sau')).dy,
+    );
+
+    await tester.tap(button);
+    expect(opened, 1);
+  });
+
+  testWidgets('TC-PLF-SWIPE-01 swiping the stepper row turns the page', (
+    tester,
+  ) async {
+    await _pump(tester);
+    final label = find.textContaining('/5');
+
+    await tester.fling(label, const Offset(-200, 0), 800);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('2/5'), findsOneWidget);
+
+    await tester.fling(label, const Offset(200, 0), 800);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1/5'), findsOneWidget);
+
+    // Already on the first round: swiping back stays put.
+    await tester.fling(label, const Offset(200, 0), 800);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1/5'), findsOneWidget);
   });
 
   testWidgets('TC-PLF-08 doubles cards fit without overflow', (tester) async {

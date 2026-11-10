@@ -762,6 +762,9 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       matches: matches,
       bracketType: bracketType,
       canScoreMatch: canScoreMatch,
+      // Only reached by users who may edit groups, so they may reorder seeds.
+      canEditSeeds: true,
+      canEditBracket: widget.canEditBracket,
       editableConfig: config,
       onConfigChanged: division == null
           ? null

@@ -806,6 +806,7 @@ class _TournamentIntroScreenState extends ConsumerState<TournamentIntroScreen>
           // Only the organizers of this tournament score from the bracket; a
           // global ADMIN role alone must not grant it.
           canScoreMatch: canManage,
+          canEditSeeds: canManage,
         );
     tabViews.add(
       SingleChildScrollView(

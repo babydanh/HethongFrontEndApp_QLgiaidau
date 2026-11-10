@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.da
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_layout.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_seed_labels.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -100,6 +101,9 @@ const double _bracketGap = 14;
 const double _minCardWidth = 96;
 const double _maxCardWidth = 200;
 
+/// Minimum fling speed (px/s) on the stepper row that counts as a page turn.
+const double _swipeMinVelocity = 250;
+
 /// Public playoff of a group-stage + double-elimination division, drawn like the
 /// Web `PagedDoubleElimView`: winners / losers tabs, a window of
 /// [kBracketVisibleRounds] rounds with connector lines, Trước/Sau to slide it
@@ -110,11 +114,19 @@ class PlayoffDoubleElimView extends StatefulWidget {
     required this.matches,
     required this.tournamentId,
     this.canScoreMatch = false,
+    this.seedLabels,
+    this.onOpenFull,
   });
 
   final List<MatchModel> matches;
   final String tournamentId;
   final bool canScoreMatch;
+
+  /// Opens the full-screen diagram; null hides the expand button.
+  final VoidCallback? onOpenFull;
+
+  /// "Nhất A / Nhì B" placeholders for empty round-one slots; null hides them.
+  final PlayoffSeedLabels? seedLabels;
 
   @override
   State<PlayoffDoubleElimView> createState() => _PlayoffDoubleElimViewState();
@@ -196,13 +208,28 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
               ),
             )
           else ...[
-            _RoundStepper(
-              label: rounds[active].label,
-              position: '${active + 1}/${rounds.length}',
-              onPrev: active > 0 ? () => select(active - 1) : null,
-              onNext: active < rounds.length - 1
-                  ? () => select(active + 1)
-                  : null,
+            // Swiping the stepper row turns the page like its arrows; the
+            // diagram below keeps its own horizontal scroll and the tab swipe.
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragEnd: (details) {
+                final velocity = details.primaryVelocity ?? 0;
+                if (velocity <= -_swipeMinVelocity &&
+                    active < rounds.length - 1) {
+                  select(active + 1);
+                } else if (velocity >= _swipeMinVelocity && active > 0) {
+                  select(active - 1);
+                }
+              },
+              child: _RoundStepper(
+                label: rounds[active].label,
+                position: '${active + 1}/${rounds.length}',
+                onPrev: active > 0 ? () => select(active - 1) : null,
+                onNext: active < rounds.length - 1
+                    ? () => select(active + 1)
+                    : null,
+                onExpand: widget.onOpenFull,
+              ),
             ),
             ClipRect(
               child: AnimatedSwitcher(
@@ -253,6 +280,7 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
                               feeders: buildFeeders(widget.matches),
                               cardWidth: cardWidth,
                               gap: _bracketGap,
+                              seedLabels: widget.seedLabels,
                               onTap: (match) => showGroupMatchSheet(
                                 context,
                                 match: match,
@@ -286,6 +314,7 @@ class _RoundStepper extends StatelessWidget {
     required this.position,
     required this.onPrev,
     required this.onNext,
+    this.onExpand,
   });
 
   final String label;
@@ -293,24 +322,32 @@ class _RoundStepper extends StatelessWidget {
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
 
+  /// Opens the full-screen diagram; null hides the button.
+  final VoidCallback? onExpand;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
-    Widget arrow(IconData icon, String tooltip, VoidCallback? onTap) =>
-        IconButton(
-          iconSize: 20,
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          tooltip: tooltip,
-          onPressed: onTap,
-          icon: Icon(
-            icon,
-            color: onTap == null
-                ? colors.textMuted.withValues(alpha: 0.3)
-                : AppTheme.primary,
-          ),
-        );
+    Widget arrow(
+      IconData icon,
+      String tooltip,
+      VoidCallback? onTap, {
+      Key? key,
+    }) => IconButton(
+      key: key,
+      iconSize: 20,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      tooltip: tooltip,
+      onPressed: onTap,
+      icon: Icon(
+        icon,
+        color: onTap == null
+            ? colors.textMuted.withValues(alpha: 0.3)
+            : AppTheme.primary,
+      ),
+    );
     return Row(
       children: [
         arrow(Icons.chevron_left_rounded, l10n.playoff_prevRound, onPrev),
@@ -328,6 +365,13 @@ class _RoundStepper extends StatelessWidget {
           ),
         ),
         arrow(Icons.chevron_right_rounded, l10n.playoff_nextRound, onNext),
+        if (onExpand != null)
+          arrow(
+            Icons.open_in_full_rounded,
+            l10n.imageViewerZoomIn,
+            onExpand,
+            key: const ValueKey('playoff-open-full'),
+          ),
       ],
     );
   }
