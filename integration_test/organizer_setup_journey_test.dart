@@ -616,12 +616,12 @@ void main() {
         'VĐV 1 đã check-in',
       );
       // Giải dựng bằng API là giải miễn phí: Backend coi hồ sơ miễn phí luôn là đã đóng phí
-      // (spec organizer-registration-payment-state), nên bỏ/đánh dấu phí không đổi `isPaid`.
-      // Kiểm: công tắc gọi được, hộp xác nhận hiện, sheet vẫn mở và Backend vẫn `isPaid` true.
+      // (spec organizer-registration-payment-state), nên bỏ đánh dấu không đổi `isPaid`.
+      // BUG-SP-02 (sản phẩm): participant_detail_sheet.dart `showFee` phụ thuộc `_paid`, nên sau khi
+      // bỏ đánh dấu ở hồ sơ miễn phí thì hàng phí biến mất và không bật lại được. Test chỉ kiểm
+      // công tắc gọi được, hộp xác nhận hiện, Backend vẫn `isPaid` true và giữ check-in.
       await tapSwitch(tester, 'participant-detail-fee-paid');
       await confirmDialog(tester, 'bỏ đã đóng phí');
-      await tapSwitch(tester, 'participant-detail-fee-paid');
-      await confirmDialog(tester, 'đánh dấu đã đóng phí');
       await waitParticipant(
         vdv1,
         (p) => p['isPaid'] == true && p['isPresent'] == true,
@@ -629,8 +629,8 @@ void main() {
       );
       await expectKey(
         tester,
-        'participant-detail-fee-paid',
-        step: 'sheet còn mở sau khi đổi phí',
+        'participant-detail-checkin',
+        step: 'sheet còn mở sau khi bỏ đánh dấu phí',
       );
 
       final note = '${single.tag} ghi chú BTC';
