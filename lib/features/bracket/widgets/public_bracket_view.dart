@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
@@ -40,12 +41,16 @@ class PublicBracketView extends StatelessWidget {
     this.onConfigChanged,
     this.editLocked = false,
     this.canEditSeeds = false,
+    this.canEditBracket = false,
   });
 
   final String tournamentId;
   final String? divisionId;
   final List<MatchModel> matches;
   final String? bracketType;
+
+  /// Organizer may edit the bracket in the full-screen diagram.
+  final bool canEditBracket;
 
   /// Viewer may enter scores (admin / organizer): a tapped match opens the
   /// score-entry popup instead of the read-only detail.
@@ -121,6 +126,7 @@ class PublicBracketView extends StatelessWidget {
         onConfigChanged: onConfigChanged,
         editLocked: editLocked,
         canEditSeeds: canEditSeeds,
+        canEditBracket: canEditBracket,
         matches: matches,
         knockoutMatches: matches.where(isKnockoutMatch).toList(growable: false),
       );
@@ -152,6 +158,15 @@ class PublicBracketView extends StatelessWidget {
         matches: knockoutOnly,
         tournamentId: tournamentId,
         canScoreMatch: canScoreMatch,
+        onOpenFull: () => openFullBracket(
+          context,
+          tournamentId: tournamentId,
+          divisionId: divisionId,
+          bracketType: bracketType,
+          matches: matches,
+          canScoreMatch: canScoreMatch,
+          canEditBracket: canEditBracket,
+        ),
       ),
     };
   }
@@ -232,6 +247,7 @@ class _GroupPlayoffTabs extends StatefulWidget {
     required this.onConfigChanged,
     required this.editLocked,
     required this.canEditSeeds,
+    required this.canEditBracket,
   });
 
   final String tournamentId;
@@ -242,6 +258,7 @@ class _GroupPlayoffTabs extends StatefulWidget {
   final Future<void> Function(GroupStageConfig next)? onConfigChanged;
   final bool editLocked;
   final bool canEditSeeds;
+  final bool canEditBracket;
   final List<MatchModel> matches;
   final List<MatchModel> knockoutMatches;
 
@@ -339,11 +356,59 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
               tournamentId: widget.tournamentId,
               canScoreMatch: widget.canScoreMatch,
               seedLabels: seedLabels,
+              onOpenFull: () => openFullBracket(
+                context,
+                tournamentId: widget.tournamentId,
+                divisionId: widget.divisionId,
+                bracketType: widget.bracketType,
+                matches: widget.matches,
+                canScoreMatch: widget.canScoreMatch,
+                canEditBracket: widget.canEditBracket,
+              ),
             ),
           ),
       ],
     );
   }
+}
+
+/// Opens the full-screen diagram (zoom, drag, scoring when allowed). When the
+/// viewer may score or edit, the bracket lists are refreshed on return.
+Future<void> openFullBracket(
+  BuildContext context, {
+  required String tournamentId,
+  required String? divisionId,
+  required String? bracketType,
+  required List<MatchModel> matches,
+  required bool canScoreMatch,
+  required bool canEditBracket,
+}) async {
+  final container = ProviderScope.containerOf(context);
+  final type = (bracketType ?? '').trim().isNotEmpty
+      ? bracketType!
+      : matches.any(isDoubleEliminationMatch)
+      ? AppConstants.bracketDoubleElimination
+      : AppConstants.bracketSingleElimination;
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => BracketDiagramScreen(
+        tournamentId: tournamentId,
+        divisionId: divisionId,
+        bracketType: type,
+        initialMatches: matches,
+        isReadOnly: !canScoreMatch && !canEditBracket,
+        canEditBracket: canEditBracket,
+        canScoreMatch: canScoreMatch,
+      ),
+    ),
+  );
+  if (!canScoreMatch && !canEditBracket) return;
+  final params = (tournamentId: tournamentId, divisionId: divisionId);
+  container
+    ..invalidate(bracketMatchesWithDivisionProvider(params))
+    ..invalidate(liteBracketMatchesWithDivisionProvider(params))
+    ..invalidate(matchesWithDivisionProvider(params))
+    ..invalidate(managedMatchesWithDivisionProvider(params));
 }
 
 /// Tải trận của một nội dung rồi vẽ [PublicBracketView]. Tách khỏi view để view
@@ -359,12 +424,14 @@ class PublicBracketLoader extends ConsumerWidget {
     this.onConfigChanged,
     this.editLocked = false,
     this.canEditSeeds = false,
+    this.canEditBracket = false,
   });
 
   final String tournamentId;
   final String? divisionId;
   final String? bracketType;
   final bool canScoreMatch;
+  final bool canEditBracket;
   final GroupStageConfig? editableConfig;
   final Future<void> Function(GroupStageConfig next)? onConfigChanged;
   final bool editLocked;
@@ -392,6 +459,7 @@ class PublicBracketLoader extends ConsumerWidget {
             onConfigChanged: onConfigChanged,
             editLocked: editLocked,
             canEditSeeds: canEditSeeds,
+            canEditBracket: canEditBracket,
           ),
           loading: () => const BoneBracketLoading(),
           error: (error, _) => Padding(

@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
@@ -99,6 +100,29 @@ void main() {
     _match('s2', round: 1, position: 1, nextMatchId: 's3'),
     _match('s3', round: 2, position: 0),
   ];
+
+  testWidgets('TC-PLF-EXPAND-03 expand button opens the full diagram', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: _host(
+          PublicBracketView(
+            tournamentId: 't-1',
+            matches: singleMatches,
+            bracketType: 'single_elimination',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('playoff-open-full')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(BracketDiagramScreen), findsOneWidget);
+  });
 
   testWidgets('TC-PLF-12 single elimination uses the paged view, no tabs', (
     tester,
