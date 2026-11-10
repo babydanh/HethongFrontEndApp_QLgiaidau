@@ -1081,7 +1081,7 @@ Future<T> waitFor<T>(
     final value = await fetch();
     if (ok(value)) return value;
     if (DateTime.now().isAfter(deadline)) {
-      fail('Hết ${timeout.inSeconds}s mà Backend chưa có: $what');
+      fail('Hết ${timeout.inSeconds}s mà Backend chưa có: $what; giá trị cuối: $value');
     }
     await tester.pump(const Duration(seconds: 1));
   }
