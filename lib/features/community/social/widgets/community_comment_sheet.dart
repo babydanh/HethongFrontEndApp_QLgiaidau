@@ -342,12 +342,15 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     if (value == null) return l10n.communityComment_justNow;
     final difference = DateTime.now().difference(value.toLocal());
     if (difference.inMinutes < 1) return l10n.communityComment_justNow;
-    if (difference.inHours < 1)
+    if (difference.inHours < 1) {
       return l10n.communityComment_minutes(difference.inMinutes);
-    if (difference.inDays < 1)
+    }
+    if (difference.inDays < 1) {
       return l10n.communityComment_hours(difference.inHours);
-    if (difference.inDays < 7)
+    }
+    if (difference.inDays < 7) {
       return l10n.communityComment_days(difference.inDays);
+    }
     return '${value.day}/${value.month}';
   }
 

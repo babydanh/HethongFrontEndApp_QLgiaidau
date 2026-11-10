@@ -537,6 +537,8 @@ class _TournamentSettingsFormState
       initial: _contactInfo,
       profileName: profile?.fullName,
       profileAvatarUrl: profile?.avatarUrl,
+      profileElo: profile?.eloPoints,
+      profileTierName: profile?.tierName,
       onChanged: (value) {
         _contactInfo = value;
         _syncDirty();

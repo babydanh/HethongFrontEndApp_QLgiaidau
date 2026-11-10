@@ -103,8 +103,6 @@ class _ClubDetailScreenState extends ConsumerState<ClubDetailScreen>
   // Khóa toàn bộ luồng tham gia, kể cả lúc đang mở dialog câu hỏi. Nút có
   // thể nhận 2 lần tap trước khi frame loading đầu tiên được vẽ.
   bool _isJoinFlowActive = false;
-  String _tournamentStatusFilter = 'ALL';
-  String _tournamentSportFilter = 'ALL';
   bool _isAddingGalleryImage = false;
   bool _isAboutDescExpanded = false;
   bool _isAboutRulesExpanded = false;

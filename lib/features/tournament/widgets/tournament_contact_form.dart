@@ -1,4 +1,4 @@
-import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/tournament_contact.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -36,6 +36,8 @@ class TournamentContactForm extends StatefulWidget {
     required this.onChanged,
     this.profileName,
     this.profileAvatarUrl,
+    this.profileElo,
+    this.profileTierName,
   });
 
   final Map<String, dynamic> initial;
@@ -44,6 +46,8 @@ class TournamentContactForm extends StatefulWidget {
   /// Account the profile source reads from; shown read-only in the card.
   final String? profileName;
   final String? profileAvatarUrl;
+  final int? profileElo;
+  final String? profileTierName;
 
   @override
   State<TournamentContactForm> createState() => _TournamentContactFormState();
@@ -259,23 +263,13 @@ class _TournamentContactFormState extends State<TournamentContactForm> {
   }
 
   Widget _profileAvatar(String label) {
-    final url = widget.profileAvatarUrl;
-    final hasPhoto = url != null && url.isNotEmpty;
-    return CircleAvatar(
-      radius: 15,
-      backgroundColor: avatarFallbackColor(label),
-      backgroundImage: hasPhoto ? NetworkImage(url) : null,
-      onBackgroundImageError: hasPhoto ? (_, _) {} : null,
-      child: hasPhoto
-          ? null
-          : Text(
-              avatarInitials(label),
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-              ),
-            ),
+    return RankAvatar(
+      imageUrl: widget.profileAvatarUrl,
+      name: label,
+      elo: widget.profileElo ?? 0,
+      tierName: widget.profileTierName,
+      size: 30,
+      ringWidth: 1.5,
     );
   }
 
