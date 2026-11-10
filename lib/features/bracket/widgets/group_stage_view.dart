@@ -4,6 +4,8 @@ import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
+import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_data.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
@@ -25,6 +27,11 @@ const double _minRowHeight = 44;
 /// Public group stage: one edge-to-edge card per group with a cross matrix
 /// (default), a standings table and a by-round list; tapping a match opens a
 /// detail sheet. Mirrors the Web `PagedRoundRobinView`.
+///
+/// Edit mode (both [editableConfig] and [onConfigChanged] set, not
+/// [editLocked]): long-press a team and drop it on another group card to move
+/// it; [onConfigChanged] receives the new config and must handle its own
+/// errors. Without them the view stays read-only.
 class GroupStageView extends ConsumerStatefulWidget {
   const GroupStageView({
     super.key,
@@ -34,6 +41,9 @@ class GroupStageView extends ConsumerStatefulWidget {
     this.divisionId,
     this.bracketType,
     this.configuredLegs = 1,
+    this.editableConfig,
+    this.onConfigChanged,
+    this.editLocked = false,
   });
 
   final List<MatchModel> matches;
@@ -42,6 +52,11 @@ class GroupStageView extends ConsumerStatefulWidget {
   final String? divisionId;
   final String? bracketType;
   final int configuredLegs;
+  final GroupStageConfig? editableConfig;
+  final Future<void> Function(GroupStageConfig next)? onConfigChanged;
+
+  /// True once a group match started or has a result: teams can no longer move.
+  final bool editLocked;
 
   @override
   ConsumerState<GroupStageView> createState() => _GroupStageViewState();
@@ -50,6 +65,27 @@ class GroupStageView extends ConsumerStatefulWidget {
 class _GroupStageViewState extends ConsumerState<GroupStageView> {
   final Map<String, _Mode> _modes = {};
   final Map<String, int> _legs = {};
+  bool _saving = false;
+
+  /// Moves [participantId] into config group [groupIndex]; ignored while a
+  /// previous move is still being saved or when it is already in that group.
+  Future<void> _drop(String participantId, int groupIndex) async {
+    final config = widget.editableConfig;
+    final save = widget.onConfigChanged;
+    if (_saving || config == null || save == null) return;
+    if (config.groups[groupIndex].participantIds.contains(participantId)) {
+      return;
+    }
+    final next = config.moveParticipant(participantId, groupIndex: groupIndex);
+    // Unknown id (e.g. unapproved team): nothing moved, so do not save/regenerate.
+    if (identical(next, config)) return;
+    _saving = true;
+    try {
+      await save(next);
+    } finally {
+      _saving = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +124,21 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
         .maybeWhen(data: (matches) => matches, orElse: () => widget.matches);
     final grouped = groupStandings(standings, l10n.crossTableDefaultGroup);
     final groupNames = grouped.keys.toList()..sort();
+    final config = widget.editableConfig;
+    final editing =
+        config != null && widget.onConfigChanged != null && !widget.editLocked;
+    int? groupIndexOf(String name) {
+      if (config == null) return null;
+      final prefix = l10n.groupStage_groupPrefix;
+      String key(String raw) => groupDisplayName(raw, prefix).toLowerCase();
+      final matching = [
+        for (var i = 0; i < config.groups.length; i++)
+          if (key(config.groups[i].name) == key(name)) i,
+      ];
+      // Ambiguous names would drop the team into the wrong group: stay off.
+      return matching.length == 1 ? matching.first : null;
+    }
+
     final isGsknockout =
         (widget.bracketType ?? '').trim().toLowerCase() ==
         AppConstants.bracketGroupStageKnockout;
@@ -115,6 +166,10 @@ class _GroupStageViewState extends ConsumerState<GroupStageView> {
             leg: _legs[name] ?? 1,
             onMode: (mode) => setState(() => _modes[name] = mode),
             onLeg: (leg) => setState(() => _legs[name] = leg),
+            dragEnabled: editing,
+            onDrop: editing && groupIndexOf(name) != null
+                ? (id) => _drop(id, groupIndexOf(name)!)
+                : null,
           ),
       ],
     );
@@ -135,6 +190,8 @@ class _GroupCard extends StatelessWidget {
     required this.leg,
     required this.onMode,
     required this.onLeg,
+    this.dragEnabled = false,
+    this.onDrop,
   });
 
   final String tournamentId;
@@ -149,9 +206,21 @@ class _GroupCard extends StatelessWidget {
   final int leg;
   final ValueChanged<_Mode> onMode;
   final ValueChanged<int> onLeg;
+  final bool dragEnabled;
+  final ValueChanged<String>? onDrop;
 
   @override
   Widget build(BuildContext context) {
+    final onDrop = this.onDrop;
+    if (onDrop == null) return _card(context, false);
+    return DragTarget<String>(
+      onAcceptWithDetails: (details) => onDrop(details.data),
+      builder: (context, candidates, _) =>
+          _card(context, candidates.isNotEmpty),
+    );
+  }
+
+  Widget _card(BuildContext context, bool highlighted) {
     final l10n = AppLocalizations.of(context)!;
     final colors = context.colors;
     final count = standings.length;
@@ -168,7 +237,12 @@ class _GroupCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: colors.bgCard,
-        border: Border.symmetric(horizontal: BorderSide(color: colors.border)),
+        border: Border.symmetric(
+          horizontal: BorderSide(
+            color: highlighted ? AppTheme.primary : colors.border,
+            width: highlighted ? 2 : 1,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,11 +314,13 @@ class _GroupCard extends StatelessWidget {
               title: title,
               standings: standings,
               matches: legMatches,
+              dragEnabled: dragEnabled,
             ),
             _Mode.standings => _StandingsTable(
               standings: standings,
               football: allMatches.any(isFootballMatch),
               advancingCount: advancingCount,
+              dragEnabled: dragEnabled,
             ),
             _Mode.rounds => _LegMatchList(
               tournamentId: tournamentId,
@@ -464,14 +540,36 @@ Widget _headerCell(
   );
 }
 
-Widget _sideLines(Standing team, {bool teamOnly = false}) {
-  return Align(
-    alignment: Alignment.centerLeft,
-    child: ParticipantSideLines(
-      teamName: team.teamName.isEmpty ? null : team.teamName,
-      players: team.players,
-      teamOnly: teamOnly,
+Widget _sideLines(
+  BuildContext context,
+  Standing team, {
+  bool teamOnly = false,
+  bool draggable = false,
+}) {
+  Widget lines({double opacity = 1}) => Opacity(
+    opacity: opacity,
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: ParticipantSideLines(
+        teamName: team.teamName.isEmpty ? null : team.teamName,
+        players: team.players,
+        teamOnly: teamOnly,
+      ),
     ),
+  );
+  if (!draggable) return lines();
+  return LongPressDraggable<String>(
+    key: ValueKey('group-team-drag-${team.id}'),
+    data: team.id,
+    delay: bracketDragDelay,
+    feedback: Material(
+      color: context.colors.bgCard,
+      elevation: 4,
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(width: _nameWidth, child: lines()),
+    ),
+    childWhenDragging: lines(opacity: 0.35),
+    child: lines(),
   );
 }
 
@@ -482,6 +580,7 @@ class _MatrixTable extends StatelessWidget {
     required this.title,
     required this.standings,
     required this.matches,
+    this.dragEnabled = false,
   });
 
   final String tournamentId;
@@ -489,6 +588,7 @@ class _MatrixTable extends StatelessWidget {
   final String title;
   final List<Standing> standings;
   final List<MatchModel> matches;
+  final bool dragEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -589,7 +689,12 @@ class _MatrixTable extends StatelessWidget {
               width: _nameWidth,
               height: rowHeight,
               alignment: Alignment.centerLeft,
-              child: _sideLines(standings[i], teamOnly: teamOnly),
+              child: _sideLines(
+                context,
+                standings[i],
+                teamOnly: teamOnly,
+                draggable: dragEnabled,
+              ),
             ),
           ],
       ],
@@ -626,11 +731,13 @@ class _StandingsTable extends StatelessWidget {
     required this.standings,
     required this.football,
     required this.advancingCount,
+    this.dragEnabled = false,
   });
 
   final List<Standing> standings;
   final bool football;
   final int advancingCount;
+  final bool dragEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -710,7 +817,12 @@ class _StandingsTable extends StatelessWidget {
               height: rowHeight,
               color: tint(i),
               alignment: Alignment.centerLeft,
-              child: _sideLines(standings[i], teamOnly: football),
+              child: _sideLines(
+                context,
+                standings[i],
+                teamOnly: football,
+                draggable: dragEnabled,
+              ),
             ),
           ],
       ],

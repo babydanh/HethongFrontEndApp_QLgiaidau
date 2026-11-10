@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
@@ -668,5 +669,101 @@ void main() {
 
     expect(find.text('Đội w10-A'), findsNothing);
     expect(find.text('Đội w30-A'), findsOneWidget);
+  });
+
+  group('TC-GROUP-DND-06 edit params reach GroupStageView', () {
+    const config = GroupStageConfig(
+      groups: [
+        GroupStageGroup(name: 'A', participantIds: ['a1', 'a2']),
+      ],
+      unassignedParticipantIds: [],
+      participantIds: ['a1', 'a2'],
+      teamsAdvancing: 1,
+      teamsPerGroup: 2,
+    );
+    Future<void> onChanged(GroupStageConfig next) async {}
+    const standings = [
+      Standing(id: 'a1', teamName: 'Đội A1', group: 'A'),
+      Standing(id: 'a2', teamName: 'Đội A2', group: 'A'),
+    ];
+    final matches = [
+      _match('g1', groupName: 'A', stageType: 'GROUP'),
+      _match('k1', stageType: 'KNOCKOUT'),
+    ];
+    final overrides = [
+      standingsWithDivisionProvider((
+        tournamentId: 't-1',
+        divisionId: null,
+      )).overrideWith((ref) => Stream.value(standings)),
+      matchesWithDivisionProvider((
+        tournamentId: 't-1',
+        divisionId: null,
+      )).overrideWith((ref) => Stream.value(matches)),
+      bracketMatchesWithDivisionProvider((
+        tournamentId: 't-1',
+        divisionId: null,
+      )).overrideWith((ref) => Stream.value(matches)),
+    ];
+
+    void expectForwarded(WidgetTester tester) {
+      final view = tester.widget<GroupStageView>(find.byType(GroupStageView));
+      expect(view.editableConfig, same(config));
+      expect(view.onConfigChanged, same(onChanged));
+      expect(view.editLocked, isTrue);
+    }
+
+    testWidgets('PublicBracketView, group + playoff tabs', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          PublicBracketView(
+            tournamentId: 't-1',
+            matches: matches,
+            bracketType: 'group_stage_knockout',
+            editableConfig: config,
+            onConfigChanged: onChanged,
+            editLocked: true,
+          ),
+          overrides: overrides,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expectForwarded(tester);
+    });
+
+    testWidgets('PublicBracketView, plain round robin', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          PublicBracketView(
+            tournamentId: 't-1',
+            matches: [matches.first],
+            bracketType: 'round_robin',
+            editableConfig: config,
+            onConfigChanged: onChanged,
+            editLocked: true,
+          ),
+          overrides: overrides,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expectForwarded(tester);
+    });
+
+    testWidgets('PublicBracketLoader', (tester) async {
+      await tester.pumpWidget(
+        _host(
+          PublicBracketLoader(
+            tournamentId: 't-1',
+            divisionId: null,
+            bracketType: 'group_stage_knockout',
+            editableConfig: config,
+            onConfigChanged: onChanged,
+            editLocked: true,
+          ),
+          overrides: overrides,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expectForwarded(tester);
+    });
   });
 }

@@ -35,6 +35,9 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_management_b
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_strip.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/save_group_assignment.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/stage_operations_screen.dart';
 import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -91,6 +94,7 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
   int _selectedGroupTab = 0;
+  bool _savingGroup = false;
   String _searchQuery = '';
   int _selectedRound = 0;
   int _selectedLeg = 0;
@@ -491,6 +495,18 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   }
 
                   if (hasGroupStage) {
+                    // A global ADMIN of someone else's tournament keeps the old view.
+                    final canEditGroups =
+                        widget.canEditBracket ||
+                        (auth.role == UserRole.admin && !adminLocked);
+                    if (canEditGroups && _activeDivisionId != null) {
+                      return _buildManagedGroupStage(
+                        matches,
+                        effectiveBracketType,
+                        tournament,
+                        canScoreMatch: canScoreMatch,
+                      );
+                    }
                     return Column(
                       mainAxisSize: widget.isEmbedded
                           ? MainAxisSize.min
@@ -498,9 +514,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                       children: [
                         _buildGroupStageTabBar(l10n),
                         const SizedBox(height: 8),
-                        if (canManageGroupAssignment &&
-                            _activeDivisionId != null)
-                          _buildManageGroupStageButton(l10n),
                         if (widget.isEmbedded)
                           _buildGroupTabContent(
                             matches,
@@ -722,6 +735,86 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
         ),
       ),
     );
+  }
+
+  /// Managers: the shared public group view in edit mode (drag a team onto
+  /// another group). Read-only once any group match started.
+  Widget _buildManagedGroupStage(
+    List<MatchModel> matches,
+    String bracketType,
+    Tournament? tournament, {
+    required bool canScoreMatch,
+  }) {
+    final divisionId = _activeDivisionId!;
+    final division = tournament?.divisions
+        .where((division) => division.id == divisionId)
+        .firstOrNull;
+    final teams = ref.watch(teamsProvider(widget.tournamentId)).value;
+    final config = tournament == null || division == null || teams == null
+        ? null
+        : resolveGroupStageConfig(
+            division: division,
+            tournamentConfig: tournament.tournamentConfig,
+            teams: teams
+                .where(
+                  (team) => team.divisionId == divisionId && team.isApproved,
+                )
+                .toList(growable: false),
+          );
+    final view = PublicBracketView(
+      tournamentId: widget.tournamentId,
+      divisionId: divisionId,
+      matches: matches,
+      bracketType: bracketType,
+      canScoreMatch: canScoreMatch,
+      editableConfig: config,
+      onConfigChanged: division == null
+          ? null
+          : (next) => _saveGroupMove(division, next, matches),
+      editLocked: matches
+          .where(isGroupStageMatch)
+          .any(groupMatchHasStartedOrResult),
+    );
+    if (widget.isEmbedded) return view;
+    return SingleChildScrollView(
+      controller: widget.scrollController,
+      padding: const EdgeInsets.only(bottom: 160),
+      child: view,
+    );
+  }
+
+  /// Persists a group move; a second call while one is running is ignored.
+  Future<void> _saveGroupMove(
+    TournamentDivision division,
+    GroupStageConfig next,
+    List<MatchModel> matches,
+  ) async {
+    if (_savingGroup) return;
+    _savingGroup = true;
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    // Captured before the awaits: the widget may be disposed mid-request.
+    final container = ProviderScope.containerOf(context, listen: false);
+    String message;
+    try {
+      final result = await saveGroupAssignment(
+        container,
+        tournamentId: widget.tournamentId,
+        divisionId: division.id,
+        division: division,
+        config: next,
+        matches: matches,
+      );
+      final regenerationError = result.regenerationError;
+      message = regenerationError == null
+          ? l10n.groupAssignmentSaved
+          : l10n.groupAssignmentRegenerateError(regenerationError.toString());
+    } catch (error) {
+      message = l10n.groupAssignmentSaveError(error.toString());
+    } finally {
+      _savingGroup = false;
+    }
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildManageGroupStageButton(AppLocalizations l10n) {

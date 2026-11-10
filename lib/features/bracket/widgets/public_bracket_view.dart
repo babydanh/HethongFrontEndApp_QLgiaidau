@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
@@ -34,6 +35,9 @@ class PublicBracketView extends StatelessWidget {
     this.divisionId,
     this.bracketType,
     this.canScoreMatch = false,
+    this.editableConfig,
+    this.onConfigChanged,
+    this.editLocked = false,
   });
 
   final String tournamentId;
@@ -44,6 +48,11 @@ class PublicBracketView extends StatelessWidget {
   /// Viewer may enter scores (admin / organizer): a tapped match opens the
   /// score-entry popup instead of the read-only detail.
   final bool canScoreMatch;
+
+  /// Group edit mode, forwarded to [GroupStageView] (null = read-only).
+  final GroupStageConfig? editableConfig;
+  final Future<void> Function(GroupStageConfig next)? onConfigChanged;
+  final bool editLocked;
 
   _Kind _kindOf(List<MatchModel> all) {
     final raw = (bracketType ?? '').trim().toLowerCase();
@@ -105,6 +114,9 @@ class PublicBracketView extends StatelessWidget {
         divisionId: divisionId,
         bracketType: bracketType,
         canScoreMatch: canScoreMatch,
+        editableConfig: editableConfig,
+        onConfigChanged: onConfigChanged,
+        editLocked: editLocked,
         matches: matches,
         knockoutMatches: matches.where(isKnockoutMatch).toList(growable: false),
       );
@@ -128,6 +140,9 @@ class PublicBracketView extends StatelessWidget {
         divisionId: divisionId,
         bracketType: bracketType,
         canScoreMatch: canScoreMatch,
+        editableConfig: editableConfig,
+        onConfigChanged: onConfigChanged,
+        editLocked: editLocked,
       ),
       _Kind.double || _Kind.single => PlayoffDoubleElimView(
         matches: knockoutOnly,
@@ -209,12 +224,18 @@ class _GroupPlayoffTabs extends StatefulWidget {
     required this.matches,
     required this.knockoutMatches,
     required this.canScoreMatch,
+    required this.editableConfig,
+    required this.onConfigChanged,
+    required this.editLocked,
   });
 
   final String tournamentId;
   final String? divisionId;
   final String? bracketType;
   final bool canScoreMatch;
+  final GroupStageConfig? editableConfig;
+  final Future<void> Function(GroupStageConfig next)? onConfigChanged;
+  final bool editLocked;
   final List<MatchModel> matches;
   final List<MatchModel> knockoutMatches;
 
@@ -286,6 +307,9 @@ class _GroupPlayoffTabsState extends State<_GroupPlayoffTabs> {
             divisionId: widget.divisionId,
             bracketType: widget.bracketType,
             canScoreMatch: widget.canScoreMatch,
+            editableConfig: widget.editableConfig,
+            onConfigChanged: widget.onConfigChanged,
+            editLocked: widget.editLocked,
           )
         else if (widget.knockoutMatches.isEmpty)
           Padding(
@@ -318,12 +342,18 @@ class PublicBracketLoader extends ConsumerWidget {
     required this.divisionId,
     this.bracketType,
     this.canScoreMatch = false,
+    this.editableConfig,
+    this.onConfigChanged,
+    this.editLocked = false,
   });
 
   final String tournamentId;
   final String? divisionId;
   final String? bracketType;
   final bool canScoreMatch;
+  final GroupStageConfig? editableConfig;
+  final Future<void> Function(GroupStageConfig next)? onConfigChanged;
+  final bool editLocked;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -343,6 +373,9 @@ class PublicBracketLoader extends ConsumerWidget {
             matches: matches,
             bracketType: bracketType,
             canScoreMatch: canScoreMatch,
+            editableConfig: editableConfig,
+            onConfigChanged: onConfigChanged,
+            editLocked: editLocked,
           ),
           loading: () => const BoneBracketLoading(),
           error: (error, _) => Padding(

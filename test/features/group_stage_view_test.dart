@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/group_stage_config.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/providers/standings_provider.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -178,5 +182,191 @@ void main() {
     await tester.tap(find.text('Bảng chéo'));
     await tester.pumpAndSettle();
     expect(find.text('STT'), findsOneWidget);
+  });
+
+  group('drag a team to another group (TC-GROUP-DND)', () {
+    final standings = [
+      const Standing(id: 't1', teamName: 'Đội Một', group: 'A'),
+      const Standing(id: 't2', teamName: 'Đội Hai', group: 'A'),
+      const Standing(id: 't3', teamName: 'Đội Ba', group: 'B'),
+    ];
+    const config = GroupStageConfig(
+      groups: [
+        GroupStageGroup(name: 'A', participantIds: ['t1', 't2']),
+        GroupStageGroup(name: 'B', participantIds: ['t3']),
+      ],
+      unassignedParticipantIds: [],
+      participantIds: ['t1', 't2', 't3'],
+      teamsAdvancing: 1,
+      teamsPerGroup: 2,
+    );
+
+    Future<void> pumpEditable(
+      WidgetTester tester, {
+      Future<void> Function(GroupStageConfig next)? onConfigChanged,
+      bool editLocked = false,
+      GroupStageConfig editableConfig = config,
+    }) async {
+      tester.view.physicalSize = const Size(400, 1200);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            standingsWithDivisionProvider((
+              tournamentId: 't-1',
+              divisionId: null,
+            )).overrideWith((ref) => Stream.value(standings)),
+            matchesWithDivisionProvider((
+              tournamentId: 't-1',
+              divisionId: null,
+            )).overrideWith((ref) => Stream.value(const <MatchModel>[])),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('vi'),
+            theme: AppTheme.lightTheme,
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: GroupStageView(
+                  matches: const [],
+                  tournamentId: 't-1',
+                  editableConfig: editableConfig,
+                  onConfigChanged: onConfigChanged,
+                  editLocked: editLocked,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> dragTeamToGroupB(WidgetTester tester, String team) async {
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text(team)),
+      );
+      await tester.pump(kLongPressTimeout);
+      await gesture.moveTo(tester.getCenter(find.text('Bảng B')));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'TC-GROUP-DND-01 dropping on another group reports new config',
+      (tester) async {
+        final saved = <GroupStageConfig>[];
+        await pumpEditable(
+          tester,
+          onConfigChanged: (next) async => saved.add(next),
+        );
+
+        await dragTeamToGroupB(tester, 'Đội Một');
+
+        expect(saved, hasLength(1));
+        expect(saved.single.groups[0].participantIds, ['t2']);
+        expect(saved.single.groups[1].participantIds, ['t3', 't1']);
+      },
+    );
+
+    testWidgets('TC-GROUP-DND-02 editLocked renders no draggable team', (
+      tester,
+    ) async {
+      var calls = 0;
+      await pumpEditable(
+        tester,
+        editLocked: true,
+        onConfigChanged: (next) async => calls++,
+      );
+
+      expect(find.byType(LongPressDraggable<String>), findsNothing);
+      await dragTeamToGroupB(tester, 'Đội Một');
+      expect(calls, 0);
+    });
+
+    testWidgets('TC-GROUP-DND-08 team missing from the config is not saved', (
+      tester,
+    ) async {
+      var calls = 0;
+      await pumpEditable(
+        tester,
+        // t1 is shown in the standings but unknown to this config.
+        editableConfig: const GroupStageConfig(
+          groups: [
+            GroupStageGroup(name: 'A', participantIds: ['t2']),
+            GroupStageGroup(name: 'B', participantIds: ['t3']),
+          ],
+          unassignedParticipantIds: [],
+          participantIds: ['t2', 't3'],
+          teamsAdvancing: 1,
+          teamsPerGroup: 2,
+        ),
+        onConfigChanged: (next) async => calls++,
+      );
+
+      await dragTeamToGroupB(tester, 'Đội Một');
+
+      expect(calls, 0);
+    });
+
+    testWidgets('TC-GROUP-DND-09 group names match ignoring case', (
+      tester,
+    ) async {
+      final saved = <GroupStageConfig>[];
+      await pumpEditable(
+        tester,
+        editableConfig: const GroupStageConfig(
+          groups: [
+            GroupStageGroup(name: 'bảng a', participantIds: ['t1', 't2']),
+            GroupStageGroup(name: 'BẢNG B', participantIds: ['t3']),
+          ],
+          unassignedParticipantIds: [],
+          participantIds: ['t1', 't2', 't3'],
+          teamsAdvancing: 1,
+          teamsPerGroup: 2,
+        ),
+        onConfigChanged: (next) async => saved.add(next),
+      );
+
+      await dragTeamToGroupB(tester, 'Đội Một');
+
+      expect(saved, hasLength(1));
+    });
+
+    testWidgets('TC-GROUP-DND-03 no onConfigChanged keeps view read-only', (
+      tester,
+    ) async {
+      await pumpEditable(tester);
+
+      expect(find.byType(LongPressDraggable<String>), findsNothing);
+      expect(find.byType(DragTarget<String>), findsNothing);
+    });
+
+    testWidgets('TC-GROUP-DND-05 a drop while saving is ignored', (
+      tester,
+    ) async {
+      final pending = Completer<void>();
+      var calls = 0;
+      await pumpEditable(
+        tester,
+        onConfigChanged: (next) {
+          calls++;
+          return pending.future;
+        },
+      );
+
+      await dragTeamToGroupB(tester, 'Đội Một');
+      await dragTeamToGroupB(tester, 'Đội Hai');
+      expect(calls, 1);
+
+      pending.complete();
+      await tester.pumpAndSettle();
+      await dragTeamToGroupB(tester, 'Đội Hai');
+      expect(calls, 2);
+    });
   });
 }
