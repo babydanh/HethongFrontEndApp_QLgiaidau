@@ -12,10 +12,10 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/standalone_match_owner.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
-import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/match_tab/social_match_mapper.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
@@ -191,7 +191,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   Future<void> _openResult(ClubSessionMatchModel match) async {
     final action = await ClubStandaloneMatchResultDialog.show(
       context,
-      match: _toMatchModel(match),
+      match: socialSessionMatchToMatchModel(match),
       showScoreboardAction: false,
     );
     if (!mounted || action != ClubStandaloneMatchAction.saved) return;
@@ -200,7 +200,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
 
   /// Live scoring (same page the CLB tab opens); refreshes the list on return.
   Future<void> _openScoreboard(ClubSessionMatchModel sm) async {
-    final match = _toMatchModel(sm);
+    final match = socialSessionMatchToMatchModel(sm);
     final repository = ref.read(matchRepositoryProvider);
     if (repository is ApiMatchRepository) repository.primeMatch(match);
     await Navigator.of(context).push<void>(
@@ -213,50 +213,6 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
       ),
     );
     if (mounted) unawaited(_fetchMatches());
-  }
-
-  MatchModel _toMatchModel(ClubSessionMatchModel sm) {
-    final sideAMembers = sm.sideAMembers
-        .map(
-          (m) => MatchMemberInfo(
-            userId: m.userId,
-            fullName: m.displayName,
-            avatarUrl: m.avatarUrl,
-            isMock: m.isMock,
-          ),
-        )
-        .toList(growable: false);
-    final sideBMembers = sm.sideBMembers
-        .map(
-          (m) => MatchMemberInfo(
-            userId: m.userId,
-            fullName: m.displayName,
-            avatarUrl: m.avatarUrl,
-            isMock: m.isMock,
-          ),
-        )
-        .toList(growable: false);
-    final sideAName = sm.sideANames.join(' · ').trim();
-    final sideBName = sm.sideBNames.join(' · ').trim();
-    return MatchModel(
-      id: sm.id,
-      isStandaloneMatch: true,
-      round: 0,
-      matchNumber: 1,
-      team1Id: 'SIDE_A',
-      team2Id: 'SIDE_B',
-      team1Name: sideAName.isEmpty ? 'Đội A' : sideAName,
-      team2Name: sideBName.isEmpty ? 'Đội B' : sideBName,
-      score1: sm.sideAScore,
-      score2: sm.sideBScore,
-      status: sm.status,
-      bracketPosition: const BracketPosition(round: 1, position: 1),
-      scoreDetails: sm.scoreDetails,
-      team1MemberInfos: sideAMembers,
-      team2MemberInfos: sideBMembers,
-      revision: sm.revision,
-      updatedAt: sm.updatedAt ?? sm.createdAt ?? DateTime.now(),
-    );
   }
 
   @override
