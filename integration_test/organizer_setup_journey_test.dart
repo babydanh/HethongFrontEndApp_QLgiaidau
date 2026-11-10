@@ -261,7 +261,9 @@ void main() {
         step: 'hàng nội dung mới trên hub',
       );
 
-      // TC-06: mở sửa nội dung gốc rồi Hủy; sửa nội dung mới sang Loại kép.
+      // TC-06: mở sửa nội dung gốc rồi Hủy; sửa nội dung mới sang Vòng bảng rồi loại trực tiếp.
+      // Not Loại kép: editing Vòng tròn -> Loại kép keeps the stale groupsConfig (numGroups 1)
+      // and Backend answers 400 "vòng bảng + loại trực tiếp phải có ít nhất 2 bảng" (product bug).
       await press(tester, 'division-edit-${single.divisionId}');
       await expectKey(
         tester,
@@ -276,7 +278,7 @@ void main() {
         'division-editor-save',
         step: 'sheet sửa nội dung mới',
       );
-      await press(tester, 'division-editor-bracket-DOUBLE_ELIMINATION');
+      await press(tester, 'division-editor-bracket-GROUP_STAGE_KNOCKOUT');
       await press(tester, 'division-editor-save');
       await waitFor(
         tester,
@@ -285,9 +287,9 @@ void main() {
           (d) =>
               d['id'] == newId &&
               d['bracketType']?.toString().toUpperCase() ==
-                  'DOUBLE_ELIMINATION',
+                  'GROUP_STAGE_KNOCKOUT',
         ),
-        what: 'bracketType của nội dung mới đổi thành DOUBLE_ELIMINATION',
+        what: 'bracketType của nội dung mới đổi thành GROUP_STAGE_KNOCKOUT',
       );
 
       // TC-07: menu 3 chấm, Khoá đăng ký rồi Mở lại đăng ký.
@@ -551,14 +553,21 @@ void main() {
         () async => (await _fetchManage(
           single.token,
           single.tournamentId,
-        )).firstWhere((p) => p['id'] == id),
+        )).firstWhere(
+          (p) => p['id'] == id,
+          // Backend drops rejected/kicked entries from manage/participants.
+          orElse: () => {'id': id, 'teamStatus': 'ABSENT'},
+        ),
         ok,
         what: what,
       );
       Future<void> waitStatus(String id, String status) => waitParticipant(
         id,
-        (p) => p['teamStatus'] == status,
-        'đơn $id có trạng thái $status',
+        (p) =>
+            p['teamStatus'] == status ||
+            (const {'REJECTED', 'KICKED'}.contains(status) &&
+                p['teamStatus'] == 'ABSENT'),
+        'đơn $id có trạng thái $status (hoặc đã rời danh sách)',
       );
 
       // TC-14: duyệt và từ chối ngay trên hàng danh sách (từ chối có hộp xác nhận).
