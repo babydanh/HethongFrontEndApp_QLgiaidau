@@ -368,7 +368,7 @@ void main() {
       await tapKey(tester, 'schedMgmt-courts');
       await expectKey(tester, 'venue-add', step: 'màn Địa điểm & sân từ nút Tạo sân');
       await shooter.snap('70-man-tao-san');
-      await tester.pageBack();
+      await _tap(tester, find.byTooltip('Quay lại'));
       await _waitGone(tester, find.byKey(const ValueKey('venue-add')), 'màn Địa điểm & sân đóng');
 
       // TC-QLGD-APP-71: schedMgmt-hours opens the hours sheet; save a new step.
@@ -574,7 +574,8 @@ void main() {
       await shooter.snap('75-sheet-thu-hoi');
       await tapKey(tester, 'permissions-row-sheet-action');
       await pumpUntilFound(tester, find.byType(AlertDialog), what: 'hộp xác nhận Thu hồi');
-      await _tap(tester, _inDialog('Thu hồi'));
+      // Tiêu đề hộp cũng là "Thu hồi": bấm đúng nút xác nhận (FilledButton).
+      await _tap(tester, find.descendant(of: find.byType(AlertDialog), matching: find.byType(FilledButton)).last);
       await _backendUntil(
         tester,
         () => raw.list('/tournaments/${seeded.tournamentId}/referees'),
@@ -591,7 +592,8 @@ void main() {
     'TC-QLGD-APP-76..77: Ban tổ chức chỉnh lệ phí bằng chip, kiểm tra ràng buộc rút tiền, không gửi yêu cầu thật',
     (tester) async {
       final api = BackendApi();
-      final seeded = await _seedA(api);
+      // Backend không cho đổi lệ phí khi giải đã có người tham gia: dùng giải riêng chưa có VĐV.
+      final seeded = await seedTournament(api, players: 0);
       final shooter = _Shooter(tester, binding, 'qlgd76');
       final container = await signInAsOrganizer(tester);
       await openManageHub(tester, container, seeded.tournamentId);
@@ -699,7 +701,9 @@ void main() {
       await _expectText(tester, 'Mã QR Chia Sẻ');
       await shooter.snap('78-ma-qr');
       await _tap(tester, find.descendant(of: find.byType(AlertDialog), matching: find.text('Sao chép link')));
-      await _closeRoute(tester, find.byType(QrImageView));
+      if (find.byType(QrImageView).evaluate().isNotEmpty) {
+        await _closeRoute(tester, find.byType(QrImageView));
+      }
       await _waitGone(tester, find.byType(QrImageView), 'hộp thoại mã QR đóng');
       _clearSnackBars(tester);
       await openShare();
