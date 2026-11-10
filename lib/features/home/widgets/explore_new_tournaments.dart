@@ -68,6 +68,50 @@ NewTournaments pickNewTournaments(List<Tournament> tournaments, DateTime now) {
   );
 }
 
+/// A new tournament placed in a time slot of the Explore list.
+class NewTournamentEntry {
+  const NewTournamentEntry({
+    required this.tournament,
+    required this.live,
+    required this.timeSlot,
+  });
+
+  final Tournament tournament;
+  final bool live;
+
+  /// "HH:mm", same format as `SocialSessionModel.timeSlot`.
+  final String timeSlot;
+}
+
+/// New tournaments shown on [day]'s time list. Anchor = start time (opened
+/// ones without a start date use their opening time). An anchor before today
+/// (e.g. started yesterday) is shown on today with its clock time.
+List<NewTournamentEntry> newTournamentEntriesForDay(
+  List<Tournament> tournaments,
+  DateTime day,
+  DateTime now,
+) {
+  final picked = pickNewTournaments(tournaments, now);
+  final today = DateUtils.dateOnly(now);
+
+  NewTournamentEntry? place(Tournament t, bool live, DateTime anchor) {
+    final local = anchor.toLocal();
+    final shownOn = local.isBefore(today) ? today : DateUtils.dateOnly(local);
+    if (!DateUtils.isSameDay(shownOn, day)) return null;
+    return NewTournamentEntry(
+      tournament: t,
+      live: live,
+      timeSlot: DateFormat('HH:mm').format(local),
+    );
+  }
+
+  return [
+    for (final t in picked.started) ?place(t, true, t.startDate!),
+    for (final t in picked.opened)
+      ?place(t, false, t.startDate ?? _openedAt(t, now)),
+  ];
+}
+
 /// Explore block: tournaments that just opened registration or just started.
 /// Renders nothing while loading, on error, or when both groups are empty.
 class ExploreNewTournaments extends ConsumerWidget {
@@ -117,7 +161,7 @@ class _Group extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          for (final t in items) _NewTournamentCard(tournament: t, live: live),
+          for (final t in items) NewTournamentCard(tournament: t, live: live),
         ],
       ),
     );
@@ -125,8 +169,12 @@ class _Group extends StatelessWidget {
 }
 
 /// Flat card: the whole card opens the tournament, there is no register button.
-class _NewTournamentCard extends StatelessWidget {
-  const _NewTournamentCard({required this.tournament, required this.live});
+class NewTournamentCard extends StatelessWidget {
+  const NewTournamentCard({
+    super.key,
+    required this.tournament,
+    required this.live,
+  });
 
   final Tournament tournament;
   final bool live;
