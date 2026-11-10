@@ -59,6 +59,7 @@ Future<void> _pump(
   required Map<String, dynamic> result,
   List<MatchModel>? matches,
   VoidCallback? onShare,
+  bool inline = false,
 }) async {
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -85,8 +86,8 @@ Future<void> _pump(
           routes: [
             GoRoute(
               path: '/',
-              builder: (_, _) => Scaffold(
-                body: ResultsMergedTab(
+              builder: (_, _) {
+                final tab = ResultsMergedTab(
                   tournamentId: _tid,
                   isLite: false,
                   canManage: false,
@@ -94,8 +95,13 @@ Future<void> _pump(
                   divisionName: 'Đôi Nam',
                   matchType: 'DOUBLES',
                   onShare: onShare,
-                ),
-              ),
+                  inline: inline,
+                );
+                // Inline = placed in a page that already scrolls (accordion row).
+                return Scaffold(
+                  body: inline ? SingleChildScrollView(child: tab) : tab,
+                );
+              },
             ),
           ],
         ),
@@ -106,6 +112,16 @@ Future<void> _pump(
 }
 
 void main() {
+  testWidgets('TC-MERGED-04 inline: lays out inside a scrolling page', (
+    tester,
+  ) async {
+    await _pump(tester, result: _withAward, inline: true);
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('CLB Sài Gòn'), findsOneWidget);
+    expect(_row('fin'), findsOneWidget);
+  });
+
   group('TC-MERGED-01 podium above the board', () {
     testWidgets('finished knockout division: podium, then the final only', (
       tester,

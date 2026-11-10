@@ -17,6 +17,7 @@ class ResultsMergedTab extends ConsumerWidget {
     this.divisionName,
     this.matchType,
     this.onShare,
+    this.inline = false,
   });
 
   final String tournamentId;
@@ -33,6 +34,10 @@ class ResultsMergedTab extends ConsumerWidget {
   /// Opens the share sheet when the podium is tapped.
   final VoidCallback? onShare;
 
+  /// Placed in a page that already scrolls (an accordion row): lays out as a
+  /// plain column instead of its own scrolling list.
+  final bool inline;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasPodium = ref.watch(
@@ -45,10 +50,7 @@ class ResultsMergedTab extends ConsumerWidget {
       }),
     );
 
-    return ListView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 140),
-      children: [
+    final children = [
         ResultsTab(
           key: ValueKey('results-podium-$divisionId'),
           tournamentId: tournamentId,
@@ -67,7 +69,17 @@ class ResultsMergedTab extends ConsumerWidget {
           divisionId: divisionId,
           finalOnly: hasPodium,
         ),
-      ],
+    ];
+    if (inline) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 140),
+      children: children,
     );
   }
 }

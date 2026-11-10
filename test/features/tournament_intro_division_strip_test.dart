@@ -118,34 +118,31 @@ Future<List<String?>> _pumpResultsTab(WidgetTester tester) async {
   return requestedDivisions;
 }
 
+Finder _divisionRow(String name) => find.descendant(
+  of: find.byType(DivisionAccordion),
+  matching: find.text(name),
+);
+
 void main() {
   testWidgets(
-    'TC-DIVSHARE-09: results tab picks a division with the shared strip, not the old accordion',
+    'TC-DIVSHARE-09: results tab lists divisions with the accordion, like the Teams tab',
     (tester) async {
       await _pumpResultsTab(tester);
 
-      expect(find.byType(DivisionStrip), findsOneWidget);
-      expect(find.byType(DivisionAccordion), findsNothing);
-      expect(
-        find.byKey(const ValueKey('results-division-$_divisionA')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const ValueKey('results-division-$_divisionB')),
-        findsOneWidget,
-      );
+      expect(find.byType(DivisionAccordion), findsOneWidget);
+      expect(find.byType(DivisionStrip), findsNothing);
+      expect(_divisionRow('Adults'), findsOneWidget);
+      expect(_divisionRow('Youth'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'TC-DIVSHARE-10: tapping a chip loads the results of that division',
+    'TC-DIVSHARE-10: tapping a division row loads the results of that division',
     (tester) async {
       final requested = await _pumpResultsTab(tester);
       expect(requested.last, _divisionA);
 
-      await tester.tap(
-        find.byKey(const ValueKey('results-division-$_divisionB')),
-      );
+      await tester.tap(_divisionRow('Youth'));
       for (var i = 0; i < 10; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
