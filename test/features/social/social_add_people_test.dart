@@ -76,4 +76,48 @@ void main() {
       expect(preview.overflow, 0);
     });
   });
+
+  group('canAddSocialPeople', () {
+    final startAt = DateTime(2026, 11, 9, 19, 30);
+    final end = startAt.add(const Duration(minutes: 120));
+    SocialSessionModel session(String status) => SocialSessionModel(
+      id: 's1',
+      hostUserId: 'h',
+      title: 'Giao lưu',
+      playFormat: 'Giao lưu',
+      startAt: startAt,
+      durationMinutes: 120,
+      venueName: 'Sân A',
+      venueAddress: '1 Đường B',
+      sport: 'PICKLEBALL',
+      sportName: 'Pickleball',
+      status: status,
+    );
+
+    test('OPEN và FULL thêm được lúc nào cũng được', () {
+      final during = end.subtract(const Duration(hours: 1));
+      expect(canAddSocialPeople(session('OPEN'), now: during), isTrue);
+      expect(canAddSocialPeople(session('FULL'), now: during), isTrue);
+    });
+
+    test('CANCELLED không bao giờ thêm được', () {
+      expect(canAddSocialPeople(session('CANCELLED'), now: end), isFalse);
+    });
+
+    test('COMPLETED thêm được tới 2 ngày sau giờ kết thúc, từ mốc đó thì không', () {
+      final s = session('completed');
+      expect(canAddSocialPeople(s, now: end.add(const Duration(hours: 1))), isTrue);
+      expect(
+        canAddSocialPeople(
+          s,
+          now: end.add(const Duration(days: 2)).subtract(const Duration(milliseconds: 1)),
+        ),
+        isTrue,
+      );
+      expect(
+        canAddSocialPeople(s, now: end.add(const Duration(days: 2))),
+        isFalse,
+      );
+    });
+  });
 }

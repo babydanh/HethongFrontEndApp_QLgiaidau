@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/social_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/social/logic/social_add_people.dart';
 
 class SocialParticipantsTab extends StatelessWidget {
   const SocialParticipantsTab({
@@ -48,6 +49,7 @@ class SocialParticipantsTab extends StatelessWidget {
     final inconsistent =
         confirmedCount != session.currentSlots || confirmedCount > totalSlots;
     final isCompleted = session.status.toUpperCase() == 'COMPLETED';
+    final canAddPeople = isHost && canAddSocialPeople(session);
     final pendingRequests = session.requestedParticipants;
 
     return ListView(
@@ -69,7 +71,7 @@ class SocialParticipantsTab extends StatelessWidget {
                 ),
               ),
             ),
-            if (isHost && !isCompleted)
+            if (canAddPeople)
               TextButton.icon(
                 onPressed: onAddParticipant,
                 icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
@@ -207,9 +209,7 @@ class SocialParticipantsTab extends StatelessWidget {
             } else {
               // Empty slot with '+' icon
               return InkWell(
-                onTap: (isHost && !isCompleted)
-                    ? onAddParticipant
-                    : null,
+                onTap: canAddPeople ? onAddParticipant : null,
                 borderRadius: BorderRadius.circular(28),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

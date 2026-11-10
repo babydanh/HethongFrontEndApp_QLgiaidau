@@ -58,6 +58,23 @@ bool isSearchableSocialTerm(String raw) {
   return term.length >= 3;
 }
 
+/// Buổi đã kết thúc vẫn cho host thêm người trong khoảng này sau giờ kết thúc
+/// dự kiến (khớp Backend `SOCIAL_ADD_PEOPLE_GRACE_MS`).
+const socialAddPeopleGrace = Duration(days: 2);
+
+/// Host thêm người được ở mọi trạng thái trừ CANCELLED; buổi COMPLETED chỉ tới
+/// 2 ngày sau `startAt + durationMinutes`. Ngoài khoảng đó Backend trả
+/// `SESSION_CLOSED`. Việc có phải host hay không do nơi gọi kiểm.
+bool canAddSocialPeople(SocialSessionModel session, {DateTime? now}) {
+  final status = session.status.toUpperCase();
+  if (status == 'CANCELLED') return false;
+  if (status != 'COMPLETED') return true;
+  final closesAt = session.startAt
+      .add(Duration(minutes: session.durationMinutes))
+      .add(socialAddPeopleGrace);
+  return (now ?? DateTime.now()).isBefore(closesAt);
+}
+
 /// userId của các tài khoản đã vào buổi hoặc đang chờ duyệt (không tính khách).
 Set<String> joinedUserIds(SocialSessionModel session) => {
   for (final p in [...session.participants, ...session.requestedParticipants])

@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/core/widgets/club_network_image.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
+import 'package:app_quanly_giaidau/features/social/logic/social_add_people.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_join_bottom_sheet.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/detail_tab/social_details_tab.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/participant_tab/social_participants_tab.dart';
@@ -348,7 +349,7 @@ class _SocialDetailScreenState extends ConsumerState<SocialDetailScreen>
                       onRemoveParticipant: _removeParticipant,
                       removingParticipantId: _removingParticipantId,
                       onAddParticipant: () {
-                        if (session.status.toUpperCase() == 'COMPLETED') return;
+                        if (!canAddSocialPeople(session)) return;
                         SocialAddParticipantSheet.show(context, session);
                       },
                       onApproveParticipant: host && !_reviewing
