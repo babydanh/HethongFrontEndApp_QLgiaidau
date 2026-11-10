@@ -123,7 +123,11 @@ void main() {
       await shooter.snap('cho-duyet');
 
       // Rút yêu cầu: hộp thoại xác nhận rồi quay về "Yêu cầu tham gia".
-      await tapText(tester, 'Chờ duyệt');
+      await tapFinder(
+        tester,
+        find.widgetWithText(ElevatedButton, 'Chờ duyệt'),
+        what: 'nút Chờ duyệt (rút yêu cầu)',
+      );
       await pumpUntilFound(tester, find.text('Hủy yêu cầu tham gia?'), what: 'hộp thoại hủy yêu cầu');
       await tapText(tester, 'Xác nhận');
       await pumpUntilFound(
@@ -216,7 +220,13 @@ void main() {
         timeout: const Duration(seconds: 30),
       );
       await shooter.snap('ket-qua-tim-nguoi');
-      await tester.tap(find.text(account.fullName).first);
+      await socialWait(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.widgetWithText(ListTile, account.fullName),
+          matching: find.byType(Checkbox),
+        ),
+      );
       await tester.pump();
       await tapText(tester, 'Thêm vào buổi (1)');
       await pumpUntilFound(
@@ -342,7 +352,9 @@ void main() {
         reason: 'host buổi cá nhân có thể thức Bracket',
       );
       for (final name in [hostName, ...others.map((u) => u.fullName)]) {
-        await tester.tap(find.descendant(of: dialog, matching: find.text(name)).first);
+        final row = find.descendant(of: dialog, matching: find.text(name));
+        await pumpUntilFound(tester, row, what: 'dòng thành viên "$name" trong hộp thoại Tạo trận đấu');
+        await tester.tap(row.first);
         await tester.pump();
       }
       await shooter.snap('da-chon-hai-doi');

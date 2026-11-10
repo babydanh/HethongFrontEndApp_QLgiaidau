@@ -95,8 +95,15 @@ class SocialApi {
   }
 
   /// Hồ sơ của chính người gọi (`GET /users/profile`).
-  Future<Map<String, dynamic>> profile(String token) async =>
-      _asMap(await _send('GET', '/users/profile', token: token));
+  /// Backend lồng họ tên trong `profile`: gộp lên cùng cấp như `UserProfile.fromJson` của app.
+  Future<Map<String, dynamic>> profile(String token) async {
+    final map = _asMap(await _send('GET', '/users/profile', token: token));
+    final nested = map['profile'];
+    if (nested is Map) {
+      nested.forEach((k, v) => map.putIfAbsent('$k', () => v));
+    }
+    return map;
+  }
 
   /// Môn thể thao đầu tiên đang bật (giống form tạo kèo chọn sẵn), ưu tiên pickleball.
   Future<String> sportSlug() async {
@@ -375,17 +382,11 @@ Future<void> openSession(
   SeededSession session,
 ) async {
   // Về trang chủ trước để dọn ngăn xếp trang còn sót, rồi push (không go): thoát buổi (huỷ buổi, nút back)
-  // cần còn trang bên dưới để pop. Thử lại vài lần và ghi đường dẫn hiện tại để biết điều hướng có ăn không.
+  // cần còn trang bên dưới để pop.
   final router = container.read(routerProvider);
   router.go('/home');
   await socialWait(tester, const Duration(seconds: 1));
-  for (var attempt = 1; attempt <= 3; attempt++) {
-    router.push('/social/${session.id}');
-    await socialWait(tester, const Duration(seconds: 2));
-    final path = router.routerDelegate.currentConfiguration.uri.path;
-    debugPrint('openSession lần $attempt: đường dẫn hiện tại $path');
-    if (path.startsWith('/social/')) break;
-  }
+  router.push('/social/${session.id}');
   await pumpUntilFound(
     tester,
     find.text(session.title.toUpperCase()),
