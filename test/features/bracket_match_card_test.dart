@@ -1,13 +1,13 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_card_parts.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_match_card.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// TC-BMC-01..05: the match card of the full-screen diagram uses the same
-// design as the card of the paged board in the tab.
+// TC-BMC-01..05: the card of the paged board (tab and full screen) shows the
+// header, winner tint, BYE tag and live tag.
 MatchModel _match({
   String status = 'SCHEDULED',
   String team1 = 'p1',
@@ -50,11 +50,14 @@ Future<void> _pump(WidgetTester tester, MatchModel match) async {
           child: SizedBox(
             width: 176,
             height: 92,
-            child: BracketMatchCard(
-              match: match,
-              tournamentId: 't-1',
-              isReferee: false,
-              isReadOnly: true,
+            child: PlayoffBracketBoard(
+              columns: [
+                [match],
+              ],
+              feeders: const {},
+              cardWidth: 176,
+              gap: 14,
+              onTap: (_) {},
             ),
           ),
         ),

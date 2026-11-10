@@ -10,10 +10,8 @@ import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dar
 import 'package:app_quanly_giaidau/features/bracket/widgets/match_table_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/swiss_standings_view.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/double_elim_diagram.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/public_bracket_view.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/single_elim_diagram.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -142,7 +140,6 @@ void main() {
     expect(find.text('Playoff'), findsNothing);
     expect(find.byType(InteractiveViewer), findsNothing);
     expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
-    expect(find.byType(SingleElimDiagram), findsNothing);
     expect(find.textContaining('Nhánh thắng'), findsNothing);
     expect(find.text('Đội s1-A'), findsOneWidget);
     expect(find.text('Đội s3-A'), findsOneWidget);
@@ -196,8 +193,6 @@ void main() {
 
     expect(find.text('Bảng'), findsNothing);
     expect(find.text('Playoff'), findsNothing);
-    expect(find.byType(SingleElimDiagram), findsNothing);
-    expect(find.byType(DoubleElimDiagram), findsNothing);
     expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
   });
 
@@ -237,8 +232,6 @@ void main() {
     expect(find.byType(GroupStageView), findsOneWidget);
     expect(find.text('Bảng A'), findsOneWidget);
     expect(find.text('Lượt 1 / 2'), findsOneWidget);
-    expect(find.byType(SingleElimDiagram), findsNothing);
-    expect(find.byType(DoubleElimDiagram), findsNothing);
   });
 
   testWidgets(
@@ -315,7 +308,6 @@ void main() {
       expect(find.text('Playoff'), findsOneWidget);
       expect(find.byType(GroupStageView), findsOneWidget);
       expect(find.text('Đội bảng A1'), findsOneWidget);
-      expect(find.byType(SingleElimDiagram), findsNothing);
 
       await tester.tap(find.text('Bảng xếp hạng'));
       await tester.pumpAndSettle();
@@ -328,7 +320,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(GroupStageView), findsNothing);
-      expect(find.byType(SingleElimDiagram), findsNothing);
       final diagram = tester.widget<PlayoffDoubleElimView>(
         find.byType(PlayoffDoubleElimView),
       );
@@ -379,7 +370,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PlayoffDoubleElimView), findsOneWidget);
-      expect(find.byType(SingleElimDiagram), findsNothing);
       expect(find.textContaining('Nhánh thắng'), findsOneWidget);
       expect(find.textContaining('Nhánh thua'), findsOneWidget);
     },
@@ -435,8 +425,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(SingleElimDiagram), findsNothing);
-    expect(find.byType(DoubleElimDiagram), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
@@ -535,7 +523,6 @@ void main() {
 
       expect(find.byType(SwissStandingsView), findsOneWidget);
       expect(find.byType(CrossTableView), findsNothing);
-      expect(find.byType(SingleElimDiagram), findsNothing);
       expect(find.text('Vòng 2'), findsWidgets);
       // Current round (2) has three rows: two matches and the BYE.
       expect(find.byType(MatchTableRow), findsNWidgets(3));
@@ -683,7 +670,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(DoubleElimDiagram), findsNothing);
     expect(find.text('Đội w10-A'), findsOneWidget);
     expect(find.text('Đội w30-A'), findsNothing);
 

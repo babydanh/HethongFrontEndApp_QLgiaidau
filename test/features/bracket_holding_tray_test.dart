@@ -9,7 +9,6 @@ import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_scre
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_card_parts.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_editing_scope.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -396,7 +395,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Vào trang Live'), findsOneWidget);
-      expect(find.byType(MatchScoreEntryChooser), findsNothing);
     });
 
     testWidgets(

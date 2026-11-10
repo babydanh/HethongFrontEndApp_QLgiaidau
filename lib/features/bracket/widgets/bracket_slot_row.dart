@@ -11,11 +11,16 @@ class BracketEditing {
     required this.onSlotDrop,
     required this.onSlotTap,
     this.selectedSlot,
+    this.onDragChanged,
   });
 
   final BracketSlotDropCallback onSlotDrop;
   final ValueChanged<BracketSlotDragData> onSlotTap;
   final BracketSlotDragData? selectedSlot;
+
+  /// Tells the board when a row is lifted (true) or let go (false), so the
+  /// edge pager can wake up. Called more than once per drag; stay idempotent.
+  final ValueChanged<bool>? onDragChanged;
 }
 
 /// One participant slot of a bracket card. A manager long-presses it and drops
@@ -29,6 +34,7 @@ class BracketSlotRow extends StatelessWidget {
     required this.onTap,
     required this.onDrop,
     required this.child,
+    this.onDragChanged,
   });
 
   final BracketSlotDragData data;
@@ -38,10 +44,13 @@ class BracketSlotRow extends StatelessWidget {
   final ValueChanged<BracketSlotDragData> onTap;
   final BracketSlotDropCallback onDrop;
   final Widget child;
+  final ValueChanged<bool>? onDragChanged;
 
   @override
   Widget build(BuildContext context) {
     final canDrag = data.hasParticipant && !data.isLocked;
+    // Reduced motion: jump straight to the end state.
+    final still = MediaQuery.disableAnimationsOf(context);
     return DragTarget<BracketSlotDragData>(
       key: ValueKey('bracket-slot-${data.matchId}-${data.slot}'),
       onWillAcceptWithDetails: (details) =>
@@ -50,7 +59,7 @@ class BracketSlotRow extends StatelessWidget {
       builder: (context, candidates, rejected) {
         final highlighted = candidates.isNotEmpty || selected;
         final row = AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
+          duration: still ? Duration.zero : const Duration(milliseconds: 140),
           decoration: BoxDecoration(
             color: highlighted
                 ? AppTheme.primary.withValues(alpha: 0.14)
@@ -61,12 +70,26 @@ class BracketSlotRow extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: child,
+          // A swap or move changes who sits here: the new name fades in.
+          child: AnimatedSwitcher(
+            duration: still ? Duration.zero : const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeOutCubic,
+            child: KeyedSubtree(
+              key: ValueKey(data.participantId),
+              child: child,
+            ),
+          ),
         );
         return LongPressDraggable<BracketSlotDragData>(
           data: data,
           delay: bracketDragDelay,
           maxSimultaneousDrags: canDrag ? 1 : 0,
+          onDragStarted: () => onDragChanged?.call(true),
+          // onDragEnd is skipped when the row is gone (the page turned), the
+          // other two still fire.
+          onDragEnd: (_) => onDragChanged?.call(false),
+          onDragCompleted: () => onDragChanged?.call(false),
+          onDraggableCanceled: (_, _) => onDragChanged?.call(false),
           feedback: Material(
             color: Colors.transparent,
             child: Container(
