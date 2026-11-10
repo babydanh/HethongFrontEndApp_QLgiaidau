@@ -3,6 +3,7 @@ import 'package:app_quanly_giaidau/core/utils/match_round_label.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/models/bracket_slot_drag.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/bracket_stage_utils.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_edge_pager.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_slot_row.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_match_sheet.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/group_stage_view.dart';
@@ -152,6 +153,15 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
   BracketSlotDragData? _selectedSlot;
   bool _updating = false;
 
+  // A row is being dragged: the page edges become page-turn zones.
+  bool _dragging = false;
+
+  void _dragChanged(bool dragging) {
+    if (mounted && _dragging != dragging) {
+      setState(() => _dragging = dragging);
+    }
+  }
+
   Future<void> _dropSlot(
     BracketSlotDragData source,
     BracketSlotDragData target,
@@ -282,72 +292,80 @@ class _PlayoffDoubleElimViewState extends State<PlayoffDoubleElimView> {
                 onExpand: widget.onOpenFull,
               ),
             ),
-            ClipRect(
-              child: AnimatedSwitcher(
-                duration: MediaQuery.disableAnimationsOf(context)
-                    ? Duration.zero
-                    : const Duration(milliseconds: 260),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                layoutBuilder: (current, previous) => Stack(
-                  alignment: Alignment.topLeft,
-                  children: [...previous, ?current],
-                ),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: Offset(_forward ? 0.15 : -0.15, 0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
+            BracketEdgePager(
+              enabled: _dragging,
+              onPrev: active > 0 ? () => select(active - 1) : null,
+              onNext: active < rounds.length - 1
+                  ? () => select(active + 1)
+                  : null,
+              child: ClipRect(
+                child: AnimatedSwitcher(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.topLeft,
+                    children: [...previous, ?current],
                   ),
-                ),
-                child: KeyedSubtree(
-                  key: ValueKey('playoff-window-$losers-$start'),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final cardWidth =
-                          ((constraints.maxWidth -
-                                      (kBracketVisibleRounds - 1) *
-                                          _bracketGap) /
-                                  kBracketVisibleRounds)
-                              .clamp(_minCardWidth, _maxCardWidth);
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _RoundPills(
-                              rounds: visible,
-                              firstIndex: start,
-                              active: active,
-                              cardWidth: cardWidth,
-                              onSelect: select,
-                            ),
-                            const SizedBox(height: 10),
-                            PlayoffBracketBoard(
-                              columns: [for (final r in visible) r.matches],
-                              feeders: buildFeeders(widget.matches),
-                              cardWidth: cardWidth,
-                              gap: _bracketGap,
-                              seedLabels: widget.seedLabels,
-                              onDoubleTap: widget.canScoreMatch
-                                  ? openMatch
-                                  : null,
-                              editing: widget.onSlotDrop == null
-                                  ? null
-                                  : BracketEditing(
-                                      onSlotDrop: _dropSlot,
-                                      onSlotTap: _tapSlot,
-                                      selectedSlot: _selectedSlot,
-                                    ),
-                              onTap: openMatch,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: Offset(_forward ? 0.15 : -0.15, 0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey('playoff-window-$losers-$start'),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final cardWidth =
+                            ((constraints.maxWidth -
+                                        (kBracketVisibleRounds - 1) *
+                                            _bracketGap) /
+                                    kBracketVisibleRounds)
+                                .clamp(_minCardWidth, _maxCardWidth);
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _RoundPills(
+                                rounds: visible,
+                                firstIndex: start,
+                                active: active,
+                                cardWidth: cardWidth,
+                                onSelect: select,
+                              ),
+                              const SizedBox(height: 10),
+                              PlayoffBracketBoard(
+                                columns: [for (final r in visible) r.matches],
+                                feeders: buildFeeders(widget.matches),
+                                cardWidth: cardWidth,
+                                gap: _bracketGap,
+                                seedLabels: widget.seedLabels,
+                                onDoubleTap: widget.canScoreMatch
+                                    ? openMatch
+                                    : null,
+                                editing: widget.onSlotDrop == null
+                                    ? null
+                                    : BracketEditing(
+                                        onSlotDrop: _dropSlot,
+                                        onSlotTap: _tapSlot,
+                                        selectedSlot: _selectedSlot,
+                                        onDragChanged: _dragChanged,
+                                      ),
+                                onTap: openMatch,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

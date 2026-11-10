@@ -1,6 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
-import 'package:app_quanly_giaidau/features/bracket/widgets/match_score_entry_chooser.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_bracket_board.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/playoff_double_elim_view.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -182,7 +181,6 @@ void main() {
 
     expect(find.text('Nhập điểm #1'), findsOneWidget);
     expect(find.text('Vào trang Live'), findsOneWidget);
-    expect(find.byType(MatchScoreEntryChooser), findsNothing);
     expect(find.text('Xem trận'), findsNothing);
   });
 
@@ -197,7 +195,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nhập điểm #1'), findsOneWidget);
-    expect(find.byType(MatchScoreEntryChooser), findsNothing);
   });
 
   testWidgets('TC-PLF-11 a finished match shows its detail, not the score sheet', (

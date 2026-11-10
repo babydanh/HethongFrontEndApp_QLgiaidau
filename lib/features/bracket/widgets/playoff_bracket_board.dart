@@ -254,6 +254,7 @@ class _BracketCard extends StatelessWidget {
       selected: edit.selectedSlot == data,
       onTap: edit.onSlotTap,
       onDrop: edit.onSlotDrop,
+      onDragChanged: edit.onDragChanged,
       child: row,
     );
   }

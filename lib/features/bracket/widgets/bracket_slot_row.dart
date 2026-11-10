@@ -11,11 +11,16 @@ class BracketEditing {
     required this.onSlotDrop,
     required this.onSlotTap,
     this.selectedSlot,
+    this.onDragChanged,
   });
 
   final BracketSlotDropCallback onSlotDrop;
   final ValueChanged<BracketSlotDragData> onSlotTap;
   final BracketSlotDragData? selectedSlot;
+
+  /// Tells the board when a row is lifted (true) or let go (false), so the
+  /// edge pager can wake up. Called more than once per drag; stay idempotent.
+  final ValueChanged<bool>? onDragChanged;
 }
 
 /// One participant slot of a bracket card. A manager long-presses it and drops
@@ -29,6 +34,7 @@ class BracketSlotRow extends StatelessWidget {
     required this.onTap,
     required this.onDrop,
     required this.child,
+    this.onDragChanged,
   });
 
   final BracketSlotDragData data;
@@ -38,6 +44,7 @@ class BracketSlotRow extends StatelessWidget {
   final ValueChanged<BracketSlotDragData> onTap;
   final BracketSlotDropCallback onDrop;
   final Widget child;
+  final ValueChanged<bool>? onDragChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +74,12 @@ class BracketSlotRow extends StatelessWidget {
           data: data,
           delay: bracketDragDelay,
           maxSimultaneousDrags: canDrag ? 1 : 0,
+          onDragStarted: () => onDragChanged?.call(true),
+          // onDragEnd is skipped when the row is gone (the page turned), the
+          // other two still fire.
+          onDragEnd: (_) => onDragChanged?.call(false),
+          onDragCompleted: () => onDragChanged?.call(false),
+          onDraggableCanceled: (_, _) => onDragChanged?.call(false),
           feedback: Material(
             color: Colors.transparent,
             child: Container(
