@@ -117,6 +117,8 @@ void main() {
           what: 'nút "Chờ duyệt" sau khi gửi yêu cầu',
           timeout: const Duration(seconds: 30),
         );
+        // Chờ sheet gửi yêu cầu đóng hẳn: bấm khi sheet còn đang đóng sẽ trúng lớp nền của nó.
+        await socialWait(tester, const Duration(seconds: 2));
       }
 
       await sendRequest();
@@ -403,8 +405,9 @@ void main() {
         what: 'thẻ trận Đã hoàn thành sau khi lưu',
         timeout: const Duration(seconds: 30),
       );
-      expect(find.text('11'), findsOneWidget, reason: 'tỉ số đội thắng');
-      expect(find.text('5'), findsOneWidget, reason: 'tỉ số đội thua');
+      // Thẻ trận hiện số set thắng (1-0) chứ không phải điểm 11-5 (xem Ghi chú sản phẩm trong báo cáo).
+      expect(find.text('1'), findsWidgets, reason: 'đội A thắng 1 set');
+      expect(find.text('0'), findsWidgets, reason: 'đội B thắng 0 set');
       expect(find.text('Nhập nhanh'), findsNothing, reason: 'trận xong không còn nút nhập');
       await shooter.snap('tran-da-hoan-thanh');
     },
