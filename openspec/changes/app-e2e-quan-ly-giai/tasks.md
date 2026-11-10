@@ -1,11 +1,11 @@
 ## 1. Hợp đồng dùng chung (làm trước, trên nhánh phiên)
 
-- [ ] 1.1 Thêm hàm dựng/kiểm dữ liệu vào `BackendApi`. Tiêu chí: `flutter analyze --no-pub integration_test/support/backend_api.dart` → exit 0
+- [x] 1.1 Thêm hàm dựng/kiểm dữ liệu vào `BackendApi`. Tiêu chí: `flutter analyze --no-pub integration_test/support/backend_api.dart` → exit 0
   - Files: sửa `integration_test/support/backend_api.dart` (thêm sau `playOutSingleElimination` ~dòng 361; tách logic bên thắng từ `_scorePlayerOneWins` ~dòng 363-391, hành vi cũ giữ nguyên)
   - Giao: `Future<void> startTournament({required String token, required String tournamentId})` (POST `/tournaments/:id/start`) · `Future<void> completeTournament({required String token, required String tournamentId})` (POST `/tournaments/:id/complete`; Backend không tự chuyển COMPLETED) · `Future<void> scoreMatch({required String token, required Map<String, dynamic> match, int winnerSide = 1})` · `Future<Map<String, dynamic>> getTournament({required String token, required String tournamentId})` (GET `/tournaments/:id`) · `Future<List<Map<String, dynamic>>> listVenues({required String token, required String tournamentId})` (GET `/tournaments/:id/venues`) · `Future<List<Map<String, dynamic>>> listSponsors({required String token, required String tournamentId})` (GET `/tournaments/:id/sponsors`) · Nhận: (không)
   - Chủ file chung: 1.1 giữ `integration_test/support/backend_api.dart`; task khác chỉ gọi
   - Phụ thuộc: không
-- [ ] 1.2 Hàm dùng chung cho các file hành trình. Tiêu chí: `flutter analyze --no-pub integration_test/support/organizer_journey.dart` → exit 0
+- [x] 1.2 Hàm dùng chung cho các file hành trình. Tiêu chí: `flutter analyze --no-pub integration_test/support/organizer_journey.dart` → exit 0
   - Files: tạo `integration_test/support/organizer_journey.dart` (dùng `app_driver.dart:22,46,77,105,135,144,171`)
   - Giao: `Future<void> signInAsOrganizer(WidgetTester tester)` · `Future<SeededTournament> seedTournament(BackendApi api, {int players = 4, String bracketType = 'single_elimination', bool singles = true})` (đăng nhập BTC, `createLiteTournament`, duyệt ADMIN, `importRoster`; trả `token`, `tournamentId`, `divisionId`) · `Future<void> openManageHub(WidgetTester tester, String tournamentId)` (route `/organizer/tournaments/:id/manage`) · `Future<void> openHubTab(WidgetTester tester, String label)` (tìm `Tab` theo chữ, `ensureVisible`, bấm, chờ) · `Future<void> tapKey(WidgetTester tester, String key)` và `Future<void> expectKey(WidgetTester tester, String key, {String? step})` (chờ có hạn rồi `expect`, thông báo nêu `step`) · Nhận: `BackendApi` (1.1)
   - Chủ file chung: 1.2 giữ `integration_test/support/organizer_journey.dart`
