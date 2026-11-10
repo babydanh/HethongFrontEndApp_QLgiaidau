@@ -84,7 +84,7 @@ class SocialApi {
     required String tag,
     required String label,
   }) async {
-    final email = '${tag.toLowerCase()}-${label.toLowerCase()}@example.com';
+    final email = '${tag.toLowerCase()}-${label.toLowerCase().replaceAll(' ', '')}@example.com';
     final fullName = '$tag $label';
     final id = await _backend.registerAccount(
       email: email,
@@ -374,8 +374,18 @@ Future<void> openSession(
   ProviderContainer container,
   SeededSession session,
 ) async {
-  // push (không go): thoát buổi (huỷ buổi, nút back) cần còn trang bên dưới để pop.
-  container.read(routerProvider).push('/social/${session.id}');
+  // Về trang chủ trước để dọn ngăn xếp trang còn sót, rồi push (không go): thoát buổi (huỷ buổi, nút back)
+  // cần còn trang bên dưới để pop. Thử lại vài lần và ghi đường dẫn hiện tại để biết điều hướng có ăn không.
+  final router = container.read(routerProvider);
+  router.go('/home');
+  await socialWait(tester, const Duration(seconds: 1));
+  for (var attempt = 1; attempt <= 3; attempt++) {
+    router.push('/social/${session.id}');
+    await socialWait(tester, const Duration(seconds: 2));
+    final path = router.routerDelegate.currentConfiguration.uri.path;
+    debugPrint('openSession lần $attempt: đường dẫn hiện tại $path');
+    if (path.startsWith('/social/')) break;
+  }
   await pumpUntilFound(
     tester,
     find.text(session.title.toUpperCase()),
