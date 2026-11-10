@@ -494,6 +494,10 @@ void main() {
       );
 
       // TC-QLGD-APP-32: nhập điểm inline; hòa số set thì không lưu được.
+      // BUG-SP-03 (sản phẩm): sheet nhập điểm ở tab Kết quả gửi PATCH /matches/:id/score cho trận
+      // SCHEDULED và Backend trả 400 "Hãy bắt đầu trận trước"; sheet không tự bắt đầu trận.
+      // Điều kiện đầu: bắt đầu trận bằng API để kiểm phần còn lại của luồng lưu điểm.
+      await api.startMatch(token: token, matchId: m1);
       await tapKey(tester, 'results-score-$m1', step: 'TC-QLGD-APP-32');
       await expectKey(tester, 'results-score-sheet', step: 'TC-QLGD-APP-32');
       await shots.snap('sheet-nhap-diem');

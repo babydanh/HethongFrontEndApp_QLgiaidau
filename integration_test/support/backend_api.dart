@@ -400,6 +400,19 @@ class BackendApi {
     return _asList(path, await _send('GET', path, token: token));
   }
 
+  /// Đưa một trận sang ONGOING (PATCH /matches/:id/status), giống nút "Bắt đầu trận".
+  Future<void> startMatch({
+    required String token,
+    required String matchId,
+  }) async {
+    await _send(
+      'PATCH',
+      '/matches/$matchId/status',
+      token: token,
+      data: {'status': 'ONGOING'},
+    );
+  }
+
   /// Chấm một trận 2-0 cho bên [winnerSide] (1 hoặc 2): 11-5, 11-5. Đưa trận sang ONGOING nếu chưa.
   Future<void> scoreMatch({
     required String token,
