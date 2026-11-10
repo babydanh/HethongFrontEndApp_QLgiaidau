@@ -1,14 +1,17 @@
 import 'dart:convert';
 
+import 'package:app_quanly_giaidau/app.dart';
 import 'package:app_quanly_giaidau/core/router/app_router.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/user_location_provider.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'app_driver.dart';
 import 'backend_api.dart';
@@ -352,7 +355,7 @@ Future<ProviderContainer> signInAs(
   required String email,
   String password = kE2ePassword,
 }) async {
-  final container = await pumpApp(tester);
+  final container = await _pumpAppWithoutGps(tester);
   await ensureSignedOut(tester, container);
   container.read(routerProvider).go('/login');
   await loginWithForm(tester, email: email, password: password);
@@ -459,4 +462,40 @@ Future<void> openSessionFromExplore(WidgetTester tester, String title) async {
     what: 'chi tiết buổi "$title" mở từ thẻ ở Khám phá',
     timeout: const Duration(seconds: 45),
   );
+}
+
+/// Không xin quyền vị trí trong E2E: hộp xin quyền hệ thống không ai bấm, yêu cầu treo qua các ca và ca sau
+/// ném "A request for permissions is already running". Quyền vị trí không thuộc phạm vi Social E2E.
+class _NoGpsLocation extends UserLocationNotifier {
+  @override
+  Future<void> requestWhenInUse() async {}
+
+  @override
+  Future<void> refreshSilently() async {}
+}
+
+/// Giống `pumpApp` của app_driver, chỉ thêm override vị trí ở trên.
+Future<ProviderContainer> _pumpAppWithoutGps(WidgetTester tester) async {
+  final container = ProviderContainer(
+    overrides: [userLocationProvider.overrideWith(_NoGpsLocation.new)],
+  );
+  await tester.pumpWidget(
+    LiquidGlassWidgets.wrap(
+      brightnessResolver: Theme.maybeBrightnessOf,
+      child: UncontrolledProviderScope(
+        container: container,
+        child: const TournamentApp(),
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+  final router = container.read(routerProvider);
+  await pumpUntilCondition(
+    tester,
+    () => router.routerDelegate.currentConfiguration.uri.path != '/',
+    timeout: const Duration(seconds: 60),
+    what: 'SplashScreen chuyển khỏi đường dẫn "/"',
+  );
+  return container;
 }
