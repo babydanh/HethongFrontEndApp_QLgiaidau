@@ -309,6 +309,13 @@ void main() {
       final seedA = pair[0].value!;
       final idB = pair[1].key;
       final seedB = pair[1].value!;
+      // Sau BUG-SP-07 App không tải lại ô hạt giống: rời hub rồi vào lại để ô khớp dữ liệu Backend.
+      j.refresh();
+      j.container.read(routerProvider).go('/');
+      await tester.pump(const Duration(seconds: 1));
+      await openManageHub(tester, j.container, j.tid);
+      await openHubTab(tester, 'Nội dung');
+      await j.dismissFullDivisionPrompt();
       final fieldA = find.byKey(ValueKey('$idA-$seedA'));
       final fieldB = find.byKey(ValueKey('$idB-$seedB'));
       await j.scrollDivisionsTo(fieldA);
