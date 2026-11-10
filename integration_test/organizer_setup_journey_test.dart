@@ -345,6 +345,66 @@ void main() {
   );
 
   testWidgets(
+    'TC-QLGD-APP-80: BTC bật luật chuẩn, đổi điểm mỗi set, tắt thắng cách 2 điểm và Backend lưu đúng',
+    (tester) async {
+      final container = await signInAsOrganizer(tester);
+      await openManageHub(tester, container, single.tournamentId);
+      await openHubTab(tester, 'Nội dung');
+      await press(
+        tester,
+        'division-edit-${single.divisionId}',
+        step: 'mở sheet sửa nội dung',
+      );
+      await expectKey(tester, 'division-editor-save', step: 'sheet nội dung');
+      final before = (await api.listDivisions(single.tournamentId))
+          .firstWhere((d) => d['id'] == single.divisionId);
+      debugPrint('TC-80: roundConfig trước: ${jsonEncode(before['roundConfig'])}');
+
+      // Mở mục luật, bật "Luật chuẩn" (nếu đang ở chế độ Lite), đặt 15 điểm/set, tắt thắng cách 2.
+      await press(tester, 'division-editor-section-rules', step: 'mở mục luật');
+      await expectKey(
+        tester,
+        'division-editor-standard-rules',
+        step: 'công tắc luật chuẩn',
+      );
+      final points = find.byKey(const ValueKey('division-editor-points-per-set'));
+      if (points.evaluate().isEmpty) {
+        await tapSwitch(tester, 'division-editor-standard-rules');
+      }
+      await pumpUntilFound(tester, points, what: 'ô điểm mỗi set (luật chuẩn)');
+      await tester.ensureVisible(points);
+      await tester.enterText(points, '15');
+      await tester.pump();
+      final winByTwo = find.descendant(
+        of: find.byKey(const ValueKey('division-editor-win-by-two')),
+        matching: find.byType(LavishSwitch),
+      );
+      await tester.ensureVisible(winByTwo);
+      final winByTwoBefore = tester.widget<LavishSwitch>(winByTwo).value;
+      await tapSwitch(tester, 'division-editor-win-by-two');
+      expect(
+        tester.widget<LavishSwitch>(winByTwo).value,
+        !winByTwoBefore,
+        reason: 'Công tắc thắng cách 2 điểm phải đổi trạng thái sau khi bấm',
+      );
+      await snap(tester, 'noi-dung-luat-chuan');
+      await press(tester, 'division-editor-save');
+
+      final saved = await waitFor(
+        tester,
+        () async => (await api.listDivisions(single.tournamentId))
+            .firstWhere((d) => d['id'] == single.divisionId),
+        (d) => jsonEncode(d['roundConfig']).contains('STRICT'),
+        what: 'roundConfig có luật chuẩn (STRICT) trên Backend',
+      );
+      debugPrint('TC-80: roundConfig sau: ${jsonEncode(saved['roundConfig'])}');
+      final rules = jsonEncode(saved['roundConfig']);
+      expect(rules, contains('15'), reason: 'Điểm mỗi set 15 phải được lưu');
+    },
+    timeout: _testTimeout,
+  );
+
+  testWidgets(
     'TC-QLGD-APP-10: menu Cấu hình từng vòng mở sheet khi nội dung đã có sơ đồ',
     (tester) async {
       // Mục menu chỉ hiện khi nội dung đã sinh sơ đồ, nên dựng giải riêng và sinh sơ đồ bằng API.
