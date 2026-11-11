@@ -88,7 +88,8 @@ TournamentContact? visibleContact(
     organizerName: '',
     phone: shownPhone,
     email: shownEmail,
-    hiddenFromViewers: hidden && (shownPhone.isNotEmpty || shownEmail.isNotEmpty),
+    hiddenFromViewers:
+        hidden && (shownPhone.isNotEmpty || shownEmail.isNotEmpty),
     links: links,
   );
 }

@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/utils/full_recording_download.dart';
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
@@ -278,6 +279,68 @@ class _MatchRecordingPlayerSheetState
     if (current != null) unawaited(current.dispose());
   }
 
+  bool _downloading = false;
+  bool _downloadFailed = false;
+
+  Future<void> _downloadFull() async {
+    if (_downloading) return;
+    setState(() {
+      _downloading = true;
+      _downloadFailed = false;
+    });
+    var failed = false;
+    try {
+      await ref
+          .read(fullRecordingDownloaderProvider)
+          .run(widget.matchId, widget.period);
+    } on Object {
+      failed = true;
+    }
+    if (!mounted) return;
+    setState(() {
+      _downloading = false;
+      _downloadFailed = failed;
+    });
+  }
+
+  Widget _buildDownload(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: AppTheme.spacingSM),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
+          onPressed: _downloading ? null : _downloadFull,
+          icon: _downloading
+              ? const SizedBox.square(
+                  dimension: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.download_rounded, size: 18),
+          label: Text(l10n.tournamentManagementRecordingDownloadFull),
+        ),
+        if (_downloading || _downloadFailed)
+          Padding(
+            padding: const EdgeInsets.only(top: AppTheme.spacingXS),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                _downloading
+                    ? l10n.tournamentManagementRecordingDownloadPreparing
+                    : l10n.tournamentManagementRecordingDownloadError,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _downloadFailed
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -320,6 +383,7 @@ class _MatchRecordingPlayerSheetState
             const SizedBox(height: AppTheme.spacingSM),
             _buildVideo(l10n),
             _buildControls(l10n),
+            _buildDownload(l10n),
             const Divider(height: AppTheme.spacingLG),
             Text(
               l10n.recordingPlayerSegments,
