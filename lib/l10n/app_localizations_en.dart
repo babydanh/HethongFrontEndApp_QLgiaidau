@@ -14743,7 +14743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementPermissionsDescription =>
-      'Manage tournament staff and referee invitations.';
+      'Manage tournament staff and referees.';
 
   @override
   String get tournamentManagementPlatformFeeRate => 'Platform fee rate';
@@ -14767,7 +14767,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementReferee => 'Referee';
 
   @override
-  String get tournamentManagementRefereeAccepted => 'Accepted';
+  String get tournamentManagementRefereeAccepted => 'Added';
 
   @override
   String get tournamentManagementRefereeDeclined => 'Declined';
@@ -14776,17 +14776,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRefereeEmail => 'Referee email';
 
   @override
-  String get tournamentManagementRefereeInviteSent =>
-      'Referee invitation sent.';
+  String get tournamentManagementRefereeInviteSent => 'Referee added.';
 
   @override
   String get tournamentManagementRefereeInvited => 'Invited';
 
   @override
-  String get tournamentManagementInviteByEmail => 'Invite by email';
+  String get tournamentManagementInviteByEmail => 'Add by email';
 
   @override
-  String get tournamentManagementInviteEmail => 'Invitee email';
+  String get tournamentManagementInviteEmail => 'Email to add';
 
   @override
   String get tournamentManagementInviteEmailInvalid => 'Invalid email.';
@@ -14797,15 +14796,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tournamentManagementResend => 'Resend';
+  String get tournamentManagementResend => 'Add again';
 
   @override
   String tournamentManagementResendConfirm(String name) {
-    return 'Resend the invitation to $name?';
+    return 'Add $name as a referee again?';
   }
 
   @override
-  String get tournamentManagementRefereeInviteResent => 'Invitation resent.';
+  String get tournamentManagementRefereeInviteResent => 'Referee added again.';
 
   @override
   String get tournamentManagementRevoke => 'Revoke';
@@ -14826,7 +14825,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementRefereesDescription =>
-      'Invite referees by email and manage their tournament assignment.';
+      'Add referees by email; they can score right away.';
 
   @override
   String get tournamentManagementRefereesEmpty => 'No referees assigned.';
@@ -14949,7 +14948,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tournamentManagementRemoveRefereeConfirm(String name) {
-    return 'Remove $name from this tournament?';
+    return 'Remove $name as a referee of this tournament?';
   }
 
   @override
@@ -15034,7 +15033,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementSeedsSaved => 'Participant seeds updated.';
 
   @override
-  String get tournamentManagementSendInvite => 'Send invitation';
+  String get tournamentManagementSendInvite => 'Add';
 
   @override
   String get tournamentManagementServerAuthorizationNote =>

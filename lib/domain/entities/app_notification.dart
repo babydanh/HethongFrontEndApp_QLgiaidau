@@ -352,6 +352,8 @@ class AppNotification {
       case 'REFEREE_INVITE_DECLINED':
       case 'REFEREE_INVITE_REVOKED':
       case 'REFEREE_ASSIGNED':
+      case 'REFEREE_ADDED':
+      case 'REFEREE_REMOVED':
         return Icons.sports_rounded;
       case 'COMMUNITY_INVITED':
       case 'COMMUNITY_ROLE_PROMOTED':
@@ -404,9 +406,11 @@ class AppNotification {
       case 'REFEREE_ASSIGNED':
         return const Color(0xFFF59E0B);
       case 'REFEREE_INVITE_ACCEPTED':
+      case 'REFEREE_ADDED':
         return const Color(0xFF10B981);
       case 'REFEREE_INVITE_DECLINED':
       case 'REFEREE_INVITE_REVOKED':
+      case 'REFEREE_REMOVED':
         return const Color(0xFF64748B);
       case 'COMMUNITY_INVITED':
         return const Color(0xFF8B5CF6);

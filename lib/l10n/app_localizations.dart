@@ -26623,7 +26623,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementPermissionsDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Quản lý nhân sự giải đấu và lời mời trọng tài.'**
+  /// **'Quản lý nhân sự và trọng tài của giải.'**
   String get tournamentManagementPermissionsDescription;
 
   /// No description provided for @tournamentManagementPlatformFeeRate.
@@ -26671,7 +26671,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRefereeAccepted.
   ///
   /// In vi, this message translates to:
-  /// **'Đã chấp nhận'**
+  /// **'Đã thêm'**
   String get tournamentManagementRefereeAccepted;
 
   /// No description provided for @tournamentManagementRefereeDeclined.
@@ -26689,7 +26689,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRefereeInviteSent.
   ///
   /// In vi, this message translates to:
-  /// **'Đã gửi lời mời trọng tài.'**
+  /// **'Đã thêm trọng tài.'**
   String get tournamentManagementRefereeInviteSent;
 
   /// No description provided for @tournamentManagementRefereeInvited.
@@ -26701,13 +26701,13 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementInviteByEmail.
   ///
   /// In vi, this message translates to:
-  /// **'Mời qua email'**
+  /// **'Thêm qua email'**
   String get tournamentManagementInviteByEmail;
 
   /// No description provided for @tournamentManagementInviteEmail.
   ///
   /// In vi, this message translates to:
-  /// **'Email người được mời'**
+  /// **'Email người được thêm'**
   String get tournamentManagementInviteEmail;
 
   /// No description provided for @tournamentManagementInviteEmailInvalid.
@@ -26725,19 +26725,19 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementResend.
   ///
   /// In vi, this message translates to:
-  /// **'Gửi lại'**
+  /// **'Thêm lại'**
   String get tournamentManagementResend;
 
   /// No description provided for @tournamentManagementResendConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Gửi lại lời mời cho {name}?'**
+  /// **'Thêm lại {name} làm trọng tài?'**
   String tournamentManagementResendConfirm(String name);
 
   /// No description provided for @tournamentManagementRefereeInviteResent.
   ///
   /// In vi, this message translates to:
-  /// **'Đã gửi lại lời mời.'**
+  /// **'Đã thêm lại trọng tài.'**
   String get tournamentManagementRefereeInviteResent;
 
   /// No description provided for @tournamentManagementRevoke.
@@ -26773,7 +26773,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRefereesDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Mời trọng tài bằng email và quản lý phân công trong giải đấu.'**
+  /// **'Thêm trọng tài bằng email; trọng tài có quyền bấm điểm ngay.'**
   String get tournamentManagementRefereesDescription;
 
   /// No description provided for @tournamentManagementRefereesEmpty.
@@ -26989,7 +26989,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRemoveRefereeConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Xóa {name} khỏi giải đấu này?'**
+  /// **'Gỡ {name} khỏi trọng tài của giải?'**
   String tournamentManagementRemoveRefereeConfirm(String name);
 
   /// No description provided for @tournamentManagementRemoveStaff.
@@ -27139,7 +27139,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementSendInvite.
   ///
   /// In vi, this message translates to:
-  /// **'Gửi lời mời'**
+  /// **'Thêm'**
   String get tournamentManagementSendInvite;
 
   /// No description provided for @tournamentManagementServerAuthorizationNote.

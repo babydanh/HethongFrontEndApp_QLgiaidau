@@ -849,6 +849,12 @@ class _TournamentPermissionsState
         Icons.refresh_rounded,
         () => _resend(row),
       ),
+      RefereeAction.remove => (
+        l10n.tournamentManagementRemove,
+        LavishTone.bad,
+        Icons.person_remove_alt_1_outlined,
+        () => _removeReferee(row),
+      ),
       RefereeAction.none => (
         l10n.tournamentManagementRemove,
         LavishTone.bad,
@@ -972,6 +978,26 @@ class _TournamentPermissionsState
           .read(tournamentManagementRepositoryProvider)
           .removeReferee(widget.tournamentId, refereeId),
       l10n.tournamentManagementRefereeInviteRevoked,
+    );
+  }
+
+  Future<void> _removeReferee(PermissionRow row) async {
+    final l10n = AppLocalizations.of(context)!;
+    final refereeId = row.refereeId;
+    if (refereeId == null || refereeId.isEmpty) return;
+    final confirmed = await confirmTournamentManagementAction(
+      context,
+      title: l10n.tournamentManagementRemove,
+      message: l10n.tournamentManagementRemoveRefereeConfirm(row.name),
+      confirmLabel: l10n.tournamentManagementRemove,
+      destructive: true,
+    );
+    if (!confirmed || !mounted || _isBusy) return;
+    await _runMutation(
+      () => ref
+          .read(tournamentManagementRepositoryProvider)
+          .removeReferee(widget.tournamentId, refereeId),
+      l10n.tournamentManagementRefereeRemoved,
     );
   }
 
