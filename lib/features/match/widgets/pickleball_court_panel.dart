@@ -62,6 +62,10 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
   /// Scoring steps the referee can take back, oldest first (session only).
   List<ScoreUndoStep> _undoSteps = const [];
 
+  /// True while the first point is starting a scheduled match; a second tap in
+  /// that moment must not start it twice.
+  bool _starting = false;
+
   @override
   void initState() {
     super.initState();
@@ -214,6 +218,40 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
         court: court,
       ),
     );
+  }
+
+  /// A scheduled match is started by its first point, so the referee never has
+  /// to look for a start button first. A failed start scores nothing.
+  Future<void> _scoreOrStart(
+    int team,
+    bool increment, {
+    required bool isSideOut,
+    required CourtContext court,
+  }) async {
+    final match = ref.read(singleMatchProvider(widget.params)).value;
+    if (increment && (match?.isScheduled ?? false)) {
+      if (_starting) return;
+      _starting = true;
+      try {
+        await ref.read(matchControllerProvider(widget.params)).startMatch();
+      } catch (error) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+              ErrorParser.parse(error, l10n.liveMatchStartError, l10n),
+            ),
+          ),
+        );
+        return;
+      } finally {
+        _starting = false;
+      }
+      if (!mounted) return;
+    }
+    _changeScore(team, increment, isSideOut: isSideOut, court: court);
   }
 
   void _applyScoreChange(
@@ -459,12 +497,14 @@ class _PickleballCourtPanelState extends ConsumerState<PickleballCourtPanel> {
           !score.isSubmitting &&
           scoreNotifier.finishSetConfirmMessage() != null,
       pickWinnerEnabled: !score.isSubmitting,
-      onScoreChange: canChangeScore
-          ? (team, increment) => _changeScore(
-              team,
-              increment,
-              isSideOut: isSideOut,
-              court: courtContext,
+      onScoreChange: canEdit
+          ? (team, increment) => unawaited(
+              _scoreOrStart(
+                team,
+                increment,
+                isSideOut: isSideOut,
+                court: courtContext,
+              ),
             )
           : null,
       onSetServingTeam: canEdit && isSideOut

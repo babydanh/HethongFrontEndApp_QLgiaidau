@@ -914,8 +914,9 @@ void main() {
     for (final entry in const {
       'LIVE': true,
       'ONGOING': true,
-      'SCHEDULED': false,
-      'PENDING': false,
+      // Not started yet: the first point starts the match (TC-START-APP).
+      'SCHEDULED': true,
+      'PENDING': true,
       'cancelled': false,
       'CANCELLED': false,
       'COMPLETED': false,
