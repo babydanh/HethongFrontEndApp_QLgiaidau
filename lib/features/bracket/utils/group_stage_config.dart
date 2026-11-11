@@ -28,7 +28,7 @@ class GroupStageConfig {
     final nextGroups = groups.take(targetCount).toList();
     for (var index = nextGroups.length; index < targetCount; index++) {
       nextGroups.add(
-        GroupStageGroup(name: _groupName(index), participantIds: const []),
+        GroupStageGroup(name: groupStageGroupName(index), participantIds: const []),
       );
     }
 
@@ -141,7 +141,7 @@ GroupStageConfig resolveGroupStageConfig({
     }
     groups.add(
       GroupStageGroup(
-        name: rawName == null || rawName.isEmpty ? _groupName(index) : rawName,
+        name: rawName == null || rawName.isEmpty ? groupStageGroupName(index) : rawName,
         participantIds: List.unmodifiable(participantIds),
       ),
     );
@@ -219,9 +219,10 @@ int? _positiveInt(Object? value) {
 
 int _ceilDivide(int value, int divisor) => (value + divisor - 1) ~/ divisor;
 
-String _groupName(int index) {
+/// Default group name: A, B, ... Z, AA, AB, ...
+String groupStageGroupName(int index) {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   if (index < letters.length) return letters[index];
-  final previous = _groupName(index ~/ letters.length - 1);
+  final previous = groupStageGroupName(index ~/ letters.length - 1);
   return '$previous${letters[index % letters.length]}';
 }
