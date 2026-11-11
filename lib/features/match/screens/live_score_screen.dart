@@ -18,6 +18,8 @@ import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
+import 'package:app_quanly_giaidau/domain/services/tournament_manage_access.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -766,13 +768,20 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         auth.isReferee &&
         effectiveTournamentId.isNotEmpty &&
         auth.tournamentId == effectiveTournamentId;
-    // An ADMIN invited as co-organizer of this tournament keeps scoring.
-    final isCoOrganizer =
-        ref
-            .watch(tournamentCoOrganizerProvider(effectiveTournamentId))
-            .asData
-            ?.value ??
-        false;
+    // Invited co-organizers and accepted tournament referees score like the
+    // creator, even when the account also carries the ADMIN role. The
+    // co-organizer answer also comes from the tournament's own staff list.
+    final isTournamentStaff =
+        (auth.isAuthenticated &&
+            effectiveTournamentId.isNotEmpty &&
+            scoringStaffTournamentIds(
+              ref.watch(myTournamentWorkspaceProvider).value,
+            ).contains(effectiveTournamentId)) ||
+        (ref
+                .watch(tournamentCoOrganizerProvider(effectiveTournamentId))
+                .asData
+                ?.value ??
+            false);
     final canOpenScoring =
         match != null &&
         !match.isCompleted &&
@@ -783,7 +792,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               isAdmin: auth.isAdmin,
               createdBy: tournamentAsync?.value?.creatorId,
               refereeId: match.refereeId,
-              isTournamentStaff: isCoOrganizer,
+              isTournamentStaff: isTournamentStaff,
               scoreAccess: scoreAccess,
             ));
     final isLandscape =

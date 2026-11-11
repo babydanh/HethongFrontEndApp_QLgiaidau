@@ -138,5 +138,35 @@ void main() {
         isFalse,
       );
     });
+
+    test(
+      'TC-APP-STAFF-SCORE-01 shows it to an admin who is invited staff '
+      '(co-organizer or tournament referee) of this tournament',
+      () {
+        expect(
+          canControlTournamentLive(
+            userId: 'admin',
+            isAdmin: true,
+            createdBy: 'u1',
+            isTournamentStaff: true,
+            scoreAccess: null,
+          ),
+          isTrue,
+        );
+      },
+    );
+
+    test('TC-APP-STAFF-SCORE-02 staff flag needs a signed-in user', () {
+      expect(
+        canControlTournamentLive(
+          userId: null,
+          isAdmin: true,
+          createdBy: 'u1',
+          isTournamentStaff: true,
+          scoreAccess: null,
+        ),
+        isFalse,
+      );
+    });
   });
 }

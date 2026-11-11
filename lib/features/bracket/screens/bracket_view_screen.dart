@@ -14,6 +14,8 @@ import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/tournament_co_organizer_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
+import 'package:app_quanly_giaidau/domain/services/tournament_manage_access.dart';
+import 'package:app_quanly_giaidau/providers/my_tournament_workspace_provider.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/cross_table_view.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_diagram_screen.dart';
@@ -451,29 +453,38 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                   final effectiveIsLite =
                       widget.isLite || tournament?.isLite == true;
                   // A global ADMIN role must not leak scoring rights across
-                  // tournaments: only the creator admin keeps them.
+                  // tournaments: only the creator admin and invited staff
+                  // (co-organizer, accepted referee) keep them.
+                  final isTournamentStaff =
+                      scoringStaffTournamentIds(
+                        ref.watch(myTournamentWorkspaceProvider).value,
+                      ).contains(widget.tournamentId) ||
+                      (ref
+                              .watch(
+                                tournamentCoOrganizerProvider(
+                                  widget.tournamentId,
+                                ),
+                              )
+                              .value ??
+                          false);
                   final adminLocked = isAdminScoringLocked(
                     userId: ref.watch(userProfileProvider).value?.id,
                     isAdmin: auth.role == UserRole.admin,
                     createdBy: tournament?.creatorId,
-                    isTournamentStaff:
-                        ref
-                            .watch(
-                              tournamentCoOrganizerProvider(
-                                widget.tournamentId,
-                              ),
-                            )
-                            .value ??
-                        false,
+                    isTournamentStaff: isTournamentStaff,
                   );
                   final adminMayScore =
                       auth.role == UserRole.admin && !adminLocked;
                   final canActAsReferee =
-                      effectiveIsLite || adminMayScore || widget.isReferee;
+                      effectiveIsLite ||
+                      adminMayScore ||
+                      widget.isReferee ||
+                      isTournamentStaff;
                   final canScoreMatch =
                       adminMayScore ||
                       (widget.canEditBracket && !adminLocked) ||
-                      widget.isReferee;
+                      widget.isReferee ||
+                      isTournamentStaff;
                   final isReadOnlyMode =
                       !effectiveIsLite && auth.role == UserRole.viewer;
 

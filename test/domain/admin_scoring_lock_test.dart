@@ -49,5 +49,17 @@ void main() {
         isFalse,
       );
     });
+
+    test('TC-APP-STAFF-SCORE-03 does not lock an admin who is invited staff', () {
+      expect(
+        isAdminScoringLocked(
+          userId: 'a1',
+          isAdmin: true,
+          createdBy: 'c1',
+          isTournamentStaff: true,
+        ),
+        isFalse,
+      );
+    });
   });
 }
