@@ -16,6 +16,26 @@ class _FakePlaylistRepository implements IMatchRecordingCatalogRepository {
   _loadPlaylist;
 
   @override
+  Future<MatchStreamCommandResult> startMatchStream(String matchId) async =>
+      const MatchStreamCommandResult();
+
+  @override
+  Future<MatchStreamCommandResult> stopMatchStream(String matchId) async =>
+      const MatchStreamCommandResult();
+
+  @override
+  Future<List<MatchLivestreamSummary>> listTournamentMatchLivestreams(
+    String tournamentId,
+  ) async => const <MatchLivestreamSummary>[];
+
+  @override
+  Future<void> downloadFullRecording(
+    String matchId, {
+    required String period,
+    required String savePath,
+  }) async {}
+
+  @override
   Future<MatchRecordingPlaylist> getPlaylist(
     String matchId, {
     required String period,
