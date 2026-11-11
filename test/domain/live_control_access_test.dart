@@ -100,6 +100,32 @@ void main() {
       expect(run(null), isFalse);
     });
 
+    test('TC-COORG-LIVE-01 an admin who is invited staff keeps the button', () {
+      expect(
+        canControlTournamentLive(
+          userId: 'u1',
+          isAdmin: true,
+          createdBy: 'c1',
+          isTournamentStaff: true,
+          scoreAccess: true,
+        ),
+        isTrue,
+      );
+    });
+
+    test('TC-COORG-LIVE-02 staff flag does not help a signed-out user', () {
+      expect(
+        canControlTournamentLive(
+          userId: null,
+          isAdmin: false,
+          createdBy: 'c1',
+          isTournamentStaff: true,
+          scoreAccess: false,
+        ),
+        isFalse,
+      );
+    });
+
     test('does not match empty ids against each other', () {
       expect(
         canControlTournamentLive(

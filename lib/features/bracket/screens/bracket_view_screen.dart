@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/tournament_co_organizer_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -467,6 +468,15 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     userId: ref.watch(userProfileProvider).value?.id,
                     isAdmin: auth.role == UserRole.admin,
                     createdBy: tournament?.creatorId,
+                    isTournamentStaff:
+                        ref
+                            .watch(
+                              tournamentCoOrganizerProvider(
+                                widget.tournamentId,
+                              ),
+                            )
+                            .value ??
+                        false,
                   );
                   final adminMayScore =
                       auth.role == UserRole.admin && !adminLocked;
