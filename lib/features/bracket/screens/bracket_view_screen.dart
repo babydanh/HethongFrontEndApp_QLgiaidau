@@ -694,6 +694,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       matchCount: matches.length,
       participantCount: division?.participantCount ?? 0,
       seedingType: isGroupStageKnockout ? 'SEEDED' : 'RANDOM',
+      bracketType: isGroupStageKnockout
+          ? 'GROUP_STAGE_KNOCKOUT'
+          : bracketType.toUpperCase(),
+      roundConfig: division?.roundConfig,
     );
   }
 

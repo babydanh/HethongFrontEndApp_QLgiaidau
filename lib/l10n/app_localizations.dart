@@ -35137,6 +35137,42 @@ abstract class AppLocalizations {
   /// **'Quay lại'**
   String get bracketMgmt_cancel;
 
+  /// No description provided for @bracketCreate_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt trước khi tạo bracket'**
+  String get bracketCreate_title;
+
+  /// No description provided for @bracketCreate_suggestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý: {groups} bảng · {teams} đội/bảng · top {advancing}'**
+  String bracketCreate_suggestion(int groups, int teams, int advancing);
+
+  /// No description provided for @bracketCreate_suggestionLegs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý: {legs} lượt'**
+  String bracketCreate_suggestionLegs(int legs);
+
+  /// No description provided for @bracketCreate_apply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng'**
+  String get bracketCreate_apply;
+
+  /// No description provided for @bracketCreate_dragHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo xong, kéo thả đội để đổi bảng ngay trên sơ đồ.'**
+  String get bracketCreate_dragHint;
+
+  /// No description provided for @bracketCreate_capacityError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sức chứa {capacity} đội chưa đủ cho {count} đội. Tăng số bảng hoặc số đội mỗi bảng.'**
+  String bracketCreate_capacityError(int capacity, int count);
+
   /// No description provided for @schedMgmt_courtsTooltip.
   ///
   /// In vi, this message translates to:

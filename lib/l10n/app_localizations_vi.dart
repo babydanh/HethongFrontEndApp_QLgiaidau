@@ -19514,6 +19514,31 @@ class AppLocalizationsVi extends AppLocalizations {
   String get bracketMgmt_cancel => 'Quay lại';
 
   @override
+  String get bracketCreate_title => 'Cài đặt trước khi tạo bracket';
+
+  @override
+  String bracketCreate_suggestion(int groups, int teams, int advancing) {
+    return 'Gợi ý: $groups bảng · $teams đội/bảng · top $advancing';
+  }
+
+  @override
+  String bracketCreate_suggestionLegs(int legs) {
+    return 'Gợi ý: $legs lượt';
+  }
+
+  @override
+  String get bracketCreate_apply => 'Áp dụng';
+
+  @override
+  String get bracketCreate_dragHint =>
+      'Tạo xong, kéo thả đội để đổi bảng ngay trên sơ đồ.';
+
+  @override
+  String bracketCreate_capacityError(int capacity, int count) {
+    return 'Sức chứa $capacity đội chưa đủ cho $count đội. Tăng số bảng hoặc số đội mỗi bảng.';
+  }
+
+  @override
   String get schedMgmt_courtsTooltip => 'Tạo sân và quản lý sân';
 
   @override

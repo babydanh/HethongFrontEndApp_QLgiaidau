@@ -19600,6 +19600,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bracketMgmt_cancel => 'Back';
 
   @override
+  String get bracketCreate_title => 'Set up before creating the bracket';
+
+  @override
+  String bracketCreate_suggestion(int groups, int teams, int advancing) {
+    return 'Suggested: $groups groups · $teams teams/group · top $advancing';
+  }
+
+  @override
+  String bracketCreate_suggestionLegs(int legs) {
+    return 'Suggested: $legs legs';
+  }
+
+  @override
+  String get bracketCreate_apply => 'Apply';
+
+  @override
+  String get bracketCreate_dragHint =>
+      'After creating, drag teams between groups on the bracket.';
+
+  @override
+  String bracketCreate_capacityError(int capacity, int count) {
+    return 'Capacity $capacity is not enough for $count teams. Raise the groups or teams per group.';
+  }
+
+  @override
   String get schedMgmt_courtsTooltip => 'Create and manage courts';
 
   @override

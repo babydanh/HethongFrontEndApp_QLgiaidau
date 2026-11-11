@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/standing.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/domain/repositories/stage_operations_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_repository.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -46,6 +47,7 @@ class _Backend {
   List<MatchModel> matches;
   int loads = 0;
   final calls = <String>[];
+  final configPayloads = <Map<String, dynamic>>[];
   Object? error;
   Completer<void>? gate;
 }
@@ -66,6 +68,24 @@ class _FakeTournamentRepo extends Fake implements ITournamentRepository {
     await backend.gate?.future;
     if (backend.error != null) throw backend.error!;
     backend.matches = [_match('m-1')];
+    return <String, dynamic>{};
+  }
+}
+
+class _FakeManagementRepo extends Fake
+    implements TournamentManagementRepository {
+  _FakeManagementRepo(this.backend);
+
+  final _Backend backend;
+
+  @override
+  Future<Map<String, dynamic>> updateDivisionConfig(
+    String id,
+    String divisionId,
+    Map<String, dynamic> payload,
+  ) async {
+    backend.calls.add('config:$id:$divisionId');
+    backend.configPayloads.add(payload);
     return <String, dynamic>{};
   }
 }
@@ -157,6 +177,9 @@ Future<_Backend> _pump(
         stageOperationsRepositoryProvider.overrideWithValue(
           _FakeStageOpsRepo(backend),
         ),
+        tournamentManagementRepositoryProvider.overrideWithValue(
+          _FakeManagementRepo(backend),
+        ),
         authProvider.overrideWith(_GuestAuthNotifier.new),
       ],
       child: MaterialApp(
@@ -223,7 +246,7 @@ void main() {
       expect(find.byKey(const Key('bracket-mgmt-create')), findsNothing);
     });
 
-    testWidgets('group stage + knockout is created with seeded draw', (
+    testWidgets('group stage + knockout opens the setup popup first', (
       tester,
     ) async {
       final backend = await _pump(
@@ -235,7 +258,144 @@ void main() {
       await tester.tap(find.byKey(const Key('bracket-mgmt-create')));
       await _settle(tester);
 
-      expect(backend.calls, ['generate:$_tournamentId:$_divisionId:SEEDED']);
+      expect(find.byKey(const Key('bracket-create-groups')), findsOneWidget);
+      expect(backend.calls, isEmpty);
+    });
+
+    testWidgets('group stage: confirm saves the config then creates', (
+      tester,
+    ) async {
+      final backend = await _pump(
+        tester,
+        canEdit: true,
+        bracketType: 'group_stage_knockout',
+      );
+
+      await tester.tap(find.byKey(const Key('bracket-mgmt-create')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('bracket-create-confirm')));
+      await _settle(tester);
+
+      expect(backend.calls, [
+        'config:$_tournamentId:$_divisionId',
+        'generate:$_tournamentId:$_divisionId:SEEDED',
+      ]);
+      final payload = backend.configPayloads.single;
+      expect(payload['isConfigOverride'], true);
+      final roundConfig = payload['roundConfig'] as Map;
+      expect((roundConfig['groupsConfig'] as Map)['numGroups'], 2);
+      expect((roundConfig['playoffConfig'] as Map)['seedingType'], 'SEEDED');
+    });
+
+    testWidgets('group stage: choosing random sends a random draw', (
+      tester,
+    ) async {
+      final backend = await _pump(
+        tester,
+        canEdit: true,
+        bracketType: 'group_stage_knockout',
+      );
+
+      await tester.tap(find.byKey(const Key('bracket-mgmt-create')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('bracket-create-seeding-RANDOM')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('bracket-create-confirm')));
+      await _settle(tester);
+
+      expect(backend.calls.last, 'generate:$_tournamentId:$_divisionId:RANDOM');
+    });
+
+    testWidgets('cancelling the popup creates nothing', (tester) async {
+      final backend = await _pump(
+        tester,
+        canEdit: true,
+        bracketType: 'group_stage_knockout',
+      );
+
+      await tester.tap(find.byKey(const Key('bracket-mgmt-create')));
+      await _settle(tester);
+      await tester.tap(find.byKey(const Key('bracket-create-cancel')));
+      await _settle(tester);
+
+      expect(backend.calls, isEmpty);
+      expect(_enabled(tester, 'bracket-mgmt-create'), isTrue);
+    });
+
+    testWidgets('round robin popup only asks for the legs', (tester) async {
+      final backend = await _pump(
+        tester,
+        canEdit: true,
+        bracketType: 'round_robin',
+      );
+
+      await tester.tap(find.byKey(const Key('bracket-mgmt-create')));
+      await _settle(tester);
+      expect(find.byKey(const Key('bracket-create-groups')), findsNothing);
+      expect(find.byKey(const Key('bracket-create-rounds')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('bracket-create-confirm')));
+      await _settle(tester);
+
+      expect(backend.calls, [
+        'config:$_tournamentId:$_divisionId',
+        'generate:$_tournamentId:$_divisionId:RANDOM',
+      ]);
+    });
+
+    testWidgets('capacity too small blocks the create button', (tester) async {
+      await _pump(
+        tester,
+        canEdit: true,
+        participants: 16,
+        bracketType: 'group_stage_knockout',
+      );
+
+      await tester.tap(find.byKey(const Key('bracket-mgmt-create')));
+      await _settle(tester);
+      await tester.enterText(
+        find.byKey(const Key('bracket-create-groups')),
+        '2',
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('bracket-create-capacity-error')),
+        findsOneWidget,
+      );
+      expect(_enabled(tester, 'bracket-create-confirm'), isFalse);
+    });
+
+    testWidgets('apply suggestion restores the suggested numbers', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        canEdit: true,
+        participants: 16,
+        bracketType: 'group_stage_knockout',
+      );
+
+      await tester.tap(find.byKey(const Key('bracket-mgmt-create')));
+      await _settle(tester);
+      expect(
+        find.byKey(const Key('bracket-create-apply-suggestion')),
+        findsNothing,
+      );
+      await tester.enterText(
+        find.byKey(const Key('bracket-create-groups')),
+        '2',
+      );
+      await tester.pump();
+      await tester.tap(
+        find.byKey(const Key('bracket-create-apply-suggestion')),
+      );
+      await tester.pump();
+
+      final groups = tester.widget<TextField>(
+        find.byKey(const Key('bracket-create-groups')),
+      );
+      expect(groups.controller?.text, '4');
     });
 
     testWidgets('is disabled below 2 participants', (tester) async {

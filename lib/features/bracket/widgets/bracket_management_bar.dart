@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_create_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart'
     show tournamentSheetServerMessage;
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -21,6 +22,8 @@ class BracketManagementBar extends ConsumerStatefulWidget {
     required this.matchCount,
     required this.participantCount,
     required this.seedingType,
+    this.bracketType = '',
+    this.roundConfig,
   });
 
   final String tournamentId;
@@ -35,6 +38,13 @@ class BracketManagementBar extends ConsumerStatefulWidget {
 
   /// `SEEDED` or `RANDOM`, sent with `POST /tournaments/:id/generate-bracket`.
   final String seedingType;
+
+  /// Division format (`ROUND_ROBIN`, `GROUP_STAGE_KNOCKOUT`, ...). Round robin
+  /// and group stage open the setup popup before creating.
+  final String bracketType;
+
+  /// Saved division `roundConfig`, the starting values of the setup popup.
+  final Map<String, dynamic>? roundConfig;
 
   @override
   ConsumerState<BracketManagementBar> createState() =>
@@ -100,16 +110,54 @@ class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
     }
   }
 
-  Future<void> _create() => _run((l10n) async {
-    await ref
-        .read(tournamentRepositoryProvider)
-        .generateBracket(
-          widget.tournamentId,
-          divisionId: widget.divisionId,
-          seedingType: widget.seedingType,
+  bool get _usesSetupSheet {
+    final type = widget.bracketType.toUpperCase();
+    return type == 'ROUND_ROBIN' || type == 'GROUP_STAGE_KNOCKOUT';
+  }
+
+  /// Round robin / group stage: confirm the settings first, then save them and
+  /// create. Other formats create straight away.
+  Future<void> _create() async {
+    if (_busy) return;
+    var seedingType = widget.seedingType;
+    Map<String, dynamic>? roundConfig;
+    if (_usesSetupSheet) {
+      // Lock the button while the popup is open (double tap).
+      setState(() => _busy = true);
+      BracketCreateResult? result;
+      try {
+        result = await BracketCreateSheet.show(
+          context,
+          bracketType: widget.bracketType,
+          participantCount: widget.participantCount,
+          roundConfig: widget.roundConfig,
         );
-    return l10n.bracketMgmt_createDone;
-  });
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+      if (result == null || !mounted) return;
+      roundConfig = result.roundConfig;
+      seedingType = result.seedingType;
+    }
+    await _run((l10n) async {
+      if (roundConfig != null) {
+        await ref
+            .read(tournamentManagementRepositoryProvider)
+            .updateDivisionConfig(widget.tournamentId, widget.divisionId, {
+              'isConfigOverride': true,
+              'roundConfig': roundConfig,
+            });
+      }
+      await ref
+          .read(tournamentRepositoryProvider)
+          .generateBracket(
+            widget.tournamentId,
+            divisionId: widget.divisionId,
+            seedingType: seedingType,
+          );
+      return l10n.bracketMgmt_createDone;
+    });
+  }
 
   Future<void> _confirmDelete() async {
     if (_busy) return;
