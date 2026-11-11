@@ -30,79 +30,6 @@ extension _ClubDetailTournamentOverview on _ClubDetailScreenState {
     final localized = l10n.sportDisplayName(key);
     return localized.isEmpty ? l10n.clubDetailOtherSport : localized;
   }
-
-  Widget _buildTournamentFilters(
-    AppColorsExtension colors,
-    List<String> sports,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final options = <(String, String)>[
-      ('ALL', l10n.clubDetailAllStatuses),
-      ('UPCOMING', l10n.clubDetailUpcoming),
-      ('ONGOING', l10n.clubDetailOngoing),
-      ('COMPLETED', l10n.clubDetailCompleted),
-      if (sports.length > 1)
-        ...sports.map(
-          (sport) => ('SPORT_$sport', _tournamentSportLabel(sport, l10n)),
-        ),
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Row(
-        children: options.map((option) {
-          final isSportOption = option.$1.startsWith('SPORT_');
-          final isSelected = isSportOption
-              ? _tournamentSportFilter == option.$1.substring(6)
-              : (_tournamentStatusFilter == option.$1 &&
-                    _tournamentSportFilter == 'ALL');
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(
-                option.$2,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              selected: isSelected,
-              onSelected: (_) {
-                _updateClubState(() {
-                  if (isSportOption) {
-                    final sportKey = option.$1.substring(6);
-                    _tournamentSportFilter = _tournamentSportFilter == sportKey
-                        ? 'ALL'
-                        : sportKey;
-                  } else {
-                    _tournamentStatusFilter = option.$1;
-                    _tournamentSportFilter = 'ALL';
-                  }
-                });
-              },
-              selectedColor: AppTheme.primary.withValues(alpha: 0.14),
-              side: BorderSide(
-                color: isSelected ? AppTheme.primary : colors.border,
-              ),
-              labelStyle: TextStyle(
-                color: isSelected ? AppTheme.primary : colors.textSecondary,
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildTournamentsTab(Community club, AppColorsExtension colors) {
-    return _ClubTournamentsFullScreenView(
-      club: club,
-      colors: colors,
-      clubDetailState: this,
-    );
-  }
 }
 
 class _ClubTournamentsFullScreenView extends ConsumerStatefulWidget {
@@ -281,9 +208,8 @@ class _ClubTournamentsFullScreenViewState
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => ClubMatchSessionsScreen(
-                              communityId: clubId,
-                            ),
+                            builder: (_) =>
+                                ClubMatchSessionsScreen(communityId: clubId),
                           ),
                         );
                       },
@@ -414,10 +340,14 @@ class _ClubTournamentsFullScreenViewState
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D9488).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF0D9488,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFF0D9488).withValues(alpha: 0.25),
+                            color: const Color(
+                              0xFF0D9488,
+                            ).withValues(alpha: 0.25),
                           ),
                         ),
                         child: Text(
@@ -438,9 +368,8 @@ class _ClubTournamentsFullScreenViewState
                         onPressed: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => ClubMatchSessionsScreen(
-                                communityId: clubId,
-                              ),
+                              builder: (_) =>
+                                  ClubMatchSessionsScreen(communityId: clubId),
                             ),
                           );
                         },
@@ -467,11 +396,8 @@ class _ClubTournamentsFullScreenViewState
                   ),
                 ),
                 ...filteredSessions.map(
-                  (session) => clubDetailState._buildSessionCard(
-                    session,
-                    club,
-                    colors,
-                  ),
+                  (session) =>
+                      clubDetailState._buildSessionCard(session, club, colors),
                 ),
               ],
 
@@ -511,10 +437,14 @@ class _ClubTournamentsFullScreenViewState
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF2563EB,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFF2563EB).withValues(alpha: 0.25),
+                            color: const Color(
+                              0xFF2563EB,
+                            ).withValues(alpha: 0.25),
                           ),
                         ),
                         child: Text(
@@ -530,11 +460,8 @@ class _ClubTournamentsFullScreenViewState
                   ),
                 ),
                 ...filteredTourneys.map(
-                  (tourney) => clubDetailState._buildTourneyCard(
-                    tourney,
-                    club,
-                    colors,
-                  ),
+                  (tourney) =>
+                      clubDetailState._buildTourneyCard(tourney, club, colors),
                 ),
               ],
             ],
