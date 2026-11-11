@@ -120,7 +120,7 @@ class ExploreNewTournaments extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tournaments = ref.watch(tournamentsProvider).asData?.value;
+    final tournaments = ref.watch(tournamentsProvider).value;
     if (tournaments == null) return const SizedBox.shrink();
     final picked = pickNewTournaments(tournaments, DateTime.now());
     if (picked.isEmpty) return const SizedBox.shrink();
