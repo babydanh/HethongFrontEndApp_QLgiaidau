@@ -16,7 +16,7 @@
   - Phụ thuộc: không
 
 ## 4. Mục 3: thẻ trận + bản ghi + tải
-- [ ] 4.1 `recording_access.dart` + provider trận-livestream + `MatchStreamActions` trên thẻ trận. Tiêu chí: `flutter test --no-pub test/features/camera_sync_match_actions_test.dart test/features/tournament_management_camera_catalog_test.dart` → exit 0 (TC-CAM-SYNC-18..26)
+- [x] 4.1 `recording_access.dart` + provider trận-livestream + `MatchStreamActions` trên thẻ trận. Tiêu chí: `flutter test --no-pub test/features/camera_sync_match_actions_test.dart test/features/tournament_management_camera_catalog_test.dart` → exit 0 (TC-CAM-SYNC-18..26)
   - Files: tạo `lib/features/tournament/utils/recording_access.dart`, `lib/features/tournament/widgets/match_stream_actions.dart`, `lib/providers/tournament_match_livestreams_provider.dart`; sửa `tournament_management_camera_section.dart`, arb
   - Phụ thuộc: 1.1, 3.1 (chung file section)
 - [ ] 4.2 "Tải video đầy đủ" trong sheet phát. Tiêu chí: `flutter test --no-pub test/features/camera_sync_download_test.dart` → exit 0 (TC-CAM-SYNC-27..30)

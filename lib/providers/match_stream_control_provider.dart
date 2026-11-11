@@ -1,6 +1,7 @@
 import 'package:app_quanly_giaidau/data/models/match_recording_catalog_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
 import 'package:app_quanly_giaidau/providers/match_recording_catalog_provider.dart';
+import 'package:app_quanly_giaidau/domain/repositories/match_recording_catalog_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,12 +23,14 @@ enum MatchStreamToggleKind {
 class MatchStreamToggleResult {
   const MatchStreamToggleResult(
     this.kind, {
+    this.streamStatus,
     this.recordingStatus,
     this.publishUrl,
     this.error,
   });
 
   final MatchStreamToggleKind kind;
+  final MatchStreamStatus? streamStatus;
   final MatchRecordingStatus? recordingStatus;
   final String? publishUrl;
   final Object? error;
@@ -46,6 +49,36 @@ class MatchStreamControlView {
 
 int? _statusCode(Object error) =>
     error is DioException ? error.response?.statusCode : null;
+
+/// Gửi lệnh start/stop và phân loại kết quả/lỗi; dùng chung cho trang chấm
+/// điểm và thẻ trận ở bảng camera.
+Future<MatchStreamToggleResult> runMatchStreamCommand(
+  IMatchRecordingCatalogRepository repository,
+  String matchId, {
+  required bool stop,
+}) async {
+  try {
+    final result = stop
+        ? await repository.stopMatchStream(matchId)
+        : await repository.startMatchStream(matchId);
+    return MatchStreamToggleResult(
+      stop ? MatchStreamToggleKind.stopped : MatchStreamToggleKind.started,
+      streamStatus: result.streamStatus,
+      recordingStatus: result.recordingStatus,
+      publishUrl: result.publishUrl,
+    );
+  } on Object catch (error) {
+    final code = _statusCode(error) ?? 0;
+    return MatchStreamToggleResult(
+      code == 403
+          ? MatchStreamToggleKind.permissionDenied
+          : code >= 500
+          ? MatchStreamToggleKind.silentFailure
+          : MatchStreamToggleKind.failed,
+      error: error,
+    );
+  }
+}
 
 /// Điều khiển phát của một trận (hook `useMatchStreamControl` của Web).
 class MatchStreamControlNotifier extends Notifier<MatchStreamControlView> {
@@ -88,10 +121,13 @@ class MatchStreamControlNotifier extends Notifier<MatchStreamControlView> {
     final stopping = state.isLive;
     final repository = ref.read(matchRecordingCatalogRepositoryProvider);
     state = MatchStreamControlView(control: current, isPending: true);
-    try {
-      final result = stopping
-          ? await repository.stopMatchStream(matchId)
-          : await repository.startMatchStream(matchId);
+    final result = await runMatchStreamCommand(
+      repository,
+      matchId,
+      stop: stopping,
+    );
+    if (result.kind == MatchStreamToggleKind.started ||
+        result.kind == MatchStreamToggleKind.stopped) {
       // Video thuộc về trang, không thuộc về nút: gắn lại luồng cho mọi người xem.
       if (ref.mounted) ref.invalidate(matchPlaybackProvider(matchId));
       final confirmed = result.streamStatus;
@@ -109,30 +145,14 @@ class MatchStreamControlNotifier extends Notifier<MatchStreamControlView> {
         // Thành công mà thiếu trạng thái thì không phải xác nhận: đọc lại.
         if (confirmed == null) await refresh();
       }
-      return MatchStreamToggleResult(
-        stopping ? MatchStreamToggleKind.stopped : MatchStreamToggleKind.started,
-        recordingStatus: result.recordingStatus,
-        publishUrl: result.publishUrl,
-      );
-    } on Object catch (error) {
-      if (ref.mounted) {
-        final denied = _statusCode(error) == 403;
-        state = MatchStreamControlView(control: denied ? null : current);
-      }
-      final code = _statusCode(error) ?? 0;
-      if (code == 403) {
-        return MatchStreamToggleResult(
-          MatchStreamToggleKind.permissionDenied,
-          error: error,
-        );
-      }
-      return MatchStreamToggleResult(
-        code >= 500
-            ? MatchStreamToggleKind.silentFailure
-            : MatchStreamToggleKind.failed,
-        error: error,
+    } else if (ref.mounted) {
+      state = MatchStreamControlView(
+        control: result.kind == MatchStreamToggleKind.permissionDenied
+            ? null
+            : current,
       );
     }
+    return result;
   }
 }
 
