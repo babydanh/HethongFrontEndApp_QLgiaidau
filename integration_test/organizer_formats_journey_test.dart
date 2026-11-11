@@ -22,7 +22,7 @@ import 'support/organizer_journey.dart';
 import 'support/shot.dart';
 
 /// Task 2.3 (TC-QLGD-APP-40..59): BTC đi qua các thể thức thi đấu: vòng tròn, loại kép, vòng bảng
-/// (phân bảng, hạt giống), Swiss (ghép cặp, hoàn tác) và vận hành giai đoạn. Backend thật.
+/// (popup cài đặt, hạt giống), Swiss (ghép cặp, hoàn tác) và vận hành giai đoạn. Backend thật.
 /// Mỗi giải dựng bằng API (loại trực tiếp), thể thức đổi trên giao diện qua DivisionEditorSheet.
 /// Kéo-thả không chạm được trên emulator nên dùng đường thay thế bằng chạm (menu `move-*`, sheet đổi chỗ Swiss).
 void main() {
@@ -33,7 +33,7 @@ void main() {
   const testTimeout = Timeout(Duration(minutes: 10));
 
   testWidgets(
-    'TC-QLGD-APP-40: BTC đổi nội dung sang Vòng tròn, phân bảng, tạo sơ đồ và kết thúc sớm giai đoạn (TC 40-43)',
+    'TC-QLGD-APP-40: BTC đổi nội dung sang Vòng tròn, tạo sơ đồ qua popup và kết thúc sớm giai đoạn (TC 40-43)',
     (tester) async {
       final j = _Journey(tester, binding, 'fmt-rr');
       await j.start(players: 4);
@@ -64,28 +64,11 @@ void main() {
         reason: 'Ô số lượt đấu (division-editor-rr-rounds) phải lưu roundsToPlay=2',
       );
 
-      // TC-41: màn phân bảng của Vòng tròn (1 bảng): chuyển từng đội vào Bảng A rồi lưu.
       await openHubTab(tester, 'Bảng đấu');
-      await tapKey(tester, 'group-stage-assignment-entry', step: 'mở phân bảng');
-      await expectKey(tester, 'save-assignment', step: 'màn phân bảng');
-      await j.snap('phan-bang-truoc');
-      await j.assignTeams(['A']);
-      await j.snap('phan-bang-sau');
-      await tapKey(tester, 'save-assignment', step: 'lưu phân bảng');
-      await pumpUntilFound(
-        tester,
-        find.text('Đã lưu cấu hình vòng bảng.'),
-        what: 'thông báo lưu phân bảng',
-      );
-      final saved = await j.eventually('Backend lưu 1 bảng đủ 4 đội', () async {
-        final groups = await j.savedGroups();
-        return groups.length == 1 && groups.first.length == 4 ? groups : null;
-      });
-      expect(saved.first.toSet(), hasLength(4));
-      await j.back('màn phân bảng');
 
-      // TC-42: tạo sơ đồ bằng nút trên tab Bảng đấu.
+      // TC-42: tạo sơ đồ bằng nút trên tab Bảng đấu; popup cài đặt hiện trước, xác nhận bằng giá trị gợi ý.
       await tapKey(tester, 'bracket-mgmt-create', step: 'tạo sơ đồ vòng tròn');
+      await tapKey(tester, 'bracket-create-confirm', step: 'xác nhận popup tạo bracket');
       await expectKey(tester, 'bracket-mgmt-delete', step: 'sơ đồ đã có');
       final stage = await j.eventually('stage ROUND_ROBIN có trận', () async {
         final stages = await j.extra.stages(j.tid, j.did);
@@ -269,7 +252,7 @@ void main() {
   );
 
   testWidgets(
-    'TC-QLGD-APP-51: BTC phân bảng Vòng bảng bằng menu chạm, tạo sơ đồ, vận hành giai đoạn và bị khóa khi đã đấu (TC 51-56)',
+    'TC-QLGD-APP-51: BTC tạo sơ đồ Vòng bảng qua popup, vận hành giai đoạn và chốt vòng bảng (TC 51-56)',
     (tester) async {
       final j = _Journey(tester, binding, 'fmt-gsk-ops');
       await j.start(players: 8);
@@ -283,39 +266,11 @@ void main() {
         return d['bracketType'] == 'GROUP_STAGE_KNOCKOUT' ? d : null;
       });
 
-      // TC-51: màn phân bảng: đổi số bảng 2 -> 4 -> 2.
       await openHubTab(tester, 'Bảng đấu');
-      await tapKey(tester, 'group-stage-assignment-entry', step: 'mở phân bảng');
-      await expectKey(tester, 'save-assignment', step: 'màn phân bảng');
-      await expectKey(tester, 'lane-unassigned', step: 'khu Chưa xếp');
-      await expectKey(tester, 'lane-B', step: 'bảng B');
-      await j.snap('phan-bang-ban-dau');
-      await tapKey(tester, 'group-count-4', step: 'đổi sang 4 bảng');
-      await expectKey(tester, 'lane-D', step: 'bảng D sau khi đổi 4 bảng');
-      await j.snap('phan-bang-4-bang');
-      await tapKey(tester, 'group-count-2', step: 'đổi về 2 bảng');
-      await gone(tester, find.byKey(const ValueKey('lane-D')), 'bảng D sau khi đổi về 2 bảng');
 
-      // TC-52: chuyển từng đội vào Bảng A/B qua menu (thay cho kéo-thả), thử Chuyển về Chưa xếp, rồi lưu.
-      await j.assignTeams(['A', 'B']);
-      // BUG-SP-06 (sản phẩm, SKIP có lý do): mục "Chuyển về Chưa xếp" trong menu của đội ở một Bảng
-      // gọi onDrop của chính Bảng đó (group_stage_assignment_screen.dart:240, onSelected ở :398 với
-      // target -1), nên đội ở lại Bảng thay vì về khu Chưa xếp. Không kiểm bước này; đã kiểm chuyển
-      // đội từ Chưa xếp vào Bảng A/B ở assignTeams và khu Chưa xếp rỗng.
-      expect(j.moveButtons('unassigned'), findsNothing, reason: 'Sau assignTeams khu Chưa xếp rỗng');
-      await j.snap('phan-bang-xong');
-      clearSnackBars(tester);
-      await tapKey(tester, 'save-assignment', step: 'lưu phân bảng');
-      await pumpUntilFound(tester, find.text('Đã lưu cấu hình vòng bảng.'), what: 'thông báo lưu phân bảng');
-      final groups = await j.eventually('Backend lưu 2 bảng, mỗi bảng 4 đội', () async {
-        final g = await j.savedGroups();
-        return g.length == 2 && g.every((e) => e.length == 4) ? g : null;
-      });
-      expect({...groups[0], ...groups[1]}, hasLength(8), reason: 'Hai bảng không được trùng đội');
-      await j.back('màn phân bảng');
-
-      // TC-53: tạo sơ đồ, sơ đồ phải theo đúng phân bảng đã lưu.
+      // TC-53: tạo sơ đồ; popup cài đặt hiện trước, xác nhận bằng giá trị gợi ý (2 bảng x 4 đội).
       await tapKey(tester, 'bracket-mgmt-create', step: 'tạo sơ đồ vòng bảng');
+      await tapKey(tester, 'bracket-create-confirm', step: 'xác nhận popup tạo bracket');
       await expectKey(tester, 'bracket-mgmt-delete', step: 'sơ đồ đã có');
       final rr = await j.eventually('stage vòng bảng có 12 trận', () async {
         final stages = await j.extra.stages(j.tid, j.did);
@@ -324,14 +279,9 @@ void main() {
       });
       final stageGroups = _maps(rr['groups']);
       expect(stageGroups, hasLength(2), reason: 'Vòng bảng phải có 2 bảng');
-      final stageSets = {
-        for (final g in stageGroups)
-          {
-            for (final m in _maps(g['matches'])) ...[_participantId(m, 1), _participantId(m, 2)],
-          },
-      };
-      final savedSets = {for (final g in groups) g.toSet()};
-      expect(stageSets, savedSets, reason: 'Sơ đồ phải xếp các đội theo phân bảng đã lưu');
+      for (final g in stageGroups) {
+        expect(_maps(g['matches']), hasLength(6), reason: 'Mỗi bảng 4 đội đá vòng tròn 1 lượt = 6 trận');
+      }
       await j.snap('so-do');
 
       // TC-54: vận hành giai đoạn: còn trận vòng bảng chưa xong nên nút Chốt vòng bảng bị khóa.
@@ -348,16 +298,8 @@ void main() {
       await j.snap('van-hanh-bi-khoa');
       await j.back('màn vận hành giai đoạn');
 
-      // TC-56: chấm hết vòng bảng bằng API, màn phân bảng bị khóa (lý do + nút lưu vô hiệu).
+      // Chấm hết vòng bảng bằng API để nút Chốt vòng bảng mở khóa.
       await j.startAndScore();
-      j.container.read(routerProvider).go(
-        '/organizer/tournaments/${j.tid}/manage/group-stage-assignment/${j.did}',
-      );
-      await expectKey(tester, 'assignment-lock-reason', step: 'màn phân bảng sau khi đã đấu');
-      expect(find.text('Không thể chỉnh sửa vì trận vòng bảng đã bắt đầu hoặc đã có kết quả.'), findsOneWidget);
-      expect(_enabled(tester, 'save-assignment'), isFalse, reason: 'Đã đấu thì không được lưu phân bảng');
-      expect(_enabled(tester, 'group-count-2'), isFalse, reason: 'Đã đấu thì không được đổi số bảng');
-      await j.snap('phan-bang-khoa');
 
       // TC-55: chốt vòng bảng, các đội đi tiếp vào loại trực tiếp.
       await openManageHub(tester, j.container, j.tid);
@@ -641,44 +583,6 @@ class _Journey {
     await tapKey(tester, 'division-editor-save', step: 'lưu nội dung');
     await gone(tester, find.byKey(const ValueKey('division-editor-save')), 'sheet nội dung sau khi lưu');
     refresh();
-  }
-
-  /// Nhóm các đội đã lưu trong cấu hình vòng bảng của nội dung (mỗi nhóm là danh sách id).
-  Future<List<List<String>>> savedGroups() async {
-    final groups = _map(_map((await division())['roundConfig'])['groupsConfig'])['groups'];
-    return [
-      for (final group in groups is List ? groups : const [])
-        [
-          for (final id in _list(_map(group)['participantIds'])) id.toString(),
-        ],
-    ];
-  }
-
-  /// Nút menu `move-*` của một khu ở màn phân bảng (`unassigned` hoặc tên bảng).
-  Finder moveButtons(String lane) => find.descendant(
-    of: find.byKey(ValueKey('lane-$lane')),
-    matching: _keyed('move-'),
-  );
-
-  /// Chuyển lần lượt mọi đội ở khu Chưa xếp vào các bảng [groups] (xoay vòng) bằng menu `Bảng X`.
-  Future<void> assignTeams(List<String> groups) async {
-    await expectKey(tester, 'lane-unassigned', step: 'khu Chưa xếp');
-    var left = moveButtons('unassigned').evaluate().length;
-    expect(left, greaterThan(0), reason: 'Không có đội hợp lệ để phân bảng (màn báo chưa có đội)');
-    var index = 0;
-    while (left > 0) {
-      final name = groups[index % groups.length];
-      await tapFinder(tester, moveButtons('unassigned').first, 'menu chuyển đội (còn $left)');
-      await tapFinder(tester, find.widgetWithText(PopupMenuItem<int>, 'Bảng $name'), 'mục Bảng $name');
-      final expected = left - 1;
-      await pumpUntilCondition(
-        tester,
-        () => moveButtons('unassigned').evaluate().length == expected,
-        what: 'khu Chưa xếp còn $expected đội',
-      );
-      left = expected;
-      index++;
-    }
   }
 
   /// Đội (id) -> hạt giống theo endpoint quản lý (cùng nguồn với mục Hạt giống của app).

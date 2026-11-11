@@ -335,7 +335,7 @@ void main() {
     expect(find.byType(MatchTableRow), findsNothing);
     expect(find.text(l10n.bracketView_noMatchingMatches), findsOneWidget);
   });
-  testWidgets('hiện lối quản lý phân bảng trước khi tạo sơ đồ', (tester) async {
+  testWidgets('không còn lối vào màn phân bảng thủ công', (tester) async {
     await _pumpOrganizer(
       tester,
       bracketType: 'group_stage_knockout',
@@ -344,7 +344,7 @@ void main() {
 
     expect(
       find.byKey(const Key('group-stage-assignment-entry')),
-      findsOneWidget,
+      findsNothing,
     );
   });
 
