@@ -1,4 +1,6 @@
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/features/bracket/utils/bracket_group_draw.dart';
+import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/features/bracket/widgets/bracket_create_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart'
     show tournamentSheetServerMessage;
@@ -115,12 +117,57 @@ class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
     return type == 'ROUND_ROBIN' || type == 'GROUP_STAGE_KNOCKOUT';
   }
 
-  /// Round robin / group stage: confirm the settings first, then save them and
-  /// create. Other formats create straight away.
+  /// Approved teams of this division, or empty while the team list (watched in
+  /// [build]) has not loaded; creation then falls back to the backend's draw.
+  List<Team> _divisionTeams() {
+    final teams =
+        ref.read(teamsProvider(widget.tournamentId)).value ?? const <Team>[];
+    return [
+      for (final team in teams)
+        if (team.divisionId == widget.divisionId && team.isApproved) team,
+    ];
+  }
+
+  /// Puts the teams into groups right away, by ELO or at random as chosen in
+  /// the popup, so the organizer does not start with an empty "unassigned" lane.
+  Map<String, dynamic> _withArrangedGroups(BracketCreateResult result) {
+    final teams = _divisionTeams();
+    if (teams.isEmpty) return result.roundConfig;
+    final groupsConfig = result.roundConfig['groupsConfig'];
+    final numGroups = groupsConfig is Map && groupsConfig['numGroups'] is num
+        ? (groupsConfig['numGroups'] as num).toInt()
+        : 1;
+    final groups = drawBracketGroups(
+      teams: teams,
+      numGroups: numGroups,
+      byElo: result.seedingType == 'SEEDED',
+    );
+    return withDrawnGroups(result.roundConfig, groups);
+  }
+
+  Future<void> _saveConfig(Map<String, dynamic> roundConfig) =>
+      ref.read(tournamentManagementRepositoryProvider).updateDivisionConfig(
+        widget.tournamentId,
+        widget.divisionId,
+        {'isConfigOverride': true, 'roundConfig': roundConfig},
+      );
+
+  Future<void> _generate(String seedingType) => ref
+      .read(tournamentRepositoryProvider)
+      .generateBracket(
+        widget.tournamentId,
+        divisionId: widget.divisionId,
+        seedingType: seedingType,
+      );
+
+  /// Round robin / group stage: confirm the settings first, then save them
+  /// (teams already placed in groups) and create. Other formats create
+  /// straight away.
   Future<void> _create() async {
     if (_busy) return;
     var seedingType = widget.seedingType;
     Map<String, dynamic>? roundConfig;
+    Map<String, dynamic>? fallbackConfig;
     if (_usesSetupSheet) {
       // Lock the button while the popup is open (double tap).
       setState(() => _busy = true);
@@ -136,25 +183,26 @@ class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
         if (mounted) setState(() => _busy = false);
       }
       if (result == null || !mounted) return;
-      roundConfig = result.roundConfig;
+      roundConfig = _withArrangedGroups(result);
+      // Only a different config needs a retry path.
+      if (!identical(roundConfig, result.roundConfig)) {
+        fallbackConfig = result.roundConfig;
+      }
       seedingType = result.seedingType;
     }
     await _run((l10n) async {
-      if (roundConfig != null) {
-        await ref
-            .read(tournamentManagementRepositoryProvider)
-            .updateDivisionConfig(widget.tournamentId, widget.divisionId, {
-              'isConfigOverride': true,
-              'roundConfig': roundConfig,
-            });
+      if (roundConfig != null) await _saveConfig(roundConfig);
+      try {
+        await _generate(seedingType);
+      } on DioException catch (error) {
+        // The app cannot see every eligibility rule (fee, waiver), so when the
+        // backend refuses the arranged groups, let it draw them itself.
+        if (fallbackConfig == null || error.response?.statusCode != 400) {
+          rethrow;
+        }
+        await _saveConfig(fallbackConfig);
+        await _generate(seedingType);
       }
-      await ref
-          .read(tournamentRepositoryProvider)
-          .generateBracket(
-            widget.tournamentId,
-            divisionId: widget.divisionId,
-            seedingType: seedingType,
-          );
       return l10n.bracketMgmt_createDone;
     });
   }
@@ -199,6 +247,10 @@ class _BracketManagementBarState extends ConsumerState<BracketManagementBar> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Load the teams ahead of time so "Tạo bracket" can arrange them at once.
+    if (_usesSetupSheet && !widget.hasBracket) {
+      ref.watch(teamsProvider(widget.tournamentId));
+    }
     final tooLittle = !widget.hasBracket && widget.participantCount < 2;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

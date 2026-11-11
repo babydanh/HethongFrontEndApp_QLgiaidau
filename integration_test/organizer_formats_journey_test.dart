@@ -282,6 +282,13 @@ void main() {
       for (final g in stageGroups) {
         expect(_maps(g['matches']), hasLength(6), reason: 'Mỗi bảng 4 đội đá vòng tròn 1 lượt = 6 trận');
       }
+      // Popup đã chọn xếp theo ELO nên đội vào bảng ngay, không còn làn "Chưa xếp".
+      await tester.pump(const Duration(seconds: 2));
+      expect(
+        find.byKey(const ValueKey('group-unassigned-lane')),
+        findsNothing,
+        reason: 'Tạo bracket từ popup phải xếp sẵn đội vào bảng',
+      );
       await j.snap('so-do');
 
       // TC-54: vận hành giai đoạn: còn trận vòng bảng chưa xong nên nút Chốt vòng bảng bị khóa.
