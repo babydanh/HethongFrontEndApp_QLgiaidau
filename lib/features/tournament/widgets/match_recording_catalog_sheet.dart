@@ -45,7 +45,7 @@ class _MatchRecordingCatalogSheetState
   bool _loadingInitial = true;
   bool _initialError = false;
   int? _initialFailureStatusCode;
-  bool _hasCamera = false;
+  bool _canBrowse = false;
   bool _loadingFiles = false;
   bool _filesError = false;
   int? _filesFailureStatusCode;
@@ -70,7 +70,7 @@ class _MatchRecordingCatalogSheetState
     _loadingInitial = true;
     _initialError = false;
     _initialFailureStatusCode = null;
-    _hasCamera = false;
+    _canBrowse = false;
     _loadingFiles = false;
     _filesError = false;
     _filesFailureStatusCode = null;
@@ -106,10 +106,10 @@ class _MatchRecordingCatalogSheetState
       final repository = ref.read(matchRecordingCatalogRepositoryProvider);
       final control = await repository.getMatchControlState(widget.matchId);
       if (!_isCurrent(generation)) return;
-      if (!control.hasCamera) {
+      if (!control.hasCamera && !control.hasRecording) {
         setState(() {
           _loadingInitial = false;
-          _hasCamera = false;
+          _canBrowse = false;
           _days = const <String>[];
           _selectedDay = null;
           _files = const <MatchRecordingFileModel>[];
@@ -125,7 +125,7 @@ class _MatchRecordingCatalogSheetState
         _loadingInitial = false;
         _initialError = false;
         _initialFailureStatusCode = null;
-        _hasCamera = true;
+        _canBrowse = true;
         _days = days;
         _selectedDay = selectedDay;
         _loadingFiles = selectedDay != null;
@@ -265,7 +265,7 @@ class _MatchRecordingCatalogSheetState
                       ? null
                       : () => unawaited(_loadInitial(showLoading: true)),
                 )
-              else if (!_hasCamera)
+              else if (!_canBrowse)
                 _InfoMessage(
                   message: l10n.tournamentManagementRecordingNoCamera,
                 )

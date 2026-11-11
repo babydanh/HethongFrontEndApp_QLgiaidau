@@ -424,6 +424,30 @@ void main() {
   });
 
   testWidgets(
+    'TC-REC-FLAG-02 no camera but hasRecording still opens the catalog',
+    (tester) async {
+      final repository = _FakeCatalogRepository(
+        control: const MatchStreamControlStateModel(
+          matchId: _matchId,
+          hasCamera: false,
+          hasRecording: true,
+        ),
+        days: MatchRecordingDaysModel(days: <String>['2026-10-09']),
+        loadFiles: (_) async => const <MatchRecordingFileModel>[
+          MatchRecordingFileModel(name: 'archived.mp4'),
+        ],
+      );
+
+      await _pumpCatalog(tester, repository);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('No camera is assigned to this match.'), findsNothing);
+      expect(find.text('archived.mp4'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'late files from an older selected day cannot replace current data',
     (tester) async {
       final latestFiles = Completer<List<MatchRecordingFileModel>>();

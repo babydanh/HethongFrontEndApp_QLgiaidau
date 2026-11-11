@@ -21,6 +21,26 @@ void main() {
     );
   });
 
+  test('TC-REC-FLAG-02 control state parses hasRecording (missing=false)', () {
+    MatchStreamControlStateModel parse(Map<String, Object?> extra) =>
+        MatchStreamControlStateModel.fromJson(<String, Object?>{
+          'matchId': _matchId,
+          'hasCamera': false,
+          ...extra,
+        });
+
+    expect(parse(<String, Object?>{'hasRecording': true}).hasRecording, isTrue);
+    expect(
+      parse(<String, Object?>{'hasRecording': false}).hasRecording,
+      isFalse,
+    );
+    expect(parse(<String, Object?>{}).hasRecording, isFalse);
+    expect(
+      parse(<String, Object?>{'hasRecording': null}).hasRecording,
+      isFalse,
+    );
+  });
+
   test('recording days keep valid calendar dates in server order only', () {
     final days = MatchRecordingDaysModel.fromJson(<Object?>[
       '2026-10-09',

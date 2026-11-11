@@ -2,10 +2,15 @@ class MatchStreamControlStateModel {
   const MatchStreamControlStateModel({
     required this.matchId,
     required this.hasCamera,
+    this.hasRecording = false,
   });
 
   final String matchId;
   final bool hasCamera;
+
+  /// True when the match was streamed and its recordings are still readable,
+  /// independent of the camera currently assigned. Missing = false (old API).
+  final bool hasRecording;
 
   factory MatchStreamControlStateModel.fromJson(Map<String, Object?> json) {
     final matchId = json['matchId'];
@@ -13,7 +18,11 @@ class MatchStreamControlStateModel {
     if (matchId is! String || matchId.trim().isEmpty || hasCamera is! bool) {
       throw const FormatException('Invalid match control-state response.');
     }
-    return MatchStreamControlStateModel(matchId: matchId, hasCamera: hasCamera);
+    return MatchStreamControlStateModel(
+      matchId: matchId,
+      hasCamera: hasCamera,
+      hasRecording: json['hasRecording'] == true,
+    );
   }
 }
 
