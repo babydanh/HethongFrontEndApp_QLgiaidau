@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
@@ -287,9 +288,13 @@ class ResultsTab extends ConsumerWidget {
     final participant = award['participant'] is Map
         ? Map<String, dynamic>.from(award['participant'] as Map)
         : const <String, dynamic>{};
-    final teamName =
-        participant['teamName']?.toString() ??
-        AppLocalizations.of(context)!.matchNotDetermined;
+    // A doubles pair has no team name: show its players (shared label contract).
+    final teamName = participant['teamName']?.toString();
+    final players = toParticipantPlayers(participant);
+    final isTeam = resolveParticipantDisplay(
+      teamName: teamName,
+      players: players,
+    ).isTeam;
     final members = _visibleMembers(participant);
     final memberNames = members
         .map((member) => member['fullName']?.toString().trim() ?? '')
@@ -329,17 +334,16 @@ class ResultsTab extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  teamName,
+                ParticipantLabel(
+                  teamName: teamName,
+                  players: players,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: colors.textPrimary,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                if (memberNames.isNotEmpty) ...[
+                if (isTeam && memberNames.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
                     memberNames,
@@ -362,7 +366,8 @@ class ResultsTab extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          if (members.isNotEmpty) _buildMemberAvatars(members, 17, badgeColor),
+          if (isTeam && members.isNotEmpty)
+            _buildMemberAvatars(members, 17, badgeColor),
         ],
       ),
     );

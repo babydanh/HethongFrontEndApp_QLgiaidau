@@ -143,6 +143,38 @@ void main() {
     );
   });
 
+  testWidgets('TC-PODIUM-NAME-01 đôi không có tên đội: hiện tên hai VĐV', (
+    tester,
+  ) async {
+    await _pumpResults(tester, _resultWithoutTeamName(rank: 1));
+
+    expect(find.text('Chưa xác định'), findsNothing);
+    expect(find.text('Nguyễn Minh / Trần Quốc'), findsOneWidget);
+    expect(find.text('QUÁN QUÂN'), findsOneWidget);
+  });
+
+  testWidgets('TC-PODIUM-NAME-02 á quân không có tên đội cũng hiện tên VĐV', (
+    tester,
+  ) async {
+    await _pumpResults(tester, _resultWithoutTeamName(rank: 2));
+
+    expect(find.text('Chưa xác định'), findsNothing);
+    expect(find.text('Nguyễn Minh / Trần Quốc'), findsOneWidget);
+    expect(find.text('Á QUÂN'), findsOneWidget);
+  });
+
+  testWidgets('TC-PODIUM-NAME-03 chưa có tên đội lẫn VĐV vẫn ghi Chưa xác định', (
+    tester,
+  ) async {
+    await _pumpResults(tester, {
+      'awards': [
+        {'rank': 1, 'participant': null},
+      ],
+    });
+
+    expect(find.text('Chưa xác định'), findsOneWidget);
+  });
+
   testWidgets('hạng mục SINGLES chỉ hiện một người và avatar', (tester) async {
     await _pumpIntro(tester);
     await _openResultsTab(tester);
@@ -376,6 +408,24 @@ void _phone(WidgetTester tester) {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 }
+
+/// A doubles pair the way Backend sends it: no `teamName`, the pair only in
+/// `players`.
+Map<String, dynamic> _resultWithoutTeamName({required int rank}) => {
+  'awards': [
+    {
+      'rank': rank,
+      'participant': {
+        'participantId': 'p1',
+        'teamName': null,
+        'players': [
+          {'slot': 1, 'fullName': 'Nguyễn Minh', 'userId': 'u1'},
+          {'slot': 2, 'fullName': 'Trần Quốc', 'userId': 'u2'},
+        ],
+      },
+    },
+  ],
+};
 
 Map<String, dynamic> _resultWithAward({bool includeAvatarUrls = true}) => {
   'awards': [
