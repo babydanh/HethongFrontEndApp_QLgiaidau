@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
@@ -173,6 +174,53 @@ void main() {
     });
 
     expect(find.text('Chưa xác định'), findsOneWidget);
+  });
+
+  testWidgets('TC-PODIUM-RANK-01 nhãn hạng thay số, mỗi hạng một màu', (
+    tester,
+  ) async {
+    await _pumpResults(tester, _podiumResult([1, 2, 3]));
+
+    expect(find.text('1'), findsNothing);
+    expect(find.text('2'), findsNothing);
+    Color? labelColor(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+    final colors = {
+      labelColor('QUÁN QUÂN'),
+      labelColor('Á QUÂN'),
+      labelColor('HẠNG 3'),
+    };
+    expect(colors.length, 3);
+    expect(colors.contains(null), isFalse);
+  });
+
+  testWidgets('TC-PODIUM-RANK-02 hai đội đồng hạng ba ghi Đồng hạng 3', (
+    tester,
+  ) async {
+    await _pumpResults(tester, _podiumResult([3, 3]));
+
+    expect(find.text('ĐỒNG HẠNG 3'), findsNWidgets(2));
+  });
+
+  testWidgets('TC-PODIUM-RANK-03 avatar cặp đôi: chữ viết tắt trên màu theo tên', (
+    tester,
+  ) async {
+    await _pumpResults(tester, _resultWithoutTeamName(rank: 1));
+
+    final avatars = tester
+        .widgetList<CircleAvatar>(
+          find.descendant(
+            of: find.byType(ResultsTab),
+            matching: find.byType(CircleAvatar),
+          ),
+        )
+        .toList();
+    expect(avatars.map((a) => a.backgroundColor), [
+      avatarFallbackColor('Nguyễn Minh'),
+      avatarFallbackColor('Trần Quốc'),
+    ]);
+    expect(find.text('NM'), findsOneWidget);
+    expect(find.text('TQ'), findsOneWidget);
   });
 
   testWidgets('hạng mục SINGLES chỉ hiện một người và avatar', (tester) async {
@@ -408,6 +456,25 @@ void _phone(WidgetTester tester) {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 }
+
+/// One award per rank in [ranks], each a distinct doubles pair without a team
+/// name.
+Map<String, dynamic> _podiumResult(List<int> ranks) => {
+  'awards': [
+    for (var i = 0; i < ranks.length; i++)
+      {
+        'rank': ranks[i],
+        'participant': {
+          'participantId': 'p$i',
+          'teamName': null,
+          'players': [
+            {'slot': 1, 'fullName': 'Người A$i', 'userId': 'a$i'},
+            {'slot': 2, 'fullName': 'Người B$i', 'userId': 'b$i'},
+          ],
+        },
+      },
+  ],
+};
 
 /// A doubles pair the way Backend sends it: no `teamName`, the pair only in
 /// `players`.

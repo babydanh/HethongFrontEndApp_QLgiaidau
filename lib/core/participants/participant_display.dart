@@ -303,12 +303,17 @@ class ParticipantLabel extends StatelessWidget {
   final TextAlign textAlign;
   final CrossAxisAlignment crossAxisAlignment;
 
+  /// Avatars show first+last initials in white on a name-based colour, like the
+  /// match board, instead of one muted letter.
+  final bool coloredAvatars;
+
   const ParticipantLabel({
     super.key,
     required this.teamName,
     required this.players,
     this.teamOnly = false,
     this.compact = false,
+    this.coloredAvatars = false,
     this.style,
     this.textAlign = TextAlign.start,
     this.crossAxisAlignment = CrossAxisAlignment.start,
@@ -378,13 +383,20 @@ class ParticipantLabel extends StatelessWidget {
                     PositionedDirectional(
                       start: overlap * i,
                       child: _PlayerAvatar(
-                        name: shown[i].fullName,
+                        initials: coloredAvatars
+                            ? avatarInitials(shown[i].fullName)
+                            : _initials(shown[i].fullName),
                         avatarUrl: shown[i].avatarUrl,
                         radius: avatarRadius,
-                        backgroundColor: colors.bgSurface,
+                        backgroundColor: coloredAvatars
+                            ? avatarFallbackColor(shown[i].fullName)
+                            : colors.bgSurface,
                         textStyle: baseStyle.copyWith(
-                          fontSize: avatarRadius * 0.9,
-                          color: colors.textMuted,
+                          fontSize: avatarRadius * (coloredAvatars ? 0.8 : 0.9),
+                          fontWeight: coloredAvatars ? FontWeight.w800 : null,
+                          color: coloredAvatars
+                              ? Colors.white
+                              : colors.textMuted,
                         ),
                       ),
                     ),
@@ -411,14 +423,14 @@ class ParticipantLabel extends StatelessWidget {
 const int _maxAvatars = 2;
 
 class _PlayerAvatar extends StatelessWidget {
-  final String name;
+  final String initials;
   final String? avatarUrl;
   final double radius;
   final Color backgroundColor;
   final TextStyle textStyle;
 
   const _PlayerAvatar({
-    required this.name,
+    required this.initials,
     required this.avatarUrl,
     required this.radius,
     required this.backgroundColor,
@@ -433,7 +445,7 @@ class _PlayerAvatar extends StatelessWidget {
       backgroundColor: backgroundColor,
       backgroundImage: url == null ? null : NetworkImage(url),
       onBackgroundImageError: url == null ? null : (_, _) {},
-      child: url == null ? Text(_initials(name), style: textStyle) : null,
+      child: url == null ? Text(initials, style: textStyle) : null,
     );
   }
 }
