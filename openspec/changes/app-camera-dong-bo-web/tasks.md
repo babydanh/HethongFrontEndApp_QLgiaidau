@@ -1,11 +1,11 @@
 ## 1. Model + repository (nền cho 3 mục)
-- [ ] 1.1 Model: `streamStatus` (ENDED→IDLE, lạ→null) trong control-state, `RecordingStatus`, kết quả start/stop (`recordingStatus`, `publishUrl`), tóm tắt livestream theo trận (`cameraId`, `streamStatus`, `hasRecording`); repo thêm `startMatchStream`, `stopMatchStream`, `listTournamentMatchLivestreams`, `downloadFullRecording`. Tiêu chí: `flutter test --no-pub test/features/camera_sync_repository_test.dart` → exit 0 (TC-CAM-SYNC-01..06)
+- [x] 1.1 Model: `streamStatus` (ENDED→IDLE, lạ→null) trong control-state, `RecordingStatus`, kết quả start/stop (`recordingStatus`, `publishUrl`), tóm tắt livestream theo trận (`cameraId`, `streamStatus`, `hasRecording`); repo thêm `startMatchStream`, `stopMatchStream`, `listTournamentMatchLivestreams`, `downloadFullRecording`. Tiêu chí: `flutter test --no-pub test/features/camera_sync_repository_test.dart` → exit 0 (TC-CAM-SYNC-01..06)
   - Files: sửa `lib/data/models/match_recording_catalog_model.dart`, `lib/domain/repositories/match_recording_catalog_repository.dart`, `lib/data/repositories/api/api_match_recording_catalog_repository.dart`; test `test/features/camera_sync_repository_test.dart`
   - Giao: các hàm repo trên · Nhận: các route ở design.md
   - Phụ thuộc: không
 
 ## 2. Mục 1: nút phát ở trang chấm điểm
-- [ ] 2.1 Notifier `matchStreamControlProvider` + hàng Livestream. Tiêu chí: `flutter test --no-pub test/features/camera_sync_stream_control_test.dart` → exit 0 (TC-CAM-SYNC-07..13)
+- [x] 2.1 Notifier `matchStreamControlProvider` + hàng Livestream. Tiêu chí: `flutter test --no-pub test/features/camera_sync_stream_control_test.dart` → exit 0 (TC-CAM-SYNC-07..13)
   - Files: tạo `lib/providers/match_stream_control_provider.dart`; sửa `lib/features/match/widgets/official_score_modal.dart`, arb vi/en
   - Giao: `MatchStreamControlNotifier` · Nhận: repo 1.1
   - Phụ thuộc: 1.1

@@ -13172,6 +13172,106 @@ class AppLocalizationsEn extends AppLocalizations {
       'Camera information is unavailable.';
 
   @override
+  String get tournamentManagementCameraStreamTitle => 'Livestream';
+
+  @override
+  String get tournamentManagementCameraStreamStart => 'Start';
+
+  @override
+  String get tournamentManagementCameraStreamStop => 'Stop';
+
+  @override
+  String tournamentManagementCameraStreamStartAria(Object match) {
+    return 'Start broadcast for $match';
+  }
+
+  @override
+  String tournamentManagementCameraStreamStopAria(Object match) {
+    return 'Stop broadcast for $match';
+  }
+
+  @override
+  String get tournamentManagementCameraStreamNeedsCamera =>
+      'This court has no camera URL yet';
+
+  @override
+  String get tournamentManagementCameraStreamWatchLive => 'Watch';
+
+  @override
+  String tournamentManagementCameraStreamWatchLiveAria(Object match) {
+    return 'Watch $match live';
+  }
+
+  @override
+  String get tournamentManagementCameraStreamStopped =>
+      'Live stream stopped. You can start it again at any time.';
+
+  @override
+  String get tournamentManagementCameraStreamStartedFromUrl =>
+      'Broadcast started from the venue URL.';
+
+  @override
+  String get tournamentManagementCameraStreamPublishLinkCreated =>
+      'A stream start link was created for the match and copied to the clipboard.';
+
+  @override
+  String get tournamentManagementCameraStreamActionFailed =>
+      'Could not control the match live stream.';
+
+  @override
+  String get tournamentManagementCameraStreamPermissionDenied =>
+      'Only the tournament organizer or assigned referee can control this match.';
+
+  @override
+  String get tournamentManagementCameraRecordingPending =>
+      'Recording status is not confirmed yet; the system will retry automatically.';
+
+  @override
+  String get tournamentManagementCameraBadgeReady => 'Ready';
+
+  @override
+  String get tournamentManagementCameraBadgeAssigned => 'Assigned';
+
+  @override
+  String get tournamentManagementCameraBadgeWaiting => 'Waiting for signal';
+
+  @override
+  String get tournamentManagementCameraBadgeLive => 'Live';
+
+  @override
+  String get tournamentManagementCameraBadgeOffline => 'Offline';
+
+  @override
+  String get tournamentManagementCameraBadgeError => 'Error';
+
+  @override
+  String get tournamentManagementCameraBadgeUnknown => 'Unknown';
+
+  @override
+  String tournamentManagementCameraBadgeSemantics(Object status) {
+    return 'Camera status: $status';
+  }
+
+  @override
+  String get tournamentManagementRecordingOpen => 'View MP4 recordings';
+
+  @override
+  String tournamentManagementRecordingOpenForMatch(Object match) {
+    return 'View MP4 recordings for $match';
+  }
+
+  @override
+  String get tournamentManagementRecordingDownloadFull => 'Download full video';
+
+  @override
+  String get tournamentManagementRecordingDownloadPreparing =>
+      'Preparing video download…';
+
+  @override
+  String get tournamentManagementRecordingDownloadError =>
+      'Unable to prepare the video download. You may not have permission to view this recording; please try again.';
+
+  @override
   String get tournamentManagementRecordingCatalog => 'Recording files';
 
   @override

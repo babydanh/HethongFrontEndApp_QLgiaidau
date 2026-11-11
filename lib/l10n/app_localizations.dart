@@ -23818,6 +23818,168 @@ abstract class AppLocalizations {
   /// **'Thông tin camera hiện không khả dụng.'**
   String get tournamentManagementCameraUnavailable;
 
+  /// No description provided for @tournamentManagementCameraStreamTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trực tiếp'**
+  String get tournamentManagementCameraStreamTitle;
+
+  /// No description provided for @tournamentManagementCameraStreamStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu'**
+  String get tournamentManagementCameraStreamStart;
+
+  /// No description provided for @tournamentManagementCameraStreamStop.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dừng'**
+  String get tournamentManagementCameraStreamStop;
+
+  /// No description provided for @tournamentManagementCameraStreamStartAria.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu phát trận {match}'**
+  String tournamentManagementCameraStreamStartAria(Object match);
+
+  /// No description provided for @tournamentManagementCameraStreamStopAria.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dừng phát trận {match}'**
+  String tournamentManagementCameraStreamStopAria(Object match);
+
+  /// No description provided for @tournamentManagementCameraStreamNeedsCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân này chưa khai URL camera'**
+  String get tournamentManagementCameraStreamNeedsCamera;
+
+  /// No description provided for @tournamentManagementCameraStreamWatchLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem live'**
+  String get tournamentManagementCameraStreamWatchLive;
+
+  /// No description provided for @tournamentManagementCameraStreamWatchLiveAria.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trực tiếp trận {match}'**
+  String tournamentManagementCameraStreamWatchLiveAria(Object match);
+
+  /// No description provided for @tournamentManagementCameraStreamStopped.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tắt phát trực tiếp. Bạn có thể bật lại bất cứ lúc nào.'**
+  String get tournamentManagementCameraStreamStopped;
+
+  /// No description provided for @tournamentManagementCameraStreamStartedFromUrl.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bắt đầu phát từ URL của sân.'**
+  String get tournamentManagementCameraStreamStartedFromUrl;
+
+  /// No description provided for @tournamentManagementCameraStreamPublishLinkCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo link bắt đầu phát cho trận và sao chép vào bộ nhớ tạm.'**
+  String get tournamentManagementCameraStreamPublishLinkCreated;
+
+  /// No description provided for @tournamentManagementCameraStreamActionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không điều khiển được phát trực tiếp của trận.'**
+  String get tournamentManagementCameraStreamActionFailed;
+
+  /// No description provided for @tournamentManagementCameraStreamPermissionDenied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ Ban tổ chức hoặc Trọng tài được phân công mới có quyền điều khiển trận này.'**
+  String get tournamentManagementCameraStreamPermissionDenied;
+
+  /// No description provided for @tournamentManagementCameraRecordingPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xác nhận được trạng thái ghi hình; hệ thống sẽ tự thử lại.'**
+  String get tournamentManagementCameraRecordingPending;
+
+  /// No description provided for @tournamentManagementCameraBadgeReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sẵn sàng'**
+  String get tournamentManagementCameraBadgeReady;
+
+  /// No description provided for @tournamentManagementCameraBadgeAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gán'**
+  String get tournamentManagementCameraBadgeAssigned;
+
+  /// No description provided for @tournamentManagementCameraBadgeWaiting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ tín hiệu'**
+  String get tournamentManagementCameraBadgeWaiting;
+
+  /// No description provided for @tournamentManagementCameraBadgeLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang live'**
+  String get tournamentManagementCameraBadgeLive;
+
+  /// No description provided for @tournamentManagementCameraBadgeOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Offline'**
+  String get tournamentManagementCameraBadgeOffline;
+
+  /// No description provided for @tournamentManagementCameraBadgeError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi'**
+  String get tournamentManagementCameraBadgeError;
+
+  /// No description provided for @tournamentManagementCameraBadgeUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không rõ'**
+  String get tournamentManagementCameraBadgeUnknown;
+
+  /// No description provided for @tournamentManagementCameraBadgeSemantics.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái camera: {status}'**
+  String tournamentManagementCameraBadgeSemantics(Object status);
+
+  /// No description provided for @tournamentManagementRecordingOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem bản ghi MP4'**
+  String get tournamentManagementRecordingOpen;
+
+  /// No description provided for @tournamentManagementRecordingOpenForMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem bản ghi MP4 của trận {match}'**
+  String tournamentManagementRecordingOpenForMatch(Object match);
+
+  /// No description provided for @tournamentManagementRecordingDownloadFull.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải video đầy đủ'**
+  String get tournamentManagementRecordingDownloadFull;
+
+  /// No description provided for @tournamentManagementRecordingDownloadPreparing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chuẩn bị tải video…'**
+  String get tournamentManagementRecordingDownloadPreparing;
+
+  /// No description provided for @tournamentManagementRecordingDownloadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể chuẩn bị tải video. Có thể bạn không có quyền xem bản ghi này; vui lòng thử lại.'**
+  String get tournamentManagementRecordingDownloadError;
+
   /// No description provided for @tournamentManagementRecordingCatalog.
   ///
   /// In vi, this message translates to:

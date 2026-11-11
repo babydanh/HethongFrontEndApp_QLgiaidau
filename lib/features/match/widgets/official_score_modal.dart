@@ -5,6 +5,7 @@ import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/match_stream_toggle_row.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/tennis_score_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/pickleball_court_panel.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/rally_score_panel.dart';
@@ -192,7 +193,15 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
             );
             // Info and close live on the title row, or on the tab row of the
             // pickleball court, whose names are already on the court.
+            final matchLabel =
+                '${widget.match.team1Name} ${l10n.matchVsLabel} ${widget.match.team2Name}';
+            final streamToggle = MatchStreamToggleRow(
+              matchId: widget.matchId,
+              matchLabel: matchLabel,
+              compact: compactHeader,
+            );
             final infoAndClose = <Widget>[
+                if (compactHeader) streamToggle,
                 IconButton(
                   icon: Icon(
                     Icons.info_outline_rounded,
@@ -294,6 +303,7 @@ class _OfficialScorePageState extends ConsumerState<OfficialScorePage> {
                 ),
                 const Divider(height: 1, thickness: 1),
                 ],
+                if (!compactHeader) streamToggle,
 
                 // Dải hiển thị điểm các set đã chốt ở đầu màn hình
                 if (!compactHeader) ...[
