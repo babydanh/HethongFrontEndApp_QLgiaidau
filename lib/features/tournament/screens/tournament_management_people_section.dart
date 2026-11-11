@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/participant_row_actions.dart';
@@ -810,7 +811,7 @@ class _TournamentPermissionsState
         : l10n.organizer_permissionsUnknown;
     return LavishRow(
       key: const Key('permissions-creator-row'),
-      leading: UserAvatarTap(
+      leading: RankedUserAvatarTap(
         userId: tournament.creatorId,
         name: name,
         imageUrl: tournament.creatorAvatarUrl,
@@ -828,7 +829,7 @@ class _TournamentPermissionsState
     final hasAction = row.action != RefereeAction.none || !isReferee;
     return LavishRow(
       leading: row.userId.isNotEmpty
-          ? UserAvatarTap(
+          ? RankedUserAvatarTap(
               userId: row.userId,
               name: name,
               imageUrl: row.avatarUrl.isEmpty ? null : row.avatarUrl,

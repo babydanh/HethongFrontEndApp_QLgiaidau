@@ -2,7 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
@@ -512,7 +512,7 @@ class _ParticipantDetailSheetState
       key: const ValueKey('participant-detail-profile'),
       children: [
         if (lead != null)
-          UserAvatarTap(
+          RankedUserAvatarTap(
             userId: lead.userId,
             name: lead.fullName,
             imageUrl: lead.avatarUrl,
@@ -789,7 +789,7 @@ class _ParticipantDetailSheetState
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          UserAvatarTap(
+          RankedUserAvatarTap(
             userId: member.userId,
             name: member.fullName,
             imageUrl: member.avatarUrl,
