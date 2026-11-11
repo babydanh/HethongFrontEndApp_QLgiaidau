@@ -35,8 +35,11 @@ class _Auth extends AuthNotifier {
 }
 
 class _Regions implements IRegionRepository {
+  const _Regions([this.provinces = const []]);
+  final List<Region> provinces;
+
   @override
-  Future<List<Region>> getProvinces() async => const [];
+  Future<List<Region>> getProvinces() async => provinces;
   @override
   Future<List<Region>> getWardsByProvince(String c) async => const [];
   @override
@@ -97,6 +100,7 @@ Future<AppLocalizations> _pump(
   ),
   required _Users users,
   _Community? community,
+  List<Region> provinces = const [],
 }) async {
   SharedPreferences.setMockInitialValues({});
   tester.view.physicalSize = const Size(430, 2600);
@@ -123,7 +127,7 @@ Future<AppLocalizations> _pump(
         communityRepositoryProvider.overrideWithValue(
           community ?? _Community(const []),
         ),
-        regionRepositoryProvider.overrideWithValue(_Regions()),
+        regionRepositoryProvider.overrideWithValue(_Regions(provinces)),
       ],
       child: MaterialApp.router(
         routerConfig: router,
@@ -202,6 +206,27 @@ void main() {
         ),
       );
       expect(find.text(l10n.settingsGenderFemale), findsOneWidget);
+    });
+  });
+
+  group('tỉnh thi đấu', () {
+    // TC-PROFILE-PROVINCE-DUP-01
+    testWidgets('hai tỉnh trùng tên không làm vỡ ô chọn tỉnh', (tester) async {
+      await _pump(
+        tester,
+        users: _Users(),
+        profile: const UserProfile(
+          id: 'u1',
+          fullName: 'Alex',
+          provinceCode: '80',
+        ),
+        provinces: const [
+          Region(code: '79', name: 'Tỉnh Tây Ninh'),
+          Region(code: '80', name: 'Tỉnh Tây Ninh'),
+        ],
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('Tỉnh Tây Ninh'), findsOneWidget);
     });
   });
 

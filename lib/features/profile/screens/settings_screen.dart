@@ -1799,9 +1799,9 @@ Widget _dropdown(
   ValueChanged<String?>? onChange, {
   Map<String, String>? displayLabels,
 }) {
-  // Giá trị hiện tại nằm ngoài danh sách (dữ liệu cũ) — thêm để DropdownButton không crash.
-  var effectiveItems = items;
-  if (!items.contains(value)) effectiveItems = [...items, value];
+  // DropdownButton cần đúng một mục cho mỗi giá trị: bỏ mục trùng (API trả hai
+  // tỉnh cùng tên) và thêm giá trị hiện tại nếu nằm ngoài danh sách (dữ liệu cũ).
+  final effectiveItems = {...items, value}.toList();
   return InputDecorator(
     isEmpty: false,
     decoration: _fieldDecoration(c, label),
