@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -830,16 +831,26 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Author Avatar ──
-          UserAvatarTap(
-            userId: comment.authorId,
-            communityId: widget.communityId,
-            name: comment.authorName,
-            imageUrl: comment.authorAvatarUrl,
-            size: isReply ? 28 : 36,
-            // Replies sit in a dense thread, so the hit box matches the
-            // artwork instead of growing the row to 44px.
-            minTouchTarget: isReply ? 28 : 36,
-          ),
+          if (comment.authorId.isEmpty)
+            UserAvatarTap(
+              userId: comment.authorId,
+              communityId: widget.communityId,
+              name: comment.authorName,
+              imageUrl: comment.authorAvatarUrl,
+              size: isReply ? 28 : 36,
+              minTouchTarget: isReply ? 28 : 36,
+            )
+          else
+            RankedUserAvatarTap(
+              userId: comment.authorId,
+              communityId: widget.communityId,
+              name: comment.authorName,
+              imageUrl: comment.authorAvatarUrl,
+              size: isReply ? 28 : 36,
+              // Replies sit in a dense thread, so the hit box matches the
+              // artwork instead of growing the row to 44px.
+              minTouchTarget: isReply ? 28 : 36,
+            ),
           const SizedBox(width: 8),
 
           // ── Speech Bubble + Action Row ──
