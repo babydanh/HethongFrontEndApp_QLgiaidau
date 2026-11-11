@@ -14,7 +14,6 @@ import 'package:flutter_test/flutter_test.dart';
 class _RecordingManagementRepository implements TournamentManagementRepository {
   final notes = <(String participantId, String note)>[];
   final entries = <(String participantId, Map<String, dynamic> payload)>[];
-  final seeds = <Map<String, dynamic>>[];
   final statusUpdates = <(String participantId, String status)>[];
   final rosterLocks = <(String participantId, bool lock)>[];
   final mockDeletes = <String>[];
@@ -38,14 +37,6 @@ class _RecordingManagementRepository implements TournamentManagementRepository {
     Map<String, dynamic> payload,
   ) async {
     entries.add((participantId, payload));
-  }
-
-  @override
-  Future<void> updateTournamentSeeds(
-    String id,
-    List<Map<String, dynamic>> seeds,
-  ) async {
-    this.seeds.addAll(seeds);
   }
 
   @override

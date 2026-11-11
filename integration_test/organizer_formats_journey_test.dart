@@ -232,12 +232,12 @@ void main() {
   );
 
   testWidgets(
-    'TC-QLGD-APP-48: BTC cấu hình Vòng bảng rồi xếp hạt giống tự động và thủ công (TC 48-50)',
+    'TC-QLGD-APP-48: BTC cấu hình Vòng bảng: số bảng, đội mỗi bảng, đội đi tiếp, playoff và cách xếp (TC 48)',
     (tester) async {
       final j = _Journey(tester, binding, 'fmt-gsk-seed');
       await j.start(players: 8);
 
-      // TC-48: chọn Vòng bảng, nhập số bảng, đội mỗi bảng, đội đi tiếp, playoff và cách xếp hạt giống.
+      // TC-48: chọn Vòng bảng, nhập số bảng, đội mỗi bảng, đội đi tiếp, playoff và cách xếp (Ngẫu nhiên / Theo ELO).
       await j.editDivision(
         'GROUP_STAGE_KNOCKOUT',
         openStage: true,
@@ -264,74 +264,6 @@ void main() {
       expect(_map(config['advancementConfig'])['teamsAdvancing'], 2);
       expect(_map(config['playoffConfig'])['type'], 'DOUBLE_ELIMINATION');
       expect(_map(config['playoffConfig'])['seedingType'], 'RANDOM');
-
-      // TC-49: Tự động xếp hạt giống: Hủy không đổi gì, xác nhận thì ghi hạt giống (POST /auto-seed).
-      final autoSeed = find.text('Tự động xếp hạt giống');
-      await j.scrollDivisionsTo(autoSeed);
-      await j.snap('muc-hat-giong');
-      final before = await j.seedsById();
-      await tapFinder(tester, autoSeed.first, 'nút Tự động xếp hạt giống');
-      await pumpUntilFound(tester, find.byType(AlertDialog), what: 'hộp xác nhận xếp hạt giống');
-      await tapFinder(tester, _dialogButton(find.widgetWithText(TextButton, 'Hủy')), 'Hủy xếp hạt giống');
-      await gone(tester, find.byType(AlertDialog), 'hộp xác nhận (Hủy)');
-      expect(await j.seedsById(), before, reason: 'Hủy không được đổi hạt giống');
-      await tapFinder(tester, autoSeed.first, 'nút Tự động xếp hạt giống (lần 2)');
-      await pumpUntilFound(tester, find.byType(AlertDialog), what: 'hộp xác nhận xếp hạt giống');
-      await tapFinder(
-        tester,
-        _dialogButton(find.widgetWithText(FilledButton, 'Tự động xếp hạt giống')),
-        'xác nhận Tự động xếp hạt giống',
-      );
-      // BUG-SP-07 (sản phẩm, cần xác minh): POST /tournaments/:id/auto-seed trả 201 nhưng App báo lỗi
-      // "Không thể hoàn tất thao tác" thay vì "Đã cập nhật hạt giống." (autoSeedParticipants đọc
-      // phản hồi như danh sách hàng). Nhận cả hai thông báo, kiểm kết quả ở Backend bên dưới.
-      await pumpUntilCondition(
-        tester,
-        () =>
-            find.text('Đã cập nhật hạt giống.').evaluate().isNotEmpty ||
-            find.textContaining('Không thể hoàn tất thao tác').evaluate().isNotEmpty,
-        what: 'thông báo sau khi tự động xếp hạt giống',
-      );
-      if (find.text('Đã cập nhật hạt giống.').evaluate().isEmpty) {
-        debugPrint('[BUG-SP-07] tự động xếp hạt giống: Backend 201 nhưng App báo lỗi');
-      }
-      final seeds = await j.eventually('Backend có hạt giống duy nhất cho các đội', () async {
-        final s = await j.seedsById();
-        final values = s.values.whereType<int>().toList();
-        return values.length >= 2 && values.toSet().length == values.length ? s : null;
-      });
-      debugPrint('TC-49: hạt giống sau tự động xếp: $seeds');
-      await j.snap('hat-giong-tu-dong');
-
-      // TC-50: sửa tay, đổi chỗ hạt giống của hai đội rồi Lưu hạt giống.
-      final pair = seeds.entries.where((e) => e.value != null).take(2).toList();
-      final idA = pair[0].key;
-      final seedA = pair[0].value!;
-      final idB = pair[1].key;
-      final seedB = pair[1].value!;
-      // Sau BUG-SP-07 App không tải lại ô hạt giống: rời hub rồi vào lại để ô khớp dữ liệu Backend.
-      j.refresh();
-      j.container.read(routerProvider).go('/');
-      await tester.pump(const Duration(seconds: 1));
-      await openManageHub(tester, j.container, j.tid);
-      await openHubTab(tester, 'Nội dung');
-      await j.dismissFullDivisionPrompt();
-      final fieldA = find.byKey(ValueKey('$idA-$seedA'));
-      final fieldB = find.byKey(ValueKey('$idB-$seedB'));
-      await j.scrollDivisionsTo(fieldA);
-      await tester.enterText(fieldA, '$seedB');
-      await j.scrollDivisionsTo(fieldB);
-      await tester.enterText(fieldB, '$seedA');
-      await tester.pump();
-      clearSnackBars(tester);
-      await j.scrollDivisionsTo(find.text('Lưu hạt giống'));
-      await j.snap('hat-giong-sua-tay');
-      await tapFinder(tester, find.text('Lưu hạt giống'), 'nút Lưu hạt giống');
-      await pumpUntilFound(tester, find.text('Đã cập nhật hạt giống.'), what: 'thông báo đã lưu hạt giống');
-      await j.eventually('hạt giống của hai đội đã đổi chỗ', () async {
-        final s = await j.seedsById();
-        return s[idA] == seedB && s[idB] == seedA ? true : null;
-      });
     },
     timeout: testTimeout,
   );

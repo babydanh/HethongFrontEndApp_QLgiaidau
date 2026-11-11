@@ -654,25 +654,6 @@ class ApiTournamentManagementRepository
   }
 
   @override
-  Future<void> updateTournamentSeeds(
-    String id,
-    List<Map<String, dynamic>> seeds,
-  ) async {
-    await _dio.patch('/tournaments/$id/seeds', data: {'seeds': seeds});
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> autoSeedParticipants(
-    String id, {
-    String? divisionId,
-  }) async => _mapList(
-    await _dio.post(
-      '/tournaments/$id/auto-seed',
-      data: {if (divisionId != null) 'divisionId': divisionId},
-    ),
-  );
-
-  @override
   Future<Map<String, dynamic>> startTournament(String id) async =>
       _map(await _dio.post('/tournaments/$id/start'));
 
