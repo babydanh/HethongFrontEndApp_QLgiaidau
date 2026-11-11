@@ -11,7 +11,7 @@
   - Phụ thuộc: 1.1
 
 ## 3. Mục 2: badge camera
-- [ ] 3.1 `CameraStatusBadge` + dùng ở panel và hàng theo sân. Tiêu chí: `flutter test --no-pub test/features/camera_sync_status_badge_test.dart test/features/tournament_camera_panel_test.dart` → exit 0 (TC-CAM-SYNC-14..17)
+- [x] 3.1 `CameraStatusBadge` + dùng ở panel và hàng theo sân. Tiêu chí: `flutter test --no-pub test/features/camera_sync_status_badge_test.dart test/features/tournament_camera_panel_test.dart` → exit 0 (TC-CAM-SYNC-14..17)
   - Files: tạo `lib/features/tournament/widgets/camera_status_badge.dart`; sửa `tournament_camera_panel.dart`, `tournament_management_camera_section.dart`, arb
   - Phụ thuộc: không
 
