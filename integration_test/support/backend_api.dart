@@ -328,7 +328,7 @@ class BackendApi {
         );
       }
       for (final match in playable) {
-        await _scorePlayerOneWins(token, match);
+        await scoreMatch(token: token, match: match);
       }
     }
     final finals = matches
@@ -360,12 +360,70 @@ class BackendApi {
     return winner.first['teamName'] as String;
   }
 
-  Future<void> _scorePlayerOneWins(
-    String token,
-    Map<String, dynamic> match,
-  ) async {
+  /// BTC khai mạc giải (`POST /tournaments/:id/start`): sang IN_PROGRESS.
+  Future<void> startTournament({
+    required String token,
+    required String tournamentId,
+  }) async {
+    await _send('POST', '/tournaments/$tournamentId/start', token: token);
+  }
+
+  /// BTC kết thúc giải (`POST /tournaments/:id/complete`). Backend không tự chuyển COMPLETED khi hết trận.
+  Future<void> completeTournament({
+    required String token,
+    required String tournamentId,
+  }) async {
+    await _send('POST', '/tournaments/$tournamentId/complete', token: token);
+  }
+
+  Future<Map<String, dynamic>> getTournament({
+    required String token,
+    required String tournamentId,
+  }) async {
+    final path = '/tournaments/$tournamentId';
+    return _asMap(path, await _send('GET', path, token: token));
+  }
+
+  Future<List<Map<String, dynamic>>> listVenues({
+    required String token,
+    required String tournamentId,
+  }) async {
+    final path = '/tournaments/$tournamentId/venues';
+    return _asList(path, await _send('GET', path, token: token));
+  }
+
+  Future<List<Map<String, dynamic>>> listSponsors({
+    required String token,
+    required String tournamentId,
+  }) async {
+    final path = '/tournaments/$tournamentId/sponsors';
+    return _asList(path, await _send('GET', path, token: token));
+  }
+
+  /// Đưa một trận sang ONGOING (PATCH /matches/:id/status), giống nút "Bắt đầu trận".
+  Future<void> startMatch({
+    required String token,
+    required String matchId,
+  }) async {
+    await _send(
+      'PATCH',
+      '/matches/$matchId/status',
+      token: token,
+      data: {'status': 'ONGOING'},
+    );
+  }
+
+  /// Chấm một trận 2-0 cho bên [winnerSide] (1 hoặc 2): 11-5, 11-5. Đưa trận sang ONGOING nếu chưa.
+  Future<void> scoreMatch({
+    required String token,
+    required Map<String, dynamic> match,
+    int winnerSide = 1,
+  }) async {
+    if (winnerSide != 1 && winnerSide != 2) {
+      throw ArgumentError.value(winnerSide, 'winnerSide', 'phải là 1 hoặc 2');
+    }
     final matchId = match['id'] as String;
-    final p1 = match['participant1Id'] as String;
+    final winnerId = match['participant${winnerSide}Id'] as String;
     if (match['status'] != 'ONGOING') {
       await _send(
         'PATCH',
@@ -374,15 +432,17 @@ class BackendApi {
         data: {'status': 'ONGOING'},
       );
     }
-    final set = {'team1Score': 11, 'team2Score': 5, 'isFinished': true};
+    final set = winnerSide == 1
+        ? {'team1Score': 11, 'team2Score': 5, 'isFinished': true}
+        : {'team1Score': 5, 'team2Score': 11, 'isFinished': true};
     await _send(
       'PATCH',
       '/matches/$matchId/score',
       token: token,
       data: {
-        'p1SetsWon': 2,
-        'p2SetsWon': 0,
-        'winnerId': p1,
+        'p1SetsWon': winnerSide == 1 ? 2 : 0,
+        'p2SetsWon': winnerSide == 2 ? 2 : 0,
+        'winnerId': winnerId,
         'scoreDetails': {
           'sets': [set, set],
         },
