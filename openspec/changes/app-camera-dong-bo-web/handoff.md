@@ -26,7 +26,7 @@ Endpoint đã dùng (đều có ở Web `api.ts`, không bịa): `GET /livestrea
 - `flutter analyze --no-pub lib/features/tournament lib/features/match lib/providers lib/data lib/domain` → **0 lỗi** (30 info/warning có sẵn ở file không đụng tới, không có dòng nào ở file của change này).
 - `openspec validate app-camera-dong-bo-web --strict` → **exit 0**.
 - Không chạy cả bộ test, không E2E.
-- Lưu ý quy trình: test TC-CAM-SYNC-07..13 và 14..17, 27..28 viết trước nhưng mình không chạy riêng lượt đỏ (đã chạy đỏ thật cho 01..06 và 18..26, 29..32 do thiếu API → lỗi biên dịch/test hỏng).
+- Lưu ý quy trình (TDD): lượt đỏ thật (lỗi biên dịch vì thiếu API) chỉ chạy cho TC-01..06 và TC-29..32. Các test còn lại (07..28) viết trước code nhưng mình không chạy lượt đỏ riêng, chạy lần đầu sau khi code đã có.
 
 ## CI
 - `CI` của repo (workflow push) trên nhánh này: run 43073247319 **FAIL sau 2 giây, 0 step, không có runner**. Mọi run gần đây của repo (cả nhánh danh3 và `ci/merge-lane/*`, từ 2026-11-11 08:48 trở đi) đều fail đúng kiểu này → lỗi hạ tầng GitHub Actions của repo (nghi hết hạn mức/billing hoặc runner), không phải do code. Cần chủ repo kiểm tra tab Actions/Billing.
