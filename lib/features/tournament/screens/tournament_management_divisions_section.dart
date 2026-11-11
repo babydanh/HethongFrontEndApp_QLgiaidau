@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_s
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/registration_divisions_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/planned_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/stage_round_config_sheet.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -164,16 +165,7 @@ class _TournamentManagementDivisionsSectionState
       onEdit: () => _editDivision(division),
       // Watch (không read) để menu hiện đúng ngay khi trận
       // của giải mới về; read lúc build luôn thấy rỗng.
-      onConfigureRounds:
-          (ref
-                      .watch(matchesProvider(widget.tournament.id))
-                      .asData
-                      ?.value
-                      .any((match) => match.divisionId == id) ??
-                  false) &&
-              !_isSwiss(division['bracketType'])
-          ? () => _configureRounds(division)
-          : null,
+      onConfigureRounds: _roundsAction(division, id),
       onToggleRegistration: () => _toggleRegistration(division),
       onReopenWithDeadline: () => _reopenWithDeadline(division),
       onBulkOpen: onBulkOpen,
@@ -291,7 +283,10 @@ class _TournamentManagementDivisionsSectionState
   /// Sheet cấu hình từng vòng của stage (task 2.2): chỉ mở khi hạng mục đã
   /// sinh sơ đồ; Swiss không có vòng riêng để cấu hình (Web trả danh sách
   /// rỗng cho SWISS) nên ẩn nút.
-  Future<void> _configureRounds(Map<String, dynamic> division) async {
+  Future<void> _configureRounds(
+    Map<String, dynamic> division, {
+    bool draft = false,
+  }) async {
     if (_configuring || _isBusy) return;
     _configuring = true;
     try {
@@ -299,11 +294,28 @@ class _TournamentManagementDivisionsSectionState
         context,
         tournament: widget.tournament,
         division: division,
+        draft: draft,
       );
       if (saved == true && mounted) _reload();
     } finally {
       _configuring = false;
     }
+  }
+
+  /// Nút "Luật theo vòng" của thẻ hạng mục. Watch (không read) để menu hiện
+  /// đúng ngay khi trận của giải về. Đã có sơ đồ: vòng thật của stage; chưa
+  /// có (danh sách trận đã tải) và có vòng dự kiến theo số đội: chế độ nháp,
+  /// lưu vào `roundConfig` hạng mục. Swiss và chưa đặt số đội: ẩn.
+  VoidCallback? _roundsAction(Map<String, dynamic> division, String id) {
+    final matches = ref.watch(matchesProvider(widget.tournament.id)).asData;
+    if (matches == null || id.isEmpty) return null;
+    if (_isSwiss(division['bracketType'])) return null;
+    if (matches.value.any((match) => match.divisionId == id)) {
+      return () => _configureRounds(division);
+    }
+    return plannedRoundsOfDivision(division).isNotEmpty
+        ? () => _configureRounds(division, draft: true)
+        : null;
   }
 
   /// Hạng mục đã có sơ đồ chưa: soi danh sách trận của giải (trận sinh cùng
