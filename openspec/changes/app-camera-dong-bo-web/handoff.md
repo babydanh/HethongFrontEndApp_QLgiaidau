@@ -30,7 +30,7 @@ Endpoint đã dùng (đều có ở Web `api.ts`, không bịa): `GET /livestrea
 
 ## CI
 - `CI` của repo (workflow push) trên nhánh này: run 43073247319 **FAIL sau 2 giây, 0 step, không có runner**. Mọi run gần đây của repo (cả nhánh danh3 và `ci/merge-lane/*`, từ 2026-11-11 08:48 trở đi) đều fail đúng kiểu này → lỗi hạ tầng GitHub Actions của repo (nghi hết hạn mức/billing hoặc runner), không phải do code. Cần chủ repo kiểm tra tab Actions/Billing.
-- Đã dispatch thêm qua `cloud-test` (agent-orchestrator): xem mục cuối.
+- Đã chạy thêm qua `cloud-test` (agent-orchestrator), target `app`, nhánh này, `--specs test/features/camera_sync_repository_test.dart`: run https://github.com/babydanh/agent-orchestrator/actions/runs/43073311622 → **success** (job "Test Flutter App (Dart Analyze & Widget)" success). Lưu ý run này chỉ chỉ định 1 file spec; 5 file test mới còn lại + analyze chạy xanh ở máy danh4 như trên.
 
 ## Còn thiếu / lưu ý
 - Chưa chạy trên máy thật/ảnh chụp màn hình (không có thiết bị); đã kiểm không tràn ở 360px và 900px bằng widget test, vùng bấm ≥ 44 (trừ nút tròn "compact" ở màn ngang thấp của trang chấm điểm: cao 30–38 vì hàng tiêu đề chật; rộng 44).
