@@ -157,7 +157,6 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
               name: value.name,
               mode: value.mode,
               courtId: value.courtId,
-              playbackUrl: value.playbackUrl,
             );
         await _refresh();
         messenger

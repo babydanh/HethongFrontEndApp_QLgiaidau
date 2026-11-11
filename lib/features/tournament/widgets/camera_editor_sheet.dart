@@ -2,14 +2,14 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_add_help.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_manage_sheet.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Backend DTO bounds (`CreateCameraDto.name`, `playbackUrl`).
+/// Backend DTO bounds (`CreateCameraDto.name`).
 const _nameMinLength = 2;
 const _nameMaxLength = 255;
-const _urlMaxLength = 2000;
 
 /// What the editor hands back. In edit mode only [courtId] is meaningful: the
 /// web has no route to rename a camera or change its mode/URL, so the app
@@ -19,20 +19,18 @@ class CameraEditorValue {
     required this.name,
     required this.mode,
     this.courtId,
-    this.playbackUrl,
   });
 
   final String name;
 
-  /// `PUSH` or `PULL`.
+  /// A new camera is always `PUSH` (AQP); an edited one keeps its own mode.
   final String mode;
   final String? courtId;
-  final String? playbackUrl;
 }
 
 typedef CameraEditorSubmit = Future<void> Function(CameraEditorValue value);
 
-/// Sheet to add a camera (name, PUSH/PULL, https URL for PULL, optional court)
+/// Sheet to add a camera (name and optional court; it always goes through AQP)
 /// or, when [camera] is given, to move an existing camera to another court
 /// (OpenSpec `quan-ly-giai-web-parity`, task 5.1).
 ///
@@ -72,12 +70,9 @@ class CameraEditorSheet extends StatefulWidget {
 
 class _CameraEditorSheetState extends State<CameraEditorSheet> {
   final _nameController = TextEditingController();
-  final _urlController = TextEditingController();
   late String? _courtId = widget.camera?.courtId;
-  String _mode = 'PUSH';
   bool _busy = false;
   String? _nameError;
-  String? _urlError;
   String? _error;
 
   bool get _isEdit => widget.camera != null;
@@ -85,50 +80,36 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
   @override
   void dispose() {
     _nameController.dispose();
-    _urlController.dispose();
     super.dispose();
-  }
-
-  bool _isHttpsUrl(String value) {
-    final uri = Uri.tryParse(value);
-    return uri != null &&
-        uri.scheme == 'https' &&
-        uri.host.isNotEmpty &&
-        value.length <= _urlMaxLength;
   }
 
   Future<void> _submit() async {
     if (_busy) return;
     final l10n = AppLocalizations.of(context)!;
     final name = _nameController.text.trim();
-    final url = _urlController.text.trim();
-    final needsUrl = !_isEdit && _mode == 'PULL';
     final nameInvalid =
         !_isEdit &&
         (name.length < _nameMinLength || name.length > _nameMaxLength);
-    final urlInvalid = needsUrl && !_isHttpsUrl(url);
-    if (nameInvalid || urlInvalid) {
+    if (nameInvalid) {
       setState(() {
-        _nameError = nameInvalid
-            ? l10n.tournamentCameraNameInvalid(_nameMinLength, _nameMaxLength)
-            : null;
-        _urlError = urlInvalid ? l10n.tournamentCameraUrlInvalid : null;
+        _nameError = l10n.tournamentCameraNameInvalid(
+          _nameMinLength,
+          _nameMaxLength,
+        );
       });
       return;
     }
     setState(() {
       _busy = true;
       _nameError = null;
-      _urlError = null;
       _error = null;
     });
     try {
       await widget.onSubmit(
         CameraEditorValue(
           name: widget.camera?.name ?? name,
-          mode: widget.camera?.mode ?? _mode,
+          mode: widget.camera?.mode ?? 'PUSH',
           courtId: _courtId,
-          playbackUrl: needsUrl ? url : null,
         ),
       );
       if (!mounted) return;
@@ -181,57 +162,19 @@ class _CameraEditorSheetState extends State<CameraEditorSheet> {
             const SizedBox(height: 4),
             Text(camera.mode, style: TextStyle(color: colors.textSecondary)),
           ] else ...[
+            const CameraAddHelp(),
+            const SizedBox(height: 8),
             TextField(
               key: const ValueKey('camera-editor-name'),
               controller: _nameController,
               enabled: !_busy,
               maxLength: _nameMaxLength,
-              textInputAction: TextInputAction.next,
+              textInputAction: TextInputAction.done,
               decoration: InputDecoration(
                 labelText: l10n.tournamentCameraNameLabel,
                 errorText: _nameError,
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.tournamentCameraModeLabel,
-              style: TextStyle(color: colors.textSecondary),
-            ),
-            const SizedBox(height: 6),
-            SegmentedButton<String>(
-              key: const ValueKey('camera-editor-mode'),
-              style: SegmentedButton.styleFrom(minimumSize: const Size(0, 44)),
-              segments: const [
-                ButtonSegment(value: 'PUSH', label: Text('PUSH')),
-                ButtonSegment(value: 'PULL', label: Text('PULL')),
-              ],
-              selected: {_mode},
-              onSelectionChanged: _busy
-                  ? null
-                  : (value) => setState(() => _mode = value.first),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              _mode == 'PUSH'
-                  ? l10n.tournamentCameraModePushHint
-                  : l10n.tournamentCameraModePullHint,
-              style: TextStyle(color: colors.textMuted, fontSize: 12),
-            ),
-            if (_mode == 'PULL') ...[
-              const SizedBox(height: 12),
-              TextField(
-                key: const ValueKey('camera-editor-url'),
-                controller: _urlController,
-                enabled: !_busy,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentCameraUrlLabel,
-                  hintText: 'https://',
-                  errorText: _urlError,
-                ),
-              ),
-            ],
           ],
           const SizedBox(height: 12),
           DropdownButtonFormField<String?>(

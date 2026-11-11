@@ -32614,7 +32614,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentCameraPanelSubtitle.
   ///
   /// In vi, this message translates to:
-  /// **'Thêm camera PUSH hoặc PULL, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.'**
+  /// **'Thêm camera qua AQP, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.'**
   String get tournamentCameraPanelSubtitle;
 
   /// No description provided for @tournamentCameraAdd.
@@ -32671,35 +32671,53 @@ abstract class AppLocalizations {
   /// **'Tên camera dài từ {min} đến {max} ký tự.'**
   String tournamentCameraNameInvalid(Object max, Object min);
 
-  /// No description provided for @tournamentCameraModeLabel.
+  /// No description provided for @tournamentCameraHelpLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Chế độ'**
-  String get tournamentCameraModeLabel;
+  /// **'Cách dùng'**
+  String get tournamentCameraHelpLabel;
 
-  /// No description provided for @tournamentCameraModePushHint.
+  /// No description provided for @tournamentCameraHelpTitle.
   ///
   /// In vi, this message translates to:
-  /// **'PUSH: camera đẩy luồng lên máy chủ (RTMP).'**
-  String get tournamentCameraModePushHint;
+  /// **'Đưa hình vào SportO qua AQP'**
+  String get tournamentCameraHelpTitle;
 
-  /// No description provided for @tournamentCameraModePullHint.
+  /// No description provided for @tournamentCameraHelpDevice.
   ///
   /// In vi, this message translates to:
-  /// **'PULL: dán URL phát đã có sẵn.'**
-  String get tournamentCameraModePullHint;
+  /// **'OBS / điện thoại'**
+  String get tournamentCameraHelpDevice;
 
-  /// No description provided for @tournamentCameraUrlLabel.
+  /// No description provided for @tournamentCameraHelpAqp.
   ///
   /// In vi, this message translates to:
-  /// **'URL phát (https)'**
-  String get tournamentCameraUrlLabel;
+  /// **'AQP SportO'**
+  String get tournamentCameraHelpAqp;
 
-  /// No description provided for @tournamentCameraUrlInvalid.
+  /// No description provided for @tournamentCameraHelpViewer.
   ///
   /// In vi, this message translates to:
-  /// **'Nhập URL phát hợp lệ, bắt đầu bằng https://.'**
-  String get tournamentCameraUrlInvalid;
+  /// **'Người xem'**
+  String get tournamentCameraHelpViewer;
+
+  /// No description provided for @tournamentCameraHelpStep1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điền tên camera, chọn sân rồi bấm nút Thêm camera ở cuối hộp.'**
+  String get tournamentCameraHelpStep1;
+
+  /// No description provided for @tournamentCameraHelpStep2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hộp tiếp theo hiện Server và Stream Key. Sao chép hai mục này.'**
+  String get tournamentCameraHelpStep2;
+
+  /// No description provided for @tournamentCameraHelpStep3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán vào OBS (Settings → Stream → Custom) hoặc app phát trên điện thoại, rồi bấm Start.'**
+  String get tournamentCameraHelpStep3;
 
   /// No description provided for @tournamentCameraCourtLabel.
   ///

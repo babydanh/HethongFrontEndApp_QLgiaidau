@@ -18089,7 +18089,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCameraPanelSubtitle =>
-      'Thêm camera PUSH hoặc PULL, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.';
+      'Thêm camera qua AQP, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.';
 
   @override
   String get tournamentCameraAdd => 'Thêm camera';
@@ -18121,21 +18121,31 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get tournamentCameraModeLabel => 'Chế độ';
+  String get tournamentCameraHelpLabel => 'Cách dùng';
 
   @override
-  String get tournamentCameraModePushHint =>
-      'PUSH: camera đẩy luồng lên máy chủ (RTMP).';
+  String get tournamentCameraHelpTitle => 'Đưa hình vào SportO qua AQP';
 
   @override
-  String get tournamentCameraModePullHint => 'PULL: dán URL phát đã có sẵn.';
+  String get tournamentCameraHelpDevice => 'OBS / điện thoại';
 
   @override
-  String get tournamentCameraUrlLabel => 'URL phát (https)';
+  String get tournamentCameraHelpAqp => 'AQP SportO';
 
   @override
-  String get tournamentCameraUrlInvalid =>
-      'Nhập URL phát hợp lệ, bắt đầu bằng https://.';
+  String get tournamentCameraHelpViewer => 'Người xem';
+
+  @override
+  String get tournamentCameraHelpStep1 =>
+      'Điền tên camera, chọn sân rồi bấm nút Thêm camera ở cuối hộp.';
+
+  @override
+  String get tournamentCameraHelpStep2 =>
+      'Hộp tiếp theo hiện Server và Stream Key. Sao chép hai mục này.';
+
+  @override
+  String get tournamentCameraHelpStep3 =>
+      'Dán vào OBS (Settings → Stream → Custom) hoặc app phát trên điện thoại, rồi bấm Start.';
 
   @override
   String get tournamentCameraCourtLabel => 'Sân';

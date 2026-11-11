@@ -18164,7 +18164,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentCameraPanelSubtitle =>
-      'Add PUSH or PULL cameras and attach them to courts. Long-press a camera card and drop it on a court card to move it.';
+      'Add cameras through AQP and attach them to courts. Long-press a camera card and drop it on a court card to move it.';
 
   @override
   String get tournamentCameraAdd => 'Add camera';
@@ -18196,22 +18196,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tournamentCameraModeLabel => 'Mode';
+  String get tournamentCameraHelpLabel => 'How it works';
 
   @override
-  String get tournamentCameraModePushHint =>
-      'PUSH: the camera pushes its stream to the server (RTMP).';
+  String get tournamentCameraHelpTitle => 'Send video to SportO through AQP';
 
   @override
-  String get tournamentCameraModePullHint =>
-      'PULL: paste a playback URL that is already live.';
+  String get tournamentCameraHelpDevice => 'OBS / phone';
 
   @override
-  String get tournamentCameraUrlLabel => 'Playback URL (https)';
+  String get tournamentCameraHelpAqp => 'AQP SportO';
 
   @override
-  String get tournamentCameraUrlInvalid =>
-      'Enter a valid playback URL starting with https://.';
+  String get tournamentCameraHelpViewer => 'Viewers';
+
+  @override
+  String get tournamentCameraHelpStep1 =>
+      'Enter a camera name, pick a court, then press the Add camera button at the bottom.';
+
+  @override
+  String get tournamentCameraHelpStep2 =>
+      'The next sheet shows the Server and Stream Key. Copy both.';
+
+  @override
+  String get tournamentCameraHelpStep3 =>
+      'Paste them into OBS (Settings → Stream → Custom) or a phone streaming app, then press Start.';
 
   @override
   String get tournamentCameraCourtLabel => 'Court';
