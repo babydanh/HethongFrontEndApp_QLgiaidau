@@ -188,6 +188,36 @@ void main() {
     expect(find.byKey(const ValueKey('venue-dialog-submit')), findsNothing);
   });
 
+  testWidgets('TC-VENUE-DLG-04 court prefix defaults to "Sân" like the Web', (
+    tester,
+  ) async {
+    final repo = await _pump(tester);
+    await _openAddDialog(tester);
+
+    final prefix = tester.widget<TextField>(
+      find.byKey(const ValueKey('venue-dialog-prefix')),
+    );
+    expect(prefix.controller!.text, 'Sân');
+
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-name')),
+      'Sunrise Club',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-address')),
+      '1 Lake Road',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('venue-dialog-count')),
+      '3',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('venue-dialog-submit')));
+    await tester.pumpAndSettle();
+
+    expect(repo.created.single['prefix'], 'Sân');
+  });
+
   testWidgets('TC-VENUE-DLG-02 footer buttons stay above the keyboard', (
     tester,
   ) async {
