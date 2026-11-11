@@ -6084,6 +6084,7 @@
   "tournamentManagementRequiredFields": "Vui lòng điền đầy đủ thông tin bắt buộc.",
   "tournamentManagementRetry": "Thử lại",
   "tournamentManagementRoleCoOrganizer": "Đồng tổ chức",
+  "tournamentManagementRoleCreator": "Người tạo giải",
   "tournamentManagementRoleOther": "Vai trò khác",
   "tournamentManagementRoleSpectator": "Khán giả",
   "tournamentManagementSave": "Lưu",

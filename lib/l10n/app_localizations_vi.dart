@@ -14931,6 +14931,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRoleCoOrganizer => 'Đồng tổ chức';
 
   @override
+  String get tournamentManagementRoleCreator => 'Người tạo giải';
+
+  @override
   String get tournamentManagementRoleOther => 'Vai trò khác';
 
   @override

@@ -14992,6 +14992,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRoleCoOrganizer => 'Co-organizer';
 
   @override
+  String get tournamentManagementRoleCreator => 'Tournament creator';
+
+  @override
   String get tournamentManagementRoleOther => 'Other role';
 
   @override

@@ -69,7 +69,7 @@ class TournamentManagementPeopleSection extends StatelessWidget {
           pairFormat: pairFormat,
           onPresenceChanged: onPresenceChanged,
         )
-      : _TournamentPermissions(tournamentId: tournament.id);
+      : _TournamentPermissions(tournament: tournament);
 }
 
 class _RegistrationPeople extends ConsumerStatefulWidget {
@@ -611,8 +611,10 @@ class _RegistrationPeopleState extends ConsumerState<_RegistrationPeople> {
 }
 
 class _TournamentPermissions extends ConsumerStatefulWidget {
-  const _TournamentPermissions({required this.tournamentId});
-  final String tournamentId;
+  const _TournamentPermissions({required this.tournament});
+  final Tournament tournament;
+
+  String get tournamentId => tournament.id;
 
   @override
   ConsumerState<_TournamentPermissions> createState() =>
@@ -747,13 +749,27 @@ class _TournamentPermissionsState
   }
 
   /// "ĐÃ MỜI · N" group; the role filter chips stay (logic unchanged).
-  Widget _buildList(AppLocalizations l10n, List<PermissionRow> rows) {
+  Widget _buildList(AppLocalizations l10n, List<PermissionRow> allRows) {
+    // The creator has their own row, so a matching co-organizer row is a repeat.
+    final creatorId = widget.tournament.creatorId;
+    final rows = allRows
+        .where(
+          (row) =>
+              creatorId.isEmpty ||
+              row.userId != creatorId ||
+              row.role == 'REFEREE',
+        )
+        .toList();
     final visible = _filter == 'ALL'
         ? rows
         : rows.where((row) => row.role == _filter).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (creatorId.isNotEmpty) ...[
+          LavishGroupHeader(l10n.organizer_permissionsCreator),
+          _buildCreatorRow(l10n),
+        ],
         LavishGroupHeader(l10n.tournamentManagementInvitedCount(rows.length)),
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
@@ -784,6 +800,27 @@ class _TournamentPermissionsState
     );
   }
 
+  /// The person who created the tournament; they have no staff record, so the
+  /// list would otherwise never say who owns the tournament.
+  Widget _buildCreatorRow(AppLocalizations l10n) {
+    final tournament = widget.tournament;
+    final fullName = tournament.creatorFullName?.trim() ?? '';
+    final name = fullName.isNotEmpty
+        ? fullName
+        : l10n.organizer_permissionsUnknown;
+    return LavishRow(
+      key: const Key('permissions-creator-row'),
+      leading: UserAvatarTap(
+        userId: tournament.creatorId,
+        name: name,
+        imageUrl: tournament.creatorAvatarUrl,
+        size: 36,
+      ),
+      title: name,
+      subtitle: l10n.tournamentManagementRoleCreator,
+    );
+  }
+
   Widget _buildRow(AppLocalizations l10n, PermissionRow row) {
     final isReferee = row.role == 'REFEREE';
     final roleLabel = _roleLabel(l10n, row.role);
@@ -791,7 +828,12 @@ class _TournamentPermissionsState
     final hasAction = row.action != RefereeAction.none || !isReferee;
     return LavishRow(
       leading: row.userId.isNotEmpty
-          ? UserAvatarTap(userId: row.userId, name: name, size: 36)
+          ? UserAvatarTap(
+              userId: row.userId,
+              name: name,
+              imageUrl: row.avatarUrl.isEmpty ? null : row.avatarUrl,
+              size: 36,
+            )
           : _LetterAvatar(name),
       title: name,
       subtitle: roleLabel,

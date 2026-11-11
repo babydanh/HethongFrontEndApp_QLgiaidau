@@ -27058,6 +27058,12 @@ abstract class AppLocalizations {
   /// **'Đồng tổ chức'**
   String get tournamentManagementRoleCoOrganizer;
 
+  /// No description provided for @tournamentManagementRoleCreator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người tạo giải'**
+  String get tournamentManagementRoleCreator;
+
   /// No description provided for @tournamentManagementRoleOther.
   ///
   /// In vi, this message translates to:

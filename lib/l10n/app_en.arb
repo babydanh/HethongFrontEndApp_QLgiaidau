@@ -5939,6 +5939,7 @@
   "tournamentManagementRequiredFields": "Complete the required fields.",
   "tournamentManagementRetry": "Retry",
   "tournamentManagementRoleCoOrganizer": "Co-organizer",
+  "tournamentManagementRoleCreator": "Tournament creator",
   "tournamentManagementRoleOther": "Other role",
   "tournamentManagementRoleSpectator": "Spectator",
   "tournamentManagementSave": "Save",

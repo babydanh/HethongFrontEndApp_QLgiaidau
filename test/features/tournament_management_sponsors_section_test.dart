@@ -132,6 +132,43 @@ void main() {
     expect(repository.updatedSponsor?['isPublic'], true);
   });
 
+  testWidgets('TC-SPONSOR-EDITOR-01 tier chips pick the saved tier', (
+    tester,
+  ) async {
+    final repository = _SponsorRepository([_sponsor('1')]);
+    final l10n = await _pump(tester, repository);
+
+    await tester.tap(find.byKey(const ValueKey('sponsor-row-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('sponsor-tier-SILVER')));
+    await tester.pump();
+    final saveButton = find.widgetWithText(
+      FilledButton,
+      l10n.tournamentManagementSave,
+    );
+    await tester.ensureVisible(saveButton);
+    await tester.tap(saveButton);
+    await tester.pumpAndSettle();
+
+    expect(repository.updatedSponsor?['tier'], 'SILVER');
+  });
+
+  testWidgets('TC-SPONSOR-EDITOR-02 editor fits a 320dp phone', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _SponsorRepository([_sponsor('1')]);
+    final l10n = await _pump(tester, repository);
+
+    await tester.tap(find.byKey(const ValueKey('sponsor-row-1')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(l10n.tournamentManagementUploadLogo), findsOneWidget);
+    expect(find.byKey(const ValueKey('sponsor-tier-IN_KIND')), findsOneWidget);
+  });
+
   testWidgets('row shows initial, tier, switch, hint and no order input', (
     tester,
   ) async {
