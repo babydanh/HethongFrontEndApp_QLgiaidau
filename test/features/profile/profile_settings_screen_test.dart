@@ -1,6 +1,8 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/profile/screens/profile_settings_screen.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -38,7 +40,10 @@ GoRouter _router() => GoRouter(
   ],
 );
 
-Future<AppLocalizations> _pumpSettings(WidgetTester tester) async {
+Future<AppLocalizations> _pumpSettings(
+  WidgetTester tester, {
+  String? avatarUrl,
+}) async {
   SharedPreferences.setMockInitialValues({});
   PackageInfo.setMockInitialValues(
     appName: 'Test',
@@ -66,8 +71,14 @@ Future<AppLocalizations> _pumpSettings(WidgetTester tester) async {
           ),
         ),
         userProfileProvider.overrideWith(
-          (ref) async =>
-              const UserProfile(id: 'user-1', fullName: 'Alex Player'),
+          (ref) async => UserProfile(
+            id: 'user-1',
+            fullName: 'Alex Player',
+            avatarUrl: avatarUrl,
+          ),
+        ),
+        userRankingsProvider.overrideWith(
+          (ref) async => const <PlayerRanking>[],
         ),
       ],
       child: MaterialApp.router(
@@ -141,6 +152,26 @@ void main() {
 
     expect(find.text(l10n.settingsChangePassword), findsNothing);
     expect(find.text(l10n.organizer_becomeOrganizer), findsNothing);
+  });
+
+  testWidgets('TC-SETTINGS-AVATAR-01 thẻ tài khoản hiện ảnh đại diện thật', (
+    tester,
+  ) async {
+    await _pumpSettings(tester, avatarUrl: 'https://example.invalid/me.png');
+
+    final avatar = tester.widget<RankAvatar>(find.byType(RankAvatar));
+    expect(avatar.imageUrl, 'https://example.invalid/me.png');
+    expect(avatar.name, 'Alex Player');
+  });
+
+  testWidgets('TC-SETTINGS-AVATAR-02 chưa có ảnh thì avatar vẫn là chữ cái', (
+    tester,
+  ) async {
+    await _pumpSettings(tester);
+
+    final avatar = tester.widget<RankAvatar>(find.byType(RankAvatar));
+    expect(avatar.imageUrl, isNull);
+    expect(find.text('A'), findsOneWidget);
   });
 
   testWidgets('Hồ sơ cá nhân mở /profile/edit', (tester) async {
