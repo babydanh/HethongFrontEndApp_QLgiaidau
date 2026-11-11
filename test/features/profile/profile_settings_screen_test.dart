@@ -87,7 +87,7 @@ Future<AppLocalizations> _pumpSettings(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('Cài đặt có nhóm Tài khoản, Ứng dụng; Lối tắt đóng sẵn', (
+  testWidgets('Cài đặt có nhóm Tài khoản, Ứng dụng, Lối tắt hiện sẵn', (
     tester,
   ) async {
     final l10n = await _pumpSettings(tester);
@@ -106,11 +106,13 @@ void main() {
     expect(find.text(l10n.settingsNotifications), findsOneWidget);
     expect(find.text(l10n.coreCheckForUpdate), findsOneWidget);
 
-    final shortcuts = tester.widget<ExpansionTile>(
-      find.widgetWithText(ExpansionTile, l10n.accountSettingsShortcuts),
+    // Shortcuts are a plain section (header + rows), not a collapsible tile.
+    expect(
+      find.text(l10n.accountSettingsShortcuts.toUpperCase()),
+      findsOneWidget,
     );
-    expect(shortcuts.initiallyExpanded, isFalse);
-    expect(find.text(l10n.myReportsTitle), findsNothing);
+    expect(find.byType(ExpansionTile), findsNothing);
+    expect(find.text(l10n.myReportsTitle), findsOneWidget);
     expect(find.text(l10n.settingsLogout), findsOneWidget);
   });
 
@@ -118,9 +120,6 @@ void main() {
     tester,
   ) async {
     final l10n = await _pumpSettings(tester);
-
-    await tester.tap(find.text(l10n.accountSettingsShortcuts));
-    await tester.pumpAndSettle();
 
     for (final label in [
       l10n.settingsDashboard,
@@ -140,9 +139,6 @@ void main() {
   ) async {
     final l10n = await _pumpSettings(tester);
 
-    await tester.tap(find.text(l10n.accountSettingsShortcuts));
-    await tester.pumpAndSettle();
-
     expect(find.text(l10n.settingsChangePassword), findsNothing);
     expect(find.text(l10n.organizer_becomeOrganizer), findsNothing);
   });
@@ -161,8 +157,6 @@ void main() {
   ) async {
     final l10n = await _pumpSettings(tester);
 
-    await tester.tap(find.text(l10n.accountSettingsShortcuts));
-    await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.myReportsTitle));
     await tester.pumpAndSettle();
 

@@ -62,7 +62,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
           _buildAccountCard(context),
           LavishGroupHeader(l.accountSettingsAppSection),
           _buildAppRows(context, isDark),
-          const SizedBox(height: 8),
+          LavishGroupHeader(l.accountSettingsShortcuts),
           _buildShortcuts(context),
           _buildLogoutButton(context),
           _buildAppVersion(context),
@@ -231,7 +231,6 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
 
   Widget _buildShortcuts(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final c = LavishColors.of(context);
     final items = [
       _SettingsMenuItem(
         Icons.dashboard_rounded,
@@ -265,36 +264,17 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         '/profile/reports',
       ),
     ];
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        key: const ValueKey('account-settings-shortcuts'),
-        initiallyExpanded: false,
-        shape: const Border(),
-        collapsedShape: const Border(),
-        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        childrenPadding: EdgeInsets.zero,
-        iconColor: LavishColors.accent,
-        collapsedIconColor: c.faint,
-        leading: _icon(Icons.bolt_rounded),
-        title: Text(
-          l.accountSettingsShortcuts,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: c.text,
+    return Column(
+      key: const ValueKey('account-settings-shortcuts'),
+      children: [
+        for (final item in items)
+          _navRow(
+            context,
+            icon: item.icon,
+            label: item.label,
+            route: item.route,
           ),
-        ),
-        children: [
-          for (final item in items)
-            _navRow(
-              context,
-              icon: item.icon,
-              label: item.label,
-              route: item.route,
-            ),
-        ],
-      ),
+      ],
     );
   }
 
