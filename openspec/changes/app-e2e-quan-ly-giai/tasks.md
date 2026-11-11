@@ -38,10 +38,16 @@
   - Phụ thuộc: sau 1.2
   - Phủ (nguồn: `lib/features/tournament/widgets/schedule_manager_bar.dart:141-153`, `schedule_grid.dart`, `screens/tournament_management_venues_section.dart`, `tournament_management_finance_section.dart`, `features/organizer_ops/screens/organizer_ops_screen.dart:2543`): `schedMgmt-courts`, `venue-add` + `venue-dialog-*`, `venue-add-court`, `court-edit-*`, `schedMgmt-hours` + `schedule-settings-save`, `schedMgmt-arrange`, `ops-matches-view-grid|list`, chạm ô trống `schedule-slot-*`, sheet hành động trận (`Thời gian xếp lịch`, `Mở bảng điểm`, `Mở bracket`, `Xử lý đặc biệt`), `schedule-multi-submit`; cài đặt nhà tài trợ, trọng tài (thêm, `DELETE`), tài chính (chip phí `financeFeeQuickFree`..., `Yêu cầu rút tiền` chỉ kiểm dialog và kiểm ràng buộc, `Lịch sử rút tiền`), `lifecycle-share`, `Xuất dữ liệu giải đấu`, `lifecycle-delete` → `delete-tournament-name` → `delete-tournament-confirm` (làm cuối cùng vì xóa giải)
 
+- [x] 2.5 Bổ sung ca App có tính năng mà chưa có test (TC-QLGD-APP-80..). Tiêu chí: cloud `app-e2e` file `organizer_setup_journey_test.dart` → xanh
+  - Files: sửa `integration_test/organizer_setup_journey_test.dart` (TC-QLGD-APP-80: luật chuẩn của nội dung, kiểm `roundConfig` ở Backend)
+  - Giao: (không) · Nhận: như 2.1
+  - Chủ file chung: không
+  - Phụ thuộc: sau 2.1
+
 ## 3. Chốt
 
-- [x] 3.1 Cập nhật README, chạy cloud từng file một, báo cáo. Tiêu chí: `flutter analyze --no-pub integration_test` → exit 0; bốn run cloud `app-e2e` xanh (hoặc nêu rõ ca đỏ do bug sản phẩm); `openspec validate app-e2e-quan-ly-giai --strict` → exit 0
-  - Files: sửa `integration_test/README.md` (thêm 4 file và lệnh cloud)
+- [x] 3.1 Cập nhật tài liệu hành trình (README.md bị .gitignore nên dùng ORGANIZER_JOURNEYS.md), chạy cloud từng file một, báo cáo. Tiêu chí: `flutter analyze --no-pub integration_test` → exit 0; bốn run cloud `app-e2e` xanh (hoặc nêu rõ ca đỏ do bug sản phẩm); `openspec validate app-e2e-quan-ly-giai --strict` → exit 0
+  - Files: sửa `integration_test/ORGANIZER_JOURNEYS.md` (thêm 4 file và lệnh cloud)
   - Giao: (không) · Nhận: bốn file test của 2.1-2.4
-  - Chủ file chung: 3.1 giữ `integration_test/README.md`
+  - Chủ file chung: 3.1 giữ `integration_test/ORGANIZER_JOURNEYS.md`
   - Phụ thuộc: sau 2.1, 2.2, 2.3, 2.4

@@ -9,7 +9,7 @@ Luồng quản lý giải đấu của Ban tổ chức trên App Flutter chưa c
   - `organizer_run_journey_test.dart` (TC-QLGD-APP-20..39): vòng đời (công bố, mở/đóng/mở lại đăng ký, khai mạc), bốc thăm (từng đội, hiện tất cả, làm lại, lưu và bắt đầu), tạo/xóa bracket, tab Kết quả (lọc, tìm, nhập điểm inline, thêm set, cảnh báo hòa, chốt lại), bàn điểm live, kết thúc giải, trang công khai.
   - `organizer_formats_journey_test.dart` (TC-QLGD-APP-40..59): vòng tròn, loại kép, vòng bảng (phân bảng), Swiss (ghép cặp, hoàn tác), vận hành giai đoạn, hạt giống và tự xếp hạt giống.
   - `organizer_schedule_settings_journey_test.dart` (TC-QLGD-APP-60..79): sân, khung giờ, xếp lịch (chọn ô, sheet hành động trận, xếp nhiều trận), nhà tài trợ, trọng tài, tài chính, chia sẻ, xuất dữ liệu, xóa giải.
-- Cập nhật `integration_test/README.md`.
+- Cập nhật `integration_test/ORGANIZER_JOURNEYS.md (README.md bị .gitignore)`.
 
 ## Out of scope
 - Quay video emulator: workflow `test-runner.yml` (repo `babydanh/agent-orchestrator`) chưa có `screenrecord`; chỉ làm khi người dùng cho phép sửa repo đó. Ảnh từng bước vẫn chụp bằng `shot()`.
