@@ -8,7 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_responsive.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class AboutTab extends StatefulWidget {
@@ -223,7 +223,7 @@ class _AboutTabState extends State<AboutTab> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     if (t.showFounder) ...[
-                      UserAvatarTap(
+                      RankedUserAvatarTap(
                         userId: t.creatorId,
                         name: creatorName,
                         imageUrl: resolvedAvatar.isEmpty
@@ -571,7 +571,7 @@ class _AboutTabState extends State<AboutTab> {
           if (t.showFounder) ...[
             Row(
               children: [
-                UserAvatarTap(
+                RankedUserAvatarTap(
                   userId: t.creatorId,
                   name: creatorName,
                   imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,
