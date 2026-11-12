@@ -2005,6 +2005,7 @@ void main() {
       l10n.tournamentManagementTabBracket,
       l10n.tournamentManagementSchedule,
       l10n.tournamentManagementTabResults,
+      l10n.opsCamera,
       l10n.tournamentManagementTabSettings,
     ]);
 

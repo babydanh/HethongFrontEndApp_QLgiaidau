@@ -38,6 +38,18 @@ enum OrganizerOpsView { overview, matches, bracket, roster, activity, camera }
 /// Khung nhìn danh sách trận trong tab vận hành: lưới sân × giờ hoặc danh sách.
 enum OrganizerOpsMatchesView { grid, list }
 
+/// True when a tournament in [status] can no longer be operated (assignments,
+/// streams); shared by the ops workspace and the management hub camera tab.
+bool isReadOnlyTournamentStatus(String status) {
+  return {
+    'COMPLETED',
+    'CANCELLED',
+    'CANCELED',
+    'ARCHIVED',
+    'PENDING_DELETE',
+  }.contains(status.trim().toUpperCase());
+}
+
 class OrganizerOpsScreen extends ConsumerStatefulWidget {
   const OrganizerOpsScreen({
     super.key,
@@ -167,7 +179,7 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
     Tournament tournament,
   ) {
     final colors = context.colors;
-    final isReadOnly = _isReadOnlyTournament(tournament.status);
+    final isReadOnly = isReadOnlyTournamentStatus(tournament.status);
     final divisionsAsync = ref.watch(
       tournamentDivisionsProvider(widget.tournamentId),
     );
@@ -3232,16 +3244,6 @@ class _OrganizerOpsScreenState extends ConsumerState<OrganizerOpsScreen> {
       return _selectedDivisionId;
     }
     return divisions.first.id;
-  }
-
-  bool _isReadOnlyTournament(String status) {
-    return {
-      'COMPLETED',
-      'CANCELLED',
-      'CANCELED',
-      'ARCHIVED',
-      'PENDING_DELETE',
-    }.contains(status.trim().toUpperCase());
   }
 
   void _goBack(BuildContext context) {

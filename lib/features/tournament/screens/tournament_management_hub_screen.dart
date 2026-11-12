@@ -9,6 +9,7 @@ import 'package:app_quanly_giaidau/domain/repositories/tournament_management_rep
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/organizer_ops/screens/organizer_ops_screen.dart';
 import 'package:app_quanly_giaidau/features/teams/screens/team_list_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_divisions_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_section_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
@@ -469,6 +470,7 @@ class _TournamentManagementHubScreenState
                 Tab(text: l10n.tournamentManagementTabBracket),
                 Tab(text: l10n.tournamentManagementSchedule),
                 Tab(text: l10n.tournamentManagementTabResults),
+                Tab(text: l10n.opsCamera),
                 Tab(text: l10n.tournamentManagementTabSettings),
               ],
             ),
@@ -563,6 +565,7 @@ class _TournamentManagementHubScreenState
                 overlapHandles: overlapHandles,
               ),
               _buildResultsTab(tournament, overlapHandles),
+              _buildCameraTab(tournament, overlapHandles),
               _buildSettingsTab(context, overlapHandles),
             ],
           );
@@ -620,6 +623,40 @@ class _TournamentManagementHubScreenState
           ),
         ),
       ],
+    );
+  }
+
+  /// Court cameras with each match's start/stop stream buttons. Built only
+  /// while this tab is selected: jumping to Cài đặt slides past it, and that
+  /// must not load venues and cameras.
+  Widget _buildCameraTab(
+    Tournament tournament,
+    List<SliverOverlapAbsorberHandle> overlapHandles,
+  ) {
+    return ListenableBuilder(
+      listenable: _tabController,
+      builder: (context, _) {
+        if (_tabController.index != _HubTab.camera.index) {
+          return const SizedBox.shrink();
+        }
+        return CustomScrollView(
+          slivers: [
+            ...overlapHandles.map(
+              (handle) => SliverOverlapInjector(handle: handle),
+            ),
+            // The camera board owns its scroll view, so it needs a bounded
+            // height instead of sizing to its content.
+            SliverFillRemaining(
+              hasScrollBody: true,
+              child: TournamentManagementCameraSection(
+                tournamentId: tournament.id,
+                divisionId: _divisionId,
+                readOnly: isReadOnlyTournamentStatus(tournament.status),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1173,6 +1210,7 @@ enum _HubTab {
   bracket,
   schedule,
   results,
+  camera,
   settings,
 }
 

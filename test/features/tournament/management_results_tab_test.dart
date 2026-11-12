@@ -98,7 +98,7 @@ Future<void> _openResults(WidgetTester tester, AppLocalizations l10n) async {
 }
 
 void main() {
-  testWidgets('TC-RESULTS-05 the hub has seven tabs and the last is Kết quả', (
+  testWidgets('TC-RESULTS-05 the hub has eight tabs and Kết quả follows Lịch', (
     tester,
   ) async {
     final l10n = await _pumpHub(tester, const []);
@@ -107,7 +107,7 @@ void main() {
         .widgetList<Tab>(find.byType(Tab))
         .map((tab) => tab.text)
         .toList();
-    expect(tabs, hasLength(7));
+    expect(tabs, hasLength(8));
     // Kết quả follows Lịch thi đấu; Cài đặt stays last.
     expect(tabs[4], l10n.tournamentManagementSchedule);
     expect(tabs[5], l10n.tournamentManagementTabResults);
