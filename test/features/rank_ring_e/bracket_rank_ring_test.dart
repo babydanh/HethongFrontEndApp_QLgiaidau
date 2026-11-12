@@ -86,6 +86,7 @@ int _ringOf(WidgetTester t, Finder avatar) {
 }
 
 void main() {
+  _labelTests();
   testWidgets(
     'TC-RANK-RING-APP-E01: bracket card side with a team name still rings the account player',
     (tester) async {
@@ -203,6 +204,61 @@ void main() {
       );
       expect(d.isTeam, isTrue);
       expect(d.accountPlayers.map((p) => p.userId), ['u1']);
+    },
+  );
+}
+
+void _labelTests() {
+  testWidgets(
+    'TC-RANK-RING-APP-E08: ParticipantLabel of a named team rings its account players, keeps the team name',
+    (tester) async {
+      await _pump(
+        tester,
+        const ParticipantLabel(
+          teamName: 'Sấm Sét',
+          compact: true,
+          players: [
+            ParticipantPlayer(slot: 1, userId: 'u1', fullName: 'Nguyễn Văn An'),
+            ParticipantPlayer(slot: 2, fullName: 'Khách Lẻ'),
+          ],
+        ),
+      );
+
+      expect(find.byType(RankAvatar), findsOneWidget);
+      expect(_ringOf(tester, find.byType(RankAvatar)), _tierSRing);
+      expect(find.text('Sấm Sét'), findsOneWidget);
+      expect(tester.getSize(find.byType(RankAvatar)), const Size(14, 14));
+    },
+  );
+
+  testWidgets(
+    'TC-RANK-RING-APP-E09: ParticipantLabel of a football team or a guest team stays text only',
+    (tester) async {
+      await _pump(
+        tester,
+        const Column(
+          children: [
+            ParticipantLabel(
+              teamName: 'FC Sấm Sét',
+              teamOnly: true,
+              players: [
+                ParticipantPlayer(
+                  slot: 1,
+                  userId: 'u1',
+                  fullName: 'Nguyễn Văn An',
+                ),
+              ],
+            ),
+            ParticipantLabel(
+              teamName: 'Đội Khách',
+              players: [ParticipantPlayer(slot: 1, fullName: 'Khách Lẻ')],
+            ),
+          ],
+        ),
+      );
+
+      expect(find.byType(RankAvatar), findsNothing);
+      expect(find.byType(CircleAvatar), findsNothing);
     },
   );
 }

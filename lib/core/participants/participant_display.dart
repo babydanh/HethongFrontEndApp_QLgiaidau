@@ -360,15 +360,19 @@ class ParticipantLabel extends StatelessWidget {
 
     if (display.isTeam) {
       final name = display.teamName!;
+      final teamText = Text(
+        name,
+        style: baseStyle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: textAlign,
+      );
+      // Người có tài khoản của đội vẫn có avatar kèm viền hạng cạnh tên đội.
       return Tooltip(
         message: name,
-        child: Text(
-          name,
-          style: baseStyle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: textAlign,
-        ),
+        child: display.accountPlayers.isEmpty
+            ? teamText
+            : _avatarRow(context, display.accountPlayers, teamText, baseStyle),
       );
     }
 
@@ -382,71 +386,78 @@ class ParticipantLabel extends StatelessWidget {
       );
     }
 
-    final colors = context.colors;
-    final avatarRadius = compact ? 7.0 : 11.0;
-    final rowGap = compact ? 4.0 : 6.0;
-    final shown = display.players.take(_maxAvatars).toList(growable: false);
-    final overlap = avatarRadius * 1.3;
     final names = display.players
         .map((p) => compact ? abbreviateName(p.fullName) : p.fullName)
         .join(' / ');
+    final nameText = Text(
+      names,
+      style: baseStyle,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: textAlign,
+    );
     return Tooltip(
       message: display.players.map((p) => p.fullName).join(' / '),
-      child: Row(
-        // Fill the width only when the label is aligned to the end/centre.
-        mainAxisSize: crossAxisAlignment == CrossAxisAlignment.start
-            ? MainAxisSize.min
-            : MainAxisSize.max,
-        mainAxisAlignment: switch (crossAxisAlignment) {
-          CrossAxisAlignment.end => MainAxisAlignment.end,
-          CrossAxisAlignment.center => MainAxisAlignment.center,
-          _ => MainAxisAlignment.start,
-        },
-        children: [
-          ExcludeSemantics(
-            child: SizedBox(
-              width: avatarRadius * 2 + overlap * (shown.length - 1),
-              height: avatarRadius * 2,
-              child: Stack(
-                children: [
-                  for (var i = 0; i < shown.length; i++)
-                    PositionedDirectional(
-                      start: overlap * i,
-                      child: _PlayerAvatar(
-                        player: shown[i],
-                        initials: coloredAvatars
-                            ? avatarInitials(shown[i].fullName)
-                            : _initials(shown[i].fullName),
-                        avatarUrl: shown[i].avatarUrl,
-                        radius: avatarRadius,
-                        backgroundColor: coloredAvatars
-                            ? avatarFallbackColor(shown[i].fullName)
-                            : colors.bgSurface,
-                        textStyle: baseStyle.copyWith(
-                          fontSize: avatarRadius * (coloredAvatars ? 0.8 : 0.9),
-                          fontWeight: coloredAvatars ? FontWeight.w800 : null,
-                          color: coloredAvatars
-                              ? Colors.white
-                              : colors.textMuted,
-                        ),
+      child: _avatarRow(context, display.players, nameText, baseStyle),
+    );
+  }
+
+  /// Avatars chồng nhau (tối đa 2, có viền hạng cho tài khoản) + [text].
+  Widget _avatarRow(
+    BuildContext context,
+    List<ParticipantPlayer> players,
+    Widget text,
+    TextStyle baseStyle,
+  ) {
+    final colors = context.colors;
+    final avatarRadius = compact ? 7.0 : 11.0;
+    final rowGap = compact ? 4.0 : 6.0;
+    final shown = players.take(_maxAvatars).toList(growable: false);
+    final overlap = avatarRadius * 1.3;
+    return Row(
+      // Fill the width only when the label is aligned to the end/centre.
+      mainAxisSize: crossAxisAlignment == CrossAxisAlignment.start
+          ? MainAxisSize.min
+          : MainAxisSize.max,
+      mainAxisAlignment: switch (crossAxisAlignment) {
+        CrossAxisAlignment.end => MainAxisAlignment.end,
+        CrossAxisAlignment.center => MainAxisAlignment.center,
+        _ => MainAxisAlignment.start,
+      },
+      children: [
+        ExcludeSemantics(
+          child: SizedBox(
+            width: avatarRadius * 2 + overlap * (shown.length - 1),
+            height: avatarRadius * 2,
+            child: Stack(
+              children: [
+                for (var i = 0; i < shown.length; i++)
+                  PositionedDirectional(
+                    start: overlap * i,
+                    child: _PlayerAvatar(
+                      player: shown[i],
+                      initials: coloredAvatars
+                          ? avatarInitials(shown[i].fullName)
+                          : _initials(shown[i].fullName),
+                      avatarUrl: shown[i].avatarUrl,
+                      radius: avatarRadius,
+                      backgroundColor: coloredAvatars
+                          ? avatarFallbackColor(shown[i].fullName)
+                          : colors.bgSurface,
+                      textStyle: baseStyle.copyWith(
+                        fontSize: avatarRadius * (coloredAvatars ? 0.8 : 0.9),
+                        fontWeight: coloredAvatars ? FontWeight.w800 : null,
+                        color: coloredAvatars ? Colors.white : colors.textMuted,
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
-          SizedBox(width: rowGap),
-          Flexible(
-            child: Text(
-              names,
-              style: baseStyle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: textAlign,
-            ),
-          ),
-        ],
-      ),
+        ),
+        SizedBox(width: rowGap),
+        Flexible(child: text),
+      ],
     );
   }
 }
