@@ -13,6 +13,8 @@ import 'package:app_quanly_giaidau/features/explore/widgets/live_tournament_with
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 typedef _Page = ({List<MatchModel> matches, String? nextCursor});
@@ -151,11 +153,9 @@ void main() {
     await tester.pumpWidget(_cardApp(repository));
     await tester.pumpAndSettle();
 
+    // Account holders render through the tier-ring RankAvatar.
     final photos = find.byWidgetPredicate(
-      (widget) =>
-          widget is CircleAvatar &&
-          widget.backgroundImage is NetworkImage &&
-          (widget.backgroundImage as NetworkImage).url == photo,
+      (widget) => widget is RankAvatar && widget.imageUrl == photo,
     );
     expect(photos, findsOneWidget);
     expect(find.text('Q'), findsOneWidget);
@@ -352,7 +352,10 @@ Widget _cardApp(
   MatchStatusFilter filter = MatchStatusFilter.scheduled,
 ]) {
   return ProviderScope(
-    overrides: [matchRepositoryProvider.overrideWith((ref) => repository)],
+    overrides: [
+      matchRepositoryProvider.overrideWith((ref) => repository),
+      userRankingsSummaryProvider.overrideWith((ref, userId) async => const []),
+    ],
     child: MaterialApp(
       theme: AppTheme.darkTheme,
       locale: const Locale('en'),
