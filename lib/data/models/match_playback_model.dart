@@ -1,3 +1,5 @@
+import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
+
 /// Kết quả `GET /livestream/matches/{matchId}/playback`.
 ///
 /// [playbackUrl] là nguồn phát trực tiếp mà web đang phát; null nghĩa là trận chưa
@@ -53,7 +55,12 @@ class MatchReplay {
     required this.endedAt,
     required this.durationSec,
     required List<MatchReplaySegment> segments,
-  }) : segments = List<MatchReplaySegment>.unmodifiable(segments);
+    List<MatchReplayOverlayEvent> overlayEvents =
+        const <MatchReplayOverlayEvent>[],
+  }) : segments = List<MatchReplaySegment>.unmodifiable(segments),
+       overlayEvents = List<MatchReplayOverlayEvent>.unmodifiable(
+         overlayEvents,
+       );
 
   factory MatchReplay.fromJson(Map<String, Object?> json) {
     final rawSegments = json['segments'];
@@ -83,6 +90,7 @@ class MatchReplay {
                 : declaredDuration)
           : 0,
       segments: segments,
+      overlayEvents: MatchReplayOverlayEvent.parseList(json['overlayEvents']),
     );
   }
 
@@ -93,6 +101,65 @@ class MatchReplay {
   final String? endedAt;
   final int durationSec;
   final List<MatchReplaySegment> segments;
+
+  /// H2H / bracket on-off changes on the replay timeline, ordered by offset.
+  /// Empty for a match recorded before the Backend stored them.
+  final List<MatchReplayOverlayEvent> overlayEvents;
+}
+
+/// One H2H or bracket overlay on/off change placed on the replay timeline by
+/// the Backend. [offsetSec] is fractional (unlike a segment's whole seconds).
+class MatchReplayOverlayEvent {
+  const MatchReplayOverlayEvent({
+    required this.kind,
+    required this.visible,
+    required this.offsetSec,
+  });
+
+  static MatchReplayOverlayEvent? tryParse(Map<String, Object?> json) {
+    final kind = switch (json['kind']) {
+      'H2H' => LiveOverlayKind.h2h,
+      'BRACKET' => LiveOverlayKind.bracket,
+      _ => null,
+    };
+    final visible = json['visible'];
+    final offsetSec = json['offsetSec'];
+    if (kind == null ||
+        visible is! bool ||
+        offsetSec is! num ||
+        !offsetSec.isFinite ||
+        offsetSec < 0) {
+      return null;
+    }
+    return MatchReplayOverlayEvent(
+      kind: kind,
+      visible: visible,
+      offsetSec: offsetSec.toDouble(),
+    );
+  }
+
+  /// A missing or non-list value means no events; malformed entries are
+  /// skipped. Ordered by offset, equal offsets keep the Backend's order.
+  static List<MatchReplayOverlayEvent> parseList(Object? raw) {
+    if (raw is! List) return const <MatchReplayOverlayEvent>[];
+    final parsed = <MatchReplayOverlayEvent>[];
+    for (final item in raw) {
+      if (item is! Map) continue;
+      final event = tryParse(_stringKeyedMap(item));
+      if (event != null) parsed.add(event);
+    }
+    // List.sort is not stable, so the original index breaks ties.
+    final indexed = [for (var i = 0; i < parsed.length; i++) (i, parsed[i])];
+    indexed.sort((a, b) {
+      final byOffset = a.$2.offsetSec.compareTo(b.$2.offsetSec);
+      return byOffset != 0 ? byOffset : a.$1.compareTo(b.$1);
+    });
+    return [for (final entry in indexed) entry.$2];
+  }
+
+  final LiveOverlayKind kind;
+  final bool visible;
+  final double offsetSec;
 }
 
 class MatchReplaySegment {

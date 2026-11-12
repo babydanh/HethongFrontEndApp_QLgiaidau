@@ -16,6 +16,7 @@ class MatchReplayPlayer extends StatefulWidget {
     this.fullscreen = false,
     this.onToggleFullscreen,
     this.onControlsVisibleChanged,
+    this.onPositionChanged,
     this.pipService,
   });
 
@@ -29,6 +30,10 @@ class MatchReplayPlayer extends StatefulWidget {
 
   /// Reports whether the control layer is up, so overlays can make room.
   final ValueChanged<bool>? onControlsVisibleChanged;
+
+  /// Reports the whole-match timeline second each time it changes (playing,
+  /// seeking, opening a segment), so overlays can follow the picture.
+  final ValueChanged<int>? onPositionChanged;
 
   /// Picture-in-picture bridge; defaults to the app-wide one.
   final PipService? pipService;
@@ -209,6 +214,7 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
     _segmentIndex = candidate;
     _finished = false;
     _displayedSeconds = widget.replay.segments[candidate].offsetSec + offsetSec;
+    widget.onPositionChanged?.call(_displayedSeconds);
     controller.addListener(() => _onControllerUpdate(controller));
     setState(() {});
     try {
@@ -245,11 +251,15 @@ class _MatchReplayPlayerState extends State<MatchReplayPlayer> {
       widget.replay.segments,
     );
     if (global != _displayedSeconds) {
+      final previous = _displayedSeconds;
       setState(
         () => _displayedSeconds = global
             .clamp(0, widget.replay.durationSec)
             .toInt(),
       );
+      if (_displayedSeconds != previous) {
+        widget.onPositionChanged?.call(_displayedSeconds);
+      }
     }
     if (controller.value.hasError) {
       _failed.add(_segmentIndex);

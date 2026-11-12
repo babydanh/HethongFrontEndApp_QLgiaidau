@@ -39,6 +39,7 @@ Future<FakeVideoPlayerPlatform> _pump(
   List<bool>? visibility,
   PipService? pip,
   bool initializes = true,
+  List<int>? positions,
 }) async {
   final platform = FakeVideoPlayerPlatform()
     ..duration = Duration(seconds: durationSec)
@@ -56,6 +57,7 @@ Future<FakeVideoPlayerPlatform> _pump(
             child: MatchReplayPlayer(
               replay: _replay(durationSec),
               onControlsVisibleChanged: visibility?.add,
+              onPositionChanged: positions?.add,
               pipService: pip,
             ),
           ),
@@ -164,6 +166,23 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     expect(seen, [true, false]);
   });
+
+  testWidgets(
+    'TC-REPLAYOV-10 reports the timeline second on open and after a seek, once per change',
+    (tester) async {
+      final positions = <int>[];
+      await _pump(tester, positions: positions);
+      expect(positions, [0]);
+
+      await tester.tap(find.byKey(_forward));
+      await tester.pump();
+      expect(positions, [0, 3]);
+
+      // Further controller updates at the same second must not repeat the report.
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(positions, [0, 3]);
+    },
+  );
 
   group('TC-PIP-07 picture-in-picture button', () {
     const pipChannel = MethodChannel(PipService.channelName);

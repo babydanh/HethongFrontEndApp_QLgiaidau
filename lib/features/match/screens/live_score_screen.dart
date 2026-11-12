@@ -32,6 +32,8 @@ import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/features/match/utils/live_bracket_scope.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/match_replay_timeline.dart';
+import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/core/strategy/penalty_strategy.dart';
 import 'package:app_quanly_giaidau/features/match/notifiers/score_panel_notifier.dart';
@@ -163,6 +165,11 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// Keeps the player alive when the page collapses to just the picture in the
   /// small (picture-in-picture) window and back.
   final _videoKey = GlobalKey();
+
+  /// Whole-match second of the replay (reported by the player), and the events
+  /// last used to draw it, so the callback can tell if a dismissed panel is stale.
+  final _replaySeconds = ValueNotifier<int>(0);
+  List<MatchReplayOverlayEvent>? _replayEventsInUse;
   final List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = false;
   StreamSubscription? _commentSub;
@@ -340,6 +347,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   @override
   void dispose() {
     PipService.instance.active.removeListener(_onPipChanged);
+    _replaySeconds.dispose();
     _maxScoreController.dispose();
     _timeLimitController.dispose();
     _chatScroll.dispose();
@@ -719,7 +727,10 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         final flagsChanged =
             before.h2hOverlayVisible != after.h2hOverlayVisible ||
             before.bracketOverlayVisible != after.bracketOverlayVisible;
-        if (flagsChanged && _dismissedOverlay != null) {
+        // A recording ignores the server flags, so their changes mean nothing to it.
+        if (flagsChanged &&
+            _dismissedOverlay != null &&
+            _replayEventsInUse == null) {
           setState(() => _dismissedOverlay = null);
         }
       },
@@ -2286,6 +2297,43 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
     return ref.watch(matchReplayProvider(widget.matchId)).asData?.value != null;
   }
 
+  /// Overlay events of the recording `LiveVideoBox` plays, or null while a
+  /// live stream (or nothing) shows. Same lookup order as `LiveVideoBox`.
+  List<MatchReplayOverlayEvent>? _replayOverlayEvents() {
+    final playback = ref.watch(matchPlaybackProvider(widget.matchId));
+    if (playback.asData?.value != null || !playback.hasValue) return null;
+    return ref
+        .watch(matchReplayProvider(widget.matchId))
+        .asData
+        ?.value
+        ?.overlayEvents;
+  }
+
+  /// Which single overlay the picture shows at [seconds] of the recording.
+  LiveOverlayKind? _replayOverlayAt(
+    List<MatchReplayOverlayEvent> events,
+    int seconds,
+  ) {
+    final state = matchReplayOverlayAt(events, seconds);
+    return liveOverlayToShow(
+      h2hVisible: state.h2h,
+      bracketVisible: state.bracket,
+      matchEnded: false,
+    );
+  }
+
+  /// The player reports the timeline second. The X of a panel lasts only while
+  /// that panel stays on: once the overlay at this second differs, it resets.
+  void _onReplayPosition(int seconds) {
+    _replaySeconds.value = seconds;
+    final events = _replayEventsInUse;
+    final dismissed = _dismissedOverlay;
+    if (events == null || dismissed == null) return;
+    if (_replayOverlayAt(events, seconds) != dismissed) {
+      setState(() => _dismissedOverlay = null);
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  VIEWER STATE — Người xem
   // ═══════════════════════════════════════════════════════════
@@ -2305,7 +2353,15 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       bracketVisible: match.bracketOverlayVisible,
       matchEnded: match.isCompleted,
     );
-    final overlayToShow = !videoShowing || serverOverlay == _dismissedOverlay
+    // A recording replays the overlay from its own events, not from the
+    // server flags (which describe the live moment, long gone).
+    final replayEvents = _replayOverlayEvents();
+    // An X pressed in one mode must not hide a panel of the other mode.
+    if ((replayEvents == null) != (_replayEventsInUse == null)) {
+      _dismissedOverlay = null;
+    }
+    _replayEventsInUse = replayEvents;
+    final liveOverlay = !videoShowing || serverOverlay == _dismissedOverlay
         ? null
         : serverOverlay;
     final landscape =
@@ -2333,6 +2389,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
       onAspectRatioChanged: (ratio) {
         if (mounted) setState(() => _videoAspect = ratio);
       },
+      onReplayPositionChanged: _onReplayPosition,
     );
     // Small window: nothing but the picture. The same keyed player moves here,
     // so the stream keeps playing across the switch.
@@ -2371,7 +2428,17 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
 
               // Overlays live inside the real picture, not in the black bands
               // of a wider player box.
-              LiveOverlayVideoFrame(
+              // Only this block follows the replay second, so the huge screen
+              // build is not redone every second of playback.
+              ValueListenableBuilder<int>(
+                valueListenable: _replaySeconds,
+                builder: (context, seconds, _) {
+              final overlayToShow = replayEvents == null
+                  ? liveOverlay
+                  : _replayOverlayAt(replayEvents, seconds) == _dismissedOverlay
+                  ? null
+                  : _replayOverlayAt(replayEvents, seconds);
+              return LiveOverlayVideoFrame(
                 aspectRatio: _videoAspect,
                 children: [
               // Bảng điểm là một phần của khung hình: luôn ở góc trên trái của
@@ -2480,6 +2547,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
                 ),
               ),
                 ],
+              );
+                },
               ),
 
               // Top layer: a translucent header over the whole picture, the

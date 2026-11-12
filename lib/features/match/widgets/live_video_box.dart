@@ -49,6 +49,7 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     this.showLiveDot = false,
     this.onControlsVisibleChanged,
     this.onAspectRatioChanged,
+    this.onReplayPositionChanged,
   });
 
   final String matchId;
@@ -58,6 +59,9 @@ class LiveVideoBox extends ConsumerStatefulWidget {
 
   /// Forwarded to the live player: the stream's real width / height.
   final ValueChanged<double>? onAspectRatioChanged;
+
+  /// Forwarded to the replay player: the whole-match timeline second.
+  final ValueChanged<int>? onReplayPositionChanged;
 
   /// Forwarded to the live player: red LIVE dot beside the sound button.
   final bool showLiveDot;
@@ -121,6 +125,7 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
           fullscreen: widget.fullscreen,
           onToggleFullscreen: widget.onToggleFullscreen,
           onControlsVisibleChanged: widget.onControlsVisibleChanged,
+          onPositionChanged: widget.onReplayPositionChanged,
         );
         // The player keeps its own 16:9 shape; the page aligns it.
         return player;

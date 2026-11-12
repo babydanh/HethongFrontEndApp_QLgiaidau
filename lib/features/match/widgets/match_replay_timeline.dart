@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
+import 'package:app_quanly_giaidau/domain/entities/live_overlay_kind.dart';
 
 /// Vị trí cục bộ tương ứng với thời gian trên timeline toàn trận.
 class MatchReplayPosition {
@@ -74,3 +75,29 @@ bool matchReplaySegmentReachedEnd(
 
 int matchReplayElapsedSeconds(MatchReplaySegment segment, int mediaSeconds) =>
     (mediaSeconds - segment.clipStartSec).clamp(0, segment.durationSec).toInt();
+
+/// Which overlays are on at [seconds] of the replay timeline: for each kind the
+/// last event at or before [seconds] decides, and no event means off. Input
+/// order does not matter; on equal offsets the later entry wins.
+({bool h2h, bool bracket}) matchReplayOverlayAt(
+  List<MatchReplayOverlayEvent> events,
+  num seconds,
+) {
+  var h2h = false;
+  var bracket = false;
+  var h2hAt = -1.0;
+  var bracketAt = -1.0;
+  for (final event in events) {
+    if (event.offsetSec > seconds) continue;
+    if (event.kind == LiveOverlayKind.h2h) {
+      if (event.offsetSec < h2hAt) continue;
+      h2hAt = event.offsetSec;
+      h2h = event.visible;
+    } else {
+      if (event.offsetSec < bracketAt) continue;
+      bracketAt = event.offsetSec;
+      bracket = event.visible;
+    }
+  }
+  return (h2h: h2h, bracket: bracket);
+}
