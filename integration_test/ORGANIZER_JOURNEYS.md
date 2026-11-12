@@ -54,3 +54,13 @@ Test ghi rõ lý do ở chỗ bỏ qua; không có ca nào "xanh giả" bằng c
   nhiên (commit `e740022d`); TC-42 và TC-53 xác nhận popup bằng giá trị gợi ý.
 
 Ghi chú: App chủ ý ẩn thể thức Thụy Sĩ khi tạo hoặc đổi nội dung (commit `2a227a69`), nên test dựng nội dung Swiss bằng API.
+
+### Thay đổi test theo `main` mới và độ bền (2026-11-12)
+
+- **Hộp Thêm nhà tài trợ** (commit `c63e4c23`): còn 3 ô chữ (tên, website, mô tả), hạng chọn bằng chip `sponsor-tier-*`, logo bắt buộc
+  nhưng chỉ chọn bằng thư viện ảnh hệ thống (không thao tác được trên emulator). TC-74 dựng nhà tài trợ có logo bằng API, kiểm
+  hộp, bắt buộc logo, ẩn/hiện, sửa hạng và lưu trữ trên giao diện.
+- **Đăng xuất rồi đăng nhập lại trong cùng một giây:** Backend huỷ token theo mốc giây nên token mới bị 401. `signInAsOrganizer`
+  chờ 1,5 giây giữa hai bước.
+- **Độ bền:** TC-01 nhận form tạo giải bằng tiêu đề "Tạo giải nhanh" (form đăng nhập cũng có `TextFormField`); TC-07 thử lại khi nút
+  menu 3 chấm biến mất lúc danh sách làm mới; TC-13 bấm gửi lại khi nút gửi còn khóa sau lần gửi trước.
