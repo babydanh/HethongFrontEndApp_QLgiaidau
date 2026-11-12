@@ -8,7 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
@@ -120,7 +120,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           context,
                           teamName: matchSideTeamName(widget.match, 1),
                           teamLogoUrl: widget.match.team1LogoUrl,
-                          members: widget.match.team1MemberInfos,
+                          members: matchSideMemberInfos(widget.match, 1),
                           players: matchSidePlayers(widget.match, 1),
                           score: cardScore.score1,
                           currentGamePoint: currentTennisGamePoints?.team1,
@@ -144,7 +144,7 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
                           context,
                           teamName: matchSideTeamName(widget.match, 2),
                           teamLogoUrl: widget.match.team2LogoUrl,
-                          members: widget.match.team2MemberInfos,
+                          members: matchSideMemberInfos(widget.match, 2),
                           players: matchSidePlayers(widget.match, 2),
                           score: cardScore.score2,
                           currentGamePoint: currentTennisGamePoints?.team2,
@@ -718,10 +718,13 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
       final url = (member.avatarUrl?.isNotEmpty ?? false)
           ? member.avatarUrl
           : fallbackUrl;
-      final artwork = RankAvatar(
+      // Without elo/tier in the payload the ring reads the user's best
+      // ranking (same rule as the profile tab) instead of staying grey.
+      final artwork = ResolvedRankAvatar(
+        userId: member.isMock ? null : member.userId,
         imageUrl: url,
         name: member.fullName.isNotEmpty ? member.fullName : fallbackInitial,
-        elo: member.eloPoints ?? 0,
+        elo: member.eloPoints,
         tierName: member.tierName,
         size: displayMembers.length >= 2 ? 34 : 38,
       );

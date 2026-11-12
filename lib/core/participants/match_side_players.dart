@@ -36,3 +36,22 @@ String matchSideLabel(MatchModel match, int side) => participantLabel(
   players: matchSidePlayers(match, side),
   teamOnly: isFootballMatch(match),
 );
+
+/// Roster (có userId/ELO/ảnh) của một bên trận cho nơi cần `MatchMemberInfo`.
+/// Payload chỉ có `participant.players[]` (không `members`/`rosters`) để
+/// `teamNMemberInfos` rỗng, nên rơi về [matchSidePlayers] để người có tài khoản
+/// vẫn có avatar và viền hạng.
+List<MatchMemberInfo> matchSideMemberInfos(MatchModel match, int side) {
+  final infos = side == 1 ? match.team1MemberInfos : match.team2MemberInfos;
+  if (infos.isNotEmpty) return infos;
+  return [
+    for (final p in matchSidePlayers(match, side))
+      MatchMemberInfo(
+        userId: p.userId,
+        fullName: p.fullName,
+        avatarUrl: p.avatarUrl,
+        eloPoints: p.eloPoints,
+        tierName: p.tierName,
+      ),
+  ];
+}
