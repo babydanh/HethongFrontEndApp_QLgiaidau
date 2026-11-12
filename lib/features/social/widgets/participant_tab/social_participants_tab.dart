@@ -143,6 +143,7 @@ class SocialParticipantsTab extends StatelessWidget {
                                   imageUrl: p.avatarUrl,
                                   size: 58,
                                   isHost: p.isHost,
+                                  userId: p.isGuest ? null : p.userId,
                                 ),
                                 if (slot.ticketIndex > 0)
                                   ClipOval(
@@ -282,6 +283,7 @@ class SocialParticipantsTab extends StatelessWidget {
                       name: p.name,
                       imageUrl: p.avatarUrl,
                       size: 54,
+                      userId: p.isGuest ? null : p.userId,
                     ),
                     const SizedBox(width: 14),
                     // Name and Actions

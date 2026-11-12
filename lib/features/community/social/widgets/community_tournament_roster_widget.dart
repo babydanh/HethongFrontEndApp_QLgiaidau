@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
@@ -10,17 +11,6 @@ import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/core/utils/tournament_division_id.dart';
-
-const List<Color> _kSlotAvatarColors = [
-  Color(0xFF10B981), // Emerald
-  Color(0xFF3B82F6), // Blue
-  Color(0xFFF59E0B), // Amber
-  Color(0xFF8B5CF6), // Purple
-  Color(0xFFF43F5E), // Rose
-  Color(0xFF6366F1), // Indigo
-  Color(0xFF14B8A6), // Teal
-  Color(0xFF06B6D4), // Cyan
-];
 
 const int _kSlotsPerPage = 16;
 
@@ -97,25 +87,6 @@ class _CommunityTournamentRosterWidgetState
         setState(() => _isLoading = false);
       }
     }
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts[0].isEmpty) return '?';
-    if (parts.length == 1) {
-      return parts[0].length >= 2
-          ? parts[0].substring(0, 2).toUpperCase()
-          : parts[0].toUpperCase();
-    }
-    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
-  }
-
-  Color _getColorByName(String name) {
-    int hash = 0;
-    for (int i = 0; i < name.length; i++) {
-      hash = name.codeUnitAt(i) + ((hash << 5) - hash);
-    }
-    return _kSlotAvatarColors[hash.abs() % _kSlotAvatarColors.length];
   }
 
   int _findCurrentParticipantIndex(String currentUserId) {
@@ -663,62 +634,13 @@ class _CommunityTournamentRosterWidgetState
                           children: [
                             Stack(
                               children: [
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    color: _getColorByName(displayName),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isSelf
-                                          ? const Color(0xFF3B82F6)
-                                          : Colors.white,
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child:
-                                        avatarUrl != null &&
-                                            avatarUrl.isNotEmpty
-                                        ? Image.network(
-                                            avatarUrl,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Center(
-                                                      child: Text(
-                                                        _getInitials(
-                                                          displayName,
-                                                        ),
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ),
-                                          )
-                                        : Center(
-                                            child: Text(
-                                              _getInitials(displayName),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ),
-                                  ),
+                                UserRankAvatar(
+                                  userId: item.member?.isMock == true
+                                      ? null
+                                      : item.userId,
+                                  name: displayName,
+                                  imageUrl: avatarUrl,
+                                  size: 52,
                                 ),
                                 if (isSelf)
                                   Positioned(

@@ -20,6 +20,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/organizer_verification_sheet.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/utils/vietnam_address_parser.dart';
 import 'package:app_quanly_giaidau/core/extensions/string_extensions.dart';
 
@@ -706,6 +707,7 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
     const avatarRing = 3.0;
     const avatarBox = (avatarRadius + avatarRing) * 2;
     const overlap = 32.0;
+    final rank = ref.watch(myBestRankingProvider);
     return SizedBox(
       height: coverHeight + avatarBox - overlap + 8,
       child: Stack(
@@ -767,37 +769,27 @@ class _ProfileTabState extends ConsumerState<_ProfileTab>
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: c.surface,
-                      ),
-                      padding: const EdgeInsets.all(avatarRing),
-                      child: CircleAvatar(
-                        radius: avatarRadius,
-                        backgroundColor: c.soft(LavishTone.accent),
-                        backgroundImage: avatarUrl == null
-                            ? null
-                            : NetworkImage(avatarUrl),
-                        child: _isUploadingAvatar
-                            ? const SizedBox.square(
-                                dimension: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : avatarUrl == null
-                            ? Text(
-                                firstInitial(fullName),
-                                style: TextStyle(
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.w800,
-                                  color: LavishColors.accent,
-                                ),
-                              )
-                            : null,
-                      ),
+                    // Same tier ring as the profile tab (viewer's best rank).
+                    RankAvatar(
+                      imageUrl: avatarUrl,
+                      name: fullName ?? '',
+                      elo: rank?.eloPoints ?? 0,
+                      tierName: rank?.tierName,
+                      tierSource: rank?.tierSource,
+                      tierAvailable: rank?.tierAvailable,
+                      matchesPlayed: rank?.matchesPlayed ?? 0,
+                      size: avatarBox,
+                      ringWidth: avatarRing,
                     ),
+                    if (_isUploadingAvatar)
+                      const Positioned.fill(
+                        child: Center(
+                          child: SizedBox.square(
+                            dimension: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2.5),
+                          ),
+                        ),
+                      ),
                     Positioned(
                       right: 0,
                       bottom: 0,

@@ -1,9 +1,12 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_team_card.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // public-team-roster / tab-vdv-giong-web:
@@ -20,20 +23,29 @@ Future<void> _pump(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(
-      theme: AppTheme.lightTheme,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('vi'),
-      home: Scaffold(
-        body: ListView(
-          children: [
-            TournamentTeamCard(
-              team: team,
-              isDoublesDivision: true,
-              onMemberTap: onMemberTap,
-            ),
-          ],
+    // Members without ELO in the payload look up their ranking by user id.
+    ProviderScope(
+      retry: (_, _) => null,
+      overrides: [
+        userRankingsSummaryProvider.overrideWith(
+          (ref, userId) async => const <PlayerRanking>[],
+        ),
+      ],
+      child: MaterialApp(
+        theme: AppTheme.lightTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('vi'),
+        home: Scaffold(
+          body: ListView(
+            children: [
+              TournamentTeamCard(
+                team: team,
+                isDoublesDivision: true,
+                onMemberTap: onMemberTap,
+              ),
+            ],
+          ),
         ),
       ),
     ),

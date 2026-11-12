@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -744,26 +745,12 @@ class _ClubStandaloneMatchDialogState
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: accentColor ?? colors.border,
-                      width: accentColor != null ? 2.5 : 1.2,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: member.userAvatarUrl?.trim().isNotEmpty == true
-                        ? Image.network(
-                            member.userAvatarUrl!.trim(),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) =>
-                                _avatarFallback(fullName, accentColor ?? AppTheme.primary),
-                          )
-                        : _avatarFallback(fullName, accentColor ?? AppTheme.primary),
-                  ),
+                // The A/B badge marks the side; the ring shows the tier.
+                UserRankAvatar(
+                  userId: member.userId,
+                  name: fullName,
+                  imageUrl: member.userAvatarUrl?.trim(),
+                  size: 40,
                 ),
                 if (accentColor != null)
                   Positioned(
@@ -844,21 +831,6 @@ class _ClubStandaloneMatchDialogState
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _avatarFallback(String name, Color color) {
-    return Container(
-      color: color.withValues(alpha: 0.12),
-      alignment: Alignment.center,
-      child: Text(
-        name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?',
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w800,
-          color: color,
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 
 /// Card "Bạn" hiển thị vị trí + ELO của người dùng hiện tại.
 /// Dạng compact 1-line gọn gàng, dán dưới cùng bảng xếp hạng.
@@ -65,28 +66,16 @@ class UserStatsCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
 
-          // Avatar Initials
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: colors.info.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: colors.info.withValues(alpha: 0.4),
-                width: 1.5,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                _initials(ranking.fullName),
-                style: TextStyle(
-                  color: colors.info,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
+          // Avatar with the shared ELO tier ring.
+          RankAvatar(
+            imageUrl: ranking.avatarUrl,
+            name: ranking.fullName,
+            elo: ranking.eloPoints,
+            tierName: ranking.tierName,
+            tierSource: ranking.tierSource,
+            tierAvailable: ranking.tierAvailable,
+            matchesPlayed: ranking.matchesPlayed,
+            size: 34,
           ),
           const SizedBox(width: 10),
 
@@ -180,13 +169,5 @@ class UserStatsCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _initials(String name) {
-    final p = name.trim().split(' ');
-    if (p.length >= 2) {
-      return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 }

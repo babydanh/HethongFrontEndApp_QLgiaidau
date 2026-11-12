@@ -13,6 +13,8 @@ import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/social_session_sport_icon.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -1535,11 +1537,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                       width: 26,
                       height: 26,
                       child: ExcludeSemantics(
-                        child: _resultAvatar(
+                        child: _sideAvatar(
                           team1Image,
                           match.team1Name,
+                          match.team1MemberInfos,
                           match.sportKey,
-                          size: 24,
                         ),
                       ),
                     ),
@@ -1548,11 +1550,11 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                       width: 26,
                       height: 26,
                       child: ExcludeSemantics(
-                        child: _resultAvatar(
+                        child: _sideAvatar(
                           team2Image,
                           match.team2Name,
+                          match.team2MemberInfos,
                           match.sportKey,
-                          size: 24,
                         ),
                       ),
                     ),
@@ -1965,8 +1967,39 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       onTap: player.userId.isEmpty
           ? null
           : () => context.push('/user/${player.userId}'),
-      imageUrl: player.avatarUrl,
-      sport: player.categoryName,
+      leadingWidget: RankAvatar(
+        imageUrl: player.avatarUrl,
+        name: player.displayName,
+        elo: player.eloPoints,
+        tierName: player.tierName,
+        tierSource: player.tierSource,
+        tierAvailable: player.tierAvailable,
+        matchesPlayed: player.matchesPlayed,
+        size: 40,
+      ),
+    );
+  }
+
+  /// A singles side is one person, so it carries the tier ring; a team keeps
+  /// the plain team avatar.
+  Widget _sideAvatar(
+    String? imageUrl,
+    String name,
+    List<MatchMemberInfo> members,
+    String? sport,
+  ) {
+    if (members.length != 1) {
+      return _resultAvatar(imageUrl, name, sport, size: 24);
+    }
+    final player = members.first;
+    return UserRankAvatar(
+      userId: player.isMock ? null : player.userId,
+      name: name,
+      imageUrl: imageUrl,
+      elo: player.eloPoints,
+      tierName: player.tierName,
+      size: 24,
+      ringWidth: 1.5,
     );
   }
 

@@ -27,8 +27,9 @@ import 'package:app_quanly_giaidau/providers/tournament_action_notifier.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/football_registration_groups.dart';
 import 'package:app_quanly_giaidau/features/lite/widgets/lite_division_picker.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/lite_tournament_create_result.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
@@ -3624,7 +3625,7 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
     final id = userId?.trim() ?? '';
     final resolvedUrl = _resolvedAvatarUrl(avatarUrl);
     if (id.isNotEmpty) {
-      return UserAvatarTap(
+      return RankedUserAvatarTap(
         userId: id,
         name: displayName,
         imageUrl: resolvedUrl,
@@ -3884,7 +3885,12 @@ class _LiteManagementScreenState extends ConsumerState<LiteManagementScreen>
         imageUrl: avatarUrl,
         child: Row(
           children: [
-            RankAvatar(imageUrl: avatarUrl, name: name, size: 32),
+            ResolvedRankAvatar(
+              userId: member.id,
+              imageUrl: avatarUrl,
+              name: name,
+              size: 32,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -4364,7 +4370,7 @@ class _LiteClubMemberPickerSheetState
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
                               children: [
-                                UserAvatarTap(
+                                RankedUserAvatarTap(
                                   userId: userId,
                                   communityId: widget.communityId,
                                   name: name,

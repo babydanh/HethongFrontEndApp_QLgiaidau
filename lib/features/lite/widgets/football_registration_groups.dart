@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/lite_management_notifier.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 
 /// Compact team-first registration view for football Lite management.
 /// The organizer opens one team card to inspect its roster instead of seeing
@@ -141,7 +141,7 @@ class _FootballRegistrationGroupsState
                           padding: const EdgeInsets.only(bottom: 7),
                           child: Row(
                             children: [
-                              UserAvatarTap(
+                              RankedUserAvatarTap(
                                 userId: member.id,
                                 name: memberName,
                                 imageUrl: member.avatarUrl.isEmpty

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 
 /// Một bình luận trong "Phòng thảo luận" của trận đấu trực tiếp.
 ///
@@ -52,7 +52,8 @@ class MatchDiscussionMessage extends StatelessWidget {
               child: compact
                   ? null
                   : Center(
-                      child: RankAvatar(
+                      child: ResolvedRankAvatar(
+                        userId: userId,
                         imageUrl: avatarUrl,
                         name: name,
                         size: 32,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -24,12 +25,18 @@ class ParticipantPlayer {
   final String? avatarUrl;
   final bool isGuest;
 
+  /// ELO/tier when the roster payload carries them (ring without a lookup).
+  final int? eloPoints;
+  final String? tierName;
+
   const ParticipantPlayer({
     required this.slot,
     this.userId,
     required this.fullName,
     this.avatarUrl,
     this.isGuest = false,
+    this.eloPoints,
+    this.tierName,
   });
 
   factory ParticipantPlayer.fromJson(
@@ -37,6 +44,7 @@ class ParticipantPlayer {
     int slot = 0,
   }) {
     final user = json['user'] is Map ? json['user'] as Map : null;
+    final ranking = json['ranking'] is Map ? json['ranking'] as Map : null;
     final userId =
         _nullableText(json['userId']) ??
         _nullableText(json['user_id']) ??
@@ -56,6 +64,14 @@ class ParticipantPlayer {
           _nullableText(user?['avatarUrl']) ??
           _nullableText(user?['avatar_url']),
       isGuest: json['isGuest'] == true || userId == null,
+      eloPoints: int.tryParse(
+        _nullableText(json['eloPoints']) ??
+            _nullableText(ranking?['eloPoints']) ??
+            '',
+      ),
+      tierName:
+          _nullableText(json['tierName']) ??
+          _nullableText(ranking?['tierName']),
     );
   }
 }
@@ -174,6 +190,8 @@ List<ParticipantPlayer> _uniquePlayers(List<ParticipantPlayer> players) {
         fullName: p.fullName,
         avatarUrl: p.avatarUrl,
         isGuest: p.isGuest,
+        eloPoints: p.eloPoints,
+        tierName: p.tierName,
       ),
     );
   }
@@ -195,6 +213,8 @@ List<ParticipantPlayer> participantPlayersFromMemberInfos(
         fullName: name,
         avatarUrl: info.avatarUrl,
         isGuest: info.userId == null,
+        eloPoints: info.eloPoints,
+        tierName: info.tierName,
       ),
     );
   }
@@ -383,6 +403,7 @@ class ParticipantLabel extends StatelessWidget {
                     PositionedDirectional(
                       start: overlap * i,
                       child: _PlayerAvatar(
+                        player: shown[i],
                         initials: coloredAvatars
                             ? avatarInitials(shown[i].fullName)
                             : _initials(shown[i].fullName),
@@ -423,6 +444,7 @@ class ParticipantLabel extends StatelessWidget {
 const int _maxAvatars = 2;
 
 class _PlayerAvatar extends StatelessWidget {
+  final ParticipantPlayer player;
   final String initials;
   final String? avatarUrl;
   final double radius;
@@ -430,6 +452,7 @@ class _PlayerAvatar extends StatelessWidget {
   final TextStyle textStyle;
 
   const _PlayerAvatar({
+    required this.player,
     required this.initials,
     required this.avatarUrl,
     required this.radius,
@@ -440,12 +463,20 @@ class _PlayerAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = avatarUrl;
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: backgroundColor,
-      backgroundImage: url == null ? null : NetworkImage(url),
-      onBackgroundImageError: url == null ? null : (_, _) {},
-      child: url == null ? Text(initials, style: textStyle) : null,
+    return ParticipantRankAvatar(
+      userId: player.userId,
+      name: player.fullName,
+      imageUrl: url,
+      eloPoints: player.eloPoints,
+      tierName: player.tierName,
+      size: radius * 2,
+      fallback: CircleAvatar(
+        radius: radius,
+        backgroundColor: backgroundColor,
+        backgroundImage: url == null ? null : NetworkImage(url),
+        onBackgroundImageError: url == null ? null : (_, _) {},
+        child: url == null ? Text(initials, style: textStyle) : null,
+      ),
     );
   }
 }
@@ -598,7 +629,8 @@ const double _sideAvatarRadius = 9;
 /// Mockup `.lg`: 22px square logo with 6px corners.
 const double _sideLogoSize = 22;
 
-/// Round avatar of one player: photo, or white initials on a name-based colour.
+/// Round avatar of one player: tier-ringed for accounts, otherwise photo or
+/// white initials on a name-based colour.
 class _SideAvatar extends StatelessWidget {
   final ParticipantPlayer player;
 
@@ -607,22 +639,30 @@ class _SideAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = player.avatarUrl;
-    return CircleAvatar(
-      radius: _sideAvatarRadius,
-      backgroundColor: avatarFallbackColor(player.fullName),
-      backgroundImage: url == null ? null : NetworkImage(url),
-      onBackgroundImageError: url == null ? null : (_, _) {},
-      child: url == null
-          ? Text(
-              avatarInitials(player.fullName),
-              style: const TextStyle(
-                fontSize: 8.5,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                height: 1,
-              ),
-            )
-          : null,
+    return ParticipantRankAvatar(
+      userId: player.userId,
+      name: player.fullName,
+      imageUrl: url,
+      eloPoints: player.eloPoints,
+      tierName: player.tierName,
+      size: _sideAvatarRadius * 2,
+      fallback: CircleAvatar(
+        radius: _sideAvatarRadius,
+        backgroundColor: avatarFallbackColor(player.fullName),
+        backgroundImage: url == null ? null : NetworkImage(url),
+        onBackgroundImageError: url == null ? null : (_, _) {},
+        child: url == null
+            ? Text(
+                avatarInitials(player.fullName),
+                style: const TextStyle(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  height: 1,
+                ),
+              )
+            : null,
+      ),
     );
   }
 }

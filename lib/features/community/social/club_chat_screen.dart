@@ -14,7 +14,8 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1038,13 +1039,12 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
               if (!isMine)
                 Padding(
                   padding: const EdgeInsets.only(right: 6, bottom: 8),
-                  child: UserAvatarTap(
+                  child: RankedUserAvatarTap(
                     userId: message.senderId,
                     communityId: widget.communityId,
                     name: message.senderName,
                     imageUrl: message.senderAvatarUrl,
                     size: 30,
-                    ringWidth: 1.5,
                   ),
                 ),
               Flexible(
@@ -1202,22 +1202,12 @@ class _ClubChatScreenState extends ConsumerState<ClubChatScreen> {
                   padding: const EdgeInsets.only(left: 3),
                   child: Tooltip(
                     message: l10n.chatDetailSeenBy(displayName),
-                    child: CircleAvatar(
-                      radius: 7.5,
-                      backgroundColor: AppTheme.primaryLight,
-                      backgroundImage: avatarUrl.isNotEmpty
-                          ? NetworkImage(avatarUrl)
-                          : null,
-                      child: avatarUrl.isEmpty
-                          ? Text(
-                              displayName.characters.first.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 7,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryDark,
-                              ),
-                            )
-                          : null,
+                    child: UserRankAvatar(
+                      userId: participant.id,
+                      name: displayName,
+                      imageUrl: avatarUrl,
+                      size: 15,
+                      ringWidth: 1,
                     ),
                   ),
                 );

@@ -54,10 +54,30 @@ List<LiveAvatarData> matchSideAvatars(MatchModel match, int side) {
     teamOnly: isFootballMatch(match),
   );
   if (!display.isTeam && display.players.isNotEmpty) {
+    final infos = side == 1 ? match.team1MemberInfos : match.team2MemberInfos;
     return [
       for (final p in display.players.take(LiveSideAvatars.maxShown))
-        LiveAvatarData(name: p.fullName, url: p.avatarUrl),
+        _athleteAvatar(p, infos),
     ];
   }
   return [LiveAvatarData(name: matchSideLabel(match, side))];
+}
+
+/// Avatar of one athlete, carrying the roster's ELO/tier when the match
+/// payload has it (matched by user id).
+LiveAvatarData _athleteAvatar(
+  ParticipantPlayer player,
+  List<MatchMemberInfo> infos,
+) {
+  final userId = player.userId;
+  final info = userId == null || userId.isEmpty
+      ? null
+      : infos.where((m) => m.userId == userId).firstOrNull;
+  return LiveAvatarData(
+    name: player.fullName,
+    url: player.avatarUrl,
+    userId: userId,
+    elo: info?.eloPoints,
+    tierName: info?.tierName,
+  );
 }

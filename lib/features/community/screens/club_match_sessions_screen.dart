@@ -24,6 +24,7 @@ import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.da
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:uuid/uuid.dart';
 
 String _localizedSessionStatus(AppLocalizations l10n, String status) =>
@@ -179,36 +180,6 @@ class _ClubMatchSessionDetailPageState
   bool _sessionRefreshScheduled = false;
   int _currentPage = 1;
   static const int _slotsPerPage = 16;
-  static const List<Color> _kSlotAvatarColors = [
-    Color(0xFF10B981),
-    Color(0xFF3B82F6),
-    Color(0xFFF59E0B),
-    Color(0xFF8B5CF6),
-    Color(0xFFF43F5E),
-    Color(0xFF6366F1),
-    Color(0xFF14B8A6),
-    Color(0xFF06B6D4),
-  ];
-
-  Color _getColorByName(String name) {
-    int hash = 0;
-    for (int i = 0; i < name.length; i++) {
-      hash = name.codeUnitAt(i) + ((hash << 5) - hash);
-    }
-    return _kSlotAvatarColors[hash.abs() % _kSlotAvatarColors.length];
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts[0].isEmpty) return '?';
-    if (parts.length == 1) {
-      return parts[0].length >= 2
-          ? parts[0].substring(0, 2).toUpperCase()
-          : parts[0].toUpperCase();
-    }
-    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
-  }
-
   ClubMatchSessionModel get session => widget.session;
 
   @override
@@ -1166,62 +1137,11 @@ class _ClubMatchSessionDetailPageState
                           children: [
                             Stack(
                               children: [
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    color: _getColorByName(displayName),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isSelf
-                                          ? const Color(0xFF3B82F6)
-                                          : Colors.white,
-                                      width: 2,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child:
-                                        item.avatarUrl != null &&
-                                            item.avatarUrl!.isNotEmpty
-                                        ? Image.network(
-                                            item.avatarUrl!,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Center(
-                                                      child: Text(
-                                                        _getInitials(
-                                                          displayName,
-                                                        ),
-                                                        style: const TextStyle(
-                                                          color: Colors.white,
-                                                          fontWeight:
-                                                              FontWeight.w800,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ),
-                                          )
-                                        : Center(
-                                            child: Text(
-                                              _getInitials(displayName),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                          ),
-                                  ),
+                                UserRankAvatar(
+                                  userId: item.isMock ? null : item.userId,
+                                  name: displayName,
+                                  imageUrl: item.avatarUrl,
+                                  size: 52,
                                 ),
                                 if (isSelf)
                                   Positioned(
@@ -1541,7 +1461,6 @@ class _ClubMatchSessionDetailPageState
     ClubSessionDetail value,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
     return _refreshableTab(
       context,
       ref,
@@ -1567,22 +1486,11 @@ class _ClubMatchSessionDetailPageState
                   : value.participants
                         .map(
                           (item) => ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage:
-                                  item.avatarUrl?.trim().isNotEmpty == true
-                                  ? NetworkImage(item.avatarUrl!.trim())
-                                  : null,
-                              backgroundColor: colors.info.withValues(
-                                alpha: .12,
-                              ),
-                              child: item.avatarUrl?.trim().isNotEmpty == true
-                                  ? null
-                                  : Text(
-                                      item.displayName.isEmpty
-                                          ? '?'
-                                          : item.displayName[0].toUpperCase(),
-                                      style: TextStyle(color: colors.info),
-                                    ),
+                            leading: UserRankAvatar(
+                              userId: item.isMock ? null : item.userId,
+                              name: item.displayName,
+                              imageUrl: item.avatarUrl?.trim(),
+                              size: 40,
                             ),
                             title: Text(item.displayName),
                             subtitle: Text(
@@ -2046,23 +1954,12 @@ class _ClubMemberStatRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: colors.info.withValues(alpha: .12),
-            backgroundImage: stat.member.avatarUrl?.trim().isNotEmpty == true
-                ? NetworkImage(stat.member.avatarUrl!.trim())
-                : null,
-            child: stat.member.avatarUrl?.trim().isNotEmpty == true
-                ? null
-                : Text(
-                    stat.member.displayName.isEmpty
-                        ? '?'
-                        : stat.member.displayName[0].toUpperCase(),
-                    style: TextStyle(
-                      color: colors.info,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+          UserRankAvatar(
+            // Mock players are not accounts, so they keep the neutral ring.
+            userId: stat.member.isMock ? null : stat.member.userId,
+            name: stat.member.displayName,
+            imageUrl: stat.member.avatarUrl?.trim(),
+            size: 40,
           ),
           const SizedBox(width: 10),
           Expanded(

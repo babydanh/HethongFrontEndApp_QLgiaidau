@@ -10,6 +10,7 @@ import 'package:app_quanly_giaidau/features/community/social/widgets/community_t
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_tournament_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_club_match_session_roster_widget.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_comment_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -82,13 +83,12 @@ Future<void> _showCommunityReactionDetails(
                             return ListTile(
                               dense: true,
                               contentPadding: EdgeInsets.zero,
-                              leading: UserAvatarTap(
+                              leading: RankedUserAvatarTap(
                                 userId: user.id,
                                 communityId: communityId,
                                 name: displayName,
                                 imageUrl: avatarUrl.isEmpty ? null : avatarUrl,
                                 size: 30,
-                                ringWidth: 1.5,
                               ),
                               title: Text(
                                 displayName,
@@ -148,7 +148,7 @@ class CommunityPostCard extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
             child: Row(
               children: [
-                UserAvatarTap(
+                RankedUserAvatarTap(
                   userId: post.authorId,
                   communityId: communityId,
                   name: post.authorName,

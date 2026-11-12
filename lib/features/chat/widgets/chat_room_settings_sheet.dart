@@ -8,7 +8,8 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/core_di_providers.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 enum ChatNotificationMode { all, mentionsOnly, muted }
@@ -350,7 +351,7 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: UserAvatarTap(
+              leading: RankedUserAvatarTap(
                 userId: participant.id,
                 name: participant.fullName,
                 communityId: widget.communityId,
@@ -611,6 +612,17 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
     );
   }
 
+  /// The other member of a direct room, whose avatar is the room avatar;
+  /// null for club and group rooms.
+  String? get _directPeerId {
+    if (widget.roomType == 'CLUB' || widget.roomType == 'GROUP') return null;
+    final myId = ref.read(userProfileProvider).asData?.value.id;
+    for (final p in _participants) {
+      if (p.id.isNotEmpty && p.id != myId) return p.id;
+    }
+    return null;
+  }
+
   Widget _buildProfileBanner(AppColorsExtension colors) {
     final l10n = AppLocalizations.of(context)!;
     final avatar = _currentRoomAvatar;
@@ -625,23 +637,30 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
         children: [
           Stack(
             children: [
-              CircleAvatar(
-                radius: 36,
-                backgroundColor: AppTheme.primaryLight,
-                backgroundImage: avatar != null && avatar.isNotEmpty
-                    ? NetworkImage(avatar)
-                    : null,
-                child: avatar == null || avatar.isEmpty
-                    ? Text(
-                        _currentRoomName.characters.first.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryDark,
-                        ),
-                      )
-                    : null,
-              ),
+              _directPeerId != null
+                  ? UserRankAvatar(
+                      userId: _directPeerId,
+                      name: _currentRoomName,
+                      imageUrl: avatar,
+                      size: 72,
+                    )
+                  : CircleAvatar(
+                      radius: 36,
+                      backgroundColor: AppTheme.primaryLight,
+                      backgroundImage: avatar != null && avatar.isNotEmpty
+                          ? NetworkImage(avatar)
+                          : null,
+                      child: avatar == null || avatar.isEmpty
+                          ? Text(
+                              _currentRoomName.characters.first.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryDark,
+                              ),
+                            )
+                          : null,
+                    ),
               if (_isRoomAdmin)
                 Positioned(
                   bottom: 0,
@@ -1296,22 +1315,11 @@ class _ChatRoomSettingsSheetState extends ConsumerState<ChatRoomSettingsSheet> {
           final isAdmin = p.role == 'ADMIN' || p.role == 'MODERATOR';
           return ListTile(
             onTap: () => _showParticipantActions(p),
-            leading: CircleAvatar(
-              radius: 18,
-              backgroundColor: AppTheme.primaryLight,
-              backgroundImage: p.avatarUrl != null && p.avatarUrl!.isNotEmpty
-                  ? NetworkImage(p.avatarUrl!)
-                  : null,
-              child: p.avatarUrl == null || p.avatarUrl!.isEmpty
-                  ? Text(
-                      p.fullName.characters.first.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryDark,
-                      ),
-                    )
-                  : null,
+            leading: UserRankAvatar(
+              userId: p.id,
+              name: p.fullName,
+              imageUrl: p.avatarUrl,
+              size: 36,
             ),
             title: Text(
               p.fullName,

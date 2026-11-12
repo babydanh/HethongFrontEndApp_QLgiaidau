@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/services/sport_rule_service.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -577,38 +578,12 @@ class _ClubStandaloneMatchResultDialogState
     Color accent,
     AppColorsExtension colors,
   ) {
-    final url = member?.avatarUrl?.trim();
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: colors.bgSurface,
-        shape: BoxShape.circle,
-        border: Border.all(color: colors.bgCard, width: 2),
-      ),
-      child: ClipOval(
-        child: url != null && url.isNotEmpty
-            ? Image.network(
-                url,
-                fit: BoxFit.cover,
-                errorBuilder: (_, error, stack) =>
-                    _avatarFallback(member?.fullName ?? fallbackName, accent),
-              )
-            : _avatarFallback(member?.fullName ?? fallbackName, accent),
-      ),
-    );
-  }
-
-  Widget _avatarFallback(String name, Color accent) {
-    return Center(
-      child: Text(
-        name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase(),
-        style: TextStyle(
-          color: accent,
-          fontSize: 13,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
+    return UserRankAvatar(
+      userId: member == null || member.isMock ? null : member.userId,
+      name: member?.fullName ?? fallbackName,
+      imageUrl: member?.avatarUrl?.trim(),
+      elo: member?.eloPoints,
+      tierName: member?.tierName,
     );
   }
 

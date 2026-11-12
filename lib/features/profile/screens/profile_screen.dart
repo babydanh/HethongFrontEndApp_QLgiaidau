@@ -26,7 +26,7 @@ import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/organized_tournaments_section.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -920,8 +920,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 
+  // FriendshipItem has no ELO, so the ring is looked up by friend id.
   Widget _friendAvatar(FriendshipItem item, String fallbackName) =>
-      UserAvatarTap(
+      RankedUserAvatarTap(
         userId: item.friendId,
         name: item.friendName ?? fallbackName,
         imageUrl: item.friendAvatar,

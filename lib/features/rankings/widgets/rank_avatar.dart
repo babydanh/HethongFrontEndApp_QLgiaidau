@@ -14,6 +14,10 @@ class RankAvatar extends StatelessWidget {
   final double size;
   final double ringWidth;
 
+  /// Shown inside the ring when there is no photo (or it fails to load);
+  /// defaults to the first letter of [name] on a grey background.
+  final Widget? placeholder;
+
   const RankAvatar({
     super.key,
     this.imageUrl,
@@ -25,6 +29,7 @@ class RankAvatar extends StatelessWidget {
     this.matchesPlayed = 0,
     this.size = 32,
     this.ringWidth = 2,
+    this.placeholder,
   });
 
   @override
@@ -77,6 +82,7 @@ class RankAvatar extends StatelessWidget {
   }
 
   Widget _fallback() {
+    if (placeholder != null) return placeholder!;
     return Container(
       color: Colors.blueGrey.shade50,
       alignment: Alignment.center,

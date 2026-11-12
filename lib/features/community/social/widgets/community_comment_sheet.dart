@@ -220,7 +220,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                 return ListTile(
                                   dense: true,
                                   contentPadding: EdgeInsets.zero,
-                                  leading: UserAvatarTap(
+                                  leading: RankedUserAvatarTap(
                                     userId: user.id,
                                     communityId: widget.communityId,
                                     name: displayName,
@@ -228,7 +228,6 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                                         ? null
                                         : avatarUrl,
                                     size: 30,
-                                    ringWidth: 1.5,
                                   ),
                                   title: Text(
                                     displayName,
