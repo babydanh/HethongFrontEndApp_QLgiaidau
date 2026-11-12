@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/data/repositories/api/api_auth_repository.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_token_repository.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -45,7 +46,10 @@ void main() {
       expect(session.accessToken, 'acc');
       expect(session.refreshToken, 'ref');
       expect(session.roles, ['ORGANIZER', 'PLAYER']);
-      expect(adapter.requests.single.body, {'email': 'a@b.vn', 'password': 'pw'});
+      expect(adapter.requests.single.body, {
+        'email': 'a@b.vn',
+        'password': 'pw',
+      });
     });
 
     test('a session body without the wrapper still maps', () async {
@@ -63,7 +67,7 @@ void main() {
     });
 
     test('a response missing either token never yields a session', () async {
-      final (repo, _) = _auth({
+      final (repo, adapter) = _auth({
         'POST /auth/mobile/login': const FakeReply(200, {
           'data': {'accessToken': 'only-access'},
         }),
@@ -80,6 +84,12 @@ void main() {
         repo.loginWithFacebook('fb'),
         throwsA(isA<Exception>()),
       );
+      // Both calls reached their (mocked) routes: the failure is the missing
+      // token, not an unmocked 404.
+      expect(adapter.requests.map((r) => r.path), [
+        '/auth/mobile/login',
+        '/auth/mobile/facebook',
+      ]);
     });
 
     test('the backend reason reaches the user for a rejected login', () async {
@@ -101,8 +111,7 @@ void main() {
       );
     });
 
-    test('Apple login sends the nonce and name only when non-empty',
-        () async {
+    test('Apple login sends the nonce and name only when non-empty', () async {
       final (repo, adapter) = _auth({
         'POST /auth/mobile/apple': const FakeReply(200, _session),
       });
@@ -139,30 +148,32 @@ void main() {
   });
 
   group('ApiAuthRepository register and logout', () {
-    test('register signs the user in right after creating the account',
-        () async {
-      final (repo, adapter) = _auth({
-        'POST /auth/mobile/register': const FakeReply(201, {}),
-        'POST /auth/mobile/login': const FakeReply(201, _session),
-      });
+    test(
+      'register signs the user in right after creating the account',
+      () async {
+        final (repo, adapter) = _auth({
+          'POST /auth/mobile/register': const FakeReply(201, {}),
+          'POST /auth/mobile/login': const FakeReply(201, _session),
+        });
 
-      final session = await repo.registerWithEmailPassword(
-        email: 'a@b.vn',
-        password: 'pw',
-        fullName: 'Nguyễn An',
-      );
+        final session = await repo.registerWithEmailPassword(
+          email: 'a@b.vn',
+          password: 'pw',
+          fullName: 'Nguyễn An',
+        );
 
-      expect(session.accessToken, 'acc');
-      expect(adapter.requests.map((r) => r.path), [
-        '/auth/mobile/register',
-        '/auth/mobile/login',
-      ]);
-      expect(adapter.requests.first.body, {
-        'email': 'a@b.vn',
-        'password': 'pw',
-        'fullName': 'Nguyễn An',
-      });
-    });
+        expect(session.accessToken, 'acc');
+        expect(adapter.requests.map((r) => r.path), [
+          '/auth/mobile/register',
+          '/auth/mobile/login',
+        ]);
+        expect(adapter.requests.first.body, {
+          'email': 'a@b.vn',
+          'password': 'pw',
+          'fullName': 'Nguyễn An',
+        });
+      },
+    );
 
     test('a rejected registration does not attempt a login', () async {
       final (repo, adapter) = _auth({
@@ -188,8 +199,7 @@ void main() {
       expect(adapter.requests.map((r) => r.path), ['/auth/mobile/register']);
     });
 
-    test('logout sends the refresh token as the refreshToken cookie',
-        () async {
+    test('logout sends the refresh token as the refreshToken cookie', () async {
       final (repo, adapter) = _auth({
         'POST /auth/logout': const FakeReply(200, {}),
       });
@@ -201,30 +211,31 @@ void main() {
   });
 
   group('ApiAuthRepository verification', () {
-    test('email and phone verification call their routes with the payload',
-        () async {
-      final (repo, adapter) = _auth({
-        'POST /auth/verify-email/request': const FakeReply(200, {}),
-        'POST /auth/verify-email/confirm': const FakeReply(200, {}),
-        'POST /auth/verify-phone/request': const FakeReply(200, {}),
-        'POST /auth/verify-phone/confirm': const FakeReply(200, {}),
-      });
+    test(
+      'email and phone verification call their routes with the payload',
+      () async {
+        final (repo, adapter) = _auth({
+          'POST /auth/verify-email/request': const FakeReply(200, {}),
+          'POST /auth/verify-email/confirm': const FakeReply(200, {}),
+          'POST /auth/verify-phone/request': const FakeReply(200, {}),
+          'POST /auth/verify-phone/confirm': const FakeReply(200, {}),
+        });
 
-      await repo.requestEmailVerification();
-      await repo.confirmEmailVerification(token: 'tok');
-      await repo.requestPhoneVerification(phoneNumber: '0900');
-      await repo.confirmPhoneVerification(code: '123456');
+        await repo.requestEmailVerification();
+        await repo.confirmEmailVerification(token: 'tok');
+        await repo.requestPhoneVerification(phoneNumber: '0900');
+        await repo.confirmPhoneVerification(code: '123456');
 
-      expect(adapter.requests.map((r) => r.body), [
-        null,
-        {'token': 'tok'},
-        {'phoneNumber': '0900'},
-        {'code': '123456'},
-      ]);
-    });
+        expect(adapter.requests.map((r) => r.body), [
+          null,
+          {'token': 'tok'},
+          {'phoneNumber': '0900'},
+          {'code': '123456'},
+        ]);
+      },
+    );
 
-    test('failures surface as an Exception with the backend message',
-        () async {
+    test('failures surface as an Exception with the backend message', () async {
       final (repo, _) = _auth({
         'POST /auth/verify-phone/confirm': const FakeReply(400, {
           'message': 'Mã sai',
@@ -234,7 +245,11 @@ void main() {
       await expectLater(
         repo.confirmPhoneVerification(code: '0'),
         throwsA(
-          isA<Exception>().having((e) => e.toString(), 'message', contains('Mã sai')),
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Mã sai'),
+          ),
         ),
       );
       await expectLater(
@@ -282,7 +297,10 @@ void main() {
       });
 
       expect(await repo.validateToken('empty'), isNull);
-      await expectLater(repo.validateToken('missing'), throwsA(anything));
+      await expectLater(
+        repo.validateToken('missing'),
+        throwsA(isA<DioException>()),
+      );
     });
 
     test('getTokensByTournament lists three roles with real or fallback '
@@ -339,8 +357,7 @@ void main() {
       expect(adapter.requests, hasLength(3));
     });
 
-    test('watchToken emits a single active token with a prefix role',
-        () async {
+    test('watchToken emits a single active token with a prefix role', () async {
       final (repo, _) = _tokens({});
 
       final admin = await repo.watchToken('ADM-1').first;

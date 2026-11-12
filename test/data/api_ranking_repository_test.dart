@@ -66,33 +66,39 @@ void main() {
         provinceCode: '79',
       );
 
-      expect(rankings.map((r) => (r.id, r.rank)), [('a', 1), ('b', 2), ('c', 3)]);
+      expect(rankings.map((r) => (r.id, r.rank)), [
+        ('a', 1),
+        ('b', 2),
+        ('c', 3),
+      ]);
       expect(adapter.requests, hasLength(2));
       expect(adapter.requests.first.query['categoryId'], 'cat-1');
       expect(adapter.requests.first.query['limit'], 100);
       expect(adapter.requests.last.query['cursor'], 'c2');
     });
 
-    test('stops on a repeated cursor, an empty page or hasMore false',
-        () async {
-      final repeating = _CursorAdapter({
-        null: FakeReply(200, {
-          'data': [_row('a', 1)],
-          'meta': {'hasMore': true, 'nextCursor': 'same'},
-        }),
-        'same': FakeReply(200, {
-          'data': [_row('b', 1)],
-          'meta': {'hasMore': true, 'nextCursor': 'same'},
-        }),
-      });
+    test(
+      'stops on a repeated cursor, an empty page or hasMore false',
+      () async {
+        final repeating = _CursorAdapter({
+          null: FakeReply(200, {
+            'data': [_row('a', 1)],
+            'meta': {'hasMore': true, 'nextCursor': 'same'},
+          }),
+          'same': FakeReply(200, {
+            'data': [_row('b', 1)],
+            'meta': {'hasMore': true, 'nextCursor': 'same'},
+          }),
+        });
 
-      final rankings = await ApiRankingRepository(
-        fakeDioClient(repeating),
-      ).getRankings();
+        final rankings = await ApiRankingRepository(
+          fakeDioClient(repeating),
+        ).getRankings();
 
-      expect(rankings.map((r) => r.id), ['a', 'b']);
-      expect(repeating.requests, hasLength(2));
-    });
+        expect(rankings.map((r) => r.id), ['a', 'b']);
+        expect(repeating.requests, hasLength(2));
+      },
+    );
 
     test('accepts a bare list and rethrows server errors', () async {
       final (bare, _) = _setup({
@@ -152,8 +158,7 @@ void main() {
   });
 
   group('football team rankings', () {
-    test('sends the category, default limit and optional community',
-        () async {
+    test('sends the category, default limit and optional community', () async {
       final (repo, adapter) = _setup({
         'GET /rankings/football-teams': const FakeReply(200, {
           'data': [
@@ -200,10 +205,11 @@ void main() {
         ]),
       });
 
-      expect(
-        (await wrapped.getEloTiers('cat-1')).map((t) => t.name),
-        ['Đồng', 'Bạc', 'Vàng'],
-      );
+      expect((await wrapped.getEloTiers('cat-1')).map((t) => t.name), [
+        'Đồng',
+        'Bạc',
+        'Vàng',
+      ]);
       expect((await bare.getEloTiers('cat-1')).single.id, 'x');
     });
 
@@ -238,34 +244,38 @@ void main() {
       expect(adapter.requests.single.query, {'categoryId': 'cat-1'});
     });
 
-    test('an empty category takes the first rank and sends no filter',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /rankings/user/u1': FakeReply(200, {
-          'publicRanks': [_row('r1', 1111, category: 'cat-x')],
-        }),
-      });
+    test(
+      'an empty category takes the first rank and sends no filter',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /rankings/user/u1': FakeReply(200, {
+            'publicRanks': [_row('r1', 1111, category: 'cat-x')],
+          }),
+        });
 
-      final rank = await repo.getUserRank('u1', '');
+        final rank = await repo.getUserRank('u1', '');
 
-      expect(rank.eloPoints, 1111);
-      expect(adapter.requests.single.query, isEmpty);
-    });
+        expect(rank.eloPoints, 1111);
+        expect(adapter.requests.single.query, isEmpty);
+      },
+    );
 
-    test('an unranked user gets the default 1000 ELO and a fallback tier',
-        () async {
-      final (repo, _) = _setup({
-        'GET /rankings/user/u1': const FakeReply(200, {
-          'data': {'publicRanks': <dynamic>[]},
-        }),
-      });
+    test(
+      'an unranked user gets the default 1000 ELO and a fallback tier',
+      () async {
+        final (repo, _) = _setup({
+          'GET /rankings/user/u1': const FakeReply(200, {
+            'data': {'publicRanks': <dynamic>[]},
+          }),
+        });
 
-      final rank = await repo.getUserRank('u1', 'cat-1');
+        final rank = await repo.getUserRank('u1', 'cat-1');
 
-      expect(rank.eloPoints, 1000);
-      expect(rank.tierName, isNotEmpty);
-      expect(rank.categoryId, 'cat-1');
-    });
+        expect(rank.eloPoints, 1000);
+        expect(rank.tierName, isNotEmpty);
+        expect(rank.categoryId, 'cat-1');
+      },
+    );
 
     test('a failure is rethrown', () async {
       final (repo, _) = _setup({});

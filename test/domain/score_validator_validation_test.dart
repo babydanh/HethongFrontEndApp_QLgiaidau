@@ -61,8 +61,11 @@ ScoreValidationCode? _codeOf(void Function() validate) {
 ScoreValidationCode? _rally(int a, int b, [SportConfig config = _badminton]) =>
     _codeOf(() => validateRallyPointSet(_set(a, b), config, setNumber: 1));
 
-ScoreValidationCode? _tennisCode(int a, int b, [SportConfig config = _tennis]) =>
-    _codeOf(() => validateTennisSet(_set(a, b), config, setNumber: 1));
+ScoreValidationCode? _tennisCode(
+  int a,
+  int b, [
+  SportConfig config = _tennis,
+]) => _codeOf(() => validateTennisSet(_set(a, b), config, setNumber: 1));
 
 ScoreValidationCode? _side(int a, int b, [SportConfig config = _sideOut]) =>
     _codeOf(
@@ -221,6 +224,8 @@ void main() {
     });
 
     test('is true as soon as the cap is reached', () {
+      // Note: validateRallyPointSet disagrees on 30-29 (findings F3); this
+      // pins only isSetComplete's own rule.
       expect(isSetComplete(_set(30, 29), _badminton), isTrue);
     });
 

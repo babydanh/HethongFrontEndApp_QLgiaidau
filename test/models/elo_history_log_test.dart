@@ -18,10 +18,8 @@ void main() {
     });
 
     test('a gain and a zero change are classified correctly', () {
-      EloHistoryLog log(int prev, int next) => EloHistoryLog.fromJson({
-        'previousElo': prev,
-        'newElo': next,
-      });
+      EloHistoryLog log(int prev, int next) =>
+          EloHistoryLog.fromJson({'previousElo': prev, 'newElo': next});
 
       expect(log(1000, 1012).isGain, isTrue);
       expect(log(1000, 1000).isGain, isFalse);

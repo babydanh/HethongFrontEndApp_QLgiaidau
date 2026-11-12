@@ -31,8 +31,7 @@ void main() {
       expect(profile.isEmailVerified, isNull);
     });
 
-    test('booleans accept bool, 0/1 and true/1 strings; junk becomes null',
-        () {
+    test('booleans accept bool, 0/1 and true/1 strings; junk becomes null', () {
       bool? flag(Object? value) =>
           UserProfile.fromJson({'isEmailVerified': value}).isEmailVerified;
 
@@ -82,8 +81,7 @@ void main() {
       expect(const UserProfile(id: 'x').hasRole('ADMIN'), isFalse);
     });
 
-    test('toJson omits null fields and copyWith overrides only given ones',
-        () {
+    test('toJson omits null fields and copyWith overrides only given ones', () {
       const profile = UserProfile(id: 'u1', fullName: 'An', bio: 'hi');
 
       final json = profile.toJson();

@@ -71,25 +71,29 @@ void main() {
   });
 
   group('getPublicTournamentsPaged', () {
-    test('maps UI statuses to backend filters and sends only set filters',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /tournaments/public': const FakeReply(200, {'data': <dynamic>[]}),
-      });
+    test(
+      'maps UI statuses to backend filters and sends only set filters',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /tournaments/public': const FakeReply(200, {
+            'data': <dynamic>[],
+          }),
+        });
 
-      Future<Object?> statusFor(String status) async {
-        adapter.requests.clear();
-        await repo.getPublicTournamentsPaged(status: status);
-        return adapter.requests.single.query['status'];
-      }
+        Future<Object?> statusFor(String status) async {
+          adapter.requests.clear();
+          await repo.getPublicTournamentsPaged(status: status);
+          return adapter.requests.single.query['status'];
+        }
 
-      expect(await statusFor('registration'), 'REGISTRATION');
-      expect(await statusFor('UPCOMING'), 'UPCOMING,REGISTRATION_CLOSED');
-      expect(await statusFor('in_progress'), 'IN_PROGRESS');
-      expect(await statusFor('completed'), 'COMPLETED');
-      expect(await statusFor('draft'), 'DRAFT');
-      expect(await statusFor('all'), isNull);
-    });
+        expect(await statusFor('registration'), 'REGISTRATION');
+        expect(await statusFor('UPCOMING'), 'UPCOMING,REGISTRATION_CLOSED');
+        expect(await statusFor('in_progress'), 'IN_PROGRESS');
+        expect(await statusFor('completed'), 'COMPLETED');
+        expect(await statusFor('draft'), 'DRAFT');
+        expect(await statusFor('all'), isNull);
+      },
+    );
 
     test('builds the full query and upper-cases the bracket type', () async {
       final (repo, adapter) = _setup({
@@ -140,26 +144,28 @@ void main() {
       expect(page.hasMore, isTrue);
     });
 
-    test('hasMore is true for meta.hasNext and for a top-level cursor',
-        () async {
-      final (viaMeta, _) = _setup({
-        'GET /tournaments/public': const FakeReply(200, {
-          'data': <dynamic>[],
-          'meta': {'hasNext': true},
-        }),
-      });
-      final (viaRoot, _) = _setup({
-        'GET /tournaments/public': const FakeReply(200, {
-          'data': <dynamic>[],
-          'nextCursor': 'root',
-        }),
-      });
+    test(
+      'hasMore is true for meta.hasNext and for a top-level cursor',
+      () async {
+        final (viaMeta, _) = _setup({
+          'GET /tournaments/public': const FakeReply(200, {
+            'data': <dynamic>[],
+            'meta': {'hasNext': true},
+          }),
+        });
+        final (viaRoot, _) = _setup({
+          'GET /tournaments/public': const FakeReply(200, {
+            'data': <dynamic>[],
+            'nextCursor': 'root',
+          }),
+        });
 
-      expect((await viaMeta.getPublicTournamentsPaged()).hasMore, isTrue);
-      final root = await viaRoot.getPublicTournamentsPaged();
-      expect(root.nextCursor, 'root');
-      expect(root.hasMore, isTrue);
-    });
+        expect((await viaMeta.getPublicTournamentsPaged()).hasMore, isTrue);
+        final root = await viaRoot.getPublicTournamentsPaged();
+        expect(root.nextCursor, 'root');
+        expect(root.hasMore, isTrue);
+      },
+    );
 
     test('falls back to /tournaments when /public fails', () async {
       final (repo, adapter) = _setup({
@@ -177,82 +183,91 @@ void main() {
       ]);
     });
 
-    test('rethrowOnError skips the fallback and surfaces the failure',
-        () async {
-      final (repo, adapter) = _setup({});
+    test(
+      'rethrowOnError skips the fallback and surfaces the failure',
+      () async {
+        final (repo, adapter) = _setup({});
 
-      await expectLater(
-        repo.getPublicTournamentsPaged(rethrowOnError: true),
-        throwsA(isA<DioException>()),
-      );
-      expect(adapter.requests.map((r) => r.path), ['/tournaments/public']);
+        await expectLater(
+          repo.getPublicTournamentsPaged(rethrowOnError: true),
+          throwsA(isA<DioException>()),
+        );
+        expect(adapter.requests.map((r) => r.path), ['/tournaments/public']);
 
-      final page = await _setup({}).$1.getPublicTournamentsPaged();
-      expect(page.tournaments, isEmpty);
-      expect(page.hasMore, isFalse);
-    });
+        final page = await _setup({}).$1.getPublicTournamentsPaged();
+        expect(page.tournaments, isEmpty);
+        expect(page.hasMore, isFalse);
+      },
+    );
 
-    test('skips malformed tournament items instead of failing the page',
-        () async {
-      final (repo, _) = _setup({
-        'GET /tournaments/public': FakeReply(200, {
-          'data': [
-            _tournament('ok'),
-            'junk',
-          ],
-        }),
-      });
+    test(
+      'skips malformed tournament items instead of failing the page',
+      () async {
+        final (repo, _) = _setup({
+          'GET /tournaments/public': FakeReply(200, {
+            'data': [_tournament('ok'), 'junk'],
+          }),
+        });
 
-      expect(
-        (await repo.getPublicTournamentsPaged()).tournaments.map((t) => t.id),
-        ['ok'],
-      );
-    });
+        expect(
+          (await repo.getPublicTournamentsPaged()).tournaments.map((t) => t.id),
+          ['ok'],
+        );
+      },
+    );
   });
 
   group('simple tournament mutations and follow', () {
-    test('update, updateStatus, delete, follow and unfollow hit their routes',
-        () async {
-      final (repo, adapter) = _setup({
-        'PATCH /tournaments/t-1': const FakeReply(200, {}),
-        'DELETE /tournaments/t-1': const FakeReply(200, {}),
-        'POST /tournaments/t-1/follow': const FakeReply(200, {}),
-        'DELETE /tournaments/t-1/follow': const FakeReply(200, {}),
-      });
+    test(
+      'update, updateStatus, delete, follow and unfollow hit their routes',
+      () async {
+        final (repo, adapter) = _setup({
+          'PATCH /tournaments/t-1': const FakeReply(200, {}),
+          'DELETE /tournaments/t-1': const FakeReply(200, {}),
+          'POST /tournaments/t-1/follow': const FakeReply(200, {}),
+          'DELETE /tournaments/t-1/follow': const FakeReply(200, {}),
+        });
 
-      await repo.update('t-1', {'name': 'Mới'});
-      await repo.updateStatus('t-1', 'COMPLETED');
-      await repo.delete('t-1');
-      await repo.followTournament('t-1');
-      await repo.unfollowTournament('t-1');
-      await repo.updateToken('t-1', 'REFEREE', 'tok'); // intentionally a no-op
+        await repo.update('t-1', {'name': 'Mới'});
+        await repo.updateStatus('t-1', 'COMPLETED');
+        await repo.delete('t-1');
+        await repo.followTournament('t-1');
+        await repo.unfollowTournament('t-1');
+        await repo.updateToken(
+          't-1',
+          'REFEREE',
+          'tok',
+        ); // intentionally a no-op
 
-      expect(adapter.requests.map((r) => '${r.method} ${r.path}'), [
-        'PATCH /tournaments/t-1',
-        'PATCH /tournaments/t-1',
-        'DELETE /tournaments/t-1',
-        'POST /tournaments/t-1/follow',
-        'DELETE /tournaments/t-1/follow',
-      ]);
-      expect(adapter.requests[0].body, {'name': 'Mới'});
-      expect(adapter.requests[1].body, {'status': 'COMPLETED'});
-    });
+        expect(adapter.requests.map((r) => '${r.method} ${r.path}'), [
+          'PATCH /tournaments/t-1',
+          'PATCH /tournaments/t-1',
+          'DELETE /tournaments/t-1',
+          'POST /tournaments/t-1/follow',
+          'DELETE /tournaments/t-1/follow',
+        ]);
+        expect(adapter.requests[0].body, {'name': 'Mới'});
+        expect(adapter.requests[1].body, {'status': 'COMPLETED'});
+      },
+    );
 
-    test('followed list and isFollowing degrade to empty/false on failure',
-        () async {
-      final (repo, _) = _setup({
-        'GET /tournaments/my/followed': FakeReply(200, {
-          'data': [_tournament('f1')],
-        }),
-      });
-      final (failing, _) = _setup({});
+    test(
+      'followed list and isFollowing degrade to empty/false on failure',
+      () async {
+        final (repo, _) = _setup({
+          'GET /tournaments/my/followed': FakeReply(200, {
+            'data': [_tournament('f1')],
+          }),
+        });
+        final (failing, _) = _setup({});
 
-      expect((await repo.getFollowedTournaments()).single.id, 'f1');
-      expect(await repo.isFollowing('f1'), isTrue);
-      expect(await repo.isFollowing('other'), isFalse);
-      expect(await failing.getFollowedTournaments(), isEmpty);
-      expect(await failing.isFollowing('f1'), isFalse);
-    });
+        expect((await repo.getFollowedTournaments()).single.id, 'f1');
+        expect(await repo.isFollowing('f1'), isTrue);
+        expect(await repo.isFollowing('other'), isFalse);
+        expect(await failing.getFollowedTournaments(), isEmpty);
+        expect(await failing.isFollowing('f1'), isFalse);
+      },
+    );
 
     test('getGroupStandings unwraps data, filters division, returns {} on '
         'error', () async {
@@ -280,8 +295,20 @@ void main() {
           _bracket([
             _match('m2', round: 2, order: 1, status: 'COMPLETED'),
             _match('m1', round: 1, order: 2, status: 'IN_PROGRESS'),
-            _match('m0', round: 1, order: 1, status: 'WALKOVER', branch: 'LOSERS'),
-            _match('mc', round: 3, order: 1, status: 'CANCELLED', branch: 'GRAND_FINALS'),
+            _match(
+              'm0',
+              round: 1,
+              order: 1,
+              status: 'WALKOVER',
+              branch: 'LOSERS',
+            ),
+            _match(
+              'mc',
+              round: 3,
+              order: 1,
+              status: 'CANCELLED',
+              branch: 'GRAND_FINALS',
+            ),
             _match('mp', round: 3, order: 2, branch: 'PLAYOFF'),
           ]),
         ),
@@ -353,16 +380,18 @@ void main() {
       expect(m.setsToWin, 2);
     });
 
-    test('a specific division with no matches returns [] without fallback',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /tournaments/t-1/bracket': const FakeReply(200, {'data': {}}),
-      });
+    test(
+      'a specific division with no matches returns [] without fallback',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /tournaments/t-1/bracket': const FakeReply(200, {'data': {}}),
+        });
 
-      expect(await repo.getBracketMatches('t-1', divisionId: 'd1'), isEmpty);
-      expect(adapter.requests, hasLength(1));
-      expect(adapter.requests.single.query, {'divisionId': 'd1'});
-    });
+        expect(await repo.getBracketMatches('t-1', divisionId: 'd1'), isEmpty);
+        expect(adapter.requests, hasLength(1));
+        expect(adapter.requests.single.query, {'divisionId': 'd1'});
+      },
+    );
 
     test('with no matches for "all divisions" it queries every division once '
         'and does not recurse', () async {
@@ -413,8 +442,10 @@ void main() {
   group('bracket editing', () {
     test('updateBracketSlots uses the lite route when asked', () async {
       final (repo, adapter) = _setup({
-        'PATCH /tournaments/t-1/divisions/d1/bracket/slots':
-            const FakeReply(200, {}),
+        'PATCH /tournaments/t-1/divisions/d1/bracket/slots': const FakeReply(
+          200,
+          {},
+        ),
         'PATCH /tournaments/lite/t-1/divisions/d1/bracket/slots':
             const FakeReply(200, {}),
       });
@@ -437,83 +468,93 @@ void main() {
       expect(adapter.requests.first.body, {'operations': ops});
     });
 
-    test('updateBracketSlots requires a division and surfaces HTTP errors',
-        () async {
-      final (repo, adapter) = _setup({});
+    test(
+      'updateBracketSlots requires a division and surfaces HTTP errors',
+      () async {
+        final (repo, adapter) = _setup({});
 
-      await expectLater(
-        repo.updateBracketSlots('t-1', operations: const []),
-        throwsA(isA<ArgumentError>()),
-      );
-      await expectLater(
-        repo.updateBracketSlots('t-1', divisionId: '', operations: const []),
-        throwsA(isA<ArgumentError>()),
-      );
-      expect(adapter.requests, isEmpty);
-      await expectLater(
-        repo.updateBracketSlots('t-1', divisionId: 'd1', operations: const []),
-        throwsA(isA<DioException>()),
-      );
-    });
+        await expectLater(
+          repo.updateBracketSlots('t-1', operations: const []),
+          throwsA(isA<ArgumentError>()),
+        );
+        await expectLater(
+          repo.updateBracketSlots('t-1', divisionId: '', operations: const []),
+          throwsA(isA<ArgumentError>()),
+        );
+        expect(adapter.requests, isEmpty);
+        await expectLater(
+          repo.updateBracketSlots(
+            't-1',
+            divisionId: 'd1',
+            operations: const [],
+          ),
+          throwsA(isA<DioException>()),
+        );
+      },
+    );
 
-    test('seed order and stage round config use the documented routes',
-        () async {
-      final (repo, adapter) = _setup({
-        'PATCH /tournaments/t-1/divisions/d1/bracket/seed-order':
-            const FakeReply(200, {}),
-        'PATCH /tournaments/stages/s1': const FakeReply(200, {}),
-      });
+    test(
+      'seed order and stage round config use the documented routes',
+      () async {
+        final (repo, adapter) = _setup({
+          'PATCH /tournaments/t-1/divisions/d1/bracket/seed-order':
+              const FakeReply(200, {}),
+          'PATCH /tournaments/stages/s1': const FakeReply(200, {}),
+        });
 
-      await repo.updateSeedOrder(
-        't-1',
-        divisionId: 'd1',
-        stageId: 's1',
-        slotOrder: const [
-          {'slot': 1},
-        ],
-      );
-      await repo.updateStageRoundConfig('t-1', 's1', {'rounds': 3});
+        await repo.updateSeedOrder(
+          't-1',
+          divisionId: 'd1',
+          stageId: 's1',
+          slotOrder: const [
+            {'slot': 1},
+          ],
+        );
+        await repo.updateStageRoundConfig('t-1', 's1', {'rounds': 3});
 
-      expect(adapter.requests[0].body, {
-        'stageId': 's1',
-        'slotOrder': [
-          {'slot': 1},
-        ],
-      });
-      expect(adapter.requests[1].path, '/tournaments/stages/s1');
-      expect(adapter.requests[1].body, {
-        'roundConfig': {'rounds': 3},
-      });
-    });
+        expect(adapter.requests[0].body, {
+          'stageId': 's1',
+          'slotOrder': [
+            {'slot': 1},
+          ],
+        });
+        expect(adapter.requests[1].path, '/tournaments/stages/s1');
+        expect(adapter.requests[1].body, {
+          'roundConfig': {'rounds': 3},
+        });
+      },
+    );
 
-    test('generateBracket omits a blank division and tolerates odd bodies',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /tournaments/t-1/generate-bracket': const FakeReply(200, {
-          'data': {'created': 7},
-        }),
-      });
-      final (odd, _) = _setup({
-        'POST /tournaments/t-1/generate-bracket': const FakeReply(200, 'x'),
-      });
+    test(
+      'generateBracket omits a blank division and tolerates odd bodies',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /tournaments/t-1/generate-bracket': const FakeReply(200, {
+            'data': {'created': 7},
+          }),
+        });
+        final (odd, _) = _setup({
+          'POST /tournaments/t-1/generate-bracket': const FakeReply(200, 'x'),
+        });
 
-      final result = await repo.generateBracket(
-        't-1',
-        divisionId: '',
-        seedingType: 'RANDOM',
-        allowReset: true,
-      );
+        final result = await repo.generateBracket(
+          't-1',
+          divisionId: '',
+          seedingType: 'RANDOM',
+          allowReset: true,
+        );
 
-      expect(result, {'created': 7});
-      expect(adapter.requests.single.body, {
-        'seedingType': 'RANDOM',
-        'allowReset': true,
-      });
-      expect(
-        await odd.generateBracket('t-1', seedingType: 'RANDOM'),
-        isEmpty,
-      );
-    });
+        expect(result, {'created': 7});
+        expect(adapter.requests.single.body, {
+          'seedingType': 'RANDOM',
+          'allowReset': true,
+        });
+        expect(
+          await odd.generateBracket('t-1', seedingType: 'RANDOM'),
+          isEmpty,
+        );
+      },
+    );
   });
 
   group('swiss and stage lookups', () {
@@ -542,24 +583,26 @@ void main() {
       expect(adapter.requests.single.query, {'divisionId': 'd1'});
     });
 
-    test('getSwissStage is null without a swiss stage or stages list',
-        () async {
-      final (none, _) = _setup({
-        'GET /tournaments/t-1/bracket': const FakeReply(200, {
-          'data': {
-            'stages': [
-              {'id': 'ko', 'type': 'KNOCKOUT'},
-            ],
-          },
-        }),
-      });
-      final (bare, _) = _setup({
-        'GET /tournaments/t-1/bracket': const FakeReply(200, <dynamic>[]),
-      });
+    test(
+      'getSwissStage is null without a swiss stage or stages list',
+      () async {
+        final (none, _) = _setup({
+          'GET /tournaments/t-1/bracket': const FakeReply(200, {
+            'data': {
+              'stages': [
+                {'id': 'ko', 'type': 'KNOCKOUT'},
+              ],
+            },
+          }),
+        });
+        final (bare, _) = _setup({
+          'GET /tournaments/t-1/bracket': const FakeReply(200, <dynamic>[]),
+        });
 
-      expect(await none.getSwissStage('t-1'), isNull);
-      expect(await bare.getSwissStage('t-1'), isNull);
-    });
+        expect(await none.getSwissStage('t-1'), isNull);
+        expect(await bare.getSwissStage('t-1'), isNull);
+      },
+    );
 
     test('getDivisionStages keeps only object stages', () async {
       final (repo, _) = _setup({
@@ -578,45 +621,49 @@ void main() {
       ]);
     });
 
-    test('swissUndoRound returns the server round, or the requested one',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /tournaments/t-1/swiss/rounds/3/undo': const FakeReply(200, {
-          'data': {'roundNumber': 2},
-        }),
-        'POST /tournaments/t-1/swiss/rounds/4/undo': const FakeReply(200, {
-          'data': {},
-        }),
-      });
+    test(
+      'swissUndoRound returns the server round, or the requested one',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /tournaments/t-1/swiss/rounds/3/undo': const FakeReply(200, {
+            'data': {'roundNumber': 2},
+          }),
+          'POST /tournaments/t-1/swiss/rounds/4/undo': const FakeReply(200, {
+            'data': {},
+          }),
+        });
 
-      expect(await repo.swissUndoRound('t-1', 3, divisionId: 'd1'), 2);
-      expect(
-        await repo.swissUndoRound('t-1', 4, divisionId: 'd1', stageId: 's9'),
-        4,
-      );
-      expect(adapter.requests[0].body, {'divisionId': 'd1'});
-      expect(adapter.requests[1].body, {'divisionId': 'd1', 'stageId': 's9'});
-    });
+        expect(await repo.swissUndoRound('t-1', 3, divisionId: 'd1'), 2);
+        expect(
+          await repo.swissUndoRound('t-1', 4, divisionId: 'd1', stageId: 's9'),
+          4,
+        );
+        expect(adapter.requests[0].body, {'divisionId': 'd1'});
+        expect(adapter.requests[1].body, {'divisionId': 'd1', 'stageId': 's9'});
+      },
+    );
 
-    test('swiss failures carry the HTTP status and server error code',
-        () async {
-      final (repo, _) = _setup({
-        'POST /tournaments/t-1/swiss/rounds/1/undo': const FakeReply(409, {
-          'code': 'SWISS_ROUND_LOCKED',
-          'message': 'Vòng đã khoá',
-        }),
-      });
+    test(
+      'swiss failures carry the HTTP status and server error code',
+      () async {
+        final (repo, _) = _setup({
+          'POST /tournaments/t-1/swiss/rounds/1/undo': const FakeReply(409, {
+            'code': 'SWISS_ROUND_LOCKED',
+            'message': 'Vòng đã khoá',
+          }),
+        });
 
-      await expectLater(
-        repo.swissUndoRound('t-1', 1, divisionId: 'd1'),
-        throwsA(
-          isA<SwissApiException>()
-              .having((e) => e.status, 'status', 409)
-              .having((e) => e.code, 'code', 'SWISS_ROUND_LOCKED')
-              .having((e) => e.message, 'message', 'Vòng đã khoá'),
-        ),
-      );
-    });
+        await expectLater(
+          repo.swissUndoRound('t-1', 1, divisionId: 'd1'),
+          throwsA(
+            isA<SwissApiException>()
+                .having((e) => e.status, 'status', 409)
+                .having((e) => e.code, 'code', 'SWISS_ROUND_LOCKED')
+                .having((e) => e.message, 'message', 'Vòng đã khoá'),
+          ),
+        );
+      },
+    );
   });
 
   group('watchBracketMatches', () {

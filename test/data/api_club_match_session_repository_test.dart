@@ -49,26 +49,28 @@ void main() {
   );
 
   group('cursor paging', () {
-    test('listPage returns the safe next cursor only when hasMore is true',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /club-match-sessions': FakeReply(200, {
-          'data': [_session('s1'), 'junk'],
-          'meta': {'hasMore': true, 'nextCursor': 'n2'},
-        }),
-      });
+    test(
+      'listPage returns the safe next cursor only when hasMore is true',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /club-match-sessions': FakeReply(200, {
+            'data': [_session('s1'), 'junk'],
+            'meta': {'hasMore': true, 'nextCursor': 'n2'},
+          }),
+        });
 
-      final page = await repo.listPage('c1', cursor: 'n1', limit: 3);
+        final page = await repo.listPage('c1', cursor: 'n1', limit: 3);
 
-      expect(page.data.map((s) => s.id), ['s1']);
-      expect(page.nextCursor, 'n2');
-      expect(page.hasMore, isTrue);
-      expect(adapter.requests.single.query, {
-        'communityId': 'c1',
-        'limit': 3,
-        'cursor': 'n1',
-      });
-    });
+        expect(page.data.map((s) => s.id), ['s1']);
+        expect(page.nextCursor, 'n2');
+        expect(page.hasMore, isTrue);
+        expect(adapter.requests.single.query, {
+          'communityId': 'c1',
+          'limit': 3,
+          'cursor': 'n1',
+        });
+      },
+    );
 
     test('a repeated cursor or hasMore=false ends the paging', () async {
       final (repeat, _) = _setup({
@@ -124,34 +126,36 @@ void main() {
       expect(adapter.requests.last.query['cursor'], 'c2');
     });
 
-    test('participants ask for ACTIVE ones and match lists page through',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /club-match-sessions/s1/participants': const FakeReply(200, {
-          'data': [
-            {
-              'participant': {'id': 'p1', 'userId': 'u1'},
-              'fullName': 'An',
-            },
-          ],
-        }),
-        'GET /club-match-sessions/s1/matches': const FakeReply(200, {
-          'data': [
-            {'id': 'm1'},
-          ],
-        }),
-      });
+    test(
+      'participants ask for ACTIVE ones and match lists page through',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /club-match-sessions/s1/participants': const FakeReply(200, {
+            'data': [
+              {
+                'participant': {'id': 'p1', 'userId': 'u1'},
+                'fullName': 'An',
+              },
+            ],
+          }),
+          'GET /club-match-sessions/s1/matches': const FakeReply(200, {
+            'data': [
+              {'id': 'm1'},
+            ],
+          }),
+        });
 
-      final participants = await repo.participants('s1');
-      final matches = await repo.matches('s1');
-      final matchPage = await repo.matchesPage('s1', cursor: 'c', limit: 5);
+        final participants = await repo.participants('s1');
+        final matches = await repo.matches('s1');
+        final matchPage = await repo.matchesPage('s1', cursor: 'c', limit: 5);
 
-      expect(participants.single.displayName, 'An');
-      expect(matches.single.id, 'm1');
-      expect(matchPage.data.single.id, 'm1');
-      expect(adapter.requests[0].query['status'], 'ACTIVE');
-      expect(adapter.requests[2].query, {'limit': 5, 'cursor': 'c'});
-    });
+        expect(participants.single.displayName, 'An');
+        expect(matches.single.id, 'm1');
+        expect(matchPage.data.single.id, 'm1');
+        expect(adapter.requests[0].query['status'], 'ACTIVE');
+        expect(adapter.requests[2].query, {'limit': 5, 'cursor': 'c'});
+      },
+    );
   });
 
   group('session read and create', () {
@@ -166,8 +170,7 @@ void main() {
       await expectLater(repo.get('missing'), throwsA(isA<DioException>()));
     });
 
-    test('create sends only meaningful fields for a one-off session',
-        () async {
+    test('create sends only meaningful fields for a one-off session', () async {
       final (repo, adapter) = _setup({
         'POST /club-match-sessions': FakeReply(201, {'data': _session('new')}),
       });
@@ -269,47 +272,53 @@ void main() {
       expect(adapter.requests.single.headers['Idempotency-Key'], 'key-1');
     });
 
-    test('createStandaloneMatch accepts a flat payload and omits matchType',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /club-match-sessions/standalone-matches': const FakeReply(201, {
-          'data': {'id': 'm8'},
-        }),
-      });
+    test(
+      'createStandaloneMatch accepts a flat payload and omits matchType',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /club-match-sessions/standalone-matches': const FakeReply(201, {
+            'data': {'id': 'm8'},
+          }),
+        });
 
-      final match = await repo.createStandaloneMatch(
-        socialSessionId: 's1',
-        sideA: const ['a'],
-        sideB: const ['b'],
-        key: 'k',
-        isRanked: true,
-      );
-
-      expect(match.id, 'm8');
-      expect(adapter.requests.single.body!.containsKey('matchType'), isFalse);
-      expect(adapter.requests.single.body!['socialSessionId'], 's1');
-    });
-
-    test('createStandaloneMatch needs an owner before it calls the network',
-        () async {
-      final (repo, adapter) = _setup({});
-
-      await expectLater(
-        repo.createStandaloneMatch(
-          sideA: const [],
-          sideB: const [],
+        final match = await repo.createStandaloneMatch(
+          socialSessionId: 's1',
+          sideA: const ['a'],
+          sideB: const ['b'],
           key: 'k',
           isRanked: true,
-        ),
-        throwsArgumentError,
-      );
-      expect(adapter.requests, isEmpty);
-    });
+        );
+
+        expect(match.id, 'm8');
+        expect(adapter.requests.single.body!.containsKey('matchType'), isFalse);
+        expect(adapter.requests.single.body!['socialSessionId'], 's1');
+      },
+    );
+
+    test(
+      'createStandaloneMatch needs an owner before it calls the network',
+      () async {
+        final (repo, adapter) = _setup({});
+
+        await expectLater(
+          repo.createStandaloneMatch(
+            sideA: const [],
+            sideB: const [],
+            key: 'k',
+            isRanked: true,
+          ),
+          throwsArgumentError,
+        );
+        expect(adapter.requests, isEmpty);
+      },
+    );
 
     test('deleteStandaloneMatch calls DELETE', () async {
       final (repo, adapter) = _setup({
-        'DELETE /club-match-sessions/standalone-matches/m1':
-            const FakeReply(204, {}),
+        'DELETE /club-match-sessions/standalone-matches/m1': const FakeReply(
+          204,
+          {},
+        ),
       });
 
       await repo.deleteStandaloneMatch('m1');
@@ -322,18 +331,29 @@ void main() {
     test('join, withdraw, remove, transition, force, mock and preferences use '
         'the documented routes and payloads', () async {
       final (repo, adapter) = _setup({
-        'POST /club-match-sessions/s1/participants/self':
-            const FakeReply(200, {}),
+        'POST /club-match-sessions/s1/participants/self': const FakeReply(
+          200,
+          {},
+        ),
         'POST /club-match-sessions/s1/participants/self/withdraw':
             const FakeReply(200, {}),
-        'PATCH /club-match-sessions/s1/participants/u1/remove':
-            const FakeReply(200, {}),
+        'PATCH /club-match-sessions/s1/participants/u1/remove': const FakeReply(
+          200,
+          {},
+        ),
         'POST /club-match-sessions/s1/transition': const FakeReply(200, {}),
-        'POST /club-match-sessions/s1/participants/force':
-            const FakeReply(200, {}),
-        'POST /club-match-sessions/s1/participants/mock':
-            const FakeReply(200, {}),
-        'PATCH /club-match-sessions/s1/preferences/me': const FakeReply(200, {}),
+        'POST /club-match-sessions/s1/participants/force': const FakeReply(
+          200,
+          {},
+        ),
+        'POST /club-match-sessions/s1/participants/mock': const FakeReply(
+          200,
+          {},
+        ),
+        'PATCH /club-match-sessions/s1/preferences/me': const FakeReply(
+          200,
+          {},
+        ),
       });
 
       await repo.selfJoin('s1');
@@ -397,8 +417,10 @@ void main() {
         'expected revision', () async {
       final (repo, adapter) = _setup({
         'PATCH /club-match-sessions/matches/m1/score': const FakeReply(200, {}),
-        'POST /club-match-sessions/matches/m1/complete':
-            const FakeReply(200, {}),
+        'POST /club-match-sessions/matches/m1/complete': const FakeReply(
+          200,
+          {},
+        ),
       });
       final match = ClubSessionMatchModel.fromJson({
         'id': 'm1',

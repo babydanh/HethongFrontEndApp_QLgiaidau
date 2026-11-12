@@ -117,37 +117,39 @@ void main() {
   });
 
   group('listByDate', () {
-    test('builds the query: skips blank filters, "all" sport and no-geo',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /social-sessions': FakeReply(200, {
-          'data': [_session('a')],
-          'meta': {'page': 2, 'limit': 10, 'total': 31},
-        }),
-      });
+    test(
+      'builds the query: skips blank filters, "all" sport and no-geo',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /social-sessions': FakeReply(200, {
+            'data': [_session('a')],
+            'meta': {'page': 2, 'limit': 10, 'total': 31},
+          }),
+        });
 
-      final result = await repo.listByDate(
-        date: '',
-        sport: 'ALL',
-        communityId: '',
-        search: '  kèo  ',
-        page: 2,
-        limit: 10,
-        lat: 10.5,
-        sortBy: 'distance',
-      );
+        final result = await repo.listByDate(
+          date: '',
+          sport: 'ALL',
+          communityId: '',
+          search: '  kèo  ',
+          page: 2,
+          limit: 10,
+          lat: 10.5,
+          sortBy: 'distance',
+        );
 
-      expect(result.items.single.id, 'a');
-      expect(result.page, 2);
-      expect(result.limit, 10);
-      expect(result.total, 31);
-      // lat without lng disables geo filtering entirely.
-      expect(adapter.requests.single.query, {
-        'page': 2,
-        'limit': 10,
-        'search': 'kèo',
-      });
-    });
+        expect(result.items.single.id, 'a');
+        expect(result.page, 2);
+        expect(result.limit, 10);
+        expect(result.total, 31);
+        // lat without lng disables geo filtering entirely.
+        expect(adapter.requests.single.query, {
+          'page': 2,
+          'limit': 10,
+          'search': 'kèo',
+        });
+      },
+    );
 
     test('adds geo params when both coordinates are present', () async {
       final (repo, adapter) = _setup({
@@ -192,25 +194,31 @@ void main() {
       expect(result.total, 9);
     });
 
-    test('returns an empty list when offline but throws on an HTTP error',
-        () async {
-      final (offline, _) = _setup({
-        'GET /social-sessions': const FakeReply.networkError(),
-      });
-      final (failing, _) = _setup({
-        'GET /social-sessions': const FakeReply(500, {'message': 'boom'}),
-      });
+    test(
+      'returns an empty list when offline but throws on an HTTP error',
+      () async {
+        final (offline, _) = _setup({
+          'GET /social-sessions': const FakeReply.networkError(),
+        });
+        final (failing, _) = _setup({
+          'GET /social-sessions': const FakeReply(500, {'message': 'boom'}),
+        });
 
-      final result = await offline.listByDate(date: '2026-06-01');
+        final result = await offline.listByDate(date: '2026-06-01');
 
-      expect(result.items, isEmpty);
-      await expectLater(
-        failing.listByDate(date: '2026-06-01'),
-        throwsA(
-          isA<SocialApiException>().having((e) => e.statusCode, 'status', 500),
-        ),
-      );
-    });
+        expect(result.items, isEmpty);
+        await expectLater(
+          failing.listByDate(date: '2026-06-01'),
+          throwsA(
+            isA<SocialApiException>().having(
+              (e) => e.statusCode,
+              'status',
+              500,
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('listNearby', () {
@@ -265,67 +273,79 @@ void main() {
       );
     });
 
-    test('create reuses one Idempotency-Key per payload until it succeeds',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /social-sessions': FakeReply(201, {'data': _session('new')}),
-      });
-      final (flaky, flakyAdapter) = _setup({
-        'POST /social-sessions': const FakeReply(500, {'message': 'x'}),
-      });
+    test(
+      'create reuses one Idempotency-Key per payload until it succeeds',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /social-sessions': FakeReply(201, {'data': _session('new')}),
+        });
+        final (flaky, flakyAdapter) = _setup({
+          'POST /social-sessions': const FakeReply(500, {'message': 'x'}),
+        });
 
-      // A failed attempt keeps its key, so a retry of the same intent reuses it.
-      for (var i = 0; i < 2; i++) {
+        // A failed attempt keeps its key, so a retry of the same intent reuses it.
+        for (var i = 0; i < 2; i++) {
+          await expectLater(
+            flaky.create(_request()),
+            throwsA(isA<SocialApiException>()),
+          );
+        }
         await expectLater(
-          flaky.create(_request()),
+          flaky.create(_request(title: 'Khác')),
           throwsA(isA<SocialApiException>()),
         );
-      }
-      await expectLater(
-        flaky.create(_request(title: 'Khác')),
-        throwsA(isA<SocialApiException>()),
-      );
 
-      final keys = flakyAdapter.requests
-          .map((r) => r.headers['Idempotency-Key'])
-          .toList();
-      expect(keys[0], isNotNull);
-      expect(keys[0], keys[1]);
-      expect(keys[2], isNot(keys[0]));
+        final keys = flakyAdapter.requests
+            .map((r) => r.headers['Idempotency-Key'])
+            .toList();
+        expect(keys[0], isNotNull);
+        expect(keys[0], keys[1]);
+        expect(keys[2], isNot(keys[0]));
 
-      // A success drops the key, so the next identical request gets a new one.
-      await repo.create(_request());
-      await repo.create(_request());
-      final okKeys = adapter.requests
-          .map((r) => r.headers['Idempotency-Key'])
-          .toList();
-      expect(okKeys[0], isNot(okKeys[1]));
-      expect(adapter.requests.first.body!['title'], 'Kèo tối');
-    });
+        // A success drops the key, so the next identical request gets a new one.
+        await repo.create(_request());
+        await repo.create(_request());
+        final okKeys = adapter.requests
+            .map((r) => r.headers['Idempotency-Key'])
+            .toList();
+        expect(okKeys[0], isNot(okKeys[1]));
+        expect(adapter.requests.first.body!['title'], 'Kèo tối');
+      },
+    );
 
-    test('update patches only the given fields and parses the result',
-        () async {
-      final (repo, adapter) = _setup({
-        'PATCH /social-sessions/s1': FakeReply(200, {'data': _session('s1')}),
-      });
+    test(
+      'update patches only the given fields and parses the result',
+      () async {
+        final (repo, adapter) = _setup({
+          'PATCH /social-sessions/s1': FakeReply(200, {'data': _session('s1')}),
+        });
 
-      final updated = await repo.update('s1', {'title': 'Mới'});
+        final updated = await repo.update('s1', {'title': 'Mới'});
 
-      expect(updated.id, 's1');
-      expect(adapter.requests.single.body, {'title': 'Mới'});
-    });
+        expect(updated.id, 's1');
+        expect(adapter.requests.single.body, {'title': 'Mới'});
+      },
+    );
 
-    test('update, cancel and delete map errors to SocialApiException',
-        () async {
-      final (repo, _) = _setup({});
+    test(
+      'update, cancel and delete map errors to SocialApiException',
+      () async {
+        final (repo, _) = _setup({});
 
-      await expectLater(
-        repo.update('s1', {}),
-        throwsA(isA<SocialApiException>()),
-      );
-      await expectLater(repo.cancel('s1'), throwsA(isA<SocialApiException>()));
-      await expectLater(repo.delete('s1'), throwsA(isA<SocialApiException>()));
-    });
+        await expectLater(
+          repo.update('s1', {}),
+          throwsA(isA<SocialApiException>()),
+        );
+        await expectLater(
+          repo.cancel('s1'),
+          throwsA(isA<SocialApiException>()),
+        );
+        await expectLater(
+          repo.delete('s1'),
+          throwsA(isA<SocialApiException>()),
+        );
+      },
+    );
 
     test('cancel PATCHes and delete DELETEs the session', () async {
       final (repo, adapter) = _setup({
@@ -384,30 +404,37 @@ void main() {
   });
 
   group('join requests', () {
-    test('requestJoin sends ticketCount; approve/reject post without body',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /social-sessions/s1/requests': const FakeReply(201, {}),
-        'POST /social-sessions/s1/requests/p1/approve':
-            const FakeReply(200, {}),
-        'POST /social-sessions/s1/requests/p1/reject': const FakeReply(200, {}),
-        'DELETE /social-sessions/s1/requests/self': const FakeReply(200, {}),
-      });
+    test(
+      'requestJoin sends ticketCount; approve/reject post without body',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /social-sessions/s1/requests': const FakeReply(201, {}),
+          'POST /social-sessions/s1/requests/p1/approve': const FakeReply(
+            200,
+            {},
+          ),
+          'POST /social-sessions/s1/requests/p1/reject': const FakeReply(
+            200,
+            {},
+          ),
+          'DELETE /social-sessions/s1/requests/self': const FakeReply(200, {}),
+        });
 
-      await repo.requestJoin('s1', ticketCount: 2);
-      await repo.approveJoinRequest('s1', 'p1');
-      await repo.rejectJoinRequest('s1', 'p1');
-      await repo.withdrawJoinRequest('s1');
+        await repo.requestJoin('s1', ticketCount: 2);
+        await repo.approveJoinRequest('s1', 'p1');
+        await repo.rejectJoinRequest('s1', 'p1');
+        await repo.withdrawJoinRequest('s1');
 
-      expect(adapter.requests[0].body, {'ticketCount': 2});
-      expect(adapter.requests[1].body, isNull);
-      expect(adapter.requests.map((r) => r.method), [
-        'POST',
-        'POST',
-        'POST',
-        'DELETE',
-      ]);
-    });
+        expect(adapter.requests[0].body, {'ticketCount': 2});
+        expect(adapter.requests[1].body, isNull);
+        expect(adapter.requests.map((r) => r.method), [
+          'POST',
+          'POST',
+          'POST',
+          'DELETE',
+        ]);
+      },
+    );
 
     test('actions surface backend codes as SocialApiException', () async {
       final (repo, _) = _setup({
@@ -485,7 +512,10 @@ void main() {
       });
       final (emptyButMore, _) = _setup({
         'GET /social-sessions/s1/requests': const FakeReply(200, {
-          'data': {'items': <dynamic>[], 'meta': {'total': 99}},
+          'data': {
+            'items': <dynamic>[],
+            'meta': {'total': 99},
+          },
         }),
       });
 
@@ -505,24 +535,26 @@ void main() {
   });
 
   group('messages and participants', () {
-    test('getMessages reads data, items or messages and ignores junk',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /social-sessions/s1/messages': const FakeReply(200, {
-          'items': [
-            {'id': 'm1', 'messageText': 'hi'},
-            'junk',
-          ],
-        }),
-        'GET /social-sessions/s2/messages': const FakeReply(200, {'data': 5}),
-      });
+    test(
+      'getMessages reads data, items or messages and ignores junk',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /social-sessions/s1/messages': const FakeReply(200, {
+            'items': [
+              {'id': 'm1', 'messageText': 'hi'},
+              'junk',
+            ],
+          }),
+          'GET /social-sessions/s2/messages': const FakeReply(200, {'data': 5}),
+        });
 
-      final messages = await repo.getMessages('s1', limit: 5);
+        final messages = await repo.getMessages('s1', limit: 5);
 
-      expect(messages, hasLength(1));
-      expect(adapter.requests.single.query, {'limit': 5});
-      expect(await repo.getMessages('s2'), isEmpty);
-    });
+        expect(messages, hasLength(1));
+        expect(adapter.requests.single.query, {'limit': 5});
+        expect(await repo.getMessages('s2'), isEmpty);
+      },
+    );
 
     test('sendMessage trims the text', () async {
       final (repo, adapter) = _setup({
@@ -534,8 +566,7 @@ void main() {
       expect(adapter.requests.single.body, {'messageText': 'chào'});
     });
 
-    test('join parses the response and defaults currentSlots/status',
-        () async {
+    test('join parses the response and defaults currentSlots/status', () async {
       final (repo, adapter) = _setup({
         'POST /social-sessions/s1/join': const FakeReply(200, {
           'data': {
@@ -561,69 +592,83 @@ void main() {
       expect(bare.participant, isNull);
     });
 
-    test('addParticipant and addGuestParticipant send different identities',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /social-sessions/s1/participants': const FakeReply(201, {}),
-      });
+    test(
+      'addParticipant and addGuestParticipant send different identities',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /social-sessions/s1/participants': const FakeReply(201, {}),
+        });
 
-      await repo.addParticipant('s1', userId: 'u1', ticketCount: 2);
-      await repo.addGuestParticipant('s1', guestName: '  Khách  ');
+        await repo.addParticipant('s1', userId: 'u1', ticketCount: 2);
+        await repo.addGuestParticipant('s1', guestName: '  Khách  ');
 
-      expect(adapter.requests[0].body, {'userId': 'u1', 'ticketCount': 2});
-      expect(adapter.requests[1].body, {'guestName': 'Khách', 'ticketCount': 1});
-    });
+        expect(adapter.requests[0].body, {'userId': 'u1', 'ticketCount': 2});
+        expect(adapter.requests[1].body, {
+          'guestName': 'Khách',
+          'ticketCount': 1,
+        });
+      },
+    );
 
-    test('addParticipantsBatch parses added/skipped and falls back counts',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /social-sessions/s1/participants/batch': const FakeReply(200, {
-          'data': {
-            'added': [
-              {'id': 'p1', 'userId': 'u1'},
-              'junk',
-            ],
-            'skipped': ['u2', 7],
-          },
-        }),
-      });
+    test(
+      'addParticipantsBatch parses added/skipped and falls back counts',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /social-sessions/s1/participants/batch': const FakeReply(200, {
+            'data': {
+              'added': [
+                {'id': 'p1', 'userId': 'u1'},
+                'junk',
+              ],
+              'skipped': ['u2', 7],
+            },
+          }),
+        });
 
-      final result = await repo.addParticipantsBatch(
-        's1',
-        userIds: ['u1', 'u2'],
-      );
+        final result = await repo.addParticipantsBatch(
+          's1',
+          userIds: ['u1', 'u2'],
+        );
 
-      expect(result.added.single.id, 'p1');
-      expect(result.skipped, ['u2', '7']);
-      expect(result.currentSlots, 1); // falls back to the added count
-      expect(result.status, 'OPEN');
-      expect(adapter.requests.single.body, {
-        'userIds': ['u1', 'u2'],
-        'ticketCount': 1,
-      });
-    });
+        expect(result.added.single.id, 'p1');
+        expect(result.skipped, ['u2', '7']);
+        expect(result.currentSlots, 1); // falls back to the added count
+        expect(result.status, 'OPEN');
+        expect(adapter.requests.single.body, {
+          'userIds': ['u1', 'u2'],
+          'ticketCount': 1,
+        });
+      },
+    );
 
-    test('removeParticipant and updatePaymentStatus call their routes',
-        () async {
-      final (repo, adapter) = _setup({
-        'DELETE /social-sessions/s1/participants/u1': const FakeReply(200, {}),
-        'PATCH /social-sessions/s1/participants/u1/payment':
-            const FakeReply(200, {}),
-      });
+    test(
+      'removeParticipant and updatePaymentStatus call their routes',
+      () async {
+        final (repo, adapter) = _setup({
+          'DELETE /social-sessions/s1/participants/u1': const FakeReply(
+            200,
+            {},
+          ),
+          'PATCH /social-sessions/s1/participants/u1/payment': const FakeReply(
+            200,
+            {},
+          ),
+        });
 
-      await repo.removeParticipant('s1', 'u1');
-      await repo.updatePaymentStatus('s1', 'u1', paymentStatus: 'PAID');
+        await repo.removeParticipant('s1', 'u1');
+        await repo.updatePaymentStatus('s1', 'u1', paymentStatus: 'PAID');
 
-      expect(adapter.requests[1].body, {'paymentStatus': 'PAID'});
-      await expectLater(
-        repo.removeParticipant('s1', 'nope'),
-        throwsA(isA<SocialApiException>()),
-      );
-      await expectLater(
-        repo.updatePaymentStatus('s1', 'nope', paymentStatus: 'PAID'),
-        throwsA(isA<SocialApiException>()),
-      );
-    });
+        expect(adapter.requests[1].body, {'paymentStatus': 'PAID'});
+        await expectLater(
+          repo.removeParticipant('s1', 'nope'),
+          throwsA(isA<SocialApiException>()),
+        );
+        await expectLater(
+          repo.updatePaymentStatus('s1', 'nope', paymentStatus: 'PAID'),
+          throwsA(isA<SocialApiException>()),
+        );
+      },
+    );
 
     test('addParticipant, batch and join map backend failures', () async {
       final (repo, _) = _setup({
@@ -663,44 +708,48 @@ void main() {
   });
 
   group('createBracket', () {
-    test('turns 409 SOCIAL_BRACKET_EXISTS into SocialBracketExistsException',
-        () async {
-      final (repo, _) = _setup({
-        'POST /social-sessions/s1/bracket': const FakeReply(409, {
-          'code': 'SOCIAL_BRACKET_EXISTS',
-          'tournamentId': 't-old',
-        }),
-      });
+    test(
+      'turns 409 SOCIAL_BRACKET_EXISTS into SocialBracketExistsException',
+      () async {
+        final (repo, _) = _setup({
+          'POST /social-sessions/s1/bracket': const FakeReply(409, {
+            'code': 'SOCIAL_BRACKET_EXISTS',
+            'tournamentId': 't-old',
+          }),
+        });
 
-      await expectLater(
-        repo.createBracket(
-          's1',
-          bracketType: 'SINGLE_ELIMINATION',
-          matchType: 'SINGLES',
-          participantUserIds: ['u1', 'u2'],
-        ),
-        throwsA(isA<SocialBracketExistsException>()),
-      );
-    });
+        await expectLater(
+          repo.createBracket(
+            's1',
+            bracketType: 'SINGLE_ELIMINATION',
+            matchType: 'SINGLES',
+            participantUserIds: ['u1', 'u2'],
+          ),
+          throwsA(isA<SocialBracketExistsException>()),
+        );
+      },
+    );
 
-    test('a 409 without a tournamentId stays a normal SocialApiException',
-        () async {
-      final (repo, _) = _setup({
-        'POST /social-sessions/s1/bracket': const FakeReply(409, {
-          'code': 'SOCIAL_BRACKET_EXISTS',
-          'message': 'đã có',
-        }),
-      });
+    test(
+      'a 409 without a tournamentId stays a normal SocialApiException',
+      () async {
+        final (repo, _) = _setup({
+          'POST /social-sessions/s1/bracket': const FakeReply(409, {
+            'code': 'SOCIAL_BRACKET_EXISTS',
+            'message': 'đã có',
+          }),
+        });
 
-      await expectLater(
-        repo.createBracket(
-          's1',
-          bracketType: 'X',
-          matchType: 'Y',
-          participantUserIds: [],
-        ),
-        throwsA(isA<SocialApiException>()),
-      );
-    });
+        await expectLater(
+          repo.createBracket(
+            's1',
+            bracketType: 'X',
+            matchType: 'Y',
+            participantUserIds: [],
+          ),
+          throwsA(isA<SocialApiException>()),
+        );
+      },
+    );
   });
 }

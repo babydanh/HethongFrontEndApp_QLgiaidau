@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
@@ -119,7 +117,10 @@ class _FakeRepo extends Fake implements ISocialSessionRepository {
   }
 
   @override
-  Future<JoinSessionResponse> join(String sessionId, {int ticketCount = 1}) async {
+  Future<JoinSessionResponse> join(
+    String sessionId, {
+    int ticketCount = 1,
+  }) async {
     await _mutation('join:$ticketCount');
     return const JoinSessionResponse(ok: true, currentSlots: 2, status: 'OPEN');
   }
@@ -129,8 +130,7 @@ class _FakeRepo extends Fake implements ISocialSessionRepository {
       _mutation('requestJoin');
 
   @override
-  Future<void> withdrawJoinRequest(String sessionId) =>
-      _mutation('withdraw');
+  Future<void> withdrawJoinRequest(String sessionId) => _mutation('withdraw');
 
   @override
   Future<void> approveJoinRequest(String sessionId, String participantId) =>
@@ -218,7 +218,9 @@ ProviderContainer _container(
 void main() {
   group('SocialFilterNotifier / SocialFilterState', () {
     test('selected date is normalised to midnight and compared by day', () {
-      final filter = SocialFilterState(selectedDate: DateTime(2026, 6, 1, 23, 59));
+      final filter = SocialFilterState(
+        selectedDate: DateTime(2026, 6, 1, 23, 59),
+      );
 
       expect(filter.selectedDate, DateTime(2026, 6, 1));
       expect(filter.isSameDate(DateTime(2026, 6, 1, 3)), isTrue);
@@ -253,45 +255,52 @@ void main() {
       expect(reset.radiusKm, defaultNearbyRadiusKm);
     });
 
-    test('toggleTimeSlotCollapse adds, removes and never mutates the old set',
-        () {
-      final container = _container(_FakeRepo());
-      final notifier = container.read(socialFilterProvider.notifier);
+    test(
+      'toggleTimeSlotCollapse adds, removes and never mutates the old set',
+      () {
+        final container = _container(_FakeRepo());
+        final notifier = container.read(socialFilterProvider.notifier);
 
-      notifier.toggleTimeSlotCollapse('08:00');
-      final afterAdd = container.read(socialFilterProvider).collapsedTimeSlots;
-      notifier.toggleTimeSlotCollapse('09:00');
-      notifier.toggleTimeSlotCollapse('08:00');
-      final afterRemove =
-          container.read(socialFilterProvider).collapsedTimeSlots;
+        notifier.toggleTimeSlotCollapse('08:00');
+        final afterAdd = container
+            .read(socialFilterProvider)
+            .collapsedTimeSlots;
+        notifier.toggleTimeSlotCollapse('09:00');
+        notifier.toggleTimeSlotCollapse('08:00');
+        final afterRemove = container
+            .read(socialFilterProvider)
+            .collapsedTimeSlots;
 
-      expect(afterAdd, {'08:00'});
-      expect(afterRemove, {'09:00'});
-    });
+        expect(afterAdd, {'08:00'});
+        expect(afterRemove, {'09:00'});
+      },
+    );
   });
 
   group('SocialSessionsNotifier', () {
-    test('lists by the selected date with trimmed search and no geo params',
-        () async {
-      final repo = _FakeRepo()..byDate = [_session('a')];
-      final container = _container(repo);
-      container.read(socialFilterProvider.notifier)
-        ..setSelectedDate(DateTime(2026, 6, 1))
-        ..setSport('tennis')
-        ..setSearchQuery('  kèo  ');
+    test(
+      'lists by the selected date with trimmed search and no geo params',
+      () async {
+        final repo = _FakeRepo()..byDate = [_session('a')];
+        final container = _container(repo);
+        container.read(socialFilterProvider.notifier)
+          ..setSelectedDate(DateTime(2026, 6, 1))
+          ..setSport('tennis')
+          ..setSearchQuery('  kèo  ');
 
-      final items = await container.read(socialSessionsProvider.future);
+        final items = await container.read(socialSessionsProvider.future);
 
-      expect(items.single.id, 'a');
-      expect(repo.lastListByDate, {
-        'date': '2026-06-01',
-        'sport': 'tennis',
-        'search': 'kèo',
-        'lat': null,
-        'radiusKm': null,
-        'sortBy': null,
-      });
-    });
+        expect(items.single.id, 'a');
+        expect(repo.lastListByDate, {
+          'date': '2026-06-01',
+          'sport': 'tennis',
+          'search': 'kèo',
+          'lat': null,
+          'radiusKm': null,
+          'sortBy': null,
+        });
+      },
+    );
 
     test('sport "all" and a blank search are not sent', () async {
       final repo = _FakeRepo();
@@ -304,20 +313,21 @@ void main() {
       expect(repo.lastListByDate['search'], isNull);
     });
 
-    test('returns nothing while the session is still being validated',
-        () async {
-      final repo = _FakeRepo()..byDate = [_session('a')];
-      final container = _container(
-        repo,
-        auth: const AuthState(status: AuthStatus.validating),
-      );
+    test(
+      'returns nothing while the session is still being validated',
+      () async {
+        final repo = _FakeRepo()..byDate = [_session('a')];
+        final container = _container(
+          repo,
+          auth: const AuthState(status: AuthStatus.validating),
+        );
 
-      expect(await container.read(socialSessionsProvider.future), isEmpty);
-      expect(repo.calls, isEmpty);
-    });
+        expect(await container.read(socialSessionsProvider.future), isEmpty);
+        expect(repo.calls, isEmpty);
+      },
+    );
 
-    test('nearby results are filtered client-side by sport and text',
-        () async {
+    test('nearby results are filtered client-side by sport and text', () async {
       final repo = _FakeRepo()
         ..nearby = [
           _session('a', title: 'Giao lưu Quận 1'),
@@ -383,32 +393,34 @@ void main() {
       expect(repo.calls, ['listByDate']);
     });
 
-    test('a failing next page keeps the list and exposes a retry message',
-        () async {
-      final repo = _FakeRepo()
-        ..nearbyError = StateError('boom')
-        ..nearbyPages = {
-          1: NearbySocialSessionsResponse(
-            items: [_session('a')],
-            page: 1,
-            limit: 1,
-            total: 5,
-          ),
-        };
-      final container = _container(repo, withLocation: true);
-      container.read(socialFilterProvider.notifier).setNearbyOnly(true);
-      await container.read(socialSessionsProvider.future);
-      final notifier = container.read(socialSessionsProvider.notifier);
+    test(
+      'a failing next page keeps the list and exposes a retry message',
+      () async {
+        final repo = _FakeRepo()
+          ..nearbyError = StateError('boom')
+          ..nearbyPages = {
+            1: NearbySocialSessionsResponse(
+              items: [_session('a')],
+              page: 1,
+              limit: 1,
+              total: 5,
+            ),
+          };
+        final container = _container(repo, withLocation: true);
+        container.read(socialFilterProvider.notifier).setNearbyOnly(true);
+        await container.read(socialSessionsProvider.future);
+        final notifier = container.read(socialSessionsProvider.notifier);
 
-      await notifier.loadMoreNearby();
+        await notifier.loadMoreNearby();
 
-      expect(
-        container.read(socialSessionsProvider).requireValue.map((s) => s.id),
-        ['a'],
-      );
-      expect(notifier.loadMoreError, contains('thử lại'));
-      expect(notifier.isLoadingMore, isFalse);
-    });
+        expect(
+          container.read(socialSessionsProvider).requireValue.map((s) => s.id),
+          ['a'],
+        );
+        expect(notifier.loadMoreError, contains('thử lại'));
+        expect(notifier.isLoadingMore, isFalse);
+      },
+    );
 
     test('mutations call the repository then refresh the list', () async {
       final repo = _FakeRepo()..byDate = [_session('a')];
@@ -427,16 +439,18 @@ void main() {
 
       expect(joined.ok, isTrue);
       expect(batch.currentSlots, 3);
-      expect(
-        repo.calls.where((c) => c != 'listByDate'),
-        ['join:2', 'addParticipant:u1', 'batch:2', 'pay:u1:PAID', 'cancel'],
-      );
+      expect(repo.calls.where((c) => c != 'listByDate'), [
+        'join:2',
+        'addParticipant:u1',
+        'batch:2',
+        'pay:u1:PAID',
+        'cancel',
+      ]);
       // initial load + one refresh per mutation
       expect(repo.calls.where((c) => c == 'listByDate'), hasLength(6));
     });
 
-    test('a failed mutation does not refresh and surfaces the error',
-        () async {
+    test('a failed mutation does not refresh and surfaces the error', () async {
       final repo = _FakeRepo()
         ..byDate = [_session('a')]
         ..mutationError = StateError('full');
@@ -444,7 +458,9 @@ void main() {
       await container.read(socialSessionsProvider.future);
 
       await expectLater(
-        container.read(socialSessionsProvider.notifier).joinSession(sessionId: 'a'),
+        container
+            .read(socialSessionsProvider.notifier)
+            .joinSession(sessionId: 'a'),
         throwsA(isA<StateError>()),
       );
       expect(repo.calls.where((c) => c == 'listByDate'), hasLength(1));
@@ -475,37 +491,44 @@ void main() {
       expect(b.chatMessages, isEmpty);
     });
 
-    test('addSharedSessionMessage attaches the card; addSession prepends',
-        () async {
-      final repo = _FakeRepo()..byDate = [_session('a')];
-      final container = _container(repo);
-      await container.read(socialSessionsProvider.future);
-      final notifier = container.read(socialSessionsProvider.notifier);
+    test(
+      'addSharedSessionMessage attaches the card; addSession prepends',
+      () async {
+        final repo = _FakeRepo()..byDate = [_session('a')];
+        final container = _container(repo);
+        await container.read(socialSessionsProvider.future);
+        final notifier = container.read(socialSessionsProvider.notifier);
 
-      notifier.addSharedSessionMessage('a', _session('shared', title: 'Thẻ kèo'));
-      notifier.addSharedSessionMessage('missing', _session('x'));
-      notifier.addSession(_session('new'));
+        notifier.addSharedSessionMessage(
+          'a',
+          _session('shared', title: 'Thẻ kèo'),
+        );
+        notifier.addSharedSessionMessage('missing', _session('x'));
+        notifier.addSession(_session('new'));
 
-      final items = container.read(socialSessionsProvider).requireValue;
-      expect(items.map((s) => s.id), ['new', 'a']);
-      final message = items.last.chatMessages.single;
-      expect(message.message, 'Thẻ kèo');
-      expect(message.sharedSession?.id, 'shared');
-      expect(message.isHost, isTrue);
-    });
+        final items = container.read(socialSessionsProvider).requireValue;
+        expect(items.map((s) => s.id), ['new', 'a']);
+        final message = items.last.chatMessages.single;
+        expect(message.message, 'Thẻ kèo');
+        expect(message.sharedSession?.id, 'shared');
+        expect(message.isHost, isTrue);
+      },
+    );
 
-    test('filteredSocialSessionsProvider mirrors the sessions provider',
-        () async {
-      final repo = _FakeRepo()..byDate = [_session('a')];
-      final container = _container(repo);
+    test(
+      'filteredSocialSessionsProvider mirrors the sessions provider',
+      () async {
+        final repo = _FakeRepo()..byDate = [_session('a')];
+        final container = _container(repo);
 
-      await container.read(socialSessionsProvider.future);
+        await container.read(socialSessionsProvider.future);
 
-      expect(
-        container.read(filteredSocialSessionsProvider).requireValue.single.id,
-        'a',
-      );
-    });
+        expect(
+          container.read(filteredSocialSessionsProvider).requireValue.single.id,
+          'a',
+        );
+      },
+    );
   });
 
   group('SocialSessionDetailNotifier', () {
@@ -513,7 +536,9 @@ void main() {
       final repo = _FakeRepo();
       final container = _container(repo);
 
-      final detail = await container.read(socialSessionDetailProvider('s1').future);
+      final detail = await container.read(
+        socialSessionDetailProvider('s1').future,
+      );
 
       expect(detail.id, 's1');
       expect(repo.calls, ['getDetail']);
@@ -531,37 +556,45 @@ void main() {
         ];
       final container = _container(repo);
 
-      final detail = await container.read(socialSessionDetailProvider('s1').future);
+      final detail = await container.read(
+        socialSessionDetailProvider('s1').future,
+      );
 
       expect(detail.requestedParticipants.map((p) => p.id), ['r1']);
       expect(repo.calls, ['getDetail', 'listJoinRequests']);
     });
 
-    test('mutations run, refresh the detail and invalidate the lists',
-        () async {
-      final repo = _FakeRepo();
-      final container = _container(repo);
-      await container.read(socialSessionDetailProvider('s1').future);
-      final notifier = container.read(socialSessionDetailProvider('s1').notifier);
+    test(
+      'mutations run, refresh the detail and invalidate the lists',
+      () async {
+        final repo = _FakeRepo();
+        final container = _container(repo);
+        await container.read(socialSessionDetailProvider('s1').future);
+        final notifier = container.read(
+          socialSessionDetailProvider('s1').notifier,
+        );
 
-      final joined = await notifier.join(ticketCount: 2);
-      await notifier.requestJoin();
+        final joined = await notifier.join(ticketCount: 2);
+        await notifier.requestJoin();
 
-      expect(joined.currentSlots, 2);
-      expect(repo.calls, [
-        'getDetail',
-        'join:2',
-        'getDetail',
-        'requestJoin',
-        'getDetail',
-      ]);
-    });
+        expect(joined.currentSlots, 2);
+        expect(repo.calls, [
+          'getDetail',
+          'join:2',
+          'getDetail',
+          'requestJoin',
+          'getDetail',
+        ]);
+      },
+    );
 
     test('host-only actions are refused for a non-host', () async {
       final repo = _FakeRepo();
       final container = _container(repo);
       await container.read(socialSessionDetailProvider('s1').future);
-      final notifier = container.read(socialSessionDetailProvider('s1').notifier);
+      final notifier = container.read(
+        socialSessionDetailProvider('s1').notifier,
+      );
 
       await expectLater(
         notifier.removeParticipant('u1'),
@@ -575,56 +608,67 @@ void main() {
       expect(repo.calls, ['getDetail']); // nothing reached the repository
     });
 
-    test('a host can manage participants, payments, guests and the session',
-        () async {
-      final repo = _FakeRepo()..detail = _session('s1', isHost: true);
-      final container = _container(repo);
-      await container.read(socialSessionDetailProvider('s1').future);
-      final notifier = container.read(socialSessionDetailProvider('s1').notifier);
-      final pending = SocialParticipantModel(id: 'p9', joinedAt: DateTime(2026));
+    test(
+      'a host can manage participants, payments, guests and the session',
+      () async {
+        final repo = _FakeRepo()..detail = _session('s1', isHost: true);
+        final container = _container(repo);
+        await container.read(socialSessionDetailProvider('s1').future);
+        final notifier = container.read(
+          socialSessionDetailProvider('s1').notifier,
+        );
+        final pending = SocialParticipantModel(
+          id: 'p9',
+          joinedAt: DateTime(2026),
+        );
 
-      await notifier.approveParticipant(pending);
-      await notifier.rejectParticipant(pending);
-      await notifier.addParticipant(userId: 'u1');
-      await notifier.addGuestParticipant(guestName: 'Khách');
-      final batch = await notifier.addParticipantsBatch(userIds: ['a', 'b']);
-      await notifier.updatePaymentStatus('u1', 'PAID');
-      await notifier.removeParticipant('u1');
-      await notifier.cancelSession();
+        await notifier.approveParticipant(pending);
+        await notifier.rejectParticipant(pending);
+        await notifier.addParticipant(userId: 'u1');
+        await notifier.addGuestParticipant(guestName: 'Khách');
+        final batch = await notifier.addParticipantsBatch(userIds: ['a', 'b']);
+        await notifier.updatePaymentStatus('u1', 'PAID');
+        await notifier.removeParticipant('u1');
+        await notifier.cancelSession();
 
-      expect(batch.currentSlots, 3);
-      expect(
-        repo.calls.where(
-          (c) => !c.startsWith('getDetail') && c != 'listJoinRequests',
-        ),
-        [
-          'approve:p9',
-          'reject:p9',
-          'addParticipant:u1',
-          'addGuest:Khách',
-          'batch:2',
-          'pay:u1:PAID',
-          'remove:u1',
-          'cancel',
-        ],
-      );
-    });
+        expect(batch.currentSlots, 3);
+        expect(
+          repo.calls.where(
+            (c) => !c.startsWith('getDetail') && c != 'listJoinRequests',
+          ),
+          [
+            'approve:p9',
+            'reject:p9',
+            'addParticipant:u1',
+            'addGuest:Khách',
+            'batch:2',
+            'pay:u1:PAID',
+            'remove:u1',
+            'cancel',
+          ],
+        );
+      },
+    );
 
-    test('a failed action still re-syncs the detail before rethrowing',
-        () async {
-      final repo = _FakeRepo()..mutationError = StateError('full');
-      final container = _container(repo);
-      await container.read(socialSessionDetailProvider('s1').future);
-      final notifier = container.read(socialSessionDetailProvider('s1').notifier);
+    test(
+      'a failed action still re-syncs the detail before rethrowing',
+      () async {
+        final repo = _FakeRepo()..mutationError = StateError('full');
+        final container = _container(repo);
+        await container.read(socialSessionDetailProvider('s1').future);
+        final notifier = container.read(
+          socialSessionDetailProvider('s1').notifier,
+        );
 
-      await expectLater(notifier.join(), throwsA(isA<StateError>()));
+        await expectLater(notifier.join(), throwsA(isA<StateError>()));
 
-      expect(repo.calls, ['getDetail', 'join:1', 'getDetail']);
-      // The guard is released, so the next action is allowed to run.
-      repo.mutationError = null;
-      await notifier.join();
-      expect(repo.calls.where((c) => c == 'join:1'), hasLength(2));
-    });
+        expect(repo.calls, ['getDetail', 'join:1', 'getDetail']);
+        // The guard is released, so the next action is allowed to run.
+        repo.mutationError = null;
+        await notifier.join();
+        expect(repo.calls.where((c) => c == 'join:1'), hasLength(2));
+      },
+    );
 
     test('actions are refused when the user is not authenticated', () async {
       final repo = _FakeRepo();
@@ -647,47 +691,59 @@ void main() {
       await c1.read(socialSessionDetailProvider('s1').future);
 
       expect(
-        () => c1.read(socialSessionDetailProvider('s1').notifier).withdrawJoinRequest(),
+        () => c1
+            .read(socialSessionDetailProvider('s1').notifier)
+            .withdrawJoinRequest(),
         throwsA(isA<StateError>()),
       );
 
       final pending = _FakeRepo()..detail = _session('s1', isPending: true);
       final c2 = _container(pending);
       await c2.read(socialSessionDetailProvider('s1').future);
-      await c2.read(socialSessionDetailProvider('s1').notifier).withdrawJoinRequest();
+      await c2
+          .read(socialSessionDetailProvider('s1').notifier)
+          .withdrawJoinRequest();
 
       expect(pending.calls, contains('withdraw'));
     });
 
-    test('while the session is being validated the detail does not load',
-        () async {
-      final repo = _FakeRepo();
-      final container = _container(
-        repo,
-        auth: const AuthState(status: AuthStatus.validating),
-      );
+    test(
+      'while the session is being validated the detail does not load',
+      () async {
+        final repo = _FakeRepo();
+        final container = _container(
+          repo,
+          auth: const AuthState(status: AuthStatus.validating),
+        );
 
-      await expectLater(
-        container.read(socialSessionDetailProvider('s1').future),
-        throwsA(isA<StateError>()),
-      );
-      expect(repo.calls, isEmpty);
-    });
+        await expectLater(
+          container.read(socialSessionDetailProvider('s1').future),
+          throwsA(isA<StateError>()),
+        );
+        expect(repo.calls, isEmpty);
+      },
+    );
 
-    test('addChatMessage appends locally without touching the network',
-        () async {
-      final repo = _FakeRepo();
-      final container = _container(repo);
-      await container.read(socialSessionDetailProvider('s1').future);
-      final notifier = container.read(socialSessionDetailProvider('s1').notifier);
+    test(
+      'addChatMessage appends locally without touching the network',
+      () async {
+        final repo = _FakeRepo();
+        final container = _container(repo);
+        await container.read(socialSessionDetailProvider('s1').future);
+        final notifier = container.read(
+          socialSessionDetailProvider('s1').notifier,
+        );
 
-      notifier.addChatMessage('chào', senderName: 'An');
+        notifier.addChatMessage('chào', senderName: 'An');
 
-      final detail = container.read(socialSessionDetailProvider('s1')).requireValue;
-      expect(detail.chatMessages.single.message, 'chào');
-      expect(detail.chatMessages.single.senderInitials, 'A');
-      expect(repo.calls, ['getDetail']);
-    });
+        final detail = container
+            .read(socialSessionDetailProvider('s1'))
+            .requireValue;
+        expect(detail.chatMessages.single.message, 'chào');
+        expect(detail.chatMessages.single.senderInitials, 'A');
+        expect(repo.calls, ['getDetail']);
+      },
+    );
   });
 
   group('ClubSocialSessionsNotifier', () {
@@ -696,8 +752,12 @@ void main() {
       final repo = _FakeRepo()..byDate = [_session('a')];
       final container = _container(repo);
 
-      final items = await container.read(clubSocialSessionsProvider('c1').future);
-      final notifier = container.read(clubSocialSessionsProvider('c1').notifier);
+      final items = await container.read(
+        clubSocialSessionsProvider('c1').future,
+      );
+      final notifier = container.read(
+        clubSocialSessionsProvider('c1').notifier,
+      );
 
       expect(items.single.id, 'a');
       expect(notifier.isStale, isFalse);
@@ -711,7 +771,9 @@ void main() {
       final repo = _FakeRepo();
       repo.mutationError = StateError('down');
       final container = _container(repo);
-      final notifier = container.read(clubSocialSessionsProvider('c1').notifier);
+      final notifier = container.read(
+        clubSocialSessionsProvider('c1').notifier,
+      );
 
       await container
           .read(clubSocialSessionsProvider('c1').future)

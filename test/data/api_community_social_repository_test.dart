@@ -64,53 +64,57 @@ void main() {
       expect(b.nextCursor, isNull);
     });
 
-    test('returns an empty page for a malformed body and rethrows on 500',
-        () async {
-      final (malformed, _) = _setup({
-        'GET $_posts': const FakeReply(200, <dynamic>[]),
-      });
-      final (failing, _) = _setup({
-        'GET $_posts': const FakeReply(500, {'message': 'boom'}),
-      });
+    test(
+      'returns an empty page for a malformed body and rethrows on 500',
+      () async {
+        final (malformed, _) = _setup({
+          'GET $_posts': const FakeReply(200, <dynamic>[]),
+        });
+        final (failing, _) = _setup({
+          'GET $_posts': const FakeReply(500, {'message': 'boom'}),
+        });
 
-      final page = await malformed.getFeed('c-1');
+        final page = await malformed.getFeed('c-1');
 
-      expect(page.items, isEmpty);
-      expect(page.hasMore, isFalse);
-      await expectLater(failing.getFeed('c-1'), throwsA(isA<DioException>()));
-    });
+        expect(page.items, isEmpty);
+        expect(page.hasMore, isFalse);
+        await expectLater(failing.getFeed('c-1'), throwsA(isA<DioException>()));
+      },
+    );
   });
 
   group('createPost', () {
-    test('sends only non-empty optional fields and an Idempotency-Key',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST $_posts': const FakeReply(201, {
-          'data': {'id': 'p9', 'body': 'bài mới'},
-        }),
-      });
+    test(
+      'sends only non-empty optional fields and an Idempotency-Key',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST $_posts': const FakeReply(201, {
+            'data': {'id': 'p9', 'body': 'bài mới'},
+          }),
+        });
 
-      final bare = await repo.createPost('c-1', text: 'bài mới');
-      await repo.createPost(
-        'c-1',
-        text: 'đủ',
-        mediaUrls: ['u1'],
-        topicTags: ['t'],
-        mentions: ['m'],
-        poll: {'question': 'q'},
-      );
+        final bare = await repo.createPost('c-1', text: 'bài mới');
+        await repo.createPost(
+          'c-1',
+          text: 'đủ',
+          mediaUrls: ['u1'],
+          topicTags: ['t'],
+          mentions: ['m'],
+          poll: {'question': 'q'},
+        );
 
-      expect(bare.id, 'p9');
-      final bodies = adapter.postsTo(_posts).map((r) => r.body).toList();
-      expect(bodies[0], {'body': 'bài mới'});
-      expect(bodies[1], {
-        'body': 'đủ',
-        'mediaUrls': ['u1'],
-        'topics': ['t'],
-        'mentions': ['m'],
-        'poll': {'question': 'q'},
-      });
-    });
+        expect(bare.id, 'p9');
+        final bodies = adapter.postsTo(_posts).map((r) => r.body).toList();
+        expect(bodies[0], {'body': 'bài mới'});
+        expect(bodies[1], {
+          'body': 'đủ',
+          'mediaUrls': ['u1'],
+          'topics': ['t'],
+          'mentions': ['m'],
+          'poll': {'question': 'q'},
+        });
+      },
+    );
 
     test('accepts an unwrapped post body', () async {
       final (repo, _) = _setup({
@@ -120,17 +124,21 @@ void main() {
       expect((await repo.createPost('c-1', text: 'raw')).id, 'p2');
     });
 
-    test('throws FormatException when the server returns a post without id',
-        () async {
-      final (repo, _) = _setup({
-        'POST $_posts': const FakeReply(201, {'data': {'body': 'x'}}),
-      });
+    test(
+      'throws FormatException when the server returns a post without id',
+      () async {
+        final (repo, _) = _setup({
+          'POST $_posts': const FakeReply(201, {
+            'data': {'body': 'x'},
+          }),
+        });
 
-      await expectLater(
-        repo.createPost('c-1', text: 'x'),
-        throwsA(isA<FormatException>()),
-      );
-    });
+        await expectLater(
+          repo.createPost('c-1', text: 'x'),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
   });
 
   group('comments', () {
@@ -164,26 +172,30 @@ void main() {
       expect(page.hasMore, isFalse);
     });
 
-    test('createComment trims the body and only sends a non-empty parentId',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST $_posts/p1/comments': const FakeReply(201, {
-          'data': {'id': 'k2', 'body': 'ok'},
-        }),
-      });
+    test(
+      'createComment trims the body and only sends a non-empty parentId',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST $_posts/p1/comments': const FakeReply(201, {
+            'data': {'id': 'k2', 'body': 'ok'},
+          }),
+        });
 
-      final c = await repo.createComment('c-1', 'p1', body: '  ok  ');
-      await repo.createComment('c-1', 'p1', body: 'r', parentId: '');
-      await repo.createComment('c-1', 'p1', body: 'r2', parentId: 'k1');
+        final c = await repo.createComment('c-1', 'p1', body: '  ok  ');
+        await repo.createComment('c-1', 'p1', body: 'r', parentId: '');
+        await repo.createComment('c-1', 'p1', body: 'r2', parentId: 'k1');
 
-      expect(c.id, 'k2');
-      final bodies = adapter.postsTo('$_posts/p1/comments').map((r) => r.body);
-      expect(bodies.toList(), [
-        {'body': 'ok'},
-        {'body': 'r'},
-        {'body': 'r2', 'parentId': 'k1'},
-      ]);
-    });
+        expect(c.id, 'k2');
+        final bodies = adapter
+            .postsTo('$_posts/p1/comments')
+            .map((r) => r.body);
+        expect(bodies.toList(), [
+          {'body': 'ok'},
+          {'body': 'r'},
+          {'body': 'r2', 'parentId': 'k1'},
+        ]);
+      },
+    );
 
     test('createComment rejects a response without a comment id', () async {
       final (repo, _) = _setup({
@@ -196,76 +208,89 @@ void main() {
       );
     });
 
-    test('deleteComment POSTs the delete route and rethrows on failure',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /communities/c-1/comments/k1/delete': const FakeReply(200, {}),
-      });
+    test(
+      'deleteComment POSTs the delete route and rethrows on failure',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /communities/c-1/comments/k1/delete': const FakeReply(200, {}),
+        });
 
-      await repo.deleteComment('c-1', 'k1');
+        await repo.deleteComment('c-1', 'k1');
 
-      expect(adapter.requests.single.path, '/communities/c-1/comments/k1/delete');
-      await expectLater(
-        repo.deleteComment('c-1', 'missing'),
-        throwsA(isA<DioException>()),
-      );
-    });
+        expect(
+          adapter.requests.single.path,
+          '/communities/c-1/comments/k1/delete',
+        );
+        await expectLater(
+          repo.deleteComment('c-1', 'missing'),
+          throwsA(isA<DioException>()),
+        );
+      },
+    );
   });
 
   group('moderation', () {
-    test('getPendingPosts reads the data envelope and drops id-less posts',
-        () async {
-      final (repo, _) = _setup({
-        'GET /communities/c-1/moderation/posts': const FakeReply(200, {
-          'data': [
-            {'id': 'p1'},
-            {'text': 'no id'},
-          ],
-        }),
-      });
+    test(
+      'getPendingPosts reads the data envelope and drops id-less posts',
+      () async {
+        final (repo, _) = _setup({
+          'GET /communities/c-1/moderation/posts': const FakeReply(200, {
+            'data': [
+              {'id': 'p1'},
+              {'text': 'no id'},
+            ],
+          }),
+        });
 
-      expect((await repo.getPendingPosts('c-1')).map((p) => p.id), ['p1']);
-    });
+        expect((await repo.getPendingPosts('c-1')).map((p) => p.id), ['p1']);
+      },
+    );
 
-    test('getPendingPosts returns empty when the payload is not a list',
-        () async {
-      final (repo, _) = _setup({
-        'GET /communities/c-1/moderation/posts': const FakeReply(200, {
-          'data': {'unexpected': true},
-        }),
-      });
+    test(
+      'getPendingPosts returns empty when the payload is not a list',
+      () async {
+        final (repo, _) = _setup({
+          'GET /communities/c-1/moderation/posts': const FakeReply(200, {
+            'data': {'unexpected': true},
+          }),
+        });
 
-      expect(await repo.getPendingPosts('c-1'), isEmpty);
-    });
+        expect(await repo.getPendingPosts('c-1'), isEmpty);
+      },
+    );
 
-    test('getReports defaults to OPEN, parses nested report and defaults',
-        () async {
-      final (repo, adapter) = _setup({
-        'GET /communities/c-1/moderation/reports': const FakeReply(200, {
-          'data': [
-            {
-              'report': {'id': 'r1', 'reason': 'SPAM'},
-            },
-            {'id': 'r2'},
-            {'reason': 'no id'},
-          ],
-        }),
-      });
+    test(
+      'getReports defaults to OPEN, parses nested report and defaults',
+      () async {
+        final (repo, adapter) = _setup({
+          'GET /communities/c-1/moderation/reports': const FakeReply(200, {
+            'data': [
+              {
+                'report': {'id': 'r1', 'reason': 'SPAM'},
+              },
+              {'id': 'r2'},
+              {'reason': 'no id'},
+            ],
+          }),
+        });
 
-      final reports = await repo.getReports('c-1');
+        final reports = await repo.getReports('c-1');
 
-      expect(reports.map((r) => r.id), ['r1', 'r2']);
-      expect(reports[0].reason, 'SPAM');
-      // Missing reason/status fall back to documented defaults.
-      expect(reports[1].reason, 'OTHER');
-      expect(reports[1].status, 'OPEN');
-      expect(adapter.requests.single.query, {'status': 'OPEN'});
-    });
+        expect(reports.map((r) => r.id), ['r1', 'r2']);
+        expect(reports[0].reason, 'SPAM');
+        // Missing reason/status fall back to documented defaults.
+        expect(reports[1].reason, 'OTHER');
+        expect(reports[1].status, 'OPEN');
+        expect(adapter.requests.single.query, {'status': 'OPEN'});
+      },
+    );
 
     test('status and report mutations send the documented payloads', () async {
       final (repo, adapter) = _setup({
-        'PATCH /communities/c-1/moderation/reports/r1':
-            const FakeReply(200, {}),
+        'PATCH /communities/c-1/moderation/reports/r1': const FakeReply(
+          200,
+          {},
+        ),
         'PATCH $_posts/p1/moderation': const FakeReply(200, {}),
         'POST $_posts/p1/report': const FakeReply(200, {}),
       });
@@ -284,37 +309,44 @@ void main() {
   });
 
   group('polls and reactions', () {
-    test('votePoll and addPollOption parse the poll and trim the option',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /communities/c-1/polls/pl1/vote': const FakeReply(200, {
-          'data': {
+    test(
+      'votePoll and addPollOption parse the poll and trim the option',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /communities/c-1/polls/pl1/vote': const FakeReply(200, {
+            'data': {
+              'id': 'pl1',
+              'question': 'Đi đâu?',
+              'totalVotes': 3,
+              'options': [
+                {
+                  'id': 'o1',
+                  'optionText': 'A',
+                  'voteCount': 2,
+                  'isVoted': true,
+                },
+                {'optionText': 'no id'},
+              ],
+            },
+          }),
+          'POST /communities/c-1/polls/pl1/options': const FakeReply(200, {
             'id': 'pl1',
-            'question': 'Đi đâu?',
-            'totalVotes': 3,
             'options': [
-              {'id': 'o1', 'optionText': 'A', 'voteCount': 2, 'isVoted': true},
-              {'optionText': 'no id'},
+              {'id': 'o9', 'text': 'Mới'},
             ],
-          },
-        }),
-        'POST /communities/c-1/polls/pl1/options': const FakeReply(200, {
-          'id': 'pl1',
-          'options': [
-            {'id': 'o9', 'text': 'Mới'},
-          ],
-        }),
-      });
+          }),
+        });
 
-      final voted = await repo.votePoll('c-1', 'pl1', 'o1');
-      final added = await repo.addPollOption('c-1', 'pl1', '  Mới  ');
+        final voted = await repo.votePoll('c-1', 'pl1', 'o1');
+        final added = await repo.addPollOption('c-1', 'pl1', '  Mới  ');
 
-      expect(voted.totalVotes, 3);
-      expect(voted.options.single.isVoted, isTrue);
-      expect(added.options.single.optionText, 'Mới');
-      expect(adapter.requests[0].body, {'optionId': 'o1'});
-      expect(adapter.requests[1].body, {'optionText': 'Mới'});
-    });
+        expect(voted.totalVotes, 3);
+        expect(voted.options.single.isVoted, isTrue);
+        expect(added.options.single.optionText, 'Mới');
+        expect(adapter.requests[0].body, {'optionId': 'o1'});
+        expect(adapter.requests[1].body, {'optionText': 'Mới'});
+      },
+    );
 
     test('reactToPost sends reactionType and rethrows on failure', () async {
       final (repo, adapter) = _setup({
@@ -402,7 +434,9 @@ void main() {
 
     test('uploadImage reads url from the root or from data', () async {
       final (root, _) = _setup({
-        'POST /upload/image': const FakeReply(200, {'url': 'https://cdn/a.png'}),
+        'POST /upload/image': const FakeReply(200, {
+          'url': 'https://cdn/a.png',
+        }),
       });
       final (nested, _) = _setup({
         'POST /upload/image': const FakeReply(200, {
@@ -416,7 +450,9 @@ void main() {
 
     test('uploadImage throws FormatException when no url comes back', () async {
       final (repo, _) = _setup({
-        'POST /upload/image': const FakeReply(200, {'data': {'url': ''}}),
+        'POST /upload/image': const FakeReply(200, {
+          'data': {'url': ''},
+        }),
       });
 
       await expectLater(

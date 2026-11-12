@@ -43,23 +43,25 @@ void main() {
       expect(member.initials, 'NA');
     });
 
-    test('defaults: name "Thành viên", initials from one word, skill level',
-        () {
-      final anon = SocialParticipantModel.fromJson({'id': 'x'});
-      final single = SocialParticipantModel.fromJson({
-        'id': 'y',
-        'name': 'an',
-        'skillLevel': '3.5',
-      });
+    test(
+      'defaults: name "Thành viên", initials from one word, skill level',
+      () {
+        final anon = SocialParticipantModel.fromJson({'id': 'x'});
+        final single = SocialParticipantModel.fromJson({
+          'id': 'y',
+          'name': 'an',
+          'skillLevel': '3.5',
+        });
 
-      expect(anon.name, 'Thành viên');
-      expect(anon.role, 'PLAYER');
-      expect(anon.status, 'JOINED');
-      expect(anon.paymentStatus, 'UNPAID');
-      expect(anon.skillLevel, 'Tất cả trình độ');
-      expect(single.initials, 'A');
-      expect(single.skillLevel, '3.5');
-    });
+        expect(anon.name, 'Thành viên');
+        expect(anon.role, 'PLAYER');
+        expect(anon.status, 'JOINED');
+        expect(anon.paymentStatus, 'UNPAID');
+        expect(anon.skillLevel, 'Tất cả trình độ');
+        expect(single.initials, 'A');
+        expect(single.skillLevel, '3.5');
+      },
+    );
 
     test('isHost flag in JSON promotes the role when none is given', () {
       expect(
@@ -106,8 +108,7 @@ void main() {
       expect(m.isMe, isFalse);
     });
 
-    test('falls back to "Thành viên"/TM initials and an embedded session',
-        () {
+    test('falls back to "Thành viên"/TM initials and an embedded session', () {
       final m = SocialChatMessageModel.fromJson({
         'id': 'm2',
         'message': 'xem kèo',
@@ -237,24 +238,31 @@ void main() {
       expect(s.requestedParticipants, hasLength(2));
     });
 
-    test('isPending follows joinRequestStatus when present, else isPending',
-        () {
-      bool pending(Map<String, dynamic> extra) =>
-          SocialSessionModel.fromJson(_base(extra)).isPending;
+    test(
+      'isPending follows joinRequestStatus when present, else isPending',
+      () {
+        bool pending(Map<String, dynamic> extra) =>
+            SocialSessionModel.fromJson(_base(extra)).isPending;
 
-      expect(pending({'joinRequestStatus': 'requested'}), isTrue);
-      expect(pending({'joinRequestStatus': 'REJECTED'}), isFalse);
-      expect(pending({'joinRequestStatus': null, 'isPending': true}), isFalse);
-      expect(pending({'isPending': true}), isTrue);
-      // A joined viewer is never "pending".
-      expect(
-        pending({'isJoined': true, 'joinRequestStatus': 'REQUESTED'}),
-        isFalse,
-      );
-    });
+        expect(pending({'joinRequestStatus': 'requested'}), isTrue);
+        expect(pending({'joinRequestStatus': 'REJECTED'}), isFalse);
+        expect(
+          pending({'joinRequestStatus': null, 'isPending': true}),
+          isFalse,
+        );
+        expect(pending({'isPending': true}), isTrue);
+        // A joined viewer is never "pending".
+        expect(
+          pending({'isJoined': true, 'joinRequestStatus': 'REQUESTED'}),
+          isFalse,
+        );
+      },
+    );
 
     test('distance prefers meters, falls back to km, and formats both', () {
-      final meters = SocialSessionModel.fromJson(_base({'distanceMeters': 420}));
+      final meters = SocialSessionModel.fromJson(
+        _base({'distanceMeters': 420}),
+      );
       final far = SocialSessionModel.fromJson(_base({'distance_m': '1500'}));
       final km = SocialSessionModel.fromJson(_base({'distanceKm': 0.5}));
       final none = SocialSessionModel.fromJson(_base());
@@ -264,7 +272,9 @@ void main() {
       expect(far.distanceDisplay, '1.5 km');
       expect(km.distanceDisplay, '500 m');
       expect(
-        SocialSessionModel.fromJson(_base({'distanceKm': 2.34})).distanceDisplay,
+        SocialSessionModel.fromJson(
+          _base({'distanceKm': 2.34}),
+        ).distanceDisplay,
         '2.3 km',
       );
       expect(none.distanceDisplay, '');
@@ -281,8 +291,7 @@ void main() {
       expect(bad.latitude, isNull);
     });
 
-    test('community comes from the nested object and supplies the club id',
-        () {
+    test('community comes from the nested object and supplies the club id', () {
       final s = SocialSessionModel.fromJson(
         _base({
           'community': {'id': 'c9', 'name': 'CLB Chín', 'logoUrl': 'l.png'},
@@ -345,9 +354,9 @@ void main() {
 
     test('Vietnamese weekday and date labels follow the local start time', () {
       // 2026-06-01 is a Monday.
-      final s = SocialSessionModel.fromJson(_base()).copyWith(
-        startAt: DateTime(2026, 6, 1, 7, 5),
-      );
+      final s = SocialSessionModel.fromJson(
+        _base(),
+      ).copyWith(startAt: DateTime(2026, 6, 1, 7, 5));
 
       expect(s.timeSlot, '07:05');
       expect(s.dateDisplay, '07:05 T2, 1/6');
@@ -474,8 +483,12 @@ void main() {
         expect(json.containsKey(key), isFalse, reason: key);
       }
       expect(
-        build(description: 'd', phone: '09', zalo: 'z', communityId: 'c')
-            .toJson()['communityId'],
+        build(
+          description: 'd',
+          phone: '09',
+          zalo: 'z',
+          communityId: 'c',
+        ).toJson()['communityId'],
         'c',
       );
     });
@@ -490,7 +503,10 @@ void main() {
         },
       });
       final flat = NearbySocialSessionsResponse.fromJson({
-        'items': [_base(), _base({'id': 's2'})],
+        'items': [
+          _base(),
+          _base({'id': 's2'}),
+        ],
       });
 
       expect(r.items, hasLength(1));

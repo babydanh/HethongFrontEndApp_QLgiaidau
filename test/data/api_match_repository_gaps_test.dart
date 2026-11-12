@@ -94,43 +94,47 @@ void main() {
   );
 
   group('updateLiveState', () {
-    test('status-only goes to /status with a normalised backend status',
-        () async {
-      final (repo, adapter, _) = _setup({
-        'PATCH /matches/m1/status': const FakeReply(200, {}),
-      });
+    test(
+      'status-only goes to /status with a normalised backend status',
+      () async {
+        final (repo, adapter, _) = _setup({
+          'PATCH /matches/m1/status': const FakeReply(200, {}),
+        });
 
-      Future<Object?> sent(String status) async {
-        adapter.requests.clear();
-        await repo.updateLiveState('t', 'm1', status: status);
-        return adapter.requests.single.body!['status'];
-      }
+        Future<Object?> sent(String status) async {
+          adapter.requests.clear();
+          await repo.updateLiveState('t', 'm1', status: status);
+          return adapter.requests.single.body!['status'];
+        }
 
-      expect(await sent('live'), 'ONGOING');
-      expect(await sent('in_progress'), 'ONGOING');
-      expect(await sent('finished'), 'COMPLETED');
-      expect(await sent('pending'), 'SCHEDULED');
-      expect(await sent('custom'), 'CUSTOM');
-    });
+        expect(await sent('live'), 'ONGOING');
+        expect(await sent('in_progress'), 'ONGOING');
+        expect(await sent('finished'), 'COMPLETED');
+        expect(await sent('pending'), 'SCHEDULED');
+        expect(await sent('custom'), 'CUSTOM');
+      },
+    );
 
-    test('flat scores and config-only updates are rejected without a request',
-        () async {
-      final (repo, adapter, _) = _setup({});
+    test(
+      'flat scores and config-only updates are rejected without a request',
+      () async {
+        final (repo, adapter, _) = _setup({});
 
-      await expectLater(
-        repo.updateLiveState('t', 'm1', score1: 1),
-        throwsA(isA<UnsupportedError>()),
-      );
-      await expectLater(
-        repo.updateLiveState('t', 'm1', status: 'live', score2: 3),
-        throwsA(isA<UnsupportedError>()),
-      );
-      await expectLater(
-        repo.updateLiveState('t', 'm1', maxScore: 11),
-        throwsA(isA<UnsupportedError>()),
-      );
-      expect(adapter.requests, isEmpty);
-    });
+        await expectLater(
+          repo.updateLiveState('t', 'm1', score1: 1),
+          throwsA(isA<UnsupportedError>()),
+        );
+        await expectLater(
+          repo.updateLiveState('t', 'm1', status: 'live', score2: 3),
+          throwsA(isA<UnsupportedError>()),
+        );
+        await expectLater(
+          repo.updateLiveState('t', 'm1', maxScore: 11),
+          throwsA(isA<UnsupportedError>()),
+        );
+        expect(adapter.requests, isEmpty);
+      },
+    );
 
     test('events-only updates are ignored silently', () async {
       final (repo, adapter, _) = _setup({});
@@ -163,34 +167,39 @@ void main() {
       expect(adapter.requests[2].body, {'status': 'ONGOING'});
     });
 
-    test('operations the backend owns throw instead of silently no-op',
-        () async {
-      final (repo, adapter, _) = _setup({});
+    test(
+      'operations the backend owns throw instead of silently no-op',
+      () async {
+        final (repo, adapter, _) = _setup({});
 
-      await expectLater(
-        repo.completeMatch(
-          't',
-          'm1',
-          winnerId: 'a',
-          loserId: 'b',
-          finalScore1: 11,
-          finalScore2: 5,
-        ),
-        throwsA(isA<UnsupportedError>()),
-      );
-      await expectLater(
-        repo.advanceWinner(
-          't',
-          'm2',
-          winnerId: 'a',
-          winnerName: 'A',
-          isTeam1: true,
-        ),
-        throwsA(isA<UnimplementedError>()),
-      );
-      await expectLater(repo.deleteAll('t'), throwsA(isA<UnimplementedError>()));
-      expect(adapter.requests, isEmpty);
-    });
+        await expectLater(
+          repo.completeMatch(
+            't',
+            'm1',
+            winnerId: 'a',
+            loserId: 'b',
+            finalScore1: 11,
+            finalScore2: 5,
+          ),
+          throwsA(isA<UnsupportedError>()),
+        );
+        await expectLater(
+          repo.advanceWinner(
+            't',
+            'm2',
+            winnerId: 'a',
+            winnerName: 'A',
+            isTeam1: true,
+          ),
+          throwsA(isA<UnimplementedError>()),
+        );
+        await expectLater(
+          repo.deleteAll('t'),
+          throwsA(isA<UnimplementedError>()),
+        );
+        expect(adapter.requests, isEmpty);
+      },
+    );
   });
 
   group('updateScoreDetails', () {
@@ -199,168 +208,181 @@ void main() {
       SetScoreData(score1: 9, score2: 11, isFinished: true),
     ];
 
-    test('builds the payload with extras, winner, revision and played time',
-        () async {
-      final (repo, adapter, _) = _setup({
-        'PATCH /matches/m1/score': const FakeReply(200, {}),
-      });
+    test(
+      'builds the payload with extras, winner, revision and played time',
+      () async {
+        final (repo, adapter, _) = _setup({
+          'PATCH /matches/m1/score': const FakeReply(200, {}),
+        });
 
-      await repo.updateScoreDetails(
-        't',
-        'm1',
-        p1SetsWon: 1,
-        p2SetsWon: 1,
-        scoreDetails: sets,
-        scoreDetailsExtras: const {'courtState': 'x'},
-        winnerId: 'a',
-        overrideReason: 'sửa',
-        expectedRevision: 4,
-        playedAt: (date: '2026-06-01', time: '10:30'),
-      );
-
-      final body = adapter.requests.single.body!;
-      expect(adapter.requests.single.method, 'PATCH');
-      expect(body['p1SetsWon'], 1);
-      expect(body['winnerId'], 'a');
-      expect(body['overrideReason'], 'sửa');
-      expect(body['expectedRevision'], 4);
-      expect(body['playedDate'], '2026-06-01');
-      expect(body['playedTime'], '10:30');
-      final details = body['scoreDetails'] as Map;
-      expect(details['courtState'], 'x');
-      expect((details['sets'] as List), hasLength(2));
-    });
-
-    test('omits optional fields, and club sessions never send played time',
-        () async {
-      final (repo, adapter, _) = _setup({
-        'PATCH /club-match-sessions/matches/m1/score': const FakeReply(200, {}),
-        'POST /club-match-sessions/matches/m1/complete':
-            const FakeReply(200, {}),
-        'PATCH /matches/m1/lite-score': const FakeReply(200, {}),
-      });
-
-      await repo.updateScoreDetails(
-        '',
-        'm1',
-        p1SetsWon: 0,
-        p2SetsWon: 0,
-        scoreDetails: const [],
-        playedAt: (date: '2026-06-01', time: null),
-      );
-      await repo.updateScoreDetails(
-        '',
-        'm1',
-        p1SetsWon: 2,
-        p2SetsWon: 0,
-        scoreDetails: sets,
-        winnerId: 'a',
-      );
-      await repo.updateScoreDetails(
-        't',
-        'm1',
-        p1SetsWon: 0,
-        p2SetsWon: 0,
-        scoreDetails: const [],
-        useLiteParticipantAccess: true,
-      );
-
-      expect(adapter.requests.map((r) => '${r.method} ${r.path}'), [
-        'PATCH /club-match-sessions/matches/m1/score',
-        'POST /club-match-sessions/matches/m1/complete',
-        'PATCH /matches/m1/lite-score',
-      ]);
-      final first = adapter.requests.first.body!;
-      expect(first.containsKey('playedDate'), isFalse);
-      expect(first.containsKey('winnerId'), isFalse);
-      expect(first.containsKey('expectedRevision'), isFalse);
-    });
-
-    test('TOURNAMENT_NOT_STARTED becomes a typed exception (tournament only)',
-        () async {
-      final (repo, _, _) = _setup({
-        'PATCH /matches/m1/score': const FakeReply(409, {
-          'code': 'TOURNAMENT_NOT_STARTED',
-          'message': 'chưa bắt đầu',
-        }),
-        'PATCH /club-match-sessions/matches/m1/score': const FakeReply(409, {
-          'code': 'TOURNAMENT_NOT_STARTED',
-          'message': 'chưa bắt đầu',
-        }),
-      });
-
-      await expectLater(
-        repo.updateScoreDetails(
+        await repo.updateScoreDetails(
           't',
           'm1',
-          p1SetsWon: 0,
-          p2SetsWon: 0,
-          scoreDetails: const [],
-        ),
-        throwsA(isA<TournamentNotStartedException>()),
-      );
-      // A club session has no tournament, so the code is shown as a message.
-      await expectLater(
-        repo.updateScoreDetails(
+          p1SetsWon: 1,
+          p2SetsWon: 1,
+          scoreDetails: sets,
+          scoreDetailsExtras: const {'courtState': 'x'},
+          winnerId: 'a',
+          overrideReason: 'sửa',
+          expectedRevision: 4,
+          playedAt: (date: '2026-06-01', time: '10:30'),
+        );
+
+        final body = adapter.requests.single.body!;
+        expect(adapter.requests.single.method, 'PATCH');
+        expect(body['p1SetsWon'], 1);
+        expect(body['winnerId'], 'a');
+        expect(body['overrideReason'], 'sửa');
+        expect(body['expectedRevision'], 4);
+        expect(body['playedDate'], '2026-06-01');
+        expect(body['playedTime'], '10:30');
+        final details = body['scoreDetails'] as Map;
+        expect(details['courtState'], 'x');
+        expect((details['sets'] as List), hasLength(2));
+      },
+    );
+
+    test(
+      'omits optional fields, and club sessions never send played time',
+      () async {
+        final (repo, adapter, _) = _setup({
+          'PATCH /club-match-sessions/matches/m1/score': const FakeReply(
+            200,
+            {},
+          ),
+          'POST /club-match-sessions/matches/m1/complete': const FakeReply(
+            200,
+            {},
+          ),
+          'PATCH /matches/m1/lite-score': const FakeReply(200, {}),
+        });
+
+        await repo.updateScoreDetails(
           '',
           'm1',
           p1SetsWon: 0,
           p2SetsWon: 0,
           scoreDetails: const [],
-        ),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('chưa bắt đầu'),
-          ),
-        ),
-      );
-    });
-
-    test('joins a list of validation messages and falls back when empty',
-        () async {
-      final (repo, _, _) = _setup({
-        'PATCH /matches/m1/score': const FakeReply(400, {
-          'message': ['Điểm sai', 'Thiếu set'],
-        }),
-        'PATCH /matches/m2/score': const FakeReply(400, {'message': '  '}),
-      });
-
-      await expectLater(
-        repo.updateScoreDetails(
+          playedAt: (date: '2026-06-01', time: null),
+        );
+        await repo.updateScoreDetails(
+          '',
+          'm1',
+          p1SetsWon: 2,
+          p2SetsWon: 0,
+          scoreDetails: sets,
+          winnerId: 'a',
+        );
+        await repo.updateScoreDetails(
           't',
           'm1',
           p1SetsWon: 0,
           p2SetsWon: 0,
           scoreDetails: const [],
-        ),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('Điểm sai\nThiếu set'),
+          useLiteParticipantAccess: true,
+        );
+
+        expect(adapter.requests.map((r) => '${r.method} ${r.path}'), [
+          'PATCH /club-match-sessions/matches/m1/score',
+          'POST /club-match-sessions/matches/m1/complete',
+          'PATCH /matches/m1/lite-score',
+        ]);
+        final first = adapter.requests.first.body!;
+        expect(first.containsKey('playedDate'), isFalse);
+        expect(first.containsKey('winnerId'), isFalse);
+        expect(first.containsKey('expectedRevision'), isFalse);
+      },
+    );
+
+    test(
+      'TOURNAMENT_NOT_STARTED becomes a typed exception (tournament only)',
+      () async {
+        final (repo, _, _) = _setup({
+          'PATCH /matches/m1/score': const FakeReply(409, {
+            'code': 'TOURNAMENT_NOT_STARTED',
+            'message': 'chưa bắt đầu',
+          }),
+          'PATCH /club-match-sessions/matches/m1/score': const FakeReply(409, {
+            'code': 'TOURNAMENT_NOT_STARTED',
+            'message': 'chưa bắt đầu',
+          }),
+        });
+
+        await expectLater(
+          repo.updateScoreDetails(
+            't',
+            'm1',
+            p1SetsWon: 0,
+            p2SetsWon: 0,
+            scoreDetails: const [],
           ),
-        ),
-      );
-      // A blank server message must not be shown: the localized fallback is.
-      await expectLater(
-        repo.updateScoreDetails(
-          't',
-          'm2',
-          p1SetsWon: 0,
-          p2SetsWon: 0,
-          scoreDetails: const [],
-        ),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString().trim().isNotEmpty,
-            'has a message',
-            isTrue,
+          throwsA(isA<TournamentNotStartedException>()),
+        );
+        // A club session has no tournament, so the code is shown as a message.
+        await expectLater(
+          repo.updateScoreDetails(
+            '',
+            'm1',
+            p1SetsWon: 0,
+            p2SetsWon: 0,
+            scoreDetails: const [],
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('chưa bắt đầu'),
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'joins a list of validation messages and falls back when empty',
+      () async {
+        final (repo, _, _) = _setup({
+          'PATCH /matches/m1/score': const FakeReply(400, {
+            'message': ['Điểm sai', 'Thiếu set'],
+          }),
+          'PATCH /matches/m2/score': const FakeReply(400, {'message': '  '}),
+        });
+
+        await expectLater(
+          repo.updateScoreDetails(
+            't',
+            'm1',
+            p1SetsWon: 0,
+            p2SetsWon: 0,
+            scoreDetails: const [],
+          ),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Điểm sai\nThiếu set'),
+            ),
+          ),
+        );
+        // A blank server message must not be shown: the localized fallback is.
+        await expectLater(
+          repo.updateScoreDetails(
+            't',
+            'm2',
+            p1SetsWon: 0,
+            p2SetsWon: 0,
+            scoreDetails: const [],
+          ),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString().trim().isNotEmpty,
+              'has a message',
+              isTrue,
+            ),
+          ),
+        );
+      },
+    );
   });
 
   group('court state and pickleball scoring', () {
@@ -385,7 +407,10 @@ void main() {
         'PATCH /matches/m1/pickleball-scoring': FakeReply(200, _match('m1')),
       });
 
-      await repo.setPickleballScoring('m1', SportScoringModel.pickleballSideOut);
+      await repo.setPickleballScoring(
+        'm1',
+        SportScoringModel.pickleballSideOut,
+      );
       await repo.setPickleballScoring('m1', SportScoringModel.rallyPointSet);
 
       expect(adapter.requests.map((r) => r.body!['scoring']), [
@@ -425,32 +450,34 @@ void main() {
   });
 
   group('loading matches', () {
-    test('getAllByTournament scopes by division and follows nextCursor',
-        () async {
-      final adapter = _CursorAdapter({
-        null: FakeReply(200, {
-          'data': [_match('m1')],
-          'meta': {'nextCursor': 'c2'},
-        }),
-        'c2': FakeReply(200, {
-          'data': [_match('m2')],
-        }),
-      });
-      final repo = ApiMatchRepository(fakeDioClient(adapter), _FakeSocket());
+    test(
+      'getAllByTournament scopes by division and follows nextCursor',
+      () async {
+        final adapter = _CursorAdapter({
+          null: FakeReply(200, {
+            'data': [_match('m1')],
+            'meta': {'nextCursor': 'c2'},
+          }),
+          'c2': FakeReply(200, {
+            'data': [_match('m2')],
+          }),
+        });
+        final repo = ApiMatchRepository(fakeDioClient(adapter), _FakeSocket());
 
-      final matches = await repo.getAllByTournament('t', divisionId: 'd1');
+        final matches = await repo.getAllByTournament('t', divisionId: 'd1');
 
-      expect(matches.map((m) => m.id), ['m1', 'm2']);
-      expect(adapter.requests, hasLength(2));
-      expect(adapter.requests[0].query, {
-        'tournamentId': 't',
-        'publicOnly': true,
-        'divisionId': 'd1',
-        'strictDivisionScope': true,
-        'limit': 100,
-      });
-      expect(adapter.requests[1].query['cursor'], 'c2');
-    });
+        expect(matches.map((m) => m.id), ['m1', 'm2']);
+        expect(adapter.requests, hasLength(2));
+        expect(adapter.requests[0].query, {
+          'tournamentId': 't',
+          'publicOnly': true,
+          'divisionId': 'd1',
+          'strictDivisionScope': true,
+          'limit': 100,
+        });
+        expect(adapter.requests[1].query['cursor'], 'c2');
+      },
+    );
 
     test('paging stops when the cursor repeats or the page is empty', () async {
       final adapter = _CursorAdapter({
@@ -473,23 +500,25 @@ void main() {
       expect(adapter.requests.first.query['publicOnly'], false);
     });
 
-    test('concurrent loads for the same tournament share one request',
-        () async {
-      final (repo, adapter, _) = _setup({
-        'GET /matches': FakeReply(200, {
-          'data': [_match('m1')],
-        }),
-      });
+    test(
+      'concurrent loads for the same tournament share one request',
+      () async {
+        final (repo, adapter, _) = _setup({
+          'GET /matches': FakeReply(200, {
+            'data': [_match('m1')],
+          }),
+        });
 
-      final results = await Future.wait([
-        repo.getAllByTournament('t'),
-        repo.getAllByTournament('t'),
-      ]);
-      await repo.getAllByTournament('t'); // after completion: a fresh request
+        final results = await Future.wait([
+          repo.getAllByTournament('t'),
+          repo.getAllByTournament('t'),
+        ]);
+        await repo.getAllByTournament('t'); // after completion: a fresh request
 
-      expect(results[0].single.id, 'm1');
-      expect(adapter.requests, hasLength(2));
-    });
+        expect(results[0].single.id, 'm1');
+        expect(adapter.requests, hasLength(2));
+      },
+    );
 
     test('a failed load rethrows and is not cached as in-flight', () async {
       final adapter = FakeApiAdapter({
@@ -588,27 +617,29 @@ void main() {
   });
 
   group('cheer, operations and visibility', () {
-    test('getCheerCount reads int, count/cheerCount maps and degrades to 0',
-        () async {
-      final (repo, _, _) = _setup({
-        'GET /matches/a/cheer-count': const FakeReply(200, {'data': 5}),
-        'GET /matches/b/cheer-count': const FakeReply(200, {
-          'data': {'count': 7},
-        }),
-        'GET /matches/c/cheer-count': const FakeReply(200, {
-          'data': {'cheerCount': 9},
-        }),
-        'GET /matches/d/cheer-count': const FakeReply(200, {
-          'data': {'other': 1},
-        }),
-      });
+    test(
+      'getCheerCount reads int, count/cheerCount maps and degrades to 0',
+      () async {
+        final (repo, _, _) = _setup({
+          'GET /matches/a/cheer-count': const FakeReply(200, {'data': 5}),
+          'GET /matches/b/cheer-count': const FakeReply(200, {
+            'data': {'count': 7},
+          }),
+          'GET /matches/c/cheer-count': const FakeReply(200, {
+            'data': {'cheerCount': 9},
+          }),
+          'GET /matches/d/cheer-count': const FakeReply(200, {
+            'data': {'other': 1},
+          }),
+        });
 
-      expect(await repo.getCheerCount('a'), 5);
-      expect(await repo.getCheerCount('b'), 7);
-      expect(await repo.getCheerCount('c'), 9);
-      expect(await repo.getCheerCount('d'), 0);
-      expect(await repo.getCheerCount('missing'), 0);
-    });
+        expect(await repo.getCheerCount('a'), 5);
+        expect(await repo.getCheerCount('b'), 7);
+        expect(await repo.getCheerCount('c'), 9);
+        expect(await repo.getCheerCount('d'), 0);
+        expect(await repo.getCheerCount('missing'), 0);
+      },
+    );
 
     test('cheerMatch posts to the cheer route', () async {
       final (repo, adapter, _) = _setup({
@@ -620,67 +651,71 @@ void main() {
       expect(adapter.requests.single.path, '/matches/m1/cheer');
     });
 
-    test('matchOperation sends winnerId only when given; walkover wraps it',
-        () async {
-      final (repo, adapter, _) = _setup({
-        'PATCH /matches/m1/operation': const FakeReply(200, {}),
-      });
+    test(
+      'matchOperation sends winnerId only when given; walkover wraps it',
+      () async {
+        final (repo, adapter, _) = _setup({
+          'PATCH /matches/m1/operation': const FakeReply(200, {}),
+        });
 
-      await repo.matchOperation('m1', action: 'RESET', reason: 'nhầm');
-      await repo.walkover('t', 'm1', winnerId: 'a', loserId: 'b');
+        await repo.matchOperation('m1', action: 'RESET', reason: 'nhầm');
+        await repo.walkover('t', 'm1', winnerId: 'a', loserId: 'b');
 
-      expect(adapter.requests[0].body, {'action': 'RESET', 'reason': 'nhầm'});
-      expect(adapter.requests[1].body, {
-        'action': 'WALKOVER',
-        'reason': 'Đội đối thủ bỏ cuộc',
-        'winnerId': 'a',
-      });
-    });
+        expect(adapter.requests[0].body, {'action': 'RESET', 'reason': 'nhầm'});
+        expect(adapter.requests[1].body, {
+          'action': 'WALKOVER',
+          'reason': 'Đội đối thủ bỏ cuộc',
+          'winnerId': 'a',
+        });
+      },
+    );
 
-    test('scoreboard and overlay visibility use club vs tournament routes',
-        () async {
-      final (repo, adapter, _) = _setup({
-        'PATCH /club-match-sessions/matches/m1/scoreboard-visibility':
-            const FakeReply(200, {}),
-        'PATCH /matches/m1/scoreboard-visibility': const FakeReply(200, {}),
-        'PATCH /matches/m1/overlay-visibility': const FakeReply(200, {
-          'data': {'h2hOverlayVisible': true},
-        }),
-        'PATCH /club-match-sessions/matches/m2/overlay-visibility':
-            const FakeReply(200, {'data': <dynamic, dynamic>{}}),
-      });
+    test(
+      'scoreboard and overlay visibility use club vs tournament routes',
+      () async {
+        final (repo, adapter, _) = _setup({
+          'PATCH /club-match-sessions/matches/m1/scoreboard-visibility':
+              const FakeReply(200, {}),
+          'PATCH /matches/m1/scoreboard-visibility': const FakeReply(200, {}),
+          'PATCH /matches/m1/overlay-visibility': const FakeReply(200, {
+            'data': {'h2hOverlayVisible': true},
+          }),
+          'PATCH /club-match-sessions/matches/m2/overlay-visibility':
+              const FakeReply(200, {'data': <dynamic, dynamic>{}}),
+        });
 
-      await repo.setScoreboardVisibility(
-        'm1',
-        visible: false,
-        isClubMatch: true,
-      );
-      await repo.setScoreboardVisibility(
-        'm1',
-        visible: true,
-        isClubMatch: false,
-      );
-      final overlay = await repo.setOverlayVisibility(
-        'm1',
-        kind: LiveOverlayKind.h2h,
-        visible: true,
-        isClubMatch: false,
-      );
-      final club = await repo.setOverlayVisibility(
-        'm2',
-        kind: LiveOverlayKind.bracket,
-        visible: false,
-        isClubMatch: true,
-      );
+        await repo.setScoreboardVisibility(
+          'm1',
+          visible: false,
+          isClubMatch: true,
+        );
+        await repo.setScoreboardVisibility(
+          'm1',
+          visible: true,
+          isClubMatch: false,
+        );
+        final overlay = await repo.setOverlayVisibility(
+          'm1',
+          kind: LiveOverlayKind.h2h,
+          visible: true,
+          isClubMatch: false,
+        );
+        final club = await repo.setOverlayVisibility(
+          'm2',
+          kind: LiveOverlayKind.bracket,
+          visible: false,
+          isClubMatch: true,
+        );
 
-      expect(adapter.requests[0].body, {'visible': false});
-      expect(adapter.requests[1].path, '/matches/m1/scoreboard-visibility');
-      expect(adapter.requests[2].body, {'kind': 'H2H', 'visible': true});
-      expect(overlay.h2hOverlayVisible, isTrue);
-      expect(overlay.bracketOverlayVisible, isFalse);
-      expect(adapter.requests[3].body, {'kind': 'BRACKET', 'visible': false});
-      expect(club.h2hOverlayVisible, isFalse);
-    });
+        expect(adapter.requests[0].body, {'visible': false});
+        expect(adapter.requests[1].path, '/matches/m1/scoreboard-visibility');
+        expect(adapter.requests[2].body, {'kind': 'H2H', 'visible': true});
+        expect(overlay.h2hOverlayVisible, isTrue);
+        expect(overlay.bracketOverlayVisible, isFalse);
+        expect(adapter.requests[3].body, {'kind': 'BRACKET', 'visible': false});
+        expect(club.h2hOverlayVisible, isFalse);
+      },
+    );
 
     test('setOverlayVisibility rejects a response without data', () async {
       final (repo, _, _) = _setup({
@@ -729,8 +764,7 @@ void main() {
       );
     });
 
-    test('returns null when nothing is selected and no court state exists',
-        () {
+    test('returns null when nothing is selected and no court state exists', () {
       expect(
         mergeCourtState(selected: null, incoming: null, previous: null),
         isNull,
@@ -814,31 +848,33 @@ void main() {
       expect(merged.status, 'live');
     });
 
-    test('a status-only payload keeps the previous score and visibility',
-        () async {
-      final (repo, _, socket) = _setup({
-        'GET /matches/m1': FakeReply(200, {
-          'data': _match('m1', {
-            'score1': 4,
-            'score2': 3,
-            'scoreboardVisible': false,
+    test(
+      'a status-only payload keeps the previous score and visibility',
+      () async {
+        final (repo, _, socket) = _setup({
+          'GET /matches/m1': FakeReply(200, {
+            'data': _match('m1', {
+              'score1': 4,
+              'score2': 3,
+              'scoreboardVisible': false,
+            }),
           }),
-        }),
-      });
-      final events = <MatchModel?>[];
-      final sub = repo.watchMatch('t', 'm1').listen(events.add);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+        });
+        final events = <MatchModel?>[];
+        final sub = repo.watchMatch('t', 'm1').listen(events.add);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      socket.status.add({'id': 'm1', 'status': 'COMPLETED'});
-      await Future<void>.delayed(Duration.zero);
-      await sub.cancel();
+        socket.status.add({'id': 'm1', 'status': 'COMPLETED'});
+        await Future<void>.delayed(Duration.zero);
+        await sub.cancel();
 
-      final merged = events.last!;
-      expect(merged.status, 'completed');
-      expect(merged.score1, 4); // no score fields in payload → previous kept
-      expect(merged.score2, 3);
-      expect(merged.scoreboardVisible, isFalse);
-    });
+        final merged = events.last!;
+        expect(merged.status, 'completed');
+        expect(merged.score1, 4); // no score fields in payload → previous kept
+        expect(merged.score2, 3);
+        expect(merged.scoreboardVisible, isFalse);
+      },
+    );
 
     test('visibility socket events update only the flags they carry', () async {
       final (repo, _, socket) = _setup({
@@ -855,7 +891,10 @@ void main() {
         'h2hOverlayVisible': true,
         'bracketOverlayVisible': false,
       });
-      socket.overlay.add({'matchId': 'm1', 'h2hOverlayVisible': true}); // ignored
+      socket.overlay.add({
+        'matchId': 'm1',
+        'h2hOverlayVisible': true,
+      }); // ignored
       await Future<void>.delayed(Duration.zero);
       await sub.cancel();
 

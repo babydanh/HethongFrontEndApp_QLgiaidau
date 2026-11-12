@@ -65,18 +65,26 @@ void main() {
     test('drops the administrative type prefix and slugifies', () {
       expect(VietnamAddressParser.provinceKey('Thành phố Hà Nội'), 'ha_noi');
       expect(VietnamAddressParser.provinceKey('Tỉnh An Giang'), 'an_giang');
-      expect(VietnamAddressParser.provinceKey('TP. Hồ Chí Minh'), 'ho_chi_minh');
+      expect(
+        VietnamAddressParser.provinceKey('TP. Hồ Chí Minh'),
+        'ho_chi_minh',
+      );
       expect(VietnamAddressParser.provinceKey('Thị xã Phú Mỹ'), 'phu_my');
     });
 
-    test('provinceAliasesOf follows the catalogue name, not a numeric code',
-        () {
-      expect(
-        VietnamAddressParser.provinceAliasesOf('Thành phố Hà Nội'),
-        contains('hn'),
-      );
-      expect(VietnamAddressParser.provinceAliasesOf('Tỉnh Không Có'), isEmpty);
-    });
+    test(
+      'provinceAliasesOf follows the catalogue name, not a numeric code',
+      () {
+        expect(
+          VietnamAddressParser.provinceAliasesOf('Thành phố Hà Nội'),
+          contains('hn'),
+        );
+        expect(
+          VietnamAddressParser.provinceAliasesOf('Tỉnh Không Có'),
+          isEmpty,
+        );
+      },
+    );
 
     test('ambiguous street-like aliases are not in the table', () {
       final all = VietnamAddressParser.provinceAliases.values.expand((v) => v);
@@ -89,9 +97,15 @@ void main() {
 
   group('localityName', () {
     test('removes the unit type prefix after stripping tones', () {
-      expect(VietnamAddressParser.localityName('Phường Bến Thành'), 'ben thanh');
+      expect(
+        VietnamAddressParser.localityName('Phường Bến Thành'),
+        'ben thanh',
+      );
       expect(VietnamAddressParser.localityName('Xã Cẩm Phế'), 'cam phe');
-      expect(VietnamAddressParser.localityName('Thị Trấn Vạn Hồng'), 'van hong');
+      expect(
+        VietnamAddressParser.localityName('Thị Trấn Vạn Hồng'),
+        'van hong',
+      );
       expect(VietnamAddressParser.localityName('Đặc khu Phú Quý'), 'phu quy');
       expect(VietnamAddressParser.localityName('Bến Nghé'), 'ben nghe');
     });

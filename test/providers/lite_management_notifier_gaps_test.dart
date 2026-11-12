@@ -83,44 +83,46 @@ void main() {
   );
 
   group('init', () {
-    test('reads schedule, venue, capacity, match type and invite code',
-        () async {
-      final (c, _) = await _loaded(
-        _adapter(
-          tournament: {
-            'inviteCode': 'INV123',
-            'startDate': '2026-06-01T08:00:00Z',
-            'endDate': '2026-06-01T10:00:00Z',
-            'maxParticipants': '12',
-            'locationAddress': '1 Lê Lợi',
-            'city': 'TP.HCM',
-            'description': 'Giải vui',
-            'isRegistrationLocked': true,
-            'tournamentConfig': {
-              'isLite': true,
-              'location': {'venueName': 'Sân A', 'ward': 'Bến Nghé'},
+    test(
+      'reads schedule, venue, capacity, match type and invite code',
+      () async {
+        final (c, _) = await _loaded(
+          _adapter(
+            tournament: {
+              'inviteCode': 'INV123',
+              'startDate': '2026-06-01T08:00:00Z',
+              'endDate': '2026-06-01T10:00:00Z',
+              'maxParticipants': '12',
+              'locationAddress': '1 Lê Lợi',
+              'city': 'TP.HCM',
+              'description': 'Giải vui',
+              'isRegistrationLocked': true,
+              'tournamentConfig': {
+                'isLite': true,
+                'location': {'venueName': 'Sân A', 'ward': 'Bến Nghé'},
+              },
             },
-          },
-          participants: [_complete('p1'), _complete('p2')],
-        ),
-      );
+            participants: [_complete('p1'), _complete('p2')],
+          ),
+        );
 
-      final s = _state(c);
-      expect(s.loading, isFalse);
-      expect(s.error, isNull);
-      expect(s.tournamentName, 'Giải Lite');
-      expect(s.inviteCode, 'INV123');
-      expect(s.matchType, 'DOUBLES');
-      expect(s.durationMinutes, 120); // derived from end - start
-      expect(s.maxParticipants, 12);
-      expect(s.venueName, 'Sân A');
-      expect(s.locationAddress, '1 Lê Lợi');
-      expect(s.province, 'TP.HCM');
-      expect(s.ward, 'Bến Nghé');
-      expect(s.description, 'Giải vui');
-      expect(s.rosterConfirmed, isTrue);
-      expect(s.participants.map((p) => p.id), ['p1', 'p2']);
-    });
+        final s = _state(c);
+        expect(s.loading, isFalse);
+        expect(s.error, isNull);
+        expect(s.tournamentName, 'Giải Lite');
+        expect(s.inviteCode, 'INV123');
+        expect(s.matchType, 'DOUBLES');
+        expect(s.durationMinutes, 120); // derived from end - start
+        expect(s.maxParticipants, 12);
+        expect(s.venueName, 'Sân A');
+        expect(s.locationAddress, '1 Lê Lợi');
+        expect(s.province, 'TP.HCM');
+        expect(s.ward, 'Bến Nghé');
+        expect(s.description, 'Giải vui');
+        expect(s.rosterConfirmed, isTrue);
+        expect(s.participants.map((p) => p.id), ['p1', 'p2']);
+      },
+    );
 
     test('the division match type decides MIXED_DOUBLES', () async {
       final (viaGender, _) = await _loaded(
@@ -146,25 +148,31 @@ void main() {
       expect(_state(fallback).matchType, 'SINGLES');
     });
 
-    test('duration prefers config minutes, then config hours, else 90',
-        () async {
-      Future<int?> durationFor(Map<String, dynamic> config) async {
-        final (c, _) = await _loaded(
-          _adapter(tournament: {'tournamentConfig': {'isLite': true, ...config}}),
-        );
-        return _state(c).durationMinutes;
-      }
+    test(
+      'duration prefers config minutes, then config hours, else 90',
+      () async {
+        Future<int?> durationFor(Map<String, dynamic> config) async {
+          final (c, _) = await _loaded(
+            _adapter(
+              tournament: {
+                'tournamentConfig': {'isLite': true, ...config},
+              },
+            ),
+          );
+          return _state(c).durationMinutes;
+        }
 
-      expect(await durationFor({'durationMinutes': 45}), 45);
-      expect(await durationFor({'durationHours': 1.5}), 90);
-      expect(
-        await durationFor({
-          'schedule': {'durationMinutes': 30},
-        }),
-        30,
-      );
-      expect(await durationFor({}), 90);
-    });
+        expect(await durationFor({'durationMinutes': 45}), 45);
+        expect(await durationFor({'durationHours': 1.5}), 90);
+        expect(
+          await durationFor({
+            'schedule': {'durationMinutes': 30},
+          }),
+          30,
+        );
+        expect(await durationFor({}), 90);
+      },
+    );
 
     test('a legacy LITE-mode config is still treated as Lite', () async {
       final (c, _) = await _loaded(
@@ -179,32 +187,40 @@ void main() {
       expect(_state(c).tournament, isNotNull);
     });
 
-    test('an advanced (non-Lite) tournament is rejected with an error',
-        () async {
-      final (c, _) = await _loaded(
-        _adapter(tournament: {'tournamentConfig': {'isLite': false}}),
-      );
+    test(
+      'an advanced (non-Lite) tournament is rejected with an error',
+      () async {
+        final (c, _) = await _loaded(
+          _adapter(
+            tournament: {
+              'tournamentConfig': {'isLite': false},
+            },
+          ),
+        );
 
-      expect(_state(c).error, isNotNull);
-      expect(_state(c).loading, isFalse);
-      expect(_state(c).tournamentName, isNull); // nothing was applied
-    });
+        expect(_state(c).error, isNotNull);
+        expect(_state(c).loading, isFalse);
+        expect(_state(c).tournamentName, isNull); // nothing was applied
+      },
+    );
 
-    test('a server message from the tournament request becomes the error',
-        () async {
-      final (c, _) = await _loaded(
-        _adapter(
-          routes: {
-            'GET /tournaments/$_id': const FakeReply(403, {
-              'message': 'Không có quyền',
-            }),
-          },
-        ),
-      );
+    test(
+      'a server message from the tournament request becomes the error',
+      () async {
+        final (c, _) = await _loaded(
+          _adapter(
+            routes: {
+              'GET /tournaments/$_id': const FakeReply(403, {
+                'message': 'Không có quyền',
+              }),
+            },
+          ),
+        );
 
-      expect(_state(c).error, 'Không có quyền');
-      expect(_state(c).loading, isFalse);
-    });
+        expect(_state(c).error, 'Không có quyền');
+        expect(_state(c).loading, isFalse);
+      },
+    );
 
     test('hasBracket follows the bracket stages; a 404 means none', () async {
       final (withStages, _) = await _loaded(
@@ -259,19 +275,21 @@ void main() {
   });
 
   group('selection and pairing', () {
-    test('toggleSelection keeps at most two ids, evicting the oldest',
-        () async {
-      final c = _container(_adapter());
-      final notifier = c.read(liteManagementProvider.notifier);
+    test(
+      'toggleSelection keeps at most two ids, evicting the oldest',
+      () async {
+        final c = _container(_adapter());
+        final notifier = c.read(liteManagementProvider.notifier);
 
-      notifier.toggleSelection('a');
-      notifier.toggleSelection('b');
-      notifier.toggleSelection('c');
-      expect(_state(c).selectedIds, {'b', 'c'});
+        notifier.toggleSelection('a');
+        notifier.toggleSelection('b');
+        notifier.toggleSelection('c');
+        expect(_state(c).selectedIds, {'b', 'c'});
 
-      notifier.toggleSelection('b'); // toggling again deselects
-      expect(_state(c).selectedIds, {'c'});
-    });
+        notifier.toggleSelection('b'); // toggling again deselects
+        expect(_state(c).selectedIds, {'c'});
+      },
+    );
 
     test('manualPair needs exactly two selected, posts both ids, then '
         'refreshes', () async {
@@ -296,41 +314,52 @@ void main() {
       expect(_state(c).selectedIds, isEmpty); // participants reload clears it
     });
 
-    test('a failed manualPair rethrows and releases the pairing flag',
-        () async {
-      final (c, notifier) = await _loaded(_adapter());
-      notifier.toggleSelection('a');
-      notifier.toggleSelection('b');
+    test(
+      'a failed manualPair rethrows and releases the pairing flag',
+      () async {
+        final (c, notifier) = await _loaded(_adapter());
+        notifier.toggleSelection('a');
+        notifier.toggleSelection('b');
 
-      await expectLater(notifier.manualPair(_id), throwsA(isA<DioException>()));
+        await expectLater(
+          notifier.manualPair(_id),
+          throwsA(isA<DioException>()),
+        );
 
-      expect(_state(c).pairing, isFalse);
-      expect(_state(c).selectedIds, {'a', 'b'}); // selection kept for a retry
-    });
+        expect(_state(c).pairing, isFalse);
+        expect(_state(c).selectedIds, {'a', 'b'}); // selection kept for a retry
+      },
+    );
 
-    test('generatePairs returns the response body and clears generating',
-        () async {
-      final adapter = _adapter(
-        routes: {
-          'POST $_lite/pairs/generate': const FakeReply(200, {
-            'data': {
-              'unpairedParticipantIds': ['x'],
-            },
-          }),
-        },
-      );
-      final (c, notifier) = await _loaded(adapter);
+    test(
+      'generatePairs returns the response body and clears generating',
+      () async {
+        final adapter = _adapter(
+          routes: {
+            'POST $_lite/pairs/generate': const FakeReply(200, {
+              'data': {
+                'unpairedParticipantIds': ['x'],
+              },
+            }),
+          },
+        );
+        final (c, notifier) = await _loaded(adapter);
 
-      final body = await notifier.generatePairs(_id, 'SKILL', divisionId: 'dz');
+        final body = await notifier.generatePairs(
+          _id,
+          'SKILL',
+          divisionId: 'dz',
+        );
 
-      expect(body, isA<Map>());
-      expect(
-        adapter.postsTo('$_lite/pairs/generate').single.body,
-        {'strategy': 'SKILL', 'divisionId': 'dz'},
-      );
-      expect(_state(c).generating, isFalse);
-      // generatingStrategy is deliberately not asserted: see findings.md F2.
-    });
+        expect(body, isA<Map>());
+        expect(adapter.postsTo('$_lite/pairs/generate').single.body, {
+          'strategy': 'SKILL',
+          'divisionId': 'dz',
+        });
+        expect(_state(c).generating, isFalse);
+        // generatingStrategy is deliberately not asserted: see findings.md F2.
+      },
+    );
 
     test('generatePairs failures rethrow and still reset the flags', () async {
       final (c, notifier) = await _loaded(_adapter());
@@ -381,7 +410,10 @@ void main() {
     test('kickParticipant posts the reason and rethrows failures', () async {
       final adapter = _adapter(
         routes: {
-          'POST /tournaments/$_id/participants/p1/kick': const FakeReply(200, {}),
+          'POST /tournaments/$_id/participants/p1/kick': const FakeReply(
+            200,
+            {},
+          ),
         },
       );
       final (_, notifier) = await _loaded(adapter);
@@ -398,53 +430,60 @@ void main() {
       );
     });
 
-    test('confirmRoster locks the roster and adopts the returned tournament',
-        () async {
-      final adapter = _adapter(
-        routes: {
-          'POST /tournaments/$_id/confirm-roster': const FakeReply(200, {
-            'data': {
-              'id': _id,
-              'name': 'Giải đã chốt',
-              'tournamentConfig': {'isLite': true},
-            },
-          }),
-        },
-      );
-      final (c, notifier) = await _loaded(adapter);
-      // After the confirm the server reports the registration as locked.
-      adapter.routes['GET /tournaments/$_id'] = const FakeReply(200, {
-        'data': {
-          'id': _id,
-          'name': 'Giải Lite',
-          'isRegistrationLocked': true,
-          'tournamentConfig': {'isLite': true},
-        },
-      });
+    test(
+      'confirmRoster locks the roster and adopts the returned tournament',
+      () async {
+        final adapter = _adapter(
+          routes: {
+            'POST /tournaments/$_id/confirm-roster': const FakeReply(200, {
+              'data': {
+                'id': _id,
+                'name': 'Giải đã chốt',
+                'tournamentConfig': {'isLite': true},
+              },
+            }),
+          },
+        );
+        final (c, notifier) = await _loaded(adapter);
+        // After the confirm the server reports the registration as locked.
+        adapter.routes['GET /tournaments/$_id'] = const FakeReply(200, {
+          'data': {
+            'id': _id,
+            'name': 'Giải Lite',
+            'isRegistrationLocked': true,
+            'tournamentConfig': {'isLite': true},
+          },
+        });
 
-      await notifier.confirmRoster(_id);
+        await notifier.confirmRoster(_id);
 
-      expect(_state(c).rosterConfirmed, isTrue);
-      expect(_state(c).tournament?.name, 'Giải đã chốt');
-    });
+        expect(_state(c).rosterConfirmed, isTrue);
+        expect(_state(c).tournament?.name, 'Giải đã chốt');
+      },
+    );
 
-    test('confirmRoster surfaces a backend refusal and keeps the roster open',
-        () async {
-      final (c, notifier) = await _loaded(_adapter());
+    test(
+      'confirmRoster surfaces a backend refusal and keeps the roster open',
+      () async {
+        final (c, notifier) = await _loaded(_adapter());
 
-      await expectLater(
-        notifier.confirmRoster(_id),
-        throwsA(isA<DioException>()),
-      );
-      expect(_state(c).rosterConfirmed, isFalse);
-    });
+        await expectLater(
+          notifier.confirmRoster(_id),
+          throwsA(isA<DioException>()),
+        );
+        expect(_state(c).rosterConfirmed, isFalse);
+      },
+    );
 
     test('seedMock sends N numbered names and the write division; clearMock '
         'deletes them', () async {
       final adapter = _adapter(
         routes: {
           'POST /tournaments/$_id/mock-participants': const FakeReply(201, {}),
-          'DELETE /tournaments/$_id/mock-participants': const FakeReply(200, {}),
+          'DELETE /tournaments/$_id/mock-participants': const FakeReply(
+            200,
+            {},
+          ),
         },
       );
       final (c, notifier) = await _loaded(adapter);
@@ -467,7 +506,10 @@ void main() {
     test('mock actions rethrow errors and release the loading flag', () async {
       final (c, notifier) = await _loaded(_adapter());
 
-      await expectLater(notifier.seedMock(_id, 1), throwsA(isA<DioException>()));
+      await expectLater(
+        notifier.seedMock(_id, 1),
+        throwsA(isA<DioException>()),
+      );
       await expectLater(notifier.clearMock(_id), throwsA(isA<DioException>()));
 
       expect(_state(c).mockLoading, isFalse);
@@ -475,16 +517,21 @@ void main() {
   });
 
   group('bracket', () {
-    test('createBracket refuses fewer than two eligible participants',
-        () async {
-      final adapter = _adapter(participants: [_complete('p1')]);
-      final (c, notifier) = await _loaded(adapter);
+    test(
+      'createBracket refuses fewer than two eligible participants',
+      () async {
+        final adapter = _adapter(participants: [_complete('p1')]);
+        final (c, notifier) = await _loaded(adapter);
 
-      await expectLater(notifier.createBracket(_id), throwsA(isA<StateError>()));
+        await expectLater(
+          notifier.createBracket(_id),
+          throwsA(isA<StateError>()),
+        );
 
-      expect(adapter.postsTo('$_lite/bracket'), isEmpty);
-      expect(_state(c).creatingBracket, isFalse);
-    });
+        expect(adapter.postsTo('$_lite/bracket'), isEmpty);
+        expect(_state(c).creatingBracket, isFalse);
+      },
+    );
 
     test('createBracket posts a random seeding with the division and marks '
         'the bracket as present', () async {
@@ -518,20 +565,22 @@ void main() {
       expect(_state(c).creatingBracket, isFalse);
     });
 
-    test('a backend failure on createBracket is rethrown, not swallowed',
-        () async {
-      final (c, notifier) = await _loaded(
-        _adapter(participants: [_complete('p1'), _complete('p2')]),
-      );
+    test(
+      'a backend failure on createBracket is rethrown, not swallowed',
+      () async {
+        final (c, notifier) = await _loaded(
+          _adapter(participants: [_complete('p1'), _complete('p2')]),
+        );
 
-      await expectLater(
-        notifier.createBracket(_id),
-        throwsA(isA<DioException>()),
-      );
+        await expectLater(
+          notifier.createBracket(_id),
+          throwsA(isA<DioException>()),
+        );
 
-      expect(_state(c).creatingBracket, isFalse);
-      expect(_state(c).hasBracket, isFalse);
-    });
+        expect(_state(c).creatingBracket, isFalse);
+        expect(_state(c).hasBracket, isFalse);
+      },
+    );
 
     test('resetBracket posts the division and reloads', () async {
       final adapter = _adapter(
@@ -560,8 +609,7 @@ void main() {
   });
 
   group('details editing', () {
-    test('updateSchedule sends UTC dates and a config with duration',
-        () async {
+    test('updateSchedule sends UTC dates and a config with duration', () async {
       final adapter = _adapter(
         routes: {'PATCH /tournaments/$_id': const FakeReply(200, {})},
       );
@@ -588,62 +636,77 @@ void main() {
       expect(_state(c).detailsSaveStatus, 'idle');
     });
 
-    test('a started or finished tournament refuses every details edit',
-        () async {
-      for (final status in ['IN_PROGRESS', 'ongoing', 'COMPLETED', 'CANCELLED']) {
-        final adapter = _adapter(tournament: {'status': status});
-        final (_, notifier) = await _loaded(adapter);
-        final before = adapter.requests.length;
+    test(
+      'a started or finished tournament refuses every details edit',
+      () async {
+        for (final status in [
+          'IN_PROGRESS',
+          'ongoing',
+          'COMPLETED',
+          'CANCELLED',
+        ]) {
+          final adapter = _adapter(tournament: {'status': status});
+          final (_, notifier) = await _loaded(adapter);
+          final before = adapter.requests.length;
 
-        expect(
-          await notifier.updateSchedule(
-            _id,
-            startDate: DateTime.utc(2026),
-            durationMinutes: 60,
-          ),
-          isFalse,
-          reason: status,
-        );
+          expect(
+            await notifier.updateSchedule(
+              _id,
+              startDate: DateTime.utc(2026),
+              durationMinutes: 60,
+            ),
+            isFalse,
+            reason: status,
+          );
+          expect(await notifier.updateMaxParticipants(_id, 8), isFalse);
+          expect(
+            await notifier.updateLocation(
+              _id,
+              venueName: 'A',
+              locationAddress: 'B',
+            ),
+            isFalse,
+          );
+          expect(
+            await notifier.updateLiteDetails(
+              _id,
+              description: 'd',
+              locationAddress: 'l',
+            ),
+            isFalse,
+          );
+          expect(adapter.requests.skip(before), isEmpty, reason: status);
+        }
+      },
+    );
+
+    test(
+      'details edits are refused before the tournament has loaded',
+      () async {
+        final adapter = _adapter();
+        final c = _container(adapter);
+        final notifier = c.read(liteManagementProvider.notifier);
+
         expect(await notifier.updateMaxParticipants(_id, 8), isFalse);
-        expect(
-          await notifier.updateLocation(_id, venueName: 'A', locationAddress: 'B'),
-          isFalse,
+        expect(adapter.requests, isEmpty);
+      },
+    );
+
+    test(
+      'updateSchedule failure resets the saving status and returns false',
+      () async {
+        final (c, notifier) = await _loaded(_adapter());
+
+        final ok = await notifier.updateSchedule(
+          _id,
+          startDate: DateTime.utc(2026),
+          durationMinutes: 60,
         );
-        expect(
-          await notifier.updateLiteDetails(
-            _id,
-            description: 'd',
-            locationAddress: 'l',
-          ),
-          isFalse,
-        );
-        expect(adapter.requests.skip(before), isEmpty, reason: status);
-      }
-    });
 
-    test('details edits are refused before the tournament has loaded',
-        () async {
-      final adapter = _adapter();
-      final c = _container(adapter);
-      final notifier = c.read(liteManagementProvider.notifier);
-
-      expect(await notifier.updateMaxParticipants(_id, 8), isFalse);
-      expect(adapter.requests, isEmpty);
-    });
-
-    test('updateSchedule failure resets the saving status and returns false',
-        () async {
-      final (c, notifier) = await _loaded(_adapter());
-
-      final ok = await notifier.updateSchedule(
-        _id,
-        startDate: DateTime.utc(2026),
-        durationMinutes: 60,
-      );
-
-      expect(ok, isFalse);
-      expect(_state(c).detailsSaveStatus, 'idle');
-    });
+        expect(ok, isFalse);
+        expect(_state(c).detailsSaveStatus, 'idle');
+      },
+    );
 
     test('updateMaxParticipants patches the tournament and the division, and '
         'tolerates a division failure', () async {
@@ -708,16 +771,17 @@ void main() {
       );
 
       expect(ok, isTrue);
-      final patch = adapter.requests.firstWhere((r) => r.method == 'PATCH').body!;
+      final patch = adapter.requests
+          .firstWhere((r) => r.method == 'PATCH')
+          .body!;
       expect(patch['locationAddress'], '1 Lê Lợi');
       expect(patch['city'], 'TP.HCM'); // falls back to the loaded province
-      final location =
-          (patch['tournamentConfig'] as Map)['location'] as Map;
+      final location = (patch['tournamentConfig'] as Map)['location'] as Map;
       expect(location['display'], 'Sân A, 1 Lê Lợi, Bến Nghé, TP.HCM');
-      expect(
-        adapter.postsTo('/tournaments/$_id/venues').single.body,
-        {'name': 'Sân A', 'locationAddress': '1 Lê Lợi'},
-      );
+      expect(adapter.postsTo('/tournaments/$_id/venues').single.body, {
+        'name': 'Sân A',
+        'locationAddress': '1 Lê Lợi',
+      });
       expect(_state(c).venueName, 'Sân A');
       await _settleSaveStatus();
     });
@@ -768,10 +832,13 @@ void main() {
           .toList();
       expect(patches[0]['description'], 'mô tả');
       expect(patches[0]['locationAddress'], 'địa chỉ');
-      expect((patches[0]['tournamentConfig'] as Map).containsKey('location'),
-          isFalse);
       expect(
-        ((patches[1]['tournamentConfig'] as Map)['location'] as Map)['venueName'],
+        (patches[0]['tournamentConfig'] as Map).containsKey('location'),
+        isFalse,
+      );
+      expect(
+        ((patches[1]['tournamentConfig'] as Map)['location']
+            as Map)['venueName'],
         'Sân B',
       );
       expect(_state(c).venueName, 'Sân B');
@@ -790,29 +857,34 @@ void main() {
       expect(_state(c).formatSaving, isFalse);
     });
 
-    test('updateMatchType patches the division config for a valid change',
-        () async {
-      final adapter = _adapter(
-        routes: {
-          'PATCH /tournaments/$_id/divisions/d1/config': const FakeReply(200, {}),
-        },
-      );
-      final (c, notifier) = await _loaded(adapter);
+    test(
+      'updateMatchType patches the division config for a valid change',
+      () async {
+        final adapter = _adapter(
+          routes: {
+            'PATCH /tournaments/$_id/divisions/d1/config': const FakeReply(
+              200,
+              {},
+            ),
+          },
+        );
+        final (c, notifier) = await _loaded(adapter);
 
-      final changed = await notifier.updateMatchType(_id, ' mixed_doubles ');
-      final same = await notifier.updateMatchType(_id, 'doubles');
-      final invalid = await notifier.updateMatchType(_id, 'TRIPLES');
+        final changed = await notifier.updateMatchType(_id, ' mixed_doubles ');
+        final same = await notifier.updateMatchType(_id, 'doubles');
+        final invalid = await notifier.updateMatchType(_id, 'TRIPLES');
 
-      expect(changed, isTrue);
-      expect(same, isTrue); // already DOUBLES: no request needed
-      expect(invalid, isFalse);
-      final patches = adapter.requests.where((r) => r.method == 'PATCH');
-      expect(patches.single.body, {
-        'matchType': 'MIXED_DOUBLES',
-        'genderRestriction': 'MIXED',
-      });
-      expect(_state(c).formatSaving, isFalse);
-    });
+        expect(changed, isTrue);
+        expect(same, isTrue); // already DOUBLES: no request needed
+        expect(invalid, isFalse);
+        final patches = adapter.requests.where((r) => r.method == 'PATCH');
+        expect(patches.single.body, {
+          'matchType': 'MIXED_DOUBLES',
+          'genderRestriction': 'MIXED',
+        });
+        expect(_state(c).formatSaving, isFalse);
+      },
+    );
 
     test('football tournaments only accept SINGLES', () async {
       final adapter = _adapter(

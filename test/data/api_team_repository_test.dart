@@ -72,8 +72,7 @@ void main() {
       expect(team.activeMembers.map((m) => m.userId), ['u1', 'u3']);
     });
 
-    test('listMyFootballTeams returns empty when data is not a list',
-        () async {
+    test('listMyFootballTeams returns empty when data is not a list', () async {
       final (repo, _) = _setup({
         'GET /football-teams/mine': const FakeReply(200, {'data': 'x'}),
       });
@@ -81,30 +80,35 @@ void main() {
       expect(await repo.listMyFootballTeams(), isEmpty);
     });
 
-    test('createFootballTeam trims the name and rejects a non-object reply',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /football-teams': const FakeReply(201, {
-          'data': {'id': 't9', 'name': 'Mới'},
-        }),
-      });
+    test(
+      'createFootballTeam trims the name and rejects a non-object reply',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /football-teams': const FakeReply(201, {
+            'data': {'id': 't9', 'name': 'Mới'},
+          }),
+        });
 
-      final created = await repo.createFootballTeam(
-        name: '  Mới  ',
-        categoryId: 'cat',
-      );
+        final created = await repo.createFootballTeam(
+          name: '  Mới  ',
+          categoryId: 'cat',
+        );
 
-      expect(created.id, 't9');
-      expect(adapter.requests.single.body, {'name': 'Mới', 'categoryId': 'cat'});
+        expect(created.id, 't9');
+        expect(adapter.requests.single.body, {
+          'name': 'Mới',
+          'categoryId': 'cat',
+        });
 
-      final (bad, _) = _setup({
-        'POST /football-teams': const FakeReply(201, {'data': 'oops'}),
-      });
-      await expectLater(
-        bad.createFootballTeam(name: 'x', categoryId: 'c'),
-        throwsA(isA<FormatException>()),
-      );
-    });
+        final (bad, _) = _setup({
+          'POST /football-teams': const FakeReply(201, {'data': 'oops'}),
+        });
+        await expectLater(
+          bad.createFootballTeam(name: 'x', categoryId: 'c'),
+          throwsA(isA<FormatException>()),
+        );
+      },
+    );
 
     test('getFootballTeam reads the enveloped or the bare team', () async {
       final (repo, _) = _setup({
@@ -151,18 +155,20 @@ void main() {
       expect(adapter.requests.last.body, {'logoUrl': 'https://cdn/logo.png'});
     });
 
-    test('uploadFootballTeamLogo stops before patching when no url returned',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /upload/image': const FakeReply(200, {'data': {}}),
-      });
+    test(
+      'uploadFootballTeamLogo stops before patching when no url returned',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /upload/image': const FakeReply(200, {'data': {}}),
+        });
 
-      await expectLater(
-        repo.uploadFootballTeamLogo('t1', [1], 'l.png'),
-        throwsA(isA<FormatException>()),
-      );
-      expect(adapter.requests.where((r) => r.method == 'PATCH'), isEmpty);
-    });
+        await expectLater(
+          repo.uploadFootballTeamLogo('t1', [1], 'l.png'),
+          throwsA(isA<FormatException>()),
+        );
+        expect(adapter.requests.where((r) => r.method == 'PATCH'), isEmpty);
+      },
+    );
 
     test('searchFootballTeamMembers keeps only object rows', () async {
       final (repo, adapter) = _setup({
@@ -182,36 +188,38 @@ void main() {
       expect(adapter.requests.single.query, {'q': 'an', 'limit': 20});
     });
 
-    test('invite, cancel, respond, role, remove and leave hit their routes',
-        () async {
-      final (repo, adapter) = _setup({
-        'POST /football-teams/t1/invites': const FakeReply(200, {}),
-        'DELETE /football-teams/t1/invites/u1': const FakeReply(200, {}),
-        'POST /football-teams/t1/invites/respond': const FakeReply(200, {}),
-        'PATCH /football-teams/t1/members/u1': const FakeReply(200, {}),
-        'DELETE /football-teams/t1/members/u1': const FakeReply(200, {}),
-        'DELETE /football-teams/t1/members/me': const FakeReply(200, {}),
-      });
+    test(
+      'invite, cancel, respond, role, remove and leave hit their routes',
+      () async {
+        final (repo, adapter) = _setup({
+          'POST /football-teams/t1/invites': const FakeReply(200, {}),
+          'DELETE /football-teams/t1/invites/u1': const FakeReply(200, {}),
+          'POST /football-teams/t1/invites/respond': const FakeReply(200, {}),
+          'PATCH /football-teams/t1/members/u1': const FakeReply(200, {}),
+          'DELETE /football-teams/t1/members/u1': const FakeReply(200, {}),
+          'DELETE /football-teams/t1/members/me': const FakeReply(200, {}),
+        });
 
-      await repo.inviteFootballTeamMember('t1', 'u1');
-      await repo.cancelFootballTeamInvite('t1', 'u1');
-      await repo.respondToFootballTeamInvite('t1', 'ACCEPTED');
-      await repo.updateFootballTeamMember('t1', 'u1', 'CAPTAIN');
-      await repo.removeFootballTeamMember('t1', 'u1');
-      await repo.leaveFootballTeam('t1');
+        await repo.inviteFootballTeamMember('t1', 'u1');
+        await repo.cancelFootballTeamInvite('t1', 'u1');
+        await repo.respondToFootballTeamInvite('t1', 'ACCEPTED');
+        await repo.updateFootballTeamMember('t1', 'u1', 'CAPTAIN');
+        await repo.removeFootballTeamMember('t1', 'u1');
+        await repo.leaveFootballTeam('t1');
 
-      expect(adapter.requests.map((r) => '${r.method} ${r.path}'), [
-        'POST /football-teams/t1/invites',
-        'DELETE /football-teams/t1/invites/u1',
-        'POST /football-teams/t1/invites/respond',
-        'PATCH /football-teams/t1/members/u1',
-        'DELETE /football-teams/t1/members/u1',
-        'DELETE /football-teams/t1/members/me',
-      ]);
-      expect(adapter.requests[0].body, {'userId': 'u1'});
-      expect(adapter.requests[2].body, {'status': 'ACCEPTED'});
-      expect(adapter.requests[3].body, {'role': 'CAPTAIN'});
-    });
+        expect(adapter.requests.map((r) => '${r.method} ${r.path}'), [
+          'POST /football-teams/t1/invites',
+          'DELETE /football-teams/t1/invites/u1',
+          'POST /football-teams/t1/invites/respond',
+          'PATCH /football-teams/t1/members/u1',
+          'DELETE /football-teams/t1/members/u1',
+          'DELETE /football-teams/t1/members/me',
+        ]);
+        expect(adapter.requests[0].body, {'userId': 'u1'});
+        expect(adapter.requests[2].body, {'status': 'ACCEPTED'});
+        expect(adapter.requests[3].body, {'role': 'CAPTAIN'});
+      },
+    );
   });
 
   group('tournament registration payload', () {
@@ -260,16 +268,18 @@ void main() {
       expect(adapter.requests[1].body!['playerNames'], ['Đội A']);
     });
 
-    test('returns the Team parsed from data when there is no participant',
-        () async {
-      final (repo, _) = _setup({
-        route: const FakeReply(200, {
-          'data': {'id': 'p2', 'teamName': 'Phẳng'},
-        }),
-      });
+    test(
+      'returns the Team parsed from data when there is no participant',
+      () async {
+        final (repo, _) = _setup({
+          route: const FakeReply(200, {
+            'data': {'id': 'p2', 'teamName': 'Phẳng'},
+          }),
+        });
 
-      expect((await repo.create('t-1', _team())).id, 'p2');
-    });
+        expect((await repo.create('t-1', _team())).id, 'p2');
+      },
+    );
 
     test('a non-200/201 success status becomes an Exception', () async {
       final (repo, _) = _setup({route: const FakeReply(204, {})});
@@ -283,7 +293,9 @@ void main() {
       await repo.importTeams('t-1', [_team(name: 'A'), _team(name: 'B')]);
 
       expect(
-        adapter.postsTo('/tournaments/t-1/register').map((r) => r.body!['teamName']),
+        adapter
+            .postsTo('/tournaments/t-1/register')
+            .map((r) => r.body!['teamName']),
         ['A', 'B'],
       );
     });
@@ -309,7 +321,9 @@ void main() {
             'createdAt': '2026-05-01T00:00:00Z',
             'members': [
               {'fullName': 'An', 'userId': 'u1'},
-              {'user': {'fullName': 'Bình'}},
+              {
+                'user': {'fullName': 'Bình'},
+              },
               {'fullName': ''},
             ],
           },
@@ -355,8 +369,8 @@ void main() {
 
     test('still lists participants when the divisions request fails', () async {
       final (repo, _) = _setup({
-        'GET /tournaments/t-1/participants': routes[
-            'GET /tournaments/t-1/participants']!,
+        'GET /tournaments/t-1/participants':
+            routes['GET /tournaments/t-1/participants']!,
       });
 
       final teams = await repo.getAllByTournament('t-1');
@@ -395,9 +409,7 @@ void main() {
       await repo.deleteAll('t-1');
 
       expect(
-        adapter.requests
-            .where((r) => r.method == 'DELETE')
-            .map((r) => r.path),
+        adapter.requests.where((r) => r.method == 'DELETE').map((r) => r.path),
         [
           '/tournaments/t-1/participants/p1',
           '/tournaments/t-1/participants/p2',
