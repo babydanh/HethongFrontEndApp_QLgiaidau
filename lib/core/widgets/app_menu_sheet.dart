@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/features/social/screens/create_social_screen.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
@@ -443,7 +444,9 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
             InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () => _navigate(isAuthenticated ? '/profile' : '/login'),
-              child: _buildAvatar(avatarUrl, colors.textMuted),
+              child: isAuthenticated
+                  ? _buildRankedAvatar(name, avatarUrl)
+                  : _buildAvatar(avatarUrl, colors.textMuted),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -504,6 +507,21 @@ class _AppMenuSheetState extends ConsumerState<AppMenuSheet>
           ],
         ),
       ),
+    );
+  }
+
+  /// Same tier ring as the profile tab avatar (best ranking of the viewer).
+  Widget _buildRankedAvatar(String name, String? avatarUrl) {
+    final rank = ref.watch(myBestRankingProvider);
+    return RankAvatar(
+      imageUrl: avatarUrl,
+      name: name,
+      elo: rank?.eloPoints ?? 0,
+      tierName: rank?.tierName,
+      tierSource: rank?.tierSource,
+      tierAvailable: rank?.tierAvailable,
+      matchesPlayed: rank?.matchesPlayed ?? 0,
+      size: 38,
     );
   }
 

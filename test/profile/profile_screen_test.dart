@@ -30,6 +30,8 @@ class _Call {
 /// Records every request and answers 200, or [failWith] when set.
 class _RecordingAdapter implements HttpClientAdapter {
   final calls = <_Call>[];
+  // Mutations only: avatar rings also issue GET /rankings/user/:id.
+  List<_Call> get writes => calls.where((c) => c.method != 'GET').toList();
   int? failWith;
 
   @override
@@ -310,7 +312,7 @@ void main() {
     await tester.tap(find.text('Đồng ý'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    final call = adapter.calls.single;
+    final call = adapter.writes.single;
     expect(call.method, 'PATCH');
     expect(call.path, '/social/friend-requests/f1');
     expect(call.data, {'action': 'ACCEPTED'});
@@ -324,7 +326,7 @@ void main() {
     await tester.tap(find.text('Từ chối'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    final call = adapter.calls.single;
+    final call = adapter.writes.single;
     expect(call.method, 'PATCH');
     expect(call.path, '/social/friend-requests/f1');
     expect(call.data, {'action': 'REJECTED'});
@@ -338,7 +340,7 @@ void main() {
     await tester.tap(find.text('Hủy'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
-    final call = adapter.calls.single;
+    final call = adapter.writes.single;
     expect(call.method, 'DELETE');
     expect(call.path, '/social/friendships/f2');
   });

@@ -352,7 +352,15 @@ void main() {
     await tester.tap(find.text(l10n.navProfile).first);
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.person_rounded), findsOneWidget);
+    // Signed-in avatar is the shared RankAvatar; a broken image falls back
+    // to the name initial inside the tier ring.
+    expect(
+      find.descendant(
+        of: find.byType(AppMenuSheet),
+        matching: find.text('A'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text(l10n.menuMessages), findsOneWidget);
   });
   testWidgets('bottom navigation labels use the selected locale', (

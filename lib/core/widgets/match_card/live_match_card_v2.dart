@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/core/utils/tournament_location_formatter.dart
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 
@@ -710,18 +711,19 @@ class _LiveMatchCardV2State extends State<LiveMatchCardV2> {
     }
 
     /// The card itself opens the match, so the member avatar is the profile
-    /// entry point here. It keeps the card's own artwork — winner ring, shadow,
-    /// initials fallback — and only borrows the shared hover-preview /
-    /// quick-sheet behaviour.
+    /// entry point here. A member is a person, so the artwork carries the
+    /// shared ELO tier ring; it borrows the hover-preview / quick-sheet
+    /// behaviour.
     Widget memberAvatar(MatchMemberInfo member, {String? fallbackUrl}) {
       final url = (member.avatarUrl?.isNotEmpty ?? false)
           ? member.avatarUrl
           : fallbackUrl;
-      final artwork = avatar(
-        url: url,
-        initial: member.fullName.isNotEmpty
-            ? member.fullName[0].toUpperCase()
-            : fallbackInitial,
+      final artwork = RankAvatar(
+        imageUrl: url,
+        name: member.fullName.isNotEmpty ? member.fullName : fallbackInitial,
+        elo: member.eloPoints ?? 0,
+        tierName: member.tierName,
+        size: displayMembers.length >= 2 ? 34 : 38,
       );
       final userId = member.userId?.trim() ?? '';
       if (userId.isEmpty || member.isMock) return artwork;

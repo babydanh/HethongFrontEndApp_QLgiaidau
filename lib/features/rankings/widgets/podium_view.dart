@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_tier.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/tier_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/sport_rank_badge.dart';
 
 /// Bục vinh danh Top 3. Người hạng 1 ở giữa cao nhất, 2 bên trái, 3 bên phải.
@@ -88,7 +89,6 @@ class PodiumView extends StatelessWidget {
                       : null,
                   podiumHeight: 52,
                   podiumColor: const Color(0xFF94A3B8),
-                  avatarBg: const Color(0xFF94A3B8),
                   formatLabel: formatLabel,
                   onTap: () {
                     if (p2 != null && onTapUser != null) {
@@ -108,7 +108,6 @@ class PodiumView extends StatelessWidget {
                       : null,
                   podiumHeight: 82,
                   podiumColor: const Color(0xFFF59E0B),
-                  avatarBg: const Color(0xFFF59E0B),
                   isKing: true,
                   formatLabel: formatLabel,
                   onTap: () {
@@ -129,7 +128,6 @@ class PodiumView extends StatelessWidget {
                       : null,
                   podiumHeight: 44,
                   podiumColor: const Color(0xFFF97316),
-                  avatarBg: const Color(0xFFF97316),
                   formatLabel: formatLabel,
                   onTap: () {
                     if (p3 != null && onTapUser != null) {
@@ -152,7 +150,6 @@ class _PodiumSlot extends StatelessWidget {
   final EloTier? tier;
   final double podiumHeight;
   final Color podiumColor;
-  final Color avatarBg;
   final bool isKing;
   final String? formatLabel;
   final VoidCallback? onTap;
@@ -163,7 +160,6 @@ class _PodiumSlot extends StatelessWidget {
     required this.tier,
     required this.podiumHeight,
     required this.podiumColor,
-    required this.avatarBg,
     this.isKing = false,
     this.formatLabel,
     this.onTap,
@@ -248,116 +244,80 @@ class _PodiumSlot extends StatelessWidget {
   }
 
   Widget _buildPodiumAvatar(dynamic colors, String name) {
-    final nameParts = name.split('/');
-    final isDoublesFormat =
-        (formatLabel != null && formatLabel!.toLowerCase().contains('đôi')) ||
-        (ranking?.matchType != null &&
-            ranking!.matchType!.toLowerCase().contains('double'));
     final size = isKing ? 58.0 : 50.0;
-    final subSize = size * 0.75;
-
-    if (isDoublesFormat) {
-      final name1 = nameParts.isNotEmpty ? nameParts[0].trim() : '';
-      final name2 = nameParts.length >= 2 ? nameParts[1].trim() : '';
-
-      return SizedBox(
-        width: size * 1.3,
+    final rank = ranking;
+    // Empty podium slot: no player, so no tier ring.
+    if (rank == null) {
+      return Container(
+        width: size,
         height: size,
-        child: Stack(
-          children: [
-            Positioned(
-              left: 0,
-              top: (size - subSize) / 2,
-              child: Container(
-                width: subSize,
-                height: subSize,
-                decoration: BoxDecoration(
-                  color: ranking != null
-                      ? const Color(0xFF2563EB)
-                      : colors.border.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.bgCard, width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    ranking != null ? _initials(name1) : '?',
-                    style: TextStyle(
-                      fontSize: isKing ? 13 : 11,
-                      fontWeight: FontWeight.w900,
-                      color: ranking != null ? Colors.white : colors.textMuted,
-                    ),
-                  ),
-                ),
-              ),
+        decoration: BoxDecoration(
+          color: colors.border.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Text(
+            '?',
+            style: TextStyle(
+              color: colors.textMuted,
+              fontSize: isKing ? 18 : 15,
+              fontWeight: FontWeight.w900,
             ),
-            Positioned(
-              left: subSize * 0.55,
-              top: (size - subSize) / 2,
-              child: Container(
-                width: subSize,
-                height: subSize,
-                decoration: BoxDecoration(
-                  color: ranking != null
-                      ? const Color(0xFF10B981)
-                      : colors.border.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.bgCard, width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    ranking != null
-                        ? (name2.isNotEmpty ? _initials(name2) : '+1')
-                        : '?',
-                    style: TextStyle(
-                      fontSize: isKing ? 13 : 11,
-                      fontWeight: FontWeight.w900,
-                      color: ranking != null ? Colors.white : colors.textMuted,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       );
     }
 
-    return Container(
-      width: size,
+    final isDoublesFormat =
+        (formatLabel != null && formatLabel!.toLowerCase().contains('đôi')) ||
+        (rank.matchType != null &&
+            rank.matchType!.toLowerCase().contains('double'));
+    if (!isDoublesFormat) return _rankAvatar(rank, rank.avatarUrl, name, size);
+
+    final nameParts = name.split('/');
+    final name1 = nameParts.isNotEmpty ? nameParts[0].trim() : '';
+    final name2 = nameParts.length >= 2 ? nameParts[1].trim() : '';
+    final subSize = size * 0.75;
+    return SizedBox(
+      width: size * 1.3,
       height: size,
-      decoration: BoxDecoration(
-        color: ranking != null
-            ? avatarBg
-            : colors.border.withValues(alpha: 0.5),
-        shape: BoxShape.circle,
-        boxShadow: ranking != null
-            ? [
-                BoxShadow(
-                  color: avatarBg.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: Center(
-        child: Text(
-          ranking != null ? _initials(name) : '?',
-          style: TextStyle(
-            color: ranking != null ? Colors.white : colors.textMuted,
-            fontSize: isKing ? 18 : 15,
-            fontWeight: FontWeight.w900,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            top: (size - subSize) / 2,
+            child: _rankAvatar(rank, rank.avatarUrl, name1, subSize),
           ),
-        ),
+          Positioned(
+            left: subSize * 0.55,
+            top: (size - subSize) / 2,
+            child: _rankAvatar(
+              rank,
+              rank.partnerAvatarUrl,
+              name2.isNotEmpty ? name2 : '+1',
+              subSize,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  String _initials(String name) {
-    final p = name.trim().split(' ');
-    if (p.length >= 2) {
-      return '${p[p.length - 2][0]}${p[p.length - 1][0]}'.toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
-  }
+  /// Both players of a pair share the pair's tier ring, like the ranking row.
+  Widget _rankAvatar(
+    PlayerRanking rank,
+    String? imageUrl,
+    String name,
+    double size,
+  ) => RankAvatar(
+    imageUrl: imageUrl,
+    name: name,
+    elo: rank.eloPoints,
+    tierName: rank.tierName,
+    tierSource: rank.tierSource,
+    tierAvailable: rank.tierAvailable,
+    matchesPlayed: rank.matchesPlayed,
+    size: size,
+    ringWidth: isKing ? 3 : 2,
+  );
 }

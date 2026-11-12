@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -15,6 +16,8 @@ class UserRankingDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rankingAsync = ref.watch(userRankingsProvider);
+    // Ring follows the same best ranking as the profile tab avatar.
+    final bestRanking = ref.watch(myBestRankingProvider);
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
 
@@ -34,7 +37,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
                   matchesPlayed: 0,
                   matchesWon: 0,
                 );
-          return _buildContent(context, ranking, l10n);
+          return _buildContent(context, ranking, bestRanking, l10n);
         },
         loading: () => const SingleChildScrollView(
           physics: NeverScrollableScrollPhysics(),
@@ -79,6 +82,7 @@ class UserRankingDetailScreen extends ConsumerWidget {
   Widget _buildContent(
     BuildContext context,
     PlayerRanking ranking,
+    PlayerRanking? bestRanking,
     AppLocalizations l10n,
   ) {
     final colors = context.colors;
@@ -153,27 +157,16 @@ class UserRankingDetailScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   // Avatar
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.15),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 2.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _getInitials(ranking.fullName),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
+                  RankAvatar(
+                    imageUrl: ranking.avatarUrl,
+                    name: ranking.fullName,
+                    elo: bestRanking?.eloPoints ?? 0,
+                    tierName: bestRanking?.tierName,
+                    tierSource: bestRanking?.tierSource,
+                    tierAvailable: bestRanking?.tierAvailable,
+                    matchesPlayed: bestRanking?.matchesPlayed ?? 0,
+                    size: 72,
+                    ringWidth: 3,
                   ),
                   const SizedBox(height: 12),
 
@@ -351,14 +344,5 @@ class UserRankingDetailScreen extends ConsumerWidget {
       height: 32,
       color: Colors.white.withValues(alpha: 0.15),
     );
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[parts.length - 2][0]}${parts[parts.length - 1][0]}'
-          .toUpperCase();
-    }
-    return name.isNotEmpty ? name[0].toUpperCase() : '??';
   }
 }
