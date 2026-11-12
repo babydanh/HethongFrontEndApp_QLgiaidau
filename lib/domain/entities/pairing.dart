@@ -58,6 +58,7 @@ class PairingCandidate {
   const PairingCandidate({
     required this.id,
     required this.name,
+    this.userId,
     this.divisionId,
     this.avatarUrl,
     this.teamStatus,
@@ -70,6 +71,9 @@ class PairingCandidate {
   /// Tên hiển thị: roster profile ưu tiên như Web `pairingParticipantName`,
   /// thiếu thì rơi về nhãn `players`/`teamName` (`participantTitle`).
   final String name;
+
+  /// Account of the first roster member (`rosters[0].userId`); null for guests.
+  final String? userId;
 
   final String? divisionId;
   final String? avatarUrl;
@@ -98,11 +102,13 @@ class PairingCandidate {
   factory PairingCandidate.fromJson(Map<dynamic, dynamic> json) {
     var rosterName = '';
     String? rosterAvatar;
+    String? rosterUserId;
     final rosters = json['rosters'];
     var rosterCount = 0;
     if (rosters is List) {
       rosterCount = rosters.length;
       if (rosters.isNotEmpty && rosters.first is Map) {
+        rosterUserId = _nullableText((rosters.first as Map)['userId']);
         final profile = (rosters.first as Map)['profile'];
         if (profile is Map) {
           rosterName = normalizeParticipantText(
@@ -127,6 +133,7 @@ class PairingCandidate {
     return PairingCandidate(
       id: json['id']?.toString() ?? '',
       name: name,
+      userId: rosterUserId,
       divisionId: (divisionId == null || divisionId.isEmpty)
           ? null
           : divisionId,

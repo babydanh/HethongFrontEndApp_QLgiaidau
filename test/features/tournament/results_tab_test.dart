@@ -15,6 +15,7 @@ import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _tournamentId = 'results-test';
@@ -205,7 +206,23 @@ void main() {
   testWidgets('TC-PODIUM-RANK-03 avatar cặp đôi: chữ viết tắt trên màu theo tên', (
     tester,
   ) async {
-    await _pumpResults(tester, _resultWithoutTeamName(rank: 1));
+    // Guests (no userId) keep the name-coloured initials; account holders get
+    // the tier ring (TC-RANK-RING-APP-D01).
+    await _pumpResults(tester, {
+      'awards': [
+        {
+          'rank': 1,
+          'participant': {
+            'participantId': 'p1',
+            'teamName': null,
+            'players': [
+              {'slot': 1, 'fullName': 'Nguyễn Minh'},
+              {'slot': 2, 'fullName': 'Trần Quốc'},
+            ],
+          },
+        },
+      ],
+    });
 
     final avatars = tester
         .widgetList<CircleAvatar>(
@@ -378,6 +395,9 @@ Future<void> _pumpResults(
           divisionId: _divisionId,
         )).overrideWith((ref) => Stream.value(result)),
         matchesProvider.overrideWith((ref, id) => Stream.value(const [])),
+        userRankingsSummaryProvider.overrideWith(
+          (ref, userId) async => const [],
+        ),
       ],
       child: MaterialApp(
         theme: AppTheme.lightTheme,

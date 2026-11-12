@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/domain/entities/pairing.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
@@ -670,24 +671,30 @@ class _PairingSheetState extends ConsumerState<PairingSheet> {
           ),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundImage: candidate.avatarUrl == null
-                    ? null
-                    : NetworkImage(candidate.avatarUrl!),
-                onBackgroundImageError: candidate.avatarUrl == null
-                    ? null
-                    : (_, _) {},
-                child: candidate.avatarUrl == null
-                    ? Text(
-                        candidate.name.isEmpty
-                            ? '?'
-                            : String.fromCharCode(
-                                candidate.name.runes.first,
-                              ).toUpperCase(),
-                        style: const TextStyle(fontSize: 14),
-                      )
-                    : null,
+              ParticipantRankAvatar(
+                userId: candidate.userId,
+                name: candidate.name,
+                imageUrl: candidate.avatarUrl,
+                size: 36,
+                fallback: CircleAvatar(
+                  radius: 18,
+                  backgroundImage: candidate.avatarUrl == null
+                      ? null
+                      : NetworkImage(candidate.avatarUrl!),
+                  onBackgroundImageError: candidate.avatarUrl == null
+                      ? null
+                      : (_, _) {},
+                  child: candidate.avatarUrl == null
+                      ? Text(
+                          candidate.name.isEmpty
+                              ? '?'
+                              : String.fromCharCode(
+                                  candidate.name.runes.first,
+                                ).toUpperCase(),
+                          style: const TextStyle(fontSize: 14),
+                        )
+                      : null,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
