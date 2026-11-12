@@ -76,6 +76,26 @@ class _FakeCatalogRepository implements IMatchRecordingCatalogRepository {
   final List<String> calls = <String>[];
 
   @override
+  Future<MatchStreamCommandResult> startMatchStream(String matchId) async =>
+      const MatchStreamCommandResult();
+
+  @override
+  Future<MatchStreamCommandResult> stopMatchStream(String matchId) async =>
+      const MatchStreamCommandResult();
+
+  @override
+  Future<List<MatchLivestreamSummary>> listTournamentMatchLivestreams(
+    String tournamentId,
+  ) async => const <MatchLivestreamSummary>[];
+
+  @override
+  Future<void> downloadFullRecording(
+    String matchId, {
+    required String period,
+    required String savePath,
+  }) async {}
+
+  @override
   Future<MatchStreamControlStateModel> getMatchControlState(
     String matchId,
   ) async {
@@ -422,6 +442,30 @@ void main() {
     expect(find.text('No camera is assigned to this match.'), findsOneWidget);
     expect(repository.calls, <String>['control:$_matchId']);
   });
+
+  testWidgets(
+    'TC-REC-FLAG-02 no camera but hasRecording still opens the catalog',
+    (tester) async {
+      final repository = _FakeCatalogRepository(
+        control: const MatchStreamControlStateModel(
+          matchId: _matchId,
+          hasCamera: false,
+          hasRecording: true,
+        ),
+        days: MatchRecordingDaysModel(days: <String>['2026-10-09']),
+        loadFiles: (_) async => const <MatchRecordingFileModel>[
+          MatchRecordingFileModel(name: 'archived.mp4'),
+        ],
+      );
+
+      await _pumpCatalog(tester, repository);
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('No camera is assigned to this match.'), findsNothing);
+      expect(find.text('archived.mp4'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'late files from an older selected day cannot replace current data',

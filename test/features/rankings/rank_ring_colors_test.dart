@@ -48,7 +48,22 @@ PlayerRanking _rank(String id, int elo, {int played = 5, bool admin = false}) =>
       adminLeaderboardEligible: admin,
     );
 
+/// Bậc Pickleball (nguồn DUPR) — khớp `RANK_BORDER_COLORS` của web.
+const _webPickleballRing = <String, int>{
+  'Pickleball Beginner': 0xFF94A3B8,
+  'Pickleball Intermediate': 0xFF3B82F6,
+  'Pickleball Advanced': 0xFF10B981,
+  'Pickleball Pro': 0xFFFBBF24,
+};
+
 void main() {
+  test('TC-RANK-RING-APP-01 pickleball tier ring colors equal the web', () {
+    _webPickleballRing.forEach((tier, color) {
+      final palette = TierPalette.fromRank(0, tier, 'DUPR');
+      expect(palette.ring, Color(color), reason: tier);
+    });
+  });
+
   test('every tier ring color equals the web ring color', () {
     _webRing.forEach((tier, color) {
       final palette = TierPalette.fromElo(_eloOfTier[tier]!, tier);

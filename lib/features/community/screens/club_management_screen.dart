@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_profile_bottom_sheet.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
@@ -1794,6 +1795,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             communityId: widget.clubId,
             name: req.userFullName ?? l10n.dashboard_user,
             imageUrl: req.userAvatarUrl,
+            elo: _memberEloMap[req.userId] ?? 0,
+            matchesPlayed: _memberEloMap.containsKey(req.userId) ? 1 : 0,
             size: 40,
           ),
           const SizedBox(width: 12),
@@ -1984,19 +1987,13 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                         initialAvatarUrl: u.avatarUrl,
                       );
                     },
-                    leading: CircleAvatar(
-                      radius: 16,
-                      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                      child: Text(
-                        u.fullName.isNotEmpty
-                            ? u.fullName[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
+                    leading: RankedUserAvatarTap(
+                      userId: u.id,
+                      communityId: widget.clubId,
+                      name: u.fullName,
+                      imageUrl: u.avatarUrl,
+                      size: 32,
+                      minTouchTarget: 32,
                     ),
                     title: Text(
                       u.fullName,
@@ -2175,6 +2172,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             communityId: widget.clubId,
             name: m.userFullName ?? l10n.dashboard_user,
             imageUrl: m.userAvatarUrl,
+            elo: _memberEloMap[m.userId] ?? 0,
+            matchesPlayed: _memberEloMap.containsKey(m.userId) ? 1 : 0,
             size: 36,
           ),
           const SizedBox(width: 12),
@@ -2275,6 +2274,8 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
             communityId: widget.clubId,
             name: m.userFullName ?? l10n.dashboard_user,
             imageUrl: m.userAvatarUrl,
+            elo: _memberEloMap[m.userId] ?? 0,
+            matchesPlayed: _memberEloMap.containsKey(m.userId) ? 1 : 0,
             size: 36,
           ),
           const SizedBox(width: 12),

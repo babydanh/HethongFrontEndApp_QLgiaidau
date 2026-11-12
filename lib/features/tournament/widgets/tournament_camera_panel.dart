@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_status_badge.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
@@ -157,7 +158,6 @@ class _TournamentCameraPanelState extends ConsumerState<TournamentCameraPanel> {
               name: value.name,
               mode: value.mode,
               courtId: value.courtId,
-              playbackUrl: value.playbackUrl,
             );
         await _refresh();
         messenger
@@ -376,11 +376,9 @@ class _CameraRow extends StatelessWidget {
       subtitle: camera.mode.isEmpty ? courtName : '${camera.mode} · $courtName',
       onTap: enabled ? onMenu : null,
       trailing: [
-        LavishPill(
-          live
-              ? l10n.tournamentManagementLivestreamStatusLive
-              : l10n.tournamentCameraStatusIdle,
-          tone: live ? LavishTone.ok : LavishTone.neutral,
+        CameraStatusBadge(
+          key: ValueKey('camera-status-${camera.id}'),
+          status: camera.status,
         ),
         // Only a PUSH camera has a stream key; a PULL one is just a URL.
         if (camera.mode == 'PUSH')

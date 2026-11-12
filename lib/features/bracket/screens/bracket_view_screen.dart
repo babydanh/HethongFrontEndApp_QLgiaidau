@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/tournament_co_organizer_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/domain/services/live_control_access.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -363,11 +364,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                           .toLowerCase();
                   final canManageGroupAssignment =
                       widget.canEditBracket || auth.role == UserRole.admin;
-                  final hasConfiguredGroupStage =
-                      rawType == 'round_robin' ||
-                      rawType == 'roundrobin' ||
-                      rawType == 'group_stage_knockout' ||
-                      rawType == 'groupstageknockout';
                   if (matches.isEmpty) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -401,13 +397,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                                 color: context.colors.textMuted,
                               ),
                             ),
-                            if (canManageGroupAssignment &&
-                                hasConfiguredGroupStage &&
-                                _activeDivisionId != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: _buildManageGroupStageButton(l10n),
-                              ),
                           ],
                         ),
                       ),
@@ -467,6 +456,15 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
                     userId: ref.watch(userProfileProvider).value?.id,
                     isAdmin: auth.role == UserRole.admin,
                     createdBy: tournament?.creatorId,
+                    isTournamentStaff:
+                        ref
+                            .watch(
+                              tournamentCoOrganizerProvider(
+                                widget.tournamentId,
+                              ),
+                            )
+                            .value ??
+                        false,
                   );
                   final adminMayScore =
                       auth.role == UserRole.admin && !adminLocked;
@@ -684,6 +682,10 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       matchCount: matches.length,
       participantCount: division?.participantCount ?? 0,
       seedingType: isGroupStageKnockout ? 'SEEDED' : 'RANDOM',
+      bracketType: isGroupStageKnockout
+          ? 'GROUP_STAGE_KNOCKOUT'
+          : bracketType.toUpperCase(),
+      roundConfig: division?.roundConfig,
     );
   }
 
@@ -812,33 +814,6 @@ class _BracketViewScreenState extends ConsumerState<BracketViewScreen> {
       _savingGroup = false;
     }
     messenger.showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  Widget _buildManageGroupStageButton(AppLocalizations l10n) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: TextButton.icon(
-          key: const Key('group-stage-assignment-entry'),
-          onPressed: _openGroupStageAssignment,
-          icon: const Icon(Icons.groups_2_outlined),
-          label: Text(l10n.groupAssignmentManage),
-        ),
-      ),
-    );
-  }
-
-  void _openGroupStageAssignment() {
-    final divisionId = _activeDivisionId;
-    if (divisionId == null || divisionId.isEmpty) return;
-
-    final routeBase = ref.read(authProvider).role == UserRole.admin
-        ? '/admin/tournament/${widget.tournamentId}'
-        : '/organizer/tournaments/${widget.tournamentId}/manage';
-    context.push(
-      '$routeBase/group-stage-assignment/${Uri.encodeComponent(divisionId)}',
-    );
   }
 
   void _openSwissPairing(String stageId, int round, int totalRounds) {

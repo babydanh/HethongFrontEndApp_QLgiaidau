@@ -42,7 +42,9 @@ final homeProjectionProvider = StreamProvider.autoDispose
       return controller.stream;
     });
 
-final tournamentsProvider = StreamProvider.autoDispose<List<Tournament>>((ref) {
+// Not autoDispose: leaving the Explore tab must not drop the list, or coming
+// back starts from an empty state while every public page is fetched again.
+final tournamentsProvider = StreamProvider<List<Tournament>>((ref) {
   return ref.watch(tournamentRepositoryProvider).watchAll().map((list) {
     return list
         .where(

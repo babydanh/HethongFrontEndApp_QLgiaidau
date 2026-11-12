@@ -464,41 +464,23 @@ abstract class AppLocalizations {
   /// **'Trận đấu'**
   String get social_matchTab;
 
-  /// No description provided for @social_matchListNote.
-  ///
-  /// In vi, this message translates to:
-  /// **'Hiển thị toàn bộ trận đấu riêng của CLB, chưa lọc chính xác theo buổi này.'**
-  String get social_matchListNote;
-
   /// No description provided for @social_matchEmptyTitle.
   ///
   /// In vi, this message translates to:
   /// **'Chưa có trận đấu nào được tạo cho CLB này.'**
   String get social_matchEmptyTitle;
 
-  /// No description provided for @social_matchNotEnoughParticipants.
-  ///
-  /// In vi, this message translates to:
-  /// **'Buổi chưa đủ người tham gia đã duyệt để ghép đội.'**
-  String get social_matchNotEnoughParticipants;
-
-  /// No description provided for @social_matchActionQuickEntry.
-  ///
-  /// In vi, this message translates to:
-  /// **'Nhập nhanh'**
-  String get social_matchActionQuickEntry;
-
-  /// No description provided for @social_matchActionLiveScore.
-  ///
-  /// In vi, this message translates to:
-  /// **'Bấm điểm'**
-  String get social_matchActionLiveScore;
-
   /// No description provided for @social_matchStatusScheduled.
   ///
   /// In vi, this message translates to:
-  /// **'Đã lên lịch'**
+  /// **'Chưa bắt đầu'**
   String get social_matchStatusScheduled;
+
+  /// No description provided for @social_matchStatusOngoing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get social_matchStatusOngoing;
 
   /// No description provided for @social_matchStatusCompleted.
   ///
@@ -23836,6 +23818,168 @@ abstract class AppLocalizations {
   /// **'Thông tin camera hiện không khả dụng.'**
   String get tournamentManagementCameraUnavailable;
 
+  /// No description provided for @tournamentManagementCameraStreamTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trực tiếp'**
+  String get tournamentManagementCameraStreamTitle;
+
+  /// No description provided for @tournamentManagementCameraStreamStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu'**
+  String get tournamentManagementCameraStreamStart;
+
+  /// No description provided for @tournamentManagementCameraStreamStop.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dừng'**
+  String get tournamentManagementCameraStreamStop;
+
+  /// No description provided for @tournamentManagementCameraStreamStartAria.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu phát trận {match}'**
+  String tournamentManagementCameraStreamStartAria(Object match);
+
+  /// No description provided for @tournamentManagementCameraStreamStopAria.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dừng phát trận {match}'**
+  String tournamentManagementCameraStreamStopAria(Object match);
+
+  /// No description provided for @tournamentManagementCameraStreamNeedsCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sân này chưa khai URL camera'**
+  String get tournamentManagementCameraStreamNeedsCamera;
+
+  /// No description provided for @tournamentManagementCameraStreamWatchLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem live'**
+  String get tournamentManagementCameraStreamWatchLive;
+
+  /// No description provided for @tournamentManagementCameraStreamWatchLiveAria.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem trực tiếp trận {match}'**
+  String tournamentManagementCameraStreamWatchLiveAria(Object match);
+
+  /// No description provided for @tournamentManagementCameraStreamStopped.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tắt phát trực tiếp. Bạn có thể bật lại bất cứ lúc nào.'**
+  String get tournamentManagementCameraStreamStopped;
+
+  /// No description provided for @tournamentManagementCameraStreamStartedFromUrl.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bắt đầu phát từ URL của sân.'**
+  String get tournamentManagementCameraStreamStartedFromUrl;
+
+  /// No description provided for @tournamentManagementCameraStreamPublishLinkCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo link bắt đầu phát cho trận và sao chép vào bộ nhớ tạm.'**
+  String get tournamentManagementCameraStreamPublishLinkCreated;
+
+  /// No description provided for @tournamentManagementCameraStreamActionFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không điều khiển được phát trực tiếp của trận.'**
+  String get tournamentManagementCameraStreamActionFailed;
+
+  /// No description provided for @tournamentManagementCameraStreamPermissionDenied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ Ban tổ chức hoặc Trọng tài được phân công mới có quyền điều khiển trận này.'**
+  String get tournamentManagementCameraStreamPermissionDenied;
+
+  /// No description provided for @tournamentManagementCameraRecordingPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xác nhận được trạng thái ghi hình; hệ thống sẽ tự thử lại.'**
+  String get tournamentManagementCameraRecordingPending;
+
+  /// No description provided for @tournamentManagementCameraBadgeReady.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sẵn sàng'**
+  String get tournamentManagementCameraBadgeReady;
+
+  /// No description provided for @tournamentManagementCameraBadgeAssigned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gán'**
+  String get tournamentManagementCameraBadgeAssigned;
+
+  /// No description provided for @tournamentManagementCameraBadgeWaiting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ tín hiệu'**
+  String get tournamentManagementCameraBadgeWaiting;
+
+  /// No description provided for @tournamentManagementCameraBadgeLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang live'**
+  String get tournamentManagementCameraBadgeLive;
+
+  /// No description provided for @tournamentManagementCameraBadgeOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Offline'**
+  String get tournamentManagementCameraBadgeOffline;
+
+  /// No description provided for @tournamentManagementCameraBadgeError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lỗi'**
+  String get tournamentManagementCameraBadgeError;
+
+  /// No description provided for @tournamentManagementCameraBadgeUnknown.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không rõ'**
+  String get tournamentManagementCameraBadgeUnknown;
+
+  /// No description provided for @tournamentManagementCameraBadgeSemantics.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trạng thái camera: {status}'**
+  String tournamentManagementCameraBadgeSemantics(Object status);
+
+  /// No description provided for @tournamentManagementRecordingOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem bản ghi MP4'**
+  String get tournamentManagementRecordingOpen;
+
+  /// No description provided for @tournamentManagementRecordingOpenForMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem bản ghi MP4 của trận {match}'**
+  String tournamentManagementRecordingOpenForMatch(Object match);
+
+  /// No description provided for @tournamentManagementRecordingDownloadFull.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải video đầy đủ'**
+  String get tournamentManagementRecordingDownloadFull;
+
+  /// No description provided for @tournamentManagementRecordingDownloadPreparing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chuẩn bị tải video…'**
+  String get tournamentManagementRecordingDownloadPreparing;
+
+  /// No description provided for @tournamentManagementRecordingDownloadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể chuẩn bị tải video. Có thể bạn không có quyền xem bản ghi này; vui lòng thử lại.'**
+  String get tournamentManagementRecordingDownloadError;
+
   /// No description provided for @tournamentManagementRecordingCatalog.
   ///
   /// In vi, this message translates to:
@@ -27075,6 +27219,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đồng tổ chức'**
   String get tournamentManagementRoleCoOrganizer;
+
+  /// No description provided for @tournamentManagementRoleCreator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người tạo giải'**
+  String get tournamentManagementRoleCreator;
 
   /// No description provided for @tournamentManagementRoleOther.
   ///
@@ -32626,7 +32776,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentCameraPanelSubtitle.
   ///
   /// In vi, this message translates to:
-  /// **'Thêm camera PUSH hoặc PULL, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.'**
+  /// **'Thêm camera qua AQP, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.'**
   String get tournamentCameraPanelSubtitle;
 
   /// No description provided for @tournamentCameraAdd.
@@ -32683,35 +32833,53 @@ abstract class AppLocalizations {
   /// **'Tên camera dài từ {min} đến {max} ký tự.'**
   String tournamentCameraNameInvalid(Object max, Object min);
 
-  /// No description provided for @tournamentCameraModeLabel.
+  /// No description provided for @tournamentCameraHelpLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Chế độ'**
-  String get tournamentCameraModeLabel;
+  /// **'Cách dùng'**
+  String get tournamentCameraHelpLabel;
 
-  /// No description provided for @tournamentCameraModePushHint.
+  /// No description provided for @tournamentCameraHelpTitle.
   ///
   /// In vi, this message translates to:
-  /// **'PUSH: camera đẩy luồng lên máy chủ (RTMP).'**
-  String get tournamentCameraModePushHint;
+  /// **'Đưa hình vào SportO qua AQP'**
+  String get tournamentCameraHelpTitle;
 
-  /// No description provided for @tournamentCameraModePullHint.
+  /// No description provided for @tournamentCameraHelpDevice.
   ///
   /// In vi, this message translates to:
-  /// **'PULL: dán URL phát đã có sẵn.'**
-  String get tournamentCameraModePullHint;
+  /// **'OBS / điện thoại'**
+  String get tournamentCameraHelpDevice;
 
-  /// No description provided for @tournamentCameraUrlLabel.
+  /// No description provided for @tournamentCameraHelpAqp.
   ///
   /// In vi, this message translates to:
-  /// **'URL phát (https)'**
-  String get tournamentCameraUrlLabel;
+  /// **'AQP SportO'**
+  String get tournamentCameraHelpAqp;
 
-  /// No description provided for @tournamentCameraUrlInvalid.
+  /// No description provided for @tournamentCameraHelpViewer.
   ///
   /// In vi, this message translates to:
-  /// **'Nhập URL phát hợp lệ, bắt đầu bằng https://.'**
-  String get tournamentCameraUrlInvalid;
+  /// **'Người xem'**
+  String get tournamentCameraHelpViewer;
+
+  /// No description provided for @tournamentCameraHelpStep1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điền tên camera, chọn sân rồi bấm nút Thêm camera ở cuối hộp.'**
+  String get tournamentCameraHelpStep1;
+
+  /// No description provided for @tournamentCameraHelpStep2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hộp tiếp theo hiện Server và Stream Key. Sao chép hai mục này.'**
+  String get tournamentCameraHelpStep2;
+
+  /// No description provided for @tournamentCameraHelpStep3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán vào OBS (Settings → Stream → Custom) hoặc app phát trên điện thoại, rồi bấm Start.'**
+  String get tournamentCameraHelpStep3;
 
   /// No description provided for @tournamentCameraCourtLabel.
   ///
@@ -35148,6 +35316,42 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Quay lại'**
   String get bracketMgmt_cancel;
+
+  /// No description provided for @bracketCreate_title.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt trước khi tạo bracket'**
+  String get bracketCreate_title;
+
+  /// No description provided for @bracketCreate_suggestion.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý: {groups} bảng · {teams} đội/bảng · top {advancing}'**
+  String bracketCreate_suggestion(int groups, int teams, int advancing);
+
+  /// No description provided for @bracketCreate_suggestionLegs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý: {legs} lượt'**
+  String bracketCreate_suggestionLegs(int legs);
+
+  /// No description provided for @bracketCreate_apply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng'**
+  String get bracketCreate_apply;
+
+  /// No description provided for @bracketCreate_dragHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo xong, kéo thả đội để đổi bảng ngay trên sơ đồ.'**
+  String get bracketCreate_dragHint;
+
+  /// No description provided for @bracketCreate_capacityError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sức chứa {capacity} đội chưa đủ cho {count} đội. Tăng số bảng hoặc số đội mỗi bảng.'**
+  String bracketCreate_capacityError(int capacity, int count);
 
   /// No description provided for @schedMgmt_courtsTooltip.
   ///

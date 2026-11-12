@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_status_badge.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_text_field.dart';
@@ -167,6 +168,16 @@ class _CourtCameraUrlRowState extends ConsumerState<CourtCameraUrlRow> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (camera != null) ...[
+              const SizedBox(width: AppTheme.spacingXS),
+              Flexible(
+                flex: 0,
+                child: CameraStatusBadge(
+                  key: ValueKey('court-camera-status-${widget.courtId}'),
+                  status: camera.status,
+                ),
+              ),
+            ],
           ],
         ),
         SizedBox(

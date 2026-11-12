@@ -13,7 +13,10 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/app_update_service.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_update_gate.dart';
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
+import 'package:app_quanly_giaidau/features/rankings/utils/best_ranking.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -62,7 +65,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
           _buildAccountCard(context),
           LavishGroupHeader(l.accountSettingsAppSection),
           _buildAppRows(context, isDark),
-          const SizedBox(height: 8),
+          LavishGroupHeader(l.accountSettingsShortcuts),
           _buildShortcuts(context),
           _buildLogoutButton(context),
           _buildAppVersion(context),
@@ -119,12 +122,23 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
   Widget _accountRow(BuildContext context, UserProfile user) {
     final name = (user.fullName ?? '').trim();
     final email = (user.email ?? '').trim();
-    final initial = name.isNotEmpty
-        ? name.characters.first.toUpperCase()
-        : (email.isNotEmpty ? email.characters.first.toUpperCase() : '?');
+    final title = name.isNotEmpty ? name : email;
+    // Same avatar (photo + tier ring) as the profile page and the "Tôi" tab.
+    final ranking = bestRankingOf(
+      ref.watch(userRankingsProvider).asData?.value ?? const <PlayerRanking>[],
+    );
     return LavishRow(
-      leading: LavishIconBox(size: 44, child: Text(initial)),
-      title: name.isNotEmpty ? name : email,
+      leading: RankAvatar(
+        imageUrl: user.avatarUrl,
+        name: title,
+        elo: ranking?.eloPoints ?? 0,
+        tierName: ranking?.tierName,
+        tierSource: ranking?.tierSource,
+        tierAvailable: ranking?.tierAvailable,
+        matchesPlayed: ranking?.matchesPlayed ?? 0,
+        size: 44,
+      ),
+      title: title,
       subtitle: name.isNotEmpty && email.isNotEmpty ? email : null,
       trailing: [_chevron(context)],
       onTap: () {
@@ -231,7 +245,6 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
 
   Widget _buildShortcuts(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final c = LavishColors.of(context);
     final items = [
       _SettingsMenuItem(
         Icons.dashboard_rounded,
@@ -265,36 +278,17 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
         '/profile/reports',
       ),
     ];
-    return Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        key: const ValueKey('account-settings-shortcuts'),
-        initiallyExpanded: false,
-        shape: const Border(),
-        collapsedShape: const Border(),
-        tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        childrenPadding: EdgeInsets.zero,
-        iconColor: LavishColors.accent,
-        collapsedIconColor: c.faint,
-        leading: _icon(Icons.bolt_rounded),
-        title: Text(
-          l.accountSettingsShortcuts,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: c.text,
+    return Column(
+      key: const ValueKey('account-settings-shortcuts'),
+      children: [
+        for (final item in items)
+          _navRow(
+            context,
+            icon: item.icon,
+            label: item.label,
+            route: item.route,
           ),
-        ),
-        children: [
-          for (final item in items)
-            _navRow(
-              context,
-              icon: item.icon,
-              label: item.label,
-              route: item.route,
-            ),
-        ],
-      ),
+      ],
     );
   }
 

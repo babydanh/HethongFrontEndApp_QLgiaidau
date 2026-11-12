@@ -1,12 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/dialogs/popup_dialog.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_sponsor.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/sponsors_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -349,105 +349,100 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colors = LavishColors.of(context);
     return AlertDialog(
+      backgroundColor: colors.surface,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+      contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       title: Text(
         widget.sponsor == null
             ? l10n.tournamentManagementAddSponsor
             : l10n.tournamentManagementEditSponsor,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: colors.text,
+        ),
       ),
       content: SizedBox(
         width: 440,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
+              _buildLogoPicker(l10n, colors),
+              const SizedBox(height: 16),
+              LavishTextField(
+                label: l10n.tournamentManagementSponsorName,
                 controller: _name,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementSponsorName,
-                  border: const OutlineInputBorder(),
-                ),
+                enabled: !_isSaving,
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _logo,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementSponsorLogo,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    onPressed: _isUploading ? null : _uploadLogo,
-                    tooltip: l10n.tournamentManagementUploadLogo,
-                    icon: _isUploading
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.upload_rounded),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                initialValue: _tier,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementSponsorTier,
-                  border: const OutlineInputBorder(),
-                ),
-                items: [
-                  for (final value in const [
-                    'TITLE',
-                    'DIAMOND',
-                    'GOLD',
-                    'SILVER',
-                    'BRONZE',
-                    'IN_KIND',
-                  ])
-                    DropdownMenuItem(
-                      value: value,
-                      child: Text(_sponsorTierLabel(l10n, value)),
+              const SizedBox(height: 16),
+              _fieldLabel(l10n.tournamentManagementSponsorTier, colors),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final value in _sponsorTiers)
+                    LavishChipButton(
+                      key: ValueKey('sponsor-tier-$value'),
+                      label: _sponsorTierLabel(l10n, value),
+                      selected: _tier == value,
+                      onPressed: _isSaving
+                          ? null
+                          : () => setState(() => _tier = value),
                     ),
                 ],
-                onChanged: _isSaving
-                    ? null
-                    : (value) {
-                        if (value != null) setState(() => _tier = value);
-                      },
               ),
-              const SizedBox(height: 10),
-              TextField(
+              const SizedBox(height: 16),
+              LavishTextField(
+                label: l10n.tournamentManagementSponsorWebsite,
                 controller: _website,
                 keyboardType: TextInputType.url,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementSponsorWebsite,
-                  border: const OutlineInputBorder(),
-                ),
+                enabled: !_isSaving,
               ),
-              const SizedBox(height: 10),
-              TextField(
+              const SizedBox(height: 16),
+              LavishTextField(
+                label: l10n.tournamentManagementSponsorDescription,
                 controller: _description,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: l10n.tournamentManagementSponsorDescription,
-                  border: const OutlineInputBorder(),
-                  alignLabelWithHint: true,
+                enabled: !_isSaving,
+              ),
+              const SizedBox(height: 8),
+              Material(
+                color: colors.soft(LavishTone.neutral),
+                borderRadius: BorderRadius.circular(12),
+                clipBehavior: Clip.antiAlias,
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  value: _isPublic,
+                  title: Text(
+                    l10n.tournamentManagementSponsorPublic,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: colors.text,
+                    ),
+                  ),
+                  onChanged: _isSaving
+                      ? null
+                      : (value) => setState(() => _isPublic = value),
                 ),
               ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: _isPublic,
-                title: Text(l10n.tournamentManagementSponsorPublic),
-                onChanged: _isSaving
-                    ? null
-                    : (value) => setState(() => _isPublic = value),
-              ),
               if (_hasError)
-                Align(
-                  alignment: Alignment.centerLeft,
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
                   child: Text(
                     l10n.tournamentManagementSaveError,
-                    style: TextStyle(color: context.colors.error),
+                    style: const TextStyle(
+                      color: LavishColors.bad,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
             ],
@@ -472,6 +467,74 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
     );
   }
 
+  Widget _fieldLabel(String text, LavishColors colors) => Text(
+    text,
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: colors.muted,
+    ),
+  );
+
+  /// Square logo preview next to the upload button; the tile turns red when a
+  /// save was refused for a missing logo.
+  Widget _buildLogoPicker(AppLocalizations l10n, LavishColors colors) {
+    final url = _logo.text.trim();
+    final missing = _hasError && url.isEmpty;
+    final placeholder = Icon(
+      Icons.add_photo_alternate_outlined,
+      size: 28,
+      color: missing ? LavishColors.bad : colors.faint,
+    );
+    return Row(
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: colors.soft(LavishTone.neutral),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: missing ? LavishColors.bad : colors.chipLine,
+              width: 1.5,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          alignment: Alignment.center,
+          child: url.isEmpty
+              ? placeholder
+              : Image.network(
+                  resolveTournamentManagementImageUrl(url),
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stack) => placeholder,
+                ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _fieldLabel(l10n.tournamentManagementSponsorLogo, colors),
+              const SizedBox(height: 6),
+              OutlinedButton.icon(
+                onPressed: _isUploading || _isSaving ? null : _uploadLogo,
+                icon: _isUploading
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.upload_rounded, size: 18),
+                label: Text(l10n.tournamentManagementUploadLogo),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _uploadLogo() async {
     if (_isUploading) return;
     setState(() {
@@ -487,7 +550,7 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
       final url = await ref
           .read(communitySocialRepositoryProvider)
           .uploadImage(await picked.readAsBytes(), picked.name);
-      if (mounted) _logo.text = url;
+      if (mounted) setState(() => _logo.text = url);
     } catch (_) {
       if (mounted) setState(() => _hasError = true);
     } finally {
@@ -531,17 +594,17 @@ class _SponsorEditorDialogState extends ConsumerState<_SponsorEditorDialog> {
   }
 
   String _normalizeTier(String tier) =>
-      const {
-        'TITLE',
-        'DIAMOND',
-        'GOLD',
-        'SILVER',
-        'BRONZE',
-        'IN_KIND',
-      }.contains(tier.toUpperCase())
-      ? tier.toUpperCase()
-      : 'GOLD';
+      _sponsorTiers.contains(tier.toUpperCase()) ? tier.toUpperCase() : 'GOLD';
 }
+
+const _sponsorTiers = [
+  'TITLE',
+  'DIAMOND',
+  'GOLD',
+  'SILVER',
+  'BRONZE',
+  'IN_KIND',
+];
 
 String _sponsorTierLabel(AppLocalizations l10n, String tier) =>
     switch (tier.toUpperCase()) {

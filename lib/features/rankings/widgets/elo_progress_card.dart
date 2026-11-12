@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/utils/elo_helpers.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -76,7 +77,17 @@ class _EloProgressCardState extends State<EloProgressCard> {
         children: [
           Row(
             children: [
-              _Avatar(name: widget.userName, avatarUrl: widget.avatarUrl),
+              RankAvatar(
+                imageUrl: widget.avatarUrl,
+                name: widget.userName,
+                elo: activeRank?.eloPoints ?? 0,
+                tierName: activeRank?.tierName,
+                tierSource: activeRank?.tierSource,
+                tierAvailable: activeRank?.tierAvailable,
+                matchesPlayed: matchesPlayed,
+                size: 56,
+                ringWidth: 3,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -394,35 +405,6 @@ class _EloProgressCardState extends State<EloProgressCard> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final String name;
-  final String? avatarUrl;
-
-  const _Avatar({required this.name, this.avatarUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
-    return CircleAvatar(
-      radius: 28,
-      backgroundColor: context.colors.info.withValues(alpha: 0.12),
-      backgroundImage: avatarUrl?.isNotEmpty == true
-          ? NetworkImage(avatarUrl!)
-          : null,
-      child: avatarUrl?.isNotEmpty == true
-          ? null
-          : Text(
-              initial,
-              style: TextStyle(
-                color: context.colors.textPrimary,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
     );
   }
 }

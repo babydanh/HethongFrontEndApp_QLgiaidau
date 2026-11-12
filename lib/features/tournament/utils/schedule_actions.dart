@@ -55,7 +55,11 @@ List<int> quickScheduleMinutes({
   required int endHour,
   int stepMinutes = 15,
 }) => [
-  for (var minute = startHour * 60; minute < endHour * 60; minute += stepMinutes)
+  for (
+    var minute = startHour * 60;
+    minute < endHour * 60;
+    minute += stepMinutes
+  )
     minute,
 ];
 
@@ -94,10 +98,7 @@ enum ScheduleSwapResult {
 }
 
 class ScheduleSwapReport {
-  const ScheduleSwapReport({
-    required this.result,
-    required this.movedMatchIds,
-  });
+  const ScheduleSwapReport({required this.result, required this.movedMatchIds});
 
   final ScheduleSwapResult result;
 
@@ -134,7 +135,9 @@ Future<ScheduleSwapReport> runScheduleSwap({
   if (placedDragged == null) {
     final restored = (await write(targetId, targetSlot)) != null;
     return ScheduleSwapReport(
-      result: restored ? ScheduleSwapResult.rolledBack : ScheduleSwapResult.partial,
+      result: restored
+          ? ScheduleSwapResult.rolledBack
+          : ScheduleSwapResult.partial,
       movedMatchIds: moved,
     );
   }
@@ -154,7 +157,9 @@ Future<ScheduleSwapReport> runScheduleSwap({
     final targetBack =
         draggedBack && (await write(targetId, targetSlot)) != null;
     return ScheduleSwapReport(
-      result: targetBack ? ScheduleSwapResult.rolledBack : ScheduleSwapResult.partial,
+      result: targetBack
+          ? ScheduleSwapResult.rolledBack
+          : ScheduleSwapResult.partial,
       movedMatchIds: moved,
     );
   }

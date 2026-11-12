@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/create_edit_screen/social_date_time_picker_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/planned_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/sport_rule_presets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_sheet.dart'
     show
@@ -65,9 +66,14 @@ class StageRoundConfigSheet extends ConsumerStatefulWidget {
     super.key,
     required this.tournament,
     required this.division,
+    this.draft = false,
   });
 
   final Tournament tournament;
+
+  /// Hạng mục chưa có sơ đồ: vòng tính từ số đội ([computePlannedRounds]) và
+  /// luật lưu vào `roundConfig` của hạng mục qua `updateDivisionConfig`.
+  final bool draft;
 
   /// Hạng mục từ `GET /tournaments/:id/divisions`: dùng `roundConfig` để suy
   /// luật gốc của hạng mục và đếm số lượt vòng bảng.
@@ -82,13 +88,17 @@ class StageRoundConfigSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     required Tournament tournament,
     required Map<String, dynamic> division,
+    bool draft = false,
   }) => showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     enableDrag: false,
     showDragHandle: false,
-    builder: (_) =>
-        StageRoundConfigSheet(tournament: tournament, division: division),
+    builder: (_) => StageRoundConfigSheet(
+      tournament: tournament,
+      division: division,
+      draft: draft,
+    ),
   );
 
   @override
@@ -179,12 +189,20 @@ class _StageRoundConfigSheetState extends ConsumerState<StageRoundConfigSheet> {
       _loadError = null;
     });
     try {
-      final stages = await ref
-          .read(tournamentRepositoryProvider)
-          .getDivisionStages(widget.tournament.id, divisionId: _divisionId);
+      final stages = widget.draft
+          ? await Future.value(const <Map<String, dynamic>>[])
+          : await ref
+                .read(tournamentRepositoryProvider)
+                .getDivisionStages(
+                  widget.tournament.id,
+                  divisionId: _divisionId,
+                );
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _rounds = _buildRounds(stages, AppLocalizations.of(context)!);
+        _rounds = widget.draft
+            ? _buildDraftRounds(l10n)
+            : _buildRounds(stages, l10n);
         _loading = false;
       });
       if (_rounds.isNotEmpty) _selectRound(_rounds.first);
@@ -224,7 +242,7 @@ class _StageRoundConfigSheetState extends ConsumerState<StageRoundConfigSheet> {
       );
       // Số lượt vòng bảng: cấu hình hạng mục, tối thiểu 1 (đối chiếu Web
       // `configuredGroupRounds`).
-      final configuredLegs = _configuredGroupLegs();
+      final configuredLegs = plannedGroupLegs(_divisionRoundConfig);
       for (var leg = 1; leg <= configuredLegs; leg++) {
         rounds.add(
           _RoundOption(
@@ -246,24 +264,36 @@ class _StageRoundConfigSheetState extends ConsumerState<StageRoundConfigSheet> {
     return rounds;
   }
 
-  /// Số lượt vòng bảng đã cấu hình của hạng mục (đối chiếu Web
-  /// `configuredGroupRounds`: `groupsConfig.roundsToPlay` + lượt override
-  /// `leg_N` đã lưu trong `roundConfig.rounds` của hạng mục).
-  int _configuredGroupLegs() {
-    final groupsConfig = _asMap(_divisionRoundConfig?['groupsConfig']);
-    final persisted = groupsConfig?['roundsToPlay'];
-    var legs = persisted is num && persisted.toInt() >= 1
-        ? persisted.toInt()
-        : 1;
-    final divisionRounds = _asMap(_divisionRoundConfig?['rounds']);
-    for (final key in divisionRounds?.keys ?? const Iterable<String>.empty()) {
-      final match = RegExp(r'^leg_(\d+)$').firstMatch(key);
-      if (match != null) {
-        legs = math.max(legs, int.tryParse(match.group(1)!) ?? 1);
-      }
-    }
-    return legs;
+  /// Vòng dự kiến của hạng mục chưa có sơ đồ: stage ảo mang `roundConfig` của
+  /// hạng mục nên `_save` dùng chung đường ghép khóa với stage thật.
+  List<_RoundOption> _buildDraftRounds(AppLocalizations l10n) {
+    final planned = plannedRoundsOfDivision(widget.division);
+    final stage = <String, dynamic>{'roundConfig': _divisionRoundConfig};
+    final savedRounds = _asMap(_divisionRoundConfig?['rounds']);
+    return [
+      for (final round in planned)
+        _RoundOption(
+          stage: stage,
+          roundNumber: round.number,
+          name: _plannedRoundName(l10n, round),
+          isGroupStage: round.kind != PlannedRoundKind.knockout,
+          override: round.roundKey == null
+              ? _divisionRoundConfig
+              : _asMap(savedRounds?[round.roundKey]),
+        ),
+    ];
   }
+
+  String _plannedRoundName(AppLocalizations l10n, PlannedRound round) =>
+      switch (round.kind) {
+        PlannedRoundKind.groupShared => l10n.stageRoundSharedGroupStage,
+        PlannedRoundKind.groupLeg => l10n.stageRoundLeg(round.number),
+        PlannedRoundKind.knockout => _knockoutRoundLabel(
+          l10n,
+          round.number - 1,
+          round.totalKnockoutRounds,
+        ),
+      };
 
   /// Các vòng loại trực tiếp của một stage: đếm theo số vòng của trận trong
   /// từng bảng, nhánh thắng là chuẩn khi trùng số vòng với nhánh thua/chung
@@ -448,13 +478,22 @@ class _StageRoundConfigSheetState extends ConsumerState<StageRoundConfigSheet> {
             ? Map<String, dynamic>.of(currentRounds)
             : {...currentRounds, roundKey: nextRoundRule},
       };
-      await ref
-          .read(tournamentRepositoryProvider)
-          .updateStageRoundConfig(
-            widget.tournament.id,
-            round.stageId,
-            roundConfig,
-          );
+      if (widget.draft) {
+        await ref
+            .read(tournamentManagementRepositoryProvider)
+            .updateDivisionConfig(widget.tournament.id, _divisionId, {
+              'isConfigOverride': true,
+              'roundConfig': roundConfig,
+            });
+      } else {
+        await ref
+            .read(tournamentRepositoryProvider)
+            .updateStageRoundConfig(
+              widget.tournament.id,
+              round.stageId,
+              roundConfig,
+            );
+      }
       if (_isSwiss) {
         ref.invalidate(
           swissStageProvider((

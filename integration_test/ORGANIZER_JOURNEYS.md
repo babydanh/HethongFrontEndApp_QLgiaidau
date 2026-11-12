@@ -12,7 +12,7 @@ bằng API (tiền tố `E2E<timestamp>` riêng mỗi lần chạy nên chạy h
 |---|---|---|
 | `organizer_setup_journey_test.dart` | 01..19, 80 | Tạo giải nhanh, tổng quan, nội dung thi đấu (thêm, sửa, khóa, đóng/mở hàng loạt, xóa, luật chuẩn), VĐV (duyệt, từ chối, chi tiết, check-in, phí, liên hệ) |
 | `organizer_run_journey_test.dart` | 20..39 | Vòng đời đăng ký, khai mạc, bốc thăm, bảng đấu, tab Kết quả (lọc, tìm, nhập điểm), bàn điểm live, kết thúc giải, trang công khai |
-| `organizer_formats_journey_test.dart` | 40..59 | Vòng tròn, loại kép, vòng bảng (phân bảng, hạt giống), Thụy Sĩ (ghép cặp, hoàn tác vòng), vận hành giai đoạn |
+| `organizer_formats_journey_test.dart` | 40..59 | Vòng tròn, loại kép, vòng bảng (popup tạo bracket, hạt giống), Thụy Sĩ (ghép cặp, hoàn tác vòng), vận hành giai đoạn |
 | `organizer_schedule_settings_journey_test.dart` | 60..79 | Địa điểm và sân, lưới lịch, thanh quản lý lịch, nhà tài trợ, trọng tài, tài chính, chia sẻ, xóa giải |
 
 Helper dùng chung: `support/organizer_journey.dart` (`signInAsOrganizer`, `seedTournament`, `openManageHub`, `openHubTab`,
@@ -42,8 +42,6 @@ Test ghi rõ lý do ở chỗ bỏ qua; không có ca nào "xanh giả" bằng c
 - **Sheet nhập điểm tab Kết quả** gửi `PATCH /matches/:id/score` cho trận chưa bắt đầu, Backend trả 400 "Hãy bắt đầu trận trước".
   Test bắt đầu trận bằng API trước khi mở App.
 - **Chi tiết VĐV, giải miễn phí:** bỏ đánh dấu đã đóng phí làm hàng phí biến mất (`showFee` phụ thuộc `_paid`), không bật lại được.
-- **Phân bảng:** mục "Chuyển về Chưa xếp" của đội trong một Bảng gọi `onDrop` của chính Bảng đó nên đội ở lại bảng
-  (`group_stage_assignment_screen.dart`). Test bỏ bước này.
 - **Tự động xếp hạt giống:** `POST /tournaments/:id/auto-seed` trả 201 nhưng App báo "Không thể hoàn tất thao tác" và không làm
   mới ô hạt giống (nghi `autoSeedParticipants` đọc phản hồi như danh sách hàng). Cần xác minh.
 - **Thụy Sĩ:** màn ghép cặp không tự đóng sau "Đã tạo vòng 2." Cần xác minh.

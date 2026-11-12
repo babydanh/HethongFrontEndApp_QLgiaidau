@@ -17,6 +17,18 @@ void main() {
       );
     });
 
+    test('TC-COORG-LOCK-01 never locks an admin who is invited staff', () {
+      expect(
+        isAdminScoringLocked(
+          userId: 'a1',
+          isAdmin: true,
+          createdBy: 'c1',
+          isTournamentStaff: true,
+        ),
+        isFalse,
+      );
+    });
+
     test('TC-ADMLOCK-03 never locks a non-admin', () {
       expect(
         isAdminScoringLocked(userId: 'u1', isAdmin: false, createdBy: 'c1'),

@@ -220,14 +220,6 @@ abstract interface class TournamentManagementRepository {
     Map<String, dynamic> payload,
   );
   Future<void> deleteDivision(String divisionId);
-  Future<void> updateTournamentSeeds(
-    String id,
-    List<Map<String, dynamic>> seeds,
-  );
-  Future<List<Map<String, dynamic>>> autoSeedParticipants(
-    String id, {
-    String? divisionId,
-  });
 
   Future<Map<String, dynamic>> publishTournament(String id);
 

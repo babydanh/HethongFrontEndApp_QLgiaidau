@@ -18,7 +18,6 @@ import 'package:app_quanly_giaidau/features/teams/screens/add_team_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/bracket_view_screen.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/auto_draw_screen.dart';
-import 'package:app_quanly_giaidau/features/bracket/screens/group_stage_assignment_screen.dart';
 import 'package:app_quanly_giaidau/features/bracket/screens/swiss_pairing_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_intro_screen.dart';
 import 'package:app_quanly_giaidau/features/notification/screens/notification_screen.dart';
@@ -320,13 +319,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 },
               ),
               GoRoute(
-                path: 'group-stage-assignment/:divisionId',
-                builder: (context, state) => GroupStageAssignmentScreen(
-                  tournamentId: state.pathParameters['id']!,
-                  divisionId: state.pathParameters['divisionId']!,
-                ),
-              ),
-              GoRoute(
                 path: 'swiss-pairing/:divisionId',
                 builder: _swissPairingBuilder,
               ),
@@ -476,13 +468,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                 canEditBracket: true,
               );
             },
-          ),
-          GoRoute(
-            path: 'group-stage-assignment/:divisionId',
-            builder: (context, state) => GroupStageAssignmentScreen(
-              tournamentId: state.pathParameters['id']!,
-              divisionId: state.pathParameters['divisionId']!,
-            ),
           ),
           GoRoute(
             path: 'swiss-pairing/:divisionId',

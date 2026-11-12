@@ -1,0 +1,3 @@
+- [x] Hàm `computePlannedRounds` + test TC-ROUND-DRAFT-01..09
+- [x] Chế độ `draft` của `StageRoundConfigSheet`, lưu bằng `updateDivisionConfig`
+- [x] Menu thẻ hạng mục (chưa sơ đồ) + test widget TC-ROUND-DRAFT-10..13

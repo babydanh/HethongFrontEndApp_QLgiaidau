@@ -1494,40 +1494,6 @@ void main() {
       expect(backend.only.method, 'DELETE');
       expect(backend.only.path, '/tournaments/divisions/division-1');
     });
-
-    test('seed update wraps the list under the seeds key', () async {
-      backend.onPatch('/tournaments/$tournamentId/seeds', <String, dynamic>{});
-      final seeds = [
-        {'participantId': 'p-1', 'seed': 1},
-      ];
-
-      await repository.updateTournamentSeeds(tournamentId, seeds);
-
-      expect(backend.only.method, 'PATCH');
-      expect(backend.only.path, '/tournaments/$tournamentId/seeds');
-      expect(backend.only.data, {'seeds': seeds});
-    });
-
-    test('auto seed omits divisionId unless one is supplied', () async {
-      backend.onPost('/tournaments/$tournamentId/auto-seed', [
-        {'participantId': 'p-1', 'seed': 1},
-      ]);
-
-      final seeded = await repository.autoSeedParticipants(tournamentId);
-      await repository.autoSeedParticipants(
-        tournamentId,
-        divisionId: 'division-1',
-      );
-
-      expect(seeded, [
-        {'participantId': 'p-1', 'seed': 1},
-      ]);
-      expect(backend.requests.map((r) => r.method), everyElement('POST'));
-      expect(backend.requests.map((r) => r.data), [
-        <String, dynamic>{},
-        {'divisionId': 'division-1'},
-      ]);
-    });
   });
 
   group('lifecycle', () {

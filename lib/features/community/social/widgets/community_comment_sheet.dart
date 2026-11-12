@@ -2,11 +2,13 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CommunityCommentSheet extends ConsumerStatefulWidget {
@@ -341,12 +343,15 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
     if (value == null) return l10n.communityComment_justNow;
     final difference = DateTime.now().difference(value.toLocal());
     if (difference.inMinutes < 1) return l10n.communityComment_justNow;
-    if (difference.inHours < 1)
+    if (difference.inHours < 1) {
       return l10n.communityComment_minutes(difference.inMinutes);
-    if (difference.inDays < 1)
+    }
+    if (difference.inDays < 1) {
       return l10n.communityComment_hours(difference.inHours);
-    if (difference.inDays < 7)
+    }
+    if (difference.inDays < 7) {
       return l10n.communityComment_days(difference.inDays);
+    }
     return '${value.day}/${value.month}';
   }
 
@@ -719,30 +724,14 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                     // Current User Avatar
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4, right: 8),
-                      child: CircleAvatar(
-                        radius: 17,
-                        backgroundColor: AppTheme.primaryLight,
-                        backgroundImage: profile?.avatarUrl == null
-                            ? null
-                            : NetworkImage(profile!.avatarUrl!),
-                        child: profile?.avatarUrl == null
-                            ? Builder(
-                                builder: (_) {
-                                  final name = profile?.fullName?.trim() ?? '';
-                                  final initial = name.isNotEmpty
-                                      ? name.characters.first.toUpperCase()
-                                      : 'B';
-                                  return Text(
-                                    initial,
-                                    style: const TextStyle(
-                                      color: AppTheme.primaryDark,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12.5,
-                                    ),
-                                  );
-                                },
-                              )
-                            : null,
+                      child: RankAvatar(
+                        imageUrl: profile?.avatarUrl,
+                        name: profile?.fullName ?? 'B',
+                        elo: profile?.eloPoints ?? 0,
+                        tierName: profile?.tierName,
+                        matchesPlayed: (profile?.eloPoints ?? 0) > 0 ? 1 : 0,
+                        size: 34,
+                        ringWidth: 1.5,
                       ),
                     ),
 
@@ -842,16 +831,26 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Author Avatar ──
-          UserAvatarTap(
-            userId: comment.authorId,
-            communityId: widget.communityId,
-            name: comment.authorName,
-            imageUrl: comment.authorAvatarUrl,
-            size: isReply ? 28 : 36,
-            // Replies sit in a dense thread, so the hit box matches the
-            // artwork instead of growing the row to 44px.
-            minTouchTarget: isReply ? 28 : 36,
-          ),
+          if (comment.authorId.isEmpty)
+            UserAvatarTap(
+              userId: comment.authorId,
+              communityId: widget.communityId,
+              name: comment.authorName,
+              imageUrl: comment.authorAvatarUrl,
+              size: isReply ? 28 : 36,
+              minTouchTarget: isReply ? 28 : 36,
+            )
+          else
+            RankedUserAvatarTap(
+              userId: comment.authorId,
+              communityId: widget.communityId,
+              name: comment.authorName,
+              imageUrl: comment.authorAvatarUrl,
+              size: isReply ? 28 : 36,
+              // Replies sit in a dense thread, so the hit box matches the
+              // artwork instead of growing the row to 44px.
+              minTouchTarget: isReply ? 28 : 36,
+            ),
           const SizedBox(width: 8),
 
           // ── Speech Bubble + Action Row ──

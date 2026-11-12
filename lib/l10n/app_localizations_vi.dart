@@ -204,25 +204,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get social_matchTab => 'Trận đấu';
 
   @override
-  String get social_matchListNote =>
-      'Hiển thị toàn bộ trận đấu riêng của CLB, chưa lọc chính xác theo buổi này.';
-
-  @override
   String get social_matchEmptyTitle =>
       'Chưa có trận đấu nào được tạo cho CLB này.';
 
   @override
-  String get social_matchNotEnoughParticipants =>
-      'Buổi chưa đủ người tham gia đã duyệt để ghép đội.';
+  String get social_matchStatusScheduled => 'Chưa bắt đầu';
 
   @override
-  String get social_matchActionQuickEntry => 'Nhập nhanh';
-
-  @override
-  String get social_matchActionLiveScore => 'Bấm điểm';
-
-  @override
-  String get social_matchStatusScheduled => 'Đã lên lịch';
+  String get social_matchStatusOngoing => 'Đang diễn ra';
 
   @override
   String get social_matchStatusCompleted => 'Đã hoàn thành';
@@ -13138,6 +13127,106 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thông tin camera hiện không khả dụng.';
 
   @override
+  String get tournamentManagementCameraStreamTitle => 'Trực tiếp';
+
+  @override
+  String get tournamentManagementCameraStreamStart => 'Bắt đầu';
+
+  @override
+  String get tournamentManagementCameraStreamStop => 'Dừng';
+
+  @override
+  String tournamentManagementCameraStreamStartAria(Object match) {
+    return 'Bắt đầu phát trận $match';
+  }
+
+  @override
+  String tournamentManagementCameraStreamStopAria(Object match) {
+    return 'Dừng phát trận $match';
+  }
+
+  @override
+  String get tournamentManagementCameraStreamNeedsCamera =>
+      'Sân này chưa khai URL camera';
+
+  @override
+  String get tournamentManagementCameraStreamWatchLive => 'Xem live';
+
+  @override
+  String tournamentManagementCameraStreamWatchLiveAria(Object match) {
+    return 'Xem trực tiếp trận $match';
+  }
+
+  @override
+  String get tournamentManagementCameraStreamStopped =>
+      'Đã tắt phát trực tiếp. Bạn có thể bật lại bất cứ lúc nào.';
+
+  @override
+  String get tournamentManagementCameraStreamStartedFromUrl =>
+      'Đã bắt đầu phát từ URL của sân.';
+
+  @override
+  String get tournamentManagementCameraStreamPublishLinkCreated =>
+      'Đã tạo link bắt đầu phát cho trận và sao chép vào bộ nhớ tạm.';
+
+  @override
+  String get tournamentManagementCameraStreamActionFailed =>
+      'Không điều khiển được phát trực tiếp của trận.';
+
+  @override
+  String get tournamentManagementCameraStreamPermissionDenied =>
+      'Chỉ Ban tổ chức hoặc Trọng tài được phân công mới có quyền điều khiển trận này.';
+
+  @override
+  String get tournamentManagementCameraRecordingPending =>
+      'Chưa xác nhận được trạng thái ghi hình; hệ thống sẽ tự thử lại.';
+
+  @override
+  String get tournamentManagementCameraBadgeReady => 'Sẵn sàng';
+
+  @override
+  String get tournamentManagementCameraBadgeAssigned => 'Đã gán';
+
+  @override
+  String get tournamentManagementCameraBadgeWaiting => 'Chờ tín hiệu';
+
+  @override
+  String get tournamentManagementCameraBadgeLive => 'Đang live';
+
+  @override
+  String get tournamentManagementCameraBadgeOffline => 'Offline';
+
+  @override
+  String get tournamentManagementCameraBadgeError => 'Lỗi';
+
+  @override
+  String get tournamentManagementCameraBadgeUnknown => 'Không rõ';
+
+  @override
+  String tournamentManagementCameraBadgeSemantics(Object status) {
+    return 'Trạng thái camera: $status';
+  }
+
+  @override
+  String get tournamentManagementRecordingOpen => 'Xem bản ghi MP4';
+
+  @override
+  String tournamentManagementRecordingOpenForMatch(Object match) {
+    return 'Xem bản ghi MP4 của trận $match';
+  }
+
+  @override
+  String get tournamentManagementRecordingDownloadFull => 'Tải video đầy đủ';
+
+  @override
+  String get tournamentManagementRecordingDownloadPreparing =>
+      'Đang chuẩn bị tải video…';
+
+  @override
+  String get tournamentManagementRecordingDownloadError =>
+      'Không thể chuẩn bị tải video. Có thể bạn không có quyền xem bản ghi này; vui lòng thử lại.';
+
+  @override
   String get tournamentManagementRecordingCatalog => 'Danh sách bản ghi';
 
   @override
@@ -14940,6 +15029,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementRoleCoOrganizer => 'Đồng tổ chức';
+
+  @override
+  String get tournamentManagementRoleCreator => 'Người tạo giải';
 
   @override
   String get tournamentManagementRoleOther => 'Vai trò khác';
@@ -18097,7 +18189,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentCameraPanelSubtitle =>
-      'Thêm camera PUSH hoặc PULL, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.';
+      'Thêm camera qua AQP, gắn vào sân. Giữ rồi kéo thẻ camera vào thẻ sân để đổi sân.';
 
   @override
   String get tournamentCameraAdd => 'Thêm camera';
@@ -18129,21 +18221,31 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get tournamentCameraModeLabel => 'Chế độ';
+  String get tournamentCameraHelpLabel => 'Cách dùng';
 
   @override
-  String get tournamentCameraModePushHint =>
-      'PUSH: camera đẩy luồng lên máy chủ (RTMP).';
+  String get tournamentCameraHelpTitle => 'Đưa hình vào SportO qua AQP';
 
   @override
-  String get tournamentCameraModePullHint => 'PULL: dán URL phát đã có sẵn.';
+  String get tournamentCameraHelpDevice => 'OBS / điện thoại';
 
   @override
-  String get tournamentCameraUrlLabel => 'URL phát (https)';
+  String get tournamentCameraHelpAqp => 'AQP SportO';
 
   @override
-  String get tournamentCameraUrlInvalid =>
-      'Nhập URL phát hợp lệ, bắt đầu bằng https://.';
+  String get tournamentCameraHelpViewer => 'Người xem';
+
+  @override
+  String get tournamentCameraHelpStep1 =>
+      'Điền tên camera, chọn sân rồi bấm nút Thêm camera ở cuối hộp.';
+
+  @override
+  String get tournamentCameraHelpStep2 =>
+      'Hộp tiếp theo hiện Server và Stream Key. Sao chép hai mục này.';
+
+  @override
+  String get tournamentCameraHelpStep3 =>
+      'Dán vào OBS (Settings → Stream → Custom) hoặc app phát trên điện thoại, rồi bấm Start.';
 
   @override
   String get tournamentCameraCourtLabel => 'Sân';
@@ -19520,6 +19622,31 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get bracketMgmt_cancel => 'Quay lại';
+
+  @override
+  String get bracketCreate_title => 'Cài đặt trước khi tạo bracket';
+
+  @override
+  String bracketCreate_suggestion(int groups, int teams, int advancing) {
+    return 'Gợi ý: $groups bảng · $teams đội/bảng · top $advancing';
+  }
+
+  @override
+  String bracketCreate_suggestionLegs(int legs) {
+    return 'Gợi ý: $legs lượt';
+  }
+
+  @override
+  String get bracketCreate_apply => 'Áp dụng';
+
+  @override
+  String get bracketCreate_dragHint =>
+      'Tạo xong, kéo thả đội để đổi bảng ngay trên sơ đồ.';
+
+  @override
+  String bracketCreate_capacityError(int capacity, int count) {
+    return 'Sức chứa $capacity đội chưa đủ cho $count đội. Tăng số bảng hoặc số đội mỗi bảng.';
+  }
 
   @override
   String get schedMgmt_courtsTooltip => 'Tạo sân và quản lý sân';

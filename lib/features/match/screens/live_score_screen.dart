@@ -22,6 +22,7 @@ import 'package:app_quanly_giaidau/providers/match_control_notifier.dart';
 import 'package:app_quanly_giaidau/providers/app_providers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_score_access_provider.dart';
+import 'package:app_quanly_giaidau/providers/tournament_co_organizer_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -752,6 +753,13 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         auth.isReferee &&
         effectiveTournamentId.isNotEmpty &&
         auth.tournamentId == effectiveTournamentId;
+    // An ADMIN invited as co-organizer of this tournament keeps scoring.
+    final isCoOrganizer =
+        ref
+            .watch(tournamentCoOrganizerProvider(effectiveTournamentId))
+            .asData
+            ?.value ??
+        false;
     final canOpenScoring =
         match != null &&
         !match.isCompleted &&
@@ -762,6 +770,7 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
               isAdmin: auth.isAdmin,
               createdBy: tournamentAsync?.value?.creatorId,
               refereeId: match.refereeId,
+              isTournamentStaff: isCoOrganizer,
               scoreAccess: scoreAccess,
             ));
     final isLandscape =

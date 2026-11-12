@@ -9,6 +9,7 @@ class PermissionRow {
     required this.email,
     required this.userId,
     required this.role,
+    this.avatarUrl = '',
     this.status,
     this.refereeId,
     this.action = RefereeAction.none,
@@ -17,6 +18,9 @@ class PermissionRow {
   final String name;
   final String email;
   final String userId;
+
+  /// Profile photo URL from the staff/referee payload; empty when unset.
+  final String avatarUrl;
 
   /// `CO_ORGANIZER`, `SPECTATOR` or `REFEREE`.
   final String role;
@@ -39,6 +43,7 @@ List<PermissionRow> buildPermissionRows(
       email: _text(member['email']),
       userId: _userId(member, const ['userId', 'user_id', 'id']),
       role: _text(member['role']).toUpperCase(),
+      avatarUrl: _avatarUrl(member),
     ),
   for (final referee in referees)
     PermissionRow(
@@ -47,6 +52,7 @@ List<PermissionRow> buildPermissionRows(
       // A referee invite is keyed by its record id, so no `id` fallback here.
       userId: _userId(referee, const ['userId', 'user_id']),
       role: 'REFEREE',
+      avatarUrl: _avatarUrl(referee),
       status: _text(referee['status']).toUpperCase(),
       refereeId: _text(referee['id'] ?? referee['refereeId']),
       action: _actionFor(_text(referee['status'])),
@@ -67,6 +73,12 @@ String _name(Map<String, dynamic> person) {
       ? nested['fullName'] ?? nested['name']
       : null;
   return _text(person['fullName'] ?? person['name'] ?? nestedName);
+}
+
+String _avatarUrl(Map<String, dynamic> person) {
+  final nested = person['user'];
+  final nestedUrl = nested is Map ? nested['avatarUrl'] : null;
+  return _text(person['avatarUrl'] ?? nestedUrl);
 }
 
 String _userId(Map<String, dynamic> person, List<String> keys) {

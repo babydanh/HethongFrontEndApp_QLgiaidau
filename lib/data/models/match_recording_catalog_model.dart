@@ -1,11 +1,53 @@
+/// Trạng thái phát của trận. `ENDED` cũ quy về [idle] như Web; giá trị lạ là null.
+enum MatchStreamStatus {
+  idle,
+  live,
+  offline,
+  error;
+
+  static MatchStreamStatus? parse(Object? value) => switch (value) {
+    'IDLE' || 'ENDED' => idle,
+    'LIVE' => live,
+    'OFFLINE' => offline,
+    'ERROR' => error,
+    _ => null,
+  };
+}
+
+/// Trạng thái ghi MP4, độc lập với trạng thái phát.
+enum MatchRecordingStatus {
+  recording,
+  stopped,
+  pending;
+
+  static MatchRecordingStatus? parse(Object? value) => switch (value) {
+    'RECORDING' => recording,
+    'STOPPED' => stopped,
+    'PENDING' => pending,
+    _ => null,
+  };
+}
+
 class MatchStreamControlStateModel {
   const MatchStreamControlStateModel({
     required this.matchId,
     required this.hasCamera,
+    this.hasRecording = false,
+    this.streamStatus,
   });
 
   final String matchId;
   final bool hasCamera;
+
+  /// True when the match was streamed and its recordings are still readable,
+  /// independent of the camera currently assigned. Missing = false (old API).
+  final bool hasRecording;
+
+  /// Null khi không có camera hoặc server trả trạng thái lạ.
+  final MatchStreamStatus? streamStatus;
+
+  /// Có camera mà trạng thái không nhận ra thì không đoán nút "Bắt đầu".
+  bool get canToggleStream => hasCamera && streamStatus != null;
 
   factory MatchStreamControlStateModel.fromJson(Map<String, Object?> json) {
     final matchId = json['matchId'];
@@ -13,7 +55,92 @@ class MatchStreamControlStateModel {
     if (matchId is! String || matchId.trim().isEmpty || hasCamera is! bool) {
       throw const FormatException('Invalid match control-state response.');
     }
-    return MatchStreamControlStateModel(matchId: matchId, hasCamera: hasCamera);
+    return MatchStreamControlStateModel(
+      matchId: matchId,
+      hasCamera: hasCamera,
+      hasRecording: json['hasRecording'] == true,
+      streamStatus: hasCamera
+          ? MatchStreamStatus.parse(json['streamStatus'])
+          : null,
+    );
+  }
+}
+
+/// Kết quả `POST /livestream/matches/{id}/start|stop`.
+class MatchStreamCommandResult {
+  const MatchStreamCommandResult({
+    this.streamStatus,
+    this.recordingStatus,
+    this.publishUrl,
+  });
+
+  final MatchStreamStatus? streamStatus;
+  final MatchRecordingStatus? recordingStatus;
+
+  /// Chỉ có khi start trả `publish` (camera PUSH); PULL thì null.
+  final String? publishUrl;
+
+  /// start: `{livestream{streamStatus}, publish, recordingStatus}`.
+  factory MatchStreamCommandResult.fromStartJson(Map<String, Object?> json) {
+    final livestream = json['livestream'];
+    final publish = json['publish'];
+    final url = publish is Map ? publish['url'] : null;
+    return MatchStreamCommandResult(
+      streamStatus: MatchStreamStatus.parse(
+        livestream is Map ? livestream['streamStatus'] : null,
+      ),
+      recordingStatus: MatchRecordingStatus.parse(json['recordingStatus']),
+      publishUrl: url is String && url.trim().isNotEmpty ? url : null,
+    );
+  }
+
+  /// stop: bản ghi livestream phẳng kèm `recordingStatus`.
+  factory MatchStreamCommandResult.fromStopJson(Map<String, Object?> json) {
+    return MatchStreamCommandResult(
+      streamStatus: MatchStreamStatus.parse(json['streamStatus']),
+      recordingStatus: MatchRecordingStatus.parse(json['recordingStatus']),
+    );
+  }
+}
+
+/// Một dòng của `GET /livestream/tournaments/{id}/matches`.
+class MatchLivestreamSummary {
+  const MatchLivestreamSummary({
+    required this.matchId,
+    this.cameraId,
+    this.streamStatus,
+    this.hasRecording = false,
+  });
+
+  final String matchId;
+  final String? cameraId;
+  final MatchStreamStatus? streamStatus;
+  final bool hasRecording;
+
+  /// Trận được gán camera riêng (như Web: `match.cameraId`).
+  bool get hasCamera => cameraId != null;
+  bool get isLive => streamStatus == MatchStreamStatus.live;
+
+  static MatchLivestreamSummary? tryFromJson(Object? value) {
+    if (value is! Map) return null;
+    final matchId = value['matchId'];
+    if (matchId is! String || matchId.trim().isEmpty) return null;
+    final cameraId = value['cameraId'];
+    return MatchLivestreamSummary(
+      matchId: matchId,
+      cameraId: cameraId is String && cameraId.isNotEmpty ? cameraId : null,
+      streamStatus: MatchStreamStatus.parse(value['streamStatus']),
+      hasRecording: value['hasRecording'] == true,
+    );
+  }
+
+  static List<MatchLivestreamSummary> listFromJson(Object? value) {
+    if (value is! List) {
+      throw const FormatException('Invalid match-livestreams response.');
+    }
+    return List<MatchLivestreamSummary>.unmodifiable([
+      for (final row in value) ?tryFromJson(row),
+    ]);
   }
 }
 

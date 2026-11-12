@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
@@ -287,84 +288,112 @@ class ResultsTab extends ConsumerWidget {
     final participant = award['participant'] is Map
         ? Map<String, dynamic>.from(award['participant'] as Map)
         : const <String, dynamic>{};
-    final teamName =
-        participant['teamName']?.toString() ??
-        AppLocalizations.of(context)!.matchNotDetermined;
+    // A doubles pair has no team name: show its players (shared label contract).
+    final teamName = participant['teamName']?.toString();
+    final players = toParticipantPlayers(participant);
+    final isTeam = resolveParticipantDisplay(
+      teamName: teamName,
+      players: players,
+    ).isTeam;
     final members = _visibleMembers(participant);
     final memberNames = members
         .map((member) => member['fullName']?.toString().trim() ?? '')
         .where((name) => name.isNotEmpty)
         .join(' · ');
-    final badgeColor = colors.textSecondary;
+    final rankColor = _rankColor(context, rank);
 
+    // Rank label on top (coloured by medal), the pair or team under it; a
+    // strip on the left carries the same colour.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: colors.bgSurface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colors.border.withValues(alpha: 0.65)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: colors.border.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$rank',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: badgeColor,
-                height: 1,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 4, color: rankColor),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                rank == 1
+                                    ? Icons.emoji_events_rounded
+                                    : Icons.military_tech_rounded,
+                                size: 15,
+                                color: rankColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                badgeTitle,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: rankColor,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          ParticipantLabel(
+                            teamName: teamName,
+                            players: players,
+                            coloredAvatars: true,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                          if (isTeam && memberNames.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              memberNames,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (isTeam && members.isNotEmpty)
+                      _buildMemberAvatars(members, 17, colors.textSecondary),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  teamName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (memberNames.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    memberNames,
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 4),
-                Text(
-                  badgeTitle,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (members.isNotEmpty) _buildMemberAvatars(members, 17, badgeColor),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Medal colour of a podium rank; the lighter tones keep contrast on the dark
+/// surface. Ranks past third use the muted text colour.
+Color _rankColor(BuildContext context, int rank) {
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  return switch (rank) {
+    1 => dark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
+    2 => dark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B),
+    3 => dark ? const Color(0xFFFB923C) : const Color(0xFF9A3412),
+    _ => context.colors.textMuted,
+  };
 }

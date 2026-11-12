@@ -1,9 +1,6 @@
-import 'package:app_quanly_giaidau/core/config/app_constants.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/utils/date_formatter_utils.dart';
-import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
-import 'package:app_quanly_giaidau/domain/entities/organizer_ops.dart';
 import 'package:app_quanly_giaidau/domain/entities/swiss.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
 import 'package:app_quanly_giaidau/features/bracket/utils/swiss_round_state.dart';
@@ -13,6 +10,7 @@ import 'package:app_quanly_giaidau/features/tournament/widgets/division_editor_s
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lifecycle_opening_sheet.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/registration_divisions_sheet.dart';
+import 'package:app_quanly_giaidau/features/tournament/utils/planned_rounds.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/stage_round_config_sheet.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:flutter/material.dart';
@@ -81,14 +79,6 @@ class _TournamentManagementDivisionsSectionState
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _maybePromptFullDivisions(divisions),
         );
-        // Hạt giống chỉ áp dụng cho nội dung vòng bảng + loại trực tiếp.
-        final seedDivisions = divisions
-            .where(
-              (division) => AppConstants.supportsSeeding(
-                division['bracketType']?.toString(),
-              ),
-            )
-            .toList();
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
@@ -125,13 +115,6 @@ class _TournamentManagementDivisionsSectionState
               label: l10n.tournamentManagementAddDivision,
               onTap: _isBusy ? null : _addDivision,
             ),
-            if (seedDivisions.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _TournamentSeedsSection(
-                tournamentId: widget.tournament.id,
-                divisions: seedDivisions,
-              ),
-            ],
           ],
         );
       },
@@ -182,16 +165,7 @@ class _TournamentManagementDivisionsSectionState
       onEdit: () => _editDivision(division),
       // Watch (không read) để menu hiện đúng ngay khi trận
       // của giải mới về; read lúc build luôn thấy rỗng.
-      onConfigureRounds:
-          (ref
-                      .watch(matchesProvider(widget.tournament.id))
-                      .asData
-                      ?.value
-                      .any((match) => match.divisionId == id) ??
-                  false) &&
-              !_isSwiss(division['bracketType'])
-          ? () => _configureRounds(division)
-          : null,
+      onConfigureRounds: _roundsAction(division, id),
       onToggleRegistration: () => _toggleRegistration(division),
       onReopenWithDeadline: () => _reopenWithDeadline(division),
       onBulkOpen: onBulkOpen,
@@ -309,7 +283,10 @@ class _TournamentManagementDivisionsSectionState
   /// Sheet cấu hình từng vòng của stage (task 2.2): chỉ mở khi hạng mục đã
   /// sinh sơ đồ; Swiss không có vòng riêng để cấu hình (Web trả danh sách
   /// rỗng cho SWISS) nên ẩn nút.
-  Future<void> _configureRounds(Map<String, dynamic> division) async {
+  Future<void> _configureRounds(
+    Map<String, dynamic> division, {
+    bool draft = false,
+  }) async {
     if (_configuring || _isBusy) return;
     _configuring = true;
     try {
@@ -317,11 +294,28 @@ class _TournamentManagementDivisionsSectionState
         context,
         tournament: widget.tournament,
         division: division,
+        draft: draft,
       );
       if (saved == true && mounted) _reload();
     } finally {
       _configuring = false;
     }
+  }
+
+  /// Nút "Luật theo vòng" của thẻ hạng mục. Watch (không read) để menu hiện
+  /// đúng ngay khi trận của giải về. Đã có sơ đồ: vòng thật của stage; chưa
+  /// có (danh sách trận đã tải) và có vòng dự kiến theo số đội: chế độ nháp,
+  /// lưu vào `roundConfig` hạng mục. Swiss và chưa đặt số đội: ẩn.
+  VoidCallback? _roundsAction(Map<String, dynamic> division, String id) {
+    final matches = ref.watch(matchesProvider(widget.tournament.id)).asData;
+    if (matches == null || id.isEmpty) return null;
+    if (_isSwiss(division['bracketType'])) return null;
+    if (matches.value.any((match) => match.divisionId == id)) {
+      return () => _configureRounds(division);
+    }
+    return plannedRoundsOfDivision(division).isNotEmpty
+        ? () => _configureRounds(division, draft: true)
+        : null;
   }
 
   /// Hạng mục đã có sơ đồ chưa: soi danh sách trận của giải (trận sinh cùng
@@ -817,298 +811,8 @@ class _DivisionMeta extends StatelessWidget {
   }
 }
 
-class _TournamentSeedsSection extends ConsumerStatefulWidget {
-  const _TournamentSeedsSection({
-    required this.tournamentId,
-    required this.divisions,
-  });
-  final String tournamentId;
-  final List<Map<String, dynamic>> divisions;
-  @override
-  ConsumerState<_TournamentSeedsSection> createState() =>
-      _TournamentSeedsSectionState();
-}
-
-class _TournamentSeedsSectionState
-    extends ConsumerState<_TournamentSeedsSection> {
-  String? _divisionId;
-  Future<List<OrganizerOpsParticipant>>? _participantsFuture;
-  final Map<String, int?> _seeds = {};
-  bool _isBusy = false;
-  String? _error;
-
-  String? get _activeDivisionId {
-    final ids = widget.divisions
-        .map(_divisionIdFor)
-        .where((id) => id.isNotEmpty)
-        .toSet();
-    if (_divisionId != null && ids.contains(_divisionId)) return _divisionId;
-    return ids.isEmpty ? null : ids.first;
-  }
-
-  void _loadParticipants(String? divisionId) {
-    if (divisionId == null) {
-      _participantsFuture = Future.value(const <OrganizerOpsParticipant>[]);
-      return;
-    }
-    _participantsFuture = ref
-        .read(tournamentRepositoryProvider)
-        .getOrganizerParticipants(widget.tournamentId, divisionId: divisionId);
-    _seeds.clear();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _divisionId = _activeDivisionId;
-    _loadParticipants(_divisionId);
-  }
-
-  @override
-  void didUpdateWidget(covariant _TournamentSeedsSection oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_divisionId == null ||
-        !widget.divisions.any(
-          (division) => _divisionIdFor(division) == _divisionId,
-        )) {
-      _divisionId = _activeDivisionId;
-      _loadParticipants(_divisionId);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final divisionId = _activeDivisionId;
-    return TournamentManagementSectionCard(
-      title: l10n.tournamentManagementSeeding,
-      subtitle: l10n.tournamentManagementSeedingDescription,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DropdownButtonFormField<String>(
-            initialValue: divisionId,
-            decoration: InputDecoration(
-              labelText: l10n.tournamentManagementDivision,
-              border: const OutlineInputBorder(),
-            ),
-            items: [
-              for (final division in widget.divisions)
-                DropdownMenuItem(
-                  value: _divisionIdFor(division),
-                  child: Text(_divisionName(division)),
-                ),
-            ],
-            onChanged: _isBusy
-                ? null
-                : (value) {
-                    if (value != null)
-                      setState(() {
-                        _divisionId = value;
-                        _loadParticipants(value);
-                        _error = null;
-                      });
-                  },
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton.icon(
-                onPressed: _isBusy || divisionId == null ? null : _autoSeed,
-                icon: _isBusy
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.auto_awesome_outlined),
-                label: Text(l10n.tournamentManagementAutoSeed),
-              ),
-              FilledButton.icon(
-                onPressed: _isBusy || divisionId == null ? null : _saveSeeds,
-                icon: const Icon(Icons.save_outlined),
-                label: Text(l10n.tournamentManagementSaveSeeds),
-              ),
-            ],
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _error == 'validation'
-                  ? l10n.tournamentManagementSeedValidationError
-                  : l10n.tournamentManagementActionError,
-              style: TextStyle(color: context.colors.error),
-            ),
-          ],
-          const SizedBox(height: 10),
-          if (_participantsFuture == null)
-            TournamentManagementEmpty(
-              title: l10n.tournamentManagementParticipantsEmpty,
-              icon: Icons.groups_outlined,
-            )
-          else
-            FutureBuilder<List<OrganizerOpsParticipant>>(
-              future: _participantsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting)
-                  return const BoneListLoading(itemCount: 3);
-                if (snapshot.hasError)
-                  return TournamentManagementError(
-                    error: snapshot.error,
-                    onRetry: () =>
-                        setState(() => _loadParticipants(divisionId)),
-                  );
-                final participants =
-                    snapshot.data ?? const <OrganizerOpsParticipant>[];
-                if (participants.isEmpty)
-                  return TournamentManagementEmpty(
-                    title: l10n.tournamentManagementParticipantsEmpty,
-                    icon: Icons.groups_outlined,
-                  );
-                return Column(
-                  children: [
-                    for (final participant in participants)
-                      _SeedRow(
-                        participant: participant,
-                        onChanged: (value) => _seeds[participant.id] = value,
-                      ),
-                  ],
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _autoSeed() async {
-    if (_isBusy || _activeDivisionId == null) return;
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await confirmTournamentManagementAction(
-      context,
-      title: l10n.tournamentManagementAutoSeed,
-      message: l10n.tournamentManagementAutoSeedConfirm,
-      confirmLabel: l10n.tournamentManagementAutoSeed,
-    );
-    if (!confirmed || !mounted) return;
-    setState(() {
-      _isBusy = true;
-      _error = null;
-    });
-    try {
-      await ref
-          .read(tournamentManagementRepositoryProvider)
-          .autoSeedParticipants(
-            widget.tournamentId,
-            divisionId: _activeDivisionId,
-          );
-      if (!mounted) return;
-      setState(() => _loadParticipants(_activeDivisionId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.tournamentManagementSeedsSaved)),
-      );
-    } catch (_) {
-      if (mounted) setState(() => _error = 'error');
-    } finally {
-      if (mounted) setState(() => _isBusy = false);
-    }
-  }
-
-  Future<void> _saveSeeds() async {
-    if (_isBusy || _activeDivisionId == null) return;
-    final l10n = AppLocalizations.of(context)!;
-    setState(() {
-      _isBusy = true;
-      _error = null;
-    });
-    try {
-      final participants = await _participantsFuture;
-      if (!mounted || participants == null || participants.isEmpty) return;
-      final currentSeeds = {
-        for (final participant in participants)
-          participant.id: _seeds.containsKey(participant.id)
-              ? _seeds[participant.id]
-              : participant.seed,
-      };
-      final clearedExistingSeed = participants.any(
-        (participant) =>
-            participant.seed != null &&
-            _seeds.containsKey(participant.id) &&
-            _seeds[participant.id] == null,
-      );
-      final values = currentSeeds.values.whereType<int>().toList();
-      if (clearedExistingSeed ||
-          values.any((value) => value < 1) ||
-          values.toSet().length != values.length) {
-        setState(() => _error = 'validation');
-        return;
-      }
-      await ref
-          .read(tournamentManagementRepositoryProvider)
-          .updateTournamentSeeds(widget.tournamentId, [
-            for (final participant in participants)
-              if (currentSeeds[participant.id] case final int seed)
-                {'participantId': participant.id, 'seed': seed},
-          ]);
-      if (!mounted) return;
-      setState(() => _loadParticipants(_activeDivisionId));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.tournamentManagementSeedsSaved)),
-      );
-    } catch (_) {
-      if (mounted) setState(() => _error = 'error');
-    } finally {
-      if (mounted) setState(() => _isBusy = false);
-    }
-  }
-}
-
-class _SeedRow extends StatelessWidget {
-  const _SeedRow({required this.participant, required this.onChanged});
-  final OrganizerOpsParticipant participant;
-  final ValueChanged<int?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        children: [
-          Expanded(
-            child: ParticipantLabel(
-              teamName: participant.teamName,
-              players: participant.players,
-              style: TextStyle(color: colors.textPrimary),
-            ),
-          ),
-          SizedBox(
-            width: 88,
-            child: TextFormField(
-              key: ValueKey('${participant.id}-${participant.seed}'),
-              initialValue: participant.seed?.toString() ?? '',
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(
-                  context,
-                )!.tournamentManagementSeed,
-                isDense: true,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) => onChanged(int.tryParse(value.trim())),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 String _divisionId(Map<String, dynamic> division) =>
     (division['id'] ?? division['divisionId'] ?? '').toString();
-String _divisionIdFor(Map<String, dynamic> division) => _divisionId(division);
 String _divisionName(Map<String, dynamic> division) =>
     (division['name'] ?? '').toString();
 

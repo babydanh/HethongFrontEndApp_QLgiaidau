@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_constants.dart';
@@ -307,22 +308,12 @@ class _ProfileRow extends ConsumerWidget {
             final name = profile.fullName?.trim() ?? '';
             final avatar = profile.avatarUrl;
             return LavishRow(
-              leading: CircleAvatar(
-                radius: 20,
-                backgroundColor: c.soft(LavishTone.accent),
-                foregroundImage: avatar != null && avatar.isNotEmpty
-                    ? NetworkImage(avatar)
-                    : null,
-                onForegroundImageError: avatar != null && avatar.isNotEmpty
-                    ? (_, _) {}
-                    : null,
-                child: Text(
-                  name.isNotEmpty ? name.characters.first.toUpperCase() : '?',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: LavishColors.accent,
-                  ),
-                ),
+              leading: RankAvatar(
+                imageUrl: avatar,
+                name: name,
+                elo: profile.eloPoints ?? 0,
+                tierName: profile.tierName,
+                size: 40,
               ),
               title: name.isNotEmpty ? name : l10n.dashboard_user,
               subtitle: profile.email,

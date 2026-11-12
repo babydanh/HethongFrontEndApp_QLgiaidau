@@ -362,7 +362,8 @@ class _VenueDialogState extends State<_VenueDialog> {
   late final _name = TextEditingController(text: widget.initialName);
   late final _address = TextEditingController(text: widget.initialAddress);
   late final _count = TextEditingController();
-  late final _prefix = TextEditingController();
+  // Same default as the Web and the Backend, so the field is never blank.
+  late final _prefix = TextEditingController(text: 'Sân');
   bool _default = false;
 
   @override

@@ -47,7 +47,8 @@ class _SocialListViewState extends ConsumerState<SocialListView> {
     final locationState = ref.watch(userLocationProvider);
     final sessionsAsync = ref.watch(filteredSocialSessionsProvider);
     // Just-opened / just-started tournaments join the time slots (not Nearby).
-    final tournaments = ref.watch(tournamentsProvider).asData?.value;
+    // `value` keeps the previous list while a reload is in flight.
+    final tournaments = ref.watch(tournamentsProvider).value;
     final newEntries = filterState.nearbyOnly || tournaments == null
         ? const <NewTournamentEntry>[]
         : newTournamentEntriesForDay(
