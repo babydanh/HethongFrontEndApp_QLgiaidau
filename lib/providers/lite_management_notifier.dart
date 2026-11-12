@@ -343,6 +343,15 @@ final liteManagementProvider =
     );
 
 class LiteManagementNotifier extends Notifier<LiteManagementState> {
+  /// Turns the "saved" badge back to idle after a short pause, unless the
+  /// provider was disposed meanwhile (the screen was left).
+  void _resetSaveStatusLater() {
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (!ref.mounted) return;
+      state = state.copyWith(detailsSaveStatus: 'idle');
+    });
+  }
+
   static const _log = AppLogger('LiteManage');
   bool _loadInFlight = false;
 
@@ -782,9 +791,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         durationMinutes: durationMinutes,
         detailsSaveStatus: 'saved',
       );
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        state = state.copyWith(detailsSaveStatus: 'idle');
-      });
+      _resetSaveStatusLater();
       return true;
     } catch (e, stack) {
       _log.error('Lỗi cập nhật lịch thi đấu Lite', e, stack);
@@ -828,9 +835,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         maxParticipants: maxParticipants,
         detailsSaveStatus: 'saved',
       );
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        state = state.copyWith(detailsSaveStatus: 'idle');
-      });
+      _resetSaveStatusLater();
       return true;
     } catch (e, stack) {
       _log.error('Lỗi cập nhật số lượng người tham gia Lite', e, stack);
@@ -914,9 +919,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         ward: effectiveWard.trim(),
         detailsSaveStatus: 'saved',
       );
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        state = state.copyWith(detailsSaveStatus: 'idle');
-      });
+      _resetSaveStatusLater();
       return true;
     } catch (e, stack) {
       _log.error('Lỗi cập nhật địa điểm Lite', e, stack);
@@ -968,9 +971,7 @@ class LiteManagementNotifier extends Notifier<LiteManagementState> {
         venueName: venueName?.trim() ?? state.venueName,
         detailsSaveStatus: 'saved',
       );
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        state = state.copyWith(detailsSaveStatus: 'idle');
-      });
+      _resetSaveStatusLater();
       return true;
     } catch (e, stack) {
       _log.error('Lỗi cập nhật thông tin giải Lite', e, stack);

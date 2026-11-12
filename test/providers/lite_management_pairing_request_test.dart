@@ -446,4 +446,35 @@ void main() {
       );
     });
   });
+
+  test(
+    'TC-LITE-SAVE-01 provider disposed before the saved badge resets: no error',
+    () async {
+      final adapter = _adapter(
+        divisions: _oneDivision,
+        participants: const [],
+        routes: {
+          'PATCH /tournaments/$_tournamentId': const FakeReply(200, {
+            'status': 'OK',
+            'data': {},
+          }),
+          'PATCH /tournaments/$_tournamentId/divisions/d1/config':
+              const FakeReply(200, {'status': 'OK', 'data': {}}),
+        },
+      );
+      final container = ProviderContainer(
+        overrides: [
+          dioClientProvider.overrideWithValue(fakeDioClient(adapter)),
+        ],
+      );
+      final notifier = container.read(liteManagementProvider.notifier);
+      await notifier.init(_tournamentId);
+
+      expect(await notifier.updateMaxParticipants(_tournamentId, 16), isTrue);
+      container.dispose();
+
+      // The badge reset fires 2.5 s after the save.
+      await Future<void>.delayed(const Duration(milliseconds: 2700));
+    },
+  );
 }
