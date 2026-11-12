@@ -18,11 +18,17 @@ class FakeReply {
 }
 
 class FakeRequest {
-  const FakeRequest(this.method, this.path, this.body);
+  const FakeRequest(
+    this.method,
+    this.path,
+    this.body, {
+    this.query = const {},
+  });
 
   final String method;
   final String path;
   final Map<String, dynamic>? body;
+  final Map<String, dynamic> query;
 }
 
 /// Trả lời theo khoá "METHOD /path". Route chưa mock trả 404 và vẫn được ghi lại.
@@ -44,6 +50,7 @@ class FakeApiAdapter implements HttpClientAdapter {
         options.method,
         options.path,
         data is Map ? Map<String, dynamic>.from(data) : null,
+        query: Map<String, dynamic>.from(options.queryParameters),
       ),
     );
     final reply =

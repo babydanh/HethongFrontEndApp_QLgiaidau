@@ -1,0 +1,23 @@
+# Tasks — phu-test-app
+
+Tiêu chí chung: lệnh hẹp `flutter test --no-pub <file>` exit 0; trước PR `dart analyze <file test thêm>` exit 0.
+
+- [x] T1 ApiCommunityRepository (0% → parse/lọc/phân trang/lỗi)
+  Files: test/data/api_community_repository_test.dart, test/support/fake_api_adapter.dart
+  Tiêu chí: `flutter test --no-pub test/data/api_community_repository_test.dart`
+  Phụ thuộc: không
+- [ ] T2 ApiCommunitySocialRepository (0%)
+  Files: test/data/api_community_social_repository_test.dart
+  Tiêu chí: `flutter test --no-pub test/data/api_community_social_repository_test.dart`
+- [ ] T3 ApiSocialSessionRepository + SocialSessionModel (31%/45%)
+  Files: test/data/api_social_session_repository_test.dart, test/data/models/social_session_model_test.dart
+- [ ] T4 ApiTeamRepository (25%)
+  Files: test/data/api_team_repository_test.dart
+- [ ] T5 ApiTournamentRepository phần còn thiếu (46%)
+  Files: test/data/api_tournament_repository_gaps_test.dart
+- [ ] T6 ApiMatchRepository phần còn thiếu (59%)
+  Files: test/data/api_match_repository_gaps_test.dart
+- [ ] T7 Notifier: score_panel_notifier, lite_management_notifier, social_provider
+  Files: test/providers/*_gaps_test.dart
+- [ ] T8 Đo lại, review, handoff, PR
+  Files: openspec/changes/phu-test-app/{coverage-after.md,handoff.md,findings.md}
