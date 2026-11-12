@@ -13,7 +13,7 @@ Tiêu chí chung: lệnh hẹp `flutter test --no-pub <file>` exit 0; trước P
   Files: test/data/api_social_session_repository_test.dart, test/data/models/social_session_model_test.dart
 - [x] T4 ApiTeamRepository (25%)
   Files: test/data/api_team_repository_test.dart
-- [ ] T5 ApiTournamentRepository phần còn thiếu (46%)
+- [x] T5 ApiTournamentRepository phần còn thiếu (46%)
   Files: test/data/api_tournament_repository_gaps_test.dart
 - [ ] T6 ApiMatchRepository phần còn thiếu (59%)
   Files: test/data/api_match_repository_gaps_test.dart
