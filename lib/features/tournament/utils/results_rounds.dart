@@ -262,3 +262,14 @@ String? defaultResultsRoundKey(List<ResultsRound> rounds) {
   if (rounds.isEmpty) return null;
   return (rounds.where((r) => r.pending > 0).firstOrNull ?? rounds.last).key;
 }
+
+/// Round holding one of [matchIds] (a finished division's final), else
+/// [defaultResultsRoundKey].
+String? focusResultsRoundKey(List<ResultsRound> rounds, Set<String>? matchIds) {
+  if (matchIds != null) {
+    for (final round in rounds) {
+      if (round.matches.any((m) => matchIds.contains(m.id))) return round.key;
+    }
+  }
+  return defaultResultsRoundKey(rounds);
+}

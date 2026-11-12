@@ -67,7 +67,7 @@ class ResultsMergedTab extends ConsumerWidget {
           isLite: isLite,
           canManage: canManage,
           divisionId: divisionId,
-          finalOnly: hasPodium,
+          focusFinal: hasPodium,
         ),
     ];
     if (inline) {

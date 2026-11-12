@@ -73,7 +73,7 @@ Future<void> _pump(
   bool canManage = false,
   String? divisionId = 'd1',
   ResultsBoardFilter initialFilter = ResultsBoardFilter.all,
-  bool finalOnly = false,
+  bool focusFinal = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -102,7 +102,7 @@ Future<void> _pump(
                     divisionId: divisionId,
                     canManage: canManage,
                     initialFilter: initialFilter,
-                    finalOnly: finalOnly,
+                    focusFinal: focusFinal,
                   ),
                 ),
               ),
@@ -153,34 +153,41 @@ void main() {
     expect(find.byKey(const ValueKey('results-box-live')), findsNothing);
   });
 
-  group('TC-FINAL-02 finalOnly lists the knockout final only', () {
+  group('TC-FINAL-02 focusFinal keeps every round, opens the final', () {
     final knockout = [
       _match('r1a', round: 1, number: 1, stageType: 'SINGLE_ELIMINATION'),
       _match('r1b', round: 1, number: 2, stageType: 'SINGLE_ELIMINATION'),
       _match('fin', round: 2, number: 1, stageType: 'SINGLE_ELIMINATION'),
     ];
 
-    testWidgets('a finished knockout division shows the last round only', (
-      tester,
-    ) async {
-      await _pump(tester, knockout, finalOnly: true);
+    testWidgets('TC-RESULTS-APP-FINAL-01 finished knockout keeps all rounds, '
+        'only the final box open', (tester) async {
+      await _pump(tester, knockout, focusFinal: true);
 
-      expect(_toggles, findsNWidgets(1));
+      expect(_toggles, findsNWidgets(2));
+      expect(find.byKey(const ValueKey('results-jump')), findsOneWidget);
       expect(_row('fin'), findsOneWidget);
       expect(_row('r1a'), findsNothing);
+      await _toggleBox(tester, 0);
+      expect(_row('r1a'), findsOneWidget);
     });
 
-    testWidgets('without finalOnly every round stays', (tester) async {
+    testWidgets('without focusFinal the first pending round opens', (
+      tester,
+    ) async {
       await _pump(tester, knockout);
 
       expect(_toggles, findsNWidgets(2));
+      expect(_row('r1a'), findsOneWidget);
+      expect(_row('fin'), findsNothing);
     });
 
-    testWidgets('no knockout final keeps the full board', (tester) async {
+    testWidgets('TC-RESULTS-APP-FINAL-02 no knockout final keeps the old '
+        'default box', (tester) async {
       await _pump(tester, [
         _match('a', round: 1, number: 1, stageType: 'ROUND_ROBIN'),
         _match('b', round: 2, number: 1, stageType: 'ROUND_ROBIN'),
-      ], finalOnly: true);
+      ], focusFinal: true);
 
       // Round robin rounds share one "Vòng bảng" box; both matches stay.
       expect(_row('a'), findsOneWidget);

@@ -65,7 +65,7 @@ class ResultsMatchBoard extends ConsumerStatefulWidget {
     required this.canManage,
     this.divisionId,
     this.initialFilter = ResultsBoardFilter.all,
-    this.finalOnly = false,
+    this.focusFinal = false,
   });
 
   final String tournamentId;
@@ -78,9 +78,10 @@ class ResultsMatchBoard extends ConsumerStatefulWidget {
   /// Chip selected when the board is first built (e.g. from a progress popup).
   final ResultsBoardFilter initialFilter;
 
-  /// Finished division: list only the knockout final. A bracket without a
-  /// knockout final (round robin, swiss) keeps the full board.
-  final bool finalOnly;
+  /// Finished division: every round stays listed, only the box holding the
+  /// knockout final starts open. A bracket without a knockout final (round
+  /// robin, swiss) keeps the usual default box.
+  final bool focusFinal;
 
   @override
   ConsumerState<ResultsMatchBoard> createState() => _ResultsMatchBoardState();
@@ -106,7 +107,8 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   // search box or switching a filter chip never recomputes round labels.
   List<MatchModel>? _source;
   String? _derivedDivisionId;
-  bool _derivedFinalOnly = false;
+  bool _derivedFocusFinal = false;
+  Set<String>? _finalIds;
   String? _derivedLocale;
   List<MatchModel> _all = const [];
   List<ResultsRound> _rounds = const [];
@@ -145,23 +147,24 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
 
   void _refreshDerived(List<MatchModel> source, AppLocalizations l10n) {
     final divisionId = widget.divisionId;
-    final finalOnly = widget.finalOnly;
+    final focusFinal = widget.focusFinal;
     if (identical(source, _source) &&
         divisionId == _derivedDivisionId &&
-        finalOnly == _derivedFinalOnly &&
+        focusFinal == _derivedFocusFinal &&
         l10n.localeName == _derivedLocale) {
       return;
     }
     _source = source;
     _derivedDivisionId = divisionId;
-    _derivedFinalOnly = finalOnly;
+    _derivedFocusFinal = focusFinal;
     _derivedLocale = l10n.localeName;
     final ofDivision = divisionId == null
         ? source
         : source.where((m) => matchDivisionId(m) == divisionId).toList();
-    final all = finalOnly
-        ? (pickFinalMatches(ofDivision) ?? ofDivision)
-        : ofDivision;
+    final all = ofDivision;
+    _finalIds = focusFinal
+        ? pickFinalMatches(ofDivision)?.map((m) => m.id).toSet()
+        : null;
     final real = all.where((m) => !m.isBye).toList();
     _all = all;
     _rounds = buildResultsRounds(all, (m) => _roundLabel(m, all, l10n));
@@ -314,9 +317,9 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
             _filter == ResultsBoardFilter.live) &&
         live.any(_matchesQuery);
     final visible = _visibleRounds();
-    final defaultKey = defaultResultsRoundKey([
+    final defaultKey = focusResultsRoundKey([
       for (final (round, _) in visible) round,
-    ]);
+    ], _finalIds);
     final searching = _needle.isNotEmpty;
     final boxes = [
       if (showLive)
