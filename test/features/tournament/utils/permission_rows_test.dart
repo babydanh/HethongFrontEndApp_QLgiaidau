@@ -11,7 +11,7 @@ Map<String, dynamic> _referee(String status, {String id = 'r1'}) => {
 
 void main() {
   group('buildPermissionRows', () {
-    test('maps referee status to the action offered', () {
+    test('TC-APP-REF-ADD-01 maps referee status to the action offered', () {
       final rows = buildPermissionRows(const [], [
         _referee('INVITED', id: 'a'),
         _referee('DECLINED', id: 'b'),
@@ -21,7 +21,7 @@ void main() {
       expect(rows.map((r) => r.action), [
         RefereeAction.revoke,
         RefereeAction.resend,
-        RefereeAction.none,
+        RefereeAction.remove,
         RefereeAction.none,
       ]);
       expect(rows.every((r) => r.role == 'REFEREE'), isTrue);

@@ -47,6 +47,10 @@ class _FakeRepo implements IStageOperationsRepository {
   Object? error;
   Object? loadError;
   Completer<void>? gate;
+  StageOpsAdvanceResult advanceResult = const StageOpsAdvanceResult(
+    stageCount: 1,
+    totalMatches: 7,
+  );
 
   Future<void> _mutate(String call) async {
     calls.add(call);
@@ -75,7 +79,7 @@ class _FakeRepo implements IStageOperationsRepository {
     required String stageId,
   }) async {
     await _mutate('advance:$tournamentId:$divisionId:$stageId');
-    return const StageOpsAdvanceResult(stageCount: 1, totalMatches: 7);
+    return advanceResult;
   }
 
   @override
@@ -124,12 +128,14 @@ Future<_FakeRepo> _pumpScreen(
   List<StageOpsStage> stages, {
   List<Standing> standings = const [],
   Object? loadError,
+  StageOpsAdvanceResult? advanceResult,
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   final repo = _FakeRepo(stages)..loadError = loadError;
+  if (advanceResult != null) repo.advanceResult = advanceResult;
   await tester.pumpWidget(
     _app(
       const StageOperationsScreen(
@@ -261,6 +267,39 @@ void main() {
         find.text('Qualified teams moved into the knockout stage (7 matches).'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('TC-STAGEOPS-11 advance waits for tied teams', () {
+    testWidgets('warns instead of reporting success when ties are pending', (
+      tester,
+    ) async {
+      final repo = await _pumpScreen(
+        tester,
+        [
+          const StageOpsStage(
+            id: 's-1',
+            name: 'Groups',
+            type: 'ROUND_ROBIN',
+            order: 1,
+            totalMatches: 6,
+          ),
+          _knockout,
+        ],
+        advanceResult: const StageOpsAdvanceResult(pendingTieCount: 2),
+      );
+
+      await _tapKey(tester, 'stage-action-advance-s-1');
+      await _tapText(tester, 'Lock groups');
+
+      expect(repo.calls, ['advance:t-1:d-1:s-1']);
+      expect(
+        find.text(
+          '2 groups of teams are level on every criterion, so the knockout is not set yet. Open the Web app to choose who advances.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('moved into the knockout stage'), findsNothing);
     });
   });
 

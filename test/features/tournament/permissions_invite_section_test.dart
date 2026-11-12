@@ -24,6 +24,7 @@ class _FakeRepo implements TournamentManagementRepository {
   final addedReferees = <String>[];
   final removedReferees = <String>[];
   final addedStaff = <(String, String)>[];
+  final removedStaff = <String>[];
 
   @override
   Future<List<Map<String, dynamic>>> getStaff(String id) async => staff;
@@ -53,6 +54,11 @@ class _FakeRepo implements TournamentManagementRepository {
     addedStaff.add((email, role));
     if (failMutations) throw Exception('boom');
     return {};
+  }
+
+  @override
+  Future<void> removeStaff(String id, String userId) async {
+    removedStaff.add(userId);
   }
 
   @override
@@ -202,7 +208,7 @@ void main() {
     final repo = _FakeRepo(
       referees: [_referee('d1', 'DECLINED', email: _declinedEmail)],
     );
-    final l10n = await _pump(tester, repo);
+    await _pump(tester, repo);
 
     await _pickRowAction(tester);
     await tester.pumpAndSettle();
@@ -216,7 +222,7 @@ void main() {
     tester,
   ) async {
     final repo = _FakeRepo(referees: [_referee('i1', 'INVITED')]);
-    final l10n = await _pump(tester, repo);
+    await _pump(tester, repo);
 
     await _pickRowAction(tester);
     await tester.pumpAndSettle();
@@ -240,17 +246,36 @@ void main() {
     expect(repo.removedReferees, isEmpty);
   });
 
-  testWidgets('accepted referee row has neither resend nor revoke', (
-    tester,
-  ) async {
-    final repo = _FakeRepo(referees: [_referee('a1', 'ACCEPTED')]);
-    final l10n = await _pump(tester, repo);
+  testWidgets(
+    'TC-APP-REF-ADD-02 accepted referee can be removed after confirming',
+    (tester) async {
+      final repo = _FakeRepo(referees: [_referee('a1', 'ACCEPTED')]);
+      final l10n = await _pump(tester, repo);
 
-    expect(find.text('Referee a1'), findsOneWidget);
-    expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
-    expect(find.text(l10n.tournamentManagementResend), findsNothing);
-    expect(find.text(l10n.tournamentManagementRevoke), findsNothing);
-  });
+      expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.more_vert_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.tournamentManagementRemove), findsOneWidget);
+      expect(find.text(l10n.tournamentManagementResend), findsNothing);
+      expect(find.text(l10n.tournamentManagementRevoke), findsNothing);
+
+      await tester.tap(find.byKey(const Key('permissions-row-sheet-action')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(l10n.tournamentManagementRemoveRefereeConfirm('Referee a1')),
+        findsOneWidget,
+      );
+      await tester.tap(_confirmButton());
+      await tester.pumpAndSettle();
+
+      expect(repo.removedReferees, ['a1']);
+      expect(repo.removedStaff, isEmpty);
+      expect(
+        find.text(l10n.tournamentManagementRefereeRemoved),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('role filter keeps only referee rows', (tester) async {
     final repo = _FakeRepo(

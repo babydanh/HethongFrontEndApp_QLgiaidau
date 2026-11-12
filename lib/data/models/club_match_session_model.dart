@@ -3,6 +3,10 @@ class ClubMatchSessionModel {
   final String communityId;
   final String resolvedName;
   final String? description;
+
+  /// Club sport from the API `category` (slug drives the sport icon).
+  final String? sportSlug;
+  final String? sportName;
   final String status;
   final String registrationMode;
   final bool isRanked;
@@ -59,6 +63,8 @@ class ClubMatchSessionModel {
     this.avoidUserIds = const [],
     this.preferenceVersion = 0,
     this.description,
+    this.sportSlug,
+    this.sportName,
   });
 
   factory ClubMatchSessionModel.fromJson(
@@ -69,6 +75,8 @@ class ClubMatchSessionModel {
     resolvedName:
         json['resolvedName']?.toString() ?? json['name']?.toString() ?? '',
     description: json['description']?.toString(),
+    sportSlug: (json['category'] as Map?)?['slug']?.toString(),
+    sportName: (json['category'] as Map?)?['name']?.toString(),
     status: json['status']?.toString() ?? 'OPEN',
     registrationMode: json['registrationMode']?.toString() ?? 'MIXED',
     isRanked: json['isRanked'] != false,

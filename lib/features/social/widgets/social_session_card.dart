@@ -7,10 +7,22 @@ class SocialSessionCard extends StatelessWidget {
   final SocialSessionModel session;
   final VoidCallback onTap;
 
+  /// Optional short status chip shown above the slot count (club manage list).
+  final Widget? badge;
+
+  /// Shows a people icon next to the slot count (icon + number stats).
+  final bool showStatIcons;
+
+  /// Replaces the host line with a schedule line (club manage list).
+  final String? caption;
+
   const SocialSessionCard({
     super.key,
     required this.session,
     required this.onTap,
+    this.badge,
+    this.showStatIcons = false,
+    this.caption,
   });
 
   @override
@@ -61,11 +73,20 @@ class SocialSessionCard extends StatelessWidget {
                   // Subtitle / Host tag with flag
                   Row(
                     children: [
-                      const Text('🇻🇳', style: TextStyle(fontSize: 12)),
+                      if (caption == null)
+                        const Text('🇻🇳', style: TextStyle(fontSize: 12))
+                      else
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 13,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          session.hostClubName.toUpperCase(),
+                          caption ?? session.hostClubName.toUpperCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -103,60 +124,62 @@ class SocialSessionCard extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       // Play Format Chip
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF2C2C2E)
-                              : const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          session.playFormat,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? const Color(0xFFCBD5E1)
-                                : const Color(0xFF334155),
+                      if (session.playFormat.trim().isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
                           ),
-                        ),
-                      ),
-
-                      // Location / Venue Tag
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 13,
+                          decoration: BoxDecoration(
                             color: isDark
-                                ? const Color(0xFF94A3B8)
-                                : const Color(0xFF64748B),
+                                ? const Color(0xFF2C2C2E)
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          const SizedBox(width: 2),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 160),
-                            child: Text(
-                              session.isLocationDeferred
-                                  ? session.venueName
-                                  : session.venueName.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF64748B),
-                              ),
+                          child: Text(
+                            session.playFormat,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? const Color(0xFFCBD5E1)
+                                  : const Color(0xFF334155),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+
+                      // Location / Venue Tag
+                      if (session.venueName.trim().isNotEmpty)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 13,
+                              color: isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 2),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 160),
+                              child: Text(
+                                session.isLocationDeferred
+                                    ? session.venueName
+                                    : session.venueName.toUpperCase(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : const Color(0xFF64748B),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ],
@@ -168,14 +191,30 @@ class SocialSessionCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                if (badge != null) ...[badge!, const SizedBox(height: 6)],
                 // Slots Capacity (e.g. 1/8)
-                Text(
-                  '${session.currentParticipants}/${session.maxParticipants}',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showStatIcons) ...[
+                      Icon(
+                        Icons.people_outline_rounded,
+                        size: 15,
+                        color: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF64748B),
+                      ),
+                      const SizedBox(width: 3),
+                    ],
+                    Text(
+                      '${session.currentParticipants}/${session.maxParticipants}',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      ),
+                    ),
+                  ],
                 ),
                 if (distanceLabel.isNotEmpty) ...[
                   const SizedBox(height: 2),

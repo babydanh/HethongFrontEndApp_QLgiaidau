@@ -1,6 +1,6 @@
-/// What the organizer may do with a referee invite (mirrors Web
-/// `PermissionsTab`): withdraw a pending one, resend a declined one.
-enum RefereeAction { none, revoke, resend }
+/// What the organizer may do with a referee (mirrors Web `PermissionsTab`):
+/// withdraw a pending invite, add a declined one again, remove an added one.
+enum RefereeAction { none, revoke, resend, remove }
 
 /// One display row of the permissions list, staff and referees unified.
 class PermissionRow {
@@ -62,6 +62,7 @@ List<PermissionRow> buildPermissionRows(
 RefereeAction _actionFor(String status) => switch (status.toUpperCase()) {
   'INVITED' => RefereeAction.revoke,
   'DECLINED' => RefereeAction.resend,
+  'ACCEPTED' => RefereeAction.remove,
   _ => RefereeAction.none,
 };
 

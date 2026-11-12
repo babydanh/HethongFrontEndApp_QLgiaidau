@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/screens/club_match_session_create_screen.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/club_manage_session_card.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/core/widgets/match_card/live_match_card_v2.dart';
@@ -82,9 +83,8 @@ class _ClubMatchSessionsScreenState
       ),
     );
     if (created == true && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
     }
   }
 
@@ -123,7 +123,8 @@ class _ClubMatchSessionsScreenState
         label: Text(l10n.clubMatchSessionCreate),
       ),
       body: sessions.when(
-        loading: () => const CommunityListSkeleton(itemCount: 5, leadingAvatar: false),
+        loading: () =>
+            const CommunityListSkeleton(itemCount: 5, leadingAvatar: false),
         error: (error, _) => Center(
           child: FilledButton.tonal(
             onPressed: () => ref
@@ -149,277 +150,12 @@ class _ClubMatchSessionsScreenState
                     Center(child: Text(l10n.clubMatchSessionEmpty)),
                   ],
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
+              : ListView.builder(
                   itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final session = items[index];
-                    final colors = context.colors;
-
-                    final (
-                      badgeBg,
-                      badgeTextColor,
-                      statusDotColor,
-                    ) = switch (session.status) {
-                      'OPEN' => (
-                        const Color(0xFF10B981).withValues(alpha: 0.12),
-                        const Color(0xFF059669),
-                        const Color(0xFF10B981),
-                      ),
-                      'LIVE' => (
-                        const Color(0xFFEF4444).withValues(alpha: 0.12),
-                        const Color(0xFFDC2626),
-                        const Color(0xFFEF4444),
-                      ),
-                      'CLOSED' => (
-                        const Color(0xFFF59E0B).withValues(alpha: 0.12),
-                        const Color(0xFFD97706),
-                        const Color(0xFFF59E0B),
-                      ),
-                      'ENDED' => (
-                        colors.bgSurface,
-                        colors.textMuted,
-                        colors.textMuted,
-                      ),
-                      'CANCELLED' => (
-                        colors.bgSurface,
-                        colors.textMuted,
-                        colors.textMuted,
-                      ),
-                      _ => (
-                        colors.bgSurface,
-                        colors.textMuted,
-                        colors.textMuted,
-                      ),
-                    };
-
-                    return InkWell(
-                      onTap: () => _openSession(session),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: colors.bgCard,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: colors.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFF3B82F6,
-                                    ).withValues(alpha: 0.10),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(
-                                    Icons.sports_tennis_rounded,
-                                    color: Color(0xFF2563EB),
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        session.resolvedName,
-                                        style: TextStyle(
-                                          fontSize: 15.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: colors.textPrimary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: session.isRanked
-                                                  ? const Color(
-                                                      0xFF3B82F6,
-                                                    ).withValues(alpha: 0.10)
-                                                  : colors.bgSurface,
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.insights_rounded,
-                                                  size: 13,
-                                                  color: session.isRanked
-                                                      ? const Color(0xFF2563EB)
-                                                      : colors.textMuted,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  session.isRanked
-                                                      ? l10n.clubMatchSessionRankedShort
-                                                      : l10n.clubMatchSessionUnrankedShort,
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: session.isRanked
-                                                        ? const Color(
-                                                            0xFF2563EB,
-                                                          )
-                                                        : colors.textMuted,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          if (session.startAt != null) ...[
-                                            const SizedBox(width: 8),
-                                            Icon(
-                                              Icons.schedule_rounded,
-                                              size: 13,
-                                              color: colors.textMuted,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${session.startAt!.day}/${session.startAt!.month} ${session.startAt!.hour.toString().padLeft(2, '0')}:${session.startAt!.minute.toString().padLeft(2, '0')}',
-                                              style: TextStyle(
-                                                fontSize: 11.5,
-                                                color: colors.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 9,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: badgeBg,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 6,
-                                        height: 6,
-                                        decoration: BoxDecoration(
-                                          color: statusDotColor,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        _localizedSessionStatus(
-                                          l10n,
-                                          session.status,
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: badgeTextColor,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Divider(
-                              height: 1,
-                              color: colors.border.withValues(alpha: 0.6),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.people_outline_rounded,
-                                      size: 15,
-                                      color: colors.textSecondary,
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      '${session.participantCount ?? 0}/${session.maxParticipants} người tham gia',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: colors.textSecondary,
-                                      ),
-                                    ),
-                                    if (session.matchCount != null &&
-                                        session.matchCount! > 0) ...[
-                                      const SizedBox(width: 12),
-                                      Icon(
-                                        Icons.sports_rounded,
-                                        size: 15,
-                                        color: colors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        '${session.matchCount} trận',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: colors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Chi tiết',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.info,
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.chevron_right_rounded,
-                                      size: 16,
-                                      color: colors.info,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                  itemBuilder: (context, index) => ClubManageSessionCard(
+                    session: items[index],
+                    onTap: () => _openSession(items[index]),
+                  ),
                 ),
         ),
       ),
@@ -537,9 +273,8 @@ class _ClubMatchSessionDetailPageState
       await action();
       _scheduleSessionDetailRefresh();
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(success)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(success)));
       }
     } catch (error) {
       if (error is DioException && error.response?.statusCode == 409) {
@@ -2008,9 +1743,8 @@ class _ClubMatchSessionDetailPageState
           const SizedBox(height: 16),
           Text(
             l10n.clubMatchSessionParticipants,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           if (stats.isEmpty)
@@ -2077,9 +1811,8 @@ class _SessionSectionTitle extends StatelessWidget {
         Expanded(
           child: Text(
             '$title ($count)',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w800),
           ),
         ),
         ...?(action == null ? null : <Widget>[action!]),

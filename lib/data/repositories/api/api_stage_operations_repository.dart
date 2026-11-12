@@ -48,9 +48,11 @@ class ApiStageOperationsRepository implements IStageOperationsRepository {
     );
     final data = _data(response.data);
     final stageIds = data['stageIds'];
+    final pendingTies = data['pendingTies'];
     return StageOpsAdvanceResult(
       stageCount: stageIds is List ? stageIds.length : 0,
       totalMatches: (data['totalMatches'] as num?)?.toInt() ?? 0,
+      pendingTieCount: pendingTies is List ? pendingTies.length : 0,
     );
   }
 

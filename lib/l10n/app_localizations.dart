@@ -1787,7 +1787,7 @@ abstract class AppLocalizations {
   /// No description provided for @communityRecurringSchedulesTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Lịch tạo giải định kỳ (Cron)'**
+  /// **'Lịch giải định kỳ'**
   String get communityRecurringSchedulesTitle;
 
   /// No description provided for @communityRecurringActive.
@@ -24850,6 +24850,12 @@ abstract class AppLocalizations {
   /// **'Không thể tải buổi giao lưu này'**
   String get clubMatchSessionLoadFailed;
 
+  /// No description provided for @clubMatchSessionListLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách buổi giao lưu'**
+  String get clubMatchSessionListLoadFailed;
+
   /// No description provided for @clubMatchSessionMatchStatus.
   ///
   /// In vi, this message translates to:
@@ -26797,7 +26803,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementPermissionsDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Quản lý nhân sự giải đấu và lời mời trọng tài.'**
+  /// **'Quản lý nhân sự và trọng tài của giải.'**
   String get tournamentManagementPermissionsDescription;
 
   /// No description provided for @tournamentManagementPlatformFeeRate.
@@ -26845,7 +26851,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRefereeAccepted.
   ///
   /// In vi, this message translates to:
-  /// **'Đã chấp nhận'**
+  /// **'Đã thêm'**
   String get tournamentManagementRefereeAccepted;
 
   /// No description provided for @tournamentManagementRefereeDeclined.
@@ -26863,7 +26869,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRefereeInviteSent.
   ///
   /// In vi, this message translates to:
-  /// **'Đã gửi lời mời trọng tài.'**
+  /// **'Đã thêm trọng tài.'**
   String get tournamentManagementRefereeInviteSent;
 
   /// No description provided for @tournamentManagementRefereeInvited.
@@ -26875,13 +26881,13 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementInviteByEmail.
   ///
   /// In vi, this message translates to:
-  /// **'Mời qua email'**
+  /// **'Thêm qua email'**
   String get tournamentManagementInviteByEmail;
 
   /// No description provided for @tournamentManagementInviteEmail.
   ///
   /// In vi, this message translates to:
-  /// **'Email người được mời'**
+  /// **'Email người được thêm'**
   String get tournamentManagementInviteEmail;
 
   /// No description provided for @tournamentManagementInviteEmailInvalid.
@@ -26899,19 +26905,19 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementResend.
   ///
   /// In vi, this message translates to:
-  /// **'Gửi lại'**
+  /// **'Thêm lại'**
   String get tournamentManagementResend;
 
   /// No description provided for @tournamentManagementResendConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Gửi lại lời mời cho {name}?'**
+  /// **'Thêm lại {name} làm trọng tài?'**
   String tournamentManagementResendConfirm(String name);
 
   /// No description provided for @tournamentManagementRefereeInviteResent.
   ///
   /// In vi, this message translates to:
-  /// **'Đã gửi lại lời mời.'**
+  /// **'Đã thêm lại trọng tài.'**
   String get tournamentManagementRefereeInviteResent;
 
   /// No description provided for @tournamentManagementRevoke.
@@ -26947,7 +26953,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRefereesDescription.
   ///
   /// In vi, this message translates to:
-  /// **'Mời trọng tài bằng email và quản lý phân công trong giải đấu.'**
+  /// **'Thêm trọng tài bằng email; trọng tài có quyền bấm điểm ngay.'**
   String get tournamentManagementRefereesDescription;
 
   /// No description provided for @tournamentManagementRefereesEmpty.
@@ -27163,7 +27169,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementRemoveRefereeConfirm.
   ///
   /// In vi, this message translates to:
-  /// **'Xóa {name} khỏi giải đấu này?'**
+  /// **'Gỡ {name} khỏi trọng tài của giải?'**
   String tournamentManagementRemoveRefereeConfirm(String name);
 
   /// No description provided for @tournamentManagementRemoveStaff.
@@ -27319,7 +27325,7 @@ abstract class AppLocalizations {
   /// No description provided for @tournamentManagementSendInvite.
   ///
   /// In vi, this message translates to:
-  /// **'Gửi lời mời'**
+  /// **'Thêm'**
   String get tournamentManagementSendInvite;
 
   /// No description provided for @tournamentManagementServerAuthorizationNote.
@@ -34081,6 +34087,12 @@ abstract class AppLocalizations {
   /// **'Đã đưa các đội đi tiếp vào vòng loại trực tiếp ({count} trận).'**
   String stageActionAdvanceDone(int count);
 
+  /// No description provided for @stageActionAdvancePendingTies.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có {count} nhóm đội hoà tuyệt đối nên chưa tạo được sơ đồ loại trực tiếp. Hãy mở bản Web để chọn đội đi tiếp.'**
+  String stageActionAdvancePendingTies(int count);
+
   /// No description provided for @stageActionPlayoffHeading.
   ///
   /// In vi, this message translates to:
@@ -34344,6 +34356,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Xem tất cả'**
   String get profLvSeeAll;
+
+  /// No description provided for @profOrgTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải tôi tổ chức'**
+  String get profOrgTitle;
+
+  /// No description provided for @profOrgLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm'**
+  String get profOrgLoadMore;
+
+  /// No description provided for @profOrgRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get profOrgRetry;
 
   /// No description provided for @profLvUpcoming.
   ///
@@ -35394,6 +35424,42 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.'**
   String get schedMgmt_emptyHint;
+
+  /// No description provided for @clubMatchSessionStatusOpenShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở'**
+  String get clubMatchSessionStatusOpenShort;
+
+  /// No description provided for @clubMatchSessionStatusLiveShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang diễn ra'**
+  String get clubMatchSessionStatusLiveShort;
+
+  /// No description provided for @clubMatchSessionStatusClosedShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đóng'**
+  String get clubMatchSessionStatusClosedShort;
+
+  /// No description provided for @clubMatchSessionStatusEndedShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết thúc'**
+  String get clubMatchSessionStatusEndedShort;
+
+  /// No description provided for @clubMatchSessionStatusCancelledShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get clubMatchSessionStatusCancelledShort;
+
+  /// No description provided for @clubManageSessionsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buổi giao lưu'**
+  String get clubManageSessionsTitle;
 }
 
 class _AppLocalizationsDelegate

@@ -895,7 +895,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get communityRecurringBadge => 'Định kỳ';
 
   @override
-  String get communityRecurringSchedulesTitle => 'Lịch tạo giải định kỳ (Cron)';
+  String get communityRecurringSchedulesTitle => 'Lịch giải định kỳ';
 
   @override
   String get communityRecurringActive => 'Đang bật';
@@ -13699,6 +13699,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionLoadFailed => 'Không thể tải buổi giao lưu này';
 
   @override
+  String get clubMatchSessionListLoadFailed =>
+      'Không tải được danh sách buổi giao lưu';
+
+  @override
   String clubMatchSessionMatchStatus(Object status) {
     return 'Trạng thái trận: $status';
   }
@@ -14791,7 +14795,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementPermissionsDescription =>
-      'Quản lý nhân sự giải đấu và lời mời trọng tài.';
+      'Quản lý nhân sự và trọng tài của giải.';
 
   @override
   String get tournamentManagementPlatformFeeRate => 'Tỷ lệ phí nền tảng';
@@ -14815,7 +14819,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementReferee => 'Trọng tài';
 
   @override
-  String get tournamentManagementRefereeAccepted => 'Đã chấp nhận';
+  String get tournamentManagementRefereeAccepted => 'Đã thêm';
 
   @override
   String get tournamentManagementRefereeDeclined => 'Đã từ chối';
@@ -14824,17 +14828,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementRefereeEmail => 'Email trọng tài';
 
   @override
-  String get tournamentManagementRefereeInviteSent =>
-      'Đã gửi lời mời trọng tài.';
+  String get tournamentManagementRefereeInviteSent => 'Đã thêm trọng tài.';
 
   @override
   String get tournamentManagementRefereeInvited => 'Đã mời';
 
   @override
-  String get tournamentManagementInviteByEmail => 'Mời qua email';
+  String get tournamentManagementInviteByEmail => 'Thêm qua email';
 
   @override
-  String get tournamentManagementInviteEmail => 'Email người được mời';
+  String get tournamentManagementInviteEmail => 'Email người được thêm';
 
   @override
   String get tournamentManagementInviteEmailInvalid => 'Email không hợp lệ.';
@@ -14845,15 +14848,16 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get tournamentManagementResend => 'Gửi lại';
+  String get tournamentManagementResend => 'Thêm lại';
 
   @override
   String tournamentManagementResendConfirm(String name) {
-    return 'Gửi lại lời mời cho $name?';
+    return 'Thêm lại $name làm trọng tài?';
   }
 
   @override
-  String get tournamentManagementRefereeInviteResent => 'Đã gửi lại lời mời.';
+  String get tournamentManagementRefereeInviteResent =>
+      'Đã thêm lại trọng tài.';
 
   @override
   String get tournamentManagementRevoke => 'Thu hồi';
@@ -14874,7 +14878,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementRefereesDescription =>
-      'Mời trọng tài bằng email và quản lý phân công trong giải đấu.';
+      'Thêm trọng tài bằng email; trọng tài có quyền bấm điểm ngay.';
 
   @override
   String get tournamentManagementRefereesEmpty => 'Chưa có trọng tài.';
@@ -14995,7 +14999,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String tournamentManagementRemoveRefereeConfirm(String name) {
-    return 'Xóa $name khỏi giải đấu này?';
+    return 'Gỡ $name khỏi trọng tài của giải?';
   }
 
   @override
@@ -15082,7 +15086,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tournamentManagementSeedsSaved => 'Đã cập nhật hạt giống.';
 
   @override
-  String get tournamentManagementSendInvite => 'Gửi lời mời';
+  String get tournamentManagementSendInvite => 'Thêm';
 
   @override
   String get tournamentManagementServerAuthorizationNote =>
@@ -18946,6 +18950,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String stageActionAdvancePendingTies(int count) {
+    return 'Có $count nhóm đội hoà tuyệt đối nên chưa tạo được sơ đồ loại trực tiếp. Hãy mở bản Web để chọn đội đi tiếp.';
+  }
+
+  @override
   String get stageActionPlayoffHeading => 'Hai đội bằng điểm (play-off)';
 
   @override
@@ -19092,6 +19101,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profLvSeeAll => 'Xem tất cả';
+
+  @override
+  String get profOrgTitle => 'Giải tôi tổ chức';
+
+  @override
+  String get profOrgLoadMore => 'Xem thêm';
+
+  @override
+  String get profOrgRetry => 'Thử lại';
 
   @override
   String get profLvUpcoming => 'Sắp tới';
@@ -19669,4 +19687,22 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get schedMgmt_emptyHint =>
       'Chưa có sân nào. Tạo sân để bắt đầu xếp lịch.';
+
+  @override
+  String get clubMatchSessionStatusOpenShort => 'Đang mở';
+
+  @override
+  String get clubMatchSessionStatusLiveShort => 'Đang diễn ra';
+
+  @override
+  String get clubMatchSessionStatusClosedShort => 'Đã đóng';
+
+  @override
+  String get clubMatchSessionStatusEndedShort => 'Kết thúc';
+
+  @override
+  String get clubMatchSessionStatusCancelledShort => 'Đã hủy';
+
+  @override
+  String get clubManageSessionsTitle => 'Buổi giao lưu';
 }

@@ -901,7 +901,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communityRecurringBadge => 'Recurring';
 
   @override
-  String get communityRecurringSchedulesTitle => 'Recurring Schedules (Cron)';
+  String get communityRecurringSchedulesTitle => 'Recurring schedules';
 
   @override
   String get communityRecurringActive => 'Active';
@@ -13746,6 +13746,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to load this social match session';
 
   @override
+  String get clubMatchSessionListLoadFailed =>
+      'Could not load the social sessions';
+
+  @override
   String clubMatchSessionMatchStatus(Object status) {
     return 'Match status: $status';
   }
@@ -14849,7 +14853,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementPermissionsDescription =>
-      'Manage tournament staff and referee invitations.';
+      'Manage tournament staff and referees.';
 
   @override
   String get tournamentManagementPlatformFeeRate => 'Platform fee rate';
@@ -14873,7 +14877,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementReferee => 'Referee';
 
   @override
-  String get tournamentManagementRefereeAccepted => 'Accepted';
+  String get tournamentManagementRefereeAccepted => 'Added';
 
   @override
   String get tournamentManagementRefereeDeclined => 'Declined';
@@ -14882,17 +14886,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementRefereeEmail => 'Referee email';
 
   @override
-  String get tournamentManagementRefereeInviteSent =>
-      'Referee invitation sent.';
+  String get tournamentManagementRefereeInviteSent => 'Referee added.';
 
   @override
   String get tournamentManagementRefereeInvited => 'Invited';
 
   @override
-  String get tournamentManagementInviteByEmail => 'Invite by email';
+  String get tournamentManagementInviteByEmail => 'Add by email';
 
   @override
-  String get tournamentManagementInviteEmail => 'Invitee email';
+  String get tournamentManagementInviteEmail => 'Email to add';
 
   @override
   String get tournamentManagementInviteEmailInvalid => 'Invalid email.';
@@ -14903,15 +14906,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get tournamentManagementResend => 'Resend';
+  String get tournamentManagementResend => 'Add again';
 
   @override
   String tournamentManagementResendConfirm(String name) {
-    return 'Resend the invitation to $name?';
+    return 'Add $name as a referee again?';
   }
 
   @override
-  String get tournamentManagementRefereeInviteResent => 'Invitation resent.';
+  String get tournamentManagementRefereeInviteResent => 'Referee added again.';
 
   @override
   String get tournamentManagementRevoke => 'Revoke';
@@ -14932,7 +14935,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementRefereesDescription =>
-      'Invite referees by email and manage their tournament assignment.';
+      'Add referees by email; they can score right away.';
 
   @override
   String get tournamentManagementRefereesEmpty => 'No referees assigned.';
@@ -15055,7 +15058,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tournamentManagementRemoveRefereeConfirm(String name) {
-    return 'Remove $name from this tournament?';
+    return 'Remove $name as a referee of this tournament?';
   }
 
   @override
@@ -15143,7 +15146,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tournamentManagementSeedsSaved => 'Participant seeds updated.';
 
   @override
-  String get tournamentManagementSendInvite => 'Send invitation';
+  String get tournamentManagementSendInvite => 'Add';
 
   @override
   String get tournamentManagementServerAuthorizationNote =>
@@ -19023,6 +19026,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String stageActionAdvancePendingTies(int count) {
+    return '$count groups of teams are level on every criterion, so the knockout is not set yet. Open the Web app to choose who advances.';
+  }
+
+  @override
   String get stageActionPlayoffHeading => 'Tied teams (playoff)';
 
   @override
@@ -19171,6 +19179,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profLvSeeAll => 'See all';
+
+  @override
+  String get profOrgTitle => 'Tournaments I organize';
+
+  @override
+  String get profOrgLoadMore => 'Load more';
+
+  @override
+  String get profOrgRetry => 'Retry';
 
   @override
   String get profLvUpcoming => 'Upcoming';
@@ -19754,4 +19771,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get schedMgmt_emptyHint =>
       'No courts yet. Create a court to start scheduling.';
+
+  @override
+  String get clubMatchSessionStatusOpenShort => 'Open';
+
+  @override
+  String get clubMatchSessionStatusLiveShort => 'Live';
+
+  @override
+  String get clubMatchSessionStatusClosedShort => 'Closed';
+
+  @override
+  String get clubMatchSessionStatusEndedShort => 'Ended';
+
+  @override
+  String get clubMatchSessionStatusCancelledShort => 'Cancelled';
+
+  @override
+  String get clubManageSessionsTitle => 'Sessions';
 }

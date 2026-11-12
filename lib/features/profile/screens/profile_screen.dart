@@ -13,6 +13,7 @@ import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/utils/navigation_helpers.dart';
 import 'package:app_quanly_giaidau/core/utils/status_helpers.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/providers/organized_tournaments_provider.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
@@ -24,6 +25,7 @@ import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/core/widgets/floating_bottom_nav.dart';
 import 'package:app_quanly_giaidau/core/widgets/app_menu_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/organized_tournaments_section.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/core/widgets/rank_tier_badge.dart';
 
@@ -814,7 +816,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   a.endDate ?? a.updatedAt,
                 ),
               );
-        if (followed.isEmpty) {
+        final organizedAsync = ref.watch(organizedTournamentsProvider);
+        final hasOrganized =
+            organizedAsync.isLoading ||
+            (organizedAsync.asData?.value.items.isNotEmpty ?? false);
+        if (followed.isEmpty && !hasOrganized) {
           return LavishEmptyState(
             icon: Icons.emoji_events_outlined,
             title: l10n.profLvEmptyTournaments,
@@ -825,6 +831,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         return ListView(
           padding: _tabPadding,
           children: [
+            OrganizedTournamentsSection(rowBuilder: _tournamentRow),
             if (active.isNotEmpty) LavishGroupHeader(l10n.profLvUpcoming),
             for (final t in active) _tournamentRow(t),
             if (completed.isNotEmpty) LavishGroupHeader(l10n.profLvCompleted),
