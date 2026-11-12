@@ -2,6 +2,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/domain/repositories/social_session_repository.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_session_sport_icon.dart';
 import 'package:app_quanly_giaidau/features/home/widgets/global_search_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -194,6 +195,23 @@ void main() {
     await tester.tap(find.text('Kèo bóng đá cuối tuần'));
     await tester.pumpAndSettle();
     expect(find.text('Social detail session-42'), findsOneWidget);
+  });
+
+  // TC-SOCIAL-ICON-04
+  testWidgets('kèo row shows the sport as an SVG icon at the start, no sport text', (
+    tester,
+  ) async {
+    final repository = _SearchSocialSessionRepository(
+      sessions: [_session('Kèo bóng đá cuối tuần')],
+      total: 1,
+    );
+    await _pumpSessionsScope(tester, repository);
+
+    expect(find.byType(SocialSessionSportIcon), findsOneWidget);
+    expect(find.byTooltip('Bóng đá'), findsOneWidget);
+    final iconLeft = tester.getTopLeft(find.byType(SocialSessionSportIcon)).dx;
+    final titleLeft = tester.getTopLeft(find.text('Kèo bóng đá cuối tuần')).dx;
+    expect(iconLeft, lessThan(titleLeft));
   });
 
   testWidgets('kèo row keeps a touch target of at least 44dp', (tester) async {

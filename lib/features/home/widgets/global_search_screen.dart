@@ -14,6 +14,7 @@ import 'package:app_quanly_giaidau/domain/entities/community.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_session_sport_icon.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations_extensions.dart';
 import 'package:app_quanly_giaidau/providers/category_provider.dart';
@@ -1884,8 +1885,10 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
       title: session.title,
       details: [time, _joinLocation(session.venueName, session.venueAddress)],
       onTap: () => context.push('/social/${session.id}'),
-      imageUrl: session.community?.logoUrl,
-      sport: session.sport,
+      leadingWidget: SocialSessionSportIcon(
+        sport: session.sport,
+        sportName: session.sportName,
+      ),
     );
   }
 
