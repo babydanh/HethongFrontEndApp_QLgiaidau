@@ -15,7 +15,7 @@ Tiêu chí chung: lệnh hẹp `flutter test --no-pub <file>` exit 0; trước P
   Files: test/data/api_team_repository_test.dart
 - [x] T5 ApiTournamentRepository phần còn thiếu (46%)
   Files: test/data/api_tournament_repository_gaps_test.dart
-- [ ] T6 ApiMatchRepository phần còn thiếu (59%)
+- [x] T6 ApiMatchRepository phần còn thiếu (59%)
   Files: test/data/api_match_repository_gaps_test.dart
 - [ ] T7 Notifier: score_panel_notifier, lite_management_notifier, social_provider
   Files: test/providers/*_gaps_test.dart
