@@ -73,4 +73,41 @@ class ApiMatchRecordingCatalogRepository
     );
     return MatchRecordingPlaylist.fromJson(_data(response), period: period);
   }
+
+  @override
+  Future<MatchStreamCommandResult> startMatchStream(String matchId) async {
+    final response = await _dio.post('/livestream/matches/$matchId/start');
+    return MatchStreamCommandResult.fromStartJson(_map(response));
+  }
+
+  @override
+  Future<MatchStreamCommandResult> stopMatchStream(String matchId) async {
+    final response = await _dio.post('/livestream/matches/$matchId/stop');
+    return MatchStreamCommandResult.fromStopJson(_map(response));
+  }
+
+  @override
+  Future<List<MatchLivestreamSummary>> listTournamentMatchLivestreams(
+    String tournamentId,
+  ) async {
+    final response = await _dio.get(
+      '/livestream/tournaments/$tournamentId/matches',
+      options: Options(extra: const <String, Object?>{'noCache': true}),
+    );
+    return MatchLivestreamSummary.listFromJson(_data(response));
+  }
+
+  @override
+  Future<void> downloadFullRecording(
+    String matchId, {
+    required String period,
+    required String savePath,
+  }) async {
+    await _dio.download(
+      '/livestream/matches/$matchId/recordings/download',
+      savePath,
+      queryParameters: <String, Object?>{'period': period},
+      options: Options(extra: const <String, Object?>{'noCache': true}),
+    );
+  }
 }

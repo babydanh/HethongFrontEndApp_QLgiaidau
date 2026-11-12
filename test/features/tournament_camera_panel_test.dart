@@ -388,14 +388,14 @@ void main() {
     expect(
       find.descendant(
         of: _card('cam-3'),
-        matching: find.text(l10n.tournamentManagementLivestreamStatusLive),
+        matching: find.text(l10n.tournamentManagementCameraBadgeLive),
       ),
       findsOneWidget,
     );
     expect(
       find.descendant(
         of: _card('cam-1'),
-        matching: find.text(l10n.tournamentCameraStatusIdle),
+        matching: find.text(l10n.tournamentManagementCameraBadgeReady),
       ),
       findsOneWidget,
     );

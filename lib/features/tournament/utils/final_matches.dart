@@ -25,6 +25,8 @@ List<MatchModel>? pickFinalMatches(List<MatchModel> matches) {
       .toList();
   if (knockout.isEmpty) return null;
 
-  final lastRound = knockout.map((m) => m.round).reduce((a, b) => a > b ? a : b);
+  final lastRound = knockout
+      .map((m) => m.round)
+      .reduce((a, b) => a > b ? a : b);
   return knockout.where((m) => m.round == lastRound).toList();
 }

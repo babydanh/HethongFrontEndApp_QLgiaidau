@@ -13127,6 +13127,106 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thông tin camera hiện không khả dụng.';
 
   @override
+  String get tournamentManagementCameraStreamTitle => 'Trực tiếp';
+
+  @override
+  String get tournamentManagementCameraStreamStart => 'Bắt đầu';
+
+  @override
+  String get tournamentManagementCameraStreamStop => 'Dừng';
+
+  @override
+  String tournamentManagementCameraStreamStartAria(Object match) {
+    return 'Bắt đầu phát trận $match';
+  }
+
+  @override
+  String tournamentManagementCameraStreamStopAria(Object match) {
+    return 'Dừng phát trận $match';
+  }
+
+  @override
+  String get tournamentManagementCameraStreamNeedsCamera =>
+      'Sân này chưa khai URL camera';
+
+  @override
+  String get tournamentManagementCameraStreamWatchLive => 'Xem live';
+
+  @override
+  String tournamentManagementCameraStreamWatchLiveAria(Object match) {
+    return 'Xem trực tiếp trận $match';
+  }
+
+  @override
+  String get tournamentManagementCameraStreamStopped =>
+      'Đã tắt phát trực tiếp. Bạn có thể bật lại bất cứ lúc nào.';
+
+  @override
+  String get tournamentManagementCameraStreamStartedFromUrl =>
+      'Đã bắt đầu phát từ URL của sân.';
+
+  @override
+  String get tournamentManagementCameraStreamPublishLinkCreated =>
+      'Đã tạo link bắt đầu phát cho trận và sao chép vào bộ nhớ tạm.';
+
+  @override
+  String get tournamentManagementCameraStreamActionFailed =>
+      'Không điều khiển được phát trực tiếp của trận.';
+
+  @override
+  String get tournamentManagementCameraStreamPermissionDenied =>
+      'Chỉ Ban tổ chức hoặc Trọng tài được phân công mới có quyền điều khiển trận này.';
+
+  @override
+  String get tournamentManagementCameraRecordingPending =>
+      'Chưa xác nhận được trạng thái ghi hình; hệ thống sẽ tự thử lại.';
+
+  @override
+  String get tournamentManagementCameraBadgeReady => 'Sẵn sàng';
+
+  @override
+  String get tournamentManagementCameraBadgeAssigned => 'Đã gán';
+
+  @override
+  String get tournamentManagementCameraBadgeWaiting => 'Chờ tín hiệu';
+
+  @override
+  String get tournamentManagementCameraBadgeLive => 'Đang live';
+
+  @override
+  String get tournamentManagementCameraBadgeOffline => 'Offline';
+
+  @override
+  String get tournamentManagementCameraBadgeError => 'Lỗi';
+
+  @override
+  String get tournamentManagementCameraBadgeUnknown => 'Không rõ';
+
+  @override
+  String tournamentManagementCameraBadgeSemantics(Object status) {
+    return 'Trạng thái camera: $status';
+  }
+
+  @override
+  String get tournamentManagementRecordingOpen => 'Xem bản ghi MP4';
+
+  @override
+  String tournamentManagementRecordingOpenForMatch(Object match) {
+    return 'Xem bản ghi MP4 của trận $match';
+  }
+
+  @override
+  String get tournamentManagementRecordingDownloadFull => 'Tải video đầy đủ';
+
+  @override
+  String get tournamentManagementRecordingDownloadPreparing =>
+      'Đang chuẩn bị tải video…';
+
+  @override
+  String get tournamentManagementRecordingDownloadError =>
+      'Không thể chuẩn bị tải video. Có thể bạn không có quyền xem bản ghi này; vui lòng thử lại.';
+
+  @override
   String get tournamentManagementRecordingCatalog => 'Danh sách bản ghi';
 
   @override
