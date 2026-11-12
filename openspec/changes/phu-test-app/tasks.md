@@ -9,7 +9,7 @@ Tiêu chí chung: lệnh hẹp `flutter test --no-pub <file>` exit 0; trước P
 - [x] T2 ApiCommunitySocialRepository (0%)
   Files: test/data/api_community_social_repository_test.dart
   Tiêu chí: `flutter test --no-pub test/data/api_community_social_repository_test.dart`
-- [ ] T3 ApiSocialSessionRepository + SocialSessionModel (31%/45%)
+- [x] T3 ApiSocialSessionRepository + SocialSessionModel (31%/45%)
   Files: test/data/api_social_session_repository_test.dart, test/data/models/social_session_model_test.dart
 - [x] T4 ApiTeamRepository (25%)
   Files: test/data/api_team_repository_test.dart
