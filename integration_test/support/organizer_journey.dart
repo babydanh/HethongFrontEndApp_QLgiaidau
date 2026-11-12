@@ -55,6 +55,8 @@ Future<ProviderContainer> signInAsOrganizer(WidgetTester tester) async {
   _tolerateKnownProductOverflow();
   final container = await pumpApp(tester);
   await ensureSignedOut(tester, container);
+  // Backend huỷ token theo mốc giây khi đăng xuất: đăng nhập lại ngay trong cùng giây làm token mới bị 401.
+  await tester.pump(const Duration(milliseconds: 1500));
   container.read(routerProvider).go('/login');
   await loginWithForm(tester, email: kOrganizerEmail, password: kE2ePassword);
   await pumpUntilCondition(

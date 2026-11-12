@@ -64,11 +64,13 @@ void main() {
 
       // TC-01: form tạo giải nhanh, thêm một nội dung đơn, bỏ nội dung mặc định "Đôi tự do".
       // Router có thể còn chuyển về trang chủ sau đăng nhập: gọi go() lại tới khi form hiện.
+      // Form đăng nhập cũng có TextFormField: nhận form tạo giải bằng tiêu đề "Tạo giải nhanh" của nó.
       await pumpUntilCondition(tester, () {
-        if (find.byType(TextFormField).evaluate().isEmpty) {
+        if (find.text('Tạo giải nhanh').evaluate().isEmpty) {
           container.read(routerProvider).go('/tournaments/create');
         }
-        return find.byType(TextFormField).evaluate().isNotEmpty;
+        return find.text('Tạo giải nhanh').evaluate().isNotEmpty &&
+            find.byType(TextFormField).evaluate().isNotEmpty;
       }, what: 'form Tạo giải nhanh (ô tên giải)');
       await snap(tester, 'form-tao-giai-nhanh');
       await tester.enterText(find.byType(TextFormField).first, name);
@@ -570,7 +572,15 @@ void main() {
         name: '${single.tag} Tai khoan',
         email: kPlayerEmail,
       );
-      await press(tester, 'add-athlete-direct-submit');
+      // Lần gửi TC-12 có thể còn đang hoàn tất trên giao diện (nút gửi tạm khóa): bấm lại tới 3 lần
+      // cho tới khi hộp "Tìm tài khoản" hiện.
+      final findAccount = find.byKey(const ValueKey('add-athlete-find-account'));
+      for (var attempt = 0; attempt < 3 && findAccount.evaluate().isEmpty; attempt++) {
+        await press(tester, 'add-athlete-direct-submit');
+        for (var i = 0; i < 16 && findAccount.evaluate().isEmpty; i++) {
+          await tester.pump(const Duration(milliseconds: 500));
+        }
+      }
       await expectKey(
         tester,
         'add-athlete-find-account',
@@ -1032,14 +1042,24 @@ Future<void> pressMenuItem(
     of: find.byKey(ValueKey('division-row-$divisionId')),
     matching: find.byType(PopupMenuButton<String>),
   );
-  await pumpUntilFound(
-    tester,
-    menu,
-    what: 'menu 3 chấm của nội dung $divisionId',
-  );
-  await tapCentered(tester, menu);
-  await tester.pump(const Duration(milliseconds: 500));
-  await pressMenuText(tester, text);
+  // Danh sách làm mới ngay sau khi lưu nên nút menu có thể biến mất giữa lúc tìm thấy và lúc bấm: thử lại.
+  for (var attempt = 0; attempt < 4; attempt++) {
+    await pumpUntilFound(
+      tester,
+      menu,
+      what: 'menu 3 chấm của nội dung $divisionId',
+    );
+    try {
+      await tapCentered(tester, menu);
+    } on StateError {
+      await tester.pump(const Duration(milliseconds: 500));
+      continue;
+    }
+    await tester.pump(const Duration(milliseconds: 500));
+    await pressMenuText(tester, text);
+    return;
+  }
+  fail('Không bấm được menu 3 chấm của nội dung $divisionId sau 4 lần thử');
 }
 
 /// Bấm nút xác nhận (FilledButton) của hộp thoại đang mở.
