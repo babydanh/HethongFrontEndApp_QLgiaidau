@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
+import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/utils/error_parser.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_model.dart';
@@ -15,8 +16,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
-String _matchLabel(MatchModel match) =>
-    '${match.team1Name} – ${match.team2Name}';
+/// Tên VĐV khi đội không có tên (domain để `''`); bên trống hẳn là
+/// "Chưa xác định" để nhãn không chỉ còn dấu "–".
+String _matchLabel(AppLocalizations l10n, MatchModel match) {
+  String side(int n) {
+    final label = matchSideLabel(match, n);
+    return label.isEmpty ? l10n.matchNotDetermined : label;
+  }
+
+  return '${side(1)} – ${side(2)}';
+}
 
 /// Trận có camera: gán riêng hoặc sân của trận có URL camera (như Web).
 bool _matchHasCamera(MatchModel match, List<TournamentCameraModel> cameras) {
@@ -129,7 +138,7 @@ class _TournamentManagementCameraSectionState
     if (match.courtId == court.id) {
       _showMessage(
         l10n.tournamentManagementCameraAlreadyAssigned(
-          _matchLabel(match),
+          _matchLabel(l10n, match),
           court.name,
         ),
       );
@@ -162,7 +171,10 @@ class _TournamentManagementCameraSectionState
           .refresh();
       if (!mounted) return;
       _showMessage(
-        l10n.tournamentManagementCameraAssigned(_matchLabel(match), court.name),
+        l10n.tournamentManagementCameraAssigned(
+          _matchLabel(l10n, match),
+          court.name,
+        ),
       );
     } on Object catch (error) {
       if (!mounted) return;
@@ -285,7 +297,7 @@ class _TournamentManagementCameraSectionState
                   ),
                   if (selectedMatch != null)
                     _SelectionBanner(
-                      label: _matchLabel(selectedMatch),
+                      label: _matchLabel(l10n, selectedMatch),
                       onClear: () => setState(() => _selectedMatchId = null),
                     ),
                 ],
@@ -446,7 +458,7 @@ class _MatchPool extends StatelessWidget {
                     isBusy: busyMatchIds.contains(match.id),
                     isSelected: selectedMatchId == match.id,
                     readOnly: readOnly,
-                    label: _matchLabel(match),
+                    label: _matchLabel(l10n, match),
                     onSelected: () => onSelected(match),
                     onAssign: (court) => onAssign(match, court),
                   ),
@@ -762,7 +774,7 @@ class _CourtDropCard extends StatelessWidget {
                 currentCamera: camera,
                 isBusy: busyMatchIds.contains(match.id),
                 readOnly: readOnly,
-                label: _matchLabel(match),
+                label: _matchLabel(l10n, match),
                 onPickCamera: (value) => onPickCamera(match, value),
               ),
           if (hasSelection) ...[
@@ -777,7 +789,7 @@ class _CourtDropCard extends StatelessWidget {
                 icon: const Icon(Icons.add_location_alt_outlined),
                 label: Text(
                   l10n.tournamentManagementCameraAssignHere(
-                    _matchLabel(selectedMatch!),
+                    _matchLabel(l10n, selectedMatch!),
                   ),
                 ),
               ),

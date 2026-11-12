@@ -1,5 +1,6 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
+import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/data/models/court_camera_model.dart';
 import 'package:app_quanly_giaidau/data/models/match_recording_catalog_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
@@ -76,7 +77,12 @@ Tournament _tournament(String status) => Tournament.fromJson({
   'updatedAt': '2026-01-01T00:00:00Z',
 }, _tid);
 
-MatchModel _match() => MatchModel(
+MatchModel _match({
+  String team1Name = 'Team A1',
+  String team2Name = 'Team B1',
+  List<ParticipantPlayer> team1Players = const [],
+  List<ParticipantPlayer> team2Players = const [],
+}) => MatchModel(
   id: 'm1',
   tournamentId: _tid,
   round: 1,
@@ -84,8 +90,10 @@ MatchModel _match() => MatchModel(
   bracketPosition: BracketPosition(round: 1, position: 1),
   team1Id: 'a1',
   team2Id: 'b1',
-  team1Name: 'Team A1',
-  team2Name: 'Team B1',
+  team1Name: team1Name,
+  team2Name: team2Name,
+  team1Players: team1Players,
+  team2Players: team2Players,
   status: 'SCHEDULED',
   divisionId: 'div-1',
   updatedAt: DateTime.utc(2026, 1, 1),
@@ -94,6 +102,7 @@ MatchModel _match() => MatchModel(
 Future<(AppLocalizations, _Venues)> _pumpHub(
   WidgetTester tester, {
   String status = 'in_progress',
+  MatchModel? match,
 }) async {
   tester.view.physicalSize = const Size(390, 1600);
   tester.view.devicePixelRatio = 1;
@@ -117,7 +126,7 @@ Future<(AppLocalizations, _Venues)> _pumpHub(
           _tid,
         ).overrideWith((ref) => Stream.value(const <MatchModel>[])),
         managedMatchesWithDivisionProvider.overrideWith(
-          (ref, args) => Stream.value([_match()]),
+          (ref, args) => Stream.value([match ?? _match()]),
         ),
       ],
       child: MaterialApp(
@@ -202,5 +211,51 @@ void main() {
 
     expect(find.byType(TournamentManagementCameraSection), findsNothing);
     expect(venues.venueCalls, 0);
+  });
+
+  testWidgets('TC-CAMLABEL-01 shows athlete names when the team has no name', (
+    tester,
+  ) async {
+    final (l10n, _) = await _pumpHub(
+      tester,
+      match: _match(
+        team1Name: '',
+        team2Name: '',
+        team1Players: const [
+          ParticipantPlayer(slot: 1, fullName: 'Nguyễn Văn An'),
+        ],
+        team2Players: const [
+          ParticipantPlayer(slot: 1, fullName: 'Trần Văn Bình'),
+        ],
+      ),
+    );
+
+    await _openTab(tester, l10n.opsCamera);
+
+    expect(find.text('Nguyễn Văn An – Trần Văn Bình'), findsWidgets);
+  });
+
+  testWidgets('TC-CAMLABEL-02 keeps the team names when they exist', (
+    tester,
+  ) async {
+    final (l10n, _) = await _pumpHub(tester);
+
+    await _openTab(tester, l10n.opsCamera);
+
+    expect(find.text('Team A1 – Team B1'), findsWidgets);
+  });
+
+  testWidgets('TC-CAMLABEL-03 an empty side reads Chưa xác định, not a dash', (
+    tester,
+  ) async {
+    final (l10n, _) = await _pumpHub(
+      tester,
+      match: _match(team1Name: '', team2Name: ''),
+    );
+
+    await _openTab(tester, l10n.opsCamera);
+
+    final label = '${l10n.matchNotDetermined} – ${l10n.matchNotDetermined}';
+    expect(find.text(label), findsWidgets);
   });
 }
