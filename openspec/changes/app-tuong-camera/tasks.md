@@ -27,7 +27,7 @@
 
 ## 3. Kiểm cuối
 
-- [ ] 3.1 Phân tích và test liên quan. Tiêu chí: `flutter analyze --no-pub lib/features/tournament lib/l10n` → 0 error/warning mới; `flutter test --no-pub test/features/tournament/camera_wall_test.dart test/features/tournament/camera_wall_screen_test.dart test/features/tournament/management_camera_tab_test.dart test/features/tournament_camera_panel_test.dart test/features/tournament_management_camera_catalog_test.dart` → exit 0
+- [x] 3.1 Phân tích và test liên quan. Tiêu chí: `flutter analyze --no-pub lib/features/tournament lib/l10n` → 0 error/warning mới; `flutter test --no-pub test/features/tournament/camera_wall_test.dart test/features/tournament/camera_wall_screen_test.dart test/features/tournament/management_camera_tab_test.dart test/features/tournament_camera_panel_test.dart test/features/tournament_management_camera_catalog_test.dart` → exit 0
   - Files: (không sửa thêm)
   - Giao: (không) · Nhận: 1.1, 2.1, 2.2, 2.3
   - Chủ file chung: không
