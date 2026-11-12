@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/domain/repositories/court_camera_repository.d
 import 'package:app_quanly_giaidau/domain/repositories/match_recording_catalog_repository.dart';
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_status_badge.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
@@ -111,26 +112,57 @@ Future<void> _pump(WidgetTester tester, Size size) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _openMoreMenu(WidgetTester tester, String matchLabel) async {
+  final row = find.ancestor(
+    of: find.text(matchLabel).first,
+    matching: find.byType(CameraMatchRow),
+  );
+  final menu = find.descendant(
+    of: row.first,
+    matching: find.byType(PopupMenuButton<String>),
+  );
+  await tester.ensureVisible(menu);
+  await tester.tap(menu);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   for (final size in const [Size(360, 740), Size(900, 1200)]) {
-    testWidgets('TC-CAM-SYNC-27/28 bảng camera ${size.width.toInt()}px: nút phát đúng trạng thái, không tràn', (
-      tester,
-    ) async {
-      await _pump(tester, size);
+    testWidgets(
+      'TC-CAM-SYNC-27/28 bảng camera ${size.width.toInt()}px: nút phát đúng trạng thái, không tràn',
+      (tester) async {
+        await _pump(tester, size);
 
-      expect(tester.takeException(), isNull);
-      // Trận đang LIVE ở sân 1 (cả ở danh sách trận và thẻ sân): có Dừng, không MP4.
-      expect(find.widgetWithText(OutlinedButton, 'Dừng'), findsWidgets);
-      // Trận chưa xếp sân: Bắt đầu khoá, không có MP4 (không camera, không bản ghi).
-      final starts = tester.widgetList<OutlinedButton>(
-        find.widgetWithText(OutlinedButton, 'Bắt đầu'),
-      );
-      expect(starts, isNotEmpty);
-      expect(starts.every((button) => button.onPressed == null), isTrue);
-      expect(find.widgetWithText(OutlinedButton, 'MP4'), findsNothing);
-      // Camera sân OFFLINE hiện badge chữ.
-      expect(find.byType(CameraStatusBadge), findsOneWidget);
-      expect(find.text('Offline'), findsOneWidget);
-    });
+        expect(tester.takeException(), isNull);
+        // Các nút chữ đã gom: không còn OutlinedButton Dừng/Bắt đầu/MP4 ở dòng.
+        expect(find.widgetWithText(OutlinedButton, 'Dừng'), findsNothing);
+        expect(find.widgetWithText(OutlinedButton, 'MP4'), findsNothing);
+        // Trận đang LIVE: menu ⋯ có Dừng và Bản ghi.
+        await _openMoreMenu(
+          tester,
+          'Live Alpha dài dài dài – Live Beta dài dài dài',
+        );
+        expect(find.text('Dừng'), findsOneWidget);
+        expect(find.text('Bản ghi'), findsOneWidget);
+        await tester.tapAt(const Offset(1, 1));
+        await tester.pumpAndSettle();
+        // Trận chưa xếp sân: Bắt đầu bị khoá (kèm lý do) trong menu.
+        await _openMoreMenu(
+          tester,
+          'Free Alpha dài dài dài – Free Beta dài dài dài',
+        );
+        final start = tester.widget<PopupMenuItem<String>>(
+          find.byWidgetPredicate(
+            (w) => w is PopupMenuItem<String> && w.value == 'start',
+          ),
+        );
+        expect(start.enabled, isFalse);
+        await tester.tapAt(const Offset(1, 1));
+        await tester.pumpAndSettle();
+        // Camera sân OFFLINE hiện badge chữ.
+        expect(find.byType(CameraStatusBadge), findsOneWidget);
+        expect(find.text('Offline'), findsOneWidget);
+      },
+    );
   }
 }

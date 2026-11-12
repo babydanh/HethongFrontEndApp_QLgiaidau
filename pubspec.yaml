@@ -109,5 +109,6 @@ flutter:
     - assets/icons/
     - assets/images/
     - assets/editorjs/
+    - assets/videos/
 
     - assets/logos/

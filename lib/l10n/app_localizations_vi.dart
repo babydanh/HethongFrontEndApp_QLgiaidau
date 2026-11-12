@@ -19708,4 +19708,133 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get clubManageSessionsTitle => 'Buổi giao lưu';
+
+  @override
+  String get camTabTitle => 'Camera của giải';
+
+  @override
+  String get camTabHelpTooltip => 'Hướng dẫn tab Camera';
+
+  @override
+  String get camTabWatchCameras => 'Xem camera';
+
+  @override
+  String camTabSummary(int total, int live, int failing) {
+    return '$total camera · $live LIVE · $failing lỗi';
+  }
+
+  @override
+  String get camTabHelpHeading => 'Cách dùng tab Camera';
+
+  @override
+  String get camTabHelpStep1Title => '1. Gán trận vào sân';
+
+  @override
+  String get camTabHelpStep1Body =>
+      'Kéo giữ một trận thả vào thẻ sân, hoặc mở menu ⋯ của trận để chuyển sân.';
+
+  @override
+  String get camTabHelpStep2Title => '2. Bắt đầu phát';
+
+  @override
+  String get camTabHelpStep2Body =>
+      'Menu ⋯ của trận có Bắt đầu / Dừng. Camera của sân sẽ phát trận đó.';
+
+  @override
+  String get camTabHelpStep3Title => '3. Theo dõi camera';
+
+  @override
+  String get camTabHelpStep3Body =>
+      'Nút Xem camera mở tường camera để xem nhiều sân cùng lúc. Bản ghi của từng trận nằm trong menu ⋯.';
+
+  @override
+  String get camTabHelpClose => 'Đã hiểu';
+
+  @override
+  String get camMatchMore => 'Thao tác khác';
+
+  @override
+  String get camMatchRecordings => 'Bản ghi';
+
+  @override
+  String camMatchMoveCourt(String court) {
+    return 'Chuyển tới $court';
+  }
+
+  @override
+  String camMatchUseCamera(String camera) {
+    return 'Dùng camera $camera';
+  }
+
+  @override
+  String camCourtCameraLine(String camera) {
+    return 'Camera: $camera';
+  }
+
+  @override
+  String camCourtNowShowing(String match) {
+    return 'Đang chiếu: $match';
+  }
+
+  @override
+  String get camCourtPreviewToggle => 'Bật/tắt xem thử trên máy này';
+
+  @override
+  String get camWallTitle => 'Tường camera';
+
+  @override
+  String get camWallClose => 'Đóng tường camera';
+
+  @override
+  String get camWallEmpty => 'Chưa có camera để xem.';
+
+  @override
+  String camWallLayout(int size) {
+    return 'Lưới $size×$size';
+  }
+
+  @override
+  String get camWallPrev => 'Trang trước';
+
+  @override
+  String get camWallNext => 'Trang sau';
+
+  @override
+  String camWallPage(int page, int count) {
+    return 'Trang $page/$count';
+  }
+
+  @override
+  String get camWallZoomHint => 'Chạm đôi một ô để phóng to';
+
+  @override
+  String get camWallNoMatch => 'Chưa có trận';
+
+  @override
+  String get camWallRetry => 'Thử lại';
+
+  @override
+  String get camWallPreview => 'Xem thử';
+
+  @override
+  String get camWallPreviewHint =>
+      'Chỉ tắt hình trên máy này, không ảnh hưởng camera.';
+
+  @override
+  String get camWallSignalLive => 'LIVE';
+
+  @override
+  String get camWallSignalConnecting => 'Đang kết nối';
+
+  @override
+  String get camWallSignalOffline => 'OFFLINE';
+
+  @override
+  String get camWallSignalError => 'ERROR';
+
+  @override
+  String get camWallSignalIdle => 'Chưa phát';
+
+  @override
+  String get camWallNoCourt => 'Chưa gắn sân';
 }
