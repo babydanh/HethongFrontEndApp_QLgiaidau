@@ -7547,6 +7547,8 @@
   "stageActionAdvanceConfirm": "Chốt vòng bảng",
   "stageActionAdvanceDone": "Đã đưa các đội đi tiếp vào vòng loại trực tiếp ({count} trận).",
   "@stageActionAdvanceDone": {"placeholders": {"count": {"type": "int"}}},
+  "stageActionAdvancePendingTies": "Có {count} nhóm đội hoà tuyệt đối nên chưa tạo được sơ đồ loại trực tiếp. Hãy mở bản Web để chọn đội đi tiếp.",
+  "@stageActionAdvancePendingTies": {"placeholders": {"count": {"type": "int"}}},
   "stageActionPlayoffHeading": "Hai đội bằng điểm (play-off)",
   "stageActionPlayoffCreate": "Tạo play-off",
   "stageActionPlayoffConfirmTitle": "Tạo trận play-off?",

@@ -181,6 +181,10 @@ class _StageOperationsScreenState extends ConsumerState<StageOperationsScreen> {
           divisionId: widget.divisionId,
           stageId: stage.id,
         );
+        // Level teams: the Backend did not fill the knockout, so never report success.
+        if (result.pendingTieCount > 0) {
+          return l10n.stageActionAdvancePendingTies(result.pendingTieCount);
+        }
         return l10n.stageActionAdvanceDone(result.totalMatches);
       },
     );

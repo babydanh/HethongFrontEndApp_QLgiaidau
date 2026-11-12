@@ -34081,6 +34081,12 @@ abstract class AppLocalizations {
   /// **'Đã đưa các đội đi tiếp vào vòng loại trực tiếp ({count} trận).'**
   String stageActionAdvanceDone(int count);
 
+  /// No description provided for @stageActionAdvancePendingTies.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có {count} nhóm đội hoà tuyệt đối nên chưa tạo được sơ đồ loại trực tiếp. Hãy mở bản Web để chọn đội đi tiếp.'**
+  String stageActionAdvancePendingTies(int count);
+
   /// No description provided for @stageActionPlayoffHeading.
   ///
   /// In vi, this message translates to:

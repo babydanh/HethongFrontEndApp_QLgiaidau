@@ -84,10 +84,18 @@ class StageOpsStage {
 
 /// Result of `POST /tournaments/:id/advance-standings`.
 class StageOpsAdvanceResult {
-  const StageOpsAdvanceResult({this.stageCount = 0, this.totalMatches = 0});
+  const StageOpsAdvanceResult({
+    this.stageCount = 0,
+    this.totalMatches = 0,
+    this.pendingTieCount = 0,
+  });
 
   final int stageCount;
   final int totalMatches;
+
+  /// Groups of teams level on every criterion; the Backend leaves the knockout
+  /// unfilled until the organizer picks who advances.
+  final int pendingTieCount;
 }
 
 /// Result of `DELETE /tournaments/:id/bracket/divisions/:divisionId`.

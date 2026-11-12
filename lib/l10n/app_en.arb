@@ -7519,6 +7519,8 @@
   "stageActionAdvanceConfirm": "Lock groups",
   "stageActionAdvanceDone": "Qualified teams moved into the knockout stage ({count} matches).",
   "@stageActionAdvanceDone": {"placeholders": {"count": {"type": "int"}}},
+  "stageActionAdvancePendingTies": "{count} groups of teams are level on every criterion, so the knockout is not set yet. Open the Web app to choose who advances.",
+  "@stageActionAdvancePendingTies": {"placeholders": {"count": {"type": "int"}}},
   "stageActionPlayoffHeading": "Tied teams (playoff)",
   "stageActionPlayoffCreate": "Create playoff",
   "stageActionPlayoffConfirmTitle": "Create a playoff match?",

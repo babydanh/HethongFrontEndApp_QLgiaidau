@@ -98,6 +98,42 @@ void main() {
     expect(result.totalMatches, 7);
   });
 
+  test('TC-STAGEOPS-10 advanceStandings reports how many tie groups wait for the organizer', () async {
+    final adapter = _Adapter(
+      body: {
+        'data': {
+          'message': 'tie',
+          'stage2Id': 's-2',
+          'advancingParticipants': 0,
+          'pendingTies': [
+            {'scope': 'GROUP', 'groupId': 'g-1', 'participantIds': ['p-1', 'p-2'], 'slots': 1},
+            {'scope': 'CROSS_GROUP', 'groupId': null, 'participantIds': ['p-3', 'p-4'], 'slots': 1},
+          ],
+        },
+      },
+    );
+
+    final result = await _repoWith(
+      adapter,
+    ).advanceStandings('t-1', divisionId: 'd-1', stageId: 's-1');
+
+    expect(result.pendingTieCount, 2);
+  });
+
+  test('TC-STAGEOPS-10 a response without pendingTies reports none', () async {
+    final adapter = _Adapter(
+      body: {
+        'data': {'message': 'ok', 'stage2Id': 's-2', 'advancingParticipants': 4},
+      },
+    );
+
+    final result = await _repoWith(
+      adapter,
+    ).advanceStandings('t-1', divisionId: 'd-1', stageId: 's-1');
+
+    expect(result.pendingTieCount, 0);
+  });
+
   test('TC-STAGEOPS-03 createPlayoffMatch POSTs stageId and both participant ids', () async {
     final adapter = _Adapter(
       body: {

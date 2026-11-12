@@ -19023,6 +19023,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String stageActionAdvancePendingTies(int count) {
+    return '$count groups of teams are level on every criterion, so the knockout is not set yet. Open the Web app to choose who advances.';
+  }
+
+  @override
   String get stageActionPlayoffHeading => 'Tied teams (playoff)';
 
   @override

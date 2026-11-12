@@ -18946,6 +18946,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String stageActionAdvancePendingTies(int count) {
+    return 'Có $count nhóm đội hoà tuyệt đối nên chưa tạo được sơ đồ loại trực tiếp. Hãy mở bản Web để chọn đội đi tiếp.';
+  }
+
+  @override
   String get stageActionPlayoffHeading => 'Hai đội bằng điểm (play-off)';
 
   @override
