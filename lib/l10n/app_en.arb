@@ -6288,6 +6288,7 @@
   "liveNoSignalLabel": "No live signal yet",
   "liveNewMessages": "{count} new messages",
   "liveBackToLive": "Back to live",
+  "liveWatchRecording": "Watch recording",
   "liveEnterFullscreen": "Fullscreen",
   "liveExitFullscreen": "Exit fullscreen",
   "liveReportAction": "Report",

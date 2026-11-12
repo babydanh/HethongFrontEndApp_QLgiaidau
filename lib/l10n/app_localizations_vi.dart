@@ -7502,6 +7502,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get liveBackToLive => 'Về live';
 
   @override
+  String get liveWatchRecording => 'Xem lại bản ghi';
+
+  @override
   String get liveEnterFullscreen => 'Toàn màn hình';
 
   @override

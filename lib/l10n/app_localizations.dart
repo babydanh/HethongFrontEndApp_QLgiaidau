@@ -13928,6 +13928,12 @@ abstract class AppLocalizations {
   /// **'Về live'**
   String get liveBackToLive;
 
+  /// No description provided for @liveWatchRecording.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem lại bản ghi'**
+  String get liveWatchRecording;
+
   /// No description provided for @liveEnterFullscreen.
   ///
   /// In vi, this message translates to:

@@ -2820,6 +2820,7 @@
   "liveNoSignalLabel": "Chưa có tín hiệu phát trực tiếp",
   "liveNewMessages": "{count} tin mới",
   "liveBackToLive": "Về live",
+  "liveWatchRecording": "Xem lại bản ghi",
   "liveEnterFullscreen": "Toàn màn hình",
   "liveExitFullscreen": "Thoát toàn màn hình",
   "liveReportAction": "Báo cáo",

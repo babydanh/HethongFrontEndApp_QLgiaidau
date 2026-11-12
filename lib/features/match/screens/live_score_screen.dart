@@ -169,6 +169,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// Whole-match second of the replay (reported by the player), and the events
   /// last used to draw it, so the callback can tell if a dismissed panel is stale.
   final _replaySeconds = ValueNotifier<int>(0);
+  // With a live stream and a recording together the viewer picks one; live first.
+  bool _preferReplay = false;
   List<MatchReplayOverlayEvent>? _replayEventsInUse;
   final List<Map<String, dynamic>> _comments = [];
   bool _isLoadingComments = false;
@@ -2301,7 +2303,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
   /// live stream (or nothing) shows. Same lookup order as `LiveVideoBox`.
   List<MatchReplayOverlayEvent>? _replayOverlayEvents() {
     final playback = ref.watch(matchPlaybackProvider(widget.matchId));
-    if (playback.asData?.value != null || !playback.hasValue) return null;
+    if (!playback.hasValue) return null;
+    if (playback.asData?.value != null && !_preferReplay) return null;
     return ref
         .watch(matchReplayProvider(widget.matchId))
         .asData
@@ -2390,6 +2393,8 @@ class _LiveScoreScreenState extends ConsumerState<LiveScoreScreen>
         if (mounted) setState(() => _videoAspect = ratio);
       },
       onReplayPositionChanged: _onReplayPosition,
+      preferReplay: _preferReplay,
+      onToggleReplay: () => setState(() => _preferReplay = !_preferReplay),
     );
     // Small window: nothing but the picture. The same keyed player moves here,
     // so the stream keeps playing across the switch.

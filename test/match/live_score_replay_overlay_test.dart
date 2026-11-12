@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/data/models/match_playback_model.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/match/screens/live_score_screen.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/live_video_box.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/live_video_player.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_score_access_provider.dart';
@@ -102,10 +103,19 @@ MatchReplay _replay(List<Map<String, Object?>> overlayEvents) =>
 Map<String, Object?> _event(String kind, bool visible, num at) =>
     <String, Object?>{'kind': kind, 'visible': visible, 'offsetSec': at};
 
+const _liveStream = MatchPlaybackModel(
+  matchId: _matchId,
+  streamStatus: StreamStatus.live,
+  playbackUrl: 'https://media.example.test/live/camera_new/hls.m3u8',
+  cameraName: 'cam',
+);
+
 Future<void> _pumpReplay(
   WidgetTester tester,
-  List<Map<String, Object?>> overlayEvents,
-) async {
+  List<Map<String, Object?>> overlayEvents, {
+  MatchPlaybackModel? live,
+  bool recordingAvailable = true,
+}) async {
   VideoPlayerPlatform.instance = FakeVideoPlayerPlatform();
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
@@ -124,9 +134,11 @@ Future<void> _pumpReplay(
         tournamentProvider.overrideWith((ref, id) => Stream.value(null)),
         viewerCountProvider.overrideWith((ref, id) => Stream.value(0)),
         // No live stream: LiveVideoBox falls through to the recording.
-        matchPlaybackProvider.overrideWith((ref, id) => Future.value(null)),
+        matchPlaybackProvider.overrideWith((ref, id) => Future.value(live)),
         matchReplayProvider.overrideWith(
-          (ref, id) => Future.value(_replay(overlayEvents)),
+          (ref, id) => Future.value(
+            recordingAvailable ? _replay(overlayEvents) : null,
+          ),
         ),
         bracketMatchesWithDivisionProvider.overrideWith(
           (ref, params) => Stream.value([
@@ -241,6 +253,46 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets(
+    'TC-REPLAYOV-15 a live stream and a recording together: live first, a button switches to the recording and the overlay follows it',
+    (tester) async {
+      await _pumpReplay(tester, [
+        _event('H2H', true, 3),
+        _event('H2H', false, 6),
+      ], live: _liveStream);
+      expect(find.byType(LiveVideoPlayer), findsOneWidget);
+      expect(find.byKey(const ValueKey('match-replay-player')), findsNothing);
+
+      final toggle = find.byKey(const ValueKey('live-replay-toggle'));
+      expect(toggle, findsOneWidget);
+      await tester.tap(toggle);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(LiveVideoPlayer), findsNothing);
+      expect(find.byKey(const ValueKey('match-replay-player')), findsOneWidget);
+      expect(_h2h, findsNothing); // 0 s: the recording's own events, not the server flag
+      await _skip(tester, _forward); // 3 s
+      expect(_h2h, findsOneWidget);
+
+      await tester.tap(toggle); // back to live
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(LiveVideoPlayer), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('TC-REPLAYOV-16 a live stream without a recording has no button', (
+    tester,
+  ) async {
+    await _pumpReplay(tester, const [], live: _liveStream, recordingAvailable: false);
+
+    expect(find.byType(LiveVideoPlayer), findsOneWidget);
+    expect(find.byKey(const ValueKey('live-replay-toggle')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'TC-REPLAYOV-14 a recording without events shows no overlay, whatever the server flags say',

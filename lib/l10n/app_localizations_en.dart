@@ -7515,6 +7515,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveBackToLive => 'Back to live';
 
   @override
+  String get liveWatchRecording => 'Watch recording';
+
+  @override
   String get liveEnterFullscreen => 'Fullscreen';
 
   @override

@@ -26,6 +26,11 @@ final matchReplayProvider = FutureProvider.family<MatchReplay?, String>((
   matchId,
 ) async {
   final repository = ref.watch(matchPlaybackRepositoryProvider);
+  // Ask again when the live stream appears or goes: an earlier "no recording
+  // yet" answer must not stick once the match has moved on.
+  ref.watch(
+    matchPlaybackProvider(matchId).select((v) => v.asData?.value?.playbackUrl),
+  );
   try {
     final replay = await repository.getMatchReplay(matchId);
     return replay.available && replay.segments.isNotEmpty ? replay : null;
@@ -50,6 +55,8 @@ class LiveVideoBox extends ConsumerStatefulWidget {
     this.onControlsVisibleChanged,
     this.onAspectRatioChanged,
     this.onReplayPositionChanged,
+    this.preferReplay = false,
+    this.onToggleReplay,
   });
 
   final String matchId;
@@ -62,6 +69,11 @@ class LiveVideoBox extends ConsumerStatefulWidget {
 
   /// Forwarded to the replay player: the whole-match timeline second.
   final ValueChanged<int>? onReplayPositionChanged;
+
+  /// With a live stream AND a recording, the viewer picks which one plays. The
+  /// button only exists when [onToggleReplay] is given.
+  final bool preferReplay;
+  final VoidCallback? onToggleReplay;
 
   /// Forwarded to the live player: red LIVE dot beside the sound button.
   final bool showLiveDot;
@@ -90,18 +102,23 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
     final playback = ref.watch(matchPlaybackProvider(widget.matchId));
     final livePlayback = playback.asData?.value;
     final url = livePlayback?.playbackUrl;
-    final label = livePlayback?.cameraName;
+    final replay = ref
+        .watch(matchReplayProvider(widget.matchId))
+        .asData
+        ?.value;
 
-    if (url != null) {
+    final canToggle =
+        url != null && replay != null && widget.onToggleReplay != null;
+    if (url != null && !(canToggle && widget.preferReplay)) {
       // Chỉ dựng lại player khi URL thật sự đổi, tránh hủy và tạo lại
       // controller ở mỗi lần dựng lại giao diện.
       if (url != _resolvedFor) {
         _resolvedFor = url;
         _url = url;
       }
-      return LiveVideoPlayer(
+      final live = LiveVideoPlayer(
         url: _url!,
-        label: label,
+        label: livePlayback?.cameraName,
         showStreamStats: widget.showStreamStats,
         fill: widget.fill,
         fullscreen: widget.fullscreen,
@@ -110,27 +127,59 @@ class _LiveVideoBoxState extends ConsumerState<LiveVideoBox> {
         onControlsVisibleChanged: widget.onControlsVisibleChanged,
         onAspectRatioChanged: widget.onAspectRatioChanged,
       );
+      return canToggle ? _withToggle(live, replayShown: false) : live;
     }
 
     _resolvedFor = null;
     _url = null;
-    if (!playback.hasValue) return const _NoSignalBox();
-    final replay = ref.watch(matchReplayProvider(widget.matchId));
-    return replay.maybeWhen(
-      data: (value) {
-        if (value == null) return const _NoSignalBox();
-        final player = MatchReplayPlayer(
-          key: ValueKey<String>('match-replay-${value.matchId}'),
-          replay: value,
-          fullscreen: widget.fullscreen,
-          onToggleFullscreen: widget.onToggleFullscreen,
-          onControlsVisibleChanged: widget.onControlsVisibleChanged,
-          onPositionChanged: widget.onReplayPositionChanged,
-        );
-        // The player keeps its own 16:9 shape; the page aligns it.
-        return player;
-      },
-      orElse: () => const _NoSignalBox(),
+    if (url == null && !playback.hasValue) return const _NoSignalBox();
+    if (replay == null) return const _NoSignalBox();
+    final player = MatchReplayPlayer(
+      key: ValueKey<String>('match-replay-${replay.matchId}'),
+      replay: replay,
+      fullscreen: widget.fullscreen,
+      onToggleFullscreen: widget.onToggleFullscreen,
+      onControlsVisibleChanged: widget.onControlsVisibleChanged,
+      onPositionChanged: widget.onReplayPositionChanged,
+    );
+    // The player keeps its own 16:9 shape; the page aligns it.
+    return canToggle ? _withToggle(player, replayShown: true) : player;
+  }
+
+  Widget _withToggle(Widget child, {required bool replayShown}) {
+    final l10n = AppLocalizations.of(context)!;
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        child,
+        Positioned(
+          top: 8,
+          right: 8,
+          child: Material(
+            color: Colors.black54,
+            shape: const StadiumBorder(),
+            child: InkWell(
+              key: const ValueKey<String>('live-replay-toggle'),
+              customBorder: const StadiumBorder(),
+              onTap: widget.onToggleReplay,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                child: Text(
+                  replayShown ? l10n.liveBackToLive : l10n.liveWatchRecording,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
