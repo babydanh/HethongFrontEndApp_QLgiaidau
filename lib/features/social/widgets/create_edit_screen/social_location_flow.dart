@@ -46,15 +46,24 @@ SocialPlace socialPlaceFromResolvedPin(
 }
 
 class SocialLocationFlow extends ConsumerStatefulWidget {
-  const SocialLocationFlow({super.key, this.initialPlace, this.initialCenter});
+  const SocialLocationFlow({
+    super.key,
+    this.initialPlace,
+    this.initialCenter,
+    this.categoryId,
+  });
 
   final SocialPlace? initialPlace;
   final LatLng? initialCenter;
+
+  /// `categories.id` của môn đang chọn; có thì chỉ gợi ý sân của môn đó.
+  final String? categoryId;
 
   static Future<SocialPlace?> show(
     BuildContext context, {
     SocialPlace? initialPlace,
     LatLng? initialCenter,
+    String? categoryId,
   }) {
     return showModalBottomSheet<SocialPlace>(
       context: context,
@@ -64,6 +73,7 @@ class SocialLocationFlow extends ConsumerStatefulWidget {
       builder: (_) => SocialLocationFlow(
         initialPlace: initialPlace,
         initialCenter: initialCenter,
+        categoryId: categoryId,
       ),
     );
   }
@@ -96,6 +106,15 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
   }
 
   @override
+  void didUpdateWidget(SocialLocationFlow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.categoryId == widget.categoryId) return;
+    // Đổi môn: bỏ kết quả cũ (qua generation) và tìm lại với môn mới.
+    final query = _searchController.text.trim();
+    _searchChanged(query);
+  }
+
+  @override
   void dispose() {
     _searchTimer?.cancel();
     _searchController.dispose();
@@ -122,7 +141,7 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
     try {
       final results = await ref
           .read(socialLocationRepositoryProvider)
-          .search(query);
+          .search(query, categoryId: widget.categoryId);
       if (!mounted || generation != _searchGeneration) return;
       setState(() {
         _results = results.where((place) => place.canApply).toList();
@@ -389,12 +408,35 @@ class _SocialLocationFlowState extends ConsumerState<SocialLocationFlow> {
         hasPin ? Icons.place_outlined : Icons.location_city_outlined,
       ),
       title: Text(place.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        hasPin
-            ? place.formattedAddress
-            : '${place.formattedAddress} • ${l10n.socialPlaceNoPin}',
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            hasPin
+                ? place.formattedAddress
+                : '${place.formattedAddress} • ${l10n.socialPlaceNoPin}',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (place.isVerified)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.verified_outlined,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  l10n.socialPlaceVerified,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       onTap: () async {
         if (!place.hasPin && place.venueId == null) {

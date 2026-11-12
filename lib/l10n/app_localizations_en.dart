@@ -15980,6 +15980,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get socialPlaceNoPin => 'No map pin';
 
   @override
+  String get socialPlaceVerified => 'Verified';
+
+  @override
   String get socialPlaceSaveAreaTitle => 'Save this area?';
 
   @override

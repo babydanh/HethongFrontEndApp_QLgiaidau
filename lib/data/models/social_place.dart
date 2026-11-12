@@ -15,7 +15,8 @@ class SocialPlace {
       provinceCode = null,
       wardCode = null,
       regionEstimated = false,
-      nameFromRegion = false;
+      nameFromRegion = false,
+      isVerified = false;
 
   const SocialPlace({
     required this.name,
@@ -30,6 +31,7 @@ class SocialPlace {
     this.wardCode,
     this.regionEstimated = false,
     this.nameFromRegion = false,
+    this.isVerified = false,
   });
 
   final String name;
@@ -46,6 +48,9 @@ class SocialPlace {
 
   /// Local editing provenance; server venue names are always treated as explicit.
   final bool nameFromRegion;
+
+  /// Sân trong danh bạ đã được xác minh (server cũ không trả thì `false`).
+  final bool isVerified;
 
   bool get hasReadableAddress => formattedAddress.trim().isNotEmpty;
   bool get hasPin => latitude != null && longitude != null;

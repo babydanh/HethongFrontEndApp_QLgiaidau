@@ -34,7 +34,12 @@ class ApiSocialLocationRepository implements ISocialLocationRepository {
   static const _vietnamBbox = '102.1,8.0,109.5,23.5';
 
   @override
-  Future<List<SocialPlace>> search(String query, {LatLng? bias}) async {
+  Future<List<SocialPlace>> search(
+    String query, {
+    LatLng? bias,
+    // Photon không có danh mục môn: bỏ qua có chủ ý.
+    String? categoryId,
+  }) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return const [];
     return _searchFeatures(trimmed, bias: bias);

@@ -288,6 +288,17 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
     return !active.any((category) => category.slug == slug);
   }
 
+  /// `categories.id` (uuid) của môn đang chọn; null khi chưa có môn hoặc môn
+  /// đã gỡ khỏi danh mục đang bật (khi đó không lọc theo môn).
+  String? _selectedCategoryId() {
+    final active = _activeSports(ref.read(categoriesProvider));
+    final slug = _resolveSport(active).slug;
+    for (final category in active) {
+      if (category.slug == slug && category.id.isNotEmpty) return category.id;
+    }
+    return null;
+  }
+
   String _getComputedDefaultTitle(String sportName) {
     final hostName = _getHostName();
     return '$sportName $_selectedFormat với $hostName';
@@ -561,6 +572,7 @@ class _CreateSocialScreenState extends ConsumerState<CreateSocialScreen> {
       context,
       initialPlace: _selectedPlace,
       initialCenter: initialCenter,
+      categoryId: _selectedCategoryId(),
     );
     if (selected != null && mounted) {
       _venueNameController.text = selected.isDeferred ? '' : selected.name;
