@@ -1,8 +1,10 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:flutter/material.dart';
 
 /// Avatar tròn: ảnh thật nếu có, không thì chữ cái đầu. [isHost] gắn huy hiệu
-/// vương miện góc dưới như nhãn "Host" của Web.
+/// vương miện góc dưới như nhãn "Host" của Web. With a [userId] the circle
+/// carries the user's ELO tier ring instead of the plain host border.
 class SocialAvatar extends StatelessWidget {
   const SocialAvatar({
     super.key,
@@ -10,12 +12,16 @@ class SocialAvatar extends StatelessWidget {
     this.imageUrl,
     this.size = 44,
     this.isHost = false,
+    this.userId,
   });
 
   final String name;
   final String? imageUrl;
   final double size;
   final bool isHost;
+
+  /// Account behind the avatar; null for guests and club logos.
+  final String? userId;
 
   String get _initials {
     final parts = name.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty);
@@ -48,24 +54,31 @@ class SocialAvatar extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colors.success.withValues(alpha: 0.25),
-                  border: isHost
-                      ? Border.all(color: AppTheme.primary, width: 2)
-                      : null,
-                ),
-                child: ClipOval(
-                  child: url.isEmpty
-                      ? fallback
-                      : Image.network(
-                          url,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, error, stack) => fallback,
-                        ),
-                ),
-              ),
+              child: userId?.trim().isNotEmpty == true
+                  ? UserRankAvatar(
+                      userId: userId,
+                      name: name,
+                      imageUrl: url,
+                      size: size,
+                    )
+                  : DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.success.withValues(alpha: 0.25),
+                        border: isHost
+                            ? Border.all(color: AppTheme.primary, width: 2)
+                            : null,
+                      ),
+                      child: ClipOval(
+                        child: url.isEmpty
+                            ? fallback
+                            : Image.network(
+                                url,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, error, stack) => fallback,
+                              ),
+                      ),
+                    ),
             ),
             if (isHost)
               Positioned(

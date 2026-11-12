@@ -1,7 +1,7 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:flutter/material.dart';
 
 class ChatReactionDetailSheet extends StatelessWidget {
@@ -147,7 +147,7 @@ class ChatReactionDetailSheet extends StatelessWidget {
                         ListTile(
                           dense: true,
                           contentPadding: EdgeInsets.zero,
-                          leading: UserAvatarTap(
+                          leading: RankedUserAvatarTap(
                             userId: user.id,
                             name: user.fullName,
                             imageUrl: user.avatarUrl,

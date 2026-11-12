@@ -10,7 +10,8 @@ import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/core/services/chat_socket_service.dart';
 import 'package:app_quanly_giaidau/data/models/chat_models.dart';
 import 'package:app_quanly_giaidau/features/chat/screens/chat_detail_screen.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -262,6 +263,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final colors = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final profile = ref.watch(userProfileProvider).asData?.value;
+    final myRank = ref.watch(myBestRankingProvider);
     final currentUserId = profile?.id;
 
     final filteredRooms = _rooms.where((r) {
@@ -290,19 +292,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         ),
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 17,
-              backgroundColor: AppTheme.primaryLight,
-              backgroundImage: profile?.avatarUrl != null
-                  ? NetworkImage(profile!.avatarUrl!)
-                  : null,
-              child: profile?.avatarUrl == null
-                  ? const Icon(
-                      Icons.person,
-                      color: AppTheme.primaryDark,
-                      size: 18,
-                    )
-                  : null,
+            // /users/profile carries no ELO: the ring comes from the best
+            // ranking, exactly like the Profile tab.
+            RankAvatar(
+              imageUrl: profile?.avatarUrl,
+              name: profile?.fullName ?? '',
+              elo: myRank?.eloPoints ?? 0,
+              tierName: myRank?.tierName,
+              tierSource: myRank?.tierSource,
+              tierAvailable: myRank?.tierAvailable,
+              matchesPlayed: myRank?.matchesPlayed ?? 0,
+              size: 34,
             ),
             const SizedBox(width: 10),
             Text(
@@ -449,7 +449,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                 clipBehavior: Clip.none,
                                 children: [
                                   peer != null
-                                      ? UserAvatarTap(
+                                      ? RankedUserAvatarTap(
                                           userId: peer.id,
                                           name: peer.fullName,
                                           communityId: room.communityId,

@@ -368,6 +368,9 @@ class _HostCard extends StatelessWidget {
             name: title,
             imageUrl: hasClub ? session.hostClubAvatar : host?.avatarUrl,
             isHost: true,
+            userId: hasClub || host == null || host.isGuest
+                ? null
+                : host.userId,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -432,6 +435,7 @@ class _ParticipantsPreview extends StatelessWidget {
                       imageUrl: p.avatarUrl,
                       size: 40,
                       isHost: p.isHost,
+                      userId: p.isGuest ? null : p.userId,
                     ),
                   ),
                 if (preview.overflow > 0)

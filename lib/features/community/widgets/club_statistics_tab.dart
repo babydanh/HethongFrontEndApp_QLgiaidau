@@ -7,7 +7,7 @@ import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';
 import 'package:app_quanly_giaidau/providers/club_match_session_provider.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
@@ -819,11 +819,11 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
             const SizedBox(height: 8),
             Row(
               children: [
-                RankAvatar(
+                UserRankAvatar(
+                  userId: _profileUserId(stat),
                   imageUrl: stat.avatarUrl,
                   name: stat.displayName,
                   size: 28,
-                  ringWidth: 2,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -902,11 +902,11 @@ class _ClubStatisticsTabState extends ConsumerState<ClubStatisticsTab> {
             const SizedBox(width: 4),
 
             // Avatar
-            RankAvatar(
+            UserRankAvatar(
+              userId: _profileUserId(stat),
               imageUrl: stat.avatarUrl,
               name: stat.displayName,
               size: 34,
-              ringWidth: 2,
             ),
             const SizedBox(width: 10),
 

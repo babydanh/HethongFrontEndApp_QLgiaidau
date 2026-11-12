@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/providers/social_provider.dart';
@@ -19,6 +20,10 @@ class SocialPaymentTab extends ConsumerWidget {
     );
     final totalExpected = session.maxParticipants * session.pricePerSlot;
     final payments = session.payments;
+    final guestRowIds = {
+      for (final p in session.participants)
+        if (p.isGuest) p.id,
+    };
     final paidPayments = payments.where((p) => p.status == 'PAID').toList();
     final totalPaidAmount = paidPayments.fold<int>(
       0,
@@ -187,26 +192,15 @@ class SocialPaymentTab extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: isPaid
-                        ? colors.success.withValues(alpha: 0.2)
-                        : colors.warning.withValues(alpha: 0.2),
-                    child: Text(
-                      payment.participantName.isNotEmpty
-                          ? payment.participantName
-                                .trim()
-                                .split(' ')
-                                .last
-                                .substring(0, 1)
-                                .toUpperCase()
-                          : 'P',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: isPaid ? colors.success : colors.warning,
-                      ),
-                    ),
+                  UserRankAvatar(
+                    // Guests have no account: their payment row id is not a
+                    // user id, so they keep the neutral ring.
+                    userId: guestRowIds.contains(payment.participantId)
+                        ? null
+                        : payment.participantId,
+                    name: payment.participantName,
+                    imageUrl: payment.participantAvatar,
+                    size: 40,
                   ),
                   const SizedBox(width: 12),
                   Expanded(

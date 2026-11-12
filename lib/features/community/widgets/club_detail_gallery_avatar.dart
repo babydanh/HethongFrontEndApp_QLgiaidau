@@ -16,20 +16,25 @@ extension _ClubDetailGalleryAvatar on _ClubDetailScreenState {
     final displayName = name?.trim() ?? '';
     final url = avatarUrl?.trim();
 
-    // A missing ranking entry stays neutral: the ring belongs to the shared
-    // avatar, and a display fallback such as 1000 must never reach this
-    // widget as proof that the member is ranked.
-    return UserAvatarTap(
-      userId: userId,
-      communityId: widget.clubId,
-      name: displayName,
-      imageUrl: url == null || url.isEmpty ? null : url,
-      elo: elo ?? 0,
-      tierName: tierName,
-      matchesPlayed: matchesPlayed,
-      size: radius * 2,
-      ringWidth: radius >= 18 ? 2.5 : 2,
-      onFilterMatches: _filterClubMatches,
+    // Without a club ranking entry the ring follows the member's best public
+    // ranking; a display fallback such as 1000 must never reach this widget
+    // as proof that the member is ranked.
+    return Consumer(
+      builder: (context, ref, _) {
+        final best = elo == null ? watchUserBestRanking(ref, userId) : null;
+        return UserAvatarTap(
+          userId: userId,
+          communityId: widget.clubId,
+          name: displayName,
+          imageUrl: url == null || url.isEmpty ? null : url,
+          elo: elo ?? best?.eloPoints ?? 0,
+          tierName: tierName ?? best?.tierName,
+          matchesPlayed: elo == null ? best?.matchesPlayed ?? 0 : matchesPlayed,
+          size: radius * 2,
+          ringWidth: radius >= 18 ? 2.5 : 2,
+          onFilterMatches: _filterClubMatches,
+        );
+      },
     );
   }
 

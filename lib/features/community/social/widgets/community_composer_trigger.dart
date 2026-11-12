@@ -1,13 +1,16 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
+import 'package:app_quanly_giaidau/providers/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Ô kích hoạt đăng bài chuẩn phong cách Facebook:
 /// - Toàn chiều rộng (full-width), không bo góc viền hộp ngoài lơ lửng.
 /// - Avatar tròn sắc nét (hoặc chữ cái đầu đẹp mắt có fallback).
 /// - Thanh input pill màu xám nhạt `Bạn đang nghĩ gì?`.
 /// - Đường kẻ mỏng và các nút hành động nhanh bên dưới (Ảnh, Bình chọn).
-class CommunityComposerTrigger extends StatelessWidget {
+class CommunityComposerTrigger extends ConsumerWidget {
   final String authorName;
   final String? authorAvatarUrl;
   final VoidCallback onOpen;
@@ -24,14 +27,14 @@ class CommunityComposerTrigger extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cleanAvatarUrl = authorAvatarUrl?.trim();
-    final hasAvatar = cleanAvatarUrl != null && cleanAvatarUrl.isNotEmpty;
-    final initial = (authorName.trim().isNotEmpty ? authorName.trim()[0] : 'U')
-        .toUpperCase();
+    // The trigger always shows the signed-in author: /users/profile carries
+    // no ELO, so the ring comes from the best ranking like the Profile tab.
+    final rank = ref.watch(myBestRankingProvider);
 
     return Container(
       color: colors.bgCard,
@@ -42,29 +45,15 @@ class CommunityComposerTrigger extends StatelessWidget {
           GestureDetector(
             onTap: onAvatarTap ?? onOpen,
             behavior: HitTestBehavior.opaque,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppTheme.primary.withValues(alpha: 0.12),
-                border: Border.all(
-                  color: colors.borderLight.withValues(alpha: 0.8),
-                  width: 1,
-                ),
-              ),
-              child: ClipOval(
-                child: hasAvatar
-                    ? Image.network(
-                        cleanAvatarUrl,
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildFallbackAvatar(initial),
-                      )
-                    : _buildFallbackAvatar(initial),
-              ),
+            child: RankAvatar(
+              imageUrl: cleanAvatarUrl,
+              name: authorName.trim().isEmpty ? 'U' : authorName,
+              elo: rank?.eloPoints ?? 0,
+              tierName: rank?.tierName,
+              tierSource: rank?.tierSource,
+              tierAvailable: rank?.tierAvailable,
+              matchesPlayed: rank?.matchesPlayed ?? 0,
+              size: 36,
             ),
           ),
           const SizedBox(width: 10),
@@ -114,19 +103,6 @@ class CommunityComposerTrigger extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFallbackAvatar(String initial) {
-    return Center(
-      child: Text(
-        initial,
-        style: const TextStyle(
-          color: AppTheme.primary,
-          fontWeight: FontWeight.w800,
-          fontSize: 14,
-        ),
       ),
     );
   }
