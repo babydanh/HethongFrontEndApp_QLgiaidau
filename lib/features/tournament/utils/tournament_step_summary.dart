@@ -422,6 +422,10 @@ StepProgress _scheduleStep({
 StepTarget _resultsTarget(ResultsBoardFilter filter) =>
     StepTarget(StepHubTab.results, resultsFilter: filter);
 
+/// No chip holds disputed matches (closed, yet not finished): open the whole
+/// board, where the row is marked.
+const _disputedTarget = StepTarget(StepHubTab.results);
+
 /// Gate shared by the two playing steps: null means there is data to count.
 StepProgress? _playGate(StepKey key, SummaryLoad load, List<_Facts> facts) {
   if (load == SummaryLoad.loading) {
@@ -452,14 +456,9 @@ StepProgress _inProgressStep(SummaryLoad load, List<_Facts> facts) {
   final disputed = live.fold(0, (s, f) => s + f.disputed);
   final late = live.fold(0, (s, f) => s + f.late);
   final todos = <StepTodo>[
-    if (disputed > 0)
-      _countTodo(
-        'disputed',
-        disputed,
-        _resultsTarget(ResultsBoardFilter.disputed),
-      ),
+    if (disputed > 0) _countTodo('disputed', disputed, _disputedTarget),
     if (late > 0)
-      _countTodo('late', late, _resultsTarget(ResultsBoardFilter.late)),
+      _countTodo('late', late, _resultsTarget(ResultsBoardFilter.unfinished)),
     if (load == SummaryLoad.error) _loadFailed,
   ];
   return StepProgress(
@@ -495,12 +494,7 @@ StepProgress _completedStep({
         unfinished,
         _resultsTarget(ResultsBoardFilter.unfinished),
       ),
-    if (disputed > 0)
-      _countTodo(
-        'disputed',
-        disputed,
-        _resultsTarget(ResultsBoardFilter.disputed),
-      ),
+    if (disputed > 0) _countTodo('disputed', disputed, _disputedTarget),
     if (endPastUnfinished)
       const StepTodo(
         key: 'endDateExpected',

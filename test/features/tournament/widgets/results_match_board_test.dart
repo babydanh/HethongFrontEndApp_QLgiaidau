@@ -73,7 +73,6 @@ Future<void> _pump(
   bool canManage = false,
   String? divisionId = 'd1',
   ResultsBoardFilter initialFilter = ResultsBoardFilter.all,
-  DateTime Function()? clock,
   bool finalOnly = false,
 }) async {
   await tester.pumpWidget(
@@ -103,7 +102,6 @@ Future<void> _pump(
                     divisionId: divisionId,
                     canManage: canManage,
                     initialFilter: initialFilter,
-                    clock: clock ?? DateTime.now,
                     finalOnly: finalOnly,
                   ),
                 ),
@@ -694,8 +692,6 @@ void main() {
   });
 
   group('management chips (Web ResultsBoard parity)', () {
-    // 2026-11-03 08:00 in Vietnam (UTC+7).
-    final now = DateTime.utc(2026, 11, 3, 1);
     final disputedA = _match('dis-a', round: 1, number: 1, status: 'DISPUTED');
     final disputedB = _match('dis-b', round: 1, number: 2, status: 'DISPUTED');
     final done = _match(
@@ -735,71 +731,20 @@ void main() {
       }
     });
 
-    testWidgets('TC-RESULTS-02 Disputed chip counts and lists only disputes', (
+    testWidgets('TC-RESULTS-02 disputes sit in no count chip', (
       tester,
     ) async {
-      await _pump(
-        tester,
-        [disputedA, disputedB, done, cancelled, todo],
-        canManage: true,
-        initialFilter: ResultsBoardFilter.disputed,
-      );
+      await _pump(tester, [
+        disputedA,
+        disputedB,
+        done,
+        cancelled,
+        todo,
+      ], canManage: true);
 
-      expect(count(tester, 'disputed'), '2');
       // Like the Web progress card: completed + cancelled, disputes excluded.
       expect(count(tester, 'finished'), '2');
       expect(count(tester, 'unfinished'), '1');
-
-      await tester.pumpAndSettle();
-      expect(_row('dis-a'), findsOneWidget);
-      expect(_row('dis-b'), findsOneWidget);
-      expect(_row('done'), findsNothing);
-      expect(_row('todo'), findsNothing);
-    });
-
-    testWidgets('TC-RESULTS-03 Late means upcoming and past its time today', (
-      tester,
-    ) async {
-      final late = _match(
-        'late',
-        round: 1,
-        number: 1,
-        scheduledTime: DateTime.utc(2026, 11, 3, 0, 30),
-      );
-      final yesterday = _match(
-        'yesterday',
-        round: 1,
-        number: 2,
-        scheduledTime: DateTime.utc(2026, 11, 2, 0, 30),
-      );
-      final later = _match(
-        'later',
-        round: 1,
-        number: 3,
-        scheduledTime: DateTime.utc(2026, 11, 3, 2),
-      );
-      final playing = _match(
-        'playing',
-        round: 1,
-        number: 4,
-        status: 'ONGOING',
-        scheduledTime: DateTime.utc(2026, 11, 3, 0),
-      );
-      await _pump(
-        tester,
-        [late, yesterday, later, playing, disputedA],
-        canManage: true,
-        clock: () => now,
-        initialFilter: ResultsBoardFilter.late,
-      );
-
-      expect(count(tester, 'late'), '1');
-      await tester.pumpAndSettle();
-
-      expect(_row('late'), findsOneWidget);
-      expect(_row('yesterday'), findsNothing);
-      expect(_row('later'), findsNothing);
-      expect(_row('playing'), findsNothing);
     });
 
     testWidgets('TC-RESULTS-04 initialFilter opens with that chip selected', (
@@ -809,11 +754,11 @@ void main() {
         tester,
         [disputedA, todo],
         canManage: true,
-        initialFilter: ResultsBoardFilter.disputed,
+        initialFilter: ResultsBoardFilter.unfinished,
       );
 
-      expect(_row('dis-a'), findsOneWidget);
-      expect(_row('todo'), findsNothing);
+      expect(_row('todo'), findsOneWidget);
+      expect(_row('dis-a'), findsNothing);
     });
   });
 
@@ -932,7 +877,7 @@ void main() {
       expect(headColor(tester, 'losers|2'), headColor(tester, 'losers|4'));
     });
 
-    testWidgets('TC-RBR-17 no late or disputed chip unless it is preset', (
+    testWidgets('TC-RBR-17 no late or disputed chip, even for managers', (
       tester,
     ) async {
       await _pump(tester, [_match('r1', round: 1, number: 1)], canManage: true);
@@ -940,16 +885,6 @@ void main() {
       expect(
         find.byKey(const ValueKey('results-filter-disputed')),
         findsNothing,
-      );
-      await _pump(
-        tester,
-        [_match('r1', round: 1, number: 1)],
-        canManage: true,
-        initialFilter: ResultsBoardFilter.disputed,
-      );
-      expect(
-        find.byKey(const ValueKey('results-filter-disputed')),
-        findsOneWidget,
       );
     });
   });

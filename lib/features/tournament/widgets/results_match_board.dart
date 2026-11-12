@@ -20,19 +20,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Chips of the board. Organisers get all seven; the public board only the
+/// Chips of the board. Organisers get all five; the public board only the
 /// first four (same split as the Web `ResultsBoard`).
-enum ResultsBoardFilter {
-  all,
-  live,
-  upcoming,
-  finished,
-  unfinished,
-  late,
-  disputed,
-}
-
-DateTime _systemNow() => DateTime.now();
+enum ResultsBoardFilter { all, live, upcoming, finished, unfinished }
 
 /// Round name only: the match code already sits in the row's first column, so
 /// the label must not repeat it ("Bán kết", not "Bán kết - #BK02").
@@ -53,7 +43,6 @@ bool _passes(
   ResultsBoardFilter filter,
   MatchModel match, {
   required bool manage,
-  required DateTime now,
 }) => switch (filter) {
   ResultsBoardFilter.all => true,
   ResultsBoardFilter.live => isLiveMatch(match),
@@ -61,8 +50,6 @@ bool _passes(
   ResultsBoardFilter.finished =>
     isMatchClosed(match) && !(manage && isDisputedMatch(match)),
   ResultsBoardFilter.unfinished => !isMatchClosed(match),
-  ResultsBoardFilter.late => isLateMatch(match, now),
-  ResultsBoardFilter.disputed => isDisputedMatch(match),
 };
 
 /// Match board shared by the "Đang diễn ra" tab and the management view, the
@@ -79,7 +66,6 @@ class ResultsMatchBoard extends ConsumerStatefulWidget {
     this.divisionId,
     this.initialFilter = ResultsBoardFilter.all,
     this.finalOnly = false,
-    this.clock = _systemNow,
   });
 
   final String tournamentId;
@@ -95,9 +81,6 @@ class ResultsMatchBoard extends ConsumerStatefulWidget {
   /// Finished division: list only the knockout final. A bracket without a
   /// knockout final (round robin, swiss) keeps the full board.
   final bool finalOnly;
-
-  /// Source of "now" for the "Trễ giờ" chip; tests pass a fixed clock.
-  final DateTime Function() clock;
 
   @override
   ConsumerState<ResultsMatchBoard> createState() => _ResultsMatchBoardState();
@@ -129,9 +112,6 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
   List<ResultsRound> _rounds = const [];
   List<MatchModel> _live = const [];
   Map<String, String> _liveRoundLabels = const {};
-  List<MatchModel> _real = const [];
-  // Every chip except "Trễ giờ", which depends on the clock and is counted at
-  // build time from [_real].
   Map<ResultsBoardFilter, int> _counts = const {};
   final Map<String, (String?, String?)> _waiting = {};
   final Map<String, String> _haystack = {};
@@ -187,14 +167,9 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     _rounds = buildResultsRounds(all, (m) => _roundLabel(m, all, l10n));
     _live = splitResultsMatches(all).live;
     _liveRoundLabels = {for (final m in _live) m.id: _roundLabel(m, all, l10n)};
-    _real = real;
-    final now = widget.clock();
     _counts = {
       for (final f in ResultsBoardFilter.values)
-        if (f != ResultsBoardFilter.late)
-          f: real
-              .where((m) => _passes(f, m, manage: widget.canManage, now: now))
-              .length,
+        f: real.where((m) => _passes(f, m, manage: widget.canManage)).length,
     };
     _waiting.clear();
     _haystack.clear();
@@ -389,14 +364,13 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
     // Live matches have their own box, except under "Chưa xong" where they
     // are unfinished matches like the rest and stay in their round.
     final liveInRound = _filter == ResultsBoardFilter.unfinished;
-    final now = widget.clock();
     return [
       for (final round in _rounds)
         if (round.matches
                 .where(
                   (m) =>
                       (liveInRound || !isLiveMatch(m)) &&
-                      _passes(_filter, m, manage: widget.canManage, now: now) &&
+                      _passes(_filter, m, manage: widget.canManage) &&
                       _matchesQuery(m),
                 )
                 .toList()
@@ -436,18 +410,9 @@ class _ResultsMatchBoardState extends ConsumerState<ResultsMatchBoard> {
       ResultsBoardFilter.finished: l10n.resultsBoard_finished,
       if (widget.canManage)
         ResultsBoardFilter.unfinished: l10n.resultsBoard_unfinished,
-      // No chip of their own; shown only while the progress popup preset one.
-      if (widget.canManage && _filter == ResultsBoardFilter.late)
-        ResultsBoardFilter.late: l10n.resultsBoard_late,
-      if (widget.canManage && _filter == ResultsBoardFilter.disputed)
-        ResultsBoardFilter.disputed: l10n.resultsBoard_disputed,
     };
-    final now = widget.clock();
-    int? countOf(ResultsBoardFilter f) => switch (f) {
-      ResultsBoardFilter.all => null,
-      ResultsBoardFilter.late => _real.where((m) => isLateMatch(m, now)).length,
-      _ => _counts[f],
-    };
+    int? countOf(ResultsBoardFilter f) =>
+        f == ResultsBoardFilter.all ? null : _counts[f];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(

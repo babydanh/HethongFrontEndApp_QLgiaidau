@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _lateTarget = StepTarget(
   StepHubTab.results,
-  resultsFilter: ResultsBoardFilter.late,
+  resultsFilter: ResultsBoardFilter.unfinished,
 );
 
 StepProgress _step(
