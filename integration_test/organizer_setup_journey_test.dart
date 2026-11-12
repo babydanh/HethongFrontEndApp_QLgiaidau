@@ -572,7 +572,15 @@ void main() {
         name: '${single.tag} Tai khoan',
         email: kPlayerEmail,
       );
-      await press(tester, 'add-athlete-direct-submit');
+      // Lần gửi TC-12 có thể còn đang hoàn tất trên giao diện (nút gửi tạm khóa): bấm lại tới 3 lần
+      // cho tới khi hộp "Tìm tài khoản" hiện.
+      final findAccount = find.byKey(const ValueKey('add-athlete-find-account'));
+      for (var attempt = 0; attempt < 3 && findAccount.evaluate().isEmpty; attempt++) {
+        await press(tester, 'add-athlete-direct-submit');
+        for (var i = 0; i < 16 && findAccount.evaluate().isEmpty; i++) {
+          await tester.pump(const Duration(milliseconds: 500));
+        }
+      }
       await expectKey(
         tester,
         'add-athlete-find-account',
