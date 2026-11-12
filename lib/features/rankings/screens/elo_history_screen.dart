@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:app_quanly_giaidau/domain/entities/elo_history_log.dart';
 import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_progress_chart.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -267,8 +268,6 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
 
   Widget _buildHeader() {
     final c = LavishColors.of(context);
-    final name = widget.userName.trim();
-    final initial = name.isEmpty ? '?' : name.characters.first.toUpperCase();
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       decoration: BoxDecoration(
@@ -276,12 +275,13 @@ class _EloHistoryScreenState extends ConsumerState<EloHistoryScreen> {
       ),
       child: Row(
         children: [
-          LavishIconBox(
+          RankAvatar(
+            imageUrl: widget.avatarUrl,
+            name: widget.userName,
+            elo: widget.currentElo,
+            tierName: widget.tierName,
             size: 48,
-            child: Text(
-              initial,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-            ),
+            ringWidth: 3,
           ),
           const SizedBox(width: 12),
           Expanded(
