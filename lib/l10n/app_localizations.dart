@@ -35466,6 +35466,228 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Buổi giao lưu'**
   String get clubManageSessionsTitle;
+
+  /// No description provided for @camTabTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera của giải'**
+  String get camTabTitle;
+
+  /// No description provided for @camTabHelpTooltip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hướng dẫn tab Camera'**
+  String get camTabHelpTooltip;
+
+  /// No description provided for @camTabWatchCameras.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem camera'**
+  String get camTabWatchCameras;
+
+  /// No description provided for @camTabSummary.
+  ///
+  /// In vi, this message translates to:
+  /// **'{total} camera · {live} LIVE · {failing} lỗi'**
+  String camTabSummary(int total, int live, int failing);
+
+  /// No description provided for @camTabHelpHeading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cách dùng tab Camera'**
+  String get camTabHelpHeading;
+
+  /// No description provided for @camTabHelpStep1Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'1. Gán trận vào sân'**
+  String get camTabHelpStep1Title;
+
+  /// No description provided for @camTabHelpStep1Body.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo giữ một trận thả vào thẻ sân, hoặc mở menu ⋯ của trận để chuyển sân.'**
+  String get camTabHelpStep1Body;
+
+  /// No description provided for @camTabHelpStep2Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'2. Bắt đầu phát'**
+  String get camTabHelpStep2Title;
+
+  /// No description provided for @camTabHelpStep2Body.
+  ///
+  /// In vi, this message translates to:
+  /// **'Menu ⋯ của trận có Bắt đầu / Dừng. Camera của sân sẽ phát trận đó.'**
+  String get camTabHelpStep2Body;
+
+  /// No description provided for @camTabHelpStep3Title.
+  ///
+  /// In vi, this message translates to:
+  /// **'3. Theo dõi camera'**
+  String get camTabHelpStep3Title;
+
+  /// No description provided for @camTabHelpStep3Body.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nút Xem camera mở tường camera để xem nhiều sân cùng lúc. Bản ghi của từng trận nằm trong menu ⋯.'**
+  String get camTabHelpStep3Body;
+
+  /// No description provided for @camTabHelpClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hiểu'**
+  String get camTabHelpClose;
+
+  /// No description provided for @camMatchMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thao tác khác'**
+  String get camMatchMore;
+
+  /// No description provided for @camMatchRecordings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bản ghi'**
+  String get camMatchRecordings;
+
+  /// No description provided for @camMatchMoveCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyển tới {court}'**
+  String camMatchMoveCourt(String court);
+
+  /// No description provided for @camMatchUseCamera.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng camera {camera}'**
+  String camMatchUseCamera(String camera);
+
+  /// No description provided for @camCourtCameraLine.
+  ///
+  /// In vi, this message translates to:
+  /// **'Camera: {camera}'**
+  String camCourtCameraLine(String camera);
+
+  /// No description provided for @camCourtNowShowing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chiếu: {match}'**
+  String camCourtNowShowing(String match);
+
+  /// No description provided for @camCourtPreviewToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật/tắt xem thử trên máy này'**
+  String get camCourtPreviewToggle;
+
+  /// No description provided for @camWallTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tường camera'**
+  String get camWallTitle;
+
+  /// No description provided for @camWallClose.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng tường camera'**
+  String get camWallClose;
+
+  /// No description provided for @camWallEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có camera để xem.'**
+  String get camWallEmpty;
+
+  /// No description provided for @camWallLayout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưới {size}×{size}'**
+  String camWallLayout(int size);
+
+  /// No description provided for @camWallPrev.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang trước'**
+  String get camWallPrev;
+
+  /// No description provided for @camWallNext.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang sau'**
+  String get camWallNext;
+
+  /// No description provided for @camWallPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang {page}/{count}'**
+  String camWallPage(int page, int count);
+
+  /// No description provided for @camWallZoomHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm đôi một ô để phóng to'**
+  String get camWallZoomHint;
+
+  /// No description provided for @camWallNoMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận'**
+  String get camWallNoMatch;
+
+  /// No description provided for @camWallRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get camWallRetry;
+
+  /// No description provided for @camWallPreview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thử'**
+  String get camWallPreview;
+
+  /// No description provided for @camWallPreviewHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ tắt hình trên máy này, không ảnh hưởng camera.'**
+  String get camWallPreviewHint;
+
+  /// No description provided for @camWallSignalLive.
+  ///
+  /// In vi, this message translates to:
+  /// **'LIVE'**
+  String get camWallSignalLive;
+
+  /// No description provided for @camWallSignalConnecting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang kết nối'**
+  String get camWallSignalConnecting;
+
+  /// No description provided for @camWallSignalOffline.
+  ///
+  /// In vi, this message translates to:
+  /// **'OFFLINE'**
+  String get camWallSignalOffline;
+
+  /// No description provided for @camWallSignalError.
+  ///
+  /// In vi, this message translates to:
+  /// **'ERROR'**
+  String get camWallSignalError;
+
+  /// No description provided for @camWallSignalIdle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa phát'**
+  String get camWallSignalIdle;
+
+  /// No description provided for @camWallNoCourt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa gắn sân'**
+  String get camWallNoCourt;
 }
 
 class _AppLocalizationsDelegate

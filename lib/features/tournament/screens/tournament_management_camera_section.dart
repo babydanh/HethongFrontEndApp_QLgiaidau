@@ -8,7 +8,10 @@ import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.d
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_live_status_action.dart';
-import 'package:app_quanly_giaidau/features/tournament/widgets/match_stream_actions.dart';
+import 'package:app_quanly_giaidau/features/tournament/screens/camera_wall_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_court_info.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_tab_header.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/query_providers.dart';
@@ -257,52 +260,27 @@ class _TournamentManagementCameraSectionState
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            TournamentManagementSectionCard(
-              title: l10n.tournamentManagementCamera,
-              subtitle: l10n.tournamentManagementCameraDescription,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        // No count is shown until the list actually loaded —
-                        // claiming "0 cameras" while fetching would be a lie.
-                        child: camerasAsync.asData == null
-                            ? const SizedBox.shrink()
-                            : Text(
-                                l10n.tournamentManagementCameraCount(
-                                  cameras.length,
-                                ),
-                                style: TextStyle(
-                                  color: context.colors.textSecondary,
-                                ),
-                              ),
-                      ),
-                      SizedBox(
-                        height: kMinTouchTarget,
-                        child: IconButton(
-                          tooltip: l10n.tournamentManagementCameraRefresh,
-                          onPressed: () => ref
-                              .read(
-                                tournamentCamerasProvider(
-                                  widget.tournamentId,
-                                ).notifier,
-                              )
-                              .refresh(),
-                          icon: const Icon(Icons.refresh_rounded),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (selectedMatch != null)
-                    _SelectionBanner(
-                      label: _matchLabel(l10n, selectedMatch),
-                      onClear: () => setState(() => _selectedMatchId = null),
-                    ),
-                ],
+            CameraTabHeader(
+              cameras: camerasAsync.asData == null ? null : cameras,
+              onRefresh: () => ref
+                  .read(tournamentCamerasProvider(widget.tournamentId).notifier)
+                  .refresh(),
+              onWatchCameras: () => showCameraWall(
+                context,
+                tournamentId: widget.tournamentId,
+                divisionId: widget.divisionId,
+                courtNames: {
+                  for (final court in courts)
+                    court.id: court.name.isEmpty ? court.id : court.name,
+                },
+                matchLabelOf: (match) => _matchLabel(l10n, match),
               ),
             ),
+            if (selectedMatch != null)
+              _SelectionBanner(
+                label: _matchLabel(l10n, selectedMatch),
+                onClear: () => setState(() => _selectedMatchId = null),
+              ),
             const SizedBox(height: AppTheme.spacingMD),
             if (snapshot.connectionState == ConnectionState.waiting)
               const BoneListLoading(itemCount: 3, leadingAvatar: false)
@@ -335,6 +313,7 @@ class _TournamentManagementCameraSectionState
                       .where((match) => match.courtId == court.id)
                       .toList(growable: false),
                   assignable: assignable,
+                  allMatches: matches,
                   cameras: cameras,
                   busyMatchIds: _busyMatchIds,
                   selectedMatch: selectedMatch,
@@ -449,196 +428,24 @@ class _MatchPool extends StatelessWidget {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final match in matches) ...[
-                  _MatchPoolRow(
+                for (var i = 0; i < matches.length; i++) ...[
+                  if (i > 0) Divider(height: 1, color: context.colors.border),
+                  CameraMatchRow(
                     tournamentId: tournamentId,
-                    hasCamera: _matchHasCamera(match, cameras),
-                    match: match,
-                    courts: courts,
-                    isBusy: busyMatchIds.contains(match.id),
-                    isSelected: selectedMatchId == match.id,
+                    match: matches[i],
+                    label: _matchLabel(l10n, matches[i]),
+                    hasCamera: _matchHasCamera(matches[i], cameras),
                     readOnly: readOnly,
-                    label: _matchLabel(l10n, match),
-                    onSelected: () => onSelected(match),
-                    onAssign: (court) => onAssign(match, court),
+                    isBusy: busyMatchIds.contains(matches[i].id),
+                    isSelected: selectedMatchId == matches[i].id,
+                    draggable: true,
+                    courts: courts,
+                    onSelected: () => onSelected(matches[i]),
+                    onAssign: (court) => onAssign(matches[i], court),
                   ),
-                  const SizedBox(height: AppTheme.spacingSM),
                 ],
               ],
             ),
-    );
-  }
-}
-
-/// One match in the pool: draggable by long press, assignable from its own
-/// court menu, and selectable by a plain tap.
-class _MatchPoolRow extends StatelessWidget {
-  const _MatchPoolRow({
-    required this.tournamentId,
-    required this.hasCamera,
-    required this.match,
-    required this.courts,
-    required this.isBusy,
-    required this.isSelected,
-    required this.readOnly,
-    required this.label,
-    required this.onSelected,
-    required this.onAssign,
-  });
-
-  final String tournamentId;
-  final bool hasCamera;
-  final MatchModel match;
-  final List<TournamentCourtRef> courts;
-  final bool isBusy;
-  final bool isSelected;
-  final bool readOnly;
-  final String label;
-  final VoidCallback onSelected;
-  final Future<void> Function(TournamentCourtRef court) onAssign;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    final courtName = match.courtName?.trim();
-    final courtLabel = (courtName == null || courtName.isEmpty)
-        ? l10n.tournamentManagementCameraUnassigned
-        : courtName;
-
-    final row = Container(
-      constraints: const BoxConstraints(minHeight: kMinTouchTarget),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacingSM,
-        vertical: AppTheme.spacingXS,
-      ),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? AppTheme.primary.withValues(alpha: 0.09)
-            : colors.bgSurface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(
-          color: isSelected ? AppTheme.primary : colors.border,
-          width: isSelected ? 1.5 : 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              if (!readOnly) ...[
-                const ExcludeSemantics(
-                  child: Icon(Icons.drag_indicator_rounded),
-                ),
-                const SizedBox(width: AppTheme.spacingXS),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      courtLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: colors.textMuted, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              if (isBusy)
-                const SizedBox.square(
-                  dimension: kMinTouchTarget,
-                  child: Center(
-                    child: SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                )
-              else if (!readOnly)
-                PopupMenuButton<String>(
-                  tooltip: l10n.tournamentManagementCameraChooseCourt,
-                  onSelected: (courtId) {
-                    final court = courts
-                        .where((item) => item.id == courtId)
-                        .firstOrNull;
-                    if (court != null) onAssign(court);
-                  },
-                  itemBuilder: (context) => [
-                    for (final court in courts)
-                      PopupMenuItem<String>(
-                        value: court.id,
-                        child: Text(
-                          court.name.isEmpty ? court.id : court.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  icon: const Icon(Icons.place_outlined),
-                ),
-            ],
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: MatchStreamActions(
-              tournamentId: tournamentId,
-              matchId: match.id,
-              matchLabel: label,
-              hasCamera: hasCamera,
-              readOnly: readOnly,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (readOnly) return row;
-
-    return LongPressDraggable<CourtMatchDragData>(
-      data: CourtMatchDragData(matchId: match.id, matchLabel: label),
-      feedback: Material(
-        color: Colors.transparent,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints.tightFor(width: 240, height: 48),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.bgCard,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              border: Border.all(color: AppTheme.primary, width: 1.5),
-              boxShadow: const [
-                BoxShadow(blurRadius: 12, color: Colors.black26),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Center(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      childWhenDragging: Opacity(opacity: 0.38, child: row),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        onTap: onSelected,
-        child: row,
-      ),
     );
   }
 }
@@ -650,6 +457,7 @@ class _CourtDropCard extends StatelessWidget {
     required this.court,
     required this.camera,
     required this.assignable,
+    required this.allMatches,
     required this.matchesHere,
     required this.cameras,
     required this.busyMatchIds,
@@ -666,6 +474,10 @@ class _CourtDropCard extends StatelessWidget {
   /// Every match that can be dropped here, not just the ones already on this
   /// court — the dragged match comes from the pool.
   final List<MatchModel> assignable;
+
+  /// Every match of the tournament, finished ones included: the camera may
+  /// still be showing one of them.
+  final List<MatchModel> allMatches;
   final List<MatchModel> matchesHere;
   final List<TournamentCameraModel> cameras;
   final Set<String> busyMatchIds;
@@ -736,6 +548,15 @@ class _CourtDropCard extends StatelessWidget {
               ),
             ],
           ),
+          if (courtCamera != null) ...[
+            const SizedBox(height: AppTheme.spacingXS),
+            CameraCourtInfo(
+              tournamentId: tournamentId,
+              camera: courtCamera,
+              matches: allMatches,
+              matchLabelOf: (match) => _matchLabel(l10n, match),
+            ),
+          ],
           const SizedBox(height: AppTheme.spacingSM),
           CourtCameraUrlRow(
             tournamentId: tournamentId,
@@ -765,18 +586,20 @@ class _CourtDropCard extends StatelessWidget {
               style: TextStyle(color: colors.textMuted, fontSize: 12),
             )
           else
-            for (final match in matchesHere)
-              _CourtMatchRow(
+            for (var i = 0; i < matchesHere.length; i++) ...[
+              if (i > 0) Divider(height: 1, color: colors.border),
+              CameraMatchRow(
                 tournamentId: tournamentId,
-                matchId: match.id,
-                hasCamera: _matchHasCamera(match, cameras),
-                cameras: cameras,
-                currentCamera: camera,
-                isBusy: busyMatchIds.contains(match.id),
+                match: matchesHere[i],
+                label: _matchLabel(l10n, matchesHere[i]),
+                hasCamera: _matchHasCamera(matchesHere[i], cameras),
                 readOnly: readOnly,
-                label: _matchLabel(l10n, match),
-                onPickCamera: (value) => onPickCamera(match, value),
+                isBusy: busyMatchIds.contains(matchesHere[i].id),
+                showCourtChip: false,
+                cameras: cameras,
+                onPickCamera: (value) => onPickCamera(matchesHere[i], value),
               ),
+            ],
           if (hasSelection) ...[
             const SizedBox(height: AppTheme.spacingSM),
             SizedBox(
@@ -821,112 +644,6 @@ class _CourtDropCard extends StatelessWidget {
           child: card,
         );
       },
-    );
-  }
-}
-
-/// A match scheduled on this court, with the camera override menu.
-class _CourtMatchRow extends StatelessWidget {
-  const _CourtMatchRow({
-    required this.tournamentId,
-    required this.matchId,
-    required this.hasCamera,
-    required this.cameras,
-    required this.currentCamera,
-    required this.isBusy,
-    required this.readOnly,
-    required this.label,
-    required this.onPickCamera,
-  });
-
-  final String tournamentId;
-  final String matchId;
-  final bool hasCamera;
-  final List<TournamentCameraModel> cameras;
-  final TournamentCameraModel? currentCamera;
-  final bool isBusy;
-  final bool readOnly;
-  final String label;
-  final ValueChanged<TournamentCameraModel> onPickCamera;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final colors = context.colors;
-    return Container(
-      constraints: const BoxConstraints(minHeight: kMinTouchTarget),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spacingXS,
-        vertical: AppTheme.spacingXS,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: colors.textPrimary),
-                ),
-              ),
-              if (currentCamera != null)
-                ExcludeSemantics(
-                  child: Icon(
-                    Icons.videocam_rounded,
-                    size: 16,
-                    color: currentCamera!.hasPlaybackUrl
-                        ? colors.success
-                        : colors.textMuted,
-                  ),
-                ),
-              if (isBusy)
-                const SizedBox.square(
-                  dimension: kMinTouchTarget,
-                  child: Center(
-                    child: SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                )
-              else if (!readOnly && cameras.isNotEmpty)
-                PopupMenuButton<String>(
-                  tooltip: l10n.tournamentManagementCameraPickCamera,
-                  onSelected: (cameraId) {
-                    final picked = cameras
-                        .where((item) => item.id == cameraId)
-                        .firstOrNull;
-                    if (picked != null) onPickCamera(picked);
-                  },
-                  itemBuilder: (context) => [
-                    for (final item in cameras)
-                      PopupMenuItem<String>(
-                        value: item.id,
-                        child: Text(
-                          item.name.isEmpty ? item.id : item.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ],
-                  icon: const Icon(Icons.videocam_outlined),
-                ),
-            ],
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: MatchStreamActions(
-              tournamentId: tournamentId,
-              matchId: matchId,
-              matchLabel: label,
-              hasCamera: hasCamera,
-              readOnly: readOnly,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

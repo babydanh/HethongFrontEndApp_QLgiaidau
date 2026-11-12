@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/repositories/match_recording_catalog_r
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_match_row.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_recording_catalog_provider.dart';
@@ -149,6 +150,18 @@ Future<(AppLocalizations, _Venues)> _pumpHub(
   return (l10n, venues);
 }
 
+Future<void> _openFirstMenu(WidgetTester tester) async {
+  final menu = find
+      .descendant(
+        of: find.byType(CameraMatchRow),
+        matching: find.byType(PopupMenuButton<String>),
+      )
+      .first;
+  await tester.ensureVisible(menu);
+  await tester.tap(menu);
+  await tester.pumpAndSettle();
+}
+
 Future<void> _openTab(WidgetTester tester, String label) async {
   final tab = find.widgetWithText(Tab, label);
   await tester.ensureVisible(tab);
@@ -171,7 +184,7 @@ void main() {
     expect(tabs.last, l10n.tournamentManagementTabSettings);
   });
 
-  testWidgets('TC-HUB-CAM-02 opening Camera shows the board with Bắt đầu', (
+  testWidgets('TC-HUB-CAM-02 opening Camera shows the board, Bắt đầu in ⋯', (
     tester,
   ) async {
     final (l10n, _) = await _pumpHub(tester);
@@ -183,7 +196,16 @@ void main() {
     );
     expect(section.tournamentId, _tid);
     expect(section.readOnly, isFalse);
-    expect(find.widgetWithText(OutlinedButton, 'Bắt đầu'), findsWidgets);
+    expect(find.text(l10n.camTabTitle), findsOneWidget);
+    expect(find.byType(CameraMatchRow), findsWidgets);
+    await _openFirstMenu(tester);
+    expect(
+      find.text(
+        'Bắt đầu · ${l10n.tournamentManagementCameraStreamNeedsCamera}',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.camMatchRecordings), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -198,8 +220,10 @@ void main() {
       find.byType(TournamentManagementCameraSection),
     );
     expect(section.readOnly, isTrue);
-    expect(find.widgetWithText(OutlinedButton, 'Bắt đầu'), findsNothing);
-    expect(find.widgetWithText(OutlinedButton, 'Dừng'), findsNothing);
+    await _openFirstMenu(tester);
+    expect(find.textContaining('Bắt đầu'), findsNothing);
+    expect(find.text('Dừng'), findsNothing);
+    expect(find.text(l10n.camMatchRecordings), findsOneWidget);
   });
 
   testWidgets('TC-HUB-CAM-04 passing over Camera to Cài đặt loads nothing', (

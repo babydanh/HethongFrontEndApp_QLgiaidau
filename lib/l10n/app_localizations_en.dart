@@ -19792,4 +19792,133 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clubManageSessionsTitle => 'Sessions';
+
+  @override
+  String get camTabTitle => 'Tournament cameras';
+
+  @override
+  String get camTabHelpTooltip => 'Camera tab guide';
+
+  @override
+  String get camTabWatchCameras => 'View cameras';
+
+  @override
+  String camTabSummary(int total, int live, int failing) {
+    return '$total cameras · $live LIVE · $failing issues';
+  }
+
+  @override
+  String get camTabHelpHeading => 'How to use the Camera tab';
+
+  @override
+  String get camTabHelpStep1Title => '1. Put a match on a court';
+
+  @override
+  String get camTabHelpStep1Body =>
+      'Long-press a match and drop it on a court card, or use the match ⋯ menu to move it.';
+
+  @override
+  String get camTabHelpStep2Title => '2. Start streaming';
+
+  @override
+  String get camTabHelpStep2Body =>
+      'The match ⋯ menu has Start / Stop. The court camera then streams that match.';
+
+  @override
+  String get camTabHelpStep3Title => '3. Watch the cameras';
+
+  @override
+  String get camTabHelpStep3Body =>
+      'View cameras opens a wall to watch several courts at once. Each match\'s recordings are in its ⋯ menu.';
+
+  @override
+  String get camTabHelpClose => 'Got it';
+
+  @override
+  String get camMatchMore => 'More actions';
+
+  @override
+  String get camMatchRecordings => 'Recordings';
+
+  @override
+  String camMatchMoveCourt(String court) {
+    return 'Move to $court';
+  }
+
+  @override
+  String camMatchUseCamera(String camera) {
+    return 'Use camera $camera';
+  }
+
+  @override
+  String camCourtCameraLine(String camera) {
+    return 'Camera: $camera';
+  }
+
+  @override
+  String camCourtNowShowing(String match) {
+    return 'Now showing: $match';
+  }
+
+  @override
+  String get camCourtPreviewToggle => 'Turn preview on/off on this device';
+
+  @override
+  String get camWallTitle => 'Camera wall';
+
+  @override
+  String get camWallClose => 'Close camera wall';
+
+  @override
+  String get camWallEmpty => 'No cameras to view yet.';
+
+  @override
+  String camWallLayout(int size) {
+    return '$size×$size grid';
+  }
+
+  @override
+  String get camWallPrev => 'Previous page';
+
+  @override
+  String get camWallNext => 'Next page';
+
+  @override
+  String camWallPage(int page, int count) {
+    return 'Page $page/$count';
+  }
+
+  @override
+  String get camWallZoomHint => 'Double-tap a tile to enlarge it';
+
+  @override
+  String get camWallNoMatch => 'No match yet';
+
+  @override
+  String get camWallRetry => 'Retry';
+
+  @override
+  String get camWallPreview => 'Preview';
+
+  @override
+  String get camWallPreviewHint =>
+      'Only hides the picture on this device; the camera is not affected.';
+
+  @override
+  String get camWallSignalLive => 'LIVE';
+
+  @override
+  String get camWallSignalConnecting => 'Connecting';
+
+  @override
+  String get camWallSignalOffline => 'OFFLINE';
+
+  @override
+  String get camWallSignalError => 'ERROR';
+
+  @override
+  String get camWallSignalIdle => 'Not live';
+
+  @override
+  String get camWallNoCourt => 'No court';
 }

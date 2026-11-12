@@ -7802,5 +7802,80 @@
   "clubMatchSessionStatusClosedShort": "Closed",
   "clubMatchSessionStatusEndedShort": "Ended",
   "clubMatchSessionStatusCancelledShort": "Cancelled",
-  "clubManageSessionsTitle": "Sessions"
+  "clubManageSessionsTitle": "Sessions",
+  "camTabTitle": "Tournament cameras",
+  "camTabHelpTooltip": "Camera tab guide",
+  "camTabWatchCameras": "View cameras",
+  "camTabSummary": "{total} cameras · {live} LIVE · {failing} issues",
+  "@camTabSummary": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "live": { "type": "int" },
+      "failing": { "type": "int" }
+    }
+  },
+  "camTabHelpHeading": "How to use the Camera tab",
+  "camTabHelpStep1Title": "1. Put a match on a court",
+  "camTabHelpStep1Body": "Long-press a match and drop it on a court card, or use the match ⋯ menu to move it.",
+  "camTabHelpStep2Title": "2. Start streaming",
+  "camTabHelpStep2Body": "The match ⋯ menu has Start / Stop. The court camera then streams that match.",
+  "camTabHelpStep3Title": "3. Watch the cameras",
+  "camTabHelpStep3Body": "View cameras opens a wall to watch several courts at once. Each match's recordings are in its ⋯ menu.",
+  "camTabHelpClose": "Got it",
+  "camMatchMore": "More actions",
+  "camMatchRecordings": "Recordings",
+  "camMatchMoveCourt": "Move to {court}",
+  "@camMatchMoveCourt": {
+    "placeholders": {
+      "court": { "type": "String" }
+    }
+  },
+  "camMatchUseCamera": "Use camera {camera}",
+  "@camMatchUseCamera": {
+    "placeholders": {
+      "camera": { "type": "String" }
+    }
+  },
+  "camCourtCameraLine": "Camera: {camera}",
+  "@camCourtCameraLine": {
+    "placeholders": {
+      "camera": { "type": "String" }
+    }
+  },
+  "camCourtNowShowing": "Now showing: {match}",
+  "@camCourtNowShowing": {
+    "placeholders": {
+      "match": { "type": "String" }
+    }
+  },
+  "camCourtPreviewToggle": "Turn preview on/off on this device",
+  "camWallTitle": "Camera wall",
+  "camWallClose": "Close camera wall",
+  "camWallEmpty": "No cameras to view yet.",
+  "camWallLayout": "{size}×{size} grid",
+  "@camWallLayout": {
+    "placeholders": {
+      "size": { "type": "int" }
+    }
+  },
+  "camWallPrev": "Previous page",
+  "camWallNext": "Next page",
+  "camWallPage": "Page {page}/{count}",
+  "@camWallPage": {
+    "placeholders": {
+      "page": { "type": "int" },
+      "count": { "type": "int" }
+    }
+  },
+  "camWallZoomHint": "Double-tap a tile to enlarge it",
+  "camWallNoMatch": "No match yet",
+  "camWallRetry": "Retry",
+  "camWallPreview": "Preview",
+  "camWallPreviewHint": "Only hides the picture on this device; the camera is not affected.",
+  "camWallSignalLive": "LIVE",
+  "camWallSignalConnecting": "Connecting",
+  "camWallSignalOffline": "OFFLINE",
+  "camWallSignalError": "ERROR",
+  "camWallSignalIdle": "Not live",
+  "camWallNoCourt": "No court"
 }
