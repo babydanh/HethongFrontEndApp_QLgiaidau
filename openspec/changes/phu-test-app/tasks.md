@@ -17,7 +17,7 @@ Tiêu chí chung: lệnh hẹp `flutter test --no-pub <file>` exit 0; trước P
   Files: test/data/api_tournament_repository_gaps_test.dart
 - [x] T6 ApiMatchRepository phần còn thiếu (59%)
   Files: test/data/api_match_repository_gaps_test.dart
-- [ ] T7 Notifier: score_panel_notifier, lite_management_notifier, social_provider
+- [x] T7 Notifier: lite_management_notifier, social_provider (score_panel_notifier bỏ qua: đã dày, phần hổng là sync/timer)
   Files: test/providers/*_gaps_test.dart
 - [ ] T8 Đo lại, review, handoff, PR
   Files: openspec/changes/phu-test-app/{coverage-after.md,handoff.md,findings.md}
