@@ -19094,6 +19094,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profLvSeeAll => 'Xem tất cả';
 
   @override
+  String get profOrgTitle => 'Giải tôi tổ chức';
+
+  @override
+  String get profOrgLoadMore => 'Xem thêm';
+
+  @override
+  String get profOrgRetry => 'Thử lại';
+
+  @override
   String get profLvUpcoming => 'Sắp tới';
 
   @override

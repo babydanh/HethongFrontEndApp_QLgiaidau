@@ -34345,6 +34345,24 @@ abstract class AppLocalizations {
   /// **'Xem tất cả'**
   String get profLvSeeAll;
 
+  /// No description provided for @profOrgTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải tôi tổ chức'**
+  String get profOrgTitle;
+
+  /// No description provided for @profOrgLoadMore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm'**
+  String get profOrgLoadMore;
+
+  /// No description provided for @profOrgRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get profOrgRetry;
+
   /// No description provided for @profLvUpcoming.
   ///
   /// In vi, this message translates to:

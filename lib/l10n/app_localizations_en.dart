@@ -19173,6 +19173,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profLvSeeAll => 'See all';
 
   @override
+  String get profOrgTitle => 'Tournaments I organize';
+
+  @override
+  String get profOrgLoadMore => 'Load more';
+
+  @override
+  String get profOrgRetry => 'Retry';
+
+  @override
   String get profLvUpcoming => 'Upcoming';
 
   @override

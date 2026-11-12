@@ -259,6 +259,18 @@ void main() {
       await expectLater(failing.getMyWorkspace(), throwsA(isA<DioException>()));
     });
 
+    test('getMyWorkspace forwards the role filter only when given', () async {
+      final (repo, adapter) = _setup({
+        'GET /tournaments/workspace/me': const FakeReply(200, {
+          'organizedTournaments': <dynamic>[],
+        }),
+      });
+
+      await repo.getMyWorkspace(limit: 4, role: 'ORGANIZER');
+
+      expect(adapter.requests.single.query, {'limit': 4, 'role': 'ORGANIZER'});
+    });
+
     test(
       'respondToRefereeInvite and kickParticipant send trimmed payloads',
       () async {

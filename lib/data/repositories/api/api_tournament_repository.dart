@@ -189,6 +189,7 @@ class ApiTournamentRepository implements ITournamentRepository {
   Future<TournamentWorkspace> getMyWorkspace({
     String? cursor,
     int limit = 20,
+    String? role,
   }) async {
     _log.debug(
       'Fetching tournament workspace for current user (cursor: ${cursor ?? 'none'})',
@@ -198,6 +199,7 @@ class ApiTournamentRepository implements ITournamentRepository {
         '/tournaments/workspace/me',
         queryParameters: {
           'limit': limit,
+          if (role != null) 'role': role,
           // Không gửi cursor rỗng: backend decode '' sẽ trả null, nhưng gửi
           // tham số rỗng vẫn làm URL xấu và dễ sót trong log.
           if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,

@@ -19,7 +19,13 @@ abstract class ITournamentRepository {
   Future<List<OrganizerOpsParticipant>> getPublicParticipants(
     String tournamentId,
   );
-  Future<TournamentWorkspace> getMyWorkspace({String? cursor, int limit = 20});
+  /// [role] (ORGANIZER | CO_ORGANIZER | PARTICIPANT) filters server-side before
+  /// paging; null keeps the merged stream.
+  Future<TournamentWorkspace> getMyWorkspace({
+    String? cursor,
+    int limit = 20,
+    String? role,
+  });
   Future<void> respondToRefereeInvite({
     required String tournamentId,
     required String refereeId,
