@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
@@ -295,11 +296,12 @@ class _CommunityPostComposerSheetState
                 children: engine.mentionedMembers
                     .map(
                       (member) => InputChip(
-                        avatar: CircleAvatar(
-                          backgroundImage: member.mentionAvatarProvider,
-                          child: member.mentionAvatarProvider == null
-                              ? Text(member.mentionInitial)
-                              : null,
+                        avatar: UserRankAvatar(
+                          userId: member.userId,
+                          name: member.mentionDisplayName,
+                          imageUrl: member.userAvatarUrl,
+                          size: 24,
+                          ringWidth: 1.5,
                         ),
                         label: Text('@${member.mentionDisplayName}'),
                         onDeleted: () {

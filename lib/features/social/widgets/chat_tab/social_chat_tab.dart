@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/providers/social_chat_provider.dart';
@@ -123,20 +124,11 @@ class _SocialChatTabState extends ConsumerState<SocialChatTab>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor:
-                            (msg.isHost || msg.senderId == session.hostUserId)
-                            ? colors.success.withValues(alpha: 0.25)
-                            : AppTheme.primaryLight.withValues(alpha: 0.35),
-                        child: Text(
-                          msg.senderInitials,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
+                      UserRankAvatar(
+                        userId: msg.senderId,
+                        name: msg.senderName,
+                        imageUrl: msg.senderAvatar,
+                        size: 36,
                       ),
                       const SizedBox(width: 10),
                       Expanded(

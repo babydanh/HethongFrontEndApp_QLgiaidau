@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:app_quanly_giaidau/core/widgets/skeleton/list_skeletons.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -2162,12 +2163,22 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
             onTap: targetUserId != null && targetUserId.isNotEmpty
                 ? () => _showMemberSheet(context, targetUserId, name, logoUrl)
                 : null,
-            child: _buildTeamAvatar(
-              name: name,
-              logoUrl: logoUrl,
-              isWinner: isWinner,
-              colors: colors,
-            ),
+            // A single player is a person: ring by tier. No member info means
+            // a bare team, which keeps the team avatar.
+            child: firstMember == null
+                ? _buildTeamAvatar(
+                    name: name,
+                    logoUrl: logoUrl,
+                    isWinner: isWinner,
+                    colors: colors,
+                  )
+                : UserRankAvatar(
+                    userId: firstMember.isMock ? null : firstMember.userId,
+                    name: name,
+                    imageUrl: logoUrl,
+                    elo: firstMember.eloPoints,
+                    tierName: firstMember.tierName,
+                  ),
           ),
         const SizedBox(width: 10),
         Expanded(
@@ -2361,12 +2372,12 @@ class _ClubActivityTabState extends ConsumerState<ClubActivityTab>
               member.avatarUrl,
             )
           : null,
-      child: _buildTeamAvatar(
+      child: UserRankAvatar(
+        userId: member.isMock ? null : userId,
         name: member.fullName,
-        logoUrl: member.avatarUrl,
-        isWinner: isWinner,
-        colors: colors,
-        borderColor: colors.bgCard,
+        imageUrl: member.avatarUrl,
+        elo: member.eloPoints,
+        tierName: member.tierName,
       ),
     );
   }

@@ -210,6 +210,35 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
     );
   }
 
+  /// Club ranking ELO when the member has one; otherwise the user's best
+  /// public ranking, so an account never falls back to a grey ring by default.
+  Widget _memberAvatar({
+    required String userId,
+    required String name,
+    String? imageUrl,
+    required double size,
+  }) {
+    final clubElo = _memberEloMap[userId];
+    if (clubElo == null) {
+      return RankedUserAvatarTap(
+        userId: userId,
+        communityId: widget.clubId,
+        name: name,
+        imageUrl: imageUrl,
+        size: size,
+      );
+    }
+    return UserAvatarTap(
+      userId: userId,
+      communityId: widget.clubId,
+      name: name,
+      imageUrl: imageUrl,
+      elo: clubElo,
+      matchesPlayed: 1,
+      size: size,
+    );
+  }
+
   Widget _buildPendingPostsSection(AppColorsExtension colors) {
     final hasPosts = _pendingPosts.isNotEmpty;
     return Container(
@@ -1426,15 +1455,11 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
                     ),
                     child: Row(
                       children: [
-                        UserAvatarTap(
+                        _memberAvatar(
                           userId: m.userId,
-                          communityId: widget.clubId,
                           name: m.userFullName ?? 'Thành viên',
                           imageUrl: m.userAvatarUrl,
-                          elo: hasRank ? elo : 0,
-                          matchesPlayed: hasRank ? 1 : 0,
                           size: 36,
-                          ringWidth: 2,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -1585,13 +1610,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       ),
       child: Row(
         children: [
-          UserAvatarTap(
+          _memberAvatar(
             userId: req.userId,
-            communityId: widget.clubId,
             name: req.userFullName ?? l10n.dashboard_user,
             imageUrl: req.userAvatarUrl,
-            elo: _memberEloMap[req.userId] ?? 0,
-            matchesPlayed: _memberEloMap.containsKey(req.userId) ? 1 : 0,
             size: 40,
           ),
           const SizedBox(width: 12),
@@ -1962,13 +1984,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       ),
       child: Row(
         children: [
-          UserAvatarTap(
+          _memberAvatar(
             userId: m.userId,
-            communityId: widget.clubId,
             name: m.userFullName ?? l10n.dashboard_user,
             imageUrl: m.userAvatarUrl,
-            elo: _memberEloMap[m.userId] ?? 0,
-            matchesPlayed: _memberEloMap.containsKey(m.userId) ? 1 : 0,
             size: 36,
           ),
           const SizedBox(width: 12),
@@ -2064,13 +2083,10 @@ class _ClubManagementScreenState extends ConsumerState<ClubManagementScreen> {
       ),
       child: Row(
         children: [
-          UserAvatarTap(
+          _memberAvatar(
             userId: m.userId,
-            communityId: widget.clubId,
             name: m.userFullName ?? l10n.dashboard_user,
             imageUrl: m.userAvatarUrl,
-            elo: _memberEloMap[m.userId] ?? 0,
-            matchesPlayed: _memberEloMap.containsKey(m.userId) ? 1 : 0,
             size: 36,
           ),
           const SizedBox(width: 12),

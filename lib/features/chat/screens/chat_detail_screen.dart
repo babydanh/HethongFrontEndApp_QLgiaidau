@@ -16,6 +16,8 @@ import 'package:app_quanly_giaidau/features/chat/widgets/chat_poll_dialog.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_room_settings_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_reaction_detail_sheet.dart';
 import 'package:app_quanly_giaidau/features/chat/widgets/chat_image_viewer.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
 import 'package:app_quanly_giaidau/providers/community_provider.dart';
@@ -1128,6 +1130,17 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     return DateFormat('EEEE, dd/MM/yyyy', localeName).format(dt);
   }
 
+  /// The other member of a direct room, whose avatar is the room avatar;
+  /// null for club and group rooms.
+  String? get _directPeerId {
+    if (widget.roomType == 'CLUB' || widget.roomType == 'GROUP') return null;
+    final myId = ref.read(userProfileProvider).asData?.value.id;
+    for (final p in _participants) {
+      if (p.id.isNotEmpty && p.id != myId) return p.id;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -1176,25 +1189,33 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  CircleAvatar(
-                    radius: 19,
-                    backgroundColor: AppTheme.primaryLight,
-                    backgroundImage:
-                        widget.roomAvatar != null &&
-                            widget.roomAvatar!.isNotEmpty
-                        ? NetworkImage(widget.roomAvatar!)
-                        : null,
-                    child:
-                        widget.roomAvatar == null || widget.roomAvatar!.isEmpty
-                        ? Text(
-                            title.characters.first.toUpperCase(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryDark,
-                            ),
-                          )
-                        : null,
-                  ),
+                  _directPeerId == null
+                      ? CircleAvatar(
+                          radius: 19,
+                          backgroundColor: AppTheme.primaryLight,
+                          backgroundImage:
+                              widget.roomAvatar != null &&
+                                  widget.roomAvatar!.isNotEmpty
+                              ? NetworkImage(widget.roomAvatar!)
+                              : null,
+                          child:
+                              widget.roomAvatar == null ||
+                                  widget.roomAvatar!.isEmpty
+                              ? Text(
+                                  title.characters.first.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryDark,
+                                  ),
+                                )
+                              : null,
+                        )
+                      : UserRankAvatar(
+                          userId: _directPeerId,
+                          name: title,
+                          imageUrl: widget.roomAvatar,
+                          size: 38,
+                        ),
                   Positioned(
                     bottom: -1,
                     right: -1,
@@ -1549,10 +1570,6 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                                   ? l10n!
                                                         .chatParticipantFallback
                                                   : p.fullName.trim();
-                                              final initial = displayName
-                                                  .characters
-                                                  .first
-                                                  .toUpperCase();
                                               return Padding(
                                                 padding: const EdgeInsets.only(
                                                   left: 3,
@@ -1562,31 +1579,17 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                                                       .chatDetailSeenBy(
                                                         displayName,
                                                       ),
-                                                  child: CircleAvatar(
-                                                    radius: 7.5,
-                                                    backgroundColor:
-                                                        AppTheme.primaryLight,
-                                                    backgroundImage:
-                                                        avatarUrl.isNotEmpty
-                                                        ? NetworkImage(
-                                                            _resolveMediaUrl(
-                                                              avatarUrl,
-                                                            ),
-                                                          )
-                                                        : null,
-                                                    child: avatarUrl.isEmpty
-                                                        ? Text(
-                                                            initial,
-                                                            style: const TextStyle(
-                                                              fontSize: 7,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: AppTheme
-                                                                  .primaryDark,
-                                                            ),
-                                                          )
-                                                        : null,
+                                                  child: UserRankAvatar(
+                                                    userId: p.id,
+                                                    name: displayName,
+                                                    imageUrl:
+                                                        avatarUrl.isEmpty
+                                                        ? null
+                                                        : _resolveMediaUrl(
+                                                            avatarUrl,
+                                                          ),
+                                                    size: 15,
+                                                    ringWidth: 1,
                                                   ),
                                                 ),
                                               );
@@ -1951,7 +1954,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           // Other's Avatar (only on last message of group)
           if (!isMine) ...[
             if (isLastInGroup)
-              UserAvatarTap(
+              RankedUserAvatarTap(
                 userId: msg.senderId,
                 name: msg.senderName,
                 communityId: widget.communityId,

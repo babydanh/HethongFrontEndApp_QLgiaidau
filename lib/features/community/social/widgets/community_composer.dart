@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_helpers.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_tag_chip.dart';
@@ -224,7 +225,7 @@ class _MentionChips extends StatelessWidget {
         spacing: 6,
         runSpacing: 6,
         children: members.map((member) => ActionChip(
-          avatar: CircleAvatar(backgroundImage: member.mentionAvatarProvider, child: member.mentionAvatarProvider == null ? Text(member.mentionInitial) : null),
+          avatar: UserRankAvatar(userId: member.userId, name: member.mentionDisplayName, imageUrl: member.userAvatarUrl, size: 24, ringWidth: 1.5),
           label: Text('@${member.mentionDisplayName}'),
           onPressed: canManageTags ? () => onTag(member) : null,
           tooltip: canManageTags ? l10n.communityComposer_tagTooltip : null,
@@ -286,7 +287,7 @@ class _MemberSuggestion extends StatelessWidget {
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingSM, vertical: 7),
       child: Row(children: [
-        CircleAvatar(radius: 17, backgroundImage: member.mentionAvatarProvider, child: member.mentionAvatarProvider == null ? Text(member.mentionInitial) : null),
+        UserRankAvatar(userId: member.userId, name: member.mentionDisplayName, imageUrl: member.userAvatarUrl, size: 34),
         const SizedBox(width: AppTheme.spacingSM),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(member.mentionDisplayName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),

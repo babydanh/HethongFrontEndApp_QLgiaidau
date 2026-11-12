@@ -90,14 +90,11 @@ extension _ClubDetailMemberManagement on _ClubDetailScreenState {
         children: [
           // The row itself is an admin action (approve / reject), so only the
           // avatar becomes the profile entry point — never the whole card.
-          UserAvatarTap(
+          _buildUserAvatar(
             userId: req.userId,
-            communityId: widget.clubId,
             name: req.userFullName ?? l10n.dashboard_user,
-            imageUrl: req.userAvatarUrl,
-            size: 44,
-            ringWidth: 2.5,
-            onFilterMatches: _filterClubMatches,
+            avatarUrl: req.userAvatarUrl,
+            radius: 22,
           ),
           const SizedBox(width: 12),
           Expanded(

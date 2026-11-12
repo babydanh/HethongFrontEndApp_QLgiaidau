@@ -1,4 +1,5 @@
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_mention_helpers.dart';
@@ -254,12 +255,11 @@ class _SuggestionRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: member.mentionAvatarProvider,
-              child: member.mentionAvatarProvider == null
-                  ? Text(member.mentionInitial)
-                  : null,
+            UserRankAvatar(
+              userId: member.userId,
+              name: member.mentionDisplayName,
+              imageUrl: member.userAvatarUrl,
+              size: 32,
             ),
             const SizedBox(width: 10),
             Expanded(

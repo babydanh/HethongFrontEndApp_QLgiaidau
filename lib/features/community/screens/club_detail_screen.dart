@@ -36,6 +36,7 @@ import 'package:app_quanly_giaidau/features/community/social/community_social_sc
 import 'package:app_quanly_giaidau/features/community/social/community_feed_notifier.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_activity_tab.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/member_elo_adjust_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
 import 'package:app_quanly_giaidau/data/models/club_match_session_model.dart';

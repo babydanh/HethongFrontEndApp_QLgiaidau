@@ -5,7 +5,7 @@ import 'package:app_quanly_giaidau/data/models/community_search_models.dart';
 import 'package:app_quanly_giaidau/features/community/providers/community_search_provider.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/community_skeletons.dart';
 import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/community/widgets/user_rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -438,17 +438,11 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
     posts
         .map<Widget>(
           (post) => _resultTile(
-            leading: CircleAvatar(
-              backgroundImage: post.authorAvatarUrl?.trim().isNotEmpty == true
-                  ? NetworkImage(post.authorAvatarUrl!.trim())
-                  : null,
-              child: post.authorAvatarUrl?.trim().isNotEmpty == true
-                  ? null
-                  : Text(
-                      post.authorName.isEmpty
-                          ? '?'
-                          : post.authorName[0].toUpperCase(),
-                    ),
+            leading: UserRankAvatar(
+              userId: post.authorId,
+              name: post.authorName,
+              imageUrl: post.authorAvatarUrl?.trim(),
+              size: 40,
             ),
             title: post.authorName,
             subtitle: post.text.isEmpty ? l10n.communitySearchPosts : post.text,
@@ -477,7 +471,12 @@ class _CommunitySearchScreenState extends ConsumerState<CommunitySearchScreen> {
               : fullName;
           final avatarUrl = member.userAvatarUrl?.trim();
           return _resultTile(
-            leading: RankAvatar(name: fullName, imageUrl: avatarUrl, size: 34),
+            leading: UserRankAvatar(
+              userId: member.userId,
+              name: fullName,
+              imageUrl: avatarUrl,
+              size: 34,
+            ),
             title: title,
             subtitle: member.role,
             profile: member.userId.trim().isEmpty

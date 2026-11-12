@@ -322,7 +322,11 @@ class _SocialAddParticipantSheetState
     return ListTile(
       contentPadding: EdgeInsets.zero,
       enabled: !already,
-      leading: SocialAvatar(name: person.fullName, imageUrl: person.avatarUrl),
+      leading: SocialAvatar(
+        name: person.fullName,
+        imageUrl: person.avatarUrl,
+        userId: person.userId,
+      ),
       title: Text(
         person.fullName,
         maxLines: 1,

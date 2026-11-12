@@ -39,13 +39,4 @@ extension CommunityMentionMember on CommunityMemberModel {
   String get mentionDisplayName => (userFullName?.trim().isNotEmpty ?? false)
       ? userFullName!.trim()
       : (userEmail?.split('@').first ?? 'Thành viên');
-
-  String get mentionInitial => mentionDisplayName.isEmpty
-      ? '?'
-      : mentionDisplayName.substring(0, 1).toUpperCase();
-
-  ImageProvider<Object>? get mentionAvatarProvider =>
-      (userAvatarUrl?.trim().isNotEmpty ?? false)
-          ? NetworkImage(userAvatarUrl!)
-          : null;
 }
