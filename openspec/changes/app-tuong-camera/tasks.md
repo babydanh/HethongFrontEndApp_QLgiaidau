@@ -14,7 +14,7 @@
   - Nhận: (không)
   - Chủ file chung: không
   - Phụ thuộc: không
-- [ ] 2.2 `CameraWallScreen`: thanh chọn lưới (mặc định 2×2), lưới ô, chia trang, ô camera (tên, `CameraStatusBadge`, dòng trận, công tắc xem thử, `LiveVideoPlayer(url: playbackUrl, label: name, showStreamStats: true, fill: true)` chỉ khi `shouldMountCameraPlayer`), chạm đúp → 1×1 đúng camera; không tràn ở 360×640 và 1024×768. Tiêu chí: `flutter test --no-pub test/features/tournament/camera_wall_screen_test.dart` → exit 0 (TC-APP-CAMWALL-10..16)
+- [x] 2.2 `CameraWallScreen`: thanh chọn lưới (mặc định 2×2), lưới ô, chia trang, ô camera (tên, `CameraStatusBadge`, dòng trận, công tắc xem thử, `LiveVideoPlayer(url: playbackUrl, label: name, showStreamStats: true, fill: true)` chỉ khi `shouldMountCameraPlayer`), chạm đúp → 1×1 đúng camera; không tràn ở 360×640 và 1024×768. Tiêu chí: `flutter test --no-pub test/features/tournament/camera_wall_screen_test.dart` → exit 0 (TC-APP-CAMWALL-10..16)
   - Files: tạo `lib/features/tournament/widgets/camera_wall_screen.dart`; test `test/features/tournament/camera_wall_screen_test.dart` (override `tournamentCamerasProvider`, `tournamentMatchLivestreamsProvider`, `managedMatchesWithDivisionProvider`; kiểm 20 camera → 16 + 4 ở 4×4; OFFLINE không có `LiveVideoPlayer`; tắt công tắc gỡ `LiveVideoPlayer` và adapter Dio không nhận request mới)
   - Giao: `CameraWallScreen({super.key, required String tournamentId})` (`ConsumerStatefulWidget`) · Nhận: hàm của 2.1, getter l10n của 1.1
   - Chủ file chung: 2.2 giữ `camera_wall_screen.dart`
