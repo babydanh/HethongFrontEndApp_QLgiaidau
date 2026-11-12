@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/features/tournament/models/court_match_drag.d
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_widgets.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/court_camera_row.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/camera_live_status_action.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_wall_screen.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/match_stream_actions.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
@@ -218,6 +219,13 @@ class _TournamentManagementCameraSectionState
     }
   }
 
+  void _openCameraWall() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      fullscreenDialog: true,
+      builder: (_) => CameraWallScreen(tournamentId: widget.tournamentId),
+    ),
+  );
+
   void _showMessage(String message) => ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(message)));
@@ -279,6 +287,12 @@ class _TournamentManagementCameraSectionState
                                 ),
                               ),
                       ),
+                      if (cameras.isNotEmpty)
+                        TextButton.icon(
+                          onPressed: _openCameraWall,
+                          icon: const Icon(Icons.grid_view_rounded),
+                          label: Text(l10n.tournamentManagementCameraWallOpen),
+                        ),
                       SizedBox(
                         height: kMinTouchTarget,
                         child: IconButton(

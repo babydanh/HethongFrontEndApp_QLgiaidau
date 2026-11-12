@@ -19,7 +19,7 @@
   - Giao: `CameraWallScreen({super.key, required String tournamentId})` (`ConsumerStatefulWidget`) · Nhận: hàm của 2.1, getter l10n của 1.1
   - Chủ file chung: 2.2 giữ `camera_wall_screen.dart`
   - Phụ thuộc: sau 1.1 và 2.1
-- [ ] 2.3 Nút "Xem camera" ở tab Camera (cạnh nút tải lại, ẩn khi chưa có camera), mở `CameraWallScreen` bằng `Navigator.of(context).push(MaterialPageRoute(fullscreenDialog: true, ...))` (không thêm route vào `app_router.dart`). Tiêu chí: `flutter test --no-pub test/features/tournament/management_camera_tab_test.dart` → exit 0 (TC-APP-CAMWALL-20..21, giữ test cũ)
+- [x] 2.3 Nút "Xem camera" ở tab Camera (cạnh nút tải lại, ẩn khi chưa có camera), mở `CameraWallScreen` bằng `Navigator.of(context).push(MaterialPageRoute(fullscreenDialog: true, ...))` (không thêm route vào `app_router.dart`). Tiêu chí: `flutter test --no-pub test/features/tournament/management_camera_tab_test.dart` → exit 0 (TC-APP-CAMWALL-20..21, giữ test cũ)
   - Files: sửa `lib/features/tournament/screens/tournament_management_camera_section.dart` (khối tiêu đề quanh dòng 240–280); sửa `test/features/tournament/management_camera_tab_test.dart`
   - Giao: (không) · Nhận: `CameraWallScreen` (2.2)
   - Chủ file chung: 2.3 giữ `tournament_management_camera_section.dart`

@@ -11,6 +11,7 @@ import 'package:app_quanly_giaidau/domain/repositories/match_recording_catalog_r
 import 'package:app_quanly_giaidau/domain/repositories/tournament_management_repository.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_camera_section.dart';
 import 'package:app_quanly_giaidau/features/tournament/screens/tournament_management_hub_screen.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/camera_wall_screen.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/court_camera_provider.dart';
 import 'package:app_quanly_giaidau/providers/match_recording_catalog_provider.dart';
@@ -44,9 +45,13 @@ class _Venues implements TournamentManagementRepository {
 }
 
 class _Cameras implements ICourtCameraRepository {
+  _Cameras([this.cameras = const []]);
+
+  final List<TournamentCameraModel> cameras;
+
   @override
   Future<List<TournamentCameraModel>> listCameras(String tournamentId) async =>
-      const [];
+      cameras;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -103,6 +108,7 @@ Future<(AppLocalizations, _Venues)> _pumpHub(
   WidgetTester tester, {
   String status = 'in_progress',
   MatchModel? match,
+  List<TournamentCameraModel> cameras = const [],
 }) async {
   tester.view.physicalSize = const Size(390, 1600);
   tester.view.devicePixelRatio = 1;
@@ -120,7 +126,7 @@ Future<(AppLocalizations, _Venues)> _pumpHub(
           ),
         ),
         tournamentManagementRepositoryProvider.overrideWithValue(venues),
-        courtCameraRepositoryProvider.overrideWithValue(_Cameras()),
+        courtCameraRepositoryProvider.overrideWithValue(_Cameras(cameras)),
         matchRecordingCatalogRepositoryProvider.overrideWithValue(_Catalog()),
         matchesProvider(
           _tid,
@@ -257,5 +263,45 @@ void main() {
 
     final label = '${l10n.matchNotDetermined} – ${l10n.matchNotDetermined}';
     expect(find.text(label), findsWidgets);
+  });
+
+  testWidgets(
+    'TC-APP-CAMWALL-20 giải chưa có camera thì không có nút Xem camera',
+    (tester) async {
+      final (l10n, _) = await _pumpHub(tester);
+
+      await _openTab(tester, l10n.opsCamera);
+
+      expect(find.text(l10n.tournamentManagementCameraWallOpen), findsNothing);
+    },
+  );
+
+  testWidgets('TC-APP-CAMWALL-21 bấm Xem camera mở tường camera lưới 2×2', (
+    tester,
+  ) async {
+    final (l10n, _) = await _pumpHub(
+      tester,
+      cameras: const [
+        TournamentCameraModel(
+          id: 'cam-1',
+          name: 'Camera sân 1',
+          mode: 'PULL',
+          status: 'OFFLINE',
+          courtId: 'court-1',
+        ),
+      ],
+    );
+    await _openTab(tester, l10n.opsCamera);
+
+    await tester.tap(find.text(l10n.tournamentManagementCameraWallOpen));
+    await tester.pumpAndSettle();
+
+    final wall = tester.widget<CameraWallScreen>(find.byType(CameraWallScreen));
+    expect(wall.tournamentId, _tid);
+    expect(find.text(l10n.tournamentManagementCameraWallTitle), findsOneWidget);
+    final layout = tester.widget<SegmentedButton<int>>(
+      find.byType(SegmentedButton<int>),
+    );
+    expect(layout.selected, {2});
   });
 }
