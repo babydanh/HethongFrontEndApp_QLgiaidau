@@ -460,7 +460,10 @@ void main() {
       await _tapText(tester, 'Thêm');
       await _expectText(tester, 'Thêm nhà tài trợ');
       final fields = find.descendant(of: find.byType(AlertDialog), matching: find.byType(TextField));
-      expect(fields, findsNWidgets(4), reason: 'Dialog nhà tài trợ phải có 4 ô: tên, logo, website, mô tả');
+      expect(fields, findsNWidgets(3), reason: 'Dialog nhà tài trợ phải có 3 ô chữ: tên, website, mô tả (logo chọn bằng ảnh)');
+      for (final tier in const ['GOLD', 'SILVER']) {
+        await expectKey(tester, 'sponsor-tier-$tier', step: 'chip hạng $tier');
+      }
       await shooter.snap('74-dialog-trong');
       await _tap(tester, _inDialog('Lưu'));
       expect(find.byType(AlertDialog), findsOneWidget, reason: 'Thiếu tên và logo thì dialog không được đóng');
@@ -468,17 +471,22 @@ void main() {
       await shooter.snap('74-thieu-ten-logo');
       final sponsorName = '${seeded.tag} Tài trợ';
       await tester.enterText(fields.at(0), sponsorName);
-      // The logo field is read-only and only filled by the image picker (not drivable on an emulator),
-      // so the controller is set directly, as the picker callback does.
-      tester.widget<TextField>(fields.at(1)).controller!.text = 'https://cdn.example.com/e2e-logo.png';
-      await tester.enterText(fields.at(2), 'https://example.com');
-      await tester.enterText(fields.at(3), 'Nhà tài trợ do E2E tạo');
+      await tester.enterText(fields.at(1), 'https://example.com');
+      await tester.enterText(fields.at(2), 'Nhà tài trợ do E2E tạo');
       await tester.pump();
-      await _tap(tester, find.byType(DropdownButtonFormField<String>));
-      await _tapText(tester, 'Bạc');
-      await shooter.snap('74-dialog-dien-day-du');
-      debugPrint('TC-QLGD-APP-74: nút tải logo chỉ được thay bằng gán thẳng URL: mở thư viện ảnh của hệ điều hành, không thao tác được trên emulator.');
+      await tapKey(tester, 'sponsor-tier-SILVER');
       await _tap(tester, _inDialog('Lưu'));
+      expect(find.byType(AlertDialog), findsOneWidget, reason: 'Có tên nhưng thiếu logo thì dialog vẫn không được đóng');
+      expect(await sponsorsNow(), isEmpty, reason: 'Thiếu logo thì Backend không có nhà tài trợ nào');
+      await shooter.snap('74-thieu-logo');
+      // Logo chỉ chọn được bằng thư viện ảnh của hệ điều hành (không thao tác được trên emulator):
+      // dựng nhà tài trợ bằng API rồi kiểm phần còn lại trên giao diện.
+      await _tap(tester, _inDialog('Hủy'));
+      await _waitGone(tester, find.byType(AlertDialog), 'dialog thêm nhà tài trợ đóng');
+      debugPrint('TC-QLGD-APP-74: nút tải logo (bắt buộc) không thao tác được trên emulator: nhà tài trợ dựng bằng API.');
+      final created = await _RawApi(seeded.token).createSponsor(seeded.tournamentId, sponsorName);
+      await _closeSettingsSection(tester);
+      await _openSettingsSection(tester, 'Nhà tài trợ');
       var sponsors = await _backendUntil(
         tester,
         sponsorsNow,
@@ -487,7 +495,7 @@ void main() {
       );
       final sponsor = sponsors.firstWhere((s) => s['displayName'] == sponsorName);
       final sponsorId = sponsor['id'] as String;
-      expect('${sponsor['tier']}'.toUpperCase(), 'SILVER', reason: 'Hạng đã chọn là Bạc');
+      expect(sponsorId, created, reason: 'Id nhà tài trợ dựng bằng API');
       await pumpUntilFound(tester, find.text(sponsorName), what: 'nhà tài trợ trong danh sách');
       _clearSnackBars(tester);
       await shooter.snap('74-da-them');
@@ -515,8 +523,15 @@ void main() {
       await _tap(tester, find.text(sponsorName).first);
       await _expectText(tester, 'Sửa nhà tài trợ');
       await shooter.snap('74-dialog-sua');
-      await _tap(tester, _inDialog('Hủy'));
-      await _waitGone(tester, find.byType(AlertDialog), 'dialog sửa nhà tài trợ đóng');
+      await tapKey(tester, 'sponsor-tier-SILVER');
+      await _tap(tester, _inDialog('Lưu'));
+      sponsors = await _backendUntil(
+        tester,
+        sponsorsNow,
+        (list) => list.any((s) => s['id'] == sponsorId && '${s['tier']}'.toUpperCase() == 'SILVER'),
+        what: 'Backend đổi hạng nhà tài trợ sang Bạc',
+      );
+      await _waitGone(tester, find.byType(AlertDialog), 'dialog sửa nhà tài trợ đóng sau Lưu');
       debugPrint('TC-QLGD-APP-74: tay nắm kéo thả sắp xếp (sponsor-handle-*) không kéo: cần ít nhất 2 nhà tài trợ và cử chỉ kéo sắp xếp lại, ngoài phạm vi.');
       await tester.drag(find.byKey(ValueKey('sponsor-row-$sponsorId')), const Offset(-600, 0));
       await tester.pump(const Duration(milliseconds: 500));
@@ -838,6 +853,31 @@ class _RawApi {
     if (code < 200 || code >= 300) {
       fail('PATCH /tournaments/$tournamentId -> HTTP $code: ${_clip(response.data)}');
     }
+  }
+
+  /// `POST /tournaments/:id/sponsors`: dựng nhà tài trợ có logo (giao diện chỉ chọn logo bằng thư viện ảnh).
+  Future<String> createSponsor(String tournamentId, String name) async {
+    final response = await _dio.post<Object?>(
+      '/tournaments/$tournamentId/sponsors',
+      data: {
+        'displayName': name,
+        'tier': 'GOLD',
+        'logoUrl': 'https://cdn.example.com/e2e-logo.png',
+        'websiteUrl': 'https://example.com',
+        'shortDescription': 'Nhà tài trợ do E2E tạo',
+        'displayOrder': 0,
+        'status': 'PUBLISHED',
+        'isPublic': true,
+      },
+      options: _auth,
+    );
+    final code = response.statusCode ?? 0;
+    if (code < 200 || code >= 300) {
+      fail('POST /tournaments/$tournamentId/sponsors -> HTTP $code: ${_clip(response.data)}');
+    }
+    final body = response.data;
+    final data = body is Map && body.containsKey('data') ? body['data'] : body;
+    return (data as Map)['id'] as String;
   }
 
   Future<List<Map<String, dynamic>>> list(String path) async {
