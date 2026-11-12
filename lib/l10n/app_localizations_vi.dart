@@ -13699,6 +13699,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get clubMatchSessionLoadFailed => 'Không thể tải buổi giao lưu này';
 
   @override
+  String get clubMatchSessionListLoadFailed =>
+      'Không tải được danh sách buổi giao lưu';
+
+  @override
   String clubMatchSessionMatchStatus(Object status) {
     return 'Trạng thái trận: $status';
   }

@@ -13746,6 +13746,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to load this social match session';
 
   @override
+  String get clubMatchSessionListLoadFailed =>
+      'Could not load the social sessions';
+
+  @override
   String clubMatchSessionMatchStatus(Object status) {
     return 'Match status: $status';
   }

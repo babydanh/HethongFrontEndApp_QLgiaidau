@@ -5622,6 +5622,7 @@
   "clubMatchSessionMatches": "Các trận giao lưu",
   "clubMatchSessionNoMatches": "Chưa có trận nào. Không có trận ẩn được tạo tự động.",
   "clubMatchSessionLoadFailed": "Không thể tải buổi giao lưu này",
+  "clubMatchSessionListLoadFailed": "Không tải được danh sách buổi giao lưu",
   "clubMatchSessionMatchStatus": "Trạng thái trận: {status}",
   "clubMatchSessionSaveScore": "Lưu điểm",
   "clubMatchSessionComplete": "Chốt kết quả",

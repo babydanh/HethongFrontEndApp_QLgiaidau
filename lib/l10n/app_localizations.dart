@@ -24850,6 +24850,12 @@ abstract class AppLocalizations {
   /// **'Không thể tải buổi giao lưu này'**
   String get clubMatchSessionLoadFailed;
 
+  /// No description provided for @clubMatchSessionListLoadFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được danh sách buổi giao lưu'**
+  String get clubMatchSessionListLoadFailed;
+
   /// No description provided for @clubMatchSessionMatchStatus.
   ///
   /// In vi, this message translates to:

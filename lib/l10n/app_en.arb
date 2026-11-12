@@ -5486,6 +5486,7 @@
   "clubMatchSessionMatches": "Matches",
   "clubMatchSessionNoMatches": "No matches yet. No hidden matches are created automatically.",
   "clubMatchSessionLoadFailed": "Unable to load this social match session",
+  "clubMatchSessionListLoadFailed": "Could not load the social sessions",
   "clubMatchSessionMatchStatus": "Match status: {status}",
   "clubMatchSessionSaveScore": "Save score",
   "clubMatchSessionComplete": "Complete result",

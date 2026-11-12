@@ -13,12 +13,16 @@ class SocialSessionCard extends StatelessWidget {
   /// Shows a people icon next to the slot count (icon + number stats).
   final bool showStatIcons;
 
+  /// Replaces the host line with a schedule line (club manage list).
+  final String? caption;
+
   const SocialSessionCard({
     super.key,
     required this.session,
     required this.onTap,
     this.badge,
     this.showStatIcons = false,
+    this.caption,
   });
 
   @override
@@ -69,11 +73,20 @@ class SocialSessionCard extends StatelessWidget {
                   // Subtitle / Host tag with flag
                   Row(
                     children: [
-                      const Text('🇻🇳', style: TextStyle(fontSize: 12)),
+                      if (caption == null)
+                        const Text('🇻🇳', style: TextStyle(fontSize: 12))
+                      else
+                        Icon(
+                          Icons.schedule_rounded,
+                          size: 13,
+                          color: isDark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          session.hostClubName.toUpperCase(),
+                          caption ?? session.hostClubName.toUpperCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

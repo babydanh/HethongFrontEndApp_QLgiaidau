@@ -4,7 +4,7 @@ import 'package:app_quanly_giaidau/features/social/widgets/social_session_card.d
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-/// Default sport icon for club sessions (the club session API has no sport).
+/// Sport icon when the API sends no club `category`.
 const _defaultClubSessionSport = 'pickleball';
 
 /// Club session row for the manage screens. Reuses [SocialSessionCard] so it
@@ -27,7 +27,22 @@ class ClubManageSessionCard extends StatelessWidget {
       onTap: onTap,
       showStatIcons: true,
       badge: _StatusChip(status: session.status),
+      caption: _caption(session, l10n),
     );
+  }
+
+  /// "15/11 18:05 · 3 trận"; parts without data are dropped.
+  static String? _caption(ClubMatchSessionModel s, AppLocalizations l10n) {
+    final start = s.startAt?.toLocal();
+    final matches = s.matchCount ?? 0;
+    final parts = [
+      if (start != null)
+        '${start.day}/${start.month} '
+            '${start.hour.toString().padLeft(2, '0')}:'
+            '${start.minute.toString().padLeft(2, '0')}',
+      if (matches > 0) l10n.matchesCount(matches),
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
   }
 
   /// Maps a club session onto the Social card model. Venue stays empty so the
@@ -49,8 +64,8 @@ class ClubManageSessionCard extends StatelessWidget {
     maxSlots: s.maxParticipants,
     currentSlots: s.participantCount ?? 0,
     status: s.status,
-    sport: _defaultClubSessionSport,
-    sportName: '',
+    sport: s.sportSlug ?? _defaultClubSessionSport,
+    sportName: s.sportName ?? '',
   );
 }
 

@@ -24,8 +24,9 @@ class ClubManageSessionsSection extends ConsumerWidget {
       ),
     );
     if (created == true && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.clubMatchSessionCreated)));
     }
   }
 
@@ -89,7 +90,25 @@ class ClubManageSessionsSection extends ConsumerWidget {
               ),
             ),
           ),
-          if (items.isEmpty && !sessions.isLoading)
+          if (sessions.hasError)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Column(
+                children: [
+                  Text(
+                    l10n.clubMatchSessionListLoadFailed,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: colors.textMuted, fontSize: 13),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        ref.invalidate(clubMatchSessionsProvider(clubId)),
+                    child: Text(l10n.infoRetry),
+                  ),
+                ],
+              ),
+            )
+          else if (items.isEmpty && !sessions.isLoading)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Center(
