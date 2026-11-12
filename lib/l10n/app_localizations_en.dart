@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -12967,6 +12968,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tournamentManagementCameraRefresh => 'Reload cameras';
+
+  @override
+  String get tournamentManagementCameraWallOpen => 'View cameras';
+
+  @override
+  String get tournamentManagementCameraWallTitle => 'Camera wall';
+
+  @override
+  String tournamentManagementCameraWallLayout(Object n) {
+    return '$n×$n';
+  }
+
+  @override
+  String tournamentManagementCameraWallPage(Object page, Object total) {
+    return 'Page $page/$total';
+  }
+
+  @override
+  String get tournamentManagementCameraWallPrevPage => 'Previous page';
+
+  @override
+  String get tournamentManagementCameraWallNextPage => 'Next page';
+
+  @override
+  String get tournamentManagementCameraWallPreview => 'Preview';
+
+  @override
+  String get tournamentManagementCameraWallNoMatch => 'No match yet';
+
+  @override
+  String get tournamentManagementCameraWallNoPicture => 'No picture';
 
   @override
   String get tournamentManagementCameraUrl => 'Camera playback URL';

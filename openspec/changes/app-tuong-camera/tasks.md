@@ -1,6 +1,6 @@
 ## 1. Chuỗi hiển thị
 
-- [ ] 1.1 Thêm key vi/en: nút "Xem camera", tiêu đề "Tường camera", nhãn lưới (`{n}×{n}`), "Trang {page}/{total}", trang trước/sau, công tắc "Xem thử", "Chưa có trận", "Không có hình", rồi `flutter gen-l10n`. Tiêu chí: `flutter gen-l10n` → exit 0 và key có ở cả `app_vi.arb` lẫn `app_en.arb`
+- [x] 1.1 Thêm key vi/en: nút "Xem camera", tiêu đề "Tường camera", nhãn lưới (`{n}×{n}`), "Trang {page}/{total}", trang trước/sau, công tắc "Xem thử", "Chưa có trận", "Không có hình", rồi `flutter gen-l10n`. Tiêu chí: `flutter gen-l10n` → exit 0 và key có ở cả `app_vi.arb` lẫn `app_en.arb`
   - Files: sửa `lib/l10n/app_vi.arb`, `lib/l10n/app_en.arb`; sinh lại `lib/l10n/app_localizations*.dart` (không sửa tay)
   - Giao: các getter `AppLocalizations` mới (tiền tố `tournamentManagementCameraWall…`) cho 2.2, 2.3 · Nhận: (không)
   - Chủ file chung: 1.1 giữ hai file `.arb`

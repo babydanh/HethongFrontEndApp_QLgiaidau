@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -12921,6 +12922,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tournamentManagementCameraRefresh => 'Tải lại danh sách camera';
+
+  @override
+  String get tournamentManagementCameraWallOpen => 'Xem camera';
+
+  @override
+  String get tournamentManagementCameraWallTitle => 'Tường camera';
+
+  @override
+  String tournamentManagementCameraWallLayout(Object n) {
+    return '$n×$n';
+  }
+
+  @override
+  String tournamentManagementCameraWallPage(Object page, Object total) {
+    return 'Trang $page/$total';
+  }
+
+  @override
+  String get tournamentManagementCameraWallPrevPage => 'Trang trước';
+
+  @override
+  String get tournamentManagementCameraWallNextPage => 'Trang sau';
+
+  @override
+  String get tournamentManagementCameraWallPreview => 'Xem thử';
+
+  @override
+  String get tournamentManagementCameraWallNoMatch => 'Chưa có trận';
+
+  @override
+  String get tournamentManagementCameraWallNoPicture => 'Không có hình';
 
   @override
   String get tournamentManagementCameraUrl => 'URL phát của camera';

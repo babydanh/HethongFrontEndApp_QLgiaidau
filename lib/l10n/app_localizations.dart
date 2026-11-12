@@ -23482,6 +23482,60 @@ abstract class AppLocalizations {
   /// **'Tải lại danh sách camera'**
   String get tournamentManagementCameraRefresh;
 
+  /// No description provided for @tournamentManagementCameraWallOpen.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem camera'**
+  String get tournamentManagementCameraWallOpen;
+
+  /// No description provided for @tournamentManagementCameraWallTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tường camera'**
+  String get tournamentManagementCameraWallTitle;
+
+  /// No description provided for @tournamentManagementCameraWallLayout.
+  ///
+  /// In vi, this message translates to:
+  /// **'{n}×{n}'**
+  String tournamentManagementCameraWallLayout(Object n);
+
+  /// No description provided for @tournamentManagementCameraWallPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang {page}/{total}'**
+  String tournamentManagementCameraWallPage(Object page, Object total);
+
+  /// No description provided for @tournamentManagementCameraWallPrevPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang trước'**
+  String get tournamentManagementCameraWallPrevPage;
+
+  /// No description provided for @tournamentManagementCameraWallNextPage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang sau'**
+  String get tournamentManagementCameraWallNextPage;
+
+  /// No description provided for @tournamentManagementCameraWallPreview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thử'**
+  String get tournamentManagementCameraWallPreview;
+
+  /// No description provided for @tournamentManagementCameraWallNoMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trận'**
+  String get tournamentManagementCameraWallNoMatch;
+
+  /// No description provided for @tournamentManagementCameraWallNoPicture.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có hình'**
+  String get tournamentManagementCameraWallNoPicture;
+
   /// No description provided for @tournamentManagementCameraUrl.
   ///
   /// In vi, this message translates to:
