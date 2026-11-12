@@ -429,6 +429,7 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
         ? const Color(0xFF3A3B3C)
         : const Color(0xFFF0F2F5);
     final profile = ref.watch(userProfileProvider).asData?.value;
+    final myRank = ref.watch(myBestRankingProvider);
     final presets = ref
         .watch(communityTagPresetsProvider(widget.communityId))
         .asData
@@ -727,9 +728,11 @@ class _CommunityCommentSheetState extends ConsumerState<CommunityCommentSheet> {
                       child: RankAvatar(
                         imageUrl: profile?.avatarUrl,
                         name: profile?.fullName ?? 'B',
-                        elo: profile?.eloPoints ?? 0,
-                        tierName: profile?.tierName,
-                        matchesPlayed: (profile?.eloPoints ?? 0) > 0 ? 1 : 0,
+                        elo: myRank?.eloPoints ?? 0,
+                        tierName: myRank?.tierName,
+                        tierSource: myRank?.tierSource,
+                        tierAvailable: myRank?.tierAvailable,
+                        matchesPlayed: myRank?.matchesPlayed ?? 0,
                         size: 34,
                         ringWidth: 1.5,
                       ),

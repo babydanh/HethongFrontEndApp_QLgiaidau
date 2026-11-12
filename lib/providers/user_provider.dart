@@ -8,6 +8,7 @@ import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/core/utils/match_visibility.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
+import 'package:app_quanly_giaidau/features/rankings/utils/best_ranking.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_team_repository.dart';
 
 class Province {
@@ -140,6 +141,14 @@ final userRankingsProvider = FutureProvider<List<PlayerRanking>>((ref) async {
       .map((e) => PlayerRanking.fromJson(e))
       .toList();
 });
+
+/// Best rank of the signed-in user for the avatar ring (same rule as the
+/// bottom-nav profile tab). `/users/profile` has no eloPoints/tierName.
+final myBestRankingProvider = Provider<PlayerRanking?>(
+  (ref) => bestRankingOf(
+    ref.watch(userRankingsProvider).asData?.value ?? const <PlayerRanking>[],
+  ),
+);
 
 /// Các đội bóng người dùng đang tham gia, dùng để hiển thị ELO đội cao nhất
 /// trong dashboard cá nhân. Backend trả rank theo category đang hoạt động.

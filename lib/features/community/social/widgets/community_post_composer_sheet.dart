@@ -474,7 +474,7 @@ class _AuthorRow extends ConsumerWidget {
     final colors = context.colors;
     final l10n = AppLocalizations.of(context)!;
     final cleanAvatarUrl = avatarUrl?.trim();
-    final profile = ref.watch(userProfileProvider).asData?.value;
+    final rank = ref.watch(myBestRankingProvider);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -482,9 +482,11 @@ class _AuthorRow extends ConsumerWidget {
         RankAvatar(
           imageUrl: cleanAvatarUrl,
           name: name,
-          elo: profile?.eloPoints ?? 0,
-          tierName: profile?.tierName,
-          matchesPlayed: (profile?.eloPoints ?? 0) > 0 ? 1 : 0,
+          elo: rank?.eloPoints ?? 0,
+          tierName: rank?.tierName,
+          tierSource: rank?.tierSource,
+          tierAvailable: rank?.tierAvailable,
+          matchesPlayed: rank?.matchesPlayed ?? 0,
           size: 42,
         ),
         const SizedBox(width: 12),

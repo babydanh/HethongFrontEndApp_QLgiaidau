@@ -533,12 +533,13 @@ class _TournamentSettingsFormState
 
   Widget _contactForm() {
     final profile = ref.watch(userProfileProvider).asData?.value;
+    final rank = ref.watch(myBestRankingProvider);
     return TournamentContactForm(
       initial: _contactInfo,
       profileName: profile?.fullName,
       profileAvatarUrl: profile?.avatarUrl,
-      profileElo: profile?.eloPoints,
-      profileTierName: profile?.tierName,
+      profileElo: rank?.eloPoints,
+      profileTierName: rank?.tierName,
       onChanged: (value) {
         _contactInfo = value;
         _syncDirty();

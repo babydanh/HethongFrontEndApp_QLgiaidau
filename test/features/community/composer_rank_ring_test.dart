@@ -1,3 +1,4 @@
+import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/community/social/widgets/community_post_composer_sheet.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
@@ -7,18 +8,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Future<int> _ringColor(WidgetTester tester, UserProfile profile) async {
+Future<int> _ringColor(
+  WidgetTester tester,
+  UserProfile profile, {
+  List<PlayerRanking> rankings = const [],
+}) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [userProfileProvider.overrideWith((ref) async => profile)],
+      overrides: [
+        userProfileProvider.overrideWith((ref) async => profile),
+        userRankingsProvider.overrideWith((ref) async => rankings),
+      ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const Scaffold(
-          body: CommunityPostComposerSheet(
-            communityId: 'c1',
-            authorName: 'An',
-          ),
+          body: CommunityPostComposerSheet(communityId: 'c1', authorName: 'An'),
         ),
       ),
     ),
@@ -38,7 +43,18 @@ void main() {
   ) async {
     final color = await _ringColor(
       tester,
-      const UserProfile(id: 'u', eloPoints: 1800, tierName: 'Tier S'),
+      // /users/profile never carries eloPoints; the tier comes from rankings.
+      const UserProfile(id: 'u'),
+      rankings: const [
+        PlayerRanking(
+          id: 'r',
+          userId: 'u',
+          fullName: 'An',
+          eloPoints: 1800,
+          tierName: 'Tier S',
+          matchesPlayed: 3,
+        ),
+      ],
     );
     expect(color, 0xFFFBBF24);
   });

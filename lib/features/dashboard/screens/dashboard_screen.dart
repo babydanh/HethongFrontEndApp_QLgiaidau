@@ -307,12 +307,16 @@ class _ProfileRow extends ConsumerWidget {
           data: (UserProfile profile) {
             final name = profile.fullName?.trim() ?? '';
             final avatar = profile.avatarUrl;
+            final rank = ref.watch(myBestRankingProvider);
             return LavishRow(
               leading: RankAvatar(
                 imageUrl: avatar,
                 name: name,
-                elo: profile.eloPoints ?? 0,
-                tierName: profile.tierName,
+                elo: rank?.eloPoints ?? 0,
+                tierName: rank?.tierName,
+                tierSource: rank?.tierSource,
+                tierAvailable: rank?.tierAvailable,
+                matchesPlayed: rank?.matchesPlayed ?? 0,
                 size: 40,
               ),
               title: name.isNotEmpty ? name : l10n.dashboard_user,

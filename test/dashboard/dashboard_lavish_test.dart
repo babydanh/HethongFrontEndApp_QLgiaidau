@@ -6,6 +6,7 @@ import 'package:app_quanly_giaidau/domain/entities/ranking.dart';
 import 'package:app_quanly_giaidau/domain/entities/tournament_workspace.dart';
 import 'package:app_quanly_giaidau/domain/entities/user.dart';
 import 'package:app_quanly_giaidau/features/dashboard/screens/dashboard_screen.dart';
+import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/lavish_kit_extras.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -261,4 +262,35 @@ void main() {
     expect(tester.takeException(), isNull);
     await _end(tester);
   });
+
+  testWidgets(
+    'TC-RANK-RING-APP-50 profile row ring uses the best rank, not /users/profile',
+    (tester) async {
+      // Arrange: /users/profile never carries eloPoints/tierName.
+      await _pump(
+        tester,
+        rankings: const [
+          PlayerRanking(
+            id: 'r9',
+            userId: 'u1',
+            fullName: 'Nguyen An',
+            eloPoints: 1850,
+            tierName: 'Tier S',
+            matchesPlayed: 9,
+          ),
+        ],
+      );
+      // Act
+      final ring = find
+          .descendant(
+            of: find.byType(RankAvatar).first,
+            matching: find.byType(Container),
+          )
+          .first;
+      final deco = tester.widget<Container>(ring).decoration! as BoxDecoration;
+      // Assert
+      expect(deco.color, const Color(0xFFFBBF24));
+      await _end(tester);
+    },
+  );
 }

@@ -160,14 +160,21 @@ void main() {
         overrides: [
           authProvider.overrideWith(_AuthedAuth.new),
           userProfileProvider.overrideWith(
-            (ref) async => const UserProfile(
-              id: 'p',
-              fullName: 'Nguyen An',
-              eloPoints: 1850,
-              tierName: 'Tier S',
-            ),
+            // /users/profile never carries eloPoints; the tier comes from rankings.
+            (ref) async => const UserProfile(id: 'p', fullName: 'Nguyen An'),
           ),
-          userRankingsProvider.overrideWith((ref) async => const []),
+          userRankingsProvider.overrideWith(
+            (ref) async => const [
+              PlayerRanking(
+                id: 'r',
+                userId: 'p',
+                fullName: 'Nguyen An',
+                eloPoints: 1850,
+                tierName: 'Tier S',
+                matchesPlayed: 5,
+              ),
+            ],
+          ),
           myFootballTeamsProvider.overrideWith((ref) async => const []),
           categoriesProvider.overrideWith((ref) async => const []),
           followedTournamentsProvider.overrideWith((ref) async => const []),
