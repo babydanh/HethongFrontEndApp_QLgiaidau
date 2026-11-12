@@ -10,15 +10,19 @@ import 'package:app_quanly_giaidau/providers/ranking_provider.dart';
 class RankedUserAvatarTap extends ConsumerWidget {
   final String userId;
   final String name;
+  final String? communityId;
   final String? imageUrl;
   final double size;
+  final double minTouchTarget;
 
   const RankedUserAvatarTap({
     super.key,
     required this.userId,
     required this.name,
+    this.communityId,
     this.imageUrl,
     this.size = 40,
+    this.minTouchTarget = 44,
   });
 
   @override
@@ -32,11 +36,13 @@ class RankedUserAvatarTap extends ConsumerWidget {
     return UserAvatarTap(
       userId: userId,
       name: name,
+      communityId: communityId,
       imageUrl: imageUrl,
       elo: best?.eloPoints ?? 0,
       tierName: best?.tierName,
       matchesPlayed: best?.matchesPlayed ?? 0,
       size: size,
+      minTouchTarget: minTouchTarget,
     );
   }
 }
