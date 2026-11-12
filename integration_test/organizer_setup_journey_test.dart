@@ -63,18 +63,29 @@ void main() {
       final container = await signInAsOrganizer(tester);
 
       // TC-01: form tạo giải nhanh, thêm một nội dung đơn, bỏ nội dung mặc định "Đôi tự do".
-      // Router có thể còn chuyển về trang chủ sau đăng nhập: gọi go() lại tới khi form hiện.
-      // Form đăng nhập cũng có TextFormField: nhận form tạo giải bằng tiêu đề "Tạo giải nhanh" của nó.
-      await pumpUntilCondition(tester, () {
-        if (find.text('Tạo giải nhanh').evaluate().isEmpty) {
-          container.read(routerProvider).go('/tournaments/create');
+      // Router có thể còn chuyển trang sau đăng nhập, kể cả sau khi form đã hiện: chờ form (nhận bằng tiêu đề
+      // "Tạo giải nhanh", vì form đăng nhập cũng có TextFormField), gõ tên, kiểm ô đã chứa tên; nếu form bị
+      // thay thì vào lại /tournaments/create và thử lại tối đa 3 lần.
+      final nameField = find.byType(TextFormField);
+      var typed = false;
+      for (var attempt = 0; attempt < 3 && !typed; attempt++) {
+        await pumpUntilCondition(tester, () {
+          if (find.text('Tạo giải nhanh').evaluate().isEmpty) {
+            container.read(routerProvider).go('/tournaments/create');
+          }
+          return find.text('Tạo giải nhanh').evaluate().isNotEmpty &&
+              nameField.evaluate().isNotEmpty;
+        }, what: 'form Tạo giải nhanh (ô tên giải)');
+        if (attempt == 0) await snap(tester, 'form-tao-giai-nhanh');
+        // Sau snap router có thể vừa đổi trang: kiểm lại form ngay trước khi gõ.
+        if (nameField.evaluate().isEmpty || find.text('Tạo giải nhanh').evaluate().isEmpty) {
+          continue;
         }
-        return find.text('Tạo giải nhanh').evaluate().isNotEmpty &&
-            find.byType(TextFormField).evaluate().isNotEmpty;
-      }, what: 'form Tạo giải nhanh (ô tên giải)');
-      await snap(tester, 'form-tao-giai-nhanh');
-      await tester.enterText(find.byType(TextFormField).first, name);
-      await tester.pump();
+        await tester.enterText(nameField.first, name);
+        await tester.pump(const Duration(milliseconds: 500));
+        typed = find.text(name).evaluate().isNotEmpty;
+      }
+      expect(typed, isTrue, reason: 'Ô tên giải của form Tạo giải nhanh phải chứa "$name" sau tối đa 3 lần thử');
 
       await scrollToText(tester, 'Thêm nội dung');
       await tester.tap(find.text('Thêm nội dung').first);
