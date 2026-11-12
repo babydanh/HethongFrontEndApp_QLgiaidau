@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/di/di.dart';
 import 'package:app_quanly_giaidau/core/services/app_logger.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 /// Widget chat trực tiếp cho trận đấu — gửi/nhận tin nhắn realtime.
@@ -221,30 +222,13 @@ class _MatchChatWidgetState extends ConsumerState<MatchChatWidget> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            radius: 14,
-                            backgroundColor: colors.border.withValues(
-                              alpha: 0.3,
-                            ),
-                            backgroundImage:
-                                (msg['senderAvatar'] != null &&
-                                    (msg['senderAvatar'] as String).isNotEmpty)
-                                ? NetworkImage(msg['senderAvatar'] as String)
-                                : null,
-                            child:
-                                (msg['senderAvatar'] == null ||
-                                    (msg['senderAvatar'] as String).isEmpty)
-                                ? Text(
-                                    sender.isNotEmpty
-                                        ? sender[0].toUpperCase()
-                                        : '?',
-                                    style: TextStyle(
-                                      color: colors.textPrimary,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 10,
-                                    ),
-                                  )
-                                : null,
+                          ResolvedRankAvatar(
+                            // Same sender keys as ChatMessage.fromJson.
+                            userId: (msg['senderId'] ?? msg['sender']?['id'])
+                                ?.toString(),
+                            name: sender,
+                            imageUrl: msg['senderAvatar'] as String?,
+                            size: 28,
                           ),
                           const SizedBox(width: 8),
                           Expanded(

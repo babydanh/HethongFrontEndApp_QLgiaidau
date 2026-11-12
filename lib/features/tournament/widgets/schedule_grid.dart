@@ -7,6 +7,7 @@ import 'package:app_quanly_giaidau/features/tournament/utils/schedule_duration.d
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_actions.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_court_label.dart';
 import 'package:app_quanly_giaidau/features/tournament/utils/schedule_gender_tint.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:app_quanly_giaidau/core/participants/match_side_players.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
@@ -1500,29 +1501,39 @@ class _ScheduleGridState extends State<ScheduleGrid> {
   }
 
   Widget _playerMiniRow(ParticipantPlayer player, TextStyle textStyle) {
+    final userId = player.userId ?? '';
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CircleAvatar(
-          radius: 6.5,
-          backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
-          backgroundImage:
-              player.avatarUrl != null && player.avatarUrl!.isNotEmpty
-              ? NetworkImage(player.avatarUrl!)
-              : null,
-          child: (player.avatarUrl == null || player.avatarUrl!.isEmpty)
-              ? Text(
-                  player.fullName.isNotEmpty
-                      ? player.fullName[0].toUpperCase()
-                      : '?',
-                  style: const TextStyle(
-                    fontSize: 7.5,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.primary,
-                  ),
-                )
-              : null,
-        ),
+        if (userId.isNotEmpty)
+          ResolvedRankAvatar(
+            userId: userId,
+            name: player.fullName,
+            imageUrl: player.avatarUrl,
+            size: 13,
+            ringWidth: 1,
+          )
+        else
+          CircleAvatar(
+            radius: 6.5,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
+            backgroundImage:
+                player.avatarUrl != null && player.avatarUrl!.isNotEmpty
+                ? NetworkImage(player.avatarUrl!)
+                : null,
+            child: (player.avatarUrl == null || player.avatarUrl!.isEmpty)
+                ? Text(
+                    player.fullName.isNotEmpty
+                        ? player.fullName[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primary,
+                    ),
+                  )
+                : null,
+          ),
         const SizedBox(width: 3.5),
         Flexible(
           child: Text(

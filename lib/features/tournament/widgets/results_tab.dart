@@ -4,6 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/tournament_result_provider.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:app_quanly_giaidau/features/tournament/widgets/tournament_bone_loading.dart';
 
 /// The honour podium (champion, runner-up, third place) of one division.
@@ -241,6 +242,16 @@ class ResultsTab extends ConsumerWidget {
   ) {
     final avatarUrl = member['avatarUrl']?.toString();
     final name = member['fullName']?.toString() ?? 'V';
+    final userId = member['userId']?.toString() ?? '';
+    if (userId.isNotEmpty) {
+      return ResolvedRankAvatar(
+        userId: userId,
+        name: name,
+        imageUrl: avatarUrl,
+        size: radius * 2,
+        ringWidth: 1.5,
+      );
+    }
 
     return Container(
       width: radius * 2,

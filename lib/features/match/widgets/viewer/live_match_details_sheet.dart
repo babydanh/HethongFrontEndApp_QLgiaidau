@@ -300,6 +300,7 @@ class _Side extends StatelessWidget {
           diameter: 34,
           borderColor: colors.bgDark,
           borderWidth: 2,
+          rankRing: true,
         ),
         const SizedBox(height: 4),
         Text(

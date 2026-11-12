@@ -4,7 +4,7 @@ import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/domain/entities/team.dart';
 import 'package:app_quanly_giaidau/features/rankings/widgets/elo_tier_badge.dart';
-import 'package:app_quanly_giaidau/features/rankings/widgets/rank_avatar.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class TournamentTeamCard extends StatefulWidget {
@@ -157,10 +157,13 @@ class _TournamentTeamCardState extends State<TournamentTeamCard> {
                               child: Row(
                                 children: [
                                   // Avatar VĐV (RankAvatar có vòng viền tier nếu có xếp hạng)
-                                  RankAvatar(
+                                  // Without ELO in the payload, the ring falls
+                                  // back to the athlete's best ranking.
+                                  ResolvedRankAvatar(
+                                    userId: player.userId,
                                     imageUrl: memberAvatar,
                                     name: mName,
-                                    elo: eloVal ?? 0,
+                                    elo: eloVal,
                                     tierName: tierStr,
                                     size: 26,
                                     ringWidth: 1.5,

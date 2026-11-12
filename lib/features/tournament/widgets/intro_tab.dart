@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_quanly_giaidau/core/widgets/rich_text/rich_text_display.dart';
 import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/tournament_model.dart';
-import 'package:app_quanly_giaidau/features/profile/widgets/user_avatar_tap.dart';
+import 'package:app_quanly_giaidau/features/profile/widgets/ranked_user_avatar_tap.dart';
 
 class IntroTab extends StatelessWidget {
   final Tournament tournament;
@@ -105,7 +105,7 @@ class IntroTab extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  UserAvatarTap(
+                  RankedUserAvatarTap(
                     userId: t.creatorId,
                     name: creatorName,
                     imageUrl: resolvedAvatar.isEmpty ? null : resolvedAvatar,

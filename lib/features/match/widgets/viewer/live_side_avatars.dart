@@ -1,13 +1,31 @@
 import 'package:app_quanly_giaidau/core/participants/participant_display.dart';
+import 'package:app_quanly_giaidau/features/tournament/widgets/resolved_rank_avatar.dart';
 import 'package:flutter/material.dart';
 
 /// One avatar of a side: a photo when [url] is set, otherwise the initials of
 /// [name] on a stable colour (same rule as the Web).
 class LiveAvatarData {
-  const LiveAvatarData({required this.name, this.url});
+  const LiveAvatarData({
+    required this.name,
+    this.url,
+    this.userId,
+    this.elo,
+    this.tierName,
+  });
 
   final String name;
   final String? url;
+
+  /// Set for a real athlete; drives the ELO tier ring when
+  /// [LiveSideAvatars.rankRing] is on.
+  final String? userId;
+  final int? elo;
+  final String? tierName;
+
+  bool get isPerson =>
+      (userId?.trim().isNotEmpty ?? false) ||
+      (elo ?? 0) > 0 ||
+      (tierName?.isNotEmpty ?? false);
 }
 
 /// One avatar for a single athlete or a team, two overlapped avatars for a
@@ -19,6 +37,7 @@ class LiveSideAvatars extends StatelessWidget {
     required this.diameter,
     this.borderColor = Colors.white24,
     this.borderWidth = 1.5,
+    this.rankRing = false,
   });
 
   static const maxShown = 2;
@@ -30,6 +49,10 @@ class LiveSideAvatars extends StatelessWidget {
   final double diameter;
   final Color borderColor;
   final double borderWidth;
+
+  /// Draw athletes with the ELO tier ring instead of [borderColor]. Off for
+  /// the video H2H overlay, whose blue/red ring identifies the side.
+  final bool rankRing;
 
   @override
   Widget build(BuildContext context) {
@@ -44,12 +67,22 @@ class LiveSideAvatars extends StatelessWidget {
             for (var i = 0; i < shown.length; i++)
               Positioned(
                 left: step * i,
-                child: _Dot(
-                  data: shown[i],
-                  diameter: diameter,
-                  borderColor: borderColor,
-                  borderWidth: borderWidth,
-                ),
+                child: rankRing && shown[i].isPerson
+                    ? ResolvedRankAvatar(
+                        userId: shown[i].userId,
+                        name: shown[i].name,
+                        imageUrl: shown[i].url,
+                        elo: shown[i].elo,
+                        tierName: shown[i].tierName,
+                        size: diameter,
+                        ringWidth: borderWidth,
+                      )
+                    : _Dot(
+                        data: shown[i],
+                        diameter: diameter,
+                        borderColor: borderColor,
+                        borderWidth: borderWidth,
+                      ),
               ),
           ],
         ),
