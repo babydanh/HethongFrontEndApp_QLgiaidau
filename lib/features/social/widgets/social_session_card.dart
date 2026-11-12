@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:app_quanly_giaidau/core/config/app_theme.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
+import 'package:app_quanly_giaidau/features/social/widgets/social_session_sport_icon.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 
 class SocialSessionCard extends StatelessWidget {
@@ -46,8 +46,11 @@ class SocialSessionCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left: Circular Club / Sport Logo
-            _buildClubLogo(isDark),
+            // Left: sport SVG icon (name is the semantics label / tooltip)
+            SocialSessionSportIcon(
+              sport: session.sport,
+              sportName: session.sportName,
+            ),
             const SizedBox(width: 12),
 
             // Middle: Host, Title, Format & Venue Tags
@@ -165,10 +168,6 @@ class SocialSessionCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Sport Icon Outline
-                _buildSportIcon(isDark),
-                const SizedBox(height: 6),
-
                 // Slots Capacity (e.g. 1/8)
                 Text(
                   '${session.currentParticipants}/${session.maxParticipants}',
@@ -194,75 +193,6 @@ class SocialSessionCard extends StatelessWidget {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildClubLogo(bool isDark) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isDark ? const Color(0xFF262626) : const Color(0xFFF8FAFC),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.12)
-              : const Color(0xFFE2E8F0),
-          width: 1.5,
-        ),
-      ),
-      child: Center(
-        child: session.sport == 'tennis'
-            ? const Icon(
-                Icons.sports_tennis_rounded,
-                size: 22,
-                color: Color(0xFF15803D),
-              )
-            : session.sport == 'pickleball'
-            ? const Icon(
-                Icons.sports_handball_rounded,
-                size: 22,
-                color: Color(0xFFD97706),
-              )
-            : const Icon(
-                Icons.sports_score_rounded,
-                size: 22,
-                color: AppTheme.primary,
-              ),
-      ),
-    );
-  }
-
-  Widget _buildSportIcon(bool isDark) {
-    IconData iconData;
-    switch (session.sport) {
-      case 'tennis':
-        iconData = Icons.sports_tennis_outlined;
-        break;
-      case 'pickleball':
-        iconData = Icons.sports_tennis_rounded;
-        break;
-      default:
-        iconData = Icons.sports_outlined;
-    }
-
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isDark ? Colors.white30 : const Color(0xFFCBD5E1),
-          width: 1.2,
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          iconData,
-          size: 18,
-          color: isDark ? Colors.white70 : const Color(0xFF334155),
         ),
       ),
     );
