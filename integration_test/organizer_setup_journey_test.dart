@@ -64,12 +64,12 @@ void main() {
 
       // TC-01: form tạo giải nhanh, thêm một nội dung đơn, bỏ nội dung mặc định "Đôi tự do".
       // Router có thể còn chuyển về trang chủ sau đăng nhập: gọi go() lại tới khi form hiện.
-      // Form đăng nhập cũng có TextFormField: nhận form tạo giải bằng nút "Thêm nội dung" của nó.
+      // Form đăng nhập cũng có TextFormField: nhận form tạo giải bằng tiêu đề "Tạo giải nhanh" của nó.
       await pumpUntilCondition(tester, () {
-        if (find.text('Thêm nội dung').evaluate().isEmpty) {
+        if (find.text('Tạo giải nhanh').evaluate().isEmpty) {
           container.read(routerProvider).go('/tournaments/create');
         }
-        return find.text('Thêm nội dung').evaluate().isNotEmpty &&
+        return find.text('Tạo giải nhanh').evaluate().isNotEmpty &&
             find.byType(TextFormField).evaluate().isNotEmpty;
       }, what: 'form Tạo giải nhanh (ô tên giải)');
       await snap(tester, 'form-tao-giai-nhanh');
