@@ -11,3 +11,9 @@
 - Quan sát: `copyWith` dùng `generatingStrategy ?? this.generatingStrategy`, nên truyền `null` giữ nguyên chiến lược cũ ('SKILL'/'RANDOM'...) sau khi sinh cặp xong.
 - Vì sao nghi sai: dòng gọi rõ ràng muốn xoá. Hiện vô hại vì UI (`lite_management_screen.dart:2929,2964`) luôn kiểm `state.generating &&` trước, nhưng một chỗ dùng mới chỉ đọc `generatingStrategy` sẽ thấy giá trị cũ.
 - Test: không khẳng định `generatingStrategy` sau khi xong.
+
+## F3. Bộ kiểm tra set từ chối tỉ số chạm trần hợp lệ (30-29 cầu lông)
+- File: `lib/domain/services/score_validator.dart:73-87` (`validateRallyPointSet`, nhánh `config.mustWinByTwo`), dùng ở `lib/features/match/notifiers/score_panel_notifier.dart:1538` (`_validateSetBeforeFinish`).
+- Quan sát: với cấu hình cầu lông mặc định (đến 21, thắng cách 2, `maxPoints` 30, `tiebreakAt` 20), set kết thúc 30-29 bị `deuceMargin` vì `minScore >= tiebreakAt` đòi `diff == 2`. Trong khi `isSetComplete` (cùng file) coi `maxScore >= maxPoints` là set đã xong (true cho 30-29). Tương tự cấu hình pickleball rally mặc định (`maxPoints` 15): 15-14.
+- Vì sao nghi sai: luật cầu lông cho phép 30-29 (điểm vàng ở cap). Hai hàm trong cùng file mâu thuẫn nhau; BTC/trọng tài chỉ kết thúc được set này bằng chế độ ghi đè.
+- Test: `test/domain/score_validator_validation_test.dart` không khẳng định 30-29/15-14 bị từ chối; chỉ khẳng định `isSetComplete(30,29)` là true (hành vi riêng của hàm đó) và các nhánh còn lại.
