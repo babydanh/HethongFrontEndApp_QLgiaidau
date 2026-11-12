@@ -150,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(went?.tab, StepHubTab.results);
-    expect(went?.resultsFilter, ResultsBoardFilter.late);
+    expect(went?.resultsFilter, ResultsBoardFilter.unfinished);
     expect(find.byKey(const ValueKey('step-popup-body')), findsNothing);
   });
 
