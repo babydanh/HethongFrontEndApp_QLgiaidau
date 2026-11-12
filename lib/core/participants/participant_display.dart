@@ -88,10 +88,15 @@ class ParticipantDisplay {
   /// VĐV đã lọc tên rỗng; dùng khi [mode] là [ParticipantDisplayMode.players].
   final List<ParticipantPlayer> players;
 
+  /// Người có tài khoản của một đội có tên (không phải bóng đá): nơi hiển thị
+  /// tên đội vẫn phải vẽ avatar của họ kèm viền hạng. Rỗng ở chế độ PLAYERS.
+  final List<ParticipantPlayer> accountPlayers;
+
   const ParticipantDisplay._({
     required this.mode,
     this.teamName,
     this.players = const [],
+    this.accountPlayers = const [],
   });
 
   bool get isTeam => mode == ParticipantDisplayMode.team;
@@ -265,6 +270,11 @@ ParticipantDisplay resolveParticipantDisplay({
       return ParticipantDisplay._(
         mode: ParticipantDisplayMode.team,
         teamName: name,
+        accountPlayers: teamOnly
+            ? const []
+            : filtered
+                  .where((p) => (p.userId?.trim().isNotEmpty ?? false))
+                  .toList(growable: false),
       );
     }
   }
@@ -584,7 +594,11 @@ class ParticipantSideLines extends StatelessWidget {
     final lines = display.isTeam
         ? [
             _SideLine(
-              leading: _TeamLogo(name: display.teamName!, url: logoUrl),
+              // Người có tài khoản luôn có viền hạng; logo chỉ khi đội không
+              // có VĐV tài khoản (khách, bóng đá).
+              leading: display.accountPlayers.isEmpty
+                  ? _TeamLogo(name: display.teamName!, url: logoUrl)
+                  : _SideAvatarStack(players: display.accountPlayers),
               text: display.teamName!,
               style: style,
             ),
@@ -662,6 +676,34 @@ class _SideAvatar extends StatelessWidget {
                 ),
               )
             : null,
+      ),
+    );
+  }
+}
+
+/// Up to two overlapped ringed avatars of a named team's account players.
+class _SideAvatarStack extends StatelessWidget {
+  final List<ParticipantPlayer> players;
+
+  const _SideAvatarStack({required this.players});
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = players.take(_maxAvatars).toList(growable: false);
+    const size = _sideAvatarRadius * 2;
+    const overlap = size * 0.7;
+    return SizedBox(
+      key: const ValueKey('side-lines-team-players'),
+      width: size + overlap * (shown.length - 1),
+      height: size,
+      child: Stack(
+        children: [
+          for (var i = 0; i < shown.length; i++)
+            PositionedDirectional(
+              start: overlap * i,
+              child: _SideAvatar(player: shown[i]),
+            ),
+        ],
       ),
     );
   }

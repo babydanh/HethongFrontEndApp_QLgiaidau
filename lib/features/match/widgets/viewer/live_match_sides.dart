@@ -53,10 +53,14 @@ List<LiveAvatarData> matchSideAvatars(MatchModel match, int side) {
     players: players,
     teamOnly: isFootballMatch(match),
   );
-  if (!display.isTeam && display.players.isNotEmpty) {
+  // Đội có tên vẫn hiện avatar (kèm viền hạng) của người có tài khoản.
+  final shownPlayers = display.isTeam
+      ? display.accountPlayers
+      : display.players;
+  if (shownPlayers.isNotEmpty) {
     final infos = side == 1 ? match.team1MemberInfos : match.team2MemberInfos;
     return [
-      for (final p in display.players.take(LiveSideAvatars.maxShown))
+      for (final p in shownPlayers.take(LiveSideAvatars.maxShown))
         _athleteAvatar(p, infos),
     ];
   }
