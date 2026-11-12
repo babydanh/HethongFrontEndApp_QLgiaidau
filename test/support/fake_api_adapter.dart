@@ -13,16 +13,27 @@ class NoTokenManager extends TokenManager {
 class FakeReply {
   const FakeReply(this.statusCode, this.body);
 
+  /// Giả lập lỗi transport (không có HTTP response), như mất mạng.
+  const FakeReply.networkError() : statusCode = -1, body = const {};
+
   final int statusCode;
   final Object body;
 }
 
 class FakeRequest {
-  const FakeRequest(this.method, this.path, this.body);
+  const FakeRequest(
+    this.method,
+    this.path,
+    this.body, {
+    this.query = const {},
+    this.headers = const {},
+  });
 
   final String method;
   final String path;
   final Map<String, dynamic>? body;
+  final Map<String, dynamic> query;
+  final Map<String, dynamic> headers;
 }
 
 /// Trả lời theo khoá "METHOD /path". Route chưa mock trả 404 và vẫn được ghi lại.
@@ -44,11 +55,19 @@ class FakeApiAdapter implements HttpClientAdapter {
         options.method,
         options.path,
         data is Map ? Map<String, dynamic>.from(data) : null,
+        query: Map<String, dynamic>.from(options.queryParameters),
+        headers: Map<String, dynamic>.from(options.headers),
       ),
     );
     final reply =
         routes['${options.method} ${options.path}'] ??
         const FakeReply(404, {'message': 'not mocked'});
+    if (reply.statusCode == -1) {
+      throw DioException.connectionError(
+        requestOptions: options,
+        reason: 'fake network error',
+      );
+    }
     return ResponseBody.fromString(
       jsonEncode(reply.body),
       reply.statusCode,
