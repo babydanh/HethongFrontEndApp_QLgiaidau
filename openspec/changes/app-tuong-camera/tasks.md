@@ -8,7 +8,7 @@
 
 ## 2. Tường camera
 
-- [ ] 2.1 Hàm thuần trong `camera_wall.dart` giống `src/features/tournaments/camera-wall.ts` của Web (TDD, test đỏ trước). Tiêu chí: `flutter test --no-pub test/features/tournament/camera_wall_test.dart` → exit 0 (TC-APP-CAMWALL-01..06)
+- [x] 2.1 Hàm thuần trong `camera_wall.dart` giống `src/features/tournaments/camera-wall.ts` của Web (TDD, test đỏ trước). Tiêu chí: `flutter test --no-pub test/features/tournament/camera_wall_test.dart` → exit 0 (TC-APP-CAMWALL-01..06)
   - Files: tạo `lib/features/tournament/utils/camera_wall.dart`; test `test/features/tournament/camera_wall_test.dart`
   - Giao: `const List<int> cameraWallLayouts = [1, 2, 3, 4];` · `({List<TournamentCameraModel> items, int pageCount, int page}) cameraWallPage(List<TournamentCameraModel> cameras, int layout, int page)` (page 1-based, kẹp vào khoảng hợp lệ, `pageCount >= 1`) · `bool shouldMountCameraPlayer(TournamentCameraModel camera, bool previewOn)` (`previewOn && status == 'LIVE' && playbackUrl` không rỗng) · `int cameraWallPageOf(List<TournamentCameraModel> cameras, String cameraId, int layout)` · `CameraWallMatchLabel? cameraWallMatchLabel(TournamentCameraModel camera, Map<String, MatchLivestreamSummary> streams, List<MatchModel> matches)` với `class CameraWallMatchLabel { final String kind; /* live|ongoing|next */ final String code; final String team1; final String team2; }` (không chứa tỉ số; bỏ trận BYE; `code` lấy `matchCode`, rỗng thì `matchNumber`)
   - Nhận: (không)
