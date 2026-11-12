@@ -6,7 +6,7 @@ Tiêu chí chung: lệnh hẹp `flutter test --no-pub <file>` exit 0; trước P
   Files: test/data/api_community_repository_test.dart, test/support/fake_api_adapter.dart
   Tiêu chí: `flutter test --no-pub test/data/api_community_repository_test.dart`
   Phụ thuộc: không
-- [ ] T2 ApiCommunitySocialRepository (0%)
+- [x] T2 ApiCommunitySocialRepository (0%)
   Files: test/data/api_community_social_repository_test.dart
   Tiêu chí: `flutter test --no-pub test/data/api_community_social_repository_test.dart`
 - [ ] T3 ApiSocialSessionRepository + SocialSessionModel (31%/45%)
