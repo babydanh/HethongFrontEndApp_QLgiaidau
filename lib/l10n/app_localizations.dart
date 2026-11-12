@@ -482,6 +482,12 @@ abstract class AppLocalizations {
   /// **'Đang diễn ra'**
   String get social_matchStatusOngoing;
 
+  /// No description provided for @social_matchScoreNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm điểm'**
+  String get social_matchScoreNow;
+
   /// No description provided for @social_matchStatusCompleted.
   ///
   /// In vi, this message translates to:

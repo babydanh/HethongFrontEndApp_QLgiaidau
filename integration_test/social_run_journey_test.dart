@@ -379,9 +379,9 @@ void main() {
       await tester.tap(find.descendant(of: find.byType(Dialog), matching: find.byIcon(Icons.close_rounded)).first);
       await socialWait(tester);
       await pumpUntilFound(tester, find.text('Chưa bắt đầu'), what: 'thẻ trận Chưa bắt đầu');
-      // Thẻ trận gọn: không còn nút Nhập nhanh / Bấm điểm trên thẻ; chạm thẻ mở bảng nhập điểm.
+      // Thẻ trận có nút Bấm điểm (social-nut-bam-diem), không có Nhập nhanh; chạm thẻ vẫn mở bảng nhập điểm.
       expect(find.text('Nhập nhanh'), findsNothing);
-      expect(find.text('Bấm điểm'), findsNothing);
+      expect(find.text('Bấm điểm'), findsOneWidget);
       await shooter.snap('the-tran-chua-bat-dau');
 
       // Chạm thẻ mở bảng Nhập kết quả, trong đó có nút Mở bảng điểm sang màn bấm điểm trực tiếp.

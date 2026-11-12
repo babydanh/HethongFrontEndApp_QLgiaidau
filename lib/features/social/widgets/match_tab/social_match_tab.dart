@@ -12,6 +12,7 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/data/models/standalone_match_owner.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_match_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_dialog.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
 import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
@@ -43,6 +44,10 @@ class SocialMatchTab extends ConsumerStatefulWidget {
   /// Lite tournament already created from this session (null = none yet).
   final String? bracketTournamentId;
 
+  /// Thay hộp thoại tạo trận khi test.
+  @visibleForTesting
+  final Future<MatchModel?> Function(BuildContext context)? createMatchLauncher;
+
   const SocialMatchTab({
     super.key,
     this.communityId,
@@ -50,6 +55,7 @@ class SocialMatchTab extends ConsumerStatefulWidget {
     this.isHost = false,
     required this.approvedParticipants,
     this.bracketTournamentId,
+    this.createMatchLauncher,
   });
 
   @override
@@ -61,6 +67,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   bool _isLoading = true;
   String? _loadError;
   Set<String> _clubMemberUserIds = const {};
+  bool _openingScoreboard = false;
 
   late final StandaloneMatchOwner _owner = StandaloneMatchOwner.forSession(
     communityId: widget.communityId,
@@ -168,32 +175,42 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   }
 
   Future<void> _createMatch() async {
-    final createdMatch = await ClubStandaloneMatchDialog.show(
-      context,
-      communityId: _owner.communityId,
-      socialSessionId: _owner.socialSessionId,
-      preselectedMembers: _preselectedMembers,
-      onMatchCreated: _fetchMatches,
-      // Only the host of a club-less session can turn it into a bracket.
-      allowBracket: _owner.isPersonalSession && widget.isHost,
-      onBracketCreated: _refreshSession,
-    );
+    final launcher = widget.createMatchLauncher;
+    final createdMatch = launcher != null
+        ? await launcher(context)
+        : await ClubStandaloneMatchDialog.show(
+            context,
+            communityId: _owner.communityId,
+            socialSessionId: _owner.socialSessionId,
+            preselectedMembers: _preselectedMembers,
+            onMatchCreated: _fetchMatches,
+            // Only the host of a club-less session can turn it into a bracket.
+            allowBracket: _owner.isPersonalSession && widget.isHost,
+            onBracketCreated: _refreshSession,
+          );
     if (!mounted || createdMatch == null) return;
     final action = await ClubStandaloneMatchResultDialog.show(
       context,
       match: createdMatch,
-      showScoreboardAction: false,
+      showScoreboardAction: _canScoreStatus(createdMatch.status),
     );
-    if (!mounted || action != ClubStandaloneMatchAction.saved) return;
+    if (!mounted) return;
+    if (action == ClubStandaloneMatchAction.openScoreboard) {
+      await _openScoreboardFor(createdMatch);
+      return;
+    }
+    if (action != ClubStandaloneMatchAction.saved) return;
     unawaited(_fetchMatches());
   }
 
   /// Backend is the real gate (MATCH_SCORE_PERMISSION_REQUIRED shows in the
   /// dialog); the app only hides live scoring for finished matches and
   /// signed-out viewers.
-  bool _canScore(ClubSessionMatchModel match) =>
-      match.status.toUpperCase() != 'COMPLETED' &&
+  bool _canScoreStatus(String status) =>
+      status.toUpperCase() != 'COMPLETED' &&
       ref.read(authProvider).status == AuthStatus.authenticated;
+
+  bool _canScore(ClubSessionMatchModel match) => _canScoreStatus(match.status);
 
   /// Tapping a match opens quick entry; live scoring is a button inside it.
   Future<void> _openResult(ClubSessionMatchModel match) async {
@@ -212,8 +229,12 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
   }
 
   /// Live scoring (same page the CLB tab opens); refreshes the list on return.
-  Future<void> _openScoreboard(ClubSessionMatchModel sm) async {
-    final match = socialSessionMatchToMatchModel(sm);
+  Future<void> _openScoreboard(ClubSessionMatchModel sm) =>
+      _openScoreboardFor(socialSessionMatchToMatchModel(sm));
+
+  Future<void> _openScoreboardFor(MatchModel match) async {
+    if (_openingScoreboard) return;
+    _openingScoreboard = true;
     final repository = ref.read(matchRepositoryProvider);
     if (repository is ApiMatchRepository) repository.primeMatch(match);
     await Navigator.of(context).push<void>(
@@ -225,6 +246,7 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
         ),
       ),
     );
+    _openingScoreboard = false;
     if (mounted) unawaited(_fetchMatches());
   }
 
@@ -431,6 +453,27 @@ class _SocialMatchTabState extends ConsumerState<SocialMatchTab> {
                 ),
               ],
             ),
+            if (_canScore(match)) ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 44,
+                child: FilledButton.icon(
+                  onPressed: () => _openScoreboard(match),
+                  icon: const Icon(Icons.scoreboard_rounded, size: 18),
+                  label: Text(
+                    l10n.social_matchScoreNow,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

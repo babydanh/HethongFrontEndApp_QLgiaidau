@@ -4,8 +4,12 @@ import 'package:app_quanly_giaidau/data/models/community_member_model.dart';
 import 'package:app_quanly_giaidau/data/models/community_social_models.dart';
 import 'package:app_quanly_giaidau/data/models/social_session_model.dart';
 import 'package:app_quanly_giaidau/data/repositories/api/api_club_match_session_repository.dart';
+import 'package:app_quanly_giaidau/domain/entities/match.dart';
+import 'package:app_quanly_giaidau/core/di/repository_providers.dart';
 import 'package:app_quanly_giaidau/domain/repositories/community_repository.dart';
+import 'package:app_quanly_giaidau/domain/repositories/match_repository.dart';
 import 'package:app_quanly_giaidau/features/community/widgets/club_standalone_match_result_dialog.dart';
+import 'package:app_quanly_giaidau/features/match/widgets/official_score_modal.dart';
 import 'package:app_quanly_giaidau/features/social/widgets/match_tab/social_match_tab.dart';
 import 'package:app_quanly_giaidau/l10n/app_localizations.dart';
 import 'package:app_quanly_giaidau/providers/auth_provider.dart';
@@ -64,6 +68,9 @@ class _FakeCommunityRepository extends Fake implements ICommunityRepository {
   ) async => const CommunitySocialSettings();
 }
 
+/// Chỉ để [matchRepositoryProvider] không đòi DotEnv; trang bấm điểm mở được.
+class _FakeMatchRepository extends Fake implements IMatchRepository {}
+
 class _SignedInAuth extends AuthNotifier {
   @override
   AuthState build() => const AuthState(status: AuthStatus.authenticated);
@@ -93,11 +100,13 @@ Widget _buildTestApp({
   List<CommunityMemberModel> clubMembers = const [],
   String? bracketTournamentId,
   bool signedIn = false,
+  Future<MatchModel?> Function(BuildContext)? createMatchLauncher,
 }) {
   return ProviderScope(
     overrides: [
       if (signedIn) authProvider.overrideWith(_SignedInAuth.new),
       clubMatchSessionRepositoryProvider.overrideWithValue(repository),
+      matchRepositoryProvider.overrideWithValue(_FakeMatchRepository()),
       communityRepositoryProvider.overrideWithValue(
         _FakeCommunityRepository(clubMembers),
       ),
@@ -114,11 +123,21 @@ Widget _buildTestApp({
           isHost: isHost,
           approvedParticipants: approvedParticipants,
           bracketTournamentId: bracketTournamentId,
+          createMatchLauncher: createMatchLauncher,
         ),
       ),
     ),
   );
 }
+
+MatchModel _created(String status) => MatchModel(
+  id: 'new-1',
+  round: 1,
+  matchNumber: 1,
+  bracketPosition: const BracketPosition(round: 1, position: 1),
+  status: status,
+  updatedAt: DateTime(2026, 1, 1),
+);
 
 void main() {
   testWidgets(
@@ -263,13 +282,12 @@ void main() {
       expect(find.text('Nguyễn Minh Danh'), findsOneWidget);
     });
 
-    testWidgets('TC-SOC-CARD-02 the card has no inline action buttons', (
+    testWidgets('TC-SOC-CARD-02 the card has no quick-entry inline button', (
       tester,
     ) async {
       await pump(tester, match('SCHEDULED'));
 
       expect(find.text('Nhập nhanh'), findsNothing);
-      expect(find.text('Bấm điểm'), findsNothing);
       expect(find.byType(OutlinedButton), findsNothing);
     });
 
@@ -337,6 +355,130 @@ void main() {
       expect(find.text('Đã lên lịch'), findsNothing);
       expect(find.text('5'), findsOneWidget);
       expect(find.text('3'), findsOneWidget);
+    });
+  });
+
+  group('nút Bấm điểm', () {
+    ClubSessionMatchModel match(String status) => ClubSessionMatchModel(
+      id: 'match-1',
+      status: status,
+      sideAUserIds: const ['user-1'],
+      sideBUserIds: const ['user-2'],
+      sideAScore: 0,
+      sideBScore: 0,
+      revision: 1,
+      eloStatus: 'PENDING',
+      sideAMembers: const [
+        ClubSessionMatchMemberModel(userId: 'user-1', displayName: 'Danh'),
+      ],
+      sideBMembers: const [
+        ClubSessionMatchMemberModel(userId: 'user-2', displayName: 'Kha'),
+      ],
+    );
+
+    Future<void> pump(
+      WidgetTester tester,
+      String status, {
+      bool signedIn = true,
+      Future<MatchModel?> Function(BuildContext)? createMatchLauncher,
+      bool isHost = false,
+    }) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        _buildTestApp(
+          approvedParticipants: [_participant('1'), _participant('2')],
+          repository: _FakeMatchSessionRepository([match(status)]),
+          signedIn: signedIn,
+          isHost: isHost,
+          createMatchLauncher: createMatchLauncher,
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    final scoreButton = find.widgetWithText(FilledButton, 'Bấm điểm');
+
+    testWidgets('TC-SOCIAL-SCORE-01 thẻ trận chưa xong có nút Bấm điểm đủ 44px', (
+      tester,
+    ) async {
+      await pump(tester, 'SCHEDULED');
+
+      expect(scoreButton, findsOneWidget);
+      expect(tester.getSize(scoreButton).height, greaterThanOrEqualTo(44));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('TC-SOCIAL-SCORE-02 trận đang diễn ra cũng có nút Bấm điểm', (
+      tester,
+    ) async {
+      await pump(tester, 'ONGOING');
+
+      expect(scoreButton, findsOneWidget);
+    });
+
+    testWidgets('TC-SOCIAL-SCORE-03 trận đã hoàn thành không có nút Bấm điểm', (
+      tester,
+    ) async {
+      await pump(tester, 'COMPLETED');
+
+      expect(scoreButton, findsNothing);
+    });
+
+    testWidgets('TC-SOCIAL-SCORE-04 chưa đăng nhập không có nút Bấm điểm', (
+      tester,
+    ) async {
+      await pump(tester, 'SCHEDULED', signedIn: false);
+
+      expect(scoreButton, findsNothing);
+    });
+
+    testWidgets('TC-SOCIAL-SCORE-05 bấm nút mở thẳng bảng bấm điểm, không qua dialog', (
+      tester,
+    ) async {
+      await pump(tester, 'SCHEDULED');
+
+      await tester.tap(scoreButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.byType(OfficialScorePage), findsOneWidget);
+      expect(find.byType(ClubStandaloneMatchResultDialog), findsNothing);
+    });
+
+    testWidgets('TC-SOCIAL-SCORE-06 sau khi tạo trận, dialog kết quả có nút Mở bảng điểm', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        'SCHEDULED',
+        isHost: true,
+        createMatchLauncher: (_) async => _created('scheduled'),
+      );
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Tạo trận đấu'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ClubStandaloneMatchResultDialog), findsOneWidget);
+      expect(find.text('Mở bảng điểm'), findsOneWidget);
+    });
+
+    testWidgets('TC-SOCIAL-SCORE-07 trận vừa tạo đã hoàn thành thì không có Mở bảng điểm', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        'SCHEDULED',
+        isHost: true,
+        createMatchLauncher: (_) async => _created('COMPLETED'),
+      );
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Tạo trận đấu'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ClubStandaloneMatchResultDialog), findsOneWidget);
+      expect(find.text('Mở bảng điểm'), findsNothing);
     });
   });
 

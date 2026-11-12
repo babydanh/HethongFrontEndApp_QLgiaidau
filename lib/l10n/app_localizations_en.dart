@@ -219,6 +219,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get social_matchStatusOngoing => 'In progress';
 
   @override
+  String get social_matchScoreNow => 'Score live';
+
+  @override
   String get social_matchStatusCompleted => 'Completed';
 
   @override

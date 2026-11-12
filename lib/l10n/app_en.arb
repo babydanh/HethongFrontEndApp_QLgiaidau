@@ -65,6 +65,7 @@
   "social_matchEmptyTitle": "No matches have been created for this club yet.",
   "social_matchStatusScheduled": "Not started",
   "social_matchStatusOngoing": "In progress",
+  "social_matchScoreNow": "Score live",
   "social_matchStatusCompleted": "Completed",
   "appTagline": "Play together",
   "memberTagSuggestionFunny": "Comic relief",

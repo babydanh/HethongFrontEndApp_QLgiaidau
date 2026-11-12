@@ -214,6 +214,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get social_matchStatusOngoing => 'Đang diễn ra';
 
   @override
+  String get social_matchScoreNow => 'Bấm điểm';
+
+  @override
   String get social_matchStatusCompleted => 'Đã hoàn thành';
 
   @override
