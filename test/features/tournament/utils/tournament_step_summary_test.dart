@@ -231,15 +231,14 @@ void main() {
 
       final playing = _step(summary, StepKey.inProgress);
       expect(_todo(playing, 'disputed')?.count, 1);
-      expect(
-        _todo(playing, 'disputed')?.target.resultsFilter,
-        ResultsBoardFilter.disputed,
-      );
+      // No chip holds disputes: the link opens the whole board.
+      expect(_todo(playing, 'disputed')?.target.tab, StepHubTab.results);
+      expect(_todo(playing, 'disputed')?.target.resultsFilter, isNull);
       expect(_todo(playing, 'late')?.count, 1);
       expect(_todo(playing, 'late')?.target.tab, StepHubTab.results);
       expect(
         _todo(playing, 'late')?.target.resultsFilter,
-        ResultsBoardFilter.late,
+        ResultsBoardFilter.unfinished,
       );
       expect(playing.state, StepStatus.attention);
       expect(playing.percent, 25);

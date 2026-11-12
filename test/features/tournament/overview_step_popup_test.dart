@@ -127,7 +127,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('TC-STEP-15 "Đi tới" on a dispute opens Kết quả on that chip', (
+  testWidgets('TC-STEP-15 "Đi tới" on a dispute opens the whole board', (
     tester,
   ) async {
     final l10n = await _pumpHub(tester);
@@ -144,7 +144,7 @@ void main() {
     final board = tester.widget<ResultsMatchBoard>(
       find.byType(ResultsMatchBoard),
     );
-    expect(board.initialFilter, ResultsBoardFilter.disputed);
+    expect(board.initialFilter, ResultsBoardFilter.all);
     expect(tester.takeException(), isNull);
   });
 

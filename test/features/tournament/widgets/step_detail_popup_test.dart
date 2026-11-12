@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _lateTarget = StepTarget(
   StepHubTab.results,
-  resultsFilter: ResultsBoardFilter.late,
+  resultsFilter: ResultsBoardFilter.unfinished,
 );
 
 StepProgress _step(
@@ -150,7 +150,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(went?.tab, StepHubTab.results);
-    expect(went?.resultsFilter, ResultsBoardFilter.late);
+    expect(went?.resultsFilter, ResultsBoardFilter.unfinished);
     expect(find.byKey(const ValueKey('step-popup-body')), findsNothing);
   });
 
