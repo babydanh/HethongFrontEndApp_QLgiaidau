@@ -28840,6 +28840,12 @@ abstract class AppLocalizations {
   /// **'Chưa có ghim'**
   String get socialPlaceNoPin;
 
+  /// No description provided for @socialPlaceVerified.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xác minh'**
+  String get socialPlaceVerified;
+
   /// No description provided for @socialPlaceSaveAreaTitle.
   ///
   /// In vi, this message translates to:

@@ -6260,6 +6260,7 @@
   "socialPlaceSuggestedSection": "Suggestions",
   "socialPlaceAreaSection": "Administrative areas",
   "socialPlaceNoPin": "No map pin",
+  "socialPlaceVerified": "Verified",
   "socialPlaceSaveAreaTitle": "Save this area?",
   "socialPlaceSaveAreaMessage": "No street address and map pin were found for this input. You can save the administrative area or pin the exact spot on the map.",
   "socialPlaceSaveArea": "Save area",

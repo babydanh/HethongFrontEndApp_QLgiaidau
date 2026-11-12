@@ -11,8 +11,14 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
   final Dio _dio;
   CancelToken? _searchToken;
 
+  static const _verifiedTieMeters = 200;
+
   @override
-  Future<List<SocialPlace>> search(String query, {LatLng? bias}) async {
+  Future<List<SocialPlace>> search(
+    String query, {
+    LatLng? bias,
+    String? categoryId,
+  }) async {
     final value = query.trim();
     if (value.length < 3) return const [];
     _searchToken?.cancel();
@@ -21,7 +27,12 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
     try {
       final response = await _dio.get<dynamic>(
         '/social-locations/search',
-        queryParameters: {'q': value, 'limit': 10},
+        queryParameters: {
+          'q': value,
+          'limit': 10,
+          if (categoryId != null && categoryId.isNotEmpty)
+            'categoryId': categoryId,
+        },
         options: Options(extra: {'noCache': true}),
         cancelToken: token,
       );
@@ -34,25 +45,30 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
           .map(_venue)
           .where((venue) => venue.canApply && venue.hasPin)
           .toList();
-      if (bias != null) {
-        const distance = Distance();
-        places.sort(
-          (a, b) => distance
-              .as(LengthUnit.Meter, bias, LatLng(a.latitude!, a.longitude!))
-              .compareTo(
-                distance.as(
-                  LengthUnit.Meter,
-                  bias,
-                  LatLng(b.latitude!, b.longitude!),
-                ),
-              ),
-        );
-      }
+      if (bias != null) places.sort(_byDistanceVerifiedFirst(bias));
       return places;
     } on DioException catch (error) {
       if (CancelToken.isCancel(error)) return const [];
       throw _failure(error);
     }
+  }
+
+  /// Gần trước; sân đã xác minh đứng trước khi chênh lệch khoảng cách dưới
+  /// [_verifiedTieMeters] (so sánh trực tiếp từng cặp để thứ tự vẫn ổn định).
+  Comparator<SocialPlace> _byDistanceVerifiedFirst(LatLng bias) {
+    const distance = Distance();
+    double meters(SocialPlace p) => distance.as(
+      LengthUnit.Meter,
+      bias,
+      LatLng(p.latitude!, p.longitude!),
+    );
+    return (a, b) {
+      final delta = meters(a) - meters(b);
+      if (a.isVerified != b.isVerified && delta.abs() < _verifiedTieMeters) {
+        return a.isVerified ? -1 : 1;
+      }
+      return delta.compareTo(0);
+    };
   }
 
   @override
@@ -146,6 +162,7 @@ class BackendSocialLocationRepository implements ISocialLocationRepository {
       venueId: (raw['venueId'] ?? raw['id'])?.toString(),
       provinceCode: raw['provinceCode']?.toString(),
       wardCode: raw['wardCode']?.toString(),
+      isVerified: raw['isVerified'] == true,
     );
   }
 

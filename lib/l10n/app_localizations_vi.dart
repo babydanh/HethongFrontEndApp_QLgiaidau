@@ -15915,6 +15915,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get socialPlaceNoPin => 'Chưa có ghim';
 
   @override
+  String get socialPlaceVerified => 'Đã xác minh';
+
+  @override
   String get socialPlaceSaveAreaTitle => 'Lưu khu vực này?';
 
   @override

@@ -32,7 +32,12 @@ class HybridSocialLocationRepository implements ISocialLocationRepository {
   static const _maxRegionResults = 5;
 
   @override
-  Future<List<SocialPlace>> search(String query, {LatLng? bias}) async {
+  Future<List<SocialPlace>> search(
+    String query, {
+    LatLng? bias,
+    // Photon và vùng hành chính không lọc theo môn: bỏ qua có chủ ý.
+    String? categoryId,
+  }) async {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return const [];
 

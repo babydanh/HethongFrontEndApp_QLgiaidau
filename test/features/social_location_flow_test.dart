@@ -10,11 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 
 class _FakeLocationRepository implements ISocialLocationRepository {
-  _FakeLocationRepository({this.resolved, this.failure});
+  _FakeLocationRepository({this.resolved, this.failure, this.results = const []});
 
   final SocialPlace? resolved;
   final Object? failure;
+  final List<SocialPlace> results;
   final reverseCalls = <LatLng>[];
+  final searchCategoryIds = <String?>[];
 
   @override
   Future<SocialPlace> reverseLookup(LatLng pin) async {
@@ -24,8 +26,14 @@ class _FakeLocationRepository implements ISocialLocationRepository {
   }
 
   @override
-  Future<List<SocialPlace>> search(String query, {LatLng? bias}) async =>
-      const [];
+  Future<List<SocialPlace>> search(
+    String query, {
+    LatLng? bias,
+    String? categoryId,
+  }) async {
+    searchCategoryIds.add(categoryId);
+    return results;
+  }
 
   @override
   Future<SocialPlace> getVenueDetail(String venueId) =>
@@ -40,13 +48,13 @@ class _FakeLocationRepository implements ISocialLocationRepository {
       throw UnimplementedError();
 }
 
-Widget _app(_FakeLocationRepository repository) => ProviderScope(
+Widget _app(_FakeLocationRepository repository, {String? categoryId}) => ProviderScope(
   overrides: [socialLocationRepositoryProvider.overrideWithValue(repository)],
-  child: const MaterialApp(
+  child: MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    locale: Locale('vi'),
-    home: Scaffold(body: SocialLocationFlow()),
+    locale: const Locale('vi'),
+    home: Scaffold(body: SocialLocationFlow(categoryId: categoryId)),
   ),
 );
 
@@ -174,5 +182,75 @@ void main() {
     expect(result!.formattedAddress, 'Phường Mỹ Đình, Hà Nội');
     expect(result!.latitude, 10.7769);
     expect(result!.longitude, 106.7009);
+  });
+
+  group('tìm sân theo môn', () {
+    const venue = SocialPlace(
+      name: 'Sân Pickleball A',
+      formattedAddress: '1 Đường X',
+      latitude: 10.0,
+      longitude: 106.0,
+      venueId: 'v1',
+      isVerified: true,
+    );
+    const unverified = SocialPlace(
+      name: 'Sân Pickleball B',
+      formattedAddress: '2 Đường Y',
+      latitude: 10.0,
+      longitude: 106.0,
+      venueId: 'v2',
+    );
+
+    Future<void> type(WidgetTester tester, String text) async {
+      await tester.enterText(find.byType(TextField).first, text);
+      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump();
+    }
+
+    testWidgets('TC-VENUE-07 gửi categoryId của môn xuống repository', (
+      tester,
+    ) async {
+      final repository = _FakeLocationRepository(results: [venue]);
+      await tester.pumpWidget(_app(repository, categoryId: 'cat-pickle'));
+      await type(tester, 'sân pic');
+
+      expect(repository.searchCategoryIds, ['cat-pickle']);
+    });
+
+    testWidgets('TC-VENUE-08 hiện nhãn Đã xác minh chỉ ở sân đã xác minh', (
+      tester,
+    ) async {
+      final repository = _FakeLocationRepository(results: [venue, unverified]);
+      await tester.pumpWidget(_app(repository, categoryId: 'cat-pickle'));
+      await type(tester, 'sân pic');
+
+      expect(find.text('Sân Pickleball A'), findsOneWidget);
+      expect(find.text('Sân Pickleball B'), findsOneWidget);
+      expect(find.text('Đã xác minh'), findsOneWidget);
+    });
+
+    testWidgets('TC-VENUE-09 đổi môn thì tìm lại với môn mới', (tester) async {
+      final repository = _FakeLocationRepository(results: [venue]);
+      await tester.pumpWidget(_app(repository, categoryId: 'cat-pickle'));
+      await type(tester, 'sân pic');
+      await tester.pumpWidget(_app(repository, categoryId: 'cat-football'));
+      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump();
+
+      expect(repository.searchCategoryIds, ['cat-pickle', 'cat-football']);
+    });
+
+    testWidgets('TC-VENUE-10 vẫn hiện nguồn © OpenStreetMap', (tester) async {
+      final repository = _FakeLocationRepository(results: [venue]);
+      await tester.pumpWidget(_app(repository, categoryId: 'cat-pickle'));
+      await tester.tap(find.text('Thêm địa điểm mới'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'Sân A');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Chọn từ bản đồ'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('OpenStreetMap'), findsWidgets);
+    });
   });
 }
